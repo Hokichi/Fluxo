@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Fluxo.Core/Fluxo.Core.csproj" Id="f7c1cabb-8600-455e-8c6a-2011b081b2c0" />
+  <Project Path="Fluxo.Data/Fluxo.Data.csproj" Id="e43fbb0d-fde1-4524-8cd6-f83ba4a53721" />
+  <Project Path="Fluxo/Fluxo.csproj" />
+</Solution>
