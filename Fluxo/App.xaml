@@ -2,13 +2,22 @@
     x:Class="Fluxo.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:Fluxo"
-    StartupUri="/Views/Shell/MainWindow.xaml">
+    xmlns:cons="clr-namespace:Fluxo.Converters"
+    xmlns:local="clr-namespace:Fluxo">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Theme.xaml" />
+                <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml" />
+                <ResourceDictionary Source="Resources/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <cons:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <cons:BoolToVisibilityInvertedConverter x:Key="BoolToVisibilityInvertedConverter" />
+            <cons:BorderCornerClipConverter x:Key="BorderCornerClipConverter" />
+            <cons:BrushToColorConverter x:Key="BrushToColorConverter" />
+            <cons:CornerRadiusConverter x:Key="CornerRadiusConverter" />
+            <cons:ObjectToNullConverter x:Key="ObjectToNullConverter" />
 
             <FontFamily x:Key="Black">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Black.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
             <FontFamily x:Key="BlackItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-BlackItalic.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
@@ -43,6 +52,8 @@
             <FontFamily x:Key="MediumItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-MediumItalic.ttf#SFT Schrifted Round TRIAL Mediu</FontFamily>
             <FontFamily x:Key="Regular">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Regular.ttf#SFT Schrifted Round TRIAL</FontFamily>
             <FontFamily x:Key="Var">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIALVar.ttf#SFT Schrifted Round TRIAL Var</FontFamily>
+
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

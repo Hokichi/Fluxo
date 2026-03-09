@@ -2,6 +2,7 @@
     x:Class="Fluxo.Views.Shell.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:local="clr-namespace:Fluxo"
@@ -15,14 +16,108 @@
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
+    <Window.Resources>
+        <Style x:Key="DaysOfWeekStyle" TargetType="ListViewItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <RadioButton GroupName="DaysOfWeek" IsChecked="{Binding IsSelected}">
+                            <RadioButton.Template>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Grid>
+                                        <StackPanel
+                                            Width="48"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent">
+                                            <TextBlock
+                                                x:Name="DayOfWeekName"
+                                                Margin="0,0,0,6"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="12"
+                                                Text="{Binding DayName}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                                                <Setter Property="Effect">
+                                                                    <Setter.Value>
+                                                                        <DropShadowEffect
+                                                                            BlurRadius="5"
+                                                                            Opacity="0.5"
+                                                                            ShadowDepth="0"
+                                                                            Color="{StaticResource Color.Mint}" />
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock
+                                                x:Name="DayOfWeekDate"
+                                                Margin="0,0,0,8"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Black}"
+                                                FontSize="14"
+                                                Text="{Binding DayNumber}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                                                <Setter Property="Effect">
+                                                                    <Setter.Value>
+                                                                        <DropShadowEffect
+                                                                            BlurRadius="5"
+                                                                            Opacity="0.5"
+                                                                            ShadowDepth="0"
+                                                                            Color="{StaticResource Color.Text.Primary}" />
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Border
+                                            Width="32"
+                                            Height="4"
+                                            VerticalAlignment="Bottom"
+                                            Background="{StaticResource Brush.Mint}"
+                                            CornerRadius="4 4 0 0"
+                                            Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Border.Effect>
+                                                <DropShadowEffect
+                                                    BlurRadius="10"
+                                                    ShadowDepth="0"
+                                                    Color="{StaticResource Color.Mint}" />
+                                            </Border.Effect>
+                                        </Border>
+                                    </Grid>
+                                </ControlTemplate>
+                            </RadioButton.Template>
+                        </RadioButton>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Border Background="{StaticResource Brush.Background.Main}" CornerRadius="16">
-        <Grid>
+        <Grid Margin="0,16,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="80" />
+                <RowDefinition Height="60" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="48,0">
+            <Grid Grid.Row="0" Margin="24,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -30,25 +125,102 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel
+                    Margin="32,0,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
                     <icons:PackIconMaterialDesign
-                        Width="32"
+                        Width="24"
                         Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                        VerticalAlignment="Center"
                         Foreground="{StaticResource Brush.Mint}"
                         Kind="AccountBalanceWallet" />
 
                     <TextBlock
-                        Margin="12,0,0,0"
+                        Margin="12,1,0,0"
                         VerticalAlignment="Center"
-                        FontFamily="{StaticResource Black}"
+                        FontFamily="{StaticResource Bold}"
                         FontSize="18"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Fluxo" />
+
+                    <StackPanel Orientation="Horizontal">
+                        <Border
+                            Width="1"
+                            Height="32"
+                            Margin="24,0"
+                            Background="{StaticResource Brush.Text.Muted}" />
+                    </StackPanel>
                 </StackPanel>
 
-                <ListView Grid.Column="1" />
+                <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="40" />
+                    </Grid.ColumnDefinitions>
+
+                    <icons:PackIconUnicons
+                        Height="12"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Kind="AngleLeft" />
+
+                    <ListView
+                        Grid.Column="1"
+                        HorizontalAlignment="Center"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        ItemContainerStyle="{StaticResource DaysOfWeekStyle}"
+                        ItemsSource="{Binding DaysOfWeek}"
+                        SelectedItem="{Binding SelectedDay}">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                    </ListView>
+
+                    <icons:PackIconUnicons
+                        Grid.Column="2"
+                        Height="12"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Kind="AngleRight" />
+                </Grid>
+
+                <StackPanel
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <c:BalloonButton
+                        Width="40"
+                        Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                        Margin="8,0,0,0"
+                        ButtonIcon="{StaticResource Minus}"
+                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                        IconSize="16" />
+                    <c:BalloonButton
+                        Width="40"
+                        Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                        Margin="8,0,0,0"
+                        ButtonIcon="{StaticResource ExpandAlt}"
+                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                        IconSize="16" />
+                    <c:BalloonButton
+                        Width="40"
+                        Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                        Margin="8,0,0,0"
+                        ButtonIcon="{StaticResource Close}"
+                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.Danger}"
+                        IconSize="16" />
+                </StackPanel>
             </Grid>
         </Grid>
     </Border>

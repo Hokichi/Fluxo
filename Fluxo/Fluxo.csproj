@@ -95,4 +95,8 @@
     <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Converters\" />
+  </ItemGroup>
+
 </Project>
