@@ -9,8 +9,46 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Black.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-BlackItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Bold.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-BoldItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlack.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlackIt.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBold.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBoldIt.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBold.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBoldIt.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExLightIt.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBold.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBoldIt.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraLight.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLight.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLightIt.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMedium.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMediumIt.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompRegular.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBold.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBoldItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExBoldItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExLightItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraBold.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraLight.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Italic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Light.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-LightItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Medium.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-MediumItalic.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Regular.ttf" />
+    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="MahApps.Metro.IconPacks" Version="6.2.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
@@ -19,6 +57,42 @@
     <ProjectReference Include="..\Fluxo.Core\Fluxo.Core.csproj" />
     <ProjectReference Include="..\Fluxo.Data\Fluxo.Data.csproj" />
     <ProjectReference Include="..\Fluxo.Services\Fluxo.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Black.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-BlackItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Bold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-BoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlack.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlackIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBoldIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBoldIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExLightIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBoldIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraLight.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLight.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLightIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMedium.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMediumIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompRegular.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExBoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExLightItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraLight.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Italic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Light.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-LightItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Medium.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-MediumItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Regular.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
   </ItemGroup>
 
 </Project>

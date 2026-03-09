@@ -10,5 +10,4 @@ namespace Fluxo
     public partial class App : Application
     {
     }
-
 }
