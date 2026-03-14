@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <Folder Include="Configurations\" />
-    <Folder Include="Migrationns\" />
     <Folder Include="UnitOfWork\" />
   </ItemGroup>
 

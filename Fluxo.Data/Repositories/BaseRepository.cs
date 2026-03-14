@@ -1,9 +1,6 @@
 ﻿using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Fluxo.Data.Repositories;
 

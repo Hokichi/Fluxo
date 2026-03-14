@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Text;
-using Fluxo.Core.Entities;
+﻿using Fluxo.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fluxo.Data.Context;

@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Services.Persistence;
 using Fluxo.Core.Interfaces.Services;

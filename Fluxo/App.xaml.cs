@@ -1,12 +1,12 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Fluxo.Data.Context;
 using Fluxo.Services.Extensions;
-using Fluxo.ViewModels.Shell;
-using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Controls;
+using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fluxo
 {
@@ -23,7 +23,8 @@ namespace Fluxo
             var services = new ServiceCollection();
 
             // Register all services
-            services.RegisterServices();
+            services.RegisterServices(); services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite($"Data Source=fluxo.sql", o => o.MigrationsAssembly("Fluxo.Data")));
 
             // Register all ViewModels
             services.AddSingleton<MainVM>();
@@ -48,6 +49,10 @@ namespace Fluxo
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            using var scope = _serviceProvider!.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
 
             // Create and show the main window using the DI container
             var mainWindow = _serviceProvider!.GetRequiredService<MainWindow>();

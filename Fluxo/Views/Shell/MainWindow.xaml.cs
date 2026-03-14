@@ -33,5 +33,16 @@ namespace Fluxo.Views.Shell
             {
             }
         }
+        private void OnCloseWindow(object sender, ExecutedRoutedEventArgs e)
+            => SystemCommands.CloseWindow(this);
+
+        private void OnMinimizeWindow(object sender, ExecutedRoutedEventArgs e)
+            => SystemCommands.MinimizeWindow(this);
+
+        private void OnMaximizeWindow(object sender, ExecutedRoutedEventArgs e)
+            => SystemCommands.MaximizeWindow(this);
+
+        private void OnRestoreWindow(object sender, ExecutedRoutedEventArgs e)
+            => SystemCommands.RestoreWindow(this);
     }
 }
