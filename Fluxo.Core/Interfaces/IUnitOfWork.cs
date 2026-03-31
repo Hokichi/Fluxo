@@ -1,0 +1,16 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Fluxo.Core.Interfaces.Repositories;
+
+namespace Fluxo.Core.Interfaces;
+
+public interface IUnitOfWork : IDisposable, IAsyncDisposable
+{
+    IExpenseRepository Expenses { get; }
+    IExpenseLogRepository ExpenseLogs { get; }
+    IExpenseTagRepository ExpenseTags { get; }
+    ISavingGoalRepository SavingGoals { get; }
+    ISpendingSourceRepository SpendingSources { get; }
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}

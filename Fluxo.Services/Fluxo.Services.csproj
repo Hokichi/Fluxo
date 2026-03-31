@@ -9,10 +9,12 @@
 
   <ItemGroup>
     <Folder Include="Calculations\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Persistence\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="16.1.0" />
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
   </ItemGroup>
