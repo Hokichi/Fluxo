@@ -3,6 +3,7 @@ using System;
 using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fluxo.Data.Migrations
 {
     [DbContext(typeof(FluxoDbContext))]
-    partial class FluxoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401084319_RenameLimitToAccountLimitOnSpendingSource")]
+    partial class RenameLimitToAccountLimitOnSpendingSource
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");

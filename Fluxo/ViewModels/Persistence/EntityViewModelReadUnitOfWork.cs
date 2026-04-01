@@ -1,26 +1,30 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Data.Context;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Persistence;
 
-public sealed class EntityViewModelReadUnitOfWork(IUnitOfWork unitOfWork, AutoMapper.IMapper mapper)
-    : IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>
+public sealed class EntityViewModelReadUnitOfWork(IUnitOfWork unitOfWork, FluxoDbContext dbContext, AutoMapper.IMapper mapper)
+    : IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly FluxoDbContext _dbContext = dbContext;
     private readonly AutoMapper.IMapper _mapper = mapper;
-    private IReadRepository<ExpenseVM>? _expenses;
-    private IReadRepository<ExpenseLogVM>? _expenseLogs;
+    private IExpenseReadRepository<ExpenseVM>? _expenses;
+    private IExpenseLogReadRepository<ExpenseLogVM>? _expenseLogs;
+    private IIncomeLogReadRepository<IncomeLogVM>? _incomeLogs;
     private IReadRepository<ExpenseTagVM>? _expenseTags;
     private IReadRepository<SavingGoalVM>? _savingGoals;
-    private IReadRepository<SpendingSourceVM>? _spendingSources;
+    private ISpendingSourceReadRepository<SpendingSourceVM>? _spendingSources;
 
-    public IReadRepository<ExpenseVM> Expenses => _expenses ??= new ViewModelReadRepository<Expense, ExpenseVM>(_unitOfWork.Expenses, _mapper);
-    public IReadRepository<ExpenseLogVM> ExpenseLogs => _expenseLogs ??= new ViewModelReadRepository<ExpenseLog, ExpenseLogVM>(_unitOfWork.ExpenseLogs, _mapper);
+    public IExpenseReadRepository<ExpenseVM> Expenses => _expenses ??= new ExpenseViewModelReadRepository<ExpenseVM>(_unitOfWork.Expenses, _dbContext, _mapper);
+    public IExpenseLogReadRepository<ExpenseLogVM> ExpenseLogs => _expenseLogs ??= new ExpenseLogViewModelReadRepository<ExpenseLogVM>(_unitOfWork.ExpenseLogs, _dbContext, _mapper);
+    public IIncomeLogReadRepository<IncomeLogVM> IncomeLogs => _incomeLogs ??= new IncomeLogViewModelReadRepository<IncomeLogVM>(_unitOfWork.IncomeLogs, _dbContext, _mapper);
     public IReadRepository<ExpenseTagVM> ExpenseTags => _expenseTags ??= new ViewModelReadRepository<ExpenseTag, ExpenseTagVM>(_unitOfWork.ExpenseTags, _mapper);
     public IReadRepository<SavingGoalVM> SavingGoals => _savingGoals ??= new ViewModelReadRepository<SavingGoal, SavingGoalVM>(_unitOfWork.SavingGoals, _mapper);
-    public IReadRepository<SpendingSourceVM> SpendingSources => _spendingSources ??= new ViewModelReadRepository<SpendingSource, SpendingSourceVM>(_unitOfWork.SpendingSources, _mapper);
+    public ISpendingSourceReadRepository<SpendingSourceVM> SpendingSources => _spendingSources ??= new SpendingSourceViewModelReadRepository<SpendingSourceVM>(_unitOfWork.SpendingSources, _dbContext, _mapper);
 
     public void Dispose()
     {

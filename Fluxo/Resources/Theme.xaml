@@ -95,4 +95,16 @@
 
     <Color x:Key="Color.Overlay">#99000000</Color>
     <SolidColorBrush x:Key="Brush.Overlay" Color="{StaticResource Color.Overlay}" />
+
+    <!--  =============================  -->
+    <!--  INCOME SOURCES  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Income.Checking.Cash">#1f79b9</Color>
+    <Color x:Key="Color.Income.Credit.BNPL">#755d99</Color>
+    <Color x:Key="Color.Income.Saving">#a96e26</Color>
+
+    <SolidColorBrush x:Key="Brush.Income.Checking.Cash" Color="{StaticResource Color.Income.Checking.Cash}" />
+    <SolidColorBrush x:Key="Brush.Income.Credit.BNPL" Color="{StaticResource Color.Income.Credit.BNPL}" />
+    <SolidColorBrush x:Key="Brush.Income.Saving" Color="{StaticResource Color.Income.Saving}" />
 </ResourceDictionary>

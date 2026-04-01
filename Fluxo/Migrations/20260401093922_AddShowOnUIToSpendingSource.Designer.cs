@@ -3,16 +3,19 @@ using System;
 using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Fluxo.Data.Migrations
+namespace Fluxo.Migrations
 {
     [DbContext(typeof(FluxoDbContext))]
-    partial class FluxoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401093922_AddShowOnUIToSpendingSource")]
+    partial class AddShowOnUIToSpendingSource
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -178,6 +181,9 @@ namespace Fluxo.Data.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("ShowOnUI")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("SpendingSourceType")
                         .HasColumnType("INTEGER");

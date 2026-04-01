@@ -3,6 +3,7 @@ using System;
 using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fluxo.Data.Migrations
 {
     [DbContext(typeof(FluxoDbContext))]
-    partial class FluxoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331102438_AddIncomeLog")]
+    partial class AddIncomeLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -163,9 +166,6 @@ namespace Fluxo.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("AccountLimit")
-                        .HasColumnType("TEXT");
-
                     b.Property<decimal>("Balance")
                         .HasColumnType("TEXT");
 
@@ -173,6 +173,9 @@ namespace Fluxo.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("InterestRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Limit")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")

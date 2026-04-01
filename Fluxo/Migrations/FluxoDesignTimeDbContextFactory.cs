@@ -1,24 +1,18 @@
-using System.IO;
+using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Fluxo.Data.Context;
+namespace Fluxo.Migrations;
 
-public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbContext>
+public sealed class FluxoDesignTimeDbContextFactory : IDesignTimeDbContextFactory<FluxoDbContext>
 {
     public FluxoDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<FluxoDbContext>();
         optionsBuilder.UseSqlite(
-            BuildConnectionString(),
+            FluxoDbContextFactory.BuildConnectionString(),
             sqliteOptions => sqliteOptions.MigrationsAssembly("Fluxo"));
 
         return new FluxoDbContext(optionsBuilder.Options);
-    }
-
-    public static string BuildConnectionString()
-    {
-        var databasePath = Path.Combine(AppContext.BaseDirectory, "fluxo.db");
-        return $"Data Source={databasePath}";
     }
 }

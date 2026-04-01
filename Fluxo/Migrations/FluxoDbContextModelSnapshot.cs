@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Fluxo.Data.Migrations
+namespace Fluxo.Migrations
 {
     [DbContext(typeof(FluxoDbContext))]
     partial class FluxoDbContextModelSnapshot : ModelSnapshot
@@ -178,6 +178,9 @@ namespace Fluxo.Data.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("ShowOnUI")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("SpendingSourceType")
                         .HasColumnType("INTEGER");

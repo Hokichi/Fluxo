@@ -10,6 +10,7 @@ public sealed class EntityViewModelProfile : Profile
     {
         CreateMap<Expense, ExpenseVM>().ReverseMap();
         CreateMap<ExpenseLog, ExpenseLogVM>().ReverseMap();
+        CreateMap<IncomeLog, IncomeLogVM>().ReverseMap();
         CreateMap<ExpenseTag, ExpenseTagVM>().ReverseMap();
         CreateMap<SavingGoal, SavingGoalVM>().ReverseMap();
         CreateMap<SpendingSource, SpendingSourceVM>().ReverseMap();
