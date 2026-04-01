@@ -37,7 +37,7 @@ namespace Fluxo.Views.Shell
 
         private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
         {
-            if (Mouse.LeftButton != MouseButtonState.Pressed)
+            if (Mouse.LeftButton != MouseButtonState.Pressed || e.GetPosition(this).Y >= 60)
                 return;
 
             if (e.OriginalSource is DependencyObject source && IsInteractiveElement(source))
@@ -128,6 +128,27 @@ namespace Fluxo.Views.Shell
             ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
         }
 
+        private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (sender is not DependencyObject source)
+                return;
+
+            var fadingScrollViewer = FindAncestor<Resources.CustomControls.FadingScrollViewer>(source);
+            if (fadingScrollViewer is null)
+                return;
+
+            var lineCount = Math.Max(1, Math.Abs(e.Delta) / Mouse.MouseWheelDeltaForOneLine);
+            for (var i = 0; i < lineCount; i++)
+            {
+                if (e.Delta > 0)
+                    fadingScrollViewer.LineUp();
+                else
+                    fadingScrollViewer.LineDown();
+            }
+
+            e.Handled = true;
+        }
+
         private static bool IsInteractiveElement(DependencyObject source)
         {
             for (DependencyObject? current = source; current is not null; current = VisualTreeHelper.GetParent(current))
@@ -137,6 +158,17 @@ namespace Fluxo.Views.Shell
             }
 
             return false;
+        }
+
+        private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
+        {
+            for (DependencyObject? current = source; current is not null; current = VisualTreeHelper.GetParent(current))
+            {
+                if (current is T match)
+                    return match;
+            }
+
+            return null;
         }
     }
 }

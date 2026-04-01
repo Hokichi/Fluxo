@@ -26,6 +26,7 @@ namespace Fluxo.ViewModels.Shell
 
             DaysOfWeek = new(daysThisWeek.Select(c => new DayOfWeekVM
             {
+                Date = c,
                 DayName = c.ToString("ddd"),
                 DayNumber = c.Day.ToString(),
                 IsSelected = c.Date == DateTime.Today

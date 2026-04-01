@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Width="240"
     Height="100"
+    Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
     mc:Ignorable="d">
     <UserControl.Resources>
         <Style x:Key="RoundedProgressBarStyle" TargetType="ProgressBar">

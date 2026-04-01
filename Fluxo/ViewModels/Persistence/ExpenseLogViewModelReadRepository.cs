@@ -26,6 +26,12 @@ public sealed class ExpenseLogViewModelReadRepository<TViewModel>(IExpenseLogRep
         return entity is null ? null : MapWithId(entity);
     }
 
+    public async Task<IReadOnlyList<TViewModel>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        var entities = await _repository.GetByDateAsync(date, cancellationToken);
+        return MapListWithIds(entities);
+    }
+
     public async Task<IReadOnlyList<TViewModel>> GetByCategoryAsync(ExpenseCategory category, CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetByCategoryAsync(category, cancellationToken);

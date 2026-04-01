@@ -22,6 +22,12 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
         return (start, start.AddDays(1));
     }
 
+    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
+    {
+        var start = date.Date;
+        return (start, start.AddDays(1));
+    }
+
     public override async Task<IReadOnlyList<Expense>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations().ToListAsync(cancellationToken);
@@ -31,6 +37,14 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
     {
         return await QueryWithNavigations()
             .FirstOrDefaultAsync(expense => expense.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Expense>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        var (start, end) = GetDayRange(date);
+        return await QueryWithNavigations()
+            .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Expense>> GetByKindAsync(ExpenseKind kind, CancellationToken cancellationToken = default)

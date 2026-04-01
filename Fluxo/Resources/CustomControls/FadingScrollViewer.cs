@@ -9,9 +9,44 @@ namespace Fluxo.Resources.CustomControls
     {
         private const string PART_SCROLL_PRESENTER_CONTAINER_NAME = "PART_ScrollContentPresenterContainer";
 
-        public double FadedEdgeThickness { get; set; }
-        public double FadedEdgeFalloffSpeed { get; set; }
-        public double FadedEdgeOpacity { get; set; }
+        public static readonly DependencyProperty FadedEdgeThicknessProperty =
+            DependencyProperty.Register(
+                nameof(FadedEdgeThickness),
+                typeof(double),
+                typeof(FadingScrollViewer),
+                new PropertyMetadata(20.0, OnFadedEdgeAppearancePropertyChanged));
+
+        public static readonly DependencyProperty FadedEdgeFalloffSpeedProperty =
+            DependencyProperty.Register(
+                nameof(FadedEdgeFalloffSpeed),
+                typeof(double),
+                typeof(FadingScrollViewer),
+                new PropertyMetadata(4.0, OnFadedEdgeAppearancePropertyChanged));
+
+        public static readonly DependencyProperty FadedEdgeOpacityProperty =
+            DependencyProperty.Register(
+                nameof(FadedEdgeOpacity),
+                typeof(double),
+                typeof(FadingScrollViewer),
+                new PropertyMetadata(0.0, OnFadedEdgeAppearancePropertyChanged));
+
+        public double FadedEdgeThickness
+        {
+            get => (double)GetValue(FadedEdgeThicknessProperty);
+            set => SetValue(FadedEdgeThicknessProperty, value);
+        }
+
+        public double FadedEdgeFalloffSpeed
+        {
+            get => (double)GetValue(FadedEdgeFalloffSpeedProperty);
+            set => SetValue(FadedEdgeFalloffSpeedProperty, value);
+        }
+
+        public double FadedEdgeOpacity
+        {
+            get => (double)GetValue(FadedEdgeOpacityProperty);
+            set => SetValue(FadedEdgeOpacityProperty, value);
+        }
 
         private BlurEffect InnerFadedBorderEffect { get; set; }
         private Border InnerFadedBorder { get; set; }
@@ -19,12 +54,16 @@ namespace Fluxo.Resources.CustomControls
 
         public FadingScrollViewer()
         {
-            this.FadedEdgeThickness = 20;
-            this.FadedEdgeFalloffSpeed = 4.0;
-            this.FadedEdgeOpacity = 0.0;
-
             this.ScrollChanged += FadingScrollViewer_ScrollChanged;
             this.SizeChanged += FadingScrollViewer_SizeChanged;
+        }
+
+        private static void OnFadedEdgeAppearancePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+        {
+            if (dependencyObject is not FadingScrollViewer fadingScrollViewer)
+                return;
+
+            fadingScrollViewer.RefreshFadedMask();
         }
 
         private void FadingScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -69,6 +108,20 @@ namespace Fluxo.Resources.CustomControls
             BuildInnerFadedBorderForOpacityMask();
             BuildOuterFadedBorderForOpacityMask();
             SetOpacityMaskOfScrollContainer();
+            RefreshFadedMask();
+        }
+
+        private void RefreshFadedMask()
+        {
+            if (this.OuterFadedBorder == null || this.InnerFadedBorder == null || this.InnerFadedBorderEffect == null)
+                return;
+
+            byte fadedEdgeByteOpacity = (byte)(this.FadedEdgeOpacity * 255);
+            this.OuterFadedBorder.Background = new SolidColorBrush(Color.FromArgb(fadedEdgeByteOpacity, 0, 0, 0));
+
+            double innerFadedBorderBaseMarginThickness = this.FadedEdgeThickness / 2.0;
+            this.InnerFadedBorder.Margin = new Thickness(innerFadedBorderBaseMarginThickness);
+            this.InnerFadedBorderEffect.Radius = this.FadedEdgeThickness;
         }
 
         private void BuildInnerFadedBorderEffectForOpacityMask()
@@ -92,11 +145,9 @@ namespace Fluxo.Resources.CustomControls
 
         private void BuildOuterFadedBorderForOpacityMask()
         {
-            byte fadedEdgeByteOpacity = (byte)(this.FadedEdgeOpacity * 255);
-
             this.OuterFadedBorder = new Border()
             {
-                Background = new SolidColorBrush(Color.FromArgb(fadedEdgeByteOpacity, 0, 0, 0)),
+                Background = Brushes.Transparent,
                 ClipToBounds = true,
                 Child = this.InnerFadedBorder,
             };

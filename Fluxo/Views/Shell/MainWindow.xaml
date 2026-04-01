@@ -58,27 +58,18 @@
             <Setter Property="Margin" Value="0,0,24,12" />
         </Style>
 
-        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0,0,0,12" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Style
+            x:Key="ExpenseListFadingScrollViewerStyle"
+            BasedOn="{StaticResource {x:Type c:FadingScrollViewer}}"
+            TargetType="{x:Type c:FadingScrollViewer}">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="FadedEdgeThickness" Value="20" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="ListViewItem">
-                        <ContentPresenter />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="ExpenseListScrollViewerStyle" TargetType="ScrollViewer">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollViewer">
-                        <Grid Background="{TemplateBinding Background}">
+                    <ControlTemplate TargetType="{x:Type c:FadingScrollViewer}">
+                        <Grid x:Name="Grid" Background="{TemplateBinding Background}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="24" />
@@ -88,13 +79,17 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <ScrollContentPresenter
-                                x:Name="PART_ScrollContentPresenter"
-                                Grid.Row="0"
-                                Grid.Column="0"
-                                Margin="{TemplateBinding Padding}"
-                                CanContentScroll="{TemplateBinding CanContentScroll}"
-                                Content="{TemplateBinding Content}" />
+                            <Border x:Name="PART_ScrollContentPresenterContainer">
+                                <ScrollContentPresenter
+                                    x:Name="PART_ScrollContentPresenter"
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="{TemplateBinding Padding}"
+                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    CanHorizontallyScroll="False"
+                                    CanVerticallyScroll="False"
+                                    Content="{TemplateBinding Content}" />
+                            </Border>
 
                             <ScrollBar
                                 x:Name="PART_VerticalScrollBar"
@@ -126,6 +121,22 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ExpenseListViewStyle" TargetType="ListView">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -138,10 +149,8 @@
             <Setter Property="ItemTemplate" Value="{DynamicResource ExpenseListTemplate}" />
             <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-            <Style.Resources>
-                <Style BasedOn="{StaticResource ExpenseListScrollViewerStyle}" TargetType="ScrollViewer" />
-            </Style.Resources>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+            <EventSetter Event="PreviewMouseWheel" Handler="OnExpenseListPreviewMouseWheel" />
         </Style>
 
         <Style x:Key="DaysOfWeekStyle" TargetType="ListViewItem">
@@ -392,7 +401,10 @@
         </DataTemplate>
     </Window.Resources>
 
-    <Border Background="{StaticResource Brush.Background.Main}" CornerRadius="16">
+    <Border
+        Background="{StaticResource Brush.Background.Main}"
+        CornerRadius="16"
+        MouseMove="MainWindow_OnMouseMove">
         <Grid Margin="0,16,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="60" />
@@ -565,7 +577,7 @@
                                 </ListView.ItemsPanel>
                                 <ListView.ItemContainerStyle>
                                     <Style TargetType="ListViewItem">
-                                        <Setter Property="Margin" Value="0,0,16,0" />
+                                        <Setter Property="Margin" Value="0,0,8,0" />
                                         <Setter Property="Padding" Value="0" />
                                         <Setter Property="Background" Value="Transparent" />
                                         <Setter Property="BorderThickness" Value="0" />
@@ -578,6 +590,11 @@
                                                 </ControlTemplate>
                                             </Setter.Value>
                                         </Setter>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ShowOnUI}" Value="False">
+                                                <Setter Property="Margin" Value="0" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </ListView.ItemContainerStyle>
                                 <ListView.ItemTemplate>
@@ -587,10 +604,7 @@
                                 </ListView.ItemTemplate>
                             </ListView>
 
-                            <Grid
-                                Width="60"
-                                Height="100"
-                                Margin="8,0,0,0">
+                            <Grid Width="80" Height="100">
                                 <Rectangle
                                     RadiusX="16"
                                     RadiusY="16"
@@ -640,18 +654,17 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="Item" />
+                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
                                 <TextBlock
                                     Grid.Column="1"
                                     HorizontalAlignment="Right"
                                     Style="{StaticResource ExpenseListHeaderText}"
-                                    Text="Amount" />
+                                    Text="AMOUNT" />
                             </Grid>
 
-                            <ListView
-                                Grid.Row="1"
-                                ItemsSource="{Binding Needs}"
-                                Style="{StaticResource ExpenseListViewStyle}" />
+                            <c:FadingScrollViewer Grid.Row="1" Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
+                                <ListView ItemsSource="{Binding Needs}" Style="{StaticResource ExpenseListViewStyle}" />
+                            </c:FadingScrollViewer>
                         </Grid>
 
                         <Grid Grid.Column="2" ClipToBounds="True">
@@ -666,18 +679,17 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="Item" />
+                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
                                 <TextBlock
                                     Grid.Column="1"
                                     HorizontalAlignment="Right"
                                     Style="{StaticResource ExpenseListHeaderText}"
-                                    Text="Amount" />
+                                    Text="AMOUNT" />
                             </Grid>
 
-                            <ListView
-                                Grid.Row="1"
-                                ItemsSource="{Binding Wants}"
-                                Style="{StaticResource ExpenseListViewStyle}" />
+                            <c:FadingScrollViewer Grid.Row="1" Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
+                                <ListView ItemsSource="{Binding Wants}" Style="{StaticResource ExpenseListViewStyle}" />
+                            </c:FadingScrollViewer>
                         </Grid>
 
                         <Grid Grid.Column="4" ClipToBounds="True">
@@ -692,18 +704,17 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="Item" />
+                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
                                 <TextBlock
                                     Grid.Column="1"
                                     HorizontalAlignment="Right"
                                     Style="{StaticResource ExpenseListHeaderText}"
-                                    Text="Amount" />
+                                    Text="AMOUNT" />
                             </Grid>
 
-                            <ListView
-                                Grid.Row="1"
-                                ItemsSource="{Binding Invest}"
-                                Style="{StaticResource ExpenseListViewStyle}" />
+                            <c:FadingScrollViewer Grid.Row="1" Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
+                                <ListView ItemsSource="{Binding Invest}" Style="{StaticResource ExpenseListViewStyle}" />
+                            </c:FadingScrollViewer>
                         </Grid>
                     </Grid>
                 </Grid>

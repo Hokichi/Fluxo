@@ -9,6 +9,20 @@ namespace Fluxo.Data.Repositories;
 public sealed class SpendingSourceRepository(FluxoDbContext dbContext)
     : Repository<SpendingSource>(dbContext), ISpendingSourceRepository
 {
+    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
+    {
+        var start = date.Date;
+        return (start, start.AddDays(1));
+    }
+
+    public async Task<IReadOnlyList<SpendingSource>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        var (start, end) = GetDayRange(date);
+        return await DbSet
+            .Where(source => source.DueDate >= start && source.DueDate < end)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<SpendingSource>> GetBySourceTypeAsync(SpendingSourceType sourceType, CancellationToken cancellationToken = default)
     {
         return await DbSet

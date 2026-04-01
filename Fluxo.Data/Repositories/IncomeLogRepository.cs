@@ -19,6 +19,12 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
         return (start, start.AddDays(1));
     }
 
+    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
+    {
+        var start = date.Date;
+        return (start, start.AddDays(1));
+    }
+
     public override async Task<IReadOnlyList<IncomeLog>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations().ToListAsync(cancellationToken);
@@ -28,6 +34,14 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
     {
         return await QueryWithNavigations()
             .FirstOrDefaultAsync(log => log.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<IncomeLog>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        var (start, end) = GetDayRange(date);
+        return await QueryWithNavigations()
+            .Where(log => log.AddedOn >= start && log.AddedOn < end)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<IncomeLog>> GetBySpendingSourceIdAsync(int spendingSourceId, CancellationToken cancellationToken = default)
