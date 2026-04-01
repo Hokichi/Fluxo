@@ -1,5 +1,6 @@
 using AutoMapper;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
 
@@ -25,9 +26,21 @@ public sealed class ExpenseLogViewModelReadRepository<TViewModel>(IExpenseLogRep
         return entity is null ? null : MapWithId(entity);
     }
 
+    public async Task<IReadOnlyList<TViewModel>> GetByCategoryAsync(ExpenseCategory category, CancellationToken cancellationToken = default)
+    {
+        var entities = await _repository.GetByCategoryAsync(category, cancellationToken);
+        return MapListWithIds(entities);
+    }
+
     public async Task<IReadOnlyList<TViewModel>> GetBySpendingSourceIdAsync(int spendingSourceId, CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetBySpendingSourceIdAsync(spendingSourceId, cancellationToken);
+        return MapListWithIds(entities);
+    }
+
+    public async Task<IReadOnlyList<TViewModel>> GetTodayByCategoryAsync(ExpenseCategory category, CancellationToken cancellationToken = default)
+    {
+        var entities = await _repository.GetTodayByCategoryAsync(category, cancellationToken);
         return MapListWithIds(entities);
     }
 
