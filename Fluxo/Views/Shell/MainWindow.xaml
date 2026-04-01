@@ -46,6 +46,28 @@
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
 
+        <Style x:Key="ExpenseListHeaderText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        </Style>
+
+        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="DaysOfWeekStyle" TargetType="ListViewItem">
             <Setter Property="Template">
                 <Setter.Value>
@@ -213,41 +235,65 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ContainerDataGridLeftCellStyle" TargetType="{x:Type DataGridCell}">
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-        </Style>
-
-        <Style x:Key="ContainerDataGridRightCellStyle" TargetType="{x:Type DataGridCell}">
-            <Setter Property="HorizontalContentAlignment" Value="Right" />
-        </Style>
-
-        <DataTemplate x:Key="ContainerDataGridLeftColumnCellTemplate">
-            <Grid HorizontalAlignment="Left">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+        <DataTemplate x:Key="ExpenseListTemplate">
+            <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="{Binding Name}" />
-                <Border
-                    Height="20"
-                    Background="{Binding ExpenseTag.HexCode}"
-                    CornerRadius="2">
-                    <TextBlock Foreground="{Binding ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}" Text="{Binding ExpenseTag.Name}" />
-                </Border>
-                <TextBlock
-                    Grid.Row="1"
-                    Grid.ColumnSpan="2"
-                    Text="{Binding RecurringDate, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
-            </Grid>
-        </DataTemplate>
+                <Grid HorizontalAlignment="Left">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-        <DataTemplate x:Key="ContainerDataGridRightColumnCellTemplate">
-            <StackPanel HorizontalAlignment="Right" />
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding Expense.Name}" />
+
+                    <Border
+                        Grid.Column="1"
+                        Height="20"
+                        Margin="8,0,0,0"
+                        Padding="8,2"
+                        VerticalAlignment="Center"
+                        Background="{Binding Expense.ExpenseTag.HexCode}"
+                        CornerRadius="6">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="10"
+                            Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
+                            Text="{Binding Expense.ExpenseTag.Name}" />
+                    </Border>
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.ColumnSpan="2"
+                        Margin="0,6,0,0"
+                        FontSize="12"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                </Grid>
+
+                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontSize="12"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="{Binding Expense.Name}" />
+                </StackPanel>
+            </Grid>
         </DataTemplate>
     </Window.Resources>
 
@@ -492,9 +538,95 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
 
-                        <DataGrid Grid.Column="0" ItemsSource="{Binding Needs}" />
-                        <DataGrid Grid.Column="2" ItemsSource="{Binding Wants}" />
-                        <DataGrid Grid.Column="4" ItemsSource="{Binding Invest}" />
+                        <Grid Grid.Column="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="Item" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource ExpenseListHeaderText}"
+                                    Text="Amount" />
+                            </Grid>
+
+                            <ListView
+                                Grid.Row="1"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
+                                ItemTemplate="{StaticResource ExpenseListTemplate}"
+                                ItemsSource="{Binding Needs}" />
+                        </Grid>
+
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="Item" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource ExpenseListHeaderText}"
+                                    Text="Amount" />
+                            </Grid>
+
+                            <ListView
+                                Grid.Row="1"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
+                                ItemTemplate="{StaticResource ExpenseListTemplate}"
+                                ItemsSource="{Binding Wants}" />
+                        </Grid>
+
+                        <Grid Grid.Column="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="Item" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource ExpenseListHeaderText}"
+                                    Text="Amount" />
+                            </Grid>
+
+                            <ListView
+                                Grid.Row="1"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
+                                ItemTemplate="{StaticResource ExpenseListTemplate}"
+                                ItemsSource="{Binding Invest}" />
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>

@@ -12,9 +12,9 @@ namespace Fluxo.ViewModels.Shell
     {
         [ObservableProperty] private ObservableCollection<DayOfWeekVM> _daysOfWeek = new();
         [ObservableProperty] private ObservableCollection<SpendingSourceVM> _spendingSources = new();
-        [ObservableProperty] private ObservableCollection<ExpenseVM> _needs = new();
-        [ObservableProperty] private ObservableCollection<ExpenseVM> _wants = new();
-        [ObservableProperty] private ObservableCollection<ExpenseVM> _invest = new();
+        [ObservableProperty] private ObservableCollection<ExpenseLogVM> _needs = new();
+        [ObservableProperty] private ObservableCollection<ExpenseLogVM> _wants = new();
+        [ObservableProperty] private ObservableCollection<ExpenseLogVM> _invest = new();
         [ObservableProperty] private DayOfWeekVM _selectedDay;
 
         [ObservableProperty] private bool _hasNotifications;
@@ -57,9 +57,9 @@ namespace Fluxo.ViewModels.Shell
                 return source;
             }));
 
-            Needs = new(await readUnitOfWork.Expenses.GetByCategoryAsync(ExpenseCategory.Needs));
-            Wants = new(await readUnitOfWork.Expenses.GetByCategoryAsync(ExpenseCategory.Wants));
-            Invest = new(await readUnitOfWork.Expenses.GetByCategoryAsync(ExpenseCategory.Savings));
+            Needs = new((await readUnitOfWork.ExpenseLogs.GetByCategoryAsync(ExpenseCategory.Needs)).OrderByDescending(c => c.DeductedOn));
+            Wants = new((await readUnitOfWork.ExpenseLogs.GetByCategoryAsync(ExpenseCategory.Wants)).OrderByDescending(c => c.DeductedOn));
+            Invest = new((await readUnitOfWork.ExpenseLogs.GetByCategoryAsync(ExpenseCategory.Savings)).OrderByDescending(c => c.DeductedOn));
         }
     }
 }
