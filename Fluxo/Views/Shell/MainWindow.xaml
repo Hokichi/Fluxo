@@ -266,6 +266,7 @@
                         Background="{Binding Expense.ExpenseTag.HexCode}"
                         CornerRadius="6">
                         <TextBlock
+                            VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="10"
                             Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
@@ -291,7 +292,7 @@
                         HorizontalAlignment="Right"
                         FontSize="12"
                         Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="{Binding Expense.Name}" />
+                        Text="{Binding SpendingSource.Name}" />
                 </StackPanel>
             </Grid>
         </DataTemplate>

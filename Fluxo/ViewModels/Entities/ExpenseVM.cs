@@ -5,6 +5,7 @@ namespace Fluxo.ViewModels.Entities;
 
 public partial class ExpenseVM : ObservableObject
 {
+    [ObservableProperty] private int _id;
     [ObservableProperty] private SpendingSourceVM _spendingSource = new();
     [ObservableProperty] private ExpenseTagVM _expenseTag = new();
     [ObservableProperty] private string _name = string.Empty;

@@ -25,8 +25,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     private static void ConfigureExpense(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Expense> entity)
     {
         entity.ToTable("Expenses");
-        entity.Property<int>("Id").ValueGeneratedOnAdd();
-        entity.HasKey("Id");
+        entity.Property(expense => expense.Id).ValueGeneratedOnAdd();
+        entity.HasKey(expense => expense.Id);
 
         entity.Property(expense => expense.Name).IsRequired();
         entity.Property(expense => expense.Amount).HasColumnType("TEXT");
@@ -45,8 +45,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     private static void ConfigureExpenseLog(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ExpenseLog> entity)
     {
         entity.ToTable("ExpenseLogs");
-        entity.Property<int>("Id").ValueGeneratedOnAdd();
-        entity.HasKey("Id");
+        entity.Property(log => log.Id).ValueGeneratedOnAdd();
+        entity.HasKey(log => log.Id);
 
         entity.Property(log => log.Amount).HasColumnType("TEXT");
         entity.Property(log => log.Notes).IsRequired();
@@ -65,8 +65,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     private static void ConfigureIncomeLog(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<IncomeLog> entity)
     {
         entity.ToTable("IncomeLogs");
-        entity.Property<int>("Id").ValueGeneratedOnAdd();
-        entity.HasKey("Id");
+        entity.Property(log => log.Id).ValueGeneratedOnAdd();
+        entity.HasKey(log => log.Id);
 
         entity.Property(log => log.Amount).HasColumnType("TEXT");
         entity.Property(log => log.Notes).IsRequired();
@@ -80,8 +80,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     private static void ConfigureExpenseTag(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ExpenseTag> entity)
     {
         entity.ToTable("ExpenseTags");
-        entity.Property<int>("Id").ValueGeneratedOnAdd();
-        entity.HasKey("Id");
+        entity.Property(tag => tag.Id).ValueGeneratedOnAdd();
+        entity.HasKey(tag => tag.Id);
 
         entity.Property(tag => tag.Name).IsRequired();
         entity.Property(tag => tag.HexCode).IsRequired();
@@ -90,8 +90,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     private static void ConfigureSavingGoal(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SavingGoal> entity)
     {
         entity.ToTable("SavingGoals");
-        entity.Property<int>("Id").ValueGeneratedOnAdd();
-        entity.HasKey("Id");
+        entity.Property(goal => goal.Id).ValueGeneratedOnAdd();
+        entity.HasKey(goal => goal.Id);
 
         entity.Property(goal => goal.Name).IsRequired();
         entity.Property(goal => goal.TargetAmount).HasColumnType("TEXT");

@@ -6,14 +6,12 @@ namespace Fluxo.Converters
 {
     public class BrushToLighterBrushConverter : IValueConverter
     {
-        private const double LightnessIncrease = 30d;
+        private const double LightnessIncrease = 50d;
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is not SolidColorBrush brush)
+            if (!TryGetColor(value, out Color color))
                 return Brushes.Transparent;
-
-            Color color = brush.Color;
             (double hue, double saturation, double lightness) = ToHsl(color);
 
             lightness = Math.Min(100d, lightness + LightnessIncrease);
@@ -30,6 +28,38 @@ namespace Fluxo.Converters
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+
+        private static bool TryGetColor(object value, out Color color)
+        {
+            switch (value)
+            {
+                case SolidColorBrush brush:
+                    color = brush.Color;
+                    return true;
+
+                case string hex when !string.IsNullOrWhiteSpace(hex):
+                    try
+                    {
+                        object converted = ColorConverter.ConvertFromString(hex);
+                        if (converted is Color parsedColor)
+                        {
+                            color = parsedColor;
+                            return true;
+                        }
+                    }
+                    catch (FormatException)
+                    {
+                    }
+                    catch (NotSupportedException)
+                    {
+                    }
+
+                    break;
+            }
+
+            color = Colors.Transparent;
+            return false;
         }
 
         private static (double Hue, double Saturation, double Lightness) ToHsl(Color color)

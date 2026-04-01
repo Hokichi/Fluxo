@@ -12,12 +12,12 @@ public class Repository<T>(FluxoDbContext dbContext) : IRepository<T> where T : 
     protected FluxoDbContext DbContext { get; } = dbContext;
     protected DbSet<T> DbSet { get; } = dbContext.Set<T>();
 
-    public async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await DbSet.ToListAsync(cancellationToken);
     }
 
-    public async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await DbSet.FindAsync([id], cancellationToken);
     }
