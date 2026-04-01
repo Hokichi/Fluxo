@@ -1,8 +1,10 @@
-using Fluxo.ViewModels.Shell;
+﻿using Fluxo.ViewModels.Shell;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
@@ -22,6 +24,7 @@ namespace Fluxo.Views.Shell
 
             _mainVM = mainVM;
             DataContext = _mainVM;
+
             Loaded += async (_, _) =>
             {
                 UpdateExpandRestoreButtonIcon();
@@ -57,6 +60,7 @@ namespace Fluxo.Views.Shell
             {
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
+
             if (onCompleted is not null)
                 anim.Completed += (_, _) => onCompleted();
 
@@ -69,6 +73,7 @@ namespace Fluxo.Views.Shell
             {
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
             };
+
             anim.Completed += (_, _) => onCompleted();
             BeginAnimation(OpacityProperty, anim);
         }
@@ -85,7 +90,6 @@ namespace Fluxo.Views.Shell
             FadeOut(() =>
             {
                 SystemCommands.MinimizeWindow(this);
-                // Reset opacity immediately so it's ready when restored
                 BeginAnimation(OpacityProperty, null);
                 Opacity = 1;
             });
