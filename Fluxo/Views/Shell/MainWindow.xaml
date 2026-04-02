@@ -48,80 +48,7 @@
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
 
-        <Style x:Key="ExpenseListHeaderText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
-        </Style>
-
-        <Style x:Key="ExpenseListHeaderGridStyle" TargetType="Grid">
-            <Setter Property="Margin" Value="12,0,36,8" />
-        </Style>
-
-        <Style
-            x:Key="ExpenseListFadingScrollViewerStyle"
-            BasedOn="{StaticResource {x:Type c:FadingScrollViewer}}"
-            TargetType="{x:Type c:FadingScrollViewer}">
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="FadedEdgeThickness" Value="20" />
-            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type c:FadingScrollViewer}">
-                        <Grid x:Name="Grid" Background="{TemplateBinding Background}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="24" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <Border x:Name="PART_ScrollContentPresenterContainer">
-                                <ScrollContentPresenter
-                                    x:Name="PART_ScrollContentPresenter"
-                                    Grid.Row="0"
-                                    Grid.Column="0"
-                                    Margin="{TemplateBinding Padding}"
-                                    CanContentScroll="{TemplateBinding CanContentScroll}"
-                                    CanHorizontallyScroll="False"
-                                    CanVerticallyScroll="False"
-                                    Content="{TemplateBinding Content}" />
-                            </Border>
-
-                            <ScrollBar
-                                x:Name="PART_VerticalScrollBar"
-                                Grid.Row="0"
-                                Grid.Column="1"
-                                AutomationProperties.AutomationId="VerticalScrollBar"
-                                Cursor="Arrow"
-                                Maximum="{TemplateBinding ScrollableHeight}"
-                                Minimum="0"
-                                ViewportSize="{TemplateBinding ViewportHeight}"
-                                Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
-                                Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
-
-                            <ScrollBar
-                                x:Name="PART_HorizontalScrollBar"
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                AutomationProperties.AutomationId="HorizontalScrollBar"
-                                Cursor="Arrow"
-                                Maximum="{TemplateBinding ScrollableWidth}"
-                                Minimum="0"
-                                Orientation="Horizontal"
-                                ViewportSize="{TemplateBinding ViewportWidth}"
-                                Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
-                                Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
+        <Style x:Key="ListViewItemStyle" TargetType="ListViewItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,0,0,12" />
             <Setter Property="Background" Value="Transparent" />
@@ -135,22 +62,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <Style x:Key="ExpenseListViewStyle" TargetType="ListView">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="VerticalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="ClipToBounds" Value="True" />
-            <Setter Property="ItemContainerStyle" Value="{StaticResource ExpenseListViewItemStyle}" />
-            <Setter Property="ItemTemplate" Value="{DynamicResource ExpenseListTemplate}" />
-            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
-            <EventSetter Event="PreviewMouseWheel" Handler="OnExpenseListPreviewMouseWheel" />
         </Style>
 
         <Style x:Key="DaysOfWeekStyle" TargetType="ListViewItem">
@@ -321,83 +232,91 @@
         </Style>
 
         <DataTemplate x:Key="ExpenseListTemplate">
-            <Border
-                x:Name="ExpenseItemBorder"
-                Padding="12,10"
-                Background="Transparent"
-                CornerRadius="12">
-                <Grid
-                    MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
-                    HorizontalAlignment="Stretch"
-                    ClipToBounds="True">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+            <Grid>
+                <Border
+                    x:Name="ExpenseItemBGBorder"
+                    Padding="12,10"
+                    Background="{StaticResource Brush.Background.Hover}"
+                    CornerRadius="12"
+                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <Border
+                    x:Name="ExpenseItemBorder"
+                    Padding="12,10"
+                    Background="Transparent"
+                    CornerRadius="12">
+                    <Grid
+                        MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
+                        HorizontalAlignment="Stretch"
+                        ClipToBounds="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="13"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding Expense.Name}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource Regular}"
+                                    FontSize="10"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+
+                                <Border
+                                    x:Name="ExpenseTagBorder"
+                                    Margin="8,0,0,0"
+                                    Padding="5,2"
+                                    VerticalAlignment="Center"
+                                    Background="{Binding Expense.ExpenseTag.HexCode}">
+                                    <Border.CornerRadius>
+                                        <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                                        </MultiBinding>
+                                    </Border.CornerRadius>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        FontSize="10"
+                                        Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                        Text="{Binding Expense.ExpenseTag.Name}" />
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            MinWidth="0"
+                            HorizontalAlignment="Right">
                             <TextBlock
-                                VerticalAlignment="Center"
+                                HorizontalAlignment="Right"
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="13"
                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="{Binding Expense.Name}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap" />
-                        </StackPanel>
-                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                             <TextBlock
+                                MaxWidth="120"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
                                 FontFamily="{StaticResource Regular}"
                                 FontSize="10"
                                 Foreground="{StaticResource Brush.Text.Muted}"
-                                Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
-
-                            <Border
-                                x:Name="ExpenseTagBorder"
-                                Margin="8,0,0,0"
-                                Padding="5,2"
-                                VerticalAlignment="Center"
-                                Background="{Binding Expense.ExpenseTag.HexCode}">
-                                <Border.CornerRadius>
-                                    <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
-                                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
-                                    </MultiBinding>
-                                </Border.CornerRadius>
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Medium}"
-                                    FontSize="10"
-                                    Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                    Text="{Binding Expense.ExpenseTag.Name}" />
-                            </Border>
+                                Text="{Binding SpendingSource.Name}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
                         </StackPanel>
-                    </StackPanel>
-
-                    <StackPanel
-                        Grid.Column="1"
-                        MinWidth="0"
-                        HorizontalAlignment="Right">
-                        <TextBlock
-                            HorizontalAlignment="Right"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="13"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                        <TextBlock
-                            MaxWidth="120"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Right"
-                            FontFamily="{StaticResource Regular}"
-                            FontSize="10"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Text="{Binding SpendingSource.Name}"
-                            TextTrimming="CharacterEllipsis"
-                            TextWrapping="NoWrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+                    </Grid>
+                </Border>
+            </Grid>
         </DataTemplate>
 
         <DataTemplate x:Key="Tags">
@@ -589,7 +508,7 @@
                 Margin="80,48">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="320" />
+                    <ColumnDefinition Width="240" />
                 </Grid.ColumnDefinitions>
 
                 <Grid>
@@ -746,10 +665,11 @@
                         </Grid>
 
                         <ListView
+                            Margin="0,12,0,0"
                             VerticalAlignment="Center"
                             Background="Transparent"
                             BorderThickness="0"
-                            ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
+                            ItemContainerStyle="{StaticResource ListViewItemStyle}"
                             ItemTemplate="{StaticResource Tags}"
                             ItemsSource="{Binding Tags}"
                             PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
@@ -763,7 +683,7 @@
                         </ListView>
                     </StackPanel>
 
-                    <Grid Grid.Row="4" Margin="0,20,0,0">
+                    <Grid Grid.Row="4" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
                             <ColumnDefinition Width="16" />
@@ -772,142 +692,25 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
 
-                        <Grid Grid.Column="0" ClipToBounds="True">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
+                        <components:ExpensesList
+                            Title="NEEDS"
+                            DotColor="{StaticResource Brush.Category.Needs}"
+                            IsListEmpty="{Binding IsNeedsEmpty}"
+                            ItemsSource="{Binding Needs}" />
 
-                            <Grid Style="{StaticResource ExpenseListHeaderGridStyle}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                        <components:ExpensesList
+                            Title="WANTS"
+                            Grid.Column="2"
+                            DotColor="{StaticResource Brush.Category.Wants}"
+                            IsListEmpty="{Binding IsWantsEmpty}"
+                            ItemsSource="{Binding Wants}" />
 
-                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
-                                <TextBlock
-                                    Grid.Column="1"
-                                    HorizontalAlignment="Right"
-                                    Style="{StaticResource ExpenseListHeaderText}"
-                                    Text="AMOUNT" />
-                            </Grid>
-
-                            <Border
-                                Grid.Row="1"
-                                Height="1"
-                                Margin="12,0,36,12"
-                                Background="{StaticResource Brush.Text.Muted}"
-                                Opacity="0.25" />
-
-                            <Grid Grid.Row="2">
-                                <StackPanel
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Visibility="{Binding IsNeedsEmpty, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Text="No entry found" />
-                                </StackPanel>
-
-                                <c:FadingScrollViewer Grid.Row="2" Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                                    <ListView ItemsSource="{Binding Needs}" Style="{StaticResource ExpenseListViewStyle}" />
-                                </c:FadingScrollViewer>
-                            </Grid>
-                        </Grid>
-
-                        <Grid Grid.Column="2" ClipToBounds="True">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <Grid Style="{StaticResource ExpenseListHeaderGridStyle}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
-                                <TextBlock
-                                    Grid.Column="1"
-                                    HorizontalAlignment="Right"
-                                    Style="{StaticResource ExpenseListHeaderText}"
-                                    Text="AMOUNT" />
-                            </Grid>
-
-                            <Border
-                                Grid.Row="1"
-                                Height="1"
-                                Margin="12,0,36,12"
-                                Background="{StaticResource Brush.Text.Muted}"
-                                Opacity="0.25" />
-
-                            <Grid Grid.Row="2">
-                                <StackPanel
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Visibility="{Binding IsWantsEmpty, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Text="No entry found" />
-                                </StackPanel>
-
-                                <c:FadingScrollViewer Grid.Row="2" Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                                    <ListView ItemsSource="{Binding Wants}" Style="{StaticResource ExpenseListViewStyle}" />
-                                </c:FadingScrollViewer>
-                            </Grid>
-                        </Grid>
-
-                        <Grid Grid.Column="4" ClipToBounds="True">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <Grid Style="{StaticResource ExpenseListHeaderGridStyle}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
-                                <TextBlock
-                                    Grid.Column="1"
-                                    HorizontalAlignment="Right"
-                                    Style="{StaticResource ExpenseListHeaderText}"
-                                    Text="AMOUNT" />
-                            </Grid>
-
-                            <Border
-                                Grid.Row="1"
-                                Height="1"
-                                Margin="12,0,36,12"
-                                Background="{StaticResource Brush.Text.Muted}"
-                                Opacity="0.25" />
-
-                            <Grid Grid.Row="2">
-                                <StackPanel
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Visibility="{Binding IsInvestEmpty, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Text="No entry found" />
-                                </StackPanel>
-                                <c:FadingScrollViewer Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                                    <ListView ItemsSource="{Binding Invest}" Style="{StaticResource ExpenseListViewStyle}" />
-                                </c:FadingScrollViewer>
-                            </Grid>
-                        </Grid>
+                        <components:ExpensesList
+                            Title="INVEST &amp; SAVINGS"
+                            Grid.Column="4"
+                            DotColor="{StaticResource Brush.Category.Investments}"
+                            IsListEmpty="{Binding IsWantsEmpty}"
+                            ItemsSource="{Binding Invest}" />
                     </Grid>
                 </Grid>
             </Grid>

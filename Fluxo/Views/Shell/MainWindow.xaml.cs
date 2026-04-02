@@ -127,28 +127,6 @@ namespace Fluxo.Views.Shell
             var iconKey = WindowState == WindowState.Maximized ? "CompressAlt" : "ExpandAlt";
             ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
         }
-
-        private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            if (sender is not DependencyObject source)
-                return;
-
-            var fadingScrollViewer = FindAncestor<Resources.CustomControls.FadingScrollViewer>(source);
-            if (fadingScrollViewer is null)
-                return;
-
-            var lineCount = Math.Max(1, Math.Abs(e.Delta) / Mouse.MouseWheelDeltaForOneLine);
-            for (var i = 0; i < lineCount; i++)
-            {
-                if (e.Delta > 0)
-                    fadingScrollViewer.LineUp();
-                else
-                    fadingScrollViewer.LineDown();
-            }
-
-            e.Handled = true;
-        }
-
         private void OnTagListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is not ListView listView)

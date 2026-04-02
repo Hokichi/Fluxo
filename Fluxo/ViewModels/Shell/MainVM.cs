@@ -15,6 +15,7 @@ namespace Fluxo.ViewModels.Shell
         [ObservableProperty] private ObservableCollection<SpendingSourceVM> _spendingSources = new();
 
         [ObservableProperty] private ObservableCollection<ExpenseTagVM> _tags = new();
+        [ObservableProperty] private ObservableCollection<ExpenseTagVM> _otherTags = new();
         [ObservableProperty] private ExpenseTagVM? _selectedTag;
 
         [ObservableProperty] private ObservableCollection<DayOfWeekVM> _daysOfWeek = new();
@@ -100,7 +101,9 @@ namespace Fluxo.ViewModels.Shell
             Wants.Filter = FilterBySelectedTag;
             Invest.Filter = FilterBySelectedTag;
 
-            Tags = new((await readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync()).Select(c => c.Tag).Take(5));
+            var allTags = (await readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync()).Select(c => c.Tag);
+            Tags = new(allTags.Take(5));
+            OtherTags = new(allTags.Skip(5));
             RefreshExpenseViews();
         }
 
