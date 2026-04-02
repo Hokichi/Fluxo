@@ -47,6 +47,11 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Expense>> GetTodayAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetByDateAsync(DateTime.Today, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Expense>> GetByKindAsync(ExpenseKind kind, CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()

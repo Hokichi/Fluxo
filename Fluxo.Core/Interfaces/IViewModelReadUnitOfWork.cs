@@ -15,7 +15,7 @@ public interface IViewModelReadUnitOfWork<TExpenseViewModel, TExpenseLogViewMode
     IExpenseReadRepository<TExpenseViewModel> Expenses { get; }
     IExpenseLogReadRepository<TExpenseLogViewModel> ExpenseLogs { get; }
     IIncomeLogReadRepository<TIncomeLogViewModel> IncomeLogs { get; }
-    IReadRepository<TExpenseTagViewModel> ExpenseTags { get; }
+    IExpenseTagReadRepository<TExpenseTagViewModel> ExpenseTags { get; }
     IReadRepository<TSavingGoalViewModel> SavingGoals { get; }
     ISpendingSourceReadRepository<TSpendingSourceViewModel> SpendingSources { get; }
 }

@@ -1,4 +1,4 @@
-﻿using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -147,6 +147,27 @@ namespace Fluxo.Views.Shell
             }
 
             e.Handled = true;
+        }
+
+        private void OnTagListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not ListView listView)
+                return;
+
+            // Find the ListViewItem that was clicked
+            if (e.OriginalSource is not DependencyObject source)
+                return;
+
+            var listViewItem = FindAncestor<ListViewItem>(source);
+            if (listViewItem is null)
+                return;
+
+            // If the clicked item is already selected, deselect it
+            if (listViewItem.IsSelected)
+            {
+                listView.SelectedItem = null;
+                e.Handled = true;
+            }
         }
 
         private static bool IsInteractiveElement(DependencyObject source)

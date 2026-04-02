@@ -38,9 +38,10 @@ public static class ServiceCollectionExtensions
                 serviceProvider.GetRequiredService<IIncomeLogRepository>(),
                 serviceProvider.GetRequiredService<Fluxo.Data.Context.FluxoDbContext>(),
                 serviceProvider.GetRequiredService<IMapper>()));
-        services.AddTransient<IReadRepository<ExpenseTagVM>>(serviceProvider =>
-            new ViewModelReadRepository<ExpenseTag, ExpenseTagVM>(
-                serviceProvider.GetRequiredService<IRepository<ExpenseTag>>(),
+        services.AddTransient<IExpenseTagReadRepository<ExpenseTagVM>>(serviceProvider =>
+            new ExpenseTagViewModelReadRepository<ExpenseTagVM>(
+                serviceProvider.GetRequiredService<IExpenseTagRepository>(),
+                serviceProvider.GetRequiredService<Fluxo.Data.Context.FluxoDbContext>(),
                 serviceProvider.GetRequiredService<IMapper>()));
         services.AddTransient<IReadRepository<SavingGoalVM>>(serviceProvider =>
             new ViewModelReadRepository<SavingGoal, SavingGoalVM>(
