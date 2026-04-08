@@ -14,5 +14,6 @@ public sealed class EntityViewModelProfile : Profile
         CreateMap<ExpenseTag, ExpenseTagVM>().ReverseMap();
         CreateMap<SavingGoal, SavingGoalVM>().ReverseMap();
         CreateMap<SpendingSource, SpendingSourceVM>().ReverseMap();
+        CreateMap<UserSettings, UserSettingsVM>().ReverseMap();
     }
 }

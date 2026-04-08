@@ -13,5 +13,6 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IExpenseTagRepository ExpenseTags { get; }
     ISavingGoalRepository SavingGoals { get; }
     ISpendingSourceRepository SpendingSources { get; }
+    IUserSettingsRepository UserSettings { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

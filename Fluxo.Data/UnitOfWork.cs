@@ -16,6 +16,7 @@ public sealed class UnitOfWork(FluxoDbContext dbContext) : IUnitOfWork
     private IExpenseTagRepository? _expenseTags;
     private ISavingGoalRepository? _savingGoals;
     private ISpendingSourceRepository? _spendingSources;
+    private IUserSettingsRepository? _userSettings;
 
     public IExpenseRepository Expenses => _expenses ??= new ExpenseRepository(_dbContext);
     public IExpenseLogRepository ExpenseLogs => _expenseLogs ??= new ExpenseLogRepository(_dbContext);
@@ -23,6 +24,7 @@ public sealed class UnitOfWork(FluxoDbContext dbContext) : IUnitOfWork
     public IExpenseTagRepository ExpenseTags => _expenseTags ??= new ExpenseTagRepository(_dbContext);
     public ISavingGoalRepository SavingGoals => _savingGoals ??= new SavingGoalRepository(_dbContext);
     public ISpendingSourceRepository SpendingSources => _spendingSources ??= new SpendingSourceRepository(_dbContext);
+    public IUserSettingsRepository UserSettings => _userSettings ??= new UserSettingsRepository(_dbContext);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

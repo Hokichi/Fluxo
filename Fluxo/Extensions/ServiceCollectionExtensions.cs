@@ -94,6 +94,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ExpenseTagVM>();
         services.AddTransient<SavingGoalVM>();
         services.AddTransient<SpendingSourceVM>();
+        services.AddTransient<UserSettingsVM>();
 
         services.AddSingleton<MainWindow>();
 

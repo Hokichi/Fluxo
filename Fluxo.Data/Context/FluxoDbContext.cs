@@ -11,6 +11,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<ExpenseTag> ExpenseTags => Set<ExpenseTag>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<SpendingSource> SpendingSources => Set<SpendingSource>();
+    public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,6 +21,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureExpenseTag(modelBuilder.Entity<ExpenseTag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
         ConfigureSpendingSource(modelBuilder.Entity<SpendingSource>());
+        ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
     }
 
     private static void ConfigureExpense(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Expense> entity)
@@ -110,5 +112,14 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(source => source.Balance).HasColumnType("TEXT");
         entity.Property(source => source.ShowOnUI);
         entity.Property(source => source.InterestRate).HasColumnType("TEXT");
+    }
+
+    private static void ConfigureUserSettings(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<UserSettings> entity)
+    {
+        entity.ToTable("UserSettings");
+        entity.HasKey(settings => settings.Name);
+
+        entity.Property(settings => settings.Name).IsRequired();
+        entity.Property(settings => settings.Value).IsRequired();
     }
 }

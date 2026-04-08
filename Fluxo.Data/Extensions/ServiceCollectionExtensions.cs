@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExpenseTagRepository, ExpenseTagRepository>();
         services.AddTransient<ISavingGoalRepository, SavingGoalRepository>();
         services.AddTransient<ISpendingSourceRepository, SpendingSourceRepository>();
+        services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
 
         services.AddTransient<IRepository<Expense>, ExpenseRepository>();
         services.AddTransient<IRepository<ExpenseLog>, ExpenseLogRepository>();
