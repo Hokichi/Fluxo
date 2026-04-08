@@ -25,15 +25,33 @@ namespace Fluxo.ViewModels.Shell
         [ObservableProperty] private bool _isWantsEmpty;
         [ObservableProperty] private bool _isInvestEmpty;
 
+        [ObservableProperty] private decimal _needsSpent;
+        [ObservableProperty] private decimal _wantsSpent;
+        [ObservableProperty] private decimal _investSpent;
+
+        [ObservableProperty] private decimal _needsAvailable;
+        [ObservableProperty] private decimal _wantsAvailable;
+        [ObservableProperty] private decimal _investAvailable;
+
+        [ObservableProperty] private int _needsPercentage;
+        [ObservableProperty] private int _wantsPercentage;
+        [ObservableProperty] private int _investPercentage;
+
+        [ObservableProperty] private int _dailyAllowance;
+
+        [ObservableProperty] private decimal _totalSpent;
+
         [ObservableProperty] private bool _hasNotifications;
 
         private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
         private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
         private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
 
-        public ICollectionView Needs { get; private set; }
-        public ICollectionView Wants { get; private set; }
-        public ICollectionView Invest { get; private set; }
+        [ObservableProperty] private ICollectionView _needs;
+        [ObservableProperty] private ICollectionView _wants;
+        [ObservableProperty] private ICollectionView _invest;
+
+        private decimal _totalIncomeAmount;
 
         partial void OnSelectedTagChanged(ExpenseTagVM? value)
         {
@@ -70,6 +88,12 @@ namespace Fluxo.ViewModels.Shell
                         MoneyOut = (await readUnitOfWork.ExpenseLogs.GetBySpendingSourceIdAsync(source.Id)).Sum(log => log.Amount)
                     }));
 
+            _totalIncomeAmount = spendingSources.Sum(c => c.Balance);
+
+            NeedsAvailable = _totalIncomeAmount * 50 / 100;
+            WantsAvailable = _totalIncomeAmount * 30 / 100;
+            InvestAvailable = _totalIncomeAmount * 20 / 100;
+
             var totalsBySourceId = trackedSourceTotals.ToDictionary(
                 total => total.SourceName,
                 total => (total.MoneyIn, total.MoneyOut));
@@ -92,6 +116,20 @@ namespace Fluxo.ViewModels.Shell
             Needs = CollectionViewSource.GetDefaultView(_needsSource);
             Wants = CollectionViewSource.GetDefaultView(_wantsSource);
             Invest = CollectionViewSource.GetDefaultView(_investSource);
+
+            NeedsSpent = _needsSource.Sum(c => c.Amount);
+            WantsSpent = _wantsSource.Sum(c => c.Amount);
+            InvestSpent = _investSource.Sum(c => c.Amount);
+
+            NeedsPercentage = (int)(NeedsSpent / NeedsAvailable * 100);
+            WantsPercentage = (int)(WantsSpent / WantsAvailable * 100);
+            InvestPercentage = (int)(InvestSpent / InvestAvailable * 100);
+
+            var daysLeft = DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month) - DateTime.Today.Day;
+
+            DailyAllowance = (int)(_totalIncomeAmount - TotalSpent) / daysLeft;
+
+            TotalSpent = NeedsSpent + WantsSpent + InvestSpent;
 
             OnPropertyChanged(nameof(Needs));
             OnPropertyChanged(nameof(Wants));

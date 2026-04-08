@@ -373,6 +373,8 @@
 
     <Border
         Background="{StaticResource Brush.Background.Main}"
+        BorderBrush="{StaticResource Brush.Border.Subtle}"
+        BorderThickness="1"
         CornerRadius="16"
         MouseMove="MainWindow_OnMouseMove">
         <Grid Margin="0,16,0,0">
@@ -467,19 +469,6 @@
                         Style="{StaticResource HeaderButtonStyle}" />
 
                     <c:BalloonButton
-                        ButtonIcon="{StaticResource RegularBell}"
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                        HoveredBackground="{StaticResource Brush.Primary.Hover}"
-                        IconSize="12"
-                        Style="{StaticResource HeaderButtonStyle}" />
-
-                    <Border
-                        Width="2"
-                        Height="24"
-                        Margin="8,0,0,0"
-                        Background="{StaticResource Brush.Text.Muted}" />
-
-                    <c:BalloonButton
                         ButtonIcon="{StaticResource Minus}"
                         Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
@@ -505,212 +494,325 @@
             <Grid
                 x:Name="MainContentGrid"
                 Grid.Row="1"
-                Margin="80,48">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="240" />
-                </Grid.ColumnDefinitions>
+                Margin="160,48">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                <TextBlock Style="{StaticResource HeaderText}" Text="Accounts &amp; Income" />
 
-                    <TextBlock Style="{StaticResource HeaderText}" Text="Accounts &amp; Income" />
-
-                    <c:FadingScrollViewer
-                        Grid.Row="1"
-                        Margin="0,20,0,0"
-                        HorizontalAlignment="Stretch"
-                        CanContentScroll="False"
-                        HorizontalScrollBarVisibility="Auto"
-                        VerticalScrollBarVisibility="Disabled">
-                        <StackPanel Orientation="Horizontal">
-                            <ListView
-                                HorizontalAlignment="Left"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                BorderThickness="0"
-                                ItemsSource="{Binding SpendingSources}"
-                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                                <ListView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" />
-                                    </ItemsPanelTemplate>
-                                </ListView.ItemsPanel>
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="Margin" Value="0,0,8,0" />
-                                        <Setter Property="Padding" Value="0" />
-                                        <Setter Property="Background" Value="Transparent" />
-                                        <Setter Property="BorderThickness" Value="0" />
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListViewItem">
-                                                    <ContentPresenter />
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ShowOnUI}" Value="False">
-                                                <Setter Property="Margin" Value="0" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <components:IncomeSource />
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-
-                            <Grid Width="80" Height="100">
-                                <Rectangle
-                                    RadiusX="16"
-                                    RadiusY="16"
-                                    Stroke="{StaticResource Brush.Text.Muted}"
-                                    StrokeDashArray="5"
-                                    StrokeThickness="1" />
-
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <icons:PackIconEntypo
-                                        Width="24"
-                                        Height="24"
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Center"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Kind="CircleWithPlus" />
-
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Text="Add" />
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </c:FadingScrollViewer>
-
-                    <StackPanel Grid.Row="3" Orientation="Horizontal">
-                        <!--  "All" tag button  -->
-                        <Grid Margin="16,0,0,0" VerticalAlignment="Center">
-                            <!--  Unselected state (outlined) - visible when a tag IS selected  -->
-                            <Border
-                                x:Name="AllTagUnselected"
-                                Height="24"
-                                Padding="12,0"
-                                Background="{StaticResource Brush.Background.Surface}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Cursor="Hand">
-                                <Border.InputBindings>
-                                    <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
-                                </Border.InputBindings>
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Bold}"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="All" />
-                            </Border>
-
-                            <!--  Selected state (filled) - visible when NO tag is selected  -->
-                            <Border
-                                x:Name="AllTagSelected"
-                                Height="24"
-                                Padding="12,0"
-                                Background="{StaticResource Brush.Mint}"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Cursor="Hand">
-                                <Border.InputBindings>
-                                    <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
-                                </Border.InputBindings>
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Bold}"
-                                    Foreground="{StaticResource Brush.Background.Surface}"
-                                    Text="All" />
-                            </Border>
-                        </Grid>
-
+                <c:FadingScrollViewer
+                    Grid.Row="1"
+                    Margin="0,20,0,0"
+                    HorizontalAlignment="Stretch"
+                    CanContentScroll="False"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal">
                         <ListView
-                            Margin="0,12,0,0"
-                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left"
                             Background="Transparent"
+                            BorderBrush="Transparent"
                             BorderThickness="0"
-                            ItemContainerStyle="{StaticResource ListViewItemStyle}"
-                            ItemTemplate="{StaticResource Tags}"
-                            ItemsSource="{Binding Tags}"
-                            PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
+                            ItemsSource="{Binding SpendingSources}"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            SelectedItem="{Binding SelectedTag}">
+                            ScrollViewer.VerticalScrollBarVisibility="Disabled">
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal" />
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="Margin" Value="0,0,8,0" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListViewItem">
+                                                <ContentPresenter />
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowOnUI}" Value="False">
+                                            <Setter Property="Margin" Value="0" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <components:IncomeSource />
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
                         </ListView>
+
+                        <Grid Width="80" Height="100">
+                            <Rectangle
+                                RadiusX="16"
+                                RadiusY="16"
+                                Stroke="{StaticResource Brush.Text.Muted}"
+                                StrokeDashArray="5"
+                                StrokeThickness="1" />
+
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <icons:PackIconEntypo
+                                    Width="24"
+                                    Height="24"
+                                    Margin="0,0,0,8"
+                                    HorizontalAlignment="Center"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Kind="CircleWithPlus" />
+
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="Add" />
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
+                </c:FadingScrollViewer>
 
-                    <Grid Grid.Row="4" Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
+                <Grid Grid.Row="2" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="300" />
+                    </Grid.ColumnDefinitions>
 
-                        <components:ExpensesList
-                            Title="NEEDS"
-                            DotColor="{StaticResource Brush.Category.Needs}"
-                            IsListEmpty="{Binding IsNeedsEmpty}"
-                            ItemsSource="{Binding Needs}" />
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                        <components:ExpensesList
-                            Title="WANTS"
-                            Grid.Column="2"
-                            DotColor="{StaticResource Brush.Category.Wants}"
-                            IsListEmpty="{Binding IsWantsEmpty}"
-                            ItemsSource="{Binding Wants}" />
+                        <Border
+                            Height="120"
+                            Margin="0,16"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="16">
+                            <Grid Margin="80,0" VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock
+                                        FontFamily="{StaticResource Light}"
+                                        Foreground="{StaticResource Brush.Text.Muted}"
+                                        Text="SPENT TODAY" />
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="24"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding TotalSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock
+                                        FontFamily="{StaticResource Light}"
+                                        Foreground="{StaticResource Brush.Text.Muted}"
+                                        Text="DAILY ALLOWANCE" />
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="24"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding DailyAllowance, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                </StackPanel>
 
-                        <components:ExpensesList
-                            Title="INVEST &amp; SAVINGS"
-                            Grid.Column="4"
-                            DotColor="{StaticResource Brush.Category.Investments}"
-                            IsListEmpty="{Binding IsWantsEmpty}"
-                            ItemsSource="{Binding Invest}" />
+                                <Grid Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock>
+                                            <Run
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="24"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding NeedsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                        </TextBlock>
+                                        <TextBlock
+                                            Margin="0,8,0,0"
+                                            FontFamily="{StaticResource Light}"
+                                            Foreground="{StaticResource Brush.Text.Muted}">
+                                            <Run Text="NEEDS" />
+                                            <Run Text="|" />
+                                            <Run Text="{Binding NeedsPercentage, StringFormat={}{0}%}" />
+                                            <Run Text="SPENT" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock>
+                                            <Run
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="24"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding WantsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                        </TextBlock>
+                                        <TextBlock
+                                            Margin="0,8,0,0"
+                                            FontFamily="{StaticResource Light}"
+                                            Foreground="{StaticResource Brush.Text.Muted}">
+                                            <Run Text="WANTS" />
+                                            <Run Text="|" />
+                                            <Run Text="{Binding WantsPercentage, StringFormat={}{0}%}" />
+                                            <Run Text="SPENT" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock>
+                                            <Run
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="24"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding InvestAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                        </TextBlock>
+                                        <TextBlock
+                                            Margin="0,9,0,0"
+                                            FontFamily="{StaticResource Light}"
+                                            Foreground="{StaticResource Brush.Text.Muted}">
+                                            <Run Text="INVEST" />
+                                            <Run Text="|" />
+                                            <Run Text="{Binding InvestPercentage, StringFormat={}{0}%}" />
+                                            <Run Text="SPENT" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel
+                            Grid.Row="1"
+                            Margin="0,0,0,16"
+                            Orientation="Horizontal">
+                            <!--  "All" tag button  -->
+                            <Grid Margin="16,0,0,0" VerticalAlignment="Center">
+                                <!--  Unselected state (outlined) - visible when a tag IS selected  -->
+                                <Border
+                                    x:Name="AllTagUnselected"
+                                    Height="24"
+                                    Padding="12,0"
+                                    Background="{StaticResource Brush.Background.Surface}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="All" />
+                                </Border>
+
+                                <!--  Selected state (filled) - visible when NO tag is selected  -->
+                                <Border
+                                    x:Name="AllTagSelected"
+                                    Height="24"
+                                    Padding="12,0"
+                                    Background="{StaticResource Brush.Mint}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{StaticResource Brush.Background.Surface}"
+                                        Text="All" />
+                                </Border>
+                            </Grid>
+
+                            <ListView
+                                Margin="0,12,0,0"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource ListViewItemStyle}"
+                                ItemTemplate="{StaticResource Tags}"
+                                ItemsSource="{Binding Tags}"
+                                PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                SelectedItem="{Binding SelectedTag}">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                            </ListView>
+                        </StackPanel>
+
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <components:ExpensesList
+                                Title="NEEDS"
+                                DotColor="{StaticResource Brush.Category.Needs}"
+                                IsListEmpty="{Binding IsNeedsEmpty}"
+                                ItemsSource="{Binding Needs}"
+                                SpentAmount="{Binding NeedsSpent}" />
+
+                            <components:ExpensesList
+                                Title="WANTS"
+                                Grid.Column="2"
+                                DotColor="{StaticResource Brush.Category.Wants}"
+                                IsListEmpty="{Binding IsWantsEmpty}"
+                                ItemsSource="{Binding Wants}"
+                                SpentAmount="{Binding WantsSpent}" />
+
+                            <components:ExpensesList
+                                Title="INVEST &amp; SAVINGS"
+                                Grid.Column="4"
+                                DotColor="{StaticResource Brush.Category.Investments}"
+                                IsListEmpty="{Binding IsWantsEmpty}"
+                                ItemsSource="{Binding Invest}"
+                                SpentAmount="{Binding InvestSpent}" />
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>
