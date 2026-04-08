@@ -343,6 +343,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
@@ -406,6 +407,21 @@
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="NoWrap" />
                         </StackPanel>
+
+                        <c:BalloonButton
+                            Grid.Column="2"
+                            Width="28"
+                            Height="28"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            ButtonIcon="{StaticResource Close}"
+                            Command="{Binding DataContext.DeleteExpenseLogCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            DefaultBackground="{StaticResource Brush.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.Danger}"
+                            IconSize="10"
+                            ToolTip="Delete expense log"
+                            Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </Grid>
                 </Border>
             </Grid>

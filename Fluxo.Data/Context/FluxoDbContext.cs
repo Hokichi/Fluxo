@@ -51,6 +51,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.HasKey(log => log.Id);
 
         entity.Property(log => log.Amount).HasColumnType("TEXT");
+        entity.Property(log => log.IsForDeletion);
         entity.Property(log => log.Notes).IsRequired();
 
         entity.HasOne(log => log.Expense)

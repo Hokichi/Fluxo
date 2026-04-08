@@ -1,4 +1,5 @@
 using Fluxo.ViewModels.Shell;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,6 +18,7 @@ namespace Fluxo.Views.Shell
     {
         private readonly MainVM _mainVM;
         private const int FadeDuration = 180; // ms
+        private bool _hasCompletedPendingDeletionCleanup;
 
         public MainWindow(MainVM mainVM)
         {
@@ -32,6 +34,7 @@ namespace Fluxo.Views.Shell
                 await _mainVM.Initialize();
             };
 
+            Closing += OnWindowClosing;
             StateChanged += OnWindowStateChanged;
         }
 
@@ -83,6 +86,33 @@ namespace Fluxo.Views.Shell
         private void OnCloseWindow(object sender, ExecutedRoutedEventArgs e)
         {
             FadeOut(() => SystemCommands.CloseWindow(this));
+        }
+
+        private async void OnWindowClosing(object? sender, CancelEventArgs e)
+        {
+            if (_hasCompletedPendingDeletionCleanup)
+                return;
+
+            e.Cancel = true;
+
+            try
+            {
+                await ((App)Application.Current).DeleteMarkedExpenseLogsAsync(_mainVM);
+                _hasCompletedPendingDeletionCleanup = true;
+                Close();
+            }
+            catch
+            {
+                BeginAnimation(OpacityProperty, null);
+                Opacity = 1;
+
+                MessageBox.Show(
+                    this,
+                    "Fluxo couldn't finish deleting the pending expense logs before closing.",
+                    "Fluxo",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         private void OnMinimizeWindow(object sender, ExecutedRoutedEventArgs e)

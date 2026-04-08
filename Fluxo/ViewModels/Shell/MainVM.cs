@@ -25,6 +25,7 @@ namespace Fluxo.ViewModels.Shell
         private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
         private readonly ObservableCollection<SavingGoalVM> _savingGoals = [];
         private readonly ObservableCollection<NotificationItemVM> _notifications = [];
+        private readonly HashSet<int> _expenseLogIdsMarkedForDeletion = [];
         private readonly List<ExpenseVM> _expenses = [];
 
         private decimal _totalIncomeAmount;
@@ -143,6 +144,22 @@ namespace Fluxo.ViewModels.Shell
             _notifications.Remove(notification);
         }
 
+        [RelayCommand]
+        private void DeleteExpenseLog(ExpenseLogVM? expenseLog)
+        {
+            if (expenseLog is null)
+                return;
+
+            RemoveExpenseLogFromCollection(_needsSource, expenseLog);
+            RemoveExpenseLogFromCollection(_wantsSource, expenseLog);
+            RemoveExpenseLogFromCollection(_investSource, expenseLog);
+        }
+
+        internal IReadOnlyCollection<int> GetExpenseLogIdsMarkedForDeletion()
+        {
+            return _expenseLogIdsMarkedForDeletion.ToArray();
+        }
+
         public async Task Initialize()
         {
             BuildDaysOfWeek();
@@ -197,11 +214,15 @@ namespace Fluxo.ViewModels.Shell
             IEnumerable<IncomeLogVM> incomeLogs,
             IEnumerable<ExpenseLogVM> expenseLogs)
         {
+            var activeExpenseLogs = expenseLogs
+                .Where(log => !log.IsForDeletion)
+                .ToList();
+
             var moneyInBySourceId = incomeLogs
                 .GroupBy(log => log.SpendingSource.Id)
                 .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
 
-            var moneyOutBySourceId = expenseLogs
+            var moneyOutBySourceId = activeExpenseLogs
                 .GroupBy(log => log.SpendingSource.Id)
                 .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
 
@@ -215,9 +236,13 @@ namespace Fluxo.ViewModels.Shell
 
         private void LoadExpenseLogs(IEnumerable<ExpenseLogVM> expenseLogs)
         {
-            ReplaceExpenseLogs(_needsSource, expenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs));
-            ReplaceExpenseLogs(_wantsSource, expenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Wants));
-            ReplaceExpenseLogs(_investSource, expenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings));
+            var activeExpenseLogs = expenseLogs
+                .Where(log => !log.IsForDeletion)
+                .ToList();
+
+            ReplaceExpenseLogs(_needsSource, activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs));
+            ReplaceExpenseLogs(_wantsSource, activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Wants));
+            ReplaceExpenseLogs(_investSource, activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings));
         }
 
         private void LoadSavingGoals(IEnumerable<SavingGoalVM> savingGoals)
@@ -658,14 +683,27 @@ namespace Fluxo.ViewModels.Shell
 
         private void OnExpenseLogCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.OldItems is not null)
+            var removedExpenseLogs = e.OldItems?.OfType<ExpenseLogVM>().ToList() ?? [];
+            var addedExpenseLogs = e.NewItems?.OfType<ExpenseLogVM>().ToList() ?? [];
+
+            if (removedExpenseLogs.Count > 0)
             {
-                DetachExpenseLogHandlers(e.OldItems.OfType<ExpenseLogVM>());
+                DetachExpenseLogHandlers(removedExpenseLogs);
+
+                if (_isInitialized)
+                {
+                    MarkExpenseLogsForDeletion(removedExpenseLogs);
+                }
             }
 
-            if (e.NewItems is not null)
+            if (addedExpenseLogs.Count > 0)
             {
-                AttachExpenseLogHandlers(e.NewItems.OfType<ExpenseLogVM>());
+                AttachExpenseLogHandlers(addedExpenseLogs);
+
+                if (_isInitialized)
+                {
+                    RestoreExpenseLogsFromDeletion(addedExpenseLogs);
+                }
             }
 
             if (_isInitialized)
@@ -775,6 +813,43 @@ namespace Fluxo.ViewModels.Shell
 
             RefreshDashboardMetrics();
             RefreshNotifications();
+        }
+
+        private void MarkExpenseLogsForDeletion(IEnumerable<ExpenseLogVM> expenseLogs)
+        {
+            foreach (var expenseLog in expenseLogs)
+            {
+                expenseLog.IsForDeletion = true;
+
+                if (expenseLog.Id > 0)
+                {
+                    _expenseLogIdsMarkedForDeletion.Add(expenseLog.Id);
+                }
+            }
+        }
+
+        private void RestoreExpenseLogsFromDeletion(IEnumerable<ExpenseLogVM> expenseLogs)
+        {
+            foreach (var expenseLog in expenseLogs.Where(log => log.IsForDeletion))
+            {
+                expenseLog.IsForDeletion = false;
+
+                if (expenseLog.Id > 0)
+                {
+                    _expenseLogIdsMarkedForDeletion.Remove(expenseLog.Id);
+                }
+            }
+        }
+
+        private static void RemoveExpenseLogFromCollection(ObservableCollection<ExpenseLogVM> expenseLogs, ExpenseLogVM expenseLog)
+        {
+            var existingExpenseLog = expenseLogs.FirstOrDefault(log =>
+                ReferenceEquals(log, expenseLog) || (expenseLog.Id > 0 && log.Id == expenseLog.Id));
+
+            if (existingExpenseLog is not null)
+            {
+                expenseLogs.Remove(existingExpenseLog);
+            }
         }
 
         private static void ReplaceExpenseLogs(ObservableCollection<ExpenseLogVM> target, IEnumerable<ExpenseLogVM> items)

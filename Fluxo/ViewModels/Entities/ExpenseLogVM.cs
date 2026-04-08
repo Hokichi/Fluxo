@@ -10,4 +10,5 @@ public partial class ExpenseLogVM : ObservableObject
     [ObservableProperty] private decimal _amount;
     [ObservableProperty] private DateTime _deductedOn;
     [ObservableProperty] private string _notes = string.Empty;
+    [ObservableProperty] private bool _isForDeletion;
 }
