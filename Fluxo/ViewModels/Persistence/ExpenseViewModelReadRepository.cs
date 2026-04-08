@@ -25,15 +25,21 @@ public sealed class ExpenseViewModelReadRepository<TViewModel>(IExpenseRepositor
         return entity is null ? null : MapWithId(entity);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByDayAsync(DateTime day, CancellationToken cancellationToken = default)
     {
-        var entities = await _repository.GetByDateAsync(date, cancellationToken);
+        var entities = await _repository.GetByDayAsync(day, cancellationToken);
         return MapListWithIds(entities);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetTodayAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek, CancellationToken cancellationToken = default)
     {
-        var entities = await _repository.GetTodayAsync(cancellationToken);
+        var entities = await _repository.GetByWeekAsync(startOfWeek, endOfWeek, cancellationToken);
+        return MapListWithIds(entities);
+    }
+
+    public async Task<IReadOnlyList<TViewModel>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
+    {
+        var entities = await _repository.GetByMonthAsync(month, cancellationToken);
         return MapListWithIds(entities);
     }
 
@@ -52,18 +58,6 @@ public sealed class ExpenseViewModelReadRepository<TViewModel>(IExpenseRepositor
     public async Task<IReadOnlyList<TViewModel>> GetByTagIdAsync(int tagId, CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetByTagIdAsync(tagId, cancellationToken);
-        return MapListWithIds(entities);
-    }
-
-    public async Task<IReadOnlyList<TViewModel>> GetTodayByCategoryAsync(ExpenseCategory category, CancellationToken cancellationToken = default)
-    {
-        var entities = await _repository.GetTodayByCategoryAsync(category, cancellationToken);
-        return MapListWithIds(entities);
-    }
-
-    public async Task<IReadOnlyList<TViewModel>> GetTodayByTagIdAsync(int tagId, CancellationToken cancellationToken = default)
-    {
-        var entities = await _repository.GetTodayByTagIdAsync(tagId, cancellationToken);
         return MapListWithIds(entities);
     }
 

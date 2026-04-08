@@ -16,18 +16,6 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
             .Include(expense => expense.SpendingSource);
     }
 
-    private static (DateTime Start, DateTime End) GetTodayRange()
-    {
-        var start = DateTime.Today;
-        return (start, start.AddDays(1));
-    }
-
-    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
-    {
-        var start = date.Date;
-        return (start, start.AddDays(1));
-    }
-
     public override async Task<IReadOnlyList<Expense>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations().ToListAsync(cancellationToken);
@@ -39,17 +27,29 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
             .FirstOrDefaultAsync(expense => expense.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Expense>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Expense>> GetByDayAsync(DateTime day, CancellationToken cancellationToken = default)
     {
-        var (start, end) = GetDayRange(date);
+        var start = day.Date;
+        var end = start.AddDays(1);
         return await QueryWithNavigations()
             .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Expense>> GetTodayAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Expense>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek, CancellationToken cancellationToken = default)
     {
-        return await GetByDateAsync(DateTime.Today, cancellationToken);
+        var start = startOfWeek.Date;
+        var end = endOfWeek.Date.AddDays(1);
+        return await QueryWithNavigations()
+            .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Expense>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
+    {
+        return await QueryWithNavigations()
+            .Where(expense => expense.RecurringDate.Month == month)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Expense>> GetByKindAsync(ExpenseKind kind, CancellationToken cancellationToken = default)
@@ -70,24 +70,6 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
     {
         return await QueryWithNavigations()
             .Where(expense => EF.Property<int>(expense, "ExpenseTagId") == tagId)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<Expense>> GetTodayByCategoryAsync(ExpenseCategory category, CancellationToken cancellationToken = default)
-    {
-        var (start, end) = GetTodayRange();
-        return await QueryWithNavigations()
-            .Where(expense => expense.ExpenseCategory == category)
-            .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<Expense>> GetTodayByTagIdAsync(int tagId, CancellationToken cancellationToken = default)
-    {
-        var (start, end) = GetTodayRange();
-        return await QueryWithNavigations()
-            .Where(expense => EF.Property<int>(expense, "ExpenseTagId") == tagId)
-            .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
             .ToListAsync(cancellationToken);
     }
 }

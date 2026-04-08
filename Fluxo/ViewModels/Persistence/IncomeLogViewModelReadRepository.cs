@@ -25,21 +25,27 @@ public sealed class IncomeLogViewModelReadRepository<TViewModel>(IIncomeLogRepos
         return entity is null ? null : MapWithId(entity);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByDayAsync(DateTime day, CancellationToken cancellationToken = default)
     {
-        var entities = await _repository.GetByDateAsync(date, cancellationToken);
+        var entities = await _repository.GetByDayAsync(day, cancellationToken);
+        return MapListWithIds(entities);
+    }
+
+    public async Task<IReadOnlyList<TViewModel>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek, CancellationToken cancellationToken = default)
+    {
+        var entities = await _repository.GetByWeekAsync(startOfWeek, endOfWeek, cancellationToken);
+        return MapListWithIds(entities);
+    }
+
+    public async Task<IReadOnlyList<TViewModel>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
+    {
+        var entities = await _repository.GetByMonthAsync(month, cancellationToken);
         return MapListWithIds(entities);
     }
 
     public async Task<IReadOnlyList<TViewModel>> GetBySpendingSourceIdAsync(int spendingSourceId, CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetBySpendingSourceIdAsync(spendingSourceId, cancellationToken);
-        return MapListWithIds(entities);
-    }
-
-    public async Task<IReadOnlyList<TViewModel>> GetTodayBySpendingSourceIdAsync(int spendingSourceId, CancellationToken cancellationToken = default)
-    {
-        var entities = await _repository.GetTodayBySpendingSourceIdAsync(spendingSourceId, cancellationToken);
         return MapListWithIds(entities);
     }
 

@@ -13,18 +13,6 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
         return DbSet.Include(log => log.SpendingSource);
     }
 
-    private static (DateTime Start, DateTime End) GetTodayRange()
-    {
-        var start = DateTime.Today;
-        return (start, start.AddDays(1));
-    }
-
-    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
-    {
-        var start = date.Date;
-        return (start, start.AddDays(1));
-    }
-
     public override async Task<IReadOnlyList<IncomeLog>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations().ToListAsync(cancellationToken);
@@ -36,11 +24,28 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
             .FirstOrDefaultAsync(log => log.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<IncomeLog>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<IncomeLog>> GetByDayAsync(DateTime day, CancellationToken cancellationToken = default)
     {
-        var (start, end) = GetDayRange(date);
+        var start = day.Date;
+        var end = start.AddDays(1);
         return await QueryWithNavigations()
             .Where(log => log.AddedOn >= start && log.AddedOn < end)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<IncomeLog>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek, CancellationToken cancellationToken = default)
+    {
+        var start = startOfWeek.Date;
+        var end = endOfWeek.Date.AddDays(1);
+        return await QueryWithNavigations()
+            .Where(log => log.AddedOn >= start && log.AddedOn < end)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<IncomeLog>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
+    {
+        return await QueryWithNavigations()
+            .Where(log => log.AddedOn.Month == month)
             .ToListAsync(cancellationToken);
     }
 
@@ -48,15 +53,6 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
     {
         return await QueryWithNavigations()
             .Where(log => EF.Property<int>(log, "SpendingSourceId") == spendingSourceId)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<IncomeLog>> GetTodayBySpendingSourceIdAsync(int spendingSourceId, CancellationToken cancellationToken = default)
-    {
-        var (start, end) = GetTodayRange();
-        return await QueryWithNavigations()
-            .Where(log => EF.Property<int>(log, "SpendingSourceId") == spendingSourceId)
-            .Where(log => log.AddedOn >= start && log.AddedOn < end)
             .ToListAsync(cancellationToken);
     }
 }
