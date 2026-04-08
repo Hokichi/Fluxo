@@ -222,6 +222,53 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="TagToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="12">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{TemplateBinding FontFamily}"
+                                FontSize="{TemplateBinding FontSize}"
+                                Foreground="{TemplateBinding Foreground}"
+                                Text="{TemplateBinding Content}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                    <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                </Trigger>
+                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                    <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <DataTemplate x:Key="DashboardNotificationTemplate">
             <Border
                 Margin="0,0,0,10"
@@ -533,6 +580,71 @@
                 <Border
                     Height="24"
                     Margin="16,0,0,0"
+                    Padding="12,0"
+                    Background="{Binding HexCode}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse
+                            Width="8"
+                            Height="8"
+                            Fill="{StaticResource Brush.Background.Surface}" />
+
+                        <TextBlock
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Background.Surface}"
+                            Text="{Binding Name}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="PopupTagListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="PopupTags">
+            <Grid>
+                <Border
+                    Height="24"
+                    Padding="12,0"
+                    Background="{StaticResource Brush.Background.Surface}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse
+                            Width="8"
+                            Height="8"
+                            Fill="{Binding HexCode}" />
+
+                        <TextBlock
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Name}" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Height="24"
                     Padding="12,0"
                     Background="{Binding HexCode}"
                     BorderThickness="1"
@@ -996,13 +1108,77 @@
                                 ItemsSource="{Binding Tags}"
                                 PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                SelectedItem="{Binding SelectedTag}">
+                                SelectedItem="{Binding SelectedVisibleTag}">
                                 <ListView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal" />
                                     </ItemsPanelTemplate>
                                 </ListView.ItemsPanel>
                             </ListView>
+
+                            <ToggleButton
+                                x:Name="MoreTagsButton"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                Content="More"
+                                Style="{StaticResource TagToggleButtonStyle}"
+                                Tag="{Binding IsSelectedTagInOtherTags}"
+                                Visibility="{Binding HasOtherTags, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <Popup
+                                AllowsTransparency="True"
+                                DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                                IsOpen="{Binding IsChecked, ElementName=MoreTagsButton, Mode=TwoWay}"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding ElementName=MoreTagsButton}"
+                                PopupAnimation="Fade"
+                                StaysOpen="False"
+                                VerticalOffset="8">
+                                <Border
+                                    Padding="12"
+                                    Background="{StaticResource Brush.Background.Elevated}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="16">
+                                    <Grid MaxWidth="320">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="8" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="12"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="More tags" />
+
+                                        <ScrollViewer
+                                            Grid.Row="2"
+                                            MaxHeight="240"
+                                            HorizontalScrollBarVisibility="Disabled"
+                                            VerticalScrollBarVisibility="Auto">
+                                            <ListView
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                ItemContainerStyle="{StaticResource PopupTagListViewItemStyle}"
+                                                ItemTemplate="{StaticResource PopupTags}"
+                                                ItemsSource="{Binding OtherTags}"
+                                                PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
+                                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                                SelectedItem="{Binding SelectedOtherTag}"
+                                                SelectionChanged="OnMoreTagsSelectionChanged">
+                                                <ListView.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ListView.ItemsPanel>
+                                            </ListView>
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Border>
+                            </Popup>
                         </StackPanel>
 
                         <Grid Grid.Row="2">

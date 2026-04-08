@@ -45,6 +45,8 @@ namespace Fluxo.ViewModels.Shell
         [ObservableProperty] private ObservableCollection<ExpenseTagVM> _tags = [];
         [ObservableProperty] private ObservableCollection<ExpenseTagVM> _otherTags = [];
         [ObservableProperty] private ExpenseTagVM? _selectedTag;
+        [ObservableProperty] private ExpenseTagVM? _selectedVisibleTag;
+        [ObservableProperty] private ExpenseTagVM? _selectedOtherTag;
 
         [ObservableProperty] private ObservableCollection<DayOfWeekVM> _daysOfWeek = [];
         [ObservableProperty] private DayOfWeekVM _selectedDay = new();
@@ -79,6 +81,8 @@ namespace Fluxo.ViewModels.Shell
         [ObservableProperty] private ICollectionView _wants = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
         [ObservableProperty] private ICollectionView _invest = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
 
+        private bool _isSynchronizingTagSelections;
+
         public MainVM(
             IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM> readUnitOfWork,
             IUserSettingsRepository userSettingsRepository)
@@ -104,9 +108,35 @@ namespace Fluxo.ViewModels.Shell
 
         public bool IsMonthlyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Monthly;
 
+        public bool HasOtherTags => OtherTags.Count > 0;
+
+        public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
+
         partial void OnSelectedTagChanged(ExpenseTagVM? value)
         {
+            SynchronizeTagSelections(value);
+            OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
             RefreshExpenseViews();
+        }
+
+        partial void OnSelectedVisibleTagChanged(ExpenseTagVM? value)
+        {
+            if (_isSynchronizingTagSelections)
+            {
+                return;
+            }
+
+            SelectedTag = value;
+        }
+
+        partial void OnSelectedOtherTagChanged(ExpenseTagVM? value)
+        {
+            if (_isSynchronizingTagSelections)
+            {
+                return;
+            }
+
+            SelectedTag = value;
         }
 
         partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
@@ -284,6 +314,9 @@ namespace Fluxo.ViewModels.Shell
         {
             Tags = new ObservableCollection<ExpenseTagVM>(allTags.Take(5));
             OtherTags = new ObservableCollection<ExpenseTagVM>(allTags.Skip(5));
+            SynchronizeTagSelections(SelectedTag);
+            OnPropertyChanged(nameof(HasOtherTags));
+            OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
         }
 
         private void ConfigureExpenseViews()
@@ -671,6 +704,26 @@ namespace Fluxo.ViewModels.Shell
             }
 
             return expenseLog.Expense?.ExpenseTag?.Id == SelectedTag.Id;
+        }
+
+        private void SynchronizeTagSelections(ExpenseTagVM? selectedTag)
+        {
+            _isSynchronizingTagSelections = true;
+
+            try
+            {
+                SelectedVisibleTag = selectedTag is null
+                    ? null
+                    : Tags.FirstOrDefault(tag => tag.Id == selectedTag.Id);
+
+                SelectedOtherTag = selectedTag is null
+                    ? null
+                    : OtherTags.FirstOrDefault(tag => tag.Id == selectedTag.Id);
+            }
+            finally
+            {
+                _isSynchronizingTagSelections = false;
+            }
         }
 
         private void RefreshExpenseViews()

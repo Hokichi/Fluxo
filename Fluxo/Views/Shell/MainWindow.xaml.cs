@@ -178,6 +178,17 @@ namespace Fluxo.Views.Shell
             }
         }
 
+        private void OnMoreTagsSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (MoreTagsButton?.IsChecked != true)
+                return;
+
+            if (e.AddedItems.Count == 0 && e.RemovedItems.Count == 0)
+                return;
+
+            MoreTagsButton.IsChecked = false;
+        }
+
         private static bool IsInteractiveElement(DependencyObject source)
         {
             for (DependencyObject? current = source; current is not null; current = VisualTreeHelper.GetParent(current))

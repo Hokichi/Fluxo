@@ -30,6 +30,7 @@ public sealed class ExpenseTagViewModelReadRepository<TViewModel>(IExpenseTagRep
         var results = await _repository.GetTagsByCountDescendingAsync(cancellationToken);
         return results
             .Select(item => (Tag: MapWithId(item.Tag), item.Count))
+            .Where(c => c.Count > 0)
             .ToList();
     }
 
