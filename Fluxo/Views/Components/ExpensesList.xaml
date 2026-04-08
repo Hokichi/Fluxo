@@ -11,6 +11,109 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+
+        <DataTemplate x:Key="ExpenseListTemplate">
+            <Grid>
+                <Border
+                    x:Name="ExpenseItemBGBorder"
+                    Padding="12,10"
+                    Background="{StaticResource Brush.Background.Hover}"
+                    CornerRadius="12"
+                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <Border
+                    x:Name="ExpenseItemBorder"
+                    Padding="12,10"
+                    Background="Transparent"
+                    CornerRadius="12">
+                    <Grid
+                        MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
+                        HorizontalAlignment="Stretch"
+                        ClipToBounds="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="13"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding Expense.Name}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource Regular}"
+                                    FontSize="10"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+
+                                <Border
+                                    x:Name="ExpenseTagBorder"
+                                    Margin="8,0,0,0"
+                                    Padding="5,2"
+                                    VerticalAlignment="Center"
+                                    Background="{Binding Expense.ExpenseTag.HexCode}">
+                                    <Border.CornerRadius>
+                                        <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                                        </MultiBinding>
+                                    </Border.CornerRadius>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        FontSize="10"
+                                        Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                        Text="{Binding Expense.ExpenseTag.Name}" />
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            MinWidth="0"
+                            HorizontalAlignment="Right">
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="13"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                            <TextBlock
+                                MaxWidth="120"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Regular}"
+                                FontSize="10"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="{Binding SpendingSource.Name}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                        </StackPanel>
+
+                        <customControls:BalloonButton
+                            Grid.Column="2"
+                            Width="28"
+                            Height="28"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            ButtonIcon="{StaticResource Close}"
+                            Command="{Binding DataContext.DeleteExpenseLogCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            DefaultBackground="{StaticResource Brush.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.Danger}"
+                            IconSize="10"
+                            Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </DataTemplate>
         <Style x:Key="ExpenseListHeaderText" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
             <Setter Property="FontSize" Value="12" />
@@ -109,7 +212,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="ClipToBounds" Value="True" />
             <Setter Property="ItemContainerStyle" Value="{StaticResource ExpenseListViewItemStyle}" />
-            <Setter Property="ItemTemplate" Value="{DynamicResource ExpenseListTemplate}" />
+            <Setter Property="ItemTemplate" Value="{StaticResource ExpenseListTemplate}" />
             <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />

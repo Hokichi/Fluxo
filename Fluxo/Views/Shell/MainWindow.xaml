@@ -9,6 +9,7 @@
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+    xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell"
     Title="MainWindow"
     Width="1600"
     Height="900"
@@ -152,6 +153,186 @@
                         CommandParameter="{Binding}"
                         Content="Dismiss"
                         Style="{StaticResource NotificationActionButtonStyle}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <Style x:Key="DashboardPanelStyle" TargetType="Border">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+        </Style>
+
+        <Style x:Key="DashboardCountBadgeStyle" TargetType="Border">
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="999" />
+        </Style>
+
+        <SolidColorBrush
+            x:Key="MainContentViewToggleSelectedBackgroundBrush"
+            Opacity="0.16"
+            Color="{StaticResource Color.Mint}" />
+
+        <Style x:Key="MainContentViewToggleButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Width" Value="80" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                </Trigger>
+                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource MainContentViewToggleSelectedBackgroundBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True" />
+                        <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="{StaticResource MainContentViewToggleSelectedBackgroundBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                </MultiDataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="DashboardNotificationTemplate">
+            <Border
+                Margin="0,0,0,10"
+                Padding="10"
+                Background="{StaticResource Brush.Background.Hover}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Margin="0,0,10,0"
+                        CornerRadius="999"
+                        Style="{StaticResource NotificationAccentStyle}" />
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Title}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,6,0,0"
+                            FontFamily="{StaticResource Regular}"
+                            FontSize="10"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding Message}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="9"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding CreatedOn, StringFormat={}{0:MMM d, h:mm tt}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SavingGoalTemplate">
+            <Border
+                Margin="0,0,0,12"
+                Padding="12"
+                Background="{StaticResource Brush.Background.Hover}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Width="64" Height="64">
+                        <Canvas
+                            Width="56"
+                            Height="56"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                            <Ellipse
+                                Canvas.Left="4"
+                                Canvas.Top="4"
+                                Width="48"
+                                Height="48"
+                                Stroke="{StaticResource Brush.Background.Surface}"
+                                StrokeThickness="8" />
+                            <Path
+                                Canvas.Left="4"
+                                Canvas.Top="4"
+                                Data="{Binding ProgressRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=48}"
+                                Stroke="{StaticResource Brush.Mint}"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                StrokeStartLineCap="Round"
+                                StrokeThickness="8" />
+                        </Canvas>
+
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding ProgressPercentage, StringFormat={}{0}%}" />
+                    </Grid>
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="13"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Name}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}">
+                            <Run Text="$" />
+                            <Run Text="{Binding CurrentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                            <Run Text="/" />
+                            <Run Text="$" />
+                            <Run Text="{Binding TargetAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                        </TextBlock>
+                    </StackPanel>
                 </Grid>
             </Border>
         </DataTemplate>
@@ -323,110 +504,6 @@
             </Setter>
         </Style>
 
-        <DataTemplate x:Key="ExpenseListTemplate">
-            <Grid>
-                <Border
-                    x:Name="ExpenseItemBGBorder"
-                    Padding="12,10"
-                    Background="{StaticResource Brush.Background.Hover}"
-                    CornerRadius="12"
-                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <Border
-                    x:Name="ExpenseItemBorder"
-                    Padding="12,10"
-                    Background="Transparent"
-                    CornerRadius="12">
-                    <Grid
-                        MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
-                        HorizontalAlignment="Stretch"
-                        ClipToBounds="True">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="13"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="{Binding Expense.Name}"
-                                    TextTrimming="CharacterEllipsis"
-                                    TextWrapping="NoWrap" />
-                            </StackPanel>
-                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                                <TextBlock
-                                    FontFamily="{StaticResource Regular}"
-                                    FontSize="10"
-                                    Foreground="{StaticResource Brush.Text.Muted}"
-                                    Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
-
-                                <Border
-                                    x:Name="ExpenseTagBorder"
-                                    Margin="8,0,0,0"
-                                    Padding="5,2"
-                                    VerticalAlignment="Center"
-                                    Background="{Binding Expense.ExpenseTag.HexCode}">
-                                    <Border.CornerRadius>
-                                        <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
-                                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
-                                        </MultiBinding>
-                                    </Border.CornerRadius>
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Medium}"
-                                        FontSize="10"
-                                        Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                        Text="{Binding Expense.ExpenseTag.Name}" />
-                                </Border>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <StackPanel
-                            Grid.Column="1"
-                            MinWidth="0"
-                            HorizontalAlignment="Right">
-                            <TextBlock
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="13"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                            <TextBlock
-                                MaxWidth="120"
-                                Margin="0,8,0,0"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Regular}"
-                                FontSize="10"
-                                Foreground="{StaticResource Brush.Text.Muted}"
-                                Text="{Binding SpendingSource.Name}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap" />
-                        </StackPanel>
-
-                        <c:BalloonButton
-                            Grid.Column="2"
-                            Width="28"
-                            Height="28"
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center"
-                            ButtonIcon="{StaticResource Close}"
-                            Command="{Binding DataContext.DeleteExpenseLogCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                            CommandParameter="{Binding}"
-                            DefaultBackground="{StaticResource Brush.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.Danger}"
-                            IconSize="10"
-                            ToolTip="Delete expense log"
-                            Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    </Grid>
-                </Border>
-            </Grid>
-        </DataTemplate>
-
         <DataTemplate x:Key="Tags">
             <Grid>
                 <Border
@@ -517,12 +594,6 @@
                         FontSize="18"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Fluxo" />
-
-                    <Border
-                        Width="1"
-                        Height="32"
-                        Margin="24,0"
-                        Background="{StaticResource Brush.Text.Muted}" />
                 </StackPanel>
 
                 <Grid Grid.Column="1">
@@ -569,34 +640,6 @@
                     Grid.Column="2"
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
-                    <Grid Width="36" Height="28">
-                        <c:BalloonButton
-                            x:Name="NotificationButton"
-                            ButtonIcon="{Binding HasNotifications, Converter={StaticResource BoolToNotificationIconConverter}}"
-                            Command="{Binding ToggleNotificationPanelCommand}"
-                            HoveredBackground="{StaticResource Brush.Primary.Hover}"
-                            IconSize="12"
-                            Style="{StaticResource HeaderButtonStyle}" />
-
-                        <Border
-                            Width="16"
-                            Height="16"
-                            Margin="0,-4,-4,0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Background="{StaticResource Brush.Danger}"
-                            CornerRadius="8"
-                            Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="9"
-                                Foreground="{StaticResource Brush.Background.Surface}"
-                                Text="{Binding NotificationCount}" />
-                        </Border>
-                    </Grid>
-
                     <c:BalloonButton
                         ButtonIcon="{StaticResource Cog}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
@@ -628,86 +671,38 @@
             </Grid>
 
             <Border
-                Width="360"
-                Margin="0,72,48,0"
-                Padding="16"
-                HorizontalAlignment="Right"
+                Grid.Row="1"
+                Height="32"
+                Margin="0,16"
+                Padding="4"
+                HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 Background="{StaticResource Brush.Background.Surface}"
                 BorderBrush="{StaticResource Brush.Border.Subtle}"
                 BorderThickness="1"
-                CornerRadius="24"
-                Panel.ZIndex="10"
-                Visibility="{Binding IsNotificationPanelOpen, Converter={StaticResource BoolToVisibilityConverter}}">
-                <Border.Effect>
-                    <DropShadowEffect
-                        BlurRadius="24"
-                        Opacity="0.25"
-                        ShadowDepth="0"
-                        Color="#FF000000" />
-                </Border.Effect>
-
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel>
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="14"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Notifications" />
-                            <TextBlock
-                                Margin="0,4,0,0"
-                                FontFamily="{StaticResource Regular}"
-                                FontSize="11"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding NotificationCount, StringFormat={}{0} active alerts}" />
-                        </StackPanel>
-
-                        <Button
-                            Grid.Column="1"
-                            VerticalAlignment="Top"
-                            Command="{Binding ClearNotificationsCommand}"
-                            Content="Clear all"
-                            Style="{StaticResource NotificationActionButtonStyle}"
-                            Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    </Grid>
-
-                    <Border
-                        Grid.Row="1"
-                        Height="1"
-                        Margin="0,16,0,16"
-                        Background="{StaticResource Brush.Border.Subtle}" />
-
-                    <TextBlock
-                        Grid.Row="2"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="12"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="You're all caught up."
-                        Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-
-                    <ScrollViewer
-                        Grid.Row="2"
-                        MaxHeight="420"
-                        VerticalScrollBarVisibility="Auto"
-                        Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <ItemsControl
-                            ItemTemplate="{StaticResource NotificationTemplate}"
-                            ItemsSource="{Binding Notifications}" />
-                    </ScrollViewer>
-                </Grid>
+                CornerRadius="14">
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        Command="{Binding SetSelectedMainContentViewCommand}"
+                        CommandParameter="{x:Static viewModels:MainContentViewMode.Daily}"
+                        Content="Day"
+                        Style="{StaticResource MainContentViewToggleButtonStyle}"
+                        Tag="{Binding IsDailyViewSelected}" />
+                    <Button
+                        Margin="4,0,0,0"
+                        Command="{Binding SetSelectedMainContentViewCommand}"
+                        CommandParameter="{x:Static viewModels:MainContentViewMode.Weekly}"
+                        Content="Week"
+                        Style="{StaticResource MainContentViewToggleButtonStyle}"
+                        Tag="{Binding IsWeeklyViewSelected}" />
+                    <Button
+                        Margin="4,0,0,0"
+                        Command="{Binding SetSelectedMainContentViewCommand}"
+                        CommandParameter="{x:Static viewModels:MainContentViewMode.Monthly}"
+                        Content="Month"
+                        Style="{StaticResource MainContentViewToggleButtonStyle}"
+                        Tag="{Binding IsMonthlyViewSelected}" />
+                </StackPanel>
             </Border>
 
             <Grid
@@ -720,7 +715,17 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Style="{StaticResource HeaderText}" Text="Accounts &amp; Income" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource HeaderText}"
+                        Text="Accounts &amp; Income" />
+                </Grid>
 
                 <c:FadingScrollViewer
                     Grid.Row="1"
@@ -804,7 +809,7 @@
                 <Grid Grid.Row="2" Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="300" />
+                        <ColumnDefinition Width="360" />
                     </Grid.ColumnDefinitions>
 
                     <Grid>
@@ -1028,10 +1033,114 @@
                                 Title="INVEST &amp; SAVINGS"
                                 Grid.Column="4"
                                 DotColor="{StaticResource Brush.Category.Investments}"
-                                IsListEmpty="{Binding IsWantsEmpty}"
+                                IsListEmpty="{Binding IsInvestEmpty}"
                                 ItemsSource="{Binding Invest}"
                                 SpentAmount="{Binding InvestSpent}" />
                         </Grid>
+                    </Grid>
+
+                    <Grid Grid.Column="1" Margin="16,16,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="250" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Style="{StaticResource DashboardPanelStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="12" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="13"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="Notifications" />
+
+                                    <Border Grid.Column="1" Style="{StaticResource DashboardCountBadgeStyle}">
+                                        <TextBlock
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="9"
+                                            Foreground="{StaticResource Brush.Text.Secondary}"
+                                            Text="{Binding NotificationCount}" />
+                                    </Border>
+                                </Grid>
+
+                                <TextBlock
+                                    Grid.Row="2"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    FontSize="11"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="You're all caught up."
+                                    TextAlignment="Center"
+                                    Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+
+                                <ScrollViewer
+                                    Grid.Row="2"
+                                    VerticalScrollBarVisibility="Auto"
+                                    Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}" ItemsSource="{Binding Notifications}" />
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Row="2" Style="{StaticResource DashboardPanelStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="12" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="13"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="Saving Goals" />
+
+                                    <Border Grid.Column="1" Style="{StaticResource DashboardCountBadgeStyle}">
+                                        <TextBlock
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="9"
+                                            Foreground="{StaticResource Brush.Text.Secondary}"
+                                            Text="{Binding SavingGoals.Count}" />
+                                    </Border>
+                                </Grid>
+
+                                <TextBlock
+                                    Grid.Row="2"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    FontSize="11"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="Add a saving goal to track progress here."
+                                    TextAlignment="Center"
+                                    Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+
+                                <ScrollViewer
+                                    Grid.Row="2"
+                                    VerticalScrollBarVisibility="Auto"
+                                    Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}" ItemsSource="{Binding SavingGoals}" />
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </Grid>
             </Grid>

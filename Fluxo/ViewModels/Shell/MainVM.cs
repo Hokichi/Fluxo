@@ -48,6 +48,7 @@ namespace Fluxo.ViewModels.Shell
 
         [ObservableProperty] private ObservableCollection<DayOfWeekVM> _daysOfWeek = [];
         [ObservableProperty] private DayOfWeekVM _selectedDay = new();
+        [ObservableProperty] private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Weekly;
 
         [ObservableProperty] private bool _isNeedsEmpty;
         [ObservableProperty] private bool _isWantsEmpty;
@@ -72,6 +73,7 @@ namespace Fluxo.ViewModels.Shell
         [ObservableProperty] private bool _hasNotifications;
         [ObservableProperty] private int _notificationCount;
         [ObservableProperty] private bool _isNotificationPanelOpen;
+        [ObservableProperty] private bool _hasSavingGoals;
 
         [ObservableProperty] private ICollectionView _needs = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
         [ObservableProperty] private ICollectionView _wants = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
@@ -94,9 +96,24 @@ namespace Fluxo.ViewModels.Shell
 
         public ObservableCollection<NotificationItemVM> Notifications => _notifications;
 
+        public ObservableCollection<SavingGoalVM> SavingGoals => _savingGoals;
+
+        public bool IsDailyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Daily;
+
+        public bool IsWeeklyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Weekly;
+
+        public bool IsMonthlyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Monthly;
+
         partial void OnSelectedTagChanged(ExpenseTagVM? value)
         {
             RefreshExpenseViews();
+        }
+
+        partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
+        {
+            OnPropertyChanged(nameof(IsDailyViewSelected));
+            OnPropertyChanged(nameof(IsWeeklyViewSelected));
+            OnPropertyChanged(nameof(IsMonthlyViewSelected));
         }
 
         partial void OnSpendingSourcesChanged(ObservableCollection<SpendingSourceVM>? oldValue, ObservableCollection<SpendingSourceVM> newValue)
@@ -121,6 +138,12 @@ namespace Fluxo.ViewModels.Shell
         private void ClearSelectedTag()
         {
             SelectedTag = null;
+        }
+
+        [RelayCommand]
+        private void SetSelectedMainContentView(MainContentViewMode viewMode)
+        {
+            SelectedMainContentViewMode = viewMode;
         }
 
         [RelayCommand]
@@ -253,6 +276,8 @@ namespace Fluxo.ViewModels.Shell
             {
                 _savingGoals.Add(goal);
             }
+
+            HasSavingGoals = _savingGoals.Count > 0;
         }
 
         private void LoadTags(IEnumerable<ExpenseTagVM> allTags)
@@ -749,6 +774,8 @@ namespace Fluxo.ViewModels.Shell
                     }
                 }
             }
+
+            HasSavingGoals = _savingGoals.Count > 0;
         }
 
         private void OnSavingGoalPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -861,5 +888,6 @@ namespace Fluxo.ViewModels.Shell
                 target.Add(item);
             }
         }
+
     }
 }
