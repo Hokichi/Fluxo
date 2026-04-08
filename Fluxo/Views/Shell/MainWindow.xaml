@@ -103,60 +103,6 @@
             </Style.Triggers>
         </Style>
 
-        <DataTemplate x:Key="NotificationTemplate">
-            <Border
-                Margin="0,0,0,12"
-                Padding="12"
-                Background="{StaticResource Brush.Background.Hover}"
-                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                BorderThickness="1"
-                CornerRadius="16">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border
-                        Margin="0,0,12,0"
-                        CornerRadius="999"
-                        Style="{StaticResource NotificationAccentStyle}" />
-
-                    <StackPanel Grid.Column="1">
-                        <TextBlock
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding Title}"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,6,0,0"
-                            FontFamily="{StaticResource Regular}"
-                            FontSize="11"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding Message}"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,10,0,0"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="10"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Text="{Binding CreatedOn, StringFormat={}{0:MMM d, h:mm tt}}" />
-                    </StackPanel>
-
-                    <Button
-                        Grid.Column="2"
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Top"
-                        Command="{Binding DataContext.DismissNotificationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="{Binding}"
-                        Content="Dismiss"
-                        Style="{StaticResource NotificationActionButtonStyle}" />
-                </Grid>
-            </Border>
-        </DataTemplate>
-
         <Style x:Key="DashboardPanelStyle" TargetType="Border">
             <Setter Property="Padding" Value="16" />
             <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
@@ -406,10 +352,12 @@
                                                 Text="{Binding DayName}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Setter Property="Foreground"
+                                                                Value="{StaticResource Brush.Text.Muted}" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                                                <Setter Property="Foreground"
+                                                                        Value="{StaticResource Brush.Mint}" />
                                                                 <Setter Property="Effect">
                                                                     <Setter.Value>
                                                                         <DropShadowEffect
@@ -434,10 +382,12 @@
                                                 Text="{Binding DayNumber}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Setter Property="Foreground"
+                                                                Value="{StaticResource Brush.Text.Muted}" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                                                <Setter Property="Foreground"
+                                                                        Value="{StaticResource Brush.Text.Primary}" />
                                                                 <Setter Property="Effect">
                                                                     <Setter.Value>
                                                                         <DropShadowEffect
@@ -466,7 +416,9 @@
                                                         <MultiDataTrigger>
                                                             <MultiDataTrigger.Conditions>
                                                                 <Condition Binding="{Binding IsSelected}" Value="False" />
-                                                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True" />
+                                                                <Condition
+                                                                    Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                                                    Value="True" />
                                                             </MultiDataTrigger.Conditions>
                                                             <MultiDataTrigger.EnterActions>
                                                                 <BeginStoryboard>
@@ -1049,7 +1001,8 @@
                                     CornerRadius="12"
                                     Cursor="Hand">
                                     <Border.InputBindings>
-                                        <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                                        <MouseBinding Command="{Binding ClearSelectedTagCommand}"
+                                                      MouseAction="LeftClick" />
                                     </Border.InputBindings>
                                     <Border.Style>
                                         <Style TargetType="Border">
@@ -1078,7 +1031,8 @@
                                     CornerRadius="12"
                                     Cursor="Hand">
                                     <Border.InputBindings>
-                                        <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                                        <MouseBinding Command="{Binding ClearSelectedTagCommand}"
+                                                      MouseAction="LeftClick" />
                                     </Border.InputBindings>
                                     <Border.Style>
                                         <Style TargetType="Border">
@@ -1265,7 +1219,8 @@
                                     Grid.Row="2"
                                     VerticalScrollBarVisibility="Auto"
                                     Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}" ItemsSource="{Binding Notifications}" />
+                                    <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}"
+                                                  ItemsSource="{Binding Notifications}" />
                                 </ScrollViewer>
                             </Grid>
                         </Border>
@@ -1313,7 +1268,8 @@
                                     Grid.Row="2"
                                     VerticalScrollBarVisibility="Auto"
                                     Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}" ItemsSource="{Binding SavingGoals}" />
+                                    <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}"
+                                                  ItemsSource="{Binding SavingGoals}" />
                                 </ScrollViewer>
                             </Grid>
                         </Border>

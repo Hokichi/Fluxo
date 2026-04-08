@@ -6,13 +6,16 @@ using Fluxo.Data.Context;
 
 namespace Fluxo.ViewModels.Persistence;
 
-public sealed class SpendingSourceViewModelReadRepository<TViewModel>(ISpendingSourceRepository repository, FluxoDbContext dbContext, IMapper mapper)
+public sealed class SpendingSourceViewModelReadRepository<TViewModel>(
+    ISpendingSourceRepository repository,
+    FluxoDbContext dbContext,
+    IMapper mapper)
     : ISpendingSourceReadRepository<TViewModel>
     where TViewModel : class
 {
-    private readonly ISpendingSourceRepository _repository = repository;
     private readonly FluxoDbContext _dbContext = dbContext;
     private readonly IMapper _mapper = mapper;
+    private readonly ISpendingSourceRepository _repository = repository;
 
     public async Task<IReadOnlyList<TViewModel>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -26,13 +29,15 @@ public sealed class SpendingSourceViewModelReadRepository<TViewModel>(ISpendingS
         return entity is null ? null : MapWithId(entity);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByDateAsync(DateTime date,
+        CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetByDateAsync(date, cancellationToken);
         return MapListWithIds(entities);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetBySourceTypeAsync(SpendingSourceType sourceType, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetBySourceTypeAsync(SpendingSourceType sourceType,
+        CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetBySourceTypeAsync(sourceType, cancellationToken);
         return MapListWithIds(entities);

@@ -148,8 +148,6 @@
                             <Border x:Name="PART_ScrollContentPresenterContainer">
                                 <ScrollContentPresenter
                                     x:Name="PART_ScrollContentPresenter"
-                                    Grid.Row="0"
-                                    Grid.Column="0"
                                     Margin="{TemplateBinding Padding}"
                                     CanContentScroll="{TemplateBinding CanContentScroll}"
                                     CanHorizontallyScroll="False"
@@ -218,7 +216,6 @@
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
             <EventSetter Event="PreviewMouseWheel" Handler="OnExpenseListPreviewMouseWheel" />
         </Style>
-
     </UserControl.Resources>
 
     <Grid VerticalAlignment="Stretch" ClipToBounds="True">
@@ -295,7 +292,9 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                    <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Style="{StaticResource ExpenseListViewStyle}" />
+                    <ListView
+                        ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        Style="{StaticResource ExpenseListViewStyle}" />
                 </customControls:FadingScrollViewer>
             </Grid>
         </Grid>

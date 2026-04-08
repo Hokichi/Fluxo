@@ -2,31 +2,30 @@
 using System.Windows;
 using System.Windows.Data;
 
-namespace Fluxo.Converters
-{
-    public class BoolToVisibilityConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value is bool b && b ? Visibility.Visible : Visibility.Collapsed;
-        }
+namespace Fluxo.Converters;
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+public class BoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value is bool b && b ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    public class BoolToVisibilityInvertedConverter : IValueConverter
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value is bool b && b ? Visibility.Collapsed : Visibility.Visible;
-        }
+        throw new NotImplementedException();
+    }
+}
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+public class BoolToVisibilityInvertedConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value is bool b && b ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -2,8 +2,7 @@
     x:Class="Fluxo.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:cons="clr-namespace:Fluxo.Converters"
-    xmlns:local="clr-namespace:Fluxo">
+    xmlns:cons="clr-namespace:Fluxo.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

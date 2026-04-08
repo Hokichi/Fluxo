@@ -19,7 +19,8 @@
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="ThumbBody" Property="Opacity" Value="1" />
-                            <Setter TargetName="ThumbBody" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="ThumbBody" Property="Background"
+                                    Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -45,7 +46,8 @@
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="ThumbBody" Property="Opacity" Value="1" />
-                            <Setter TargetName="ThumbBody" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="ThumbBody" Property="Background"
+                                    Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -182,8 +184,6 @@
                         <Border x:Name="PART_ScrollContentPresenterContainer">
                             <ScrollContentPresenter
                                 x:Name="PART_ScrollContentPresenter"
-                                Grid.Row="0"
-                                Grid.Column="0"
                                 Margin="{TemplateBinding Padding}"
                                 CanContentScroll="{TemplateBinding CanContentScroll}"
                                 CanHorizontallyScroll="False"

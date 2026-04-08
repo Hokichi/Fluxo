@@ -1,11 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Fluxo.Core.Interfaces.Repositories;
 
 namespace Fluxo.Core.Interfaces;
 
-public interface IViewModelWriteUnitOfWork<TExpenseViewModel, TExpenseLogViewModel, TIncomeLogViewModel, TExpenseTagViewModel, TSavingGoalViewModel, TSpendingSourceViewModel>
+public interface IViewModelWriteUnitOfWork<TExpenseViewModel, TExpenseLogViewModel, TIncomeLogViewModel,
+    TExpenseTagViewModel, TSavingGoalViewModel, TSpendingSourceViewModel>
     : IDisposable, IAsyncDisposable
     where TExpenseViewModel : class
     where TExpenseLogViewModel : class

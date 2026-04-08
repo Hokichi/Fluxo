@@ -1,9 +1,6 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fluxo.Data.Repositories;
 

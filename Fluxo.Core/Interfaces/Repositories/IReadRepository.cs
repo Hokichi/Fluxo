@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Fluxo.Core.Interfaces.Repositories;
 
 public interface IReadRepository<T> where T : class

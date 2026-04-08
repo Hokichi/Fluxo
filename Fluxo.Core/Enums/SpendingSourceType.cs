@@ -1,11 +1,10 @@
-﻿namespace Fluxo.Core.Enums
+﻿namespace Fluxo.Core.Enums;
+
+public enum SpendingSourceType
 {
-    public enum SpendingSourceType
-    {
-        Credit = 1,
-        BNPL = 2,
-        Checking = 3,
-        Cash = 4,
-        Saving = 5
-    }
+    Credit = 1,
+    BNPL = 2,
+    Checking = 3,
+    Cash = 4,
+    Saving = 5
 }

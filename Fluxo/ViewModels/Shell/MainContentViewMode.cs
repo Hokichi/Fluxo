@@ -1,9 +1,8 @@
-namespace Fluxo.ViewModels.Shell
+namespace Fluxo.ViewModels.Shell;
+
+public enum MainContentViewMode
 {
-    public enum MainContentViewMode
-    {
-        Daily,
-        Weekly,
-        Monthly
-    }
+    Daily,
+    Weekly,
+    Monthly
 }

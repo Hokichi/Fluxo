@@ -1,8 +1,7 @@
-﻿namespace Fluxo.Core.Enums
+﻿namespace Fluxo.Core.Enums;
+
+public enum ExpenseKind
 {
-    public enum ExpenseKind
-    {
-        Fixed = 1,
-        Manual = 2
-    }
+    Fixed = 1,
+    Manual = 2
 }

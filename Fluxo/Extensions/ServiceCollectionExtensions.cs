@@ -2,6 +2,7 @@ using AutoMapper;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Data.Context;
 using Fluxo.Mappings;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
@@ -26,22 +27,22 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExpenseReadRepository<ExpenseVM>>(serviceProvider =>
             new ExpenseViewModelReadRepository<ExpenseVM>(
                 serviceProvider.GetRequiredService<IExpenseRepository>(),
-                serviceProvider.GetRequiredService<Fluxo.Data.Context.FluxoDbContext>(),
+                serviceProvider.GetRequiredService<FluxoDbContext>(),
                 serviceProvider.GetRequiredService<IMapper>()));
         services.AddTransient<IExpenseLogReadRepository<ExpenseLogVM>>(serviceProvider =>
             new ExpenseLogViewModelReadRepository<ExpenseLogVM>(
                 serviceProvider.GetRequiredService<IExpenseLogRepository>(),
-                serviceProvider.GetRequiredService<Fluxo.Data.Context.FluxoDbContext>(),
+                serviceProvider.GetRequiredService<FluxoDbContext>(),
                 serviceProvider.GetRequiredService<IMapper>()));
         services.AddTransient<IIncomeLogReadRepository<IncomeLogVM>>(serviceProvider =>
             new IncomeLogViewModelReadRepository<IncomeLogVM>(
                 serviceProvider.GetRequiredService<IIncomeLogRepository>(),
-                serviceProvider.GetRequiredService<Fluxo.Data.Context.FluxoDbContext>(),
+                serviceProvider.GetRequiredService<FluxoDbContext>(),
                 serviceProvider.GetRequiredService<IMapper>()));
         services.AddTransient<IExpenseTagReadRepository<ExpenseTagVM>>(serviceProvider =>
             new ExpenseTagViewModelReadRepository<ExpenseTagVM>(
                 serviceProvider.GetRequiredService<IExpenseTagRepository>(),
-                serviceProvider.GetRequiredService<Fluxo.Data.Context.FluxoDbContext>(),
+                serviceProvider.GetRequiredService<FluxoDbContext>(),
                 serviceProvider.GetRequiredService<IMapper>()));
         services.AddTransient<IReadRepository<SavingGoalVM>>(serviceProvider =>
             new ViewModelReadRepository<SavingGoal, SavingGoalVM>(
@@ -50,7 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISpendingSourceReadRepository<SpendingSourceVM>>(serviceProvider =>
             new SpendingSourceViewModelReadRepository<SpendingSourceVM>(
                 serviceProvider.GetRequiredService<ISpendingSourceRepository>(),
-                serviceProvider.GetRequiredService<Fluxo.Data.Context.FluxoDbContext>(),
+                serviceProvider.GetRequiredService<FluxoDbContext>(),
                 serviceProvider.GetRequiredService<IMapper>()));
 
         services.AddTransient<IWriteRepository<ExpenseVM>>(serviceProvider =>
@@ -78,8 +79,14 @@ public static class ServiceCollectionExtensions
                 serviceProvider.GetRequiredService<IRepository<SpendingSource>>(),
                 serviceProvider.GetRequiredService<IMapper>()));
 
-        services.AddTransient<IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>, EntityViewModelReadUnitOfWork>();
-        services.AddTransient<IViewModelWriteUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>, EntityViewModelWriteUnitOfWork>();
+        services
+            .AddTransient<
+                IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM,
+                    SpendingSourceVM>, EntityViewModelReadUnitOfWork>();
+        services
+            .AddTransient<
+                IViewModelWriteUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM,
+                    SpendingSourceVM>, EntityViewModelWriteUnitOfWork>();
 
         return services;
     }

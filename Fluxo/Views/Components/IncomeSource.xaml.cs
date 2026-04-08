@@ -1,15 +1,14 @@
 using System.Windows.Controls;
 
-namespace Fluxo.Views.Components
+namespace Fluxo.Views.Components;
+
+/// <summary>
+///     Interaction logic for IncomeSource.xaml
+/// </summary>
+public partial class IncomeSource : UserControl
 {
-    /// <summary>
-    /// Interaction logic for IncomeSource.xaml
-    /// </summary>
-    public partial class IncomeSource : UserControl
+    public IncomeSource()
     {
-        public IncomeSource()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

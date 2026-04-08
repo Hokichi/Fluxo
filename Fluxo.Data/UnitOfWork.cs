@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
@@ -10,10 +8,10 @@ namespace Fluxo.Data;
 public sealed class UnitOfWork(FluxoDbContext dbContext) : IUnitOfWork
 {
     private readonly FluxoDbContext _dbContext = dbContext;
-    private IExpenseRepository? _expenses;
     private IExpenseLogRepository? _expenseLogs;
-    private IIncomeLogRepository? _incomeLogs;
+    private IExpenseRepository? _expenses;
     private IExpenseTagRepository? _expenseTags;
+    private IIncomeLogRepository? _incomeLogs;
     private ISavingGoalRepository? _savingGoals;
     private ISpendingSourceRepository? _spendingSources;
     private IUserSettingsRepository? _userSettings;

@@ -8,11 +8,6 @@ namespace Fluxo.Data.Repositories;
 public sealed class IncomeLogRepository(FluxoDbContext dbContext)
     : Repository<IncomeLog>(dbContext), IIncomeLogRepository
 {
-    private IQueryable<IncomeLog> QueryWithNavigations()
-    {
-        return DbSet.Include(log => log.SpendingSource);
-    }
-
     public override async Task<IReadOnlyList<IncomeLog>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations().ToListAsync(cancellationToken);
@@ -24,7 +19,8 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
             .FirstOrDefaultAsync(log => log.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<IncomeLog>> GetByDayAsync(DateTime day, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<IncomeLog>> GetByDayAsync(DateTime day,
+        CancellationToken cancellationToken = default)
     {
         var start = day.Date;
         var end = start.AddDays(1);
@@ -33,7 +29,8 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<IncomeLog>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<IncomeLog>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek,
+        CancellationToken cancellationToken = default)
     {
         var start = startOfWeek.Date;
         var end = endOfWeek.Date.AddDays(1);
@@ -42,17 +39,24 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<IncomeLog>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<IncomeLog>> GetByMonthAsync(int month,
+        CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
             .Where(log => log.AddedOn.Month == month)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<IncomeLog>> GetBySpendingSourceIdAsync(int spendingSourceId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<IncomeLog>> GetBySpendingSourceIdAsync(int spendingSourceId,
+        CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
             .Where(log => EF.Property<int>(log, "SpendingSourceId") == spendingSourceId)
             .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<IncomeLog> QueryWithNavigations()
+    {
+        return DbSet.Include(log => log.SpendingSource);
     }
 }

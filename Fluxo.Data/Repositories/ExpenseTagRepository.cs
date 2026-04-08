@@ -8,13 +8,8 @@ namespace Fluxo.Data.Repositories;
 public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
     : Repository<ExpenseTag>(dbContext), IExpenseTagRepository
 {
-    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
-    {
-        var start = date.Date;
-        return (start, start.AddDays(1));
-    }
-
-    public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTagsByCountDescendingAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTagsByCountDescendingAsync(
+        CancellationToken cancellationToken = default)
     {
         var countsByTagId = await DbContext.Expenses
             .GroupBy(expense => EF.Property<int>(expense, "ExpenseTagId"))
@@ -28,7 +23,8 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
             .ToList();
     }
 
-    public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
+        CancellationToken cancellationToken = default)
     {
         var (start, end) = GetDayRange(DateTime.Today);
         var countsByTagId = await DbContext.Expenses
@@ -42,5 +38,11 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
             .Select(tag => (Tag: tag, Count: countsByTagId.GetValueOrDefault(tag.Id)))
             .OrderByDescending(item => item.Count)
             .ToList();
+    }
+
+    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
+    {
+        var start = date.Date;
+        return (start, start.AddDays(1));
     }
 }

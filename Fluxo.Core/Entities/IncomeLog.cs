@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Fluxo.Core.Entities;
 
-namespace Fluxo.Core.Entities
-{
 public sealed class IncomeLog
 {
     public int Id { get; set; }
     public SpendingSource SpendingSource { get; set; }
     public decimal Amount { get; set; }
     public DateTime AddedOn { get; set; }
-        public string Notes { get; set; }
-    }
+    public string Notes { get; set; }
 }

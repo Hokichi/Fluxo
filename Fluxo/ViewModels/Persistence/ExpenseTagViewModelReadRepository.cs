@@ -5,13 +5,16 @@ using Fluxo.Data.Context;
 
 namespace Fluxo.ViewModels.Persistence;
 
-public sealed class ExpenseTagViewModelReadRepository<TViewModel>(IExpenseTagRepository repository, FluxoDbContext dbContext, IMapper mapper)
+public sealed class ExpenseTagViewModelReadRepository<TViewModel>(
+    IExpenseTagRepository repository,
+    FluxoDbContext dbContext,
+    IMapper mapper)
     : IExpenseTagReadRepository<TViewModel>
     where TViewModel : class
 {
-    private readonly IExpenseTagRepository _repository = repository;
     private readonly FluxoDbContext _dbContext = dbContext;
     private readonly IMapper _mapper = mapper;
+    private readonly IExpenseTagRepository _repository = repository;
 
     public async Task<IReadOnlyList<TViewModel>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -25,7 +28,8 @@ public sealed class ExpenseTagViewModelReadRepository<TViewModel>(IExpenseTagRep
         return entity is null ? null : MapWithId(entity);
     }
 
-    public async Task<IReadOnlyList<(TViewModel Tag, int Count)>> GetTagsByCountDescendingAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<(TViewModel Tag, int Count)>> GetTagsByCountDescendingAsync(
+        CancellationToken cancellationToken = default)
     {
         var results = await _repository.GetTagsByCountDescendingAsync(cancellationToken);
         return results
@@ -34,7 +38,8 @@ public sealed class ExpenseTagViewModelReadRepository<TViewModel>(IExpenseTagRep
             .ToList();
     }
 
-    public async Task<IReadOnlyList<(TViewModel Tag, int Count)>> GetTodayTagsByCountDescendingAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<(TViewModel Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
+        CancellationToken cancellationToken = default)
     {
         var results = await _repository.GetTodayTagsByCountDescendingAsync(cancellationToken);
         return results

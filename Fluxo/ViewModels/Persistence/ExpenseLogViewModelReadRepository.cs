@@ -6,13 +6,16 @@ using Fluxo.Data.Context;
 
 namespace Fluxo.ViewModels.Persistence;
 
-public sealed class ExpenseLogViewModelReadRepository<TViewModel>(IExpenseLogRepository repository, FluxoDbContext dbContext, IMapper mapper)
+public sealed class ExpenseLogViewModelReadRepository<TViewModel>(
+    IExpenseLogRepository repository,
+    FluxoDbContext dbContext,
+    IMapper mapper)
     : IExpenseLogReadRepository<TViewModel>
     where TViewModel : class
 {
-    private readonly IExpenseLogRepository _repository = repository;
     private readonly FluxoDbContext _dbContext = dbContext;
     private readonly IMapper _mapper = mapper;
+    private readonly IExpenseLogRepository _repository = repository;
 
     public async Task<IReadOnlyList<TViewModel>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -26,31 +29,36 @@ public sealed class ExpenseLogViewModelReadRepository<TViewModel>(IExpenseLogRep
         return entity is null ? null : MapWithId(entity);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetByDayAsync(DateTime day, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByDayAsync(DateTime day,
+        CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetByDayAsync(day, cancellationToken);
         return MapListWithIds(entities);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek,
+        CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetByWeekAsync(startOfWeek, endOfWeek, cancellationToken);
         return MapListWithIds(entities);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByMonthAsync(int month,
+        CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetByMonthAsync(month, cancellationToken);
         return MapListWithIds(entities);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetByCategoryAsync(ExpenseCategory category, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetByCategoryAsync(ExpenseCategory category,
+        CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetByCategoryAsync(category, cancellationToken);
         return MapListWithIds(entities);
     }
 
-    public async Task<IReadOnlyList<TViewModel>> GetBySpendingSourceIdAsync(int spendingSourceId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TViewModel>> GetBySpendingSourceIdAsync(int spendingSourceId,
+        CancellationToken cancellationToken = default)
     {
         var entities = await _repository.GetBySpendingSourceIdAsync(spendingSourceId, cancellationToken);
         return MapListWithIds(entities);

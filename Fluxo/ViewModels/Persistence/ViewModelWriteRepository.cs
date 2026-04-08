@@ -8,8 +8,8 @@ public sealed class ViewModelWriteRepository<TEntity, TViewModel>(IRepository<TE
     where TEntity : class
     where TViewModel : class
 {
-    private readonly IRepository<TEntity> _repository = repository;
     private readonly IMapper _mapper = mapper;
+    private readonly IRepository<TEntity> _repository = repository;
 
     public async Task AddAsync(TViewModel entity, CancellationToken cancellationToken = default)
     {

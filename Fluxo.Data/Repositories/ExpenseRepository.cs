@@ -9,13 +9,6 @@ namespace Fluxo.Data.Repositories;
 public sealed class ExpenseRepository(FluxoDbContext dbContext)
     : Repository<Expense>(dbContext), IExpenseRepository
 {
-    private IQueryable<Expense> QueryWithNavigations()
-    {
-        return DbSet
-            .Include(expense => expense.ExpenseTag)
-            .Include(expense => expense.SpendingSource);
-    }
-
     public override async Task<IReadOnlyList<Expense>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations().ToListAsync(cancellationToken);
@@ -36,7 +29,8 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Expense>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Expense>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek,
+        CancellationToken cancellationToken = default)
     {
         var start = startOfWeek.Date;
         var end = endOfWeek.Date.AddDays(1);
@@ -48,18 +42,20 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
     public async Task<IReadOnlyList<Expense>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
-            .Where(expense => expense.RecurringDate.Month == month)
+            .Where(expense => expense.RecurringDate.GetValueOrDefault().Month == month)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Expense>> GetByKindAsync(ExpenseKind kind, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Expense>> GetByKindAsync(ExpenseKind kind,
+        CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
             .Where(expense => expense.ExpenseKind == kind)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Expense>> GetByCategoryAsync(ExpenseCategory category, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Expense>> GetByCategoryAsync(ExpenseCategory category,
+        CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
             .Where(expense => expense.ExpenseCategory == category)
@@ -71,5 +67,12 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
         return await QueryWithNavigations()
             .Where(expense => EF.Property<int>(expense, "ExpenseTagId") == tagId)
             .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<Expense> QueryWithNavigations()
+    {
+        return DbSet
+            .Include(expense => expense.ExpenseTag)
+            .Include(expense => expense.SpendingSource);
     }
 }

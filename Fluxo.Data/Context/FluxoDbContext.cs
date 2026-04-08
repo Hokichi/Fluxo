@@ -1,5 +1,6 @@
 using Fluxo.Core.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Fluxo.Data.Context;
 
@@ -24,7 +25,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
     }
 
-    private static void ConfigureExpense(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Expense> entity)
+    private static void ConfigureExpense(EntityTypeBuilder<Expense> entity)
     {
         entity.ToTable("Expenses");
         entity.Property(expense => expense.Id).ValueGeneratedOnAdd();
@@ -44,7 +45,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
             .OnDelete(DeleteBehavior.Restrict);
     }
 
-    private static void ConfigureExpenseLog(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ExpenseLog> entity)
+    private static void ConfigureExpenseLog(EntityTypeBuilder<ExpenseLog> entity)
     {
         entity.ToTable("ExpenseLogs");
         entity.Property(log => log.Id).ValueGeneratedOnAdd();
@@ -65,7 +66,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
             .OnDelete(DeleteBehavior.Restrict);
     }
 
-    private static void ConfigureIncomeLog(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<IncomeLog> entity)
+    private static void ConfigureIncomeLog(EntityTypeBuilder<IncomeLog> entity)
     {
         entity.ToTable("IncomeLogs");
         entity.Property(log => log.Id).ValueGeneratedOnAdd();
@@ -80,7 +81,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
             .OnDelete(DeleteBehavior.Restrict);
     }
 
-    private static void ConfigureExpenseTag(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ExpenseTag> entity)
+    private static void ConfigureExpenseTag(EntityTypeBuilder<ExpenseTag> entity)
     {
         entity.ToTable("ExpenseTags");
         entity.Property(tag => tag.Id).ValueGeneratedOnAdd();
@@ -90,7 +91,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(tag => tag.HexCode).IsRequired();
     }
 
-    private static void ConfigureSavingGoal(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SavingGoal> entity)
+    private static void ConfigureSavingGoal(EntityTypeBuilder<SavingGoal> entity)
     {
         entity.ToTable("SavingGoals");
         entity.Property(goal => goal.Id).ValueGeneratedOnAdd();
@@ -101,7 +102,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(goal => goal.CurrentAmount).HasColumnType("TEXT");
     }
 
-    private static void ConfigureSpendingSource(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SpendingSource> entity)
+    private static void ConfigureSpendingSource(EntityTypeBuilder<SpendingSource> entity)
     {
         entity.ToTable("SpendingSources");
         entity.Property(source => source.Id).ValueGeneratedOnAdd();
@@ -115,7 +116,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(source => source.InterestRate).HasColumnType("TEXT");
     }
 
-    private static void ConfigureUserSettings(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<UserSettings> entity)
+    private static void ConfigureUserSettings(EntityTypeBuilder<UserSettings> entity)
     {
         entity.ToTable("UserSettings");
         entity.HasKey(settings => settings.Name);

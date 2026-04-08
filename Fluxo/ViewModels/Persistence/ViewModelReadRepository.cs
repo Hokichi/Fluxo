@@ -8,8 +8,8 @@ public sealed class ViewModelReadRepository<TEntity, TViewModel>(IRepository<TEn
     where TEntity : class
     where TViewModel : class
 {
-    private readonly IRepository<TEntity> _repository = repository;
     private readonly IMapper _mapper = mapper;
+    private readonly IRepository<TEntity> _repository = repository;
 
     public async Task<IReadOnlyList<TViewModel>> GetAllAsync(CancellationToken cancellationToken = default)
     {
