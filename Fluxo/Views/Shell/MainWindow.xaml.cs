@@ -41,7 +41,6 @@ public partial class MainWindow : Window
         };
 
         Closing += OnWindowClosing;
-        StateChanged += OnWindowStateChanged;
         PreviewKeyDown += OnPreviewKeyDown;
     }
 
@@ -124,45 +123,12 @@ public partial class MainWindow : Window
         });
     }
 
-    private void OnMaximizeWindow(object sender, ExecutedRoutedEventArgs e)
-    {
-        AnimateToMaximized();
-    }
-
-    private void OnRestoreWindow(object sender, ExecutedRoutedEventArgs e)
-    {
-        AnimateToRestored();
-    }
-
     private void OnExpandRestoreWindow(object sender, RoutedEventArgs e)
     {
         if (_isMaximized)
             AnimateToRestored();
         else
             AnimateToMaximized();
-    }
-
-    // ── Maximize / Restore animation ────────────────────────────────
-
-    private void OnWindowStateChanged(object sender, EventArgs e)
-    {
-        // Intercept OS-triggered maximize (Win+Up, snap, etc.)
-        if (WindowState == WindowState.Maximized)
-        {
-            _restoreBounds = RestoreBounds;
-            WindowState = WindowState.Normal;
-            _isMaximized = true;
-
-            var workArea = GetMonitorWorkArea();
-            Left = workArea.Left;
-            Top = workArea.Top;
-            Width = workArea.Width;
-            Height = workArea.Height;
-
-            RootBorder.CornerRadius = new CornerRadius(0);
-            RootBorder.BorderThickness = new Thickness(0);
-            UpdateExpandRestoreButtonIcon();
-        }
     }
 
     private void UpdateExpandRestoreButtonIcon()
@@ -218,13 +184,13 @@ public partial class MainWindow : Window
         Height = to.Height;
 
         BeginAnimation(LeftProperty, new DoubleAnimation(from.Left, to.Left, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
         BeginAnimation(TopProperty, new DoubleAnimation(from.Top, to.Top, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
         BeginAnimation(WidthProperty, new DoubleAnimation(from.Width, to.Width, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
         BeginAnimation(HeightProperty, new DoubleAnimation(from.Height, to.Height, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
     }
 
     // ── Monitor work area ───────────────────────────────────────────
