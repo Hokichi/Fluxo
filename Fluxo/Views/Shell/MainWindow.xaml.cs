@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private const int StateChangeDuration = 250; // ms
     private readonly MainVM _mainVM;
     private bool _hasCompletedPendingDeletionCleanup;
+    private bool _isClosing;
 
     public MainWindow(MainVM mainVM)
     {
@@ -84,6 +85,7 @@ public partial class MainWindow : Window
 
     private void OnCloseWindow(object sender, ExecutedRoutedEventArgs e)
     {
+        if (_isClosing) return;
         FadeOut(() => SystemCommands.CloseWindow(this));
     }
 
@@ -93,6 +95,9 @@ public partial class MainWindow : Window
             return;
 
         e.Cancel = true;
+
+        if (_isClosing) return;
+        _isClosing = true;
 
         try
         {
