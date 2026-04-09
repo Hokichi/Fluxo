@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     private readonly MainVM _mainVM;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _isClosing;
-    private bool _isManuallyMaximized;
+    private bool _isMaximized;
     private Rect _restoreBounds;
 
     public MainWindow(MainVM mainVM)
@@ -138,7 +138,7 @@ public partial class MainWindow : Window
 
     private void OnExpandRestoreWindow(object sender, RoutedEventArgs e)
     {
-        if (_isManuallyMaximized)
+        if (_isMaximized)
             AnimateToRestored();
         else
             AnimateToMaximized();
@@ -148,25 +148,24 @@ public partial class MainWindow : Window
 
     private void OnWindowStateChanged(object sender, EventArgs e)
     {
-        // If the OS maximized us (e.g. Win+Up, snap), sync our state
-        if (WindowState == WindowState.Maximized && !_isManuallyMaximized)
+        // Intercept OS-triggered maximize (Win+Up, snap, etc.)
+        if (WindowState == WindowState.Maximized)
         {
             _restoreBounds = RestoreBounds;
             WindowState = WindowState.Normal;
+            _isMaximized = true;
 
+            ClearBoundsAnimations();
             var workArea = GetMonitorWorkArea();
             Left = workArea.Left;
             Top = workArea.Top;
             Width = workArea.Width;
             Height = workArea.Height;
-            _isManuallyMaximized = true;
 
-            RootBorder.Margin = new Thickness(0);
             RootBorder.CornerRadius = new CornerRadius(0);
             RootBorder.BorderThickness = new Thickness(0);
+            UpdateExpandRestoreButtonIcon();
         }
-
-        UpdateExpandRestoreButtonIcon();
     }
 
     private void UpdateExpandRestoreButtonIcon()
@@ -174,69 +173,38 @@ public partial class MainWindow : Window
         if (ExpandRestoreButton is null)
             return;
 
-        var iconKey = _isManuallyMaximized ? "CompressAlt" : "ExpandAlt";
+        var iconKey = _isMaximized ? "CompressAlt" : "ExpandAlt";
         ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
     }
 
     private void AnimateToMaximized()
     {
-        if (_isManuallyMaximized)
+        if (_isMaximized)
             return;
 
+        // Clear any held animations so we read real property values
+        ClearBoundsAnimations();
+
         _restoreBounds = new Rect(Left, Top, Width, Height);
-        _isManuallyMaximized = true;
+        _isMaximized = true;
         UpdateExpandRestoreButtonIcon();
 
         var workArea = GetMonitorWorkArea();
-
-        // Compute the margin that makes the border appear at its current position
-        // within the full work-area-sized window
-        var fromMargin = new Thickness(
-            _restoreBounds.Left - workArea.Left,
-            _restoreBounds.Top - workArea.Top,
-            workArea.Right - _restoreBounds.Right,
-            workArea.Bottom - _restoreBounds.Bottom);
-
-        // Set margin FIRST, then resize without repainting so the first
-        // visible frame already has the correct margin applied.
-        RootBorder.Margin = fromMargin;
-        SetWindowBoundsNoRedraw(workArea);
-
-        // Animate margin to zero (border grows to fill the window)
-        AnimateMargin(fromMargin, new Thickness(0), maximizing: true);
+        AnimateBounds(workArea, maximizing: true);
     }
 
     private void AnimateToRestored()
     {
-        if (!_isManuallyMaximized)
+        if (!_isMaximized)
             return;
 
-        _isManuallyMaximized = false;
+        _isMaximized = false;
         UpdateExpandRestoreButtonIcon();
 
-        var workArea = GetMonitorWorkArea();
-        var target = _restoreBounds;
-
-        // Compute the margin that makes the border appear at the restore position
-        var toMargin = new Thickness(
-            target.Left - workArea.Left,
-            target.Top - workArea.Top,
-            workArea.Right - target.Right,
-            workArea.Bottom - target.Bottom);
-
-        // Animate margin from zero to the restore margin
-        AnimateMargin(new Thickness(0), toMargin, maximizing: false, onCompleted: () =>
-        {
-            // Shrink window without repainting, then clear the margin
-            // so the first visible frame is already correct.
-            RootBorder.BeginAnimation(MarginProperty, null);
-            SetWindowBoundsNoRedraw(target);
-            RootBorder.Margin = new Thickness(0);
-        });
+        AnimateBounds(_restoreBounds, maximizing: false);
     }
 
-    private void AnimateMargin(Thickness from, Thickness to, bool maximizing,
-        Action? onCompleted = null)
+    private void AnimateBounds(Rect target, bool maximizing)
     {
         RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
         RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
@@ -247,31 +215,50 @@ public partial class MainWindow : Window
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        RootBorder.BeginAnimation(MarginProperty, null);
+        // Clear previous animations so current values are used as From
+        ClearBoundsAnimations();
 
-        var anim = new ThicknessAnimation(from, to, duration) { EasingFunction = ease };
+        var leftAnim = new DoubleAnimation(target.Left, duration) { EasingFunction = ease };
+        var topAnim = new DoubleAnimation(target.Top, duration) { EasingFunction = ease };
+        var widthAnim = new DoubleAnimation(target.Width, duration) { EasingFunction = ease };
+        var heightAnim = new DoubleAnimation(target.Height, duration) { EasingFunction = ease };
 
-        if (onCompleted is not null)
-            anim.Completed += (_, _) => onCompleted();
+        // Commit final values when done so the window is freely movable
+        heightAnim.Completed += (_, _) =>
+        {
+            ClearBoundsAnimations();
+            Left = target.Left;
+            Top = target.Top;
+            Width = target.Width;
+            Height = target.Height;
+        };
 
-        RootBorder.BeginAnimation(MarginProperty, anim);
+        BeginAnimation(LeftProperty, leftAnim);
+        BeginAnimation(TopProperty, topAnim);
+        BeginAnimation(WidthProperty, widthAnim);
+        BeginAnimation(HeightProperty, heightAnim);
     }
 
-    // ── Win32 helpers ──────────────────────────────────────────────
-
-    private void SetWindowBoundsNoRedraw(Rect bounds)
+    private void ClearBoundsAnimations()
     {
-        var hwnd = new WindowInteropHelper(this).Handle;
-        var source = PresentationSource.FromVisual(this);
-        var toDevice = source?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+        // Freeze current animated values as local values, then remove animations
+        var left = Left;
+        var top = Top;
+        var width = Width;
+        var height = Height;
 
-        SetWindowPos(hwnd, IntPtr.Zero,
-            (int)Math.Round(bounds.Left * toDevice.M11),
-            (int)Math.Round(bounds.Top * toDevice.M22),
-            (int)Math.Round(bounds.Width * toDevice.M11),
-            (int)Math.Round(bounds.Height * toDevice.M22),
-            SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW);
+        BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
+        BeginAnimation(WidthProperty, null);
+        BeginAnimation(HeightProperty, null);
+
+        Left = left;
+        Top = top;
+        Width = width;
+        Height = height;
     }
+
+    // ── Monitor work area ───────────────────────────────────────────
 
     private Rect GetMonitorWorkArea()
     {
@@ -281,23 +268,15 @@ public partial class MainWindow : Window
         GetMonitorInfo(monitor, ref info);
 
         var source = PresentationSource.FromVisual(this);
-        var toDevice = source?.CompositionTarget?.TransformFromDevice
-                       ?? Matrix.Identity;
+        var fromDevice = source?.CompositionTarget?.TransformFromDevice
+                         ?? Matrix.Identity;
 
         return new Rect(
-            info.rcWork.Left * toDevice.M11,
-            info.rcWork.Top * toDevice.M22,
-            (info.rcWork.Right - info.rcWork.Left) * toDevice.M11,
-            (info.rcWork.Bottom - info.rcWork.Top) * toDevice.M22);
+            info.rcWork.Left * fromDevice.M11,
+            info.rcWork.Top * fromDevice.M22,
+            (info.rcWork.Right - info.rcWork.Left) * fromDevice.M11,
+            (info.rcWork.Bottom - info.rcWork.Top) * fromDevice.M22);
     }
-
-    [DllImport("user32.dll")]
-    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
-        int x, int y, int cx, int cy, uint uFlags);
-
-    private const uint SWP_NOZORDER = 0x0004;
-    private const uint SWP_NOREDRAW = 0x0008;
-    private const uint SWP_NOACTIVATE = 0x0010;
 
     [DllImport("user32.dll")]
     private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
@@ -319,6 +298,8 @@ public partial class MainWindow : Window
     {
         public int Left, Top, Right, Bottom;
     }
+
+    // ── Shared UI helpers ───────────────────────────────────────────
 
     private void OnTagListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
