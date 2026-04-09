@@ -620,11 +620,7 @@
         BorderBrush="{StaticResource Brush.Border.Subtle}"
         BorderThickness="1"
         CornerRadius="16"
-        MouseMove="MainWindow_OnMouseMove"
-        RenderTransformOrigin="0.5,0.5">
-        <Border.RenderTransform>
-            <ScaleTransform ScaleX="1" ScaleY="1" />
-        </Border.RenderTransform>
+        MouseMove="MainWindow_OnMouseMove">
         <Grid Margin="0,16,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="60" />

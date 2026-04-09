@@ -1,8 +1,10 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Fluxo.ViewModels.Shell;
@@ -15,10 +17,12 @@ namespace Fluxo.Views.Shell;
 public partial class MainWindow : Window
 {
     private const int FadeDuration = 180; // ms
-    private const int StateChangeDuration = 250; // ms
+    private const int StateChangeDuration = 300; // ms
     private readonly MainVM _mainVM;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _isClosing;
+    private bool _isManuallyMaximized;
+    private Rect _restoreBounds;
 
     public MainWindow(MainVM mainVM)
     {
@@ -118,31 +122,44 @@ public partial class MainWindow : Window
 
     private void OnMaximizeWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        AnimateStateChange(() => SystemCommands.MaximizeWindow(this), maximizing: true);
+        AnimateToMaximized();
     }
 
     private void OnRestoreWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        AnimateStateChange(() => SystemCommands.RestoreWindow(this), maximizing: false);
+        AnimateToRestored();
     }
 
     private void OnExpandRestoreWindow(object sender, RoutedEventArgs e)
     {
-        if (WindowState == WindowState.Maximized)
-        {
-            AnimateStateChange(() => SystemCommands.RestoreWindow(this), maximizing: false);
-            return;
-        }
-
-        AnimateStateChange(() => SystemCommands.MaximizeWindow(this), maximizing: true);
+        if (_isManuallyMaximized)
+            AnimateToRestored();
+        else
+            AnimateToMaximized();
     }
 
-    // ── Restore fade-in ─────────────────────────────────────────────
+    // ── Maximize / Restore animation ────────────────────────────────
 
     private void OnWindowStateChanged(object sender, EventArgs e)
     {
+        // If the OS maximized us (e.g. Win+Up, snap), sync our state
+        if (WindowState == WindowState.Maximized && !_isManuallyMaximized)
+        {
+            _restoreBounds = RestoreBounds;
+            WindowState = WindowState.Normal;
+
+            var workArea = GetMonitorWorkArea();
+            Left = workArea.Left;
+            Top = workArea.Top;
+            Width = workArea.Width;
+            Height = workArea.Height;
+            _isManuallyMaximized = true;
+
+            RootBorder.CornerRadius = new CornerRadius(0);
+            RootBorder.BorderThickness = new Thickness(0);
+        }
+
         UpdateExpandRestoreButtonIcon();
-        UpdateBorderForState();
     }
 
     private void UpdateExpandRestoreButtonIcon()
@@ -150,72 +167,101 @@ public partial class MainWindow : Window
         if (ExpandRestoreButton is null)
             return;
 
-        var iconKey = WindowState == WindowState.Maximized ? "CompressAlt" : "ExpandAlt";
+        var iconKey = _isManuallyMaximized ? "CompressAlt" : "ExpandAlt";
         ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
     }
 
-    private void AnimateStateChange(Action applyState, bool maximizing)
+    private void AnimateToMaximized()
     {
-        if (RootBorder.RenderTransform is not ScaleTransform transform)
-        {
-            applyState();
+        if (_isManuallyMaximized)
             return;
-        }
 
-        // Capture current size before the state change
-        var oldWidth = RootBorder.ActualWidth;
-        var oldHeight = RootBorder.ActualHeight;
+        // Save current bounds for restore
+        _restoreBounds = new Rect(Left, Top, Width, Height);
+        _isManuallyMaximized = true;
 
-        // Listen for the actual resize, then animate
-        void OnSizeChanged(object s, SizeChangedEventArgs e)
-        {
-            RootBorder.SizeChanged -= OnSizeChanged;
-
-            var scaleX = oldWidth / e.NewSize.Width;
-            var scaleY = oldHeight / e.NewSize.Height;
-
-            if (scaleX <= 0 || scaleY <= 0 ||
-                (Math.Abs(scaleX - 1) < 0.001 && Math.Abs(scaleY - 1) < 0.001))
-                return;
-
-            // Snap to the old-size scale so content appears unchanged
-            transform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-            transform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-            transform.ScaleX = scaleX;
-            transform.ScaleY = scaleY;
-
-            // Animate to 1.0 (final size)
-            var ease = new CubicEase
-            {
-                EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
-            };
-            var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
-            var animX = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
-            var animY = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
-
-            transform.BeginAnimation(ScaleTransform.ScaleXProperty, animX);
-            transform.BeginAnimation(ScaleTransform.ScaleYProperty, animY);
-        }
-
-        RootBorder.SizeChanged += OnSizeChanged;
-        applyState();
+        var workArea = GetMonitorWorkArea();
+        AnimateBounds(workArea, maximizing: true);
     }
 
-    private void UpdateBorderForState()
+    private void AnimateToRestored()
     {
-        if (RootBorder is null)
+        if (!_isManuallyMaximized)
             return;
 
-        if (WindowState == WindowState.Maximized)
+        _isManuallyMaximized = false;
+        AnimateBounds(_restoreBounds, maximizing: false);
+    }
+
+    private void AnimateBounds(Rect target, bool maximizing)
+    {
+        UpdateExpandRestoreButtonIcon();
+
+        // Update corner radius / border at the start of the animation
+        RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
+        RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
+
+        var ease = new CubicEase
         {
-            RootBorder.CornerRadius = new CornerRadius(0);
-            RootBorder.BorderThickness = new Thickness(0);
-        }
-        else
-        {
-            RootBorder.CornerRadius = new CornerRadius(16);
-            RootBorder.BorderThickness = new Thickness(1);
-        }
+            EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
+        };
+        var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
+
+        // Clear previous animations so we can read/set values cleanly
+        BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
+        BeginAnimation(WidthProperty, null);
+        BeginAnimation(HeightProperty, null);
+
+        BeginAnimation(LeftProperty,
+            new DoubleAnimation(target.Left, duration) { EasingFunction = ease });
+        BeginAnimation(TopProperty,
+            new DoubleAnimation(target.Top, duration) { EasingFunction = ease });
+        BeginAnimation(WidthProperty,
+            new DoubleAnimation(target.Width, duration) { EasingFunction = ease });
+        BeginAnimation(HeightProperty,
+            new DoubleAnimation(target.Height, duration) { EasingFunction = ease });
+    }
+
+    // ── Monitor work area (multi-monitor aware) ─────────────────────
+
+    private Rect GetMonitorWorkArea()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        var monitor = MonitorFromWindow(hwnd, 2 /* MONITOR_DEFAULTTONEAREST */);
+        var info = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+        GetMonitorInfo(monitor, ref info);
+
+        var source = PresentationSource.FromVisual(this);
+        var toDevice = source?.CompositionTarget?.TransformFromDevice
+                       ?? Matrix.Identity;
+
+        return new Rect(
+            info.rcWork.Left * toDevice.M11,
+            info.rcWork.Top * toDevice.M22,
+            (info.rcWork.Right - info.rcWork.Left) * toDevice.M11,
+            (info.rcWork.Bottom - info.rcWork.Top) * toDevice.M22);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left, Top, Right, Bottom;
     }
 
     private void OnTagListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
