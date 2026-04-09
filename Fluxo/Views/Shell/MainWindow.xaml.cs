@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _isClosing;
     private bool _isMaximized;
+    private Rect _currentBounds;
     private Rect _restoreBounds;
 
     public MainWindow(MainVM mainVM)
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
 
         Loaded += async (_, _) =>
         {
+            _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
             FadeIn();
             await _mainVM.Initialize();
@@ -145,11 +147,13 @@ public partial class MainWindow : Window
         if (_isMaximized)
             return;
 
-        _restoreBounds = new Rect(Left, Top, Width, Height);
+        _restoreBounds = _currentBounds;
         _isMaximized = true;
         UpdateExpandRestoreButtonIcon();
 
-        AnimateBounds(_restoreBounds, GetMonitorWorkArea(), maximizing: true);
+        var workArea = GetMonitorWorkArea();
+        _currentBounds = workArea;
+        AnimateBounds(_restoreBounds, workArea, maximizing: true);
     }
 
     private void AnimateToRestored()
@@ -157,10 +161,11 @@ public partial class MainWindow : Window
         if (!_isMaximized)
             return;
 
-        var from = new Rect(Left, Top, Width, Height);
+        var from = _currentBounds;
         _isMaximized = false;
         UpdateExpandRestoreButtonIcon();
 
+        _currentBounds = _restoreBounds;
         AnimateBounds(from, _restoreBounds, maximizing: false);
     }
 
