@@ -168,43 +168,43 @@ public partial class MainWindow : Window
             return;
         }
 
-        // 1. Capture current size before the state change
-        var oldWidth = ActualWidth;
-        var oldHeight = ActualHeight;
+        // Capture current size before the state change
+        var oldWidth = RootBorder.ActualWidth;
+        var oldHeight = RootBorder.ActualHeight;
 
-        // 2. Apply the state change (instant resize)
-        applyState();
-
-        // 3. Force layout so ActualWidth/Height reflect the new size
-        UpdateLayout();
-
-        var newWidth = ActualWidth;
-        var newHeight = ActualHeight;
-
-        // 4. Compute the ratio so content appears the same size as before
-        var scaleX = oldWidth / newWidth;
-        var scaleY = oldHeight / newHeight;
-
-        if (scaleX <= 0 || scaleY <= 0 || (Math.Abs(scaleX - 1) < 0.001 && Math.Abs(scaleY - 1) < 0.001))
-            return;
-
-        // 5. Snap to the old-size scale
-        transform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-        transform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-        transform.ScaleX = scaleX;
-        transform.ScaleY = scaleY;
-
-        // 6. Animate to 1.0 (final size)
-        var ease = new CubicEase
+        // Listen for the actual resize, then animate
+        void OnSizeChanged(object s, SizeChangedEventArgs e)
         {
-            EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
-        };
-        var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
-        var animX = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
-        var animY = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
+            RootBorder.SizeChanged -= OnSizeChanged;
 
-        transform.BeginAnimation(ScaleTransform.ScaleXProperty, animX);
-        transform.BeginAnimation(ScaleTransform.ScaleYProperty, animY);
+            var scaleX = oldWidth / e.NewSize.Width;
+            var scaleY = oldHeight / e.NewSize.Height;
+
+            if (scaleX <= 0 || scaleY <= 0 ||
+                (Math.Abs(scaleX - 1) < 0.001 && Math.Abs(scaleY - 1) < 0.001))
+                return;
+
+            // Snap to the old-size scale so content appears unchanged
+            transform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            transform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            transform.ScaleX = scaleX;
+            transform.ScaleY = scaleY;
+
+            // Animate to 1.0 (final size)
+            var ease = new CubicEase
+            {
+                EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
+            };
+            var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
+            var animX = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
+            var animY = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
+
+            transform.BeginAnimation(ScaleTransform.ScaleXProperty, animX);
+            transform.BeginAnimation(ScaleTransform.ScaleYProperty, animY);
+        }
+
+        RootBorder.SizeChanged += OnSizeChanged;
+        applyState();
     }
 
     private void UpdateBorderForState()
