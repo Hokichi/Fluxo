@@ -177,7 +177,9 @@ public partial class MainWindow : Window
         if (_isManuallyMaximized)
             return;
 
-        // Save current bounds for restore
+        // Clear held animations so Left/Top/Width/Height return real values
+        ClearBoundsAnimations();
+
         _restoreBounds = new Rect(Left, Top, Width, Height);
         _isManuallyMaximized = true;
 
@@ -198,7 +200,6 @@ public partial class MainWindow : Window
     {
         UpdateExpandRestoreButtonIcon();
 
-        // Update corner radius / border at the start of the animation
         RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
         RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
 
@@ -208,20 +209,37 @@ public partial class MainWindow : Window
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        // Clear previous animations so we can read/set values cleanly
+        // Clear previous animations so From values are read correctly
+        ClearBoundsAnimations();
+
+        var leftAnim = new DoubleAnimation(target.Left, duration) { EasingFunction = ease };
+        var topAnim = new DoubleAnimation(target.Top, duration) { EasingFunction = ease };
+        var widthAnim = new DoubleAnimation(target.Width, duration) { EasingFunction = ease };
+        var heightAnim = new DoubleAnimation(target.Height, duration) { EasingFunction = ease };
+
+        // On completion, commit final values as local values so the window
+        // is freely movable and future animations read correct positions
+        heightAnim.Completed += (_, _) =>
+        {
+            ClearBoundsAnimations();
+            Left = target.Left;
+            Top = target.Top;
+            Width = target.Width;
+            Height = target.Height;
+        };
+
+        BeginAnimation(LeftProperty, leftAnim);
+        BeginAnimation(TopProperty, topAnim);
+        BeginAnimation(WidthProperty, widthAnim);
+        BeginAnimation(HeightProperty, heightAnim);
+    }
+
+    private void ClearBoundsAnimations()
+    {
         BeginAnimation(LeftProperty, null);
         BeginAnimation(TopProperty, null);
         BeginAnimation(WidthProperty, null);
         BeginAnimation(HeightProperty, null);
-
-        BeginAnimation(LeftProperty,
-            new DoubleAnimation(target.Left, duration) { EasingFunction = ease });
-        BeginAnimation(TopProperty,
-            new DoubleAnimation(target.Top, duration) { EasingFunction = ease });
-        BeginAnimation(WidthProperty,
-            new DoubleAnimation(target.Width, duration) { EasingFunction = ease });
-        BeginAnimation(HeightProperty,
-            new DoubleAnimation(target.Height, duration) { EasingFunction = ease });
     }
 
     // ── Monitor work area (multi-monitor aware) ─────────────────────
