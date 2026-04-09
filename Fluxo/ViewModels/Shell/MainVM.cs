@@ -120,6 +120,14 @@ public partial class MainVM : ObservableRecipient
 
     public bool IsMonthlyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Monthly;
 
+    public string MoveToCurrentLabel => SelectedMainContentViewMode switch
+    {
+        MainContentViewMode.Daily => "Move to today",
+        MainContentViewMode.Weekly => "Move to current week",
+        MainContentViewMode.Monthly => "Move to current month",
+        _ => ""
+    };
+
     public bool HasOtherTags => OtherTags.Count > 0;
 
     public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
@@ -167,6 +175,7 @@ public partial class MainVM : ObservableRecipient
         OnPropertyChanged(nameof(IsDailyViewSelected));
         OnPropertyChanged(nameof(IsWeeklyViewSelected));
         OnPropertyChanged(nameof(IsMonthlyViewSelected));
+        OnPropertyChanged(nameof(MoveToCurrentLabel));
 
         if (_isInitialized)
             NavigateSpinnerToDate(SelectedDay.Date);
@@ -201,6 +210,12 @@ public partial class MainVM : ObservableRecipient
     private void SetSelectedMainContentView(MainContentViewMode viewMode)
     {
         SelectedMainContentViewMode = viewMode;
+    }
+
+    [RelayCommand]
+    private void MoveToCurrentPeriod()
+    {
+        NavigateSpinnerToDate(DateTime.Today);
     }
 
     [RelayCommand]

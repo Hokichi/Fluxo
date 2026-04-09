@@ -835,6 +835,44 @@
                     </StackPanel>
                 </Border>
 
+                <Button
+                    Grid.Row="1"
+                    Margin="0,52,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Command="{Binding MoveToCurrentPeriodCommand}"
+                    Content="{Binding MoveToCurrentLabel}"
+                    Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+                            <Setter Property="FontSize" Value="10" />
+                            <Setter Property="Padding" Value="8,2" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <TextBlock
+                                            Padding="{TemplateBinding Padding}"
+                                            FontFamily="{TemplateBinding FontFamily}"
+                                            FontSize="{TemplateBinding FontSize}"
+                                            Foreground="{TemplateBinding Foreground}"
+                                            Text="{TemplateBinding Content}" />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <Grid
                     x:Name="MainContentGrid"
                     Grid.Row="1"
