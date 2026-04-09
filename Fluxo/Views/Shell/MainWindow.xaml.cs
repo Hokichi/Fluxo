@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.Views.Shell;
@@ -344,5 +345,36 @@ public partial class MainWindow : Window
                 return match;
 
         return null;
+    }
+
+    // ── Popup overlay & blur ────────────────────────────────────────
+
+    public void ShowPopupOverlay()
+    {
+        ContentGrid.Effect = new BlurEffect { Radius = 10, RenderingBias = RenderingBias.Performance };
+
+        PopupOverlay.Visibility = Visibility.Visible;
+        var fadeIn = new DoubleAnimation(0, 0.5, TimeSpan.FromMilliseconds(FadeDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        PopupOverlay.BeginAnimation(OpacityProperty, fadeIn);
+    }
+
+    public void HidePopupOverlay()
+    {
+        ContentGrid.Effect = null;
+
+        var fadeOut = new DoubleAnimation(0.5, 0, TimeSpan.FromMilliseconds(FadeDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+        fadeOut.Completed += (_, _) =>
+        {
+            PopupOverlay.BeginAnimation(OpacityProperty, null);
+            PopupOverlay.Opacity = 0;
+            PopupOverlay.Visibility = Visibility.Collapsed;
+        };
+        PopupOverlay.BeginAnimation(OpacityProperty, fadeOut);
     }
 }
