@@ -96,11 +96,6 @@ public partial class MainWindow : Window
 
         e.Cancel = true;
 
-        if (_isClosing)
-            return;
-
-        _isClosing = true;
-
         try
         {
             await ((App)Application.Current).DeleteMarkedExpenseLogsAsync(_mainVM);
@@ -108,7 +103,6 @@ public partial class MainWindow : Window
         }
         finally
         {
-            Close();
         }
     }
 
