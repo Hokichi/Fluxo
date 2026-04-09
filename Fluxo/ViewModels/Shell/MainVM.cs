@@ -147,7 +147,7 @@ public partial class MainVM : ObservableRecipient
 
     async partial void OnSelectedDayChanged(DayOfWeekVM value)
     {
-        if (!_isInitialized || value is null)
+        if (value is null)
             return;
 
         foreach (var item in DaysOfWeek)
@@ -155,6 +155,9 @@ public partial class MainVM : ObservableRecipient
 
         if (SelectedMainContentViewMode == MainContentViewMode.Daily)
             _lastSelectedDate = value.Date;
+
+        if (!_isInitialized)
+            return;
 
         await ReloadDataForSelectedItem(value);
     }
