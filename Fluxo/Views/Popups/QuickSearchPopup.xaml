@@ -80,7 +80,16 @@
             Grid.Row="1"
             Margin="16,0,16,16"
             Visibility="Collapsed">
-            <ItemsControl x:Name="ResultsList">
+            <Grid>
+                <TextBlock
+                    x:Name="NoResultsText"
+                    Padding="12,10"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="14"
+                    Foreground="{DynamicResource Brush.Text.Muted}"
+                    Text="No expense found"
+                    Visibility="Collapsed" />
+                <ItemsControl x:Name="ResultsList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border MouseLeftButtonUp="OnResultItemClick" Style="{StaticResource SearchResultItemStyle}">
@@ -152,6 +161,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            </Grid>
         </Border>
     </Grid>
 </c:BasePopup>

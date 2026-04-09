@@ -30,6 +30,7 @@ public partial class QuickSearchPopup : BasePopup
         if (string.IsNullOrEmpty(query) || query.Length <= 3)
         {
             ResultsBorder.Visibility = Visibility.Collapsed;
+            NoResultsText.Visibility = Visibility.Collapsed;
             return;
         }
 
@@ -38,16 +39,18 @@ public partial class QuickSearchPopup : BasePopup
             .Take(5)
             .ToList();
 
+        ResultsBorder.Visibility = Visibility.Visible;
+
         if (matches.Count == 0)
         {
-            ResultsBorder.Visibility = Visibility.Collapsed;
+            NoResultsText.Visibility = Visibility.Visible;
             return;
         }
 
+        NoResultsText.Visibility = Visibility.Collapsed;
+
         foreach (var match in matches)
             _searchResults.Add(match);
-
-        ResultsBorder.Visibility = Visibility.Visible;
     }
 
     private void OnResultItemClick(object sender, MouseButtonEventArgs e)
