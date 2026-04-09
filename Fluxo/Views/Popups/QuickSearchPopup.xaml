@@ -45,7 +45,7 @@
         <!--  Search Bar  -->
         <Border
             Grid.Row="0"
-            Margin="16,16,16,0"
+            Margin="16"
             Padding="12,10"
             Background="{DynamicResource Brush.Background.Surface}"
             BorderBrush="{DynamicResource Brush.Border.Subtle}"
@@ -78,14 +78,12 @@
         <Border
             x:Name="ResultsBorder"
             Grid.Row="1"
-            Margin="16,8,16,16"
+            Margin="16,0,16,16"
             Visibility="Collapsed">
             <ItemsControl x:Name="ResultsList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border
-                            MouseLeftButtonUp="OnResultItemClick"
-                            Style="{StaticResource SearchResultItemStyle}">
+                        <Border MouseLeftButtonUp="OnResultItemClick" Style="{StaticResource SearchResultItemStyle}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -105,7 +103,7 @@
                                             FontFamily="{DynamicResource Regular}"
                                             FontSize="10"
                                             Foreground="{DynamicResource Brush.Text.Muted}"
-                                            Text="{Binding DeductedOn, Converter={DynamicResource DateTimeToRelativeDateConverter}}" />
+                                            Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
 
                                         <Border
                                             Margin="8,0,0,0"
@@ -113,7 +111,7 @@
                                             VerticalAlignment="Center"
                                             Background="{Binding Expense.ExpenseTag.HexCode}">
                                             <Border.CornerRadius>
-                                                <MultiBinding Converter="{DynamicResource CornerRadiusConverter}">
+                                                <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
                                                     <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
                                                     <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
                                                 </MultiBinding>
@@ -122,7 +120,7 @@
                                                 VerticalAlignment="Center"
                                                 FontFamily="{DynamicResource Medium}"
                                                 FontSize="10"
-                                                Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={DynamicResource BrushToLighterBrushConverter}}"
+                                                Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
                                                 Text="{Binding Expense.ExpenseTag.Name}" />
                                         </Border>
                                     </StackPanel>
@@ -137,7 +135,7 @@
                                         FontFamily="{DynamicResource Bold}"
                                         FontSize="13"
                                         Foreground="{DynamicResource Brush.Text.Primary}"
-                                        Text="{Binding Amount, Converter={DynamicResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                        Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                                     <TextBlock
                                         MaxWidth="120"
                                         Margin="0,6,0,0"

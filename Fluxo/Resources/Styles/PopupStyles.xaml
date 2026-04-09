@@ -93,7 +93,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource ContentSaveMore}"
+                                        ButtonIcon="{StaticResource ContentSaveMove}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"

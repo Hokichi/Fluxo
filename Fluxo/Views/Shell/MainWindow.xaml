@@ -877,7 +877,7 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
-                            <Grid Margin="0,24" VerticalAlignment="Center">
+                            <Grid VerticalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="300" />
                                     <ColumnDefinition Width="24" />
@@ -926,20 +926,17 @@
 
                                 <Border
                                     Grid.Column="2"
-                                    Margin="0,16,48,16"
+                                    Margin="0,16,8,16"
                                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                                     BorderThickness="1"
                                     CornerRadius="16">
-                                    <Grid Margin="16,24,20,24">
+                                    <Grid Margin="32,24">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition />
                                             <ColumnDefinition />
                                             <ColumnDefinition />
                                         </Grid.ColumnDefinitions>
-                                        <StackPanel
-                                            Grid.Column="0"
-                                            Margin="24,0,0,0"
-                                            VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                             <TextBlock>
                                                 <Run
                                                     FontFamily="{StaticResource Bold}"

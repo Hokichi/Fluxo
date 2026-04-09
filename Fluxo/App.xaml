@@ -7,28 +7,6 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
-                    <cons:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-                    <cons:BoolToVisibilityInvertedConverter x:Key="BoolToVisibilityInvertedConverter" />
-                    <cons:BoolToNotificationIconConverter x:Key="BoolToNotificationIconConverter" />
-                    <cons:BorderCornerClipConverter x:Key="BorderCornerClipConverter" />
-                    <cons:BrushToColorConverter x:Key="BrushToColorConverter" />
-                    <cons:BrushToLighterBrushConverter x:Key="BrushToLighterBrushConverter" />
-                    <cons:CornerRadiusConverter x:Key="CornerRadiusConverter" />
-                    <cons:DateTimeToRelativeDateConverter x:Key="DateTimeToRelativeDateConverter" />
-                    <cons:NumberWithCommasConverter x:Key="NumberWithCommasConverter" />
-                    <cons:ObjectToNullConverter x:Key="ObjectToNullConverter" />
-                    <cons:ProgressToArcGeometryConverter x:Key="ProgressToArcGeometryConverter" />
-                </ResourceDictionary>
-
-                <ResourceDictionary Source="Resources/Theme.xaml" />
-                <ResourceDictionary Source="Resources/Icons.xaml" />
-
-                <ResourceDictionary Source="Resources/Fonts/ContainerStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/GlobalStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/PopupStyles.xaml" />
-
-                <ResourceDictionary>
                     <FontFamily x:Key="Black">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Black.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
                     <FontFamily x:Key="BlackItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-BlackItalic.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
                     <FontFamily x:Key="Bold">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Bold.ttf#SFT Schrifted Round TRIAL</FontFamily>
@@ -63,6 +41,28 @@
                     <FontFamily x:Key="Regular">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Regular.ttf#SFT Schrifted Round TRIAL</FontFamily>
                     <FontFamily x:Key="Var">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIALVar.ttf#SFT Schrifted Round TRIAL Var</FontFamily>
                 </ResourceDictionary>
+
+                <ResourceDictionary>
+                    <cons:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+                    <cons:BoolToVisibilityInvertedConverter x:Key="BoolToVisibilityInvertedConverter" />
+                    <cons:BoolToNotificationIconConverter x:Key="BoolToNotificationIconConverter" />
+                    <cons:BorderCornerClipConverter x:Key="BorderCornerClipConverter" />
+                    <cons:BrushToColorConverter x:Key="BrushToColorConverter" />
+                    <cons:BrushToLighterBrushConverter x:Key="BrushToLighterBrushConverter" />
+                    <cons:CornerRadiusConverter x:Key="CornerRadiusConverter" />
+                    <cons:DateTimeToRelativeDateConverter x:Key="DateTimeToRelativeDateConverter" />
+                    <cons:NumberWithCommasConverter x:Key="NumberWithCommasConverter" />
+                    <cons:ObjectToNullConverter x:Key="ObjectToNullConverter" />
+                    <cons:ProgressToArcGeometryConverter x:Key="ProgressToArcGeometryConverter" />
+                </ResourceDictionary>
+
+                <ResourceDictionary Source="Resources/Theme.xaml" />
+                <ResourceDictionary Source="Resources/Icons.xaml" />
+
+                <ResourceDictionary Source="Resources/Fonts/ContainerStyles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/GlobalStyles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/PopupStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
