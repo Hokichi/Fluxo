@@ -661,12 +661,19 @@
                             <ColumnDefinition Width="40" />
                         </Grid.ColumnDefinitions>
 
-                        <icons:PackIconUnicons
-                            Height="12"
+                        <Button
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Kind="AngleLeft" />
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Command="{Binding NavigateSpinnerBackCommand}"
+                            Cursor="Hand">
+                            <icons:PackIconUnicons
+                                Height="12"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Kind="AngleLeft" />
+                        </Button>
 
                         <ListView
                             Grid.Column="1"
@@ -685,13 +692,21 @@
                             </ListView.ItemsPanel>
                         </ListView>
 
-                        <icons:PackIconUnicons
+                        <Button
                             Grid.Column="2"
-                            Height="12"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Kind="AngleRight" />
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Command="{Binding NavigateSpinnerForwardCommand}"
+                            Cursor="Hand"
+                            IsEnabled="{Binding CanNavigateForward}">
+                            <icons:PackIconUnicons
+                                Height="12"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Kind="AngleRight" />
+                        </Button>
                     </Grid>
 
                     <StackPanel

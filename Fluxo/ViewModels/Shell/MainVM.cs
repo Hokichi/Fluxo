@@ -56,6 +56,8 @@ public partial class MainVM : ObservableRecipient
 
     private bool _isSynchronizingTagSelections;
     [ObservableProperty] private bool _isWantsEmpty;
+    [ObservableProperty] private bool _canNavigateForward;
+    private int _spinnerPageOffset;
     private decimal _lowAccountBalancePercentage = 0.20m;
 
     [ObservableProperty]
@@ -142,14 +144,30 @@ public partial class MainVM : ObservableRecipient
         SelectedTag = value;
     }
 
-    async partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
+    async partial void OnSelectedDayChanged(DayOfWeekVM value)
+    {
+        if (!_isInitialized || value is null)
+            return;
+
+        foreach (var item in DaysOfWeek)
+            item.IsSelected = ReferenceEquals(item, value);
+
+        await ReloadDataForSelectedItem(value);
+    }
+
+    partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
     {
         OnPropertyChanged(nameof(IsDailyViewSelected));
         OnPropertyChanged(nameof(IsWeeklyViewSelected));
         OnPropertyChanged(nameof(IsMonthlyViewSelected));
 
         if (_isInitialized)
-            await ReloadDataForViewMode(value);
+        {
+            _spinnerPageOffset = 0;
+            CanNavigateForward = false;
+            BuildSpinnerItems();
+            SelectDefaultSpinnerItem();
+        }
     }
 
     partial void OnSpendingSourcesChanged(ObservableCollection<SpendingSourceVM>? oldValue,
@@ -181,6 +199,27 @@ public partial class MainVM : ObservableRecipient
     private void SetSelectedMainContentView(MainContentViewMode viewMode)
     {
         SelectedMainContentViewMode = viewMode;
+    }
+
+    [RelayCommand]
+    private void NavigateSpinnerBack()
+    {
+        _spinnerPageOffset--;
+        CanNavigateForward = true;
+        BuildSpinnerItems();
+        SelectDefaultSpinnerItem();
+    }
+
+    [RelayCommand]
+    private void NavigateSpinnerForward()
+    {
+        if (_spinnerPageOffset >= 0)
+            return;
+
+        _spinnerPageOffset++;
+        CanNavigateForward = _spinnerPageOffset < 0;
+        BuildSpinnerItems();
+        SelectDefaultSpinnerItem();
     }
 
     [RelayCommand]
@@ -227,7 +266,8 @@ public partial class MainVM : ObservableRecipient
 
     public async Task Initialize()
     {
-        BuildDaysOfWeek();
+        BuildSpinnerItems();
+        SelectDefaultSpinnerItem();
         await LoadUserSettingsAsync();
 
         var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
@@ -251,22 +291,23 @@ public partial class MainVM : ObservableRecipient
         RefreshNotifications();
     }
 
-    private async Task ReloadDataForViewMode(MainContentViewMode viewMode)
+    private async Task ReloadDataForSelectedItem(DayOfWeekVM selectedItem)
     {
         IReadOnlyList<ExpenseVM> expenses;
         IReadOnlyList<ExpenseLogVM> expenseLogs;
         IReadOnlyList<IncomeLogVM> incomeLogs;
 
-        switch (viewMode)
+        switch (SelectedMainContentViewMode)
         {
             case MainContentViewMode.Daily:
-                expenses = await _readUnitOfWork.Expenses.GetByDayAsync(DateTime.Today);
-                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(DateTime.Today);
-                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(DateTime.Today);
+                var day = selectedItem.Date;
+                expenses = await _readUnitOfWork.Expenses.GetByDayAsync(day);
+                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(day);
+                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(day);
                 break;
 
             case MainContentViewMode.Weekly:
-                var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1);
+                var startOfWeek = selectedItem.Date;
                 var endOfWeek = startOfWeek.AddDays(6);
                 expenses = await _readUnitOfWork.Expenses.GetByWeekAsync(startOfWeek, endOfWeek);
                 expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByWeekAsync(startOfWeek, endOfWeek);
@@ -274,10 +315,10 @@ public partial class MainVM : ObservableRecipient
                 break;
 
             case MainContentViewMode.Monthly:
-                var currentMonth = DateTime.Today.Month;
-                expenses = await _readUnitOfWork.Expenses.GetByMonthAsync(currentMonth);
-                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByMonthAsync(currentMonth);
-                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByMonthAsync(currentMonth);
+                var month = selectedItem.Date.Month;
+                expenses = await _readUnitOfWork.Expenses.GetByMonthAsync(month);
+                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByMonthAsync(month);
+                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByMonthAsync(month);
                 break;
 
             default:
@@ -291,22 +332,90 @@ public partial class MainVM : ObservableRecipient
         RefreshNotifications();
     }
 
-    private void BuildDaysOfWeek()
+    private void BuildSpinnerItems()
     {
-        var firstDayOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1);
-        var daysThisWeek = Enumerable.Range(0, 7)
-            .Select(offset => firstDayOfWeek.AddDays(offset))
-            .ToList();
-
-        DaysOfWeek = new ObservableCollection<DayOfWeekVM>(daysThisWeek.Select(day => new DayOfWeekVM
+        switch (SelectedMainContentViewMode)
         {
-            Date = day,
-            DayName = day.ToString("ddd"),
-            DayNumber = day.Day.ToString(),
-            IsSelected = day.Date == DateTime.Today
-        }));
+            case MainContentViewMode.Daily:
+                BuildDailySpinnerItems();
+                break;
+            case MainContentViewMode.Weekly:
+                BuildWeeklySpinnerItems();
+                break;
+            case MainContentViewMode.Monthly:
+                BuildMonthlySpinnerItems();
+                break;
+        }
+    }
 
-        SelectedDay = DaysOfWeek.FirstOrDefault(day => day.IsSelected) ??
+    private void BuildDailySpinnerItems()
+    {
+        var currentWeekMonday = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1);
+        var firstDay = currentWeekMonday.AddDays(_spinnerPageOffset * 7);
+
+        DaysOfWeek = new ObservableCollection<DayOfWeekVM>(
+            Enumerable.Range(0, 7).Select(offset =>
+            {
+                var day = firstDay.AddDays(offset);
+                return new DayOfWeekVM
+                {
+                    Date = day,
+                    DayName = day.ToString("ddd"),
+                    DayNumber = day.Day.ToString(),
+                    IsSelected = day.Date == DateTime.Today
+                };
+            }));
+    }
+
+    private void BuildWeeklySpinnerItems()
+    {
+        var today = DateTime.Today;
+        var currentWeekMonday = today.AddDays(-(int)today.DayOfWeek + 1);
+        var currentWeekNumber = ISOWeek.GetWeekOfYear(today);
+        var groupStart = ((currentWeekNumber - 1) / 4) * 4;
+        var baseMonday = currentWeekMonday.AddDays(-(currentWeekNumber - 1 - groupStart) * 7);
+        var firstMonday = baseMonday.AddDays(_spinnerPageOffset * 28);
+
+        DaysOfWeek = new ObservableCollection<DayOfWeekVM>(
+            Enumerable.Range(0, 4).Select(offset =>
+            {
+                var weekMonday = firstMonday.AddDays(offset * 7);
+                var weekNumber = ISOWeek.GetWeekOfYear(weekMonday);
+                return new DayOfWeekVM
+                {
+                    Date = weekMonday,
+                    DayName = "Week",
+                    DayNumber = weekNumber.ToString(),
+                    IsSelected = weekMonday == currentWeekMonday
+                };
+            }));
+    }
+
+    private void BuildMonthlySpinnerItems()
+    {
+        var today = DateTime.Today;
+        var currentMonth = today.Month;
+        var groupStartMonth = ((currentMonth - 1) / 4) * 4 + 1;
+        var baseDate = new DateTime(today.Year, groupStartMonth, 1);
+        var firstMonth = baseDate.AddMonths(_spinnerPageOffset * 4);
+
+        DaysOfWeek = new ObservableCollection<DayOfWeekVM>(
+            Enumerable.Range(0, 4).Select(offset =>
+            {
+                var monthDate = firstMonth.AddMonths(offset);
+                return new DayOfWeekVM
+                {
+                    Date = monthDate,
+                    DayName = "",
+                    DayNumber = monthDate.ToString("MMM"),
+                    IsSelected = monthDate.Month == today.Month && monthDate.Year == today.Year
+                };
+            }));
+    }
+
+    private void SelectDefaultSpinnerItem()
+    {
+        SelectedDay = DaysOfWeek.FirstOrDefault(item => item.IsSelected) ??
                       DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM();
     }
 

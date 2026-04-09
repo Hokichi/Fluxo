@@ -42,7 +42,7 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
     public async Task<IReadOnlyList<Expense>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
-            .Where(expense => expense.RecurringDate.GetValueOrDefault().Month == month)
+            .Where(expense => expense.RecurringDate != null && expense.RecurringDate.Value.Month == month)
             .ToListAsync(cancellationToken);
     }
 
