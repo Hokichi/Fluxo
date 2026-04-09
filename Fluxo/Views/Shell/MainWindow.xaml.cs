@@ -175,22 +175,24 @@ public partial class MainWindow : Window
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        // Pre-set local values to the target. While the animation runs it
-        // overrides these, but when FillBehavior.Stop removes the animation
-        // on completion the properties fall back to these correct values.
+        // Start animations FIRST — BeginAnimation takes immediate effect with
+        // the From value, so no Win32 repaint flash from setting local values.
+        BeginAnimation(LeftProperty, new DoubleAnimation(from.Left, to.Left, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        BeginAnimation(TopProperty, new DoubleAnimation(from.Top, to.Top, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        BeginAnimation(WidthProperty, new DoubleAnimation(from.Width, to.Width, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        BeginAnimation(HeightProperty, new DoubleAnimation(from.Height, to.Height, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+
+        // Set local values while animations are running (invisible — animation
+        // overrides). When FillBehavior.Stop removes the animation on completion,
+        // properties fall back to these correct target values.
         Left = to.Left;
         Top = to.Top;
         Width = to.Width;
         Height = to.Height;
-
-        BeginAnimation(LeftProperty, new DoubleAnimation(from.Left, to.Left, duration)
-        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
-        BeginAnimation(TopProperty, new DoubleAnimation(from.Top, to.Top, duration)
-        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
-        BeginAnimation(WidthProperty, new DoubleAnimation(from.Width, to.Width, duration)
-        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
-        BeginAnimation(HeightProperty, new DoubleAnimation(from.Height, to.Height, duration)
-        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
     }
 
     // ── Monitor work area ───────────────────────────────────────────
