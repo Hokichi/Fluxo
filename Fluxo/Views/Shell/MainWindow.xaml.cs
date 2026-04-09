@@ -19,7 +19,7 @@ namespace Fluxo.Views.Shell;
 public partial class MainWindow : Window
 {
     private const int FadeDuration = 180; // ms
-    private const int StateChangeDuration = 300; // ms
+    private const int StateChangeDuration = 200; // ms
     private readonly MainVM _mainVM;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _isClosing;
