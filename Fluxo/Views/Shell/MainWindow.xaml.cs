@@ -169,25 +169,55 @@ public partial class MainWindow : Window
         AnimateBounds(from, _restoreBounds, maximizing: false);
     }
 
+    private EventHandler? _renderHandler;
+
     private void AnimateBounds(Rect from, Rect to, bool maximizing)
     {
         RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
         RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
 
+        // Stop any in-progress animation
+        if (_renderHandler is not null)
+        {
+            CompositionTarget.Rendering -= _renderHandler;
+            _renderHandler = null;
+        }
+
+        // Clear any leftover WPF animations so direct property sets work
+        BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
+        BeginAnimation(WidthProperty, null);
+        BeginAnimation(HeightProperty, null);
+
         var ease = new CubicEase
         {
             EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
         };
-        var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
+        var durationMs = (double)StateChangeDuration;
+        var startTime = TimeSpan.Zero;
 
-        BeginAnimation(LeftProperty, new DoubleAnimation(from.Left, to.Left, duration)
-            { EasingFunction = ease });
-        BeginAnimation(TopProperty, new DoubleAnimation(from.Top, to.Top, duration)
-            { EasingFunction = ease });
-        BeginAnimation(WidthProperty, new DoubleAnimation(from.Width, to.Width, duration)
-            { EasingFunction = ease });
-        BeginAnimation(HeightProperty, new DoubleAnimation(from.Height, to.Height, duration)
-            { EasingFunction = ease });
+        _renderHandler = (sender, e) =>
+        {
+            var timestamp = ((RenderingEventArgs)e).RenderingTime;
+            if (startTime == TimeSpan.Zero)
+                startTime = timestamp;
+
+            var t = Math.Min(1.0, (timestamp - startTime).TotalMilliseconds / durationMs);
+            var eased = ease.Ease(t);
+
+            Left = from.Left + (to.Left - from.Left) * eased;
+            Top = from.Top + (to.Top - from.Top) * eased;
+            Width = from.Width + (to.Width - from.Width) * eased;
+            Height = from.Height + (to.Height - from.Height) * eased;
+
+            if (t >= 1.0)
+            {
+                CompositionTarget.Rendering -= _renderHandler;
+                _renderHandler = null;
+            }
+        };
+
+        CompositionTarget.Rendering += _renderHandler;
     }
 
     // ── Monitor work area ───────────────────────────────────────────
