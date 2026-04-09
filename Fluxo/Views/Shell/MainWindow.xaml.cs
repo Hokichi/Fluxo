@@ -15,6 +15,7 @@ namespace Fluxo.Views.Shell;
 public partial class MainWindow : Window
 {
     private const int FadeDuration = 180; // ms
+    private const int StateChangeDuration = 250; // ms
     private readonly MainVM _mainVM;
     private bool _hasCompletedPendingDeletionCleanup;
 
@@ -116,24 +117,26 @@ public partial class MainWindow : Window
 
     private void OnMaximizeWindow(object sender, ExecutedRoutedEventArgs e)
     {
+        AnimateStateChange(maximizing: true);
         SystemCommands.MaximizeWindow(this);
-        // no fade needed, snappy feels better
     }
 
     private void OnRestoreWindow(object sender, ExecutedRoutedEventArgs e)
     {
+        AnimateStateChange(maximizing: false);
         SystemCommands.RestoreWindow(this);
-        // StateChanged handles the fade-in
     }
 
     private void OnExpandRestoreWindow(object sender, RoutedEventArgs e)
     {
         if (WindowState == WindowState.Maximized)
         {
+            AnimateStateChange(maximizing: false);
             SystemCommands.RestoreWindow(this);
             return;
         }
 
+        AnimateStateChange(maximizing: true);
         SystemCommands.MaximizeWindow(this);
     }
 
@@ -142,6 +145,7 @@ public partial class MainWindow : Window
     private void OnWindowStateChanged(object sender, EventArgs e)
     {
         UpdateExpandRestoreButtonIcon();
+        UpdateBorderForState();
     }
 
     private void UpdateExpandRestoreButtonIcon()
@@ -151,6 +155,42 @@ public partial class MainWindow : Window
 
         var iconKey = WindowState == WindowState.Maximized ? "CompressAlt" : "ExpandAlt";
         ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
+    }
+
+    private void AnimateStateChange(bool maximizing)
+    {
+        var ease = new CubicEase
+        {
+            EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
+        };
+        var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
+
+        // Scale: start slightly smaller when maximizing, slightly larger when restoring
+        var fromScale = maximizing ? 0.95 : 1.03;
+        var scaleAnim = new DoubleAnimation(fromScale, 1.0, duration) { EasingFunction = ease };
+
+        if (RootBorder.RenderTransform is ScaleTransform transform)
+        {
+            transform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+            transform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+        }
+    }
+
+    private void UpdateBorderForState()
+    {
+        if (RootBorder is null)
+            return;
+
+        if (WindowState == WindowState.Maximized)
+        {
+            RootBorder.CornerRadius = new CornerRadius(0);
+            RootBorder.BorderThickness = new Thickness(0);
+        }
+        else
+        {
+            RootBorder.CornerRadius = new CornerRadius(16);
+            RootBorder.BorderThickness = new Thickness(1);
+        }
     }
 
     private void OnTagListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
