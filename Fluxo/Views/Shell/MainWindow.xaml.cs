@@ -156,6 +156,7 @@ public partial class MainWindow : Window
             Height = workArea.Height;
             _isManuallyMaximized = true;
 
+            RootBorder.Margin = new Thickness(0);
             RootBorder.CornerRadius = new CornerRadius(0);
             RootBorder.BorderThickness = new Thickness(0);
         }
@@ -177,14 +178,29 @@ public partial class MainWindow : Window
         if (_isManuallyMaximized)
             return;
 
-        // Clear held animations so Left/Top/Width/Height return real values
-        ClearBoundsAnimations();
-
         _restoreBounds = new Rect(Left, Top, Width, Height);
         _isManuallyMaximized = true;
+        UpdateExpandRestoreButtonIcon();
 
         var workArea = GetMonitorWorkArea();
-        AnimateBounds(workArea, maximizing: true);
+
+        // Compute the margin that makes the border appear at its current position
+        // within the full work-area-sized window
+        var fromMargin = new Thickness(
+            _restoreBounds.Left - workArea.Left,
+            _restoreBounds.Top - workArea.Top,
+            workArea.Right - _restoreBounds.Right,
+            workArea.Bottom - _restoreBounds.Bottom);
+
+        // Snap window to full work area immediately (invisible behind the margin)
+        Left = workArea.Left;
+        Top = workArea.Top;
+        Width = workArea.Width;
+        Height = workArea.Height;
+        RootBorder.Margin = fromMargin;
+
+        // Animate margin to zero (border grows to fill the window)
+        AnimateMargin(fromMargin, new Thickness(0), maximizing: true);
     }
 
     private void AnimateToRestored()
@@ -193,13 +209,34 @@ public partial class MainWindow : Window
             return;
 
         _isManuallyMaximized = false;
-        AnimateBounds(_restoreBounds, maximizing: false);
-    }
-
-    private void AnimateBounds(Rect target, bool maximizing)
-    {
         UpdateExpandRestoreButtonIcon();
 
+        var workArea = GetMonitorWorkArea();
+        var target = _restoreBounds;
+
+        // Compute the margin that makes the border appear at the restore position
+        var toMargin = new Thickness(
+            target.Left - workArea.Left,
+            target.Top - workArea.Top,
+            workArea.Right - target.Right,
+            workArea.Bottom - target.Bottom);
+
+        // Animate margin from zero to the restore margin
+        AnimateMargin(new Thickness(0), toMargin, maximizing: false, onCompleted: () =>
+        {
+            // Shrink window to actual restore bounds and reset margin
+            RootBorder.BeginAnimation(MarginProperty, null);
+            RootBorder.Margin = new Thickness(0);
+            Left = target.Left;
+            Top = target.Top;
+            Width = target.Width;
+            Height = target.Height;
+        });
+    }
+
+    private void AnimateMargin(Thickness from, Thickness to, bool maximizing,
+        Action? onCompleted = null)
+    {
         RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
         RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
 
@@ -209,37 +246,14 @@ public partial class MainWindow : Window
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        // Clear previous animations so From values are read correctly
-        ClearBoundsAnimations();
+        RootBorder.BeginAnimation(MarginProperty, null);
 
-        var leftAnim = new DoubleAnimation(target.Left, duration) { EasingFunction = ease };
-        var topAnim = new DoubleAnimation(target.Top, duration) { EasingFunction = ease };
-        var widthAnim = new DoubleAnimation(target.Width, duration) { EasingFunction = ease };
-        var heightAnim = new DoubleAnimation(target.Height, duration) { EasingFunction = ease };
+        var anim = new ThicknessAnimation(from, to, duration) { EasingFunction = ease };
 
-        // On completion, commit final values as local values so the window
-        // is freely movable and future animations read correct positions
-        heightAnim.Completed += (_, _) =>
-        {
-            ClearBoundsAnimations();
-            Left = target.Left;
-            Top = target.Top;
-            Width = target.Width;
-            Height = target.Height;
-        };
+        if (onCompleted is not null)
+            anim.Completed += (_, _) => onCompleted();
 
-        BeginAnimation(LeftProperty, leftAnim);
-        BeginAnimation(TopProperty, topAnim);
-        BeginAnimation(WidthProperty, widthAnim);
-        BeginAnimation(HeightProperty, heightAnim);
-    }
-
-    private void ClearBoundsAnimations()
-    {
-        BeginAnimation(LeftProperty, null);
-        BeginAnimation(TopProperty, null);
-        BeginAnimation(WidthProperty, null);
-        BeginAnimation(HeightProperty, null);
+        RootBorder.BeginAnimation(MarginProperty, anim);
     }
 
     // ── Monitor work area (multi-monitor aware) ─────────────────────
