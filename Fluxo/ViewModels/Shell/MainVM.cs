@@ -212,6 +212,11 @@ public partial class MainVM : ObservableRecipient
         RemoveExpenseLogFromCollection(_investSource, expenseLog);
     }
 
+    internal IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs()
+    {
+        return _needsSource.Concat(_wantsSource).Concat(_investSource).ToList();
+    }
+
     internal IReadOnlyCollection<int> GetExpenseLogIdsMarkedForDeletion()
     {
         return _expenseLogIdsMarkedForDeletion.ToArray();

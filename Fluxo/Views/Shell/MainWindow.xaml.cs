@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using Fluxo.ViewModels.Shell;
+using Fluxo.Views.Popups;
 
 namespace Fluxo.Views.Shell;
 
@@ -41,6 +42,7 @@ public partial class MainWindow : Window
 
         Closing += OnWindowClosing;
         StateChanged += OnWindowStateChanged;
+        PreviewKeyDown += OnPreviewKeyDown;
     }
 
     private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
@@ -345,6 +347,18 @@ public partial class MainWindow : Window
                 return match;
 
         return null;
+    }
+
+    // ── Keyboard shortcuts ────────────────────────────────────────────
+
+    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            var popup = new QuickSearchPopup(_mainVM) { Owner = this };
+            popup.ShowDialog();
+            e.Handled = true;
+        }
     }
 
     // ── Popup overlay & blur ────────────────────────────────────────
