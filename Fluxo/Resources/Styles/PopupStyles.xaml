@@ -1,0 +1,150 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls">
+
+    <BooleanToVisibilityConverter x:Key="PopupBoolToVisibility" />
+
+    <Style TargetType="{x:Type c:BasePopup}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type c:BasePopup}">
+                    <Border
+                        Background="{StaticResource Brush.Background.Main}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="60" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!--  Header  -->
+                            <Grid Grid.Row="0" Margin="24,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!--  Popup Title  -->
+                                <TextBlock
+                                    Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="18"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{TemplateBinding PopupTitle}" />
+
+                                <!--  Action Buttons  -->
+                                <StackPanel
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+
+                                    <!--  Edit  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_EditButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource Edit}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                                        IconSize="8"
+                                        Visibility="{TemplateBinding ShowEditButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
+                                    <!--  Revert  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_RevertButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource RegularUndo}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Warning}"
+                                        IconSize="8"
+                                        Visibility="{TemplateBinding ShowRevertButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
+                                    <!--  Apply  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_ApplyButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource Check}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Success}"
+                                        IconSize="8"
+                                        Visibility="{TemplateBinding ShowApplyButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
+                                    <!--  Save and Create New  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_SaveAndCreateNewButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource ContentSaveMore}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                                        IconSize="8"
+                                        Visibility="{TemplateBinding ShowSaveAndCreateNewButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
+                                    <!--  Save  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_SaveButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource ContentSave}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        IconSize="8"
+                                        Visibility="{TemplateBinding ShowSaveButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
+                                    <!--  Close (always visible)  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_CloseButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource Close}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Danger}"
+                                        IconSize="8" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!--  Separator  -->
+                            <Border
+                                Grid.Row="0"
+                                Height="1"
+                                VerticalAlignment="Bottom"
+                                Background="{StaticResource Brush.Border.Subtle}" />
+
+                            <!--  Main Content  -->
+                            <ContentPresenter Grid.Row="1" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

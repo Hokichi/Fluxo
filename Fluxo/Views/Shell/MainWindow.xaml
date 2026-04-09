@@ -621,7 +621,8 @@
         BorderThickness="1"
         CornerRadius="16"
         MouseMove="MainWindow_OnMouseMove">
-        <Grid Margin="0,16,0,0">
+        <Grid>
+            <Grid x:Name="ContentGrid" Margin="0,16,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="60" />
                 <RowDefinition Height="*" />
@@ -1340,6 +1341,14 @@
                     </Grid>
                 </Grid>
             </Grid>
+            </Grid>
+            <Border
+                x:Name="PopupOverlay"
+                Background="Black"
+                CornerRadius="16"
+                IsHitTestVisible="False"
+                Opacity="0"
+                Visibility="Collapsed" />
         </Grid>
     </Border>
 </Window>
