@@ -117,27 +117,27 @@ public partial class MainWindow : Window
 
     private void OnMaximizeWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        AnimateStateChange(maximizing: true);
         SystemCommands.MaximizeWindow(this);
+        AnimateStateChange(maximizing: true);
     }
 
     private void OnRestoreWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        AnimateStateChange(maximizing: false);
         SystemCommands.RestoreWindow(this);
+        AnimateStateChange(maximizing: false);
     }
 
     private void OnExpandRestoreWindow(object sender, RoutedEventArgs e)
     {
         if (WindowState == WindowState.Maximized)
         {
-            AnimateStateChange(maximizing: false);
             SystemCommands.RestoreWindow(this);
+            AnimateStateChange(maximizing: false);
             return;
         }
 
-        AnimateStateChange(maximizing: true);
         SystemCommands.MaximizeWindow(this);
+        AnimateStateChange(maximizing: true);
     }
 
     // ── Restore fade-in ─────────────────────────────────────────────
@@ -159,21 +159,29 @@ public partial class MainWindow : Window
 
     private void AnimateStateChange(bool maximizing)
     {
+        if (RootBorder.RenderTransform is not ScaleTransform transform)
+            return;
+
+        var fromScale = maximizing ? 0.95 : 1.03;
+
+        // Clear any running animation, then snap to the starting scale
+        transform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        transform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        transform.ScaleX = fromScale;
+        transform.ScaleY = fromScale;
+
+        // Animate from the starting scale to 1.0
         var ease = new CubicEase
         {
             EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
         };
-        var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
-
-        // Scale: start slightly smaller when maximizing, slightly larger when restoring
-        var fromScale = maximizing ? 0.95 : 1.03;
-        var scaleAnim = new DoubleAnimation(fromScale, 1.0, duration) { EasingFunction = ease };
-
-        if (RootBorder.RenderTransform is ScaleTransform transform)
+        var anim = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(StateChangeDuration))
         {
-            transform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
-            transform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
-        }
+            EasingFunction = ease
+        };
+
+        transform.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
+        transform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
     }
 
     private void UpdateBorderForState()
