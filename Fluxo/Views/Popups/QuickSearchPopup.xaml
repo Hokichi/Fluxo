@@ -8,9 +8,9 @@
     <c:BasePopup.Resources>
         <Style x:Key="SearchTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="CaretBrush" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="FontFamily" Value="{StaticResource Regular}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
+            <Setter Property="FontFamily" Value="{DynamicResource Regular}" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -30,7 +30,7 @@
             <Setter Property="Cursor" Value="Hand" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                    <Setter Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -47,8 +47,8 @@
             Grid.Row="0"
             Margin="16,16,16,0"
             Padding="12,10"
-            Background="{StaticResource Brush.Background.Surface}"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
+            Background="{DynamicResource Brush.Background.Surface}"
+            BorderBrush="{DynamicResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="12">
             <Grid>
@@ -61,8 +61,8 @@
                     Width="14"
                     Height="14"
                     VerticalAlignment="Center"
-                    Data="{StaticResource MagnifyingGlass}"
-                    Fill="{StaticResource Brush.Text.Muted}"
+                    Data="{DynamicResource MagnifyingGlass}"
+                    Fill="{DynamicResource Brush.Text.Muted}"
                     Stretch="Uniform" />
 
                 <TextBox
@@ -94,18 +94,18 @@
 
                                 <StackPanel Margin="0,0,8,0">
                                     <TextBlock
-                                        FontFamily="{StaticResource Bold}"
+                                        FontFamily="{DynamicResource Bold}"
                                         FontSize="13"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Foreground="{DynamicResource Brush.Text.Primary}"
                                         Text="{Binding Expense.Name}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap" />
                                     <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
                                         <TextBlock
-                                            FontFamily="{StaticResource Regular}"
+                                            FontFamily="{DynamicResource Regular}"
                                             FontSize="10"
-                                            Foreground="{StaticResource Brush.Text.Muted}"
-                                            Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                                            Foreground="{DynamicResource Brush.Text.Muted}"
+                                            Text="{Binding DeductedOn, Converter={DynamicResource DateTimeToRelativeDateConverter}}" />
 
                                         <Border
                                             Margin="8,0,0,0"
@@ -113,16 +113,16 @@
                                             VerticalAlignment="Center"
                                             Background="{Binding Expense.ExpenseTag.HexCode}">
                                             <Border.CornerRadius>
-                                                <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                                <MultiBinding Converter="{DynamicResource CornerRadiusConverter}">
                                                     <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
                                                     <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
                                                 </MultiBinding>
                                             </Border.CornerRadius>
                                             <TextBlock
                                                 VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Medium}"
+                                                FontFamily="{DynamicResource Medium}"
                                                 FontSize="10"
-                                                Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                                Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={DynamicResource BrushToLighterBrushConverter}}"
                                                 Text="{Binding Expense.ExpenseTag.Name}" />
                                         </Border>
                                     </StackPanel>
@@ -134,17 +134,17 @@
                                     VerticalAlignment="Center">
                                     <TextBlock
                                         HorizontalAlignment="Right"
-                                        FontFamily="{StaticResource Bold}"
+                                        FontFamily="{DynamicResource Bold}"
                                         FontSize="13"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                        Foreground="{DynamicResource Brush.Text.Primary}"
+                                        Text="{Binding Amount, Converter={DynamicResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                                     <TextBlock
                                         MaxWidth="120"
                                         Margin="0,6,0,0"
                                         HorizontalAlignment="Right"
-                                        FontFamily="{StaticResource Regular}"
+                                        FontFamily="{DynamicResource Regular}"
                                         FontSize="10"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
+                                        Foreground="{DynamicResource Brush.Text.Muted}"
                                         Text="{Binding SpendingSource.Name}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap" />
