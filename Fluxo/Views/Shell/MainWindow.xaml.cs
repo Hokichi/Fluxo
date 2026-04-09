@@ -107,6 +107,7 @@ public partial class MainWindow : Window
         }
         finally
         {
+            Environment.Exit(1);
         }
     }
 
