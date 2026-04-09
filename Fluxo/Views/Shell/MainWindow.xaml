@@ -884,7 +884,7 @@
 
                         <Grid Margin="0,24" VerticalAlignment="Center">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="400" />
                                 <ColumnDefinition Width="24" />
                                 <ColumnDefinition Width="2*" />
                             </Grid.ColumnDefinitions>
@@ -896,7 +896,7 @@
                                 BorderThickness="1"
                                 CornerRadius="16">
 
-                                <Grid Margin="40,24 28 24">
+                                <Grid Margin="40,24,28,24">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition />
                                         <ColumnDefinition />
