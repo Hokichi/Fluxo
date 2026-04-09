@@ -96,7 +96,9 @@ public partial class MainWindow : Window
 
         e.Cancel = true;
 
-        if (_isClosing) return;
+        if (_isClosing)
+            return;
+
         _isClosing = true;
 
         try
