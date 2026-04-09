@@ -24,8 +24,8 @@
                 <ResourceDictionary Source="Resources/Fonts/ContainerStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/GlobalStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/PopupStyles.xaml" />
                 <ResourceDictionary Source="Resources/Icons.xaml" />
+                <ResourceDictionary Source="Resources/Styles/PopupStyles.xaml" />
 
                 <ResourceDictionary>
                     <FontFamily x:Key="Black">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Black.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
