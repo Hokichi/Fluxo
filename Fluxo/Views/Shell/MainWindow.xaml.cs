@@ -176,13 +176,13 @@ public partial class MainWindow : Window
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
         BeginAnimation(LeftProperty, new DoubleAnimation(from.Left, to.Left, duration)
-            { EasingFunction = ease });
+        { EasingFunction = ease });
         BeginAnimation(TopProperty, new DoubleAnimation(from.Top, to.Top, duration)
-            { EasingFunction = ease });
+        { EasingFunction = ease });
         BeginAnimation(WidthProperty, new DoubleAnimation(from.Width, to.Width, duration)
-            { EasingFunction = ease });
+        { EasingFunction = ease });
         BeginAnimation(HeightProperty, new DoubleAnimation(from.Height, to.Height, duration)
-            { EasingFunction = ease });
+        { EasingFunction = ease });
     }
 
     // ── Monitor work area ───────────────────────────────────────────
@@ -294,7 +294,7 @@ public partial class MainWindow : Window
 
     public void ShowPopupOverlay()
     {
-        ContentGrid.Effect = new BlurEffect { Radius = 10, RenderingBias = RenderingBias.Performance };
+        ContentGrid.Effect = new BlurEffect { Radius = 20, RenderingBias = RenderingBias.Performance };
 
         PopupOverlay.Visibility = Visibility.Visible;
         var fadeIn = new DoubleAnimation(0, 0.5, TimeSpan.FromMilliseconds(FadeDuration))

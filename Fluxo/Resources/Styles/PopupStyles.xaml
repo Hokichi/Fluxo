@@ -132,13 +132,6 @@
                                 </StackPanel>
                             </Grid>
 
-                            <!--  Separator  -->
-                            <Border
-                                Grid.Row="0"
-                                Height="1"
-                                VerticalAlignment="Bottom"
-                                Background="{StaticResource Brush.Border.Subtle}" />
-
                             <!--  Main Content  -->
                             <ContentPresenter Grid.Row="1" />
                         </Grid>
