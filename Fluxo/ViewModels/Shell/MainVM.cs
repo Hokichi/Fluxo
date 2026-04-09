@@ -57,6 +57,7 @@ public partial class MainVM : ObservableRecipient
     private bool _isSynchronizingTagSelections;
     [ObservableProperty] private bool _isWantsEmpty;
     [ObservableProperty] private bool _canNavigateForward;
+    private DateTime _lastSelectedDate = DateTime.Today;
     private int _spinnerPageOffset;
     private decimal _lowAccountBalancePercentage = 0.20m;
 
@@ -152,6 +153,9 @@ public partial class MainVM : ObservableRecipient
         foreach (var item in DaysOfWeek)
             item.IsSelected = ReferenceEquals(item, value);
 
+        if (SelectedMainContentViewMode == MainContentViewMode.Daily)
+            _lastSelectedDate = value.Date;
+
         await ReloadDataForSelectedItem(value);
     }
 
@@ -162,12 +166,7 @@ public partial class MainVM : ObservableRecipient
         OnPropertyChanged(nameof(IsMonthlyViewSelected));
 
         if (_isInitialized)
-        {
-            _spinnerPageOffset = 0;
-            CanNavigateForward = false;
-            BuildSpinnerItems();
-            SelectDefaultSpinnerItem();
-        }
+            NavigateSpinnerToDate(SelectedDay.Date);
     }
 
     partial void OnSpendingSourcesChanged(ObservableCollection<SpendingSourceVM>? oldValue,
@@ -207,7 +206,7 @@ public partial class MainVM : ObservableRecipient
         _spinnerPageOffset--;
         CanNavigateForward = true;
         BuildSpinnerItems();
-        SelectDefaultSpinnerItem();
+        SelectFirstSpinnerItem();
     }
 
     [RelayCommand]
@@ -219,7 +218,7 @@ public partial class MainVM : ObservableRecipient
         _spinnerPageOffset++;
         CanNavigateForward = _spinnerPageOffset < 0;
         BuildSpinnerItems();
-        SelectDefaultSpinnerItem();
+        SelectFirstSpinnerItem();
     }
 
     [RelayCommand]
@@ -266,8 +265,7 @@ public partial class MainVM : ObservableRecipient
 
     public async Task Initialize()
     {
-        BuildSpinnerItems();
-        SelectDefaultSpinnerItem();
+        NavigateSpinnerToDate(DateTime.Today);
         await LoadUserSettingsAsync();
 
         var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
@@ -332,6 +330,50 @@ public partial class MainVM : ObservableRecipient
         RefreshNotifications();
     }
 
+    private void NavigateSpinnerToDate(DateTime referenceDate)
+    {
+        ComputeSpinnerOffset(referenceDate);
+        CanNavigateForward = _spinnerPageOffset < 0;
+        BuildSpinnerItems();
+        SelectSpinnerItemForDate(referenceDate);
+    }
+
+    private void ComputeSpinnerOffset(DateTime referenceDate)
+    {
+        var today = DateTime.Today;
+
+        switch (SelectedMainContentViewMode)
+        {
+            case MainContentViewMode.Daily:
+                var todayMonday = today.AddDays(-(int)today.DayOfWeek + 1);
+                var refMonday = referenceDate.AddDays(-(int)referenceDate.DayOfWeek + 1);
+                _spinnerPageOffset = (int)(refMonday - todayMonday).Days / 7;
+                break;
+
+            case MainContentViewMode.Weekly:
+                var todayWeekMonday = today.AddDays(-(int)today.DayOfWeek + 1);
+                var todayWeekNum = ISOWeek.GetWeekOfYear(today);
+                var todayGroupStart = ((todayWeekNum - 1) / 4) * 4;
+                var todayBaseMonday = todayWeekMonday.AddDays(-(todayWeekNum - 1 - todayGroupStart) * 7);
+
+                var refWeekMonday = referenceDate.AddDays(-(int)referenceDate.DayOfWeek + 1);
+                var refWeekNum = ISOWeek.GetWeekOfYear(refWeekMonday);
+                var refGroupStart = ((refWeekNum - 1) / 4) * 4;
+                var refBaseMonday = refWeekMonday.AddDays(-(refWeekNum - 1 - refGroupStart) * 7);
+
+                _spinnerPageOffset = (int)(refBaseMonday - todayBaseMonday).Days / 28;
+                break;
+
+            case MainContentViewMode.Monthly:
+                var todayGroupMonth = ((today.Month - 1) / 4) * 4 + 1;
+                var refGroupMonth = ((referenceDate.Month - 1) / 4) * 4 + 1;
+                var todayBase = new DateTime(today.Year, todayGroupMonth, 1);
+                var refBase = new DateTime(referenceDate.Year, refGroupMonth, 1);
+                _spinnerPageOffset = ((refBase.Year - todayBase.Year) * 12 + refBase.Month - todayBase.Month) / 4;
+                break;
+        }
+    }
+
     private void BuildSpinnerItems()
     {
         switch (SelectedMainContentViewMode)
@@ -362,7 +404,7 @@ public partial class MainVM : ObservableRecipient
                     Date = day,
                     DayName = day.ToString("ddd"),
                     DayNumber = day.Day.ToString(),
-                    IsSelected = day.Date == DateTime.Today
+                    IsSelected = false
                 };
             }));
     }
@@ -386,7 +428,7 @@ public partial class MainVM : ObservableRecipient
                     Date = weekMonday,
                     DayName = "Week",
                     DayNumber = weekNumber.ToString(),
-                    IsSelected = weekMonday == currentWeekMonday
+                    IsSelected = false
                 };
             }));
     }
@@ -408,15 +450,36 @@ public partial class MainVM : ObservableRecipient
                     Date = monthDate,
                     DayName = "",
                     DayNumber = monthDate.ToString("MMM"),
-                    IsSelected = monthDate.Month == today.Month && monthDate.Year == today.Year
+                    IsSelected = false
                 };
             }));
     }
 
-    private void SelectDefaultSpinnerItem()
+    private void SelectSpinnerItemForDate(DateTime referenceDate)
     {
-        SelectedDay = DaysOfWeek.FirstOrDefault(item => item.IsSelected) ??
-                      DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM();
+        DayOfWeekVM? match = SelectedMainContentViewMode switch
+        {
+            MainContentViewMode.Daily =>
+                DaysOfWeek.FirstOrDefault(d => d.Date.Date == _lastSelectedDate.Date)
+                ?? DaysOfWeek.FirstOrDefault(d => d.Date.Date == referenceDate.Date),
+
+            MainContentViewMode.Weekly =>
+                DaysOfWeek.FirstOrDefault(d =>
+                    referenceDate.Date >= d.Date.Date && referenceDate.Date < d.Date.AddDays(7).Date),
+
+            MainContentViewMode.Monthly =>
+                DaysOfWeek.FirstOrDefault(d =>
+                    d.Date.Year == referenceDate.Year && d.Date.Month == referenceDate.Month),
+
+            _ => null
+        };
+
+        SelectedDay = match ?? DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM();
+    }
+
+    private void SelectFirstSpinnerItem()
+    {
+        SelectedDay = DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM();
     }
 
     private void LoadExpenses(IEnumerable<ExpenseVM> expenses)

@@ -328,6 +328,29 @@
             </Border>
         </DataTemplate>
 
+        <Style x:Key="SpinnerArrowButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter
+                            x:Name="ContentHost"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="DaysOfWeekStyle" TargetType="ListViewItem">
             <Setter Property="Template">
                 <Setter.Value>
@@ -665,14 +688,31 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
                             Command="{Binding NavigateSpinnerBackCommand}"
-                            Cursor="Hand">
+                            Style="{StaticResource SpinnerArrowButtonStyle}">
                             <icons:PackIconUnicons
                                 Height="12"
-                                Foreground="{StaticResource Brush.Text.Muted}"
-                                Kind="AngleLeft" />
+                                Kind="AngleLeft">
+                                <icons:PackIconUnicons.Style>
+                                    <Style TargetType="icons:PackIconUnicons">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                                <Setter Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect
+                                                            BlurRadius="2"
+                                                            Opacity="0.8"
+                                                            ShadowDepth="0"
+                                                            Color="White" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </icons:PackIconUnicons.Style>
+                            </icons:PackIconUnicons>
                         </Button>
 
                         <ListView
@@ -697,15 +737,32 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
                             Command="{Binding NavigateSpinnerForwardCommand}"
-                            Cursor="Hand"
-                            IsEnabled="{Binding CanNavigateForward}">
+                            IsEnabled="{Binding CanNavigateForward}"
+                            Style="{StaticResource SpinnerArrowButtonStyle}">
                             <icons:PackIconUnicons
                                 Height="12"
-                                Foreground="{StaticResource Brush.Text.Muted}"
-                                Kind="AngleRight" />
+                                Kind="AngleRight">
+                                <icons:PackIconUnicons.Style>
+                                    <Style TargetType="icons:PackIconUnicons">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                                <Setter Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect
+                                                            BlurRadius="2"
+                                                            Opacity="0.8"
+                                                            ShadowDepth="0"
+                                                            Color="White" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </icons:PackIconUnicons.Style>
+                            </icons:PackIconUnicons>
                         </Button>
                     </Grid>
 
