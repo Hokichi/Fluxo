@@ -70,7 +70,7 @@ public partial class MainVM : ObservableRecipient
     [ObservableProperty] private int _notificationCount;
     [ObservableProperty] private ObservableCollection<ExpenseTagVM> _otherTags = [];
     [ObservableProperty] private DayOfWeekVM _selectedDay = new();
-    [ObservableProperty] private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Weekly;
+    [ObservableProperty] private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
     [ObservableProperty] private ExpenseTagVM? _selectedOtherTag;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
     [ObservableProperty] private ExpenseTagVM? _selectedVisibleTag;
@@ -142,11 +142,14 @@ public partial class MainVM : ObservableRecipient
         SelectedTag = value;
     }
 
-    partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
+    async partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
     {
         OnPropertyChanged(nameof(IsDailyViewSelected));
         OnPropertyChanged(nameof(IsWeeklyViewSelected));
         OnPropertyChanged(nameof(IsMonthlyViewSelected));
+
+        if (_isInitialized)
+            await ReloadDataForViewMode(value);
     }
 
     partial void OnSpendingSourcesChanged(ObservableCollection<SpendingSourceVM>? oldValue,
@@ -228,9 +231,9 @@ public partial class MainVM : ObservableRecipient
         await LoadUserSettingsAsync();
 
         var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
-        var expenses = await _readUnitOfWork.Expenses.GetAllAsync();
-        var expenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
-        var incomeLogs = await _readUnitOfWork.IncomeLogs.GetAllAsync();
+        var expenses = await _readUnitOfWork.Expenses.GetByDayAsync(DateTime.Today);
+        var expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(DateTime.Today);
+        var incomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(DateTime.Today);
         var savingGoals = await _readUnitOfWork.SavingGoals.GetAllAsync();
         var allTags = (await _readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync()).Select(tag => tag.Tag)
             .ToList();
@@ -245,6 +248,46 @@ public partial class MainVM : ObservableRecipient
 
         _isInitialized = true;
         RefreshExpenseViews();
+        RefreshNotifications();
+    }
+
+    private async Task ReloadDataForViewMode(MainContentViewMode viewMode)
+    {
+        IReadOnlyList<ExpenseVM> expenses;
+        IReadOnlyList<ExpenseLogVM> expenseLogs;
+        IReadOnlyList<IncomeLogVM> incomeLogs;
+
+        switch (viewMode)
+        {
+            case MainContentViewMode.Daily:
+                expenses = await _readUnitOfWork.Expenses.GetByDayAsync(DateTime.Today);
+                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(DateTime.Today);
+                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(DateTime.Today);
+                break;
+
+            case MainContentViewMode.Weekly:
+                var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1);
+                var endOfWeek = startOfWeek.AddDays(6);
+                expenses = await _readUnitOfWork.Expenses.GetByWeekAsync(startOfWeek, endOfWeek);
+                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByWeekAsync(startOfWeek, endOfWeek);
+                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByWeekAsync(startOfWeek, endOfWeek);
+                break;
+
+            case MainContentViewMode.Monthly:
+                var currentMonth = DateTime.Today.Month;
+                expenses = await _readUnitOfWork.Expenses.GetByMonthAsync(currentMonth);
+                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByMonthAsync(currentMonth);
+                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByMonthAsync(currentMonth);
+                break;
+
+            default:
+                return;
+        }
+
+        LoadExpenses(expenses);
+        LoadSpendingSources(SpendingSources, incomeLogs, expenseLogs);
+        LoadExpenseLogs(expenseLogs);
+        RefreshDashboardMetrics();
         RefreshNotifications();
     }
 
