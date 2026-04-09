@@ -161,32 +161,43 @@ public partial class MainWindow : Window
             return;
         }
 
-        // 1. Hide content so the instant resize is invisible
-        RootBorder.Opacity = 0;
+        // 1. Capture current size before the state change
+        var oldWidth = ActualWidth;
+        var oldHeight = ActualHeight;
 
-        // 2. Apply the state change (resize happens while hidden)
+        // 2. Apply the state change (instant resize)
         applyState();
 
-        // 3. Snap scale to starting value
-        var fromScale = maximizing ? 0.95 : 1.03;
+        // 3. Force layout so ActualWidth/Height reflect the new size
+        UpdateLayout();
+
+        var newWidth = ActualWidth;
+        var newHeight = ActualHeight;
+
+        // 4. Compute the ratio so content appears the same size as before
+        var scaleX = oldWidth / newWidth;
+        var scaleY = oldHeight / newHeight;
+
+        if (scaleX <= 0 || scaleY <= 0 || (Math.Abs(scaleX - 1) < 0.001 && Math.Abs(scaleY - 1) < 0.001))
+            return;
+
+        // 5. Snap to the old-size scale
         transform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
         transform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-        transform.ScaleX = fromScale;
-        transform.ScaleY = fromScale;
+        transform.ScaleX = scaleX;
+        transform.ScaleY = scaleY;
 
-        // 4. Animate scale and opacity together
+        // 6. Animate to 1.0 (final size)
         var ease = new CubicEase
         {
             EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
+        var animX = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
+        var animY = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
 
-        var scaleAnim = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
-        var fadeAnim = new DoubleAnimation(0, 1, duration) { EasingFunction = ease };
-
-        RootBorder.BeginAnimation(OpacityProperty, fadeAnim);
-        transform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
-        transform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+        transform.BeginAnimation(ScaleTransform.ScaleXProperty, animX);
+        transform.BeginAnimation(ScaleTransform.ScaleYProperty, animY);
     }
 
     private void UpdateBorderForState()
