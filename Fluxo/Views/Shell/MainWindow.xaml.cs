@@ -117,27 +117,23 @@ public partial class MainWindow : Window
 
     private void OnMaximizeWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        SystemCommands.MaximizeWindow(this);
-        AnimateStateChange(maximizing: true);
+        AnimateStateChange(() => SystemCommands.MaximizeWindow(this), maximizing: true);
     }
 
     private void OnRestoreWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        SystemCommands.RestoreWindow(this);
-        AnimateStateChange(maximizing: false);
+        AnimateStateChange(() => SystemCommands.RestoreWindow(this), maximizing: false);
     }
 
     private void OnExpandRestoreWindow(object sender, RoutedEventArgs e)
     {
         if (WindowState == WindowState.Maximized)
         {
-            SystemCommands.RestoreWindow(this);
-            AnimateStateChange(maximizing: false);
+            AnimateStateChange(() => SystemCommands.RestoreWindow(this), maximizing: false);
             return;
         }
 
-        SystemCommands.MaximizeWindow(this);
-        AnimateStateChange(maximizing: true);
+        AnimateStateChange(() => SystemCommands.MaximizeWindow(this), maximizing: true);
     }
 
     // ── Restore fade-in ─────────────────────────────────────────────
@@ -157,31 +153,40 @@ public partial class MainWindow : Window
         ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
     }
 
-    private void AnimateStateChange(bool maximizing)
+    private void AnimateStateChange(Action applyState, bool maximizing)
     {
         if (RootBorder.RenderTransform is not ScaleTransform transform)
+        {
+            applyState();
             return;
+        }
 
+        // 1. Hide content so the instant resize is invisible
+        RootBorder.Opacity = 0;
+
+        // 2. Apply the state change (resize happens while hidden)
+        applyState();
+
+        // 3. Snap scale to starting value
         var fromScale = maximizing ? 0.95 : 1.03;
-
-        // Clear any running animation, then snap to the starting scale
         transform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
         transform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
         transform.ScaleX = fromScale;
         transform.ScaleY = fromScale;
 
-        // Animate from the starting scale to 1.0
+        // 4. Animate scale and opacity together
         var ease = new CubicEase
         {
             EasingMode = maximizing ? EasingMode.EaseOut : EasingMode.EaseInOut
         };
-        var anim = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(StateChangeDuration))
-        {
-            EasingFunction = ease
-        };
+        var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        transform.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
-        transform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
+        var scaleAnim = new DoubleAnimation(1.0, duration) { EasingFunction = ease };
+        var fadeAnim = new DoubleAnimation(0, 1, duration) { EasingFunction = ease };
+
+        RootBorder.BeginAnimation(OpacityProperty, fadeAnim);
+        transform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+        transform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
     }
 
     private void UpdateBorderForState()
