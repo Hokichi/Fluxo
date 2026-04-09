@@ -153,7 +153,6 @@ public partial class MainWindow : Window
             WindowState = WindowState.Normal;
             _isMaximized = true;
 
-            CommitCurrentBounds();
             var workArea = GetMonitorWorkArea();
             Left = workArea.Left;
             Top = workArea.Top;
@@ -180,15 +179,11 @@ public partial class MainWindow : Window
         if (_isMaximized)
             return;
 
-        // Snapshot current bounds as local values
-        CommitCurrentBounds();
-
         _restoreBounds = new Rect(Left, Top, Width, Height);
         _isMaximized = true;
         UpdateExpandRestoreButtonIcon();
 
-        var workArea = GetMonitorWorkArea();
-        AnimateBounds(_restoreBounds, workArea, maximizing: true);
+        AnimateBounds(_restoreBounds, GetMonitorWorkArea(), maximizing: true);
     }
 
     private void AnimateToRestored()
@@ -196,7 +191,7 @@ public partial class MainWindow : Window
         if (!_isMaximized)
             return;
 
-        var from = CommitCurrentBounds();
+        var from = new Rect(Left, Top, Width, Height);
         _isMaximized = false;
         UpdateExpandRestoreButtonIcon();
 
@@ -214,51 +209,22 @@ public partial class MainWindow : Window
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        var leftAnim = new DoubleAnimation(from.Left, to.Left, duration) { EasingFunction = ease };
-        var topAnim = new DoubleAnimation(from.Top, to.Top, duration) { EasingFunction = ease };
-        var widthAnim = new DoubleAnimation(from.Width, to.Width, duration) { EasingFunction = ease };
-        var heightAnim = new DoubleAnimation(from.Height, to.Height, duration) { EasingFunction = ease };
+        // Pre-set local values to the target. While the animation runs it
+        // overrides these, but when FillBehavior.Stop removes the animation
+        // on completion the properties fall back to these correct values.
+        Left = to.Left;
+        Top = to.Top;
+        Width = to.Width;
+        Height = to.Height;
 
-        // When done, set local values FIRST, then clear animations.
-        // This way animations fall back to already-correct local values — no blink.
-        heightAnim.Completed += (_, _) =>
-        {
-            Left = to.Left;
-            Top = to.Top;
-            Width = to.Width;
-            Height = to.Height;
-
-            BeginAnimation(LeftProperty, null);
-            BeginAnimation(TopProperty, null);
-            BeginAnimation(WidthProperty, null);
-            BeginAnimation(HeightProperty, null);
-        };
-
-        BeginAnimation(LeftProperty, leftAnim);
-        BeginAnimation(TopProperty, topAnim);
-        BeginAnimation(WidthProperty, widthAnim);
-        BeginAnimation(HeightProperty, heightAnim);
-    }
-
-    /// <summary>
-    ///     Snapshot the current effective bounds as local values and remove animations.
-    /// </summary>
-    private Rect CommitCurrentBounds()
-    {
-        var bounds = new Rect(Left, Top, Width, Height);
-
-        // Set local values first so clearing animations falls back to them
-        Left = bounds.Left;
-        Top = bounds.Top;
-        Width = bounds.Width;
-        Height = bounds.Height;
-
-        BeginAnimation(LeftProperty, null);
-        BeginAnimation(TopProperty, null);
-        BeginAnimation(WidthProperty, null);
-        BeginAnimation(HeightProperty, null);
-
-        return bounds;
+        BeginAnimation(LeftProperty, new DoubleAnimation(from.Left, to.Left, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        BeginAnimation(TopProperty, new DoubleAnimation(from.Top, to.Top, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        BeginAnimation(WidthProperty, new DoubleAnimation(from.Width, to.Width, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        BeginAnimation(HeightProperty, new DoubleAnimation(from.Height, to.Height, duration)
+            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
     }
 
     // ── Monitor work area ───────────────────────────────────────────
