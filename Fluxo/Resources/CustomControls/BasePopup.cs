@@ -55,6 +55,10 @@ public class BasePopup : Window
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
 
+        // Implicit styles in App.Resources don't auto-apply to derived types,
+        // so bind the Style explicitly to the BasePopup resource key.
+        SetResourceReference(StyleProperty, typeof(BasePopup));
+
         Loaded += OnLoaded;
         Closed += OnClosed;
     }
