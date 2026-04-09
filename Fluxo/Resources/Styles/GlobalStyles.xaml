@@ -19,8 +19,7 @@
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="ThumbBody" Property="Opacity" Value="1" />
-                            <Setter TargetName="ThumbBody" Property="Background"
-                                    Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="ThumbBody" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -46,8 +45,7 @@
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="ThumbBody" Property="Opacity" Value="1" />
-                            <Setter TargetName="ThumbBody" Property="Background"
-                                    Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="ThumbBody" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -215,6 +213,36 @@
                             Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
                             Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
                     </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="RoundedProgressBarStyle" TargetType="ProgressBar">
+        <Setter Property="Background" Value="{StaticResource Brush.Reserved}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Income.Credit.BNPL}" />
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Border
+                        x:Name="BackgroundBorder"
+                        Background="{TemplateBinding Background}"
+                        SnapsToDevicePixels="True">
+                        <Border.CornerRadius>
+                            <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                <Binding Path="Width" RelativeSource="{RelativeSource TemplatedParent}" />
+                                <Binding Path="Height" RelativeSource="{RelativeSource TemplatedParent}" />
+                            </MultiBinding>
+                        </Border.CornerRadius>
+                        <Grid x:Name="PART_Track">
+                            <Border
+                                x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="{Binding ElementName=BackgroundBorder, Path=CornerRadius}" />
+                        </Grid>
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

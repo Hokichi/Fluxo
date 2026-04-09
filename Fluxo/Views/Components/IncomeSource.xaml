@@ -9,34 +9,6 @@
     Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <Style x:Key="RoundedProgressBarStyle" TargetType="ProgressBar">
-            <Setter Property="Background" Value="{StaticResource Brush.Text.Secondary}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Income.Credit.BNPL}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ProgressBar">
-                        <Border
-                            x:Name="BackgroundBorder"
-                            Background="{TemplateBinding Background}"
-                            SnapsToDevicePixels="True">
-                            <Border.CornerRadius>
-                                <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                    <Binding Path="Width" RelativeSource="{RelativeSource TemplatedParent}" />
-                                    <Binding Path="Height" RelativeSource="{RelativeSource TemplatedParent}" />
-                                </MultiBinding>
-                            </Border.CornerRadius>
-                            <Grid x:Name="PART_Track">
-                                <Border
-                                    x:Name="PART_Indicator"
-                                    HorizontalAlignment="Left"
-                                    Background="{TemplateBinding Foreground}"
-                                    CornerRadius="{Binding ElementName=BackgroundBorder, Path=CornerRadius}" />
-                            </Grid>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
         <Style x:Key="IncomeSourceAccentStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
             <Style.Triggers>
