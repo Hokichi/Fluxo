@@ -97,10 +97,10 @@ public partial class MainWindow : Window
         {
             await ((App)Application.Current).DeleteMarkedExpenseLogsAsync(_mainVM);
             _hasCompletedPendingDeletionCleanup = true;
-            Close();
         }
-        catch
+        finally
         {
+            Close();
         }
     }
 
