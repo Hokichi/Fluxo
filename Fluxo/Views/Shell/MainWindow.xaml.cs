@@ -197,12 +197,10 @@ public partial class MainWindow : Window
             workArea.Right - _restoreBounds.Right,
             workArea.Bottom - _restoreBounds.Bottom);
 
-        // Snap window to full work area immediately (invisible behind the margin)
-        Left = workArea.Left;
-        Top = workArea.Top;
-        Width = workArea.Width;
-        Height = workArea.Height;
+        // Set margin FIRST, then resize without repainting so the first
+        // visible frame already has the correct margin applied.
         RootBorder.Margin = fromMargin;
+        SetWindowBoundsNoRedraw(workArea);
 
         // Animate margin to zero (border grows to fill the window)
         AnimateMargin(fromMargin, new Thickness(0), maximizing: true);
@@ -229,13 +227,11 @@ public partial class MainWindow : Window
         // Animate margin from zero to the restore margin
         AnimateMargin(new Thickness(0), toMargin, maximizing: false, onCompleted: () =>
         {
-            // Shrink window to actual restore bounds and reset margin
+            // Shrink window without repainting, then clear the margin
+            // so the first visible frame is already correct.
             RootBorder.BeginAnimation(MarginProperty, null);
+            SetWindowBoundsNoRedraw(target);
             RootBorder.Margin = new Thickness(0);
-            Left = target.Left;
-            Top = target.Top;
-            Width = target.Width;
-            Height = target.Height;
         });
     }
 
@@ -261,7 +257,21 @@ public partial class MainWindow : Window
         RootBorder.BeginAnimation(MarginProperty, anim);
     }
 
-    // ── Monitor work area (multi-monitor aware) ─────────────────────
+    // ── Win32 helpers ──────────────────────────────────────────────
+
+    private void SetWindowBoundsNoRedraw(Rect bounds)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        var source = PresentationSource.FromVisual(this);
+        var toDevice = source?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+
+        SetWindowPos(hwnd, IntPtr.Zero,
+            (int)Math.Round(bounds.Left * toDevice.M11),
+            (int)Math.Round(bounds.Top * toDevice.M22),
+            (int)Math.Round(bounds.Width * toDevice.M11),
+            (int)Math.Round(bounds.Height * toDevice.M22),
+            SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW);
+    }
 
     private Rect GetMonitorWorkArea()
     {
@@ -280,6 +290,14 @@ public partial class MainWindow : Window
             (info.rcWork.Right - info.rcWork.Left) * toDevice.M11,
             (info.rcWork.Bottom - info.rcWork.Top) * toDevice.M22);
     }
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
+        int x, int y, int cx, int cy, uint uFlags);
+
+    private const uint SWP_NOZORDER = 0x0004;
+    private const uint SWP_NOREDRAW = 0x0008;
+    private const uint SWP_NOACTIVATE = 0x0010;
 
     [DllImport("user32.dll")]
     private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
