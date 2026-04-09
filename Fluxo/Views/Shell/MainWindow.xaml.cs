@@ -155,7 +155,7 @@ public partial class MainWindow : Window
             WindowState = WindowState.Normal;
             _isMaximized = true;
 
-            ClearBoundsAnimations();
+            CommitCurrentBounds();
             var workArea = GetMonitorWorkArea();
             Left = workArea.Left;
             Top = workArea.Top;
@@ -182,15 +182,15 @@ public partial class MainWindow : Window
         if (_isMaximized)
             return;
 
-        // Clear any held animations so we read real property values
-        ClearBoundsAnimations();
+        // Snapshot current bounds as local values
+        CommitCurrentBounds();
 
         _restoreBounds = new Rect(Left, Top, Width, Height);
         _isMaximized = true;
         UpdateExpandRestoreButtonIcon();
 
         var workArea = GetMonitorWorkArea();
-        AnimateBounds(workArea, maximizing: true);
+        AnimateBounds(_restoreBounds, workArea, maximizing: true);
     }
 
     private void AnimateToRestored()
@@ -198,13 +198,14 @@ public partial class MainWindow : Window
         if (!_isMaximized)
             return;
 
+        var from = CommitCurrentBounds();
         _isMaximized = false;
         UpdateExpandRestoreButtonIcon();
 
-        AnimateBounds(_restoreBounds, maximizing: false);
+        AnimateBounds(from, _restoreBounds, maximizing: false);
     }
 
-    private void AnimateBounds(Rect target, bool maximizing)
+    private void AnimateBounds(Rect from, Rect to, bool maximizing)
     {
         RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
         RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
@@ -215,22 +216,24 @@ public partial class MainWindow : Window
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        // Clear previous animations so current values are used as From
-        ClearBoundsAnimations();
+        var leftAnim = new DoubleAnimation(from.Left, to.Left, duration) { EasingFunction = ease };
+        var topAnim = new DoubleAnimation(from.Top, to.Top, duration) { EasingFunction = ease };
+        var widthAnim = new DoubleAnimation(from.Width, to.Width, duration) { EasingFunction = ease };
+        var heightAnim = new DoubleAnimation(from.Height, to.Height, duration) { EasingFunction = ease };
 
-        var leftAnim = new DoubleAnimation(target.Left, duration) { EasingFunction = ease };
-        var topAnim = new DoubleAnimation(target.Top, duration) { EasingFunction = ease };
-        var widthAnim = new DoubleAnimation(target.Width, duration) { EasingFunction = ease };
-        var heightAnim = new DoubleAnimation(target.Height, duration) { EasingFunction = ease };
-
-        // Commit final values when done so the window is freely movable
+        // When done, set local values FIRST, then clear animations.
+        // This way animations fall back to already-correct local values — no blink.
         heightAnim.Completed += (_, _) =>
         {
-            ClearBoundsAnimations();
-            Left = target.Left;
-            Top = target.Top;
-            Width = target.Width;
-            Height = target.Height;
+            Left = to.Left;
+            Top = to.Top;
+            Width = to.Width;
+            Height = to.Height;
+
+            BeginAnimation(LeftProperty, null);
+            BeginAnimation(TopProperty, null);
+            BeginAnimation(WidthProperty, null);
+            BeginAnimation(HeightProperty, null);
         };
 
         BeginAnimation(LeftProperty, leftAnim);
@@ -239,23 +242,25 @@ public partial class MainWindow : Window
         BeginAnimation(HeightProperty, heightAnim);
     }
 
-    private void ClearBoundsAnimations()
+    /// <summary>
+    ///     Snapshot the current effective bounds as local values and remove animations.
+    /// </summary>
+    private Rect CommitCurrentBounds()
     {
-        // Freeze current animated values as local values, then remove animations
-        var left = Left;
-        var top = Top;
-        var width = Width;
-        var height = Height;
+        var bounds = new Rect(Left, Top, Width, Height);
+
+        // Set local values first so clearing animations falls back to them
+        Left = bounds.Left;
+        Top = bounds.Top;
+        Width = bounds.Width;
+        Height = bounds.Height;
 
         BeginAnimation(LeftProperty, null);
         BeginAnimation(TopProperty, null);
         BeginAnimation(WidthProperty, null);
         BeginAnimation(HeightProperty, null);
 
-        Left = left;
-        Top = top;
-        Width = width;
-        Height = height;
+        return bounds;
     }
 
     // ── Monitor work area ───────────────────────────────────────────
