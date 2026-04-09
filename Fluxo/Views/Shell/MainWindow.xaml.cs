@@ -175,24 +175,14 @@ public partial class MainWindow : Window
         };
         var duration = TimeSpan.FromMilliseconds(StateChangeDuration);
 
-        // Start animations FIRST — BeginAnimation takes immediate effect with
-        // the From value, so no Win32 repaint flash from setting local values.
         BeginAnimation(LeftProperty, new DoubleAnimation(from.Left, to.Left, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+            { EasingFunction = ease });
         BeginAnimation(TopProperty, new DoubleAnimation(from.Top, to.Top, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+            { EasingFunction = ease });
         BeginAnimation(WidthProperty, new DoubleAnimation(from.Width, to.Width, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+            { EasingFunction = ease });
         BeginAnimation(HeightProperty, new DoubleAnimation(from.Height, to.Height, duration)
-            { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
-
-        // Set local values while animations are running (invisible — animation
-        // overrides). When FillBehavior.Stop removes the animation on completion,
-        // properties fall back to these correct target values.
-        Left = to.Left;
-        Top = to.Top;
-        Width = to.Width;
-        Height = to.Height;
+            { EasingFunction = ease });
     }
 
     // ── Monitor work area ───────────────────────────────────────────
