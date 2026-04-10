@@ -58,7 +58,9 @@ public partial class MainVM : ObservableRecipient
     [ObservableProperty] private bool _isWantsEmpty;
     [ObservableProperty] private bool _canNavigateForward;
     [ObservableProperty] private bool _isAtCurrentPeriod = true;
-    private DateTime _lastSelectedDate = DateTime.Today;
+    private DateTime _savedDailyDate = DateTime.Today;
+    private DateTime _savedWeeklyDate = DateTime.Today;
+    private DateTime _savedMonthlyDate = DateTime.Today;
     private int _spinnerPageOffset;
     private decimal _allTimeNeedsSpent;
     private decimal _allTimeWantsSpent;
@@ -169,9 +171,7 @@ public partial class MainVM : ObservableRecipient
         foreach (var item in DaysOfWeek)
             item.IsSelected = ReferenceEquals(item, value);
 
-        if (SelectedMainContentViewMode == MainContentViewMode.Daily)
-            _lastSelectedDate = value.Date;
-
+        SaveSelectedDateForMode(value.Date);
         UpdateIsAtCurrentPeriod(value);
 
         if (!_isInitialized)
@@ -180,7 +180,7 @@ public partial class MainVM : ObservableRecipient
         await ReloadDataForSelectedItem(value);
     }
 
-    async partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
+    async partial void OnSelectedMainContentViewModeChanged(MainContentViewMode oldValue, MainContentViewMode newValue)
     {
         OnPropertyChanged(nameof(IsDailyViewSelected));
         OnPropertyChanged(nameof(IsWeeklyViewSelected));
@@ -192,10 +192,10 @@ public partial class MainVM : ObservableRecipient
         if (!_isInitialized)
             return;
 
-        if (value == MainContentViewMode.AllTime)
+        if (newValue == MainContentViewMode.AllTime)
             await LoadAllTimeData();
         else
-            NavigateSpinnerToDate(SelectedDay.Date);
+            NavigateSpinnerToDate(GetSavedDateForMode(newValue));
     }
 
     partial void OnSpendingSourcesChanged(ObservableCollection<SpendingSourceVM>? oldValue,
@@ -501,8 +501,7 @@ public partial class MainVM : ObservableRecipient
         DayOfWeekVM? match = SelectedMainContentViewMode switch
         {
             MainContentViewMode.Daily =>
-                DaysOfWeek.FirstOrDefault(d => d.Date.Date == _lastSelectedDate.Date)
-                ?? DaysOfWeek.FirstOrDefault(d => d.Date.Date == referenceDate.Date),
+                DaysOfWeek.FirstOrDefault(d => d.Date.Date == referenceDate.Date),
 
             MainContentViewMode.Weekly =>
                 DaysOfWeek.FirstOrDefault(d =>
@@ -521,6 +520,33 @@ public partial class MainVM : ObservableRecipient
     private void SelectFirstSpinnerItem()
     {
         SelectedDay = DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM();
+    }
+
+    private void SaveSelectedDateForMode(DateTime date)
+    {
+        switch (SelectedMainContentViewMode)
+        {
+            case MainContentViewMode.Daily:
+                _savedDailyDate = date;
+                break;
+            case MainContentViewMode.Weekly:
+                _savedWeeklyDate = date;
+                break;
+            case MainContentViewMode.Monthly:
+                _savedMonthlyDate = date;
+                break;
+        }
+    }
+
+    private DateTime GetSavedDateForMode(MainContentViewMode mode)
+    {
+        return mode switch
+        {
+            MainContentViewMode.Daily => _savedDailyDate,
+            MainContentViewMode.Weekly => _savedWeeklyDate,
+            MainContentViewMode.Monthly => _savedMonthlyDate,
+            _ => DateTime.Today
+        };
     }
 
     private void UpdateIsAtCurrentPeriod(DayOfWeekVM selectedItem)
