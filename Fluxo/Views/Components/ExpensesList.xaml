@@ -63,11 +63,7 @@
                         </Border.Style>
                     </Border>
 
-                    <Border
-                        x:Name="ExpenseItemBGBorder"
-                        Margin="4,0,0,0"
-                        Background="{StaticResource Brush.Background.Hover}"
-                        CornerRadius="12">
+                    <Border CornerRadius="12">
                         <Border.Clip>
                             <MultiBinding Converter="{StaticResource BorderCornerClipConverter}">
                                 <Binding Path="CornerRadius" RelativeSource="{RelativeSource Self}" />
@@ -75,20 +71,57 @@
                                 <Binding Path="ActualHeight" RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
                             </MultiBinding>
                         </Border.Clip>
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </MultiDataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
+                        <Border
+                            x:Name="ExpenseItemBGBorder"
+                            Background="{StaticResource Brush.Background.Hover}"
+                            ClipToBounds="True"
+                            CornerRadius="12">
+                            <Border.RenderTransform>
+                                <TranslateTransform />
+                            </Border.RenderTransform>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <MultiDataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                            To="4"
+                                                            Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut" />
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </MultiDataTrigger.EnterActions>
+                                            <MultiDataTrigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                            To="0"
+                                                            Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut" />
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </MultiDataTrigger.ExitActions>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
                     </Border>
 
                     <Border
@@ -96,6 +129,49 @@
                         Padding="12,10"
                         Background="Transparent"
                         CornerRadius="12">
+                        <Border.RenderTransform>
+                            <TranslateTransform x:Name="ContentShiftTransform" />
+                        </Border.RenderTransform>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                        </MultiDataTrigger.Conditions>
+                                        <MultiDataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        To="4"
+                                                        Duration="0:0:0.15">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseOut" />
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </MultiDataTrigger.EnterActions>
+                                        <MultiDataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                        To="0"
+                                                        Duration="0:0:0.15">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <CubicEase EasingMode="EaseOut" />
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </MultiDataTrigger.ExitActions>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <Grid
                             MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
                             HorizontalAlignment="Stretch"
@@ -106,16 +182,14 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="13"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding Expense.Name}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="NoWrap" />
-                                </StackPanel>
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="13"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding Expense.Name}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
                                 <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                                     <TextBlock
                                         FontFamily="{StaticResource Regular}"

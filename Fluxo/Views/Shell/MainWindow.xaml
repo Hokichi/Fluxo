@@ -889,9 +889,7 @@
                                     <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
                                 </Trigger>
                                 <DataTrigger Binding="{Binding IsAtCurrentPeriod}" Value="True">
-                                    <Setter Property="IsEnabled" Value="False" />
-                                    <Setter Property="Opacity" Value="0.4" />
-                                    <Setter Property="Cursor" Value="Arrow" />
+                                    <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
                                     <Setter Property="Visibility" Value="Collapsed" />
