@@ -60,6 +60,9 @@ public partial class MainVM : ObservableRecipient
     [ObservableProperty] private bool _isAtCurrentPeriod = true;
     private DateTime _lastSelectedDate = DateTime.Today;
     private int _spinnerPageOffset;
+    private decimal _allTimeNeedsSpent;
+    private decimal _allTimeWantsSpent;
+    private decimal _allTimeInvestSpent;
     private decimal _lowAccountBalancePercentage = 0.20m;
 
     [ObservableProperty]
@@ -299,8 +302,9 @@ public partial class MainVM : ObservableRecipient
             .ToList();
 
         LoadExpenses(expenses);
+        CacheAllTimeExpenseTotals(allExpenseLogs);
         LoadSpendingSources(spendingSources, periodIncomeLogs, periodExpenseLogs);
-        LoadExpenseLogs(allExpenseLogs);
+        LoadExpenseLogs(periodExpenseLogs);
         LoadSavingGoals(savingGoals);
         LoadTags(allTags);
         ConfigureExpenseViews();
@@ -342,6 +346,8 @@ public partial class MainVM : ObservableRecipient
         }
 
         LoadSpendingSources(SpendingSources, periodIncomeLogs, periodExpenseLogs);
+        LoadExpenseLogs(periodExpenseLogs);
+        RefreshDashboardMetrics();
     }
 
     private void NavigateSpinnerToDate(DateTime referenceDate)
@@ -542,6 +548,23 @@ public partial class MainVM : ObservableRecipient
         }));
     }
 
+    private void CacheAllTimeExpenseTotals(IEnumerable<ExpenseLogVM> allExpenseLogs)
+    {
+        var activeExpenseLogs = allExpenseLogs
+            .Where(log => !log.IsForDeletion)
+            .ToList();
+
+        _allTimeNeedsSpent = activeExpenseLogs
+            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs)
+            .Sum(log => log.Amount);
+        _allTimeWantsSpent = activeExpenseLogs
+            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Wants)
+            .Sum(log => log.Amount);
+        _allTimeInvestSpent = activeExpenseLogs
+            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings)
+            .Sum(log => log.Amount);
+    }
+
     private void LoadExpenseLogs(IEnumerable<ExpenseLogVM> expenseLogs)
     {
         var activeExpenseLogs = expenseLogs
@@ -593,9 +616,9 @@ public partial class MainVM : ObservableRecipient
         WantsAvailable = decimal.Round(_totalIncomeAmount * _wantsThreshold, 2);
         InvestAvailable = decimal.Round(_totalIncomeAmount * _investThreshold, 2);
 
-        NeedsSpent = _needsSource.Sum(log => log.Amount);
-        WantsSpent = _wantsSource.Sum(log => log.Amount);
-        InvestSpent = _investSource.Sum(log => log.Amount);
+        NeedsSpent = _allTimeNeedsSpent;
+        WantsSpent = _allTimeWantsSpent;
+        InvestSpent = _allTimeInvestSpent;
         TotalSpent = NeedsSpent + WantsSpent + InvestSpent;
 
         NeedsPercentage = CalculatePercentage(NeedsSpent, NeedsAvailable);
