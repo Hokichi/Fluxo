@@ -124,6 +124,10 @@ public partial class MainVM : ObservableRecipient
 
     public bool IsMonthlyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Monthly;
 
+    public bool IsAllTimeViewSelected => SelectedMainContentViewMode == MainContentViewMode.AllTime;
+
+    public bool IsSpinnerVisible => SelectedMainContentViewMode != MainContentViewMode.AllTime;
+
     public string MoveToCurrentLabel => SelectedMainContentViewMode switch
     {
         MainContentViewMode.Daily => "Move to today",
@@ -176,14 +180,21 @@ public partial class MainVM : ObservableRecipient
         await ReloadDataForSelectedItem(value);
     }
 
-    partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
+    async partial void OnSelectedMainContentViewModeChanged(MainContentViewMode value)
     {
         OnPropertyChanged(nameof(IsDailyViewSelected));
         OnPropertyChanged(nameof(IsWeeklyViewSelected));
         OnPropertyChanged(nameof(IsMonthlyViewSelected));
+        OnPropertyChanged(nameof(IsAllTimeViewSelected));
+        OnPropertyChanged(nameof(IsSpinnerVisible));
         OnPropertyChanged(nameof(MoveToCurrentLabel));
 
-        if (_isInitialized)
+        if (!_isInitialized)
+            return;
+
+        if (value == MainContentViewMode.AllTime)
+            await LoadAllTimeData();
+        else
             NavigateSpinnerToDate(SelectedDay.Date);
     }
 
@@ -347,6 +358,16 @@ public partial class MainVM : ObservableRecipient
 
         LoadSpendingSources(SpendingSources, periodIncomeLogs, periodExpenseLogs);
         LoadExpenseLogs(periodExpenseLogs);
+        RefreshDashboardMetrics();
+    }
+
+    private async Task LoadAllTimeData()
+    {
+        var allExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
+        var allIncomeLogs = await _readUnitOfWork.IncomeLogs.GetAllAsync();
+
+        LoadSpendingSources(SpendingSources, allIncomeLogs, allExpenseLogs);
+        LoadExpenseLogs(allExpenseLogs);
         RefreshDashboardMetrics();
     }
 

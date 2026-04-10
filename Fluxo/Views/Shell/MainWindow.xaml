@@ -679,6 +679,15 @@
                     </StackPanel>
 
                     <Grid Grid.Column="1">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="40" />
                             <ColumnDefinition Width="*" />
@@ -836,6 +845,13 @@
                             Content="Month"
                             Style="{StaticResource MainContentViewToggleButtonStyle}"
                             Tag="{Binding IsMonthlyViewSelected}" />
+                        <Button
+                            Margin="4,0,0,0"
+                            Command="{Binding SetSelectedMainContentViewCommand}"
+                            CommandParameter="{x:Static viewModels:MainContentViewMode.AllTime}"
+                            Content="All-time"
+                            Style="{StaticResource MainContentViewToggleButtonStyle}"
+                            Tag="{Binding IsAllTimeViewSelected}" />
                     </StackPanel>
                 </Border>
 
@@ -876,6 +892,9 @@
                                     <Setter Property="IsEnabled" Value="False" />
                                     <Setter Property="Opacity" Value="0.4" />
                                     <Setter Property="Cursor" Value="Arrow" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
