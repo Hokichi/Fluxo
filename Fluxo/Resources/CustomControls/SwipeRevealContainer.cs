@@ -26,6 +26,10 @@ public class SwipeRevealContainer : ContentControl
     public static readonly DependencyProperty RightContentProperty =
         DependencyProperty.Register(nameof(RightContent), typeof(object), typeof(SwipeRevealContainer));
 
+    public static readonly DependencyProperty IsRevealedProperty =
+        DependencyProperty.Register(nameof(IsRevealed), typeof(bool), typeof(SwipeRevealContainer),
+            new PropertyMetadata(false));
+
     private Border? _contentBorder;
     private bool _isDragging;
     private bool _isPointerDown;
@@ -49,6 +53,12 @@ public class SwipeRevealContainer : ContentControl
     {
         get => GetValue(RightContentProperty);
         set => SetValue(RightContentProperty, value);
+    }
+
+    public bool IsRevealed
+    {
+        get => (bool)GetValue(IsRevealedProperty);
+        set => SetValue(IsRevealedProperty, value);
     }
 
     public override void OnApplyTemplate()
@@ -114,21 +124,31 @@ public class SwipeRevealContainer : ContentControl
             ReleaseMouseCapture();
 
         if (!wasDragging)
+        {
+            // Click (no drag): toggle swipe state
+            // If currently revealed → restore; otherwise → swipe right to reveal left panel
+            if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) is not null)
+                return;
+
+            var targetOffset = _currentOffset != 0 ? 0 : RevealWidth;
+            AnimateTo(targetOffset);
+            e.Handled = true;
             return;
+        }
 
         var currentPoint = e.GetPosition(this);
         var deltaX = currentPoint.X - _startPoint.X;
         var totalOffset = _currentOffset + deltaX;
 
-        double targetOffset;
+        double snapTarget;
         if (totalOffset < -SwipeThreshold)
-            targetOffset = -RevealWidth; // Reveal right panel
+            snapTarget = -RevealWidth; // Reveal right panel
         else if (totalOffset > SwipeThreshold)
-            targetOffset = RevealWidth; // Reveal left panel
+            snapTarget = RevealWidth; // Reveal left panel
         else
-            targetOffset = 0; // Snap back
+            snapTarget = 0; // Snap back
 
-        AnimateTo(targetOffset);
+        AnimateTo(snapTarget);
         e.Handled = true;
     }
 
@@ -165,6 +185,7 @@ public class SwipeRevealContainer : ContentControl
         animation.Completed += (_, _) => _currentOffset = targetX;
         _translateTransform.BeginAnimation(TranslateTransform.XProperty, animation);
         _currentOffset = targetX;
+        IsRevealed = targetX != 0;
     }
 
     private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
