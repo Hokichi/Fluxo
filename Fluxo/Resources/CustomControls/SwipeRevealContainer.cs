@@ -30,6 +30,8 @@ public class SwipeRevealContainer : ContentControl
         DependencyProperty.Register(nameof(IsRevealed), typeof(bool), typeof(SwipeRevealContainer),
             new PropertyMetadata(false));
 
+    private static SwipeRevealContainer? _currentlyRevealed;
+
     private Border? _contentBorder;
     private bool _isDragging;
     private bool _isPointerDown;
@@ -178,6 +180,10 @@ public class SwipeRevealContainer : ContentControl
 
     private void AnimateTo(double targetX)
     {
+        // Reset the previously revealed item if a different one is being revealed
+        if (targetX != 0 && _currentlyRevealed is not null && _currentlyRevealed != this)
+            _currentlyRevealed.ResetSwipe();
+
         var animation = new DoubleAnimation(targetX, AnimationDuration)
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
@@ -186,6 +192,8 @@ public class SwipeRevealContainer : ContentControl
         _translateTransform.BeginAnimation(TranslateTransform.XProperty, animation);
         _currentOffset = targetX;
         IsRevealed = targetX != 0;
+
+        _currentlyRevealed = targetX != 0 ? this : null;
     }
 
     private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
