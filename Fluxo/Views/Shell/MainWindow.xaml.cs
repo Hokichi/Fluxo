@@ -317,12 +317,30 @@ public partial class MainWindow : Window
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.N && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            OpenQuickAddPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
         {
             var popup = new QuickSearchPopup(_mainVM) { Owner = this };
             popup.ShowDialog();
             e.Handled = true;
         }
+    }
+
+    private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)
+    {
+        OpenQuickAddPopup();
+    }
+
+    private void OpenQuickAddPopup()
+    {
+        var popup = new QuickAddPopup(_mainVM) { Owner = this };
+        popup.ShowDialog();
     }
 
     // ── Popup overlay & blur ────────────────────────────────────────

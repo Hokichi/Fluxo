@@ -35,6 +35,11 @@ public partial class App : Application
         mainWindow.Show();
     }
 
+    internal T GetRequiredService<T>() where T : notnull
+    {
+        return _serviceProvider!.GetRequiredService<T>();
+    }
+
     internal async Task DeleteMarkedExpenseLogsAsync(MainVM mainViewModel,
         CancellationToken cancellationToken = default)
     {

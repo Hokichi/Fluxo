@@ -778,6 +778,7 @@
                         Orientation="Horizontal">
                         <c:BalloonButton
                             ButtonIcon="{StaticResource PlusSolid}"
+                            Click="OnQuickAddButtonClick"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Mint.Muted}"
                             IconSize="10"

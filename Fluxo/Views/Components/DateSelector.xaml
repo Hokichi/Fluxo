@@ -1,0 +1,392 @@
+<UserControl
+    x:Class="Fluxo.Views.Components.DateSelector"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Fluxo.Views.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="Root"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="SelectorButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="12">
+                            <Grid Margin="12,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    FontSize="13"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding FormattedSelectedDate, ElementName=Root}" />
+
+                                <Path
+                                    Grid.Column="1"
+                                    Width="14"
+                                    Height="14"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Data="{StaticResource Calendar}"
+                                    Fill="{StaticResource Brush.Text.Muted}"
+                                    Stretch="Uniform" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CalendarNavButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="ButtonBackground"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="HeaderButtonBackground"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="HeaderButtonBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="WeekdayLabelStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        </Style>
+
+        <Style x:Key="CalendarDayButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="DayBackground"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="11"
+                            SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                                    <Condition Binding="{Binding IsSelected}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+
+                                <Setter TargetName="DayBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </MultiDataTrigger>
+
+                            <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+                            </DataTrigger>
+
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsSelected}" Value="False" />
+                                    <Condition Binding="{Binding IsToday}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="BorderThickness" Value="1" />
+                            </MultiDataTrigger>
+
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CalendarChoiceButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="78" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="ChoiceBackground"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="12">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ChoiceBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <ToggleButton
+            x:Name="SelectorButton"
+            IsChecked="{Binding IsPopupOpen, ElementName=Root, Mode=TwoWay}"
+            Style="{StaticResource SelectorButtonStyle}" />
+
+        <Popup
+            AllowsTransparency="True"
+            DataContext="{Binding ElementName=Root}"
+            IsOpen="{Binding IsPopupOpen, Mode=TwoWay}"
+            Placement="Bottom"
+            PlacementTarget="{Binding ElementName=SelectorButton}"
+            PopupAnimation="Fade"
+            StaysOpen="False"
+            VerticalOffset="8">
+            <Border
+                Width="296"
+                Padding="14"
+                Background="{StaticResource Brush.Background.Elevated}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            Grid.Column="0"
+                            Click="OnPreviousClick"
+                            Style="{StaticResource CalendarNavButtonStyle}">
+                            <Path
+                                Width="8"
+                                Height="8"
+                                Data="{StaticResource AngleDown}"
+                                Fill="{StaticResource Brush.Text.Muted}"
+                                RenderTransformOrigin="0.5,0.5"
+                                Stretch="Uniform">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="90" />
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button
+                                Click="OnMonthHeaderClick"
+                                Content="{Binding DisplayMonthLabel}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Visibility="{Binding IsDayMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <Button
+                                Margin="4,0,0,0"
+                                Click="OnYearHeaderClick"
+                                Content="{Binding DisplayYearLabel}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Visibility="{Binding IsDayMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <Button
+                                Click="OnYearHeaderClick"
+                                Content="{Binding DisplayYearLabel}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Visibility="{Binding IsMonthMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding DisplayYearRangeLabel}"
+                                Visibility="{Binding IsYearMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
+
+                        <Button
+                            Grid.Column="2"
+                            Click="OnNextClick"
+                            Style="{StaticResource CalendarNavButtonStyle}">
+                            <Path
+                                Width="8"
+                                Height="8"
+                                Data="{StaticResource AngleDown}"
+                                Fill="{StaticResource Brush.Text.Muted}"
+                                RenderTransformOrigin="0.5,0.5"
+                                Stretch="Uniform">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="-90" />
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
+                    </Grid>
+
+                    <StackPanel Margin="0,14,0,0" Visibility="{Binding IsDayMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <UniformGrid Margin="0,0,0,10" Columns="7">
+                            <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Mon" />
+                            <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Tue" />
+                            <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Wed" />
+                            <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Thu" />
+                            <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Fri" />
+                            <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Sat" />
+                            <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Sun" />
+                        </UniformGrid>
+
+                        <ItemsControl HorizontalAlignment="Center" ItemsSource="{Binding Days}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel ItemHeight="38" ItemWidth="38" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button
+                                        Click="OnDayButtonClick"
+                                        Content="{Binding DayNumber}"
+                                        Style="{StaticResource CalendarDayButtonStyle}"
+                                        Tag="{Binding Date}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <ItemsControl
+                        Margin="0,14,0,0"
+                        HorizontalAlignment="Center"
+                        ItemsSource="{Binding Months}"
+                        Visibility="{Binding IsMonthMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemHeight="46" ItemWidth="86" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Click="OnMonthButtonClick"
+                                    Content="{Binding Label}"
+                                    Style="{StaticResource CalendarChoiceButtonStyle}"
+                                    Tag="{Binding Value}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <ItemsControl
+                        Margin="0,14,0,0"
+                        HorizontalAlignment="Center"
+                        ItemsSource="{Binding Years}"
+                        Visibility="{Binding IsYearMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemHeight="46" ItemWidth="86" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Click="OnYearButtonClick"
+                                    Content="{Binding Label}"
+                                    Style="{StaticResource CalendarChoiceButtonStyle}"
+                                    Tag="{Binding Value}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

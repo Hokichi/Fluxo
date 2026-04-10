@@ -298,6 +298,34 @@ public partial class MainVM : ObservableRecipient
         return _expenseLogIdsMarkedForDeletion.ToArray();
     }
 
+    internal async Task ReloadCurrentDataAsync()
+    {
+        var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
+        var expenses = await _readUnitOfWork.Expenses.GetAllAsync();
+        var allExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
+        var savingGoals = await _readUnitOfWork.SavingGoals.GetAllAsync();
+        var allTags = (await _readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync()).Select(tag => tag.Tag)
+            .ToList();
+
+        LoadExpenses(expenses);
+        CacheAllTimeExpenseTotals(allExpenseLogs);
+        LoadSavingGoals(savingGoals);
+        LoadTags(allTags);
+
+        if (SelectedMainContentViewMode == MainContentViewMode.AllTime)
+        {
+            await LoadAllTimeData(spendingSources);
+        }
+        else
+        {
+            var selectedItem = SelectedDay ?? DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM { Date = DateTime.Today };
+            await ReloadDataForSelectedItem(selectedItem, spendingSources);
+        }
+
+        RefreshExpenseViews();
+        RefreshNotifications();
+    }
+
     public async Task Initialize()
     {
         NavigateSpinnerToDate(DateTime.Today);
@@ -326,7 +354,8 @@ public partial class MainVM : ObservableRecipient
         RefreshNotifications();
     }
 
-    private async Task ReloadDataForSelectedItem(DayOfWeekVM selectedItem)
+    private async Task ReloadDataForSelectedItem(DayOfWeekVM selectedItem,
+        IEnumerable<SpendingSourceVM>? spendingSources = null)
     {
         IReadOnlyList<ExpenseLogVM> periodExpenseLogs;
         IReadOnlyList<IncomeLogVM> periodIncomeLogs;
@@ -356,17 +385,17 @@ public partial class MainVM : ObservableRecipient
                 return;
         }
 
-        LoadSpendingSources(SpendingSources, periodIncomeLogs, periodExpenseLogs);
+        LoadSpendingSources(spendingSources ?? SpendingSources, periodIncomeLogs, periodExpenseLogs);
         LoadExpenseLogs(periodExpenseLogs);
         RefreshDashboardMetrics();
     }
 
-    private async Task LoadAllTimeData()
+    private async Task LoadAllTimeData(IEnumerable<SpendingSourceVM>? spendingSources = null)
     {
         var allExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
         var allIncomeLogs = await _readUnitOfWork.IncomeLogs.GetAllAsync();
 
-        LoadSpendingSources(SpendingSources, allIncomeLogs, allExpenseLogs);
+        LoadSpendingSources(spendingSources ?? SpendingSources, allIncomeLogs, allExpenseLogs);
         LoadExpenseLogs(allExpenseLogs);
         RefreshDashboardMetrics();
     }
