@@ -12,8 +12,10 @@ namespace Fluxo.Resources.CustomControls;
 ///     Swipe left  → reveals the <see cref="RightContent" /> panel.
 ///     Swipe right → reveals the <see cref="LeftContent" /> panel.
 /// </summary>
+[TemplatePart(Name = PartContentBorder, Type = typeof(Border))]
 public class SwipeRevealContainer : ContentControl
 {
+    private const string PartContentBorder = "PART_ContentBorder";
     private const double SwipeThreshold = 40;
     private const double RevealWidth = 52;
     private static readonly Duration AnimationDuration = new(TimeSpan.FromMilliseconds(200));
@@ -26,9 +28,16 @@ public class SwipeRevealContainer : ContentControl
 
     private Border? _contentBorder;
     private bool _isDragging;
+    private bool _isPointerDown;
     private Point _startPoint;
-    private TranslateTransform _translateTransform = new();
+    private readonly TranslateTransform _translateTransform = new();
     private double _currentOffset;
+
+    static SwipeRevealContainer()
+    {
+        DefaultStyleKeyProperty.OverrideMetadata(typeof(SwipeRevealContainer),
+            new FrameworkPropertyMetadata(typeof(SwipeRevealContainer)));
+    }
 
     public object LeftContent
     {
@@ -45,37 +54,39 @@ public class SwipeRevealContainer : ContentControl
     public override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
-        _contentBorder = GetTemplateChild("PART_ContentBorder") as Border;
+        _contentBorder = GetTemplateChild(PartContentBorder) as Border;
         if (_contentBorder is not null)
             _contentBorder.RenderTransform = _translateTransform;
     }
 
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
     {
-        base.OnMouseLeftButtonDown(e);
+        base.OnPreviewMouseLeftButtonDown(e);
 
-        // Don't capture swipe if the click is on a button
+        // Don't start swipe if the click is on a button
         if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) is not null)
             return;
 
         _startPoint = e.GetPosition(this);
         _isDragging = false;
-        CaptureMouse();
+        _isPointerDown = true;
     }
 
-    protected override void OnMouseMove(MouseEventArgs e)
+    protected override void OnPreviewMouseMove(MouseEventArgs e)
     {
-        base.OnMouseMove(e);
+        base.OnPreviewMouseMove(e);
 
-        if (!IsMouseCaptured)
+        if (!_isPointerDown)
             return;
 
         var currentPoint = e.GetPosition(this);
         var deltaX = currentPoint.X - _startPoint.X;
 
-        // Start dragging only after a small horizontal threshold to avoid false triggers
         if (!_isDragging && Math.Abs(deltaX) > 5)
+        {
             _isDragging = true;
+            CaptureMouse();
+        }
 
         if (!_isDragging)
             return;
@@ -84,16 +95,26 @@ public class SwipeRevealContainer : ContentControl
         var offset = _currentOffset + deltaX;
         offset = Math.Max(-RevealWidth, Math.Min(RevealWidth, offset));
         _translateTransform.X = offset;
+
+        e.Handled = true;
     }
 
-    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
     {
-        base.OnMouseLeftButtonUp(e);
+        base.OnPreviewMouseLeftButtonUp(e);
 
-        if (!IsMouseCaptured)
+        if (!_isPointerDown)
             return;
 
-        ReleaseMouseCapture();
+        var wasDragging = _isDragging;
+        _isPointerDown = false;
+        _isDragging = false;
+
+        if (IsMouseCaptured)
+            ReleaseMouseCapture();
+
+        if (!wasDragging)
+            return;
 
         var currentPoint = e.GetPosition(this);
         var deltaX = currentPoint.X - _startPoint.X;
@@ -108,19 +129,23 @@ public class SwipeRevealContainer : ContentControl
             targetOffset = 0; // Snap back
 
         AnimateTo(targetOffset);
-        _isDragging = false;
+        e.Handled = true;
     }
 
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
 
+        if (!_isPointerDown)
+            return;
+
+        _isPointerDown = false;
+        _isDragging = false;
+
         if (IsMouseCaptured)
-        {
             ReleaseMouseCapture();
-            AnimateTo(0);
-            _isDragging = false;
-        }
+
+        AnimateTo(0);
     }
 
     /// <summary>

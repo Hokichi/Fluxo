@@ -60,7 +60,7 @@
                             Content="{TemplateBinding RightContent}" />
 
                         <!--  Main slideable content  -->
-                        <Border x:Name="PART_ContentBorder" Background="Transparent">
+                        <Border x:Name="PART_ContentBorder" Background="{StaticResource Brush.Background.Main}">
                             <ContentPresenter Content="{TemplateBinding Content}" />
                         </Border>
                     </Grid>

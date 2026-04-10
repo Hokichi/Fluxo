@@ -14,32 +14,30 @@
 
         <DataTemplate x:Key="ExpenseListTemplate">
             <customControls:SwipeRevealContainer>
-                <!--  Left action: delete (revealed on swipe right)  -->
                 <customControls:SwipeRevealContainer.LeftContent>
                     <customControls:BalloonButton
-                        Width="36"
-                        Height="36"
+                        Width="32"
+                        Height="32"
                         Margin="8,0,0,0"
-                        VerticalAlignment="Center"
-                        ButtonIcon="{StaticResource CircleMinusSolid}"
-                        Command="{Binding DataContext.DeleteExpenseLogCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="{Binding}"
-                        DefaultBackground="{StaticResource Brush.Danger}"
-                        HoveredBackground="{StaticResource Brush.Danger}"
-                        IconSize="14" />
-                </customControls:SwipeRevealContainer.LeftContent>
-
-                <!--  Right action: info / expense detail (revealed on swipe left)  -->
-                <customControls:SwipeRevealContainer.RightContent>
-                    <customControls:BalloonButton
-                        Width="36"
-                        Height="36"
-                        Margin="0,0,8,0"
                         VerticalAlignment="Center"
                         ButtonIcon="{StaticResource Info}"
                         Click="OnExpenseDetailButtonClick"
                         DefaultBackground="{StaticResource Brush.Background.Surface}"
-                        HoveredBackground="{StaticResource Brush.Background.Hover}"
+                        HoveredBackground="{StaticResource Brush.Info}"
+                        IconSize="14" />
+                </customControls:SwipeRevealContainer.LeftContent>
+
+                <customControls:SwipeRevealContainer.RightContent>
+                    <customControls:BalloonButton
+                        Width="32"
+                        Height="32"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                        Command="{Binding DataContext.DeleteExpenseLogCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}"
+                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.Danger}"
                         IconSize="14" />
                 </customControls:SwipeRevealContainer.RightContent>
 
@@ -308,9 +306,7 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                    <ListView
-                        ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                        Style="{StaticResource ExpenseListViewStyle}" />
+                    <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Style="{StaticResource ExpenseListViewStyle}" />
                 </customControls:FadingScrollViewer>
             </Grid>
         </Grid>
