@@ -20,7 +20,6 @@ public partial class ExpenseDetailPopup : BasePopup
 
         _viewModel = viewModel;
         DataContext = viewModel;
-        PopupTitle = viewModel.PopupTitle;
 
         _viewModel.PropertyChanged += (_, e) =>
         {

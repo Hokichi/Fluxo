@@ -5,13 +5,22 @@ using System.Globalization;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Notifications;
+using EntityReadUnitOfWork = Fluxo.Core.Interfaces.IViewModelReadUnitOfWork<
+    Fluxo.ViewModels.Entities.ExpenseVM,
+    Fluxo.ViewModels.Entities.ExpenseLogVM,
+    Fluxo.ViewModels.Entities.IncomeLogVM,
+    Fluxo.ViewModels.Entities.ExpenseTagVM,
+    Fluxo.ViewModels.Entities.SavingGoalVM,
+    Fluxo.ViewModels.Entities.SpendingSourceVM>;
 
 namespace Fluxo.ViewModels.Shell;
 
@@ -103,9 +112,11 @@ public partial class MainVM : ObservableRecipient
     public MainVM(
         IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>
             readUnitOfWork,
+        Func<EntityReadUnitOfWork> readUnitOfWorkFactory,
         IUserSettingsRepository userSettingsRepository)
     {
         _readUnitOfWork = readUnitOfWork;
+        _readUnitOfWorkFactory = readUnitOfWorkFactory;
         _userSettingsRepository = userSettingsRepository;
 
         Notifications.CollectionChanged += OnNotificationsCollectionChanged;
@@ -114,6 +125,8 @@ public partial class MainVM : ObservableRecipient
         AttachExpenseLogCollectionHandlers(_needsSource);
         AttachExpenseLogCollectionHandlers(_wantsSource);
         AttachExpenseLogCollectionHandlers(_investSource);
+        WeakReferenceMessenger.Default.Register<MainVM, ExpenseDetailUpdatedMessage>(this,
+            static (recipient, message) => recipient.HandleExpenseDetailUpdatedMessage(message));
     }
 
     public ObservableCollection<NotificationItemVM> Notifications { get; } = [];
@@ -209,6 +222,9 @@ public partial class MainVM : ObservableRecipient
 
         newValue.CollectionChanged += OnSpendingSourcesCollectionChanged;
         AttachSpendingSourceHandlers(newValue);
+
+        if (_isApplyingExpenseDetailRefresh)
+            return;
 
         if (_isInitialized)
         {
@@ -616,12 +632,13 @@ public partial class MainVM : ObservableRecipient
             .GroupBy(log => log.SpendingSource.Id)
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
 
-        SpendingSources = new ObservableCollection<SpendingSourceVM>(spendingSources.Select(source =>
-        {
-            source.MoneyIn = moneyInBySourceId.GetValueOrDefault(source.Id);
-            source.MoneyOut = moneyOutBySourceId.GetValueOrDefault(source.Id);
-            return source;
-        }));
+        RunBatchedExpenseRefresh(() =>
+            SpendingSources = new ObservableCollection<SpendingSourceVM>(spendingSources.Select(source =>
+            {
+                source.MoneyIn = moneyInBySourceId.GetValueOrDefault(source.Id);
+                source.MoneyOut = moneyOutBySourceId.GetValueOrDefault(source.Id);
+                return source;
+            })));
     }
 
     private void CacheAllTimeExpenseTotals(IEnumerable<ExpenseLogVM> allExpenseLogs)
@@ -647,12 +664,15 @@ public partial class MainVM : ObservableRecipient
             .Where(log => !log.IsForDeletion)
             .ToList();
 
-        ReplaceExpenseLogs(_needsSource,
-            activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs));
-        ReplaceExpenseLogs(_wantsSource,
-            activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Wants));
-        ReplaceExpenseLogs(_investSource,
-            activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings));
+        RunBatchedExpenseRefresh(() =>
+        {
+            ReplaceExpenseLogs(_needsSource,
+                activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs));
+            ReplaceExpenseLogs(_wantsSource,
+                activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Wants));
+            ReplaceExpenseLogs(_investSource,
+                activeExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings));
+        });
     }
 
     private void LoadSavingGoals(IEnumerable<SavingGoalVM> savingGoals)
@@ -1096,18 +1116,19 @@ public partial class MainVM : ObservableRecipient
         var addedExpenseLogs = e.NewItems?.OfType<ExpenseLogVM>().ToList() ?? [];
 
         if (removedExpenseLogs.Count > 0)
-        {
             DetachExpenseLogHandlers(removedExpenseLogs);
 
-            if (_isInitialized) MarkExpenseLogsForDeletion(removedExpenseLogs);
-        }
-
         if (addedExpenseLogs.Count > 0)
-        {
             AttachExpenseLogHandlers(addedExpenseLogs);
 
-            if (_isInitialized) RestoreExpenseLogsFromDeletion(addedExpenseLogs);
-        }
+        if (_isApplyingExpenseDetailRefresh)
+            return;
+
+        if (removedExpenseLogs.Count > 0 && _isInitialized)
+            MarkExpenseLogsForDeletion(removedExpenseLogs);
+
+        if (addedExpenseLogs.Count > 0 && _isInitialized)
+            RestoreExpenseLogsFromDeletion(addedExpenseLogs);
 
         if (_isInitialized)
         {
@@ -1118,7 +1139,7 @@ public partial class MainVM : ObservableRecipient
 
     private void OnExpenseLogPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (!_isInitialized)
+        if (!_isInitialized || _isApplyingExpenseDetailRefresh)
             return;
 
         RefreshDashboardMetrics();
@@ -1186,6 +1207,9 @@ public partial class MainVM : ObservableRecipient
 
         if (e.NewItems is not null) AttachSpendingSourceHandlers(e.NewItems.OfType<SpendingSourceVM>());
 
+        if (_isApplyingExpenseDetailRefresh)
+            return;
+
         if (_isInitialized)
         {
             RefreshDashboardMetrics();
@@ -1195,7 +1219,7 @@ public partial class MainVM : ObservableRecipient
 
     private void OnSpendingSourcePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (!_isInitialized)
+        if (!_isInitialized || _isApplyingExpenseDetailRefresh)
             return;
 
         RefreshDashboardMetrics();

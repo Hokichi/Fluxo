@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups;
@@ -16,6 +18,8 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly ExpenseLogVM _expenseLog;
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IUnitOfWork _uow;
+    private ExpenseDetailSavedState _savedState = new(string.Empty, 0m, string.Empty, DateTime.Today,
+        ExpenseCategory.Needs, 0, 0);
     private bool _isUpdatingTagCollections;
 
     [ObservableProperty] private string _amountText = string.Empty;
@@ -52,7 +56,8 @@ public partial class ExpenseDetailVM : ObservableObject
         _uow = uow;
 
         ReloadChoicesFromMainViewModel();
-        LoadFromExpenseLog(expenseLog);
+        _savedState = CreateSavedState(expenseLog);
+        LoadFromSavedState();
     }
 
     partial void OnIsEditingChanged(bool value)
@@ -81,7 +86,7 @@ public partial class ExpenseDetailVM : ObservableObject
     public void CancelEditing()
     {
         IsEditing = false;
-        LoadFromExpenseLog(_expenseLog);
+        LoadFromSavedState();
     }
 
     public QuickAddVM.QuickAddDraft CreateQuickAddDraft()
@@ -105,6 +110,15 @@ public partial class ExpenseDetailVM : ObservableObject
         if (!TryBuildInput(out var input, out var validationMessage))
             return ExpenseDetailSaveResult.Failure(validationMessage);
 
+        var previousState = CreateMessageSnapshot(_savedState);
+        var changedFields = GetChangedFields(input, _savedState);
+        if (changedFields == ExpenseDetailChangedFields.None)
+        {
+            IsEditing = false;
+            LoadFromSavedState();
+            return ExpenseDetailSaveResult.Success();
+        }
+
         IsSaving = true;
 
         try
@@ -123,10 +137,12 @@ public partial class ExpenseDetailVM : ObservableObject
             if (expenseTag is null)
                 return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
 
+            var resolvedName = BuildExpenseName(input.Name, input.Note, expenseTag.Name);
+
             RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
             ApplyExpenseToSpendingSource(newSpendingSource, input.Amount);
 
-            expense.Name = BuildExpenseName(input.Name, input.Note, expenseTag.Name);
+            expense.Name = resolvedName;
             expense.Amount = input.Amount;
             expense.ExpenseCategory = input.Category;
             expense.RecurringDate = input.Date;
@@ -146,42 +162,19 @@ public partial class ExpenseDetailVM : ObservableObject
                 _uow.SpendingSources.Update(newSpendingSource);
 
             await _uow.SaveChangesAsync();
-            await _mainViewModel.ReloadCurrentDataAsync();
-
-            _expenseLog.Amount = expenseLog.Amount;
-            _expenseLog.DeductedOn = expenseLog.DeductedOn;
-            _expenseLog.Notes = expenseLog.Notes;
-            _expenseLog.SpendingSource = new SpendingSourceVM
-            {
-                Id = newSpendingSource.Id,
-                Name = newSpendingSource.Name,
-                SpendingSourceType = newSpendingSource.SpendingSourceType
-            };
-            _expenseLog.Expense = new ExpenseVM
-            {
-                Id = expense.Id,
-                Name = expense.Name,
-                Amount = expense.Amount,
-                ExpenseCategory = expense.ExpenseCategory,
-                ExpenseKind = expense.ExpenseKind,
-                IsActive = expense.IsActive,
-                RecurringDate = expense.RecurringDate,
-                SpendingSource = new SpendingSourceVM
-                {
-                    Id = newSpendingSource.Id,
-                    Name = newSpendingSource.Name,
-                    SpendingSourceType = newSpendingSource.SpendingSourceType
-                },
-                ExpenseTag = new ExpenseTagVM
-                {
-                    Id = expenseTag.Id,
-                    Name = expenseTag.Name,
-                    HexCode = expenseTag.HexCode
-                }
-            };
+            _savedState = new ExpenseDetailSavedState(
+                resolvedName,
+                input.Amount,
+                input.Note,
+                input.Date,
+                input.Category,
+                input.SpendingSourceId,
+                input.TagId);
 
             IsEditing = false;
-            LoadFromExpenseLog(_expenseLog);
+            LoadFromSavedState();
+            WeakReferenceMessenger.Default.Send(new ExpenseDetailUpdatedMessage(
+                new ExpenseDetailUpdate(_expenseLog.Id, previousState, changedFields)));
             return ExpenseDetailSaveResult.Success();
         }
         catch (Exception exception)
@@ -194,16 +187,16 @@ public partial class ExpenseDetailVM : ObservableObject
         }
     }
 
-    private void LoadFromExpenseLog(ExpenseLogVM expenseLog)
+    private void LoadFromSavedState()
     {
-        AmountText = expenseLog.Amount.ToString(CultureInfo.CurrentCulture);
-        NameText = expenseLog.Expense?.Name ?? string.Empty;
-        NoteText = expenseLog.Notes ?? string.Empty;
-        SelectedDate = expenseLog.DeductedOn == default ? DateTime.Today : expenseLog.DeductedOn.Date;
-        SelectedExpenseCategory = expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs;
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == expenseLog.SpendingSource?.Id) ??
+        AmountText = _savedState.Amount.ToString(CultureInfo.CurrentCulture);
+        NameText = _savedState.Name;
+        NoteText = _savedState.Note;
+        SelectedDate = _savedState.Date == default ? DateTime.Today : _savedState.Date.Date;
+        SelectedExpenseCategory = _savedState.Category;
+        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == _savedState.SpendingSourceId) ??
                                  SpendingSources.FirstOrDefault();
-        SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == expenseLog.Expense?.ExpenseTag?.Id) ??
+        SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == _savedState.TagId) ??
                       _orderedTags.FirstOrDefault();
         PopupTitle = string.IsNullOrWhiteSpace(NameText) ? "Expense Detail" : NameText.Trim();
         IsMoreTagsOpen = false;
@@ -380,6 +373,56 @@ public partial class ExpenseDetailVM : ObservableObject
             target.Add(item);
     }
 
+    private static ExpenseDetailSavedState CreateSavedState(ExpenseLogVM expenseLog)
+    {
+        return new ExpenseDetailSavedState(
+            expenseLog.Expense?.Name?.Trim() ?? string.Empty,
+            expenseLog.Amount,
+            expenseLog.Notes?.Trim() ?? string.Empty,
+            expenseLog.DeductedOn == default ? DateTime.Today : expenseLog.DeductedOn.Date,
+            expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
+            expenseLog.SpendingSource?.Id ?? 0,
+            expenseLog.Expense?.ExpenseTag?.Id ?? 0);
+    }
+
+    private static ExpenseDetailSnapshot CreateMessageSnapshot(ExpenseDetailSavedState savedState)
+    {
+        return new ExpenseDetailSnapshot(
+            savedState.Amount,
+            savedState.Date,
+            savedState.Category,
+            savedState.SpendingSourceId,
+            savedState.TagId);
+    }
+
+    private static ExpenseDetailChangedFields GetChangedFields(ExpenseDetailInput input, ExpenseDetailSavedState savedState)
+    {
+        var changedFields = ExpenseDetailChangedFields.None;
+
+        if (!string.Equals(input.Name, savedState.Name, StringComparison.Ordinal))
+            changedFields |= ExpenseDetailChangedFields.Name;
+
+        if (input.Amount != savedState.Amount)
+            changedFields |= ExpenseDetailChangedFields.Amount;
+
+        if (input.Date.Date != savedState.Date.Date)
+            changedFields |= ExpenseDetailChangedFields.Date;
+
+        if (input.Category != savedState.Category)
+            changedFields |= ExpenseDetailChangedFields.Category;
+
+        if (input.SpendingSourceId != savedState.SpendingSourceId)
+            changedFields |= ExpenseDetailChangedFields.SpendingSource;
+
+        if (input.TagId != savedState.TagId)
+            changedFields |= ExpenseDetailChangedFields.Tag;
+
+        if (!string.Equals(input.Note, savedState.Note, StringComparison.Ordinal))
+            changedFields |= ExpenseDetailChangedFields.Note;
+
+        return changedFields;
+    }
+
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
 
     public readonly record struct ExpenseDetailSaveResult(bool IsSuccess, string? ErrorMessage)
@@ -395,5 +438,14 @@ public partial class ExpenseDetailVM : ObservableObject
         DateTime Date,
         string Note,
         ExpenseCategory Category,
+        int TagId);
+
+    private readonly record struct ExpenseDetailSavedState(
+        string Name,
+        decimal Amount,
+        string Note,
+        DateTime Date,
+        ExpenseCategory Category,
+        int SpendingSourceId,
         int TagId);
 }

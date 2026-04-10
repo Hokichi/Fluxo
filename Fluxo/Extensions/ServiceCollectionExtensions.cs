@@ -90,6 +90,10 @@ public static class ServiceCollectionExtensions
         // so a factory delegate bridges the lifetime mismatch.
         services.AddSingleton<Func<IUnitOfWork>>(serviceProvider =>
             serviceProvider.GetRequiredService<IUnitOfWork>);
+        services.AddSingleton<Func<IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM,
+            SavingGoalVM, SpendingSourceVM>>>(serviceProvider =>
+            serviceProvider.GetRequiredService<IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM,
+                ExpenseTagVM, SavingGoalVM, SpendingSourceVM>>);
 
         // Cleanup service
         services.AddTransient<IExpenseCleanupService, ExpenseCleanupService>();
