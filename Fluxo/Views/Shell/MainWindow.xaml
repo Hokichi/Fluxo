@@ -286,9 +286,9 @@
                                 Stroke="{StaticResource Brush.Background.Surface}"
                                 StrokeThickness="8" />
                             <Path
-                                Canvas.Left="4"
-                                Canvas.Top="4"
-                                Data="{Binding ProgressRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=48}"
+                                Canvas.Left="8"
+                                Canvas.Top="8"
+                                Data="{Binding ProgressRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=40}"
                                 Stroke="{StaticResource Brush.Mint}"
                                 StrokeEndLineCap="Round"
                                 StrokeLineJoin="Round"
@@ -343,7 +343,7 @@
                             VerticalAlignment="Center" />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.5" />
+                                <Setter Property="Opacity" Value="0.2" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -690,9 +690,7 @@
                             shell:WindowChrome.IsHitTestVisibleInChrome="True"
                             Command="{Binding NavigateSpinnerBackCommand}"
                             Style="{StaticResource SpinnerArrowButtonStyle}">
-                            <icons:PackIconUnicons
-                                Height="12"
-                                Kind="AngleLeft">
+                            <icons:PackIconUnicons Height="12" Kind="AngleLeft">
                                 <icons:PackIconUnicons.Style>
                                     <Style TargetType="icons:PackIconUnicons">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
@@ -740,9 +738,7 @@
                             Command="{Binding NavigateSpinnerForwardCommand}"
                             IsEnabled="{Binding CanNavigateForward}"
                             Style="{StaticResource SpinnerArrowButtonStyle}">
-                            <icons:PackIconUnicons
-                                Height="12"
-                                Kind="AngleRight">
+                            <icons:PackIconUnicons Height="12" Kind="AngleRight">
                                 <icons:PackIconUnicons.Style>
                                     <Style TargetType="icons:PackIconUnicons">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
@@ -849,7 +845,7 @@
                             <Setter Property="BorderBrush" Value="Transparent" />
                             <Setter Property="BorderThickness" Value="0" />
                             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
-                            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+                            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
                             <Setter Property="FontSize" Value="10" />
                             <Setter Property="Padding" Value="8,2" />
                             <Setter Property="Template">
@@ -1011,7 +1007,7 @@
                                             <TextBlock
                                                 FontFamily="{StaticResource Light}"
                                                 Foreground="{StaticResource Brush.Text.Muted}"
-                                                Text="SPENT TODAY" />
+                                                Text="SPENT" />
                                             <TextBlock
                                                 Margin="0,12,0,0"
                                                 FontFamily="{StaticResource Bold}"
@@ -1023,7 +1019,7 @@
                                             <TextBlock
                                                 FontFamily="{StaticResource Light}"
                                                 Foreground="{StaticResource Brush.Text.Muted}"
-                                                Text="DAILY ALLOWANCE" />
+                                                Text="ALLOWANCE" />
                                             <TextBlock
                                                 Margin="0,12,0,0"
                                                 FontFamily="{StaticResource Bold}"
