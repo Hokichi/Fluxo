@@ -1,0 +1,399 @@
+using System.Collections.ObjectModel;
+using System.Globalization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Shell;
+
+namespace Fluxo.ViewModels.Popups;
+
+public partial class ExpenseDetailVM : ObservableObject
+{
+    private readonly MainVM _mainViewModel;
+    private readonly List<SpendingSourceVM> _availableSpendingSources = [];
+    private readonly ExpenseLogVM _expenseLog;
+    private readonly List<ExpenseTagVM> _orderedTags = [];
+    private readonly IUnitOfWork _uow;
+    private bool _isUpdatingTagCollections;
+
+    [ObservableProperty] private string _amountText = string.Empty;
+    [ObservableProperty] private bool _isEditing;
+    [ObservableProperty] private bool _isMoreTagsOpen;
+    [ObservableProperty] private bool _isSaving;
+    [ObservableProperty] private string _nameText = string.Empty;
+    [ObservableProperty] private string _noteText = string.Empty;
+    [ObservableProperty] private string _popupTitle = "Expense Detail";
+    [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
+    [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
+    [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty] private ExpenseTagVM? _selectedTag;
+
+    public IReadOnlyList<ExpenseCategoryOption> ExpenseCategories { get; } =
+    [
+        new("Needs", ExpenseCategory.Needs),
+        new("Wants", ExpenseCategory.Wants),
+        new("Invest", ExpenseCategory.Savings)
+    ];
+
+    public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
+    public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
+    public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
+
+    public bool AreFieldsReadOnly => !IsEditing;
+    public bool CanEditFields => IsEditing;
+    public bool HasMoreTags => OverflowTags.Count > 0;
+
+    public ExpenseDetailVM(MainVM mainViewModel, ExpenseLogVM expenseLog, IUnitOfWork uow)
+    {
+        _mainViewModel = mainViewModel;
+        _expenseLog = expenseLog;
+        _uow = uow;
+
+        ReloadChoicesFromMainViewModel();
+        LoadFromExpenseLog(expenseLog);
+    }
+
+    partial void OnIsEditingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(AreFieldsReadOnly));
+        OnPropertyChanged(nameof(CanEditFields));
+
+        if (!value)
+            IsMoreTagsOpen = false;
+    }
+
+    partial void OnSelectedTagChanged(ExpenseTagVM? value)
+    {
+        if (_isUpdatingTagCollections || value is null || !IsEditing)
+            return;
+
+        PromoteTagToVisibleStart(value);
+        IsMoreTagsOpen = false;
+    }
+
+    public void BeginEditing()
+    {
+        IsEditing = true;
+    }
+
+    public void CancelEditing()
+    {
+        IsEditing = false;
+        LoadFromExpenseLog(_expenseLog);
+    }
+
+    public QuickAddVM.QuickAddDraft CreateQuickAddDraft()
+    {
+        return new QuickAddVM.QuickAddDraft(
+            true,
+            NameText,
+            AmountText,
+            SelectedSpendingSource?.Id,
+            SelectedDate.Date,
+            NoteText,
+            SelectedExpenseCategory,
+            SelectedTag?.Id);
+    }
+
+    public async Task<ExpenseDetailSaveResult> SaveAsync()
+    {
+        if (IsSaving)
+            return ExpenseDetailSaveResult.Failure("This expense is already being saved.");
+
+        if (!TryBuildInput(out var input, out var validationMessage))
+            return ExpenseDetailSaveResult.Failure(validationMessage);
+
+        IsSaving = true;
+
+        try
+        {
+            var expenseLog = await _uow.ExpenseLogs.GetByIdAsync(_expenseLog.Id);
+            if (expenseLog?.Expense is null)
+                return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
+
+            var expense = expenseLog.Expense;
+            var currentSpendingSource = expenseLog.SpendingSource;
+            var newSpendingSource = await _uow.SpendingSources.GetByIdAsync(input.SpendingSourceId);
+            if (newSpendingSource is null)
+                return ExpenseDetailSaveResult.Failure("Please select a valid spending source.");
+
+            var expenseTag = await _uow.ExpenseTags.GetByIdAsync(input.TagId);
+            if (expenseTag is null)
+                return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
+
+            RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
+            ApplyExpenseToSpendingSource(newSpendingSource, input.Amount);
+
+            expense.Name = BuildExpenseName(input.Name, input.Note, expenseTag.Name);
+            expense.Amount = input.Amount;
+            expense.ExpenseCategory = input.Category;
+            expense.RecurringDate = input.Date;
+            expense.SpendingSource = newSpendingSource;
+            expense.ExpenseTag = expenseTag;
+
+            expenseLog.Amount = input.Amount;
+            expenseLog.DeductedOn = input.Date;
+            expenseLog.Notes = input.Note;
+            expenseLog.SpendingSource = newSpendingSource;
+
+            _uow.Expenses.Update(expense);
+            _uow.ExpenseLogs.Update(expenseLog);
+            _uow.SpendingSources.Update(currentSpendingSource);
+
+            if (!ReferenceEquals(currentSpendingSource, newSpendingSource))
+                _uow.SpendingSources.Update(newSpendingSource);
+
+            await _uow.SaveChangesAsync();
+            await _mainViewModel.ReloadCurrentDataAsync();
+
+            _expenseLog.Amount = expenseLog.Amount;
+            _expenseLog.DeductedOn = expenseLog.DeductedOn;
+            _expenseLog.Notes = expenseLog.Notes;
+            _expenseLog.SpendingSource = new SpendingSourceVM
+            {
+                Id = newSpendingSource.Id,
+                Name = newSpendingSource.Name,
+                SpendingSourceType = newSpendingSource.SpendingSourceType
+            };
+            _expenseLog.Expense = new ExpenseVM
+            {
+                Id = expense.Id,
+                Name = expense.Name,
+                Amount = expense.Amount,
+                ExpenseCategory = expense.ExpenseCategory,
+                ExpenseKind = expense.ExpenseKind,
+                IsActive = expense.IsActive,
+                RecurringDate = expense.RecurringDate,
+                SpendingSource = new SpendingSourceVM
+                {
+                    Id = newSpendingSource.Id,
+                    Name = newSpendingSource.Name,
+                    SpendingSourceType = newSpendingSource.SpendingSourceType
+                },
+                ExpenseTag = new ExpenseTagVM
+                {
+                    Id = expenseTag.Id,
+                    Name = expenseTag.Name,
+                    HexCode = expenseTag.HexCode
+                }
+            };
+
+            IsEditing = false;
+            LoadFromExpenseLog(_expenseLog);
+            return ExpenseDetailSaveResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return ExpenseDetailSaveResult.Failure($"Unable to save this expense.\n\n{exception.Message}");
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void LoadFromExpenseLog(ExpenseLogVM expenseLog)
+    {
+        AmountText = expenseLog.Amount.ToString(CultureInfo.CurrentCulture);
+        NameText = expenseLog.Expense?.Name ?? string.Empty;
+        NoteText = expenseLog.Notes ?? string.Empty;
+        SelectedDate = expenseLog.DeductedOn == default ? DateTime.Today : expenseLog.DeductedOn.Date;
+        SelectedExpenseCategory = expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs;
+        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == expenseLog.SpendingSource?.Id) ??
+                                 SpendingSources.FirstOrDefault();
+        SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == expenseLog.Expense?.ExpenseTag?.Id) ??
+                      _orderedTags.FirstOrDefault();
+        PopupTitle = string.IsNullOrWhiteSpace(NameText) ? "Expense Detail" : NameText.Trim();
+        IsMoreTagsOpen = false;
+    }
+
+    private bool TryBuildInput(out ExpenseDetailInput input, out string validationMessage)
+    {
+        input = default;
+        validationMessage = string.Empty;
+
+        if (!TryParseAmount(out var amount))
+        {
+            validationMessage = "Please enter a valid amount greater than zero.";
+            return false;
+        }
+
+        if (SelectedSpendingSource is null)
+        {
+            validationMessage = "Please choose a spending source.";
+            return false;
+        }
+
+        if (SelectedTag is null)
+        {
+            validationMessage = "Please choose a tag.";
+            return false;
+        }
+
+        input = new ExpenseDetailInput(
+            NameText.Trim(),
+            amount,
+            SelectedSpendingSource.Id,
+            SelectedDate.Date,
+            NoteText.Trim(),
+            SelectedExpenseCategory,
+            SelectedTag.Id);
+
+        return true;
+    }
+
+    private bool TryParseAmount(out decimal amount)
+    {
+        amount = 0m;
+
+        var normalizedAmount = AmountText
+            .Trim()
+            .Replace(CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol, string.Empty, StringComparison.Ordinal)
+            .Replace(",", string.Empty, StringComparison.Ordinal)
+            .Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedAmount))
+            return false;
+
+        if (!decimal.TryParse(normalizedAmount, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+                CultureInfo.CurrentCulture, out amount) &&
+            !decimal.TryParse(normalizedAmount, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+                CultureInfo.InvariantCulture, out amount))
+            return false;
+
+        return amount > 0m;
+    }
+
+    private void ReloadChoicesFromMainViewModel()
+    {
+        _availableSpendingSources.Clear();
+        _availableSpendingSources.AddRange(_mainViewModel.SpendingSources);
+
+        _orderedTags.Clear();
+        _orderedTags.AddRange(_mainViewModel.Tags
+            .Concat(_mainViewModel.OtherTags)
+            .GroupBy(tag => tag.Id)
+            .Select(group => group.First()));
+
+        RefreshTagCollections();
+        RefreshSpendingSources();
+    }
+
+    private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
+    {
+        var reorderedTags = _orderedTags
+            .Where(tag => tag.Id != selectedTag.Id)
+            .Prepend(selectedTag)
+            .ToList();
+
+        _orderedTags.Clear();
+        _orderedTags.AddRange(reorderedTags);
+
+        RefreshTagCollections();
+        SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == selectedTag.Id);
+    }
+
+    private void RefreshTagCollections()
+    {
+        var selectedTagId = SelectedTag?.Id;
+
+        _isUpdatingTagCollections = true;
+
+        try
+        {
+            ReplaceCollection(VisibleTags, _orderedTags.Take(4));
+            ReplaceCollection(OverflowTags, _orderedTags.Skip(4));
+
+            OnPropertyChanged(nameof(HasMoreTags));
+            if (!HasMoreTags)
+                IsMoreTagsOpen = false;
+
+            if (selectedTagId is null)
+                return;
+
+            SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == selectedTagId.Value);
+        }
+        finally
+        {
+            _isUpdatingTagCollections = false;
+        }
+    }
+
+    private void RefreshSpendingSources()
+    {
+        var selectedSpendingSourceId = SelectedSpendingSource?.Id;
+        ReplaceCollection(SpendingSources, _availableSpendingSources.OrderBy(source => source.Name));
+
+        SelectedSpendingSource = selectedSpendingSourceId is null
+            ? SpendingSources.FirstOrDefault()
+            : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ??
+              SpendingSources.FirstOrDefault();
+    }
+
+    private static string BuildExpenseName(string name, string note, string fallbackName)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+            return name.Trim();
+
+        if (string.IsNullOrWhiteSpace(note))
+            return fallbackName;
+
+        var firstMeaningfulLine = note
+            .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line));
+
+        return string.IsNullOrWhiteSpace(firstMeaningfulLine)
+            ? fallbackName
+            : firstMeaningfulLine;
+    }
+
+    private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    {
+        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            spendingSource.SpentAmount += amount;
+            return;
+        }
+
+        spendingSource.Balance -= amount;
+    }
+
+    private static void RevertExpenseFromSpendingSource(SpendingSource spendingSource, decimal amount)
+    {
+        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            return;
+        }
+
+        spendingSource.Balance += amount;
+    }
+
+    private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> items)
+    {
+        target.Clear();
+
+        foreach (var item in items)
+            target.Add(item);
+    }
+
+    public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
+
+    public readonly record struct ExpenseDetailSaveResult(bool IsSuccess, string? ErrorMessage)
+    {
+        public static ExpenseDetailSaveResult Success() => new(true, null);
+        public static ExpenseDetailSaveResult Failure(string? errorMessage) => new(false, errorMessage);
+    }
+
+    private readonly record struct ExpenseDetailInput(
+        string Name,
+        decimal Amount,
+        int SpendingSourceId,
+        DateTime Date,
+        string Note,
+        ExpenseCategory Category,
+        int TagId);
+}

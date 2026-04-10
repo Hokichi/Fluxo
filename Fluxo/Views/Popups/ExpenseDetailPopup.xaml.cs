@@ -5,51 +5,71 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Views.Shell;
 
 namespace Fluxo.Views.Popups;
 
-public partial class QuickAddPopup : BasePopup
+public partial class ExpenseDetailPopup : BasePopup
 {
-    private readonly QuickAddVM _viewModel;
+    private readonly ExpenseDetailVM _viewModel;
     private bool _isSyncingNoteDocument;
 
-    public QuickAddPopup(QuickAddVM viewModel)
+    public ExpenseDetailPopup(ExpenseDetailVM viewModel)
     {
         InitializeComponent();
 
         _viewModel = viewModel;
         DataContext = viewModel;
+        PopupTitle = viewModel.PopupTitle;
+
+        _viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ExpenseDetailVM.PopupTitle))
+                PopupTitle = _viewModel.PopupTitle;
+
+            if (e.PropertyName == nameof(ExpenseDetailVM.IsEditing))
+                UpdateButtonStates();
+        };
 
         Loaded += (_, _) =>
         {
             SyncNoteDocumentFromViewModel();
-            FocusPrimaryInput();
+            UpdateButtonStates();
         };
+    }
+
+    protected override void OnEditButtonClick()
+    {
+        _viewModel.BeginEditing();
+        ExpenseNameTextBox.Focus();
     }
 
     protected override async void OnSaveButtonClick()
     {
-        var result = await _viewModel.SaveAsync(resetAfterSave: false);
+        var result = await _viewModel.SaveAsync();
         if (!result.IsSuccess)
         {
             ShowValidationMessage(result.ErrorMessage);
             return;
         }
 
-        Close();
+        SyncNoteDocumentFromViewModel();
     }
 
-    protected override async void OnSaveAndCreateNewButtonClick()
+    protected override void OnCloneButtonClick()
     {
-        var result = await _viewModel.SaveAsync(resetAfterSave: true);
-        if (!result.IsSuccess)
-        {
-            ShowValidationMessage(result.ErrorMessage);
-            return;
-        }
+        var draft = _viewModel.CreateQuickAddDraft();
+        var ownerWindow = Owner as MainWindow;
 
-        NoteRichTextBox.Document.Blocks.Clear();
-        FocusPrimaryInput();
+        Close();
+
+        ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenQuickAddPopup(draft)));
+    }
+
+    protected override void OnCancelButtonClick()
+    {
+        _viewModel.CancelEditing();
+        SyncNoteDocumentFromViewModel();
     }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -72,7 +92,7 @@ public partial class QuickAddPopup : BasePopup
 
     private void OnAmountTextBoxPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
-        if (sender is not TextBox textBox)
+        if (sender is not TextBox textBox || _viewModel.AreFieldsReadOnly)
             return;
 
         e.Handled = !IsValidAmountInput(textBox, e.Text);
@@ -80,7 +100,7 @@ public partial class QuickAddPopup : BasePopup
 
     private void OnAmountTextBoxPasting(object sender, DataObjectPastingEventArgs e)
     {
-        if (sender is not TextBox textBox)
+        if (sender is not TextBox textBox || _viewModel.AreFieldsReadOnly)
             return;
 
         if (!e.SourceDataObject.GetDataPresent(DataFormats.Text))
@@ -94,23 +114,20 @@ public partial class QuickAddPopup : BasePopup
             e.CancelCommand();
     }
 
+    private void UpdateButtonStates()
+    {
+        ShowEditButton = !_viewModel.IsEditing;
+        ShowSaveButton = _viewModel.IsEditing;
+        ShowCloneButton = !_viewModel.IsEditing;
+        ShowCancelButton = _viewModel.IsEditing;
+    }
+
     private void ShowValidationMessage(string? message)
     {
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FluxoMessageBox.Show(this, message, "Add New Transaction", MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
-    private void FocusPrimaryInput()
-    {
-        if (_viewModel.IsExpense)
-        {
-            ExpenseNameTextBox.Focus();
-            return;
-        }
-
-        IncomeNameTextBox.Focus();
+        FluxoMessageBox.Show(this, message, "Expense Detail", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void SyncNoteDocumentFromViewModel()

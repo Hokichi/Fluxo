@@ -41,6 +41,14 @@ public class BasePopup : Window
         DependencyProperty.Register(nameof(ShowDeleteButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty ShowCloneButtonProperty =
+        DependencyProperty.Register(nameof(ShowCloneButton), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty ShowCancelButtonProperty =
+        DependencyProperty.Register(nameof(ShowCancelButton), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
     private MainWindow? _ownerWindow;
 
     static BasePopup()
@@ -105,8 +113,22 @@ public class BasePopup : Window
 
     public bool ShowDeleteButton
     {
-        get => (bool)GetValue(ShowEditButtonProperty);
-        set => SetValue(ShowEditButtonProperty, value);
+        get => (bool)GetValue(ShowDeleteButtonProperty);
+        set => SetValue(ShowDeleteButtonProperty, value);
+    }
+
+
+    public bool ShowCloneButton
+    {
+        get => (bool)GetValue(ShowCloneButtonProperty);
+        set => SetValue(ShowCloneButtonProperty, value);
+    }
+
+
+    public bool ShowCancelButton
+    {
+        get => (bool)GetValue(ShowCancelButtonProperty);
+        set => SetValue(ShowCancelButtonProperty, value);
     }
 
     // ── Template wiring ─────────────────────────────────────────────
@@ -122,6 +144,8 @@ public class BasePopup : Window
         WireButton("PART_RevertButton", _ => OnRevertButtonClick());
         WireButton("PART_EditButton", _ => OnEditButtonClick());
         WireButton("PART_DeleteButton", _ => OnDeleteButtonClick());
+        WireButton("PART_CloneButton", _ => OnCloneButtonClick());
+        WireButton("PART_CancelButton", _ => OnCancelButtonClick());
     }
 
     private void WireButton(string partName, Action<RoutedEventArgs> handler)
@@ -148,6 +172,10 @@ public class BasePopup : Window
     protected virtual void OnEditButtonClick() { }
 
     protected virtual void OnDeleteButtonClick() { }
+
+    protected virtual void OnCloneButtonClick() { }
+
+    protected virtual void OnCancelButtonClick() { }
 
     // ── Keyboard shortcuts ──────────────────────────────────────────
 

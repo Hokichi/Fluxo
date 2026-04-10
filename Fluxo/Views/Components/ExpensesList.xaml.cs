@@ -6,6 +6,7 @@ using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.Views.Popups;
+using Fluxo.Views.Shell;
 
 namespace Fluxo.Views.Components;
 
@@ -76,8 +77,8 @@ public partial class ExpensesList : UserControl
         if (FindAncestor<SwipeRevealContainer>((DependencyObject)sender) is { } container)
             container.ResetSwipe();
 
-        var popup = new ExpenseDetailPopup(expenseLog) { Owner = mainWindow };
-        popup.ShowDialog();
+        if (mainWindow is MainWindow ownerWindow)
+            ownerWindow.OpenExpenseDetailPopup(expenseLog);
     }
 
     private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)

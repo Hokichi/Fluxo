@@ -42,7 +42,22 @@
                                     HorizontalAlignment="Right"
                                     Orientation="Horizontal">
 
-                                    <!--  Edit  -->
+                                    <!--  Clone  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_CloneButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource CloneRegular}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        IconSize="8"
+                                        Visibility="{TemplateBinding ShowCloneButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
+                                    <!--  Delete  -->
                                     <c:BalloonButton
                                         x:Name="PART_DeleteButton"
                                         Width="28"
@@ -100,6 +115,21 @@
                                         HoveredBackground="{StaticResource Brush.Success}"
                                         IconSize="8"
                                         Visibility="{TemplateBinding ShowApplyButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
+                                    <!--  Cancel  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_CancelButton"
+                                        Width="28"
+                                        Height="28"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource Ban}"
+                                        CornerRadius="8"
+                                        CurveHeight="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.Warning}"
+                                        IconSize="8"
+                                        Visibility="{TemplateBinding ShowCancelButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Save and Create New  -->

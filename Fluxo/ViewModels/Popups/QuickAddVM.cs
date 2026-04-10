@@ -62,6 +62,26 @@ public partial class QuickAddVM : ObservableObject
         ResetForm(keepCurrentType: false);
     }
 
+    public void InitializeFromDraft(QuickAddDraft draft)
+    {
+        ReloadChoicesFromMainViewModel();
+
+        IsExpense = draft.IsExpense;
+        AmountText = draft.AmountText;
+        NameText = draft.Name;
+        NoteText = draft.Note;
+        SelectedDate = draft.Date.Date;
+        SelectedExpenseCategory = draft.Category ?? ExpenseCategory.Needs;
+        SelectedSpendingSource = draft.SpendingSourceId is null
+            ? SpendingSources.FirstOrDefault()
+            : SpendingSources.FirstOrDefault(source => source.Id == draft.SpendingSourceId.Value) ??
+              SpendingSources.FirstOrDefault();
+        SelectedTag = draft.TagId is null
+            ? _orderedTags.FirstOrDefault()
+            : _orderedTags.FirstOrDefault(tag => tag.Id == draft.TagId.Value) ?? _orderedTags.FirstOrDefault();
+        IsMoreTagsOpen = false;
+    }
+
     partial void OnIsExpenseChanged(bool value)
     {
         OnPropertyChanged(nameof(IsIncome));
@@ -390,6 +410,16 @@ public partial class QuickAddVM : ObservableObject
         public static QuickAddSubmissionResult Success() => new(true, null);
         public static QuickAddSubmissionResult Failure(string? errorMessage) => new(false, errorMessage);
     }
+
+    public readonly record struct QuickAddDraft(
+        bool IsExpense,
+        string Name,
+        string AmountText,
+        int? SpendingSourceId,
+        DateTime Date,
+        string Note,
+        ExpenseCategory? Category,
+        int? TagId);
 
     private readonly record struct QuickTransactionInput(
         bool IsExpense,

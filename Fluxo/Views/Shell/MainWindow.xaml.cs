@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
@@ -344,11 +345,22 @@ public partial class MainWindow : Window
         OpenQuickAddPopup();
     }
 
-    private void OpenQuickAddPopup()
+    public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
         using var unitOfWork = _unitOfWorkFactory();
         var popupViewModel = new QuickAddVM(_mainVM, unitOfWork);
+        if (draft is { } popupDraft)
+            popupViewModel.InitializeFromDraft(popupDraft);
+
         var popup = new QuickAddPopup(popupViewModel) { Owner = this };
+        popup.ShowDialog();
+    }
+
+    public void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
+    {
+        using var unitOfWork = _unitOfWorkFactory();
+        var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, unitOfWork);
+        var popup = new ExpenseDetailPopup(popupViewModel) { Owner = this };
         popup.ShowDialog();
     }
 

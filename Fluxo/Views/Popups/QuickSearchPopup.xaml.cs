@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
+using Fluxo.Views.Shell;
 
 namespace Fluxo.Views.Popups;
 
@@ -58,10 +59,9 @@ public partial class QuickSearchPopup : BasePopup
         if (sender is not FrameworkElement { DataContext: ExpenseLogVM log })
             return;
 
-        var mainWindow = Owner;
+        var mainWindow = Owner as MainWindow;
         Close();
 
-        var detail = new ExpenseDetailPopup(log) { Owner = mainWindow };
-        detail.ShowDialog();
+        mainWindow?.OpenExpenseDetailPopup(log);
     }
 }
