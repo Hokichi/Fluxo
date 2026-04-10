@@ -57,6 +57,7 @@ public partial class MainVM : ObservableRecipient
     private bool _isSynchronizingTagSelections;
     [ObservableProperty] private bool _isWantsEmpty;
     [ObservableProperty] private bool _canNavigateForward;
+    [ObservableProperty] private bool _isAtCurrentPeriod = true;
     private DateTime _lastSelectedDate = DateTime.Today;
     private int _spinnerPageOffset;
     private decimal _lowAccountBalancePercentage = 0.20m;
@@ -163,6 +164,8 @@ public partial class MainVM : ObservableRecipient
 
         if (SelectedMainContentViewMode == MainContentViewMode.Daily)
             _lastSelectedDate = value.Date;
+
+        UpdateIsAtCurrentPeriod(value);
 
         if (!_isInitialized)
             return;
@@ -287,16 +290,17 @@ public partial class MainVM : ObservableRecipient
         await LoadUserSettingsAsync();
 
         var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
-        var expenses = await _readUnitOfWork.Expenses.GetByDayAsync(DateTime.Today);
-        var expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(DateTime.Today);
-        var incomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(DateTime.Today);
+        var expenses = await _readUnitOfWork.Expenses.GetAllAsync();
+        var allExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
+        var periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(DateTime.Today);
+        var periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(DateTime.Today);
         var savingGoals = await _readUnitOfWork.SavingGoals.GetAllAsync();
         var allTags = (await _readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync()).Select(tag => tag.Tag)
             .ToList();
 
         LoadExpenses(expenses);
-        LoadSpendingSources(spendingSources, incomeLogs, expenseLogs);
-        LoadExpenseLogs(expenseLogs);
+        LoadSpendingSources(spendingSources, periodIncomeLogs, periodExpenseLogs);
+        LoadExpenseLogs(allExpenseLogs);
         LoadSavingGoals(savingGoals);
         LoadTags(allTags);
         ConfigureExpenseViews();
@@ -309,43 +313,35 @@ public partial class MainVM : ObservableRecipient
 
     private async Task ReloadDataForSelectedItem(DayOfWeekVM selectedItem)
     {
-        IReadOnlyList<ExpenseVM> expenses;
-        IReadOnlyList<ExpenseLogVM> expenseLogs;
-        IReadOnlyList<IncomeLogVM> incomeLogs;
+        IReadOnlyList<ExpenseLogVM> periodExpenseLogs;
+        IReadOnlyList<IncomeLogVM> periodIncomeLogs;
 
         switch (SelectedMainContentViewMode)
         {
             case MainContentViewMode.Daily:
                 var day = selectedItem.Date;
-                expenses = await _readUnitOfWork.Expenses.GetByDayAsync(day);
-                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(day);
-                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(day);
+                periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(day);
+                periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(day);
                 break;
 
             case MainContentViewMode.Weekly:
                 var startOfWeek = selectedItem.Date;
                 var endOfWeek = startOfWeek.AddDays(6);
-                expenses = await _readUnitOfWork.Expenses.GetByWeekAsync(startOfWeek, endOfWeek);
-                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByWeekAsync(startOfWeek, endOfWeek);
-                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByWeekAsync(startOfWeek, endOfWeek);
+                periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByWeekAsync(startOfWeek, endOfWeek);
+                periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByWeekAsync(startOfWeek, endOfWeek);
                 break;
 
             case MainContentViewMode.Monthly:
                 var month = selectedItem.Date.Month;
-                expenses = await _readUnitOfWork.Expenses.GetByMonthAsync(month);
-                expenseLogs = await _readUnitOfWork.ExpenseLogs.GetByMonthAsync(month);
-                incomeLogs = await _readUnitOfWork.IncomeLogs.GetByMonthAsync(month);
+                periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByMonthAsync(month);
+                periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByMonthAsync(month);
                 break;
 
             default:
                 return;
         }
 
-        LoadExpenses(expenses);
-        LoadSpendingSources(SpendingSources, incomeLogs, expenseLogs);
-        LoadExpenseLogs(expenseLogs);
-        RefreshDashboardMetrics();
-        RefreshNotifications();
+        LoadSpendingSources(SpendingSources, periodIncomeLogs, periodExpenseLogs);
     }
 
     private void NavigateSpinnerToDate(DateTime referenceDate)
@@ -466,7 +462,7 @@ public partial class MainVM : ObservableRecipient
                 return new DayOfWeekVM
                 {
                     Date = monthDate,
-                    DayName = "",
+                    DayName = monthDate.Year.ToString(),
                     DayNumber = monthDate.ToString("MMM"),
                     IsSelected = false
                 };
@@ -498,6 +494,21 @@ public partial class MainVM : ObservableRecipient
     private void SelectFirstSpinnerItem()
     {
         SelectedDay = DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM();
+    }
+
+    private void UpdateIsAtCurrentPeriod(DayOfWeekVM selectedItem)
+    {
+        var today = DateTime.Today;
+
+        IsAtCurrentPeriod = SelectedMainContentViewMode switch
+        {
+            MainContentViewMode.Daily => selectedItem.Date.Date == today,
+            MainContentViewMode.Weekly =>
+                today >= selectedItem.Date.Date && today < selectedItem.Date.AddDays(7).Date,
+            MainContentViewMode.Monthly =>
+                selectedItem.Date.Year == today.Year && selectedItem.Date.Month == today.Month,
+            _ => false
+        };
     }
 
     private void LoadExpenses(IEnumerable<ExpenseVM> expenses)
