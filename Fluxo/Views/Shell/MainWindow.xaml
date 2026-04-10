@@ -768,9 +768,16 @@
                         HorizontalAlignment="Right"
                         Orientation="Horizontal">
                         <c:BalloonButton
+                            ButtonIcon="{StaticResource PlusSolid}"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                            IconSize="10"
+                            Style="{StaticResource HeaderButtonStyle}" />
+
+                        <c:BalloonButton
                             ButtonIcon="{StaticResource Cog}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                            HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                            HoveredBackground="{StaticResource Brush.Info}"
                             IconSize="12"
                             Style="{StaticResource HeaderButtonStyle}" />
 
@@ -1054,6 +1061,16 @@
                                                     FontFamily="{StaticResource Bold}"
                                                     FontSize="20"
                                                     Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="{Binding NeedsSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                                <Run
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                                    Text="/" />
+                                                <Run
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
                                                     Text="{Binding NeedsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                                             </TextBlock>
 
@@ -1091,6 +1108,16 @@
                                                     FontFamily="{StaticResource Bold}"
                                                     FontSize="20"
                                                     Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="{Binding WantsSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                                <Run
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                                    Text="/" />
+                                                <Run
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
                                                     Text="{Binding WantsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                                             </TextBlock>
 
@@ -1128,6 +1155,16 @@
                                                     FontFamily="{StaticResource Bold}"
                                                     FontSize="20"
                                                     Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="{Binding InvestSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                                <Run
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                                    Text="/" />
+                                                <Run
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
                                                     Text="{Binding InvestAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                                             </TextBlock>
 
