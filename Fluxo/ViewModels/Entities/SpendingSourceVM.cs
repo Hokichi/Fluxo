@@ -16,4 +16,62 @@ public partial class SpendingSourceVM : ObservableObject
     [ObservableProperty] private bool _showOnUI;
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
     [ObservableProperty] private decimal _spentAmount;
+
+    public bool IsCashOrChecking =>
+        SpendingSourceType is SpendingSourceType.Cash or SpendingSourceType.Checking;
+
+    public bool IsCredit => SpendingSourceType == SpendingSourceType.Credit;
+
+    public bool IsBnpl => SpendingSourceType == SpendingSourceType.BNPL;
+
+    public bool IsSaving => SpendingSourceType == SpendingSourceType.Saving;
+
+    public bool CanTransferOut => SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL);
+
+    public decimal PrimaryAmount => SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
+        ? SpentAmount
+        : Balance;
+
+    public string PrimaryAmountLabel => SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
+        ? "Spent"
+        : "Balance";
+
+    public string TypeDisplayName => SpendingSourceType switch
+    {
+        SpendingSourceType.Credit => "Credit",
+        SpendingSourceType.BNPL => "BNPL",
+        SpendingSourceType.Checking => "Checking",
+        SpendingSourceType.Cash => "Cash",
+        SpendingSourceType.Saving => "Savings",
+        _ => "Source"
+    };
+
+    public bool IsDisabled => !ShowOnUI;
+
+    partial void OnBalanceChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(PrimaryAmount));
+    }
+
+    partial void OnSpentAmountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(PrimaryAmount));
+    }
+
+    partial void OnShowOnUIChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsDisabled));
+    }
+
+    partial void OnSpendingSourceTypeChanged(SpendingSourceType value)
+    {
+        OnPropertyChanged(nameof(IsCashOrChecking));
+        OnPropertyChanged(nameof(IsCredit));
+        OnPropertyChanged(nameof(IsBnpl));
+        OnPropertyChanged(nameof(IsSaving));
+        OnPropertyChanged(nameof(CanTransferOut));
+        OnPropertyChanged(nameof(PrimaryAmount));
+        OnPropertyChanged(nameof(PrimaryAmountLabel));
+        OnPropertyChanged(nameof(TypeDisplayName));
+    }
 }

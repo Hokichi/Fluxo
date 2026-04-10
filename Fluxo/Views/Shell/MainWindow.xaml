@@ -830,7 +830,7 @@
                             VerticalOffset="8">
                             <Border
                                 x:Name="HeaderMenuPopupRoot"
-                                Width="180"
+                                Width="220"
                                 Padding="8"
                                 Background="{StaticResource Brush.Background.Elevated}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"
@@ -858,6 +858,28 @@
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="Add" />
+                                        </Grid>
+                                    </Button>
+
+                                    <Button Click="OnSpendingSourcesButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Viewbox Width="14" Height="14">
+                                                <Path
+                                                    Data="{StaticResource Bank}"
+                                                    Fill="{StaticResource Brush.Mint}"
+                                                    Stretch="Uniform" />
+                                            </Viewbox>
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Sources" />
                                         </Grid>
                                     </Button>
 

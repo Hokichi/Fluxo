@@ -11,6 +11,34 @@ public interface ILogMemoryAction
     Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
 }
 
+public sealed record SpendingSourceMemorySnapshot(
+    int SpendingSourceId,
+    string Name,
+    SpendingSourceType SpendingSourceType,
+    decimal AccountLimit,
+    decimal SpentAmount,
+    decimal Balance,
+    DateTime? DueDate,
+    decimal? InterestRate,
+    bool ShowOnUI)
+{
+    public static SpendingSourceMemorySnapshot Create(SpendingSource spendingSource)
+    {
+        ArgumentNullException.ThrowIfNull(spendingSource);
+
+        return new SpendingSourceMemorySnapshot(
+            spendingSource.Id,
+            spendingSource.Name,
+            spendingSource.SpendingSourceType,
+            spendingSource.AccountLimit,
+            spendingSource.SpentAmount,
+            spendingSource.Balance,
+            spendingSource.DueDate,
+            spendingSource.InterestRate,
+            spendingSource.ShowOnUI);
+    }
+}
+
 public sealed record ExpenseLogMemorySnapshot(
     int ExpenseId,
     int ExpenseLogId,
@@ -192,6 +220,24 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
     }
 }
 
+public sealed class CompositeLogMemoryAction(string description, IReadOnlyList<ILogMemoryAction> actions)
+    : ILogMemoryAction
+{
+    public string Description { get; } = description;
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        foreach (var action in actions.Reverse())
+            await action.UndoAsync(unitOfWork, cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        foreach (var action in actions)
+            await action.RedoAsync(unitOfWork, cancellationToken);
+    }
+}
+
 public sealed class EditExpenseLogMemoryAction(
     ExpenseLogMemorySnapshot before,
     ExpenseLogMemorySnapshot after) : ILogMemoryAction
@@ -274,6 +320,80 @@ public sealed class DeleteExpenseLogMemoryAction(int expenseLogId) : ILogMemoryA
 
         expenseLog.IsForDeletion = isForDeletion;
         unitOfWork.ExpenseLogs.Update(expenseLog);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class EditSpendingSourceMemoryAction(
+    SpendingSourceMemorySnapshot before,
+    SpendingSourceMemorySnapshot after) : ILogMemoryAction
+{
+    public string Description => "Edit spending source";
+
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
+    }
+
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
+    }
+
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, SpendingSourceMemorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        var spendingSource =
+            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                cancellationToken);
+
+        spendingSource.Name = snapshot.Name;
+        spendingSource.SpendingSourceType = snapshot.SpendingSourceType;
+        spendingSource.AccountLimit = snapshot.AccountLimit;
+        spendingSource.SpentAmount = snapshot.SpentAmount;
+        spendingSource.Balance = snapshot.Balance;
+        spendingSource.DueDate = snapshot.DueDate;
+        spendingSource.InterestRate = snapshot.InterestRate;
+        spendingSource.ShowOnUI = snapshot.ShowOnUI;
+
+        unitOfWork.SpendingSources.Update(spendingSource);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public string Description => "Delete spending source";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken) is not null)
+            return;
+
+        var spendingSource = new SpendingSource
+        {
+            Id = snapshot.SpendingSourceId,
+            Name = snapshot.Name,
+            SpendingSourceType = snapshot.SpendingSourceType,
+            AccountLimit = snapshot.AccountLimit,
+            SpentAmount = snapshot.SpentAmount,
+            Balance = snapshot.Balance,
+            DueDate = snapshot.DueDate,
+            InterestRate = snapshot.InterestRate,
+            ShowOnUI = snapshot.ShowOnUI
+        };
+
+        await unitOfWork.SpendingSources.AddAsync(spendingSource, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
+        if (spendingSource is null)
+            return;
+
+        unitOfWork.SpendingSources.Remove(spendingSource);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

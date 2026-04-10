@@ -353,6 +353,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            OpenSpendingSourcesListPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused())
         {
             _ = UndoLogMemoryAsync();
@@ -403,6 +410,12 @@ public partial class MainWindow : Window
         OpenHeaderMenu(pinned: true);
     }
 
+    private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)
+    {
+        CloseHeaderMenu();
+        OpenSpendingSourcesListPopup();
+    }
+
     private async void OnUndoButtonClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
@@ -438,6 +451,20 @@ public partial class MainWindow : Window
         using var unitOfWork = _unitOfWorkFactory();
         var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, unitOfWork);
         var popup = new ExpenseDetailPopup(popupViewModel) { Owner = this };
+        popup.ShowDialog();
+    }
+
+    public void OpenSpendingSourcesListPopup()
+    {
+        var popup = new SpendingSourcesListPopup(_mainVM) { Owner = this };
+        popup.ShowDialog();
+    }
+
+    public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
+    {
+        using var unitOfWork = _unitOfWorkFactory();
+        var popupViewModel = new SpendingSourceDetailVM(_mainVM, spendingSource.Id, unitOfWork);
+        var popup = new SpendingSourceDetailPopup(popupViewModel) { Owner = this };
         popup.ShowDialog();
     }
 

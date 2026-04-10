@@ -1,0 +1,32 @@
+using System.Windows;
+using System.Windows.Controls;
+using Fluxo.Resources.CustomControls;
+using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Shell;
+using Fluxo.Views.Shell;
+
+namespace Fluxo.Views.Popups;
+
+public partial class SpendingSourcesListPopup : BasePopup
+{
+    public SpendingSourcesListPopup(MainVM mainViewModel)
+    {
+        InitializeComponent();
+
+        SourcesList.ItemsSource = mainViewModel.SpendingSources
+            .OrderByDescending(source => source.ShowOnUI)
+            .ThenBy(source => source.Name)
+            .ToList();
+    }
+
+    private void OnSourceClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: SpendingSourceVM spendingSource })
+            return;
+
+        var ownerWindow = Owner as MainWindow;
+        Close();
+
+        ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenSpendingSourceDetailPopup(spendingSource)));
+    }
+}

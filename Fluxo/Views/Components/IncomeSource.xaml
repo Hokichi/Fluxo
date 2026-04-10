@@ -80,6 +80,7 @@
         </Style>
     </UserControl.Resources>
     <Border
+        MouseLeftButtonDown="OnRootMouseLeftButtonDown"
         BorderBrush="{StaticResource Brush.Border.Subtle}"
         BorderThickness="1"
         CornerRadius="16">
