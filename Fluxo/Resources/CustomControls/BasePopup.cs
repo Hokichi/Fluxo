@@ -37,6 +37,10 @@ public class BasePopup : Window
         DependencyProperty.Register(nameof(ShowEditButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty ShowDeleteButtonProperty =
+        DependencyProperty.Register(nameof(ShowDeleteButton), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
     private MainWindow? _ownerWindow;
 
     static BasePopup()
@@ -99,6 +103,12 @@ public class BasePopup : Window
         set => SetValue(ShowEditButtonProperty, value);
     }
 
+    public bool ShowDeleteButton
+    {
+        get => (bool)GetValue(ShowEditButtonProperty);
+        set => SetValue(ShowEditButtonProperty, value);
+    }
+
     // ── Template wiring ─────────────────────────────────────────────
 
     public override void OnApplyTemplate()
@@ -111,6 +121,7 @@ public class BasePopup : Window
         WireButton("PART_ApplyButton", _ => OnApplyButtonClick());
         WireButton("PART_RevertButton", _ => OnRevertButtonClick());
         WireButton("PART_EditButton", _ => OnEditButtonClick());
+        WireButton("PART_DeleteButton", _ => OnDeleteButtonClick());
     }
 
     private void WireButton(string partName, Action<RoutedEventArgs> handler)
@@ -135,6 +146,8 @@ public class BasePopup : Window
     protected virtual void OnRevertButtonClick() { }
 
     protected virtual void OnEditButtonClick() { }
+
+    protected virtual void OnDeleteButtonClick() { }
 
     // ── Keyboard shortcuts ──────────────────────────────────────────
 
@@ -168,6 +181,10 @@ public class BasePopup : Window
                     OnSaveButtonClick();
                     e.Handled = true;
                 }
+                break;
+            case Key.Delete:
+                OnDeleteButtonClick();
+                e.Handled = true;
                 break;
         }
     }
