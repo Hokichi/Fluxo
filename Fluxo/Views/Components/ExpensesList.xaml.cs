@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
+using Fluxo.ViewModels.Entities;
+using Fluxo.Views.Popups;
+using Fluxo.Views.Shell;
 
 namespace Fluxo.Views.Components;
 
@@ -61,6 +64,21 @@ public partial class ExpensesList : UserControl
     {
         get => (Brush)GetValue(DotColorProperty);
         set => SetValue(DotColorProperty, value);
+    }
+
+    private void OnExpenseDetailButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: ExpenseLogVM expenseLog })
+            return;
+
+        var mainWindow = Window.GetWindow(this);
+
+        // Reset the swipe on the container
+        if (FindAncestor<SwipeRevealContainer>((DependencyObject)sender) is { } container)
+            container.ResetSwipe();
+
+        if (mainWindow is MainWindow ownerWindow)
+            ownerWindow.OpenExpenseDetailPopup(expenseLog);
     }
 
     private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)
