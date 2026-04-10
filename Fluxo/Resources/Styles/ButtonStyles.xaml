@@ -41,4 +41,31 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style TargetType="{x:Type c:SwipeRevealContainer}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type c:SwipeRevealContainer}">
+                    <Grid ClipToBounds="True">
+                        <!--  Left action (revealed on swipe right)  -->
+                        <ContentPresenter
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Content="{TemplateBinding LeftContent}" />
+
+                        <!--  Right action (revealed on swipe left)  -->
+                        <ContentPresenter
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Content="{TemplateBinding RightContent}" />
+
+                        <!--  Main slideable content  -->
+                        <Border x:Name="PART_ContentBorder" Background="Transparent">
+                            <ContentPresenter Content="{TemplateBinding Content}" />
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

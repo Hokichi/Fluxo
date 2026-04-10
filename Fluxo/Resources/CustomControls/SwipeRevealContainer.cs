@@ -1,0 +1,153 @@
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+
+namespace Fluxo.Resources.CustomControls;
+
+/// <summary>
+///     A container that reveals left or right action panels when the user
+///     presses and drags horizontally (swipe gesture).
+///     Swipe left  → reveals the <see cref="RightContent" /> panel.
+///     Swipe right → reveals the <see cref="LeftContent" /> panel.
+/// </summary>
+public class SwipeRevealContainer : ContentControl
+{
+    private const double SwipeThreshold = 40;
+    private const double RevealWidth = 52;
+    private static readonly Duration AnimationDuration = new(TimeSpan.FromMilliseconds(200));
+
+    public static readonly DependencyProperty LeftContentProperty =
+        DependencyProperty.Register(nameof(LeftContent), typeof(object), typeof(SwipeRevealContainer));
+
+    public static readonly DependencyProperty RightContentProperty =
+        DependencyProperty.Register(nameof(RightContent), typeof(object), typeof(SwipeRevealContainer));
+
+    private Border? _contentBorder;
+    private bool _isDragging;
+    private Point _startPoint;
+    private TranslateTransform _translateTransform = new();
+    private double _currentOffset;
+
+    public object LeftContent
+    {
+        get => GetValue(LeftContentProperty);
+        set => SetValue(LeftContentProperty, value);
+    }
+
+    public object RightContent
+    {
+        get => GetValue(RightContentProperty);
+        set => SetValue(RightContentProperty, value);
+    }
+
+    public override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        _contentBorder = GetTemplateChild("PART_ContentBorder") as Border;
+        if (_contentBorder is not null)
+            _contentBorder.RenderTransform = _translateTransform;
+    }
+
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonDown(e);
+
+        // Don't capture swipe if the click is on a button
+        if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) is not null)
+            return;
+
+        _startPoint = e.GetPosition(this);
+        _isDragging = false;
+        CaptureMouse();
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+
+        if (!IsMouseCaptured)
+            return;
+
+        var currentPoint = e.GetPosition(this);
+        var deltaX = currentPoint.X - _startPoint.X;
+
+        // Start dragging only after a small horizontal threshold to avoid false triggers
+        if (!_isDragging && Math.Abs(deltaX) > 5)
+            _isDragging = true;
+
+        if (!_isDragging)
+            return;
+
+        // Clamp offset: negative = swipe left (reveal right), positive = swipe right (reveal left)
+        var offset = _currentOffset + deltaX;
+        offset = Math.Max(-RevealWidth, Math.Min(RevealWidth, offset));
+        _translateTransform.X = offset;
+    }
+
+    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonUp(e);
+
+        if (!IsMouseCaptured)
+            return;
+
+        ReleaseMouseCapture();
+
+        var currentPoint = e.GetPosition(this);
+        var deltaX = currentPoint.X - _startPoint.X;
+        var totalOffset = _currentOffset + deltaX;
+
+        double targetOffset;
+        if (totalOffset < -SwipeThreshold)
+            targetOffset = -RevealWidth; // Reveal right panel
+        else if (totalOffset > SwipeThreshold)
+            targetOffset = RevealWidth; // Reveal left panel
+        else
+            targetOffset = 0; // Snap back
+
+        AnimateTo(targetOffset);
+        _isDragging = false;
+    }
+
+    protected override void OnMouseLeave(MouseEventArgs e)
+    {
+        base.OnMouseLeave(e);
+
+        if (IsMouseCaptured)
+        {
+            ReleaseMouseCapture();
+            AnimateTo(0);
+            _isDragging = false;
+        }
+    }
+
+    /// <summary>
+    ///     Resets the swipe position back to center.
+    /// </summary>
+    public void ResetSwipe()
+    {
+        AnimateTo(0);
+    }
+
+    private void AnimateTo(double targetX)
+    {
+        var animation = new DoubleAnimation(targetX, AnimationDuration)
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        animation.Completed += (_, _) => _currentOffset = targetX;
+        _translateTransform.BeginAnimation(TranslateTransform.XProperty, animation);
+        _currentOffset = targetX;
+    }
+
+    private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
+    {
+        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
+            if (current is T match)
+                return match;
+
+        return null;
+    }
+}
