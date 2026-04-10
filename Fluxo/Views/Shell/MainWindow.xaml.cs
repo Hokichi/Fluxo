@@ -8,6 +8,8 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using System.Windows.Threading;
+using Fluxo.Resources.CustomControls;
 using Fluxo.Core.Interfaces;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -30,6 +32,11 @@ public partial class MainWindow : Window
     private bool _isClosing;
     private bool _isMaximized;
     private Rect _currentBounds;
+    private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private bool _isHeaderMenuPinned;
+    private bool _isPointerOverHeaderMenuButton;
+    private bool _isPointerOverHeaderMenuPopup;
+    private IInputElement? _lastCommandTarget;
     private Rect _restoreBounds;
 
     public MainWindow(MainVM mainVM, Func<IUnitOfWork> unitOfWorkFactory, IExpenseCleanupService expenseCleanupService)
@@ -50,7 +57,10 @@ public partial class MainWindow : Window
         };
 
         Closing += OnWindowClosing;
+        Deactivated += OnWindowDeactivated;
         PreviewKeyDown += OnPreviewKeyDown;
+        PreviewMouseLeftButtonDown += OnWindowPreviewMouseLeftButtonDown;
+        _headerMenuCloseTimer.Tick += OnHeaderMenuCloseTimerTick;
     }
 
     private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
@@ -342,7 +352,55 @@ public partial class MainWindow : Window
 
     private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)
     {
+        CloseHeaderMenu();
         OpenQuickAddPopup();
+    }
+
+    private void OnHeaderMenuButtonMouseEnter(object sender, MouseEventArgs e)
+    {
+        _isPointerOverHeaderMenuButton = true;
+        _headerMenuCloseTimer.Stop();
+        OpenHeaderMenu(pinned: false);
+    }
+
+    private void OnHeaderMenuButtonMouseLeave(object sender, MouseEventArgs e)
+    {
+        _isPointerOverHeaderMenuButton = false;
+        ScheduleHeaderMenuClose();
+    }
+
+    private void OnHeaderMenuPopupMouseEnter(object sender, MouseEventArgs e)
+    {
+        _isPointerOverHeaderMenuPopup = true;
+        _headerMenuCloseTimer.Stop();
+    }
+
+    private void OnHeaderMenuPopupMouseLeave(object sender, MouseEventArgs e)
+    {
+        _isPointerOverHeaderMenuPopup = false;
+        ScheduleHeaderMenuClose();
+    }
+
+    private void OnHeaderMenuButtonClick(object sender, RoutedEventArgs e)
+    {
+        OpenHeaderMenu(pinned: true);
+    }
+
+    private void OnUndoButtonClick(object sender, RoutedEventArgs e)
+    {
+        ExecuteMenuCommand(ApplicationCommands.Undo);
+    }
+
+    private void OnRedoButtonClick(object sender, RoutedEventArgs e)
+    {
+        ExecuteMenuCommand(ApplicationCommands.Redo);
+    }
+
+    private void OnSettingsButtonClick(object sender, RoutedEventArgs e)
+    {
+        CloseHeaderMenu();
+        FluxoMessageBox.Show(this, "Settings is not available yet.", "Settings", MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
@@ -393,5 +451,87 @@ public partial class MainWindow : Window
             PopupOverlay.Visibility = Visibility.Collapsed;
         };
         PopupOverlay.BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    private void OpenHeaderMenu(bool pinned)
+    {
+        _lastCommandTarget = GetCommandTarget();
+        _isHeaderMenuPinned = pinned || _isHeaderMenuPinned;
+        _headerMenuCloseTimer.Stop();
+        HeaderMenuPopup.IsOpen = true;
+    }
+
+    private void CloseHeaderMenu()
+    {
+        _headerMenuCloseTimer.Stop();
+        _isHeaderMenuPinned = false;
+        _isPointerOverHeaderMenuButton = false;
+        _isPointerOverHeaderMenuPopup = false;
+        HeaderMenuPopup.IsOpen = false;
+    }
+
+    private void ScheduleHeaderMenuClose()
+    {
+        if (_isHeaderMenuPinned)
+            return;
+
+        _headerMenuCloseTimer.Stop();
+        _headerMenuCloseTimer.Start();
+    }
+
+    private void OnHeaderMenuCloseTimerTick(object? sender, EventArgs e)
+    {
+        _headerMenuCloseTimer.Stop();
+
+        if (_isHeaderMenuPinned || _isPointerOverHeaderMenuButton || _isPointerOverHeaderMenuPopup)
+            return;
+
+        HeaderMenuPopup.IsOpen = false;
+    }
+
+    private void OnWindowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isHeaderMenuPinned || e.OriginalSource is not DependencyObject source)
+            return;
+
+        if (FindAncestor<BalloonButton>(source) == HeaderMenuButton)
+            return;
+
+        CloseHeaderMenu();
+    }
+
+    private void OnWindowDeactivated(object? sender, EventArgs e)
+    {
+        CloseHeaderMenu();
+    }
+
+    private void ExecuteMenuCommand(RoutedCommand command)
+    {
+        var target = _lastCommandTarget;
+
+        if (target is not null && command.CanExecute(null, target))
+        {
+            command.Execute(null, target);
+            CloseHeaderMenu();
+            return;
+        }
+
+        if (command.CanExecute(null, this))
+            command.Execute(null, this);
+
+        CloseHeaderMenu();
+    }
+
+    private IInputElement? GetCommandTarget()
+    {
+        var focusedElement = FocusManager.GetFocusedElement(this) as IInputElement;
+        if (focusedElement is not null && focusedElement != HeaderMenuButton)
+            return focusedElement;
+
+        var keyboardFocusedElement = Keyboard.FocusedElement as IInputElement;
+        if (keyboardFocusedElement is not null && keyboardFocusedElement != HeaderMenuButton)
+            return keyboardFocusedElement;
+
+        return null;
     }
 }
