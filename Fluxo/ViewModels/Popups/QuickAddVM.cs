@@ -1,10 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups;
@@ -150,6 +153,10 @@ public partial class QuickAddVM : ObservableObject
 
                 ApplyExpenseToSpendingSource(spendingSource, input.Amount);
                 _uow.SpendingSources.Update(spendingSource);
+
+                await _uow.SaveChangesAsync();
+                WeakReferenceMessenger.Default.Send(
+                    new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot.Create(expenseLog))));
             }
             else
             {
@@ -165,9 +172,11 @@ public partial class QuickAddVM : ObservableObject
 
                 ApplyIncomeToSpendingSource(spendingSource, input.Amount);
                 _uow.SpendingSources.Update(spendingSource);
-            }
 
-            await _uow.SaveChangesAsync();
+                await _uow.SaveChangesAsync();
+                WeakReferenceMessenger.Default.Send(
+                    new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(IncomeLogMemorySnapshot.Create(incomeLog))));
+            }
             await _mainViewModel.ReloadCurrentDataAsync();
 
             if (resetAfterSave)
@@ -186,6 +195,11 @@ public partial class QuickAddVM : ObservableObject
         {
             IsSaving = false;
         }
+    }
+
+    public bool HasValidEntryToPersistOnClose()
+    {
+        return TryBuildTransactionInput(out _, out _);
     }
 
     public void ResetForm(bool keepCurrentType)

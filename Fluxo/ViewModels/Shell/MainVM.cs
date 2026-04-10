@@ -10,6 +10,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Services.History;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
@@ -29,6 +30,7 @@ public partial class MainVM : ObservableRecipient
     private readonly HashSet<int> _expenseLogIdsMarkedForDeletion = [];
     private readonly List<ExpenseVM> _expenses = [];
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
+    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
 
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
 
@@ -112,10 +114,12 @@ public partial class MainVM : ObservableRecipient
     public MainVM(
         IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>
             readUnitOfWork,
+        Func<IUnitOfWork> unitOfWorkFactory,
         Func<EntityReadUnitOfWork> readUnitOfWorkFactory,
         IUserSettingsRepository userSettingsRepository)
     {
         _readUnitOfWork = readUnitOfWork;
+        _unitOfWorkFactory = unitOfWorkFactory;
         _readUnitOfWorkFactory = readUnitOfWorkFactory;
         _userSettingsRepository = userSettingsRepository;
 
@@ -294,14 +298,23 @@ public partial class MainVM : ObservableRecipient
     }
 
     [RelayCommand]
-    private void DeleteExpenseLog(ExpenseLogVM? expenseLog)
+    private async Task DeleteExpenseLog(ExpenseLogVM? expenseLog)
     {
         if (expenseLog is null)
             return;
 
-        RemoveExpenseLogFromCollection(_needsSource, expenseLog);
-        RemoveExpenseLogFromCollection(_wantsSource, expenseLog);
-        RemoveExpenseLogFromCollection(_investSource, expenseLog);
+        await using var unitOfWork = _unitOfWorkFactory();
+        var trackedExpenseLog = await unitOfWork.ExpenseLogs.GetByIdAsync(expenseLog.Id);
+        if (trackedExpenseLog is null || trackedExpenseLog.IsForDeletion)
+            return;
+
+        trackedExpenseLog.IsForDeletion = true;
+        unitOfWork.ExpenseLogs.Update(trackedExpenseLog);
+        await unitOfWork.SaveChangesAsync();
+
+        ApplyDeletedExpenseLogToUi(expenseLog);
+        WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
+            new DeleteExpenseLogMemoryAction(trackedExpenseLog.Id)));
     }
 
     internal IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs()
@@ -1253,6 +1266,28 @@ public partial class MainVM : ObservableRecipient
             ReferenceEquals(log, expenseLog) || (expenseLog.Id > 0 && log.Id == expenseLog.Id));
 
         if (existingExpenseLog is not null) expenseLogs.Remove(existingExpenseLog);
+    }
+
+    private void ApplyDeletedExpenseLogToUi(ExpenseLogVM expenseLog)
+    {
+        var trackedExpenseLog = FindExpenseLogInCollections(expenseLog.Id) ?? expenseLog;
+        var sourceCollection = FindExpenseLogCollection(expenseLog.Id);
+        if (sourceCollection is null)
+            return;
+
+        RunBatchedExpenseRefresh(() =>
+        {
+            trackedExpenseLog.IsForDeletion = true;
+            RemoveExpenseLogFromCollection(sourceCollection, trackedExpenseLog);
+        });
+
+        if (trackedExpenseLog.Id > 0)
+            _expenseLogIdsMarkedForDeletion.Add(trackedExpenseLog.Id);
+
+        AddToAllTimeSpent(trackedExpenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs, -trackedExpenseLog.Amount);
+        RefreshVisibleMoneyOutMetrics([trackedExpenseLog.SpendingSource.Id]);
+        RefreshDashboardMetrics();
+        RefreshNotifications();
     }
 
     private static void ReplaceExpenseLogs(ObservableCollection<ExpenseLogVM> target, IEnumerable<ExpenseLogVM> items)

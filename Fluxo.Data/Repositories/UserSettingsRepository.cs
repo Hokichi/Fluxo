@@ -13,13 +13,16 @@ public sealed class UserSettingsRepository(FluxoDbContext dbContext) : IUserSett
     public async Task<IReadOnlyList<UserSettings>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet
+            .AsNoTracking()
             .OrderBy(settings => settings.Name)
             .ToListAsync(cancellationToken);
     }
 
     public Task<UserSettings?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
-        return _dbSet.FirstOrDefaultAsync(settings => settings.Name == name, cancellationToken);
+        return _dbSet
+            .AsNoTracking()
+            .FirstOrDefaultAsync(settings => settings.Name == name, cancellationToken);
     }
 
     public Task AddAsync(UserSettings entity, CancellationToken cancellationToken = default)

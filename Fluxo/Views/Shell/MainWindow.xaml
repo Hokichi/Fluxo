@@ -1539,9 +1539,9 @@
 
                         <Grid Grid.Column="1" Margin="16,16,0,0">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="250" />
-                                <RowDefinition Height="16" />
                                 <RowDefinition Height="*" />
+                                <RowDefinition Height="16" />
+                                <RowDefinition Height="2*" />
                             </Grid.RowDefinitions>
 
                             <Border Style="{StaticResource DashboardPanelStyle}">

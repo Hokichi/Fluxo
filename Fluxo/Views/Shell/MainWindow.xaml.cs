@@ -11,6 +11,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using Fluxo.Resources.CustomControls;
 using Fluxo.Core.Interfaces;
+using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
@@ -36,7 +37,7 @@ public partial class MainWindow : Window
     private bool _isHeaderMenuPinned;
     private bool _isPointerOverHeaderMenuButton;
     private bool _isPointerOverHeaderMenuPopup;
-    private IInputElement? _lastCommandTarget;
+    private readonly LogMemoryManager _logMemoryManager;
     private Rect _restoreBounds;
 
     public MainWindow(MainVM mainVM, Func<IUnitOfWork> unitOfWorkFactory, IExpenseCleanupService expenseCleanupService)
@@ -46,6 +47,7 @@ public partial class MainWindow : Window
         _mainVM = mainVM;
         _unitOfWorkFactory = unitOfWorkFactory;
         _expenseCleanupService = expenseCleanupService;
+        _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWorkFactory);
         DataContext = _mainVM;
 
         Loaded += async (_, _) =>
@@ -126,6 +128,7 @@ public partial class MainWindow : Window
             var markedIds = _mainVM.GetExpenseLogIdsMarkedForDeletion();
             await _expenseCleanupService.DeleteMarkedExpenseLogsAsync(markedIds);
             _hasCompletedPendingDeletionCleanup = true;
+            _logMemoryManager.Dispose();
         }
         finally
         {
@@ -347,6 +350,20 @@ public partial class MainWindow : Window
             var popup = new QuickSearchPopup(_mainVM) { Owner = this };
             popup.ShowDialog();
             e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused())
+        {
+            _ = UndoLogMemoryAsync();
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused())
+        {
+            _ = RedoLogMemoryAsync();
+            e.Handled = true;
         }
     }
 
@@ -386,14 +403,16 @@ public partial class MainWindow : Window
         OpenHeaderMenu(pinned: true);
     }
 
-    private void OnUndoButtonClick(object sender, RoutedEventArgs e)
+    private async void OnUndoButtonClick(object sender, RoutedEventArgs e)
     {
-        ExecuteMenuCommand(ApplicationCommands.Undo);
+        CloseHeaderMenu();
+        await UndoLogMemoryAsync();
     }
 
-    private void OnRedoButtonClick(object sender, RoutedEventArgs e)
+    private async void OnRedoButtonClick(object sender, RoutedEventArgs e)
     {
-        ExecuteMenuCommand(ApplicationCommands.Redo);
+        CloseHeaderMenu();
+        await RedoLogMemoryAsync();
     }
 
     private void OnSettingsButtonClick(object sender, RoutedEventArgs e)
@@ -455,7 +474,6 @@ public partial class MainWindow : Window
 
     private void OpenHeaderMenu(bool pinned)
     {
-        _lastCommandTarget = GetCommandTarget();
         _isHeaderMenuPinned = pinned || _isHeaderMenuPinned;
         _headerMenuCloseTimer.Stop();
         HeaderMenuPopup.IsOpen = true;
@@ -505,33 +523,34 @@ public partial class MainWindow : Window
         CloseHeaderMenu();
     }
 
-    private void ExecuteMenuCommand(RoutedCommand command)
+    private async Task UndoLogMemoryAsync()
     {
-        var target = _lastCommandTarget;
-
-        if (target is not null && command.CanExecute(null, target))
+        try
         {
-            command.Execute(null, target);
-            CloseHeaderMenu();
-            return;
+            await _logMemoryManager.UndoAsync();
         }
-
-        if (command.CanExecute(null, this))
-            command.Execute(null, this);
-
-        CloseHeaderMenu();
+        catch (Exception exception)
+        {
+            FluxoMessageBox.Show(this, $"Unable to undo the last action.\n\n{exception.Message}", "Undo",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
-    private IInputElement? GetCommandTarget()
+    private async Task RedoLogMemoryAsync()
     {
-        var focusedElement = FocusManager.GetFocusedElement(this) as IInputElement;
-        if (focusedElement is not null && focusedElement != HeaderMenuButton)
-            return focusedElement;
+        try
+        {
+            await _logMemoryManager.RedoAsync();
+        }
+        catch (Exception exception)
+        {
+            FluxoMessageBox.Show(this, $"Unable to redo the last action.\n\n{exception.Message}", "Redo",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
-        var keyboardFocusedElement = Keyboard.FocusedElement as IInputElement;
-        if (keyboardFocusedElement is not null && keyboardFocusedElement != HeaderMenuButton)
-            return keyboardFocusedElement;
-
-        return null;
+    private static bool IsTextInputElementFocused()
+    {
+        return Keyboard.FocusedElement is TextBoxBase or PasswordBox or ComboBox;
     }
 }

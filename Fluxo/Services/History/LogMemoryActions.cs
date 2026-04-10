@@ -1,0 +1,340 @@
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces;
+
+namespace Fluxo.Services.History;
+
+public interface ILogMemoryAction
+{
+    string Description { get; }
+    Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
+    Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
+}
+
+public sealed record ExpenseLogMemorySnapshot(
+    int ExpenseId,
+    int ExpenseLogId,
+    string ExpenseName,
+    decimal Amount,
+    ExpenseKind ExpenseKind,
+    ExpenseCategory ExpenseCategory,
+    DateTime? RecurringDate,
+    bool IsActive,
+    int SpendingSourceId,
+    int TagId,
+    DateTime DeductedOn,
+    string Notes,
+    bool IsForDeletion)
+{
+    public static ExpenseLogMemorySnapshot Create(ExpenseLog expenseLog)
+    {
+        ArgumentNullException.ThrowIfNull(expenseLog);
+        ArgumentNullException.ThrowIfNull(expenseLog.Expense);
+        ArgumentNullException.ThrowIfNull(expenseLog.SpendingSource);
+        ArgumentNullException.ThrowIfNull(expenseLog.Expense.ExpenseTag);
+
+        return new ExpenseLogMemorySnapshot(
+            expenseLog.Expense.Id,
+            expenseLog.Id,
+            expenseLog.Expense.Name,
+            expenseLog.Amount,
+            expenseLog.Expense.ExpenseKind,
+            expenseLog.Expense.ExpenseCategory,
+            expenseLog.Expense.RecurringDate,
+            expenseLog.Expense.IsActive,
+            expenseLog.SpendingSource.Id,
+            expenseLog.Expense.ExpenseTag.Id,
+            expenseLog.DeductedOn,
+            expenseLog.Notes,
+            expenseLog.IsForDeletion);
+    }
+}
+
+public sealed record IncomeLogMemorySnapshot(
+    int IncomeLogId,
+    int SpendingSourceId,
+    decimal Amount,
+    DateTime AddedOn,
+    string Notes)
+{
+    public static IncomeLogMemorySnapshot Create(IncomeLog incomeLog)
+    {
+        ArgumentNullException.ThrowIfNull(incomeLog);
+        ArgumentNullException.ThrowIfNull(incomeLog.SpendingSource);
+
+        return new IncomeLogMemorySnapshot(
+            incomeLog.Id,
+            incomeLog.SpendingSource.Id,
+            incomeLog.Amount,
+            incomeLog.AddedOn,
+            incomeLog.Notes);
+    }
+}
+
+public sealed class AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public string Description => "Add expense";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var expenseLog = await unitOfWork.ExpenseLogs.GetByIdAsync(snapshot.ExpenseLogId, cancellationToken);
+        if (expenseLog is null)
+            return;
+
+        LogMemoryPersistence.RevertExpenseFromSpendingSource(expenseLog.SpendingSource, expenseLog.Amount);
+        unitOfWork.SpendingSources.Update(expenseLog.SpendingSource);
+
+        var expense = expenseLog.Expense;
+        unitOfWork.ExpenseLogs.Remove(expenseLog);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (expense is null)
+            return;
+
+        var remainingExpenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync(cancellationToken);
+        if (remainingExpenseLogs.Any(log => log.Expense?.Id == expense.Id))
+            return;
+
+        var persistedExpense = await unitOfWork.Expenses.GetByIdAsync(expense.Id, cancellationToken);
+        if (persistedExpense is null)
+            return;
+
+        unitOfWork.Expenses.Remove(persistedExpense);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.ExpenseLogs.GetByIdAsync(snapshot.ExpenseLogId, cancellationToken) is not null)
+            return;
+
+        var spendingSource =
+            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                cancellationToken);
+        var expenseTag =
+            await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId, cancellationToken);
+
+        var expense = new Expense
+        {
+            Id = snapshot.ExpenseId,
+            Name = snapshot.ExpenseName,
+            Amount = snapshot.Amount,
+            ExpenseKind = snapshot.ExpenseKind,
+            ExpenseCategory = snapshot.ExpenseCategory,
+            RecurringDate = snapshot.RecurringDate,
+            IsActive = snapshot.IsActive,
+            SpendingSource = spendingSource,
+            ExpenseTag = expenseTag
+        };
+
+        var expenseLog = new ExpenseLog
+        {
+            Id = snapshot.ExpenseLogId,
+            Expense = expense,
+            SpendingSource = spendingSource,
+            Amount = snapshot.Amount,
+            DeductedOn = snapshot.DeductedOn,
+            Notes = snapshot.Notes,
+            IsForDeletion = snapshot.IsForDeletion
+        };
+
+        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
+        await unitOfWork.ExpenseLogs.AddAsync(expenseLog, cancellationToken);
+
+        LogMemoryPersistence.ApplyExpenseToSpendingSource(spendingSource, snapshot.Amount);
+        unitOfWork.SpendingSources.Update(spendingSource);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public string Description => "Add income";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var incomeLog = await unitOfWork.IncomeLogs.GetByIdAsync(snapshot.IncomeLogId, cancellationToken);
+        if (incomeLog is null)
+            return;
+
+        LogMemoryPersistence.RevertIncomeFromSpendingSource(incomeLog.SpendingSource, incomeLog.Amount);
+        unitOfWork.SpendingSources.Update(incomeLog.SpendingSource);
+        unitOfWork.IncomeLogs.Remove(incomeLog);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.IncomeLogs.GetByIdAsync(snapshot.IncomeLogId, cancellationToken) is not null)
+            return;
+
+        var spendingSource =
+            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                cancellationToken);
+
+        var incomeLog = new IncomeLog
+        {
+            Id = snapshot.IncomeLogId,
+            SpendingSource = spendingSource,
+            Amount = snapshot.Amount,
+            AddedOn = snapshot.AddedOn,
+            Notes = snapshot.Notes
+        };
+
+        await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
+
+        LogMemoryPersistence.ApplyIncomeToSpendingSource(spendingSource, snapshot.Amount);
+        unitOfWork.SpendingSources.Update(spendingSource);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class EditExpenseLogMemoryAction(
+    ExpenseLogMemorySnapshot before,
+    ExpenseLogMemorySnapshot after) : ILogMemoryAction
+{
+    public string Description => "Edit expense";
+
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
+    }
+
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
+    }
+
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, ExpenseLogMemorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        var expenseLog = await unitOfWork.ExpenseLogs.GetByIdAsync(snapshot.ExpenseLogId, cancellationToken);
+        if (expenseLog?.Expense is null)
+            return;
+
+        var currentSpendingSource = expenseLog.SpendingSource;
+        var targetSpendingSource =
+            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                cancellationToken);
+        var expenseTag =
+            await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId, cancellationToken);
+
+        LogMemoryPersistence.RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
+        LogMemoryPersistence.ApplyExpenseToSpendingSource(targetSpendingSource, snapshot.Amount);
+
+        expenseLog.Expense.Name = snapshot.ExpenseName;
+        expenseLog.Expense.Amount = snapshot.Amount;
+        expenseLog.Expense.ExpenseKind = snapshot.ExpenseKind;
+        expenseLog.Expense.ExpenseCategory = snapshot.ExpenseCategory;
+        expenseLog.Expense.RecurringDate = snapshot.RecurringDate;
+        expenseLog.Expense.IsActive = snapshot.IsActive;
+        expenseLog.Expense.SpendingSource = targetSpendingSource;
+        expenseLog.Expense.ExpenseTag = expenseTag;
+
+        expenseLog.Amount = snapshot.Amount;
+        expenseLog.DeductedOn = snapshot.DeductedOn;
+        expenseLog.Notes = snapshot.Notes;
+        expenseLog.IsForDeletion = snapshot.IsForDeletion;
+        expenseLog.SpendingSource = targetSpendingSource;
+
+        unitOfWork.Expenses.Update(expenseLog.Expense);
+        unitOfWork.ExpenseLogs.Update(expenseLog);
+        unitOfWork.SpendingSources.Update(currentSpendingSource);
+
+        if (!ReferenceEquals(currentSpendingSource, targetSpendingSource))
+            unitOfWork.SpendingSources.Update(targetSpendingSource);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class DeleteExpenseLogMemoryAction(int expenseLogId) : ILogMemoryAction
+{
+    public string Description => "Delete expense";
+
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return SetDeletionStateAsync(unitOfWork, false, cancellationToken);
+    }
+
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return SetDeletionStateAsync(unitOfWork, true, cancellationToken);
+    }
+
+    private async Task SetDeletionStateAsync(IUnitOfWork unitOfWork, bool isForDeletion,
+        CancellationToken cancellationToken)
+    {
+        var expenseLog = await unitOfWork.ExpenseLogs.GetByIdAsync(expenseLogId, cancellationToken);
+        if (expenseLog is null || expenseLog.IsForDeletion == isForDeletion)
+            return;
+
+        expenseLog.IsForDeletion = isForDeletion;
+        unitOfWork.ExpenseLogs.Update(expenseLog);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+internal static class LogMemoryPersistence
+{
+    internal static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    {
+        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            spendingSource.SpentAmount += amount;
+            return;
+        }
+
+        spendingSource.Balance -= amount;
+    }
+
+    internal static void RevertExpenseFromSpendingSource(SpendingSource spendingSource, decimal amount)
+    {
+        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            return;
+        }
+
+        spendingSource.Balance += amount;
+    }
+
+    internal static void ApplyIncomeToSpendingSource(SpendingSource spendingSource, decimal amount)
+    {
+        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            return;
+        }
+
+        spendingSource.Balance += amount;
+    }
+
+    internal static void RevertIncomeFromSpendingSource(SpendingSource spendingSource, decimal amount)
+    {
+        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            spendingSource.SpentAmount += amount;
+            return;
+        }
+
+        spendingSource.Balance -= amount;
+    }
+
+    internal static async Task<SpendingSource> GetRequiredSpendingSourceAsync(IUnitOfWork unitOfWork,
+        int spendingSourceId, CancellationToken cancellationToken)
+    {
+        var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(spendingSourceId, cancellationToken);
+        return spendingSource ?? throw new InvalidOperationException($"Unable to find spending source {spendingSourceId}.");
+    }
+
+    internal static async Task<ExpenseTag> GetRequiredExpenseTagAsync(IUnitOfWork unitOfWork, int expenseTagId,
+        CancellationToken cancellationToken)
+    {
+        var expenseTag = await unitOfWork.ExpenseTags.GetByIdAsync(expenseTagId, cancellationToken);
+        return expenseTag ?? throw new InvalidOperationException($"Unable to find expense tag {expenseTagId}.");
+    }
+}

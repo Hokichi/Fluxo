@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
@@ -127,6 +128,8 @@ public partial class ExpenseDetailVM : ObservableObject
             if (expenseLog?.Expense is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
 
+            var beforeHistorySnapshot = ExpenseLogMemorySnapshot.Create(expenseLog);
+
             var expense = expenseLog.Expense;
             var currentSpendingSource = expenseLog.SpendingSource;
             var newSpendingSource = await _uow.SpendingSources.GetByIdAsync(input.SpendingSourceId);
@@ -175,6 +178,8 @@ public partial class ExpenseDetailVM : ObservableObject
             LoadFromSavedState();
             WeakReferenceMessenger.Default.Send(new ExpenseDetailUpdatedMessage(
                 new ExpenseDetailUpdate(_expenseLog.Id, previousState, changedFields)));
+            WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
+                new EditExpenseLogMemoryAction(beforeHistorySnapshot, ExpenseLogMemorySnapshot.Create(expenseLog))));
             return ExpenseDetailSaveResult.Success();
         }
         catch (Exception exception)
@@ -185,6 +190,17 @@ public partial class ExpenseDetailVM : ObservableObject
         {
             IsSaving = false;
         }
+    }
+
+    public bool HasValidChangesToPersistOnClose()
+    {
+        if (!IsEditing)
+            return false;
+
+        if (!TryBuildInput(out var input, out _))
+            return false;
+
+        return GetChangedFields(input, _savedState) != ExpenseDetailChangedFields.None;
     }
 
     private void LoadFromSavedState()

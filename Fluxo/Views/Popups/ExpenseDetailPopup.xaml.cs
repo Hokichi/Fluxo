@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,6 +13,8 @@ namespace Fluxo.Views.Popups;
 public partial class ExpenseDetailPopup : BasePopup
 {
     private readonly ExpenseDetailVM _viewModel;
+    private bool _allowClose;
+    private bool _isHandlingCloseRequest;
     private bool _isSyncingNoteDocument;
 
     public ExpenseDetailPopup(ExpenseDetailVM viewModel)
@@ -35,6 +38,7 @@ public partial class ExpenseDetailPopup : BasePopup
             SyncNoteDocumentFromViewModel();
             UpdateButtonStates();
         };
+        Closing += OnPopupClosing;
     }
 
     protected override void OnEditButtonClick()
@@ -77,6 +81,44 @@ public partial class ExpenseDetailPopup : BasePopup
             return;
 
         base.OnPreviewKeyDown(e);
+    }
+
+    private async void OnPopupClosing(object? sender, CancelEventArgs e)
+    {
+        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasValidChangesToPersistOnClose())
+            return;
+
+        e.Cancel = true;
+        _isHandlingCloseRequest = true;
+
+        try
+        {
+            var confirmation = FluxoMessageBox.Show(
+                this,
+                "Save your changes before closing?",
+                "Expense Detail",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmation == MessageBoxResult.Yes)
+            {
+                var result = await _viewModel.SaveAsync();
+                if (!result.IsSuccess)
+                {
+                    ShowValidationMessage(result.ErrorMessage);
+                    return;
+                }
+
+                SyncNoteDocumentFromViewModel();
+            }
+
+            _allowClose = true;
+            Close();
+        }
+        finally
+        {
+            _isHandlingCloseRequest = false;
+        }
     }
 
     private void OnNoteTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)

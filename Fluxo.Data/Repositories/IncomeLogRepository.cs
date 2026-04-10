@@ -57,6 +57,8 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
 
     private IQueryable<IncomeLog> QueryWithNavigations()
     {
-        return DbSet.Include(log => log.SpendingSource);
+        return DbSet
+            .AsNoTracking()
+            .Include(log => log.SpendingSource);
     }
 }

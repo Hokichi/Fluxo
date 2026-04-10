@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +12,8 @@ namespace Fluxo.Views.Popups;
 public partial class QuickAddPopup : BasePopup
 {
     private readonly QuickAddVM _viewModel;
+    private bool _allowClose;
+    private bool _isHandlingCloseRequest;
     private bool _isSyncingNoteDocument;
 
     public QuickAddPopup(QuickAddVM viewModel)
@@ -25,6 +28,7 @@ public partial class QuickAddPopup : BasePopup
             SyncNoteDocumentFromViewModel();
             FocusPrimaryInput();
         };
+        Closing += OnPopupClosing;
     }
 
     protected override async void OnSaveButtonClick()
@@ -36,6 +40,7 @@ public partial class QuickAddPopup : BasePopup
             return;
         }
 
+        _allowClose = true;
         Close();
     }
 
@@ -54,10 +59,44 @@ public partial class QuickAddPopup : BasePopup
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && NoteRichTextBox.IsKeyboardFocusWithin)
+        if (e.Key == Key.Enter && NoteRichTextBox.IsKeyboardFocusWithin && Keyboard.Modifiers != ModifierKeys.Shift)
             return;
 
         base.OnPreviewKeyDown(e);
+    }
+
+    private async void OnPopupClosing(object? sender, CancelEventArgs e)
+    {
+        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasValidEntryToPersistOnClose())
+            return;
+
+        _isHandlingCloseRequest = true;
+
+        try
+        {
+            var confirmation = FluxoMessageBox.Show(
+                this,
+                "Save this transaction before closing?",
+                "Add New Transaction",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmation == MessageBoxResult.Yes)
+            {
+                var result = await _viewModel.SaveAsync(resetAfterSave: false);
+                if (!result.IsSuccess)
+                {
+                    ShowValidationMessage(result.ErrorMessage);
+                    return;
+                }
+            }
+
+            _allowClose = true;
+        }
+        finally
+        {
+            _isHandlingCloseRequest = false;
+        }
     }
 
     private void OnNoteTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)

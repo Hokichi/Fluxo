@@ -16,7 +16,9 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
             .Select(group => new { TagId = group.Key, Count = group.Count() })
             .ToDictionaryAsync(item => item.TagId, item => item.Count, cancellationToken);
 
-        var tags = await DbSet.ToListAsync(cancellationToken);
+        var tags = await DbSet
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
         return tags
             .Select(tag => (Tag: tag, Count: countsByTagId.GetValueOrDefault(tag.Id)))
             .OrderByDescending(item => item.Count)
@@ -33,7 +35,9 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
             .Select(group => new { TagId = group.Key, Count = group.Count() })
             .ToDictionaryAsync(item => item.TagId, item => item.Count, cancellationToken);
 
-        var tags = await DbSet.ToListAsync(cancellationToken);
+        var tags = await DbSet
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
         return tags
             .Select(tag => (Tag: tag, Count: countsByTagId.GetValueOrDefault(tag.Id)))
             .OrderByDescending(item => item.Count)

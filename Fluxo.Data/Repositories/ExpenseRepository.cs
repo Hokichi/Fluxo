@@ -72,6 +72,7 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
     private IQueryable<Expense> QueryWithNavigations()
     {
         return DbSet
+            .AsNoTracking()
             .Include(expense => expense.ExpenseTag)
             .Include(expense => expense.SpendingSource);
     }

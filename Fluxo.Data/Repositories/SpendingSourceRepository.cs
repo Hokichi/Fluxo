@@ -14,6 +14,7 @@ public sealed class SpendingSourceRepository(FluxoDbContext dbContext)
     {
         var (start, end) = GetDayRange(date);
         return await DbSet
+            .AsNoTracking()
             .Where(source => source.DueDate >= start && source.DueDate < end)
             .ToListAsync(cancellationToken);
     }
@@ -22,6 +23,7 @@ public sealed class SpendingSourceRepository(FluxoDbContext dbContext)
         CancellationToken cancellationToken = default)
     {
         return await DbSet
+            .AsNoTracking()
             .Where(source => source.SpendingSourceType == sourceType)
             .ToListAsync(cancellationToken);
     }
