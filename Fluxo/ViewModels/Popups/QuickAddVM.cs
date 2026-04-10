@@ -12,6 +12,7 @@ namespace Fluxo.ViewModels.Popups;
 public partial class QuickAddVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
+    private readonly List<SpendingSourceVM> _availableSpendingSources = [];
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IUnitOfWork _uow;
     private bool _isUpdatingTagCollections;
@@ -20,6 +21,7 @@ public partial class QuickAddVM : ObservableObject
     [ObservableProperty] private bool _isExpense = true;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
+    [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
@@ -66,6 +68,8 @@ public partial class QuickAddVM : ObservableObject
 
         if (!value)
             IsMoreTagsOpen = false;
+
+        RefreshSpendingSources();
     }
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
@@ -101,7 +105,7 @@ public partial class QuickAddVM : ObservableObject
 
                 var expense = new Expense
                 {
-                    Name = BuildExpenseName(input.Note, expenseTag.Name),
+                    Name = BuildExpenseName(input.Name, input.Note, expenseTag.Name),
                     Amount = input.Amount,
                     ExpenseKind = ExpenseKind.Manual,
                     ExpenseCategory = input.Category!.Value,
@@ -134,7 +138,7 @@ public partial class QuickAddVM : ObservableObject
                     SpendingSource = spendingSource,
                     Amount = input.Amount,
                     AddedOn = input.Date,
-                    Notes = input.Note
+                    Notes = BuildIncomeNote(input.Name, input.Note)
                 };
 
                 await _uow.IncomeLogs.AddAsync(incomeLog);
@@ -170,6 +174,7 @@ public partial class QuickAddVM : ObservableObject
             IsExpense = true;
 
         AmountText = string.Empty;
+        NameText = string.Empty;
         NoteText = string.Empty;
         SelectedDate = DateTime.Today;
         SelectedExpenseCategory = ExpenseCategory.Needs;
@@ -212,6 +217,7 @@ public partial class QuickAddVM : ObservableObject
 
         input = new QuickTransactionInput(
             IsExpense,
+            NameText.Trim(),
             amount,
             SelectedSpendingSource.Id,
             SelectedDate.Date,
@@ -246,11 +252,8 @@ public partial class QuickAddVM : ObservableObject
 
     private void ReloadChoicesFromMainViewModel()
     {
-        ReplaceCollection(
-            SpendingSources,
-            _mainViewModel.SpendingSources
-                .OrderBy(source => source.Name)
-                .ToList());
+        _availableSpendingSources.Clear();
+        _availableSpendingSources.AddRange(_mainViewModel.SpendingSources);
 
         _orderedTags.Clear();
         _orderedTags.AddRange(_mainViewModel.Tags
@@ -259,7 +262,7 @@ public partial class QuickAddVM : ObservableObject
             .Select(group => group.First()));
 
         RefreshTagCollections();
-        SelectedSpendingSource ??= SpendingSources.FirstOrDefault();
+        RefreshSpendingSources();
     }
 
     private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
@@ -302,8 +305,11 @@ public partial class QuickAddVM : ObservableObject
         }
     }
 
-    private static string BuildExpenseName(string note, string fallbackName)
+    private static string BuildExpenseName(string name, string note, string fallbackName)
     {
+        if (!string.IsNullOrWhiteSpace(name))
+            return name.Trim();
+
         if (string.IsNullOrWhiteSpace(note))
             return fallbackName;
 
@@ -315,6 +321,20 @@ public partial class QuickAddVM : ObservableObject
         return string.IsNullOrWhiteSpace(firstMeaningfulLine)
             ? fallbackName
             : firstMeaningfulLine;
+    }
+
+    private static string BuildIncomeNote(string name, string note)
+    {
+        var trimmedName = name.Trim();
+        var trimmedNote = note.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedName))
+            return trimmedNote;
+
+        if (string.IsNullOrWhiteSpace(trimmedNote))
+            return trimmedName;
+
+        return $"{trimmedName}\n{trimmedNote}";
     }
 
     private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
@@ -347,6 +367,22 @@ public partial class QuickAddVM : ObservableObject
             target.Add(item);
     }
 
+    private void RefreshSpendingSources()
+    {
+        var selectedSpendingSourceId = SelectedSpendingSource?.Id;
+
+        var filteredSources = _availableSpendingSources
+            .Where(source => IsExpense || source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+            .OrderBy(source => source.Name)
+            .ToList();
+
+        ReplaceCollection(SpendingSources, filteredSources);
+
+        SelectedSpendingSource = selectedSpendingSourceId is null
+            ? SpendingSources.FirstOrDefault()
+            : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ?? SpendingSources.FirstOrDefault();
+    }
+
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
 
     public readonly record struct QuickAddSubmissionResult(bool IsSuccess, string? ErrorMessage)
@@ -357,6 +393,7 @@ public partial class QuickAddVM : ObservableObject
 
     private readonly record struct QuickTransactionInput(
         bool IsExpense,
+        string Name,
         decimal Amount,
         int SpendingSourceId,
         DateTime Date,
