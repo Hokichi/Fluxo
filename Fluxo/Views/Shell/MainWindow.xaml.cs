@@ -8,6 +8,8 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
 
@@ -339,7 +341,10 @@ public partial class MainWindow : Window
 
     private void OpenQuickAddPopup()
     {
-        var popup = new QuickAddPopup(_mainVM) { Owner = this };
+        var app = (App)Application.Current;
+        using var unitOfWork = app.GetRequiredService<IUnitOfWork>();
+        var popupViewModel = new QuickAddVM(_mainVM, unitOfWork);
+        var popup = new QuickAddPopup(popupViewModel) { Owner = this };
         popup.ShowDialog();
     }
 

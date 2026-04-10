@@ -12,8 +12,8 @@ namespace Fluxo.ViewModels.Popups;
 public partial class QuickAddVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
     private readonly List<ExpenseTagVM> _orderedTags = [];
+    private readonly IUnitOfWork _uow;
     private bool _isUpdatingTagCollections;
 
     [ObservableProperty] private string _amountText = string.Empty;
@@ -51,10 +51,10 @@ public partial class QuickAddVM : ObservableObject
 
     public bool HasMoreTags => OverflowTags.Count > 0;
 
-    public QuickAddVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
+    public QuickAddVM(MainVM mainViewModel, IUnitOfWork uoW)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _uow = uoW;
 
         ReloadChoicesFromMainViewModel();
         ResetForm(keepCurrentType: false);
@@ -89,15 +89,13 @@ public partial class QuickAddVM : ObservableObject
 
         try
         {
-            await using var unitOfWork = _unitOfWorkFactory();
-
-            var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(input.SpendingSourceId);
+            var spendingSource = await _uow.SpendingSources.GetByIdAsync(input.SpendingSourceId);
             if (spendingSource is null)
                 return QuickAddSubmissionResult.Failure("Please select a valid spending source.");
 
             if (input.IsExpense)
             {
-                var expenseTag = await unitOfWork.ExpenseTags.GetByIdAsync(input.TagId!.Value);
+                var expenseTag = await _uow.ExpenseTags.GetByIdAsync(input.TagId!.Value);
                 if (expenseTag is null)
                     return QuickAddSubmissionResult.Failure("Please select a valid tag.");
 
@@ -123,11 +121,11 @@ public partial class QuickAddVM : ObservableObject
                     IsForDeletion = false
                 };
 
-                await unitOfWork.Expenses.AddAsync(expense);
-                await unitOfWork.ExpenseLogs.AddAsync(expenseLog);
+                await _uow.Expenses.AddAsync(expense);
+                await _uow.ExpenseLogs.AddAsync(expenseLog);
 
                 ApplyExpenseToSpendingSource(spendingSource, input.Amount);
-                unitOfWork.SpendingSources.Update(spendingSource);
+                _uow.SpendingSources.Update(spendingSource);
             }
             else
             {
@@ -139,13 +137,13 @@ public partial class QuickAddVM : ObservableObject
                     Notes = input.Note
                 };
 
-                await unitOfWork.IncomeLogs.AddAsync(incomeLog);
+                await _uow.IncomeLogs.AddAsync(incomeLog);
 
                 ApplyIncomeToSpendingSource(spendingSource, input.Amount);
-                unitOfWork.SpendingSources.Update(spendingSource);
+                _uow.SpendingSources.Update(spendingSource);
             }
 
-            await unitOfWork.SaveChangesAsync();
+            await _uow.SaveChangesAsync();
             await _mainViewModel.ReloadCurrentDataAsync();
 
             if (resetAfterSave)

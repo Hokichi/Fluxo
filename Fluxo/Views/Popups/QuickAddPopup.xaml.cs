@@ -3,7 +3,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
-using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.Views.Popups;
 
@@ -11,13 +10,12 @@ public partial class QuickAddPopup : BasePopup
 {
     private readonly QuickAddVM _viewModel;
 
-    public QuickAddPopup(MainVM mainViewModel)
+    public QuickAddPopup(QuickAddVM viewModel)
     {
         InitializeComponent();
 
-        var app = (App)Application.Current;
-        _viewModel = new QuickAddVM(mainViewModel, () => app.GetRequiredService<Fluxo.Core.Interfaces.IUnitOfWork>());
-        DataContext = _viewModel;
+        _viewModel = viewModel;
+        DataContext = viewModel;
 
         Loaded += (_, _) => AmountTextBox.Focus();
     }
@@ -67,6 +65,6 @@ public partial class QuickAddPopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        MessageBox.Show(this, message, "Add New Transaction", MessageBoxButton.OK, MessageBoxImage.Information);
+        FluxoMessageBox.Show(this, message, "Add New Transaction", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }
