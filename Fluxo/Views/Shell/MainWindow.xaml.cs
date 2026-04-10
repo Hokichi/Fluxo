@@ -22,18 +22,22 @@ public partial class MainWindow : Window
 {
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 200; // ms
+    private readonly IExpenseCleanupService _expenseCleanupService;
     private readonly MainVM _mainVM;
+    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _isClosing;
     private bool _isMaximized;
     private Rect _currentBounds;
     private Rect _restoreBounds;
 
-    public MainWindow(MainVM mainVM)
+    public MainWindow(MainVM mainVM, Func<IUnitOfWork> unitOfWorkFactory, IExpenseCleanupService expenseCleanupService)
     {
         InitializeComponent();
 
         _mainVM = mainVM;
+        _unitOfWorkFactory = unitOfWorkFactory;
+        _expenseCleanupService = expenseCleanupService;
         DataContext = _mainVM;
 
         Loaded += async (_, _) =>
@@ -108,7 +112,8 @@ public partial class MainWindow : Window
 
         try
         {
-            await ((App)Application.Current).DeleteMarkedExpenseLogsAsync(_mainVM);
+            var markedIds = _mainVM.GetExpenseLogIdsMarkedForDeletion();
+            await _expenseCleanupService.DeleteMarkedExpenseLogsAsync(markedIds);
             _hasCompletedPendingDeletionCleanup = true;
         }
         finally
@@ -341,8 +346,7 @@ public partial class MainWindow : Window
 
     private void OpenQuickAddPopup()
     {
-        var app = (App)Application.Current;
-        using var unitOfWork = app.GetRequiredService<IUnitOfWork>();
+        using var unitOfWork = _unitOfWorkFactory();
         var popupViewModel = new QuickAddVM(_mainVM, unitOfWork);
         var popup = new QuickAddPopup(popupViewModel) { Owner = this };
         popup.ShowDialog();

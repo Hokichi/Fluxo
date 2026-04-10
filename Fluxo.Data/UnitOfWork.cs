@@ -1,28 +1,28 @@
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
-using Fluxo.Data.Repositories;
 
 namespace Fluxo.Data;
 
-public sealed class UnitOfWork(FluxoDbContext dbContext) : IUnitOfWork
+public sealed class UnitOfWork(
+    FluxoDbContext dbContext,
+    IExpenseRepository expenses,
+    IExpenseLogRepository expenseLogs,
+    IIncomeLogRepository incomeLogs,
+    IExpenseTagRepository expenseTags,
+    ISavingGoalRepository savingGoals,
+    ISpendingSourceRepository spendingSources,
+    IUserSettingsRepository userSettings) : IUnitOfWork
 {
     private readonly FluxoDbContext _dbContext = dbContext;
-    private IExpenseLogRepository? _expenseLogs;
-    private IExpenseRepository? _expenses;
-    private IExpenseTagRepository? _expenseTags;
-    private IIncomeLogRepository? _incomeLogs;
-    private ISavingGoalRepository? _savingGoals;
-    private ISpendingSourceRepository? _spendingSources;
-    private IUserSettingsRepository? _userSettings;
 
-    public IExpenseRepository Expenses => _expenses ??= new ExpenseRepository(_dbContext);
-    public IExpenseLogRepository ExpenseLogs => _expenseLogs ??= new ExpenseLogRepository(_dbContext);
-    public IIncomeLogRepository IncomeLogs => _incomeLogs ??= new IncomeLogRepository(_dbContext);
-    public IExpenseTagRepository ExpenseTags => _expenseTags ??= new ExpenseTagRepository(_dbContext);
-    public ISavingGoalRepository SavingGoals => _savingGoals ??= new SavingGoalRepository(_dbContext);
-    public ISpendingSourceRepository SpendingSources => _spendingSources ??= new SpendingSourceRepository(_dbContext);
-    public IUserSettingsRepository UserSettings => _userSettings ??= new UserSettingsRepository(_dbContext);
+    public IExpenseRepository Expenses { get; } = expenses;
+    public IExpenseLogRepository ExpenseLogs { get; } = expenseLogs;
+    public IIncomeLogRepository IncomeLogs { get; } = incomeLogs;
+    public IExpenseTagRepository ExpenseTags { get; } = expenseTags;
+    public ISavingGoalRepository SavingGoals { get; } = savingGoals;
+    public ISpendingSourceRepository SpendingSources { get; } = spendingSources;
+    public IUserSettingsRepository UserSettings { get; } = userSettings;
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

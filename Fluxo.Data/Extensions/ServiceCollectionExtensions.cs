@@ -12,7 +12,21 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddFluxoData(this IServiceCollection services)
     {
         services.AddTransient<FluxoDbContext>(_ => new FluxoDbContextFactory().CreateDbContext([]));
-        services.AddTransient<IUnitOfWork, UnitOfWork>();
+
+        // UnitOfWork factory: all repositories share the same DbContext instance
+        services.AddTransient<IUnitOfWork>(_ =>
+        {
+            var dbContext = new FluxoDbContextFactory().CreateDbContext([]);
+            return new UnitOfWork(
+                dbContext,
+                new ExpenseRepository(dbContext),
+                new ExpenseLogRepository(dbContext),
+                new IncomeLogRepository(dbContext),
+                new ExpenseTagRepository(dbContext),
+                new SavingGoalRepository(dbContext),
+                new SpendingSourceRepository(dbContext),
+                new UserSettingsRepository(dbContext));
+        });
 
         services.AddTransient<IExpenseRepository, ExpenseRepository>();
         services.AddTransient<IExpenseLogRepository, ExpenseLogRepository>();
