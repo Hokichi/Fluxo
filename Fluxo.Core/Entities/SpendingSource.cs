@@ -13,4 +13,5 @@ public sealed class SpendingSource
     public DateTime? DueDate { get; set; }
     public decimal? InterestRate { get; set; }
     public bool ShowOnUI { get; set; }
+    public bool IsEnabled { get; set; }
 }

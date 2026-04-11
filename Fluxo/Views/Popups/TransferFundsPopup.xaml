@@ -3,9 +3,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
-    PopupTitle="Transfer Funds"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
     Width="460"
-    Height="420">
+    Height="420"
+    PopupTitle="Transfer Funds"
+    ShowApplyButton="True">
 
     <c:BasePopup.Resources>
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
@@ -29,14 +31,23 @@
         </Grid.RowDefinitions>
 
         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Transfer From" />
-        <TextBlock Grid.Row="2" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding SourceName}" />
+        <TextBlock
+            Grid.Row="2"
+            FontFamily="{StaticResource Medium}"
+            Foreground="{StaticResource Brush.Text.Secondary}"
+            Text="{Binding SourceName}" />
 
-        <TextBlock Grid.Row="4" Style="{StaticResource FieldLabelStyle}" Text="Transfer To" />
+        <TextBlock
+            Grid.Row="4"
+            Style="{StaticResource FieldLabelStyle}"
+            Text="Transfer To" />
         <ComboBox
             Grid.Row="6"
             DisplayMemberPath="Name"
+            ItemContainerStyle="{StaticResource FluxoComboBoxItemStyle}"
             ItemsSource="{Binding Targets}"
-            SelectedItem="{Binding SelectedTarget, Mode=TwoWay}" />
+            SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
+            Style="{StaticResource FluxoComboBoxStyle}" />
 
         <Grid Grid.Row="8">
             <Grid.RowDefinitions>
@@ -56,8 +67,11 @@
                 PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                 Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 
-            <TextBlock Grid.Row="4" Style="{StaticResource FieldLabelStyle}" Text="Date" />
-            <DatePicker Grid.Row="6" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+            <TextBlock
+                Grid.Row="4"
+                Style="{StaticResource FieldLabelStyle}"
+                Text="Date" />
+            <components:DateSelector Grid.Row="6" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
         </Grid>
     </Grid>
 </c:BasePopup>

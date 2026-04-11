@@ -16,7 +16,6 @@ public partial class TransferFundsPopup : BasePopup
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = viewModel;
-        ShowSaveButton = true;
         Loaded += (_, _) => AmountTextBox.Focus();
     }
 
@@ -41,7 +40,7 @@ public partial class TransferFundsPopup : BasePopup
         e.Handled = !IsValidAmountInput(textBox, e.Text);
     }
 
-    protected override void OnCloseButtonClick()
+    protected override void OnApplyButtonClick()
     {
         base.OnCloseButtonClick();
     }

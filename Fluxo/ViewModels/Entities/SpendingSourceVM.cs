@@ -9,6 +9,7 @@ public partial class SpendingSourceVM : ObservableObject
     [ObservableProperty] private decimal _balance;
     [ObservableProperty] private DateTime? _dueDate;
     [ObservableProperty] private int _id;
+    [ObservableProperty] private bool _isEnabled;
     [ObservableProperty] private decimal? _interestRate;
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;
