@@ -134,18 +134,18 @@ public partial class QuickAddVM : ObservableObject
                     ExpenseCategory = input.Category!.Value,
                     RecurringDate = input.Date,
                     IsActive = false,
-                    SpendingSource = spendingSource,
-                    ExpenseTag = expenseTag
+                    SpendingSourceId = spendingSource.Id,
+                    ExpenseTagId = expenseTag.Id
                 };
 
                 var expenseLog = new ExpenseLog
                 {
                     Expense = expense,
-                    SpendingSource = spendingSource,
                     Amount = input.Amount,
                     DeductedOn = input.Date,
                     Notes = input.Note,
-                    IsForDeletion = false
+                    IsForDeletion = false,
+                    SpendingSourceId = spendingSource.Id
                 };
 
                 await _uow.Expenses.AddAsync(expense);
@@ -156,16 +156,29 @@ public partial class QuickAddVM : ObservableObject
 
                 await _uow.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
-                    new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot.Create(expenseLog))));
+                    new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
+                        expense.Id,
+                        expenseLog.Id,
+                        expense.Name,
+                        expenseLog.Amount,
+                        expense.ExpenseKind,
+                        expense.ExpenseCategory,
+                        expense.RecurringDate,
+                        expense.IsActive,
+                        spendingSource.Id,
+                        expenseTag.Id,
+                        expenseLog.DeductedOn,
+                        expenseLog.Notes,
+                        expenseLog.IsForDeletion))));
             }
             else
             {
                 var incomeLog = new IncomeLog
                 {
-                    SpendingSource = spendingSource,
                     Amount = input.Amount,
                     AddedOn = input.Date,
-                    Notes = BuildIncomeNote(input.Name, input.Note)
+                    Notes = BuildIncomeNote(input.Name, input.Note),
+                    SpendingSourceId = spendingSource.Id
                 };
 
                 await _uow.IncomeLogs.AddAsync(incomeLog);
@@ -175,7 +188,12 @@ public partial class QuickAddVM : ObservableObject
 
                 await _uow.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
-                    new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(IncomeLogMemorySnapshot.Create(incomeLog))));
+                    new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
+                        incomeLog.Id,
+                        spendingSource.Id,
+                        incomeLog.Amount,
+                        incomeLog.AddedOn,
+                        incomeLog.Notes))));
             }
             await _mainViewModel.ReloadCurrentDataAsync();
 

@@ -5,6 +5,8 @@ namespace Fluxo.Core.Entities;
 public sealed class Expense
 {
     public int Id { get; set; }
+    public int SpendingSourceId { get; set; }
+    public int ExpenseTagId { get; set; }
     public SpendingSource SpendingSource { get; set; }
     public ExpenseTag ExpenseTag { get; set; }
     public string Name { get; set; }

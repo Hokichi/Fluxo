@@ -36,12 +36,12 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.HasOne(expense => expense.SpendingSource)
             .WithMany()
-            .HasForeignKey("SpendingSourceId")
+            .HasForeignKey(expense => expense.SpendingSourceId)
             .OnDelete(DeleteBehavior.Restrict);
 
         entity.HasOne(expense => expense.ExpenseTag)
             .WithMany()
-            .HasForeignKey("ExpenseTagId")
+            .HasForeignKey(expense => expense.ExpenseTagId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 
@@ -57,12 +57,12 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.HasOne(log => log.Expense)
             .WithMany()
-            .HasForeignKey("ExpenseId")
+            .HasForeignKey(log => log.ExpenseId)
             .OnDelete(DeleteBehavior.Restrict);
 
         entity.HasOne(log => log.SpendingSource)
             .WithMany()
-            .HasForeignKey("SpendingSourceId")
+            .HasForeignKey(log => log.SpendingSourceId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 
@@ -77,7 +77,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.HasOne(log => log.SpendingSource)
             .WithMany()
-            .HasForeignKey("SpendingSourceId")
+            .HasForeignKey(log => log.SpendingSourceId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 

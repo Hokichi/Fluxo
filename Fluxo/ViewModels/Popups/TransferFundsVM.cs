@@ -81,26 +81,26 @@ public partial class TransferFundsVM : ObservableObject
                 ExpenseCategory = ExpenseCategory.Savings,
                 RecurringDate = input.Date,
                 IsActive = false,
-                SpendingSource = source,
-                ExpenseTag = expenseTag
+                SpendingSourceId = source.Id,
+                ExpenseTagId = expenseTag.Id
             };
 
             var expenseLog = new ExpenseLog
             {
                 Expense = expense,
-                SpendingSource = source,
                 Amount = input.Amount,
                 DeductedOn = input.Date,
                 Notes = BuildExpenseNote(target.Name, input.Note),
-                IsForDeletion = false
+                IsForDeletion = false,
+                SpendingSourceId = source.Id
             };
 
             var incomeLog = new IncomeLog
             {
-                SpendingSource = target,
                 Amount = input.Amount,
                 AddedOn = input.Date,
-                Notes = BuildIncomeNote(source.Name, input.Note)
+                Notes = BuildIncomeNote(source.Name, input.Note),
+                SpendingSourceId = target.Id
             };
 
             await _uow.Expenses.AddAsync(expense);
@@ -119,8 +119,26 @@ public partial class TransferFundsVM : ObservableObject
                 new CompositeLogMemoryAction(
                     "Transfer funds",
                     [
-                        new AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot.Create(expenseLog)),
-                        new AddIncomeLogMemoryAction(IncomeLogMemorySnapshot.Create(incomeLog))
+                        new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
+                            expense.Id,
+                            expenseLog.Id,
+                            expense.Name,
+                            expenseLog.Amount,
+                            expense.ExpenseKind,
+                            expense.ExpenseCategory,
+                            expense.RecurringDate,
+                            expense.IsActive,
+                            source.Id,
+                            expenseTag.Id,
+                            expenseLog.DeductedOn,
+                            expenseLog.Notes,
+                            expenseLog.IsForDeletion)),
+                        new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
+                            incomeLog.Id,
+                            target.Id,
+                            incomeLog.Amount,
+                            incomeLog.AddedOn,
+                            incomeLog.Notes))
                     ])));
 
             await _mainViewModel.ReloadCurrentDataAsync();

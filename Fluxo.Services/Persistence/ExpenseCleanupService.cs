@@ -2,38 +2,42 @@ using Fluxo.Core.Interfaces;
 
 namespace Fluxo.Services.Persistence;
 
-public sealed class ExpenseCleanupService(IUnitOfWork unitOfWork) : IExpenseCleanupService
+public sealed class ExpenseCleanupService(Func<IUnitOfWork> unitOfWorkFactory) : IExpenseCleanupService
 {
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly Func<IUnitOfWork> _unitOfWorkFactory = unitOfWorkFactory;
 
     public async Task DeleteMarkedExpenseLogsAsync(IEnumerable<int> expenseLogIdsMarkedForDeletion,
         CancellationToken cancellationToken = default)
     {
         var markedIds = expenseLogIdsMarkedForDeletion.ToHashSet();
+        HashSet<int> expenseIdsToDelete;
 
-        var unitOfWork = _unitOfWork;
+        await using (var unitOfWork = _unitOfWorkFactory())
+        {
+            var expenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync(cancellationToken);
+            var expenseLogsToDelete = expenseLogs
+                .Where(log => log.IsForDeletion || markedIds.Contains(log.Id))
+                .ToList();
 
-        var expenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync(cancellationToken);
-        var expenseLogsToDelete = expenseLogs
-            .Where(log => log.IsForDeletion || markedIds.Contains(log.Id))
-            .ToList();
+            if (expenseLogsToDelete.Count == 0)
+                return;
 
-        if (expenseLogsToDelete.Count == 0)
-            return;
+            expenseIdsToDelete = expenseLogsToDelete
+                .Select(log => log.Expense?.Id ?? 0)
+                .Where(id => id > 0)
+                .ToHashSet();
 
-        var expenseIdsToDelete = expenseLogsToDelete
-            .Select(log => log.Expense?.Id ?? 0)
-            .Where(id => id > 0)
-            .ToHashSet();
+            foreach (var expenseLog in expenseLogsToDelete) unitOfWork.ExpenseLogs.Remove(expenseLog);
 
-        foreach (var expenseLog in expenseLogsToDelete) unitOfWork.ExpenseLogs.Remove(expenseLog);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
 
         if (expenseIdsToDelete.Count == 0)
             return;
 
-        var remainingExpenseLogExpenseIds = (await unitOfWork.ExpenseLogs.GetAllAsync(cancellationToken))
+        await using var cleanupUnitOfWork = _unitOfWorkFactory();
+
+        var remainingExpenseLogExpenseIds = (await cleanupUnitOfWork.ExpenseLogs.GetAllAsync(cancellationToken))
             .Select(log => log.Expense?.Id ?? 0)
             .Where(id => id > 0)
             .ToHashSet();
@@ -42,10 +46,10 @@ public sealed class ExpenseCleanupService(IUnitOfWork unitOfWork) : IExpenseClea
         if (expenseIdsToDelete.Count == 0)
             return;
 
-        var expenses = await unitOfWork.Expenses.GetAllAsync(cancellationToken);
+        var expenses = await cleanupUnitOfWork.Expenses.GetAllAsync(cancellationToken);
         foreach (var expense in expenses.Where(expense => expenseIdsToDelete.Contains(expense.Id)))
-            unitOfWork.Expenses.Remove(expense);
+            cleanupUnitOfWork.Expenses.Remove(expense);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await cleanupUnitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

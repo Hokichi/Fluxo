@@ -16,6 +16,9 @@ public sealed class ExpenseLogRepository(FluxoDbContext dbContext)
 
     public override async Task<ExpenseLog?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
+        if (FindTrackedEntity(id) is { } trackedExpenseLog)
+            return trackedExpenseLog;
+
         return await QueryWithNavigations()
             .FirstOrDefaultAsync(log => log.Id == id, cancellationToken);
     }
@@ -60,14 +63,14 @@ public sealed class ExpenseLogRepository(FluxoDbContext dbContext)
         CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
-            .Where(log => EF.Property<int>(log, "SpendingSourceId") == spendingSourceId)
+            .Where(log => log.SpendingSourceId == spendingSourceId)
             .ToListAsync(cancellationToken);
     }
 
     private IQueryable<ExpenseLog> QueryWithNavigations()
     {
         return DbSet
-            .AsNoTracking()
+            .AsNoTrackingWithIdentityResolution()
             .Include(log => log.Expense)
             .ThenInclude(expense => expense.ExpenseTag)
             .Include(log => log.Expense)

@@ -139,9 +139,6 @@ public sealed class AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot)
         var spendingSource =
             await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
                 cancellationToken);
-        var expenseTag =
-            await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId, cancellationToken);
-
         var expense = new Expense
         {
             Id = snapshot.ExpenseId,
@@ -151,19 +148,19 @@ public sealed class AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot)
             ExpenseCategory = snapshot.ExpenseCategory,
             RecurringDate = snapshot.RecurringDate,
             IsActive = snapshot.IsActive,
-            SpendingSource = spendingSource,
-            ExpenseTag = expenseTag
+            SpendingSourceId = snapshot.SpendingSourceId,
+            ExpenseTagId = snapshot.TagId
         };
 
         var expenseLog = new ExpenseLog
         {
             Id = snapshot.ExpenseLogId,
             Expense = expense,
-            SpendingSource = spendingSource,
             Amount = snapshot.Amount,
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
-            IsForDeletion = snapshot.IsForDeletion
+            IsForDeletion = snapshot.IsForDeletion,
+            SpendingSourceId = snapshot.SpendingSourceId
         };
 
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
@@ -205,10 +202,10 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
         var incomeLog = new IncomeLog
         {
             Id = snapshot.IncomeLogId,
-            SpendingSource = spendingSource,
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
-            Notes = snapshot.Notes
+            Notes = snapshot.Notes,
+            SpendingSourceId = snapshot.SpendingSourceId
         };
 
         await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
