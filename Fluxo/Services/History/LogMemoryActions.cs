@@ -20,7 +20,8 @@ public sealed record SpendingSourceMemorySnapshot(
     decimal Balance,
     DateTime? DueDate,
     decimal? InterestRate,
-    bool ShowOnUI)
+    bool ShowOnUI,
+    bool IsEnabled)
 {
     public static SpendingSourceMemorySnapshot Create(SpendingSource spendingSource)
     {
@@ -35,7 +36,8 @@ public sealed record SpendingSourceMemorySnapshot(
             spendingSource.Balance,
             spendingSource.DueDate,
             spendingSource.InterestRate,
-            spendingSource.ShowOnUI);
+            spendingSource.ShowOnUI,
+            spendingSource.IsEnabled);
     }
 }
 
@@ -352,6 +354,7 @@ public sealed class EditSpendingSourceMemoryAction(
         spendingSource.DueDate = snapshot.DueDate;
         spendingSource.InterestRate = snapshot.InterestRate;
         spendingSource.ShowOnUI = snapshot.ShowOnUI;
+        spendingSource.IsEnabled = snapshot.IsEnabled;
 
         unitOfWork.SpendingSources.Update(spendingSource);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -377,7 +380,8 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
             Balance = snapshot.Balance,
             DueDate = snapshot.DueDate,
             InterestRate = snapshot.InterestRate,
-            ShowOnUI = snapshot.ShowOnUI
+            ShowOnUI = snapshot.ShowOnUI,
+            IsEnabled = snapshot.IsEnabled
         };
 
         await unitOfWork.SpendingSources.AddAsync(spendingSource, cancellationToken);

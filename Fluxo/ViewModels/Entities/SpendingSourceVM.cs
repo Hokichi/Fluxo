@@ -47,7 +47,7 @@ public partial class SpendingSourceVM : ObservableObject
         _ => "Source"
     };
 
-    public bool IsDisabled => !ShowOnUI;
+    public bool IsDisabled => !IsEnabled;
 
     partial void OnBalanceChanged(decimal value)
     {
@@ -60,6 +60,10 @@ public partial class SpendingSourceVM : ObservableObject
     }
 
     partial void OnShowOnUIChanged(bool value)
+    {
+    }
+
+    partial void OnIsEnabledChanged(bool value)
     {
         OnPropertyChanged(nameof(IsDisabled));
     }

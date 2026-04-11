@@ -61,11 +61,19 @@
             </Grid.RowDefinitions>
 
             <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Amount" />
-            <TextBox
-                x:Name="AmountTextBox"
+            <Border
                 Grid.Row="2"
-                PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
+                Padding="12,10"
+                Background="{DynamicResource Brush.Background.Surface}"
+                BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="12">
+                <TextBox
+                    x:Name="AmountTextBox"
+                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                    Style="{StaticResource PopupTextInputStyle}"
+                    Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
+            </Border>
 
             <TextBlock
                 Grid.Row="4"

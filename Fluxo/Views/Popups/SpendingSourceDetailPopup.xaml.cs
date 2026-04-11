@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Views.Shell;
 
 namespace Fluxo.Views.Popups;
 
@@ -14,6 +15,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
     private readonly SpendingSourceDetailVM _viewModel;
     private bool _allowClose;
     private bool _isHandlingCloseRequest;
+    private bool _reopenSourcesOnClose;
 
     public SpendingSourceDetailPopup(SpendingSourceDetailVM viewModel)
     {
@@ -21,6 +23,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
         _viewModel = viewModel;
         DataContext = viewModel;
         Closing += OnPopupClosing;
+        Closed += OnPopupClosed;
         Loaded += OnLoadedAsync;
     }
 
@@ -55,6 +58,13 @@ public partial class SpendingSourceDetailPopup : BasePopup
 
     private async void OnDisableButtonClick(object sender, RoutedEventArgs e)
     {
+        var result = await _viewModel.ToggleEnabledAsync();
+        if (!result.IsSuccess)
+            ShowValidationMessage(result.ErrorMessage);
+    }
+
+    private async void OnHideOrUnhideButtonClick(object sender, RoutedEventArgs e)
+    {
         var result = await _viewModel.ToggleVisibilityAsync();
         if (!result.IsSuccess)
             ShowValidationMessage(result.ErrorMessage);
@@ -70,12 +80,25 @@ public partial class SpendingSourceDetailPopup : BasePopup
             Id = _viewModel.SpendingSourceId,
             Name = _viewModel.NameText,
             SpendingSourceType = _viewModel.SpendingSourceType,
+            IsEnabled = _viewModel.IsEnabled,
             ShowOnUI = _viewModel.ShowOnUI
         }, _viewModel.UnitOfWork);
 
         var popup = new TransferFundsPopup(transferVm) { Owner = this };
         popup.ShowDialog();
         _ = _viewModel.LoadAsync();
+    }
+
+    private void OnBackToSourcesButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (Owner is not MainWindow)
+            return;
+
+        _reopenSourcesOnClose = true;
+        Close();
+
+        if (IsVisible)
+            _reopenSourcesOnClose = false;
     }
 
     private async void OnDeleteButtonClick(object sender, RoutedEventArgs e)
@@ -140,6 +163,15 @@ public partial class SpendingSourceDetailPopup : BasePopup
     {
         if (!string.IsNullOrWhiteSpace(message))
             FluxoMessageBox.Show(this, message, "Income Detail", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void OnPopupClosed(object? sender, EventArgs e)
+    {
+        if (!_reopenSourcesOnClose || Owner is not MainWindow ownerWindow)
+            return;
+
+        _reopenSourcesOnClose = false;
+        ownerWindow.Dispatcher.BeginInvoke(new Action(ownerWindow.OpenSpendingSourcesListPopup));
     }
 
     private static bool IsValidAmountInput(TextBox textBox, string newText)

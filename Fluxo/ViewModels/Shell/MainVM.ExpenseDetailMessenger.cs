@@ -147,6 +147,7 @@ public partial class MainVM
             trackedSource.DueDate = refreshedSource.DueDate;
             trackedSource.InterestRate = refreshedSource.InterestRate;
             trackedSource.ShowOnUI = refreshedSource.ShowOnUI;
+            trackedSource.IsEnabled = refreshedSource.IsEnabled;
             trackedSource.SpentAmount = refreshedSource.SpentAmount;
         }
     }

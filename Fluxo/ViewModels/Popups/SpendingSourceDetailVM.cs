@@ -27,6 +27,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
     [ObservableProperty] private decimal _moneyOut;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _primaryAmountText = string.Empty;
+    [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private bool _showOnUI = true;
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
     [ObservableProperty] private string _spentAmountText = string.Empty;
@@ -58,13 +59,15 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public bool IsSaving => SpendingSourceType == SpendingSourceType.Saving;
 
-    public bool CanTransfer => SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL) && !IsEditing;
+    public bool CanTransfer => IsEnabled && SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL) && !IsEditing;
 
     public bool CanDelete => !IsEditing;
 
-    public string DisableButtonLabel => IsEditing ? "Cancel" : ShowOnUI ? "Disable" : "Enable";
+    public bool CanHideOrUnhide => IsEnabled && !IsEditing;
 
     public string EditButtonLabel => IsEditing ? "Save" : "Edit";
+
+    public bool IsHidden => !ShowOnUI;
 
     public decimal DisplayPrimaryAmount => SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
         ? ParseDecimalOrDefault(SpentAmountText)
@@ -78,13 +81,19 @@ public partial class SpendingSourceDetailVM : ObservableObject
     {
         OnPropertyChanged(nameof(CanTransfer));
         OnPropertyChanged(nameof(CanDelete));
-        OnPropertyChanged(nameof(DisableButtonLabel));
         OnPropertyChanged(nameof(EditButtonLabel));
+        OnPropertyChanged(nameof(CanHideOrUnhide));
     }
 
     partial void OnShowOnUIChanged(bool value)
     {
-        OnPropertyChanged(nameof(DisableButtonLabel));
+        OnPropertyChanged(nameof(IsHidden));
+    }
+
+    partial void OnIsEnabledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanTransfer));
+        OnPropertyChanged(nameof(CanHideOrUnhide));
     }
 
     partial void OnSpendingSourceTypeChanged(SpendingSourceType value)
@@ -178,10 +187,10 @@ public partial class SpendingSourceDetailVM : ObservableObject
     public async Task<SpendingSourceDetailResult> ToggleVisibilityAsync()
     {
         if (IsEditing)
-        {
-            CancelEditing();
-            return SpendingSourceDetailResult.Success();
-        }
+            return SpendingSourceDetailResult.Failure("Finish editing before hiding or unhiding this source.");
+
+        if (!IsEnabled)
+            return SpendingSourceDetailResult.Failure("Enable this source before hiding or unhiding it.");
 
         if (IsBusy)
             return SpendingSourceDetailResult.Failure("This spending source is already being updated.");
@@ -197,6 +206,48 @@ public partial class SpendingSourceDetailVM : ObservableObject
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
             spendingSource.ShowOnUI = !spendingSource.ShowOnUI;
+            _uow.SpendingSources.Update(spendingSource);
+            await _uow.SaveChangesAsync();
+
+            var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
+            WeakReferenceMessenger.Default.Send(
+                new RecordLogMemoryMessage(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)));
+
+            await _mainViewModel.ReloadCurrentDataAsync();
+            await RefreshAsync(resetDraft: true);
+
+            return SpendingSourceDetailResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return SpendingSourceDetailResult.Failure(
+                $"Unable to update this spending source.\n\n{exception.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    public async Task<SpendingSourceDetailResult> ToggleEnabledAsync()
+    {
+        if (IsEditing)
+            return SpendingSourceDetailResult.Failure("Finish editing before enabling or disabling this source.");
+
+        if (IsBusy)
+            return SpendingSourceDetailResult.Failure("This spending source is already being updated.");
+
+        IsBusy = true;
+
+        try
+        {
+            var spendingSource = await _uow.SpendingSources.GetByIdAsync(_spendingSourceId);
+            if (spendingSource is null)
+                return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
+
+            var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
+
+            spendingSource.IsEnabled = !spendingSource.IsEnabled;
             _uow.SpendingSources.Update(spendingSource);
             await _uow.SaveChangesAsync();
 
@@ -305,6 +356,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         AccountLimitText = FormatDecimal(state.AccountLimit);
         ApyText = state.InterestRate.HasValue ? FormatDecimal(state.InterestRate.Value) : string.Empty;
         DueDate = state.DueDate;
+        IsEnabled = state.IsEnabled;
         ShowOnUI = state.ShowOnUI;
     }
 
@@ -367,6 +419,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             SpentAmount: spentAmount,
             DueDate: DueDate?.Date,
             InterestRate: interestRate,
+            IsEnabled: IsEnabled,
             ShowOnUI: ShowOnUI);
 
         return true;
@@ -379,6 +432,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.SpentAmount = input.SpentAmount;
         spendingSource.DueDate = input.DueDate;
         spendingSource.InterestRate = input.InterestRate;
+        spendingSource.IsEnabled = input.IsEnabled;
         spendingSource.ShowOnUI = input.ShowOnUI;
 
         if (input.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
@@ -403,6 +457,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             spendingSource.SpentAmount,
             spendingSource.DueDate,
             spendingSource.InterestRate,
+            spendingSource.IsEnabled,
             spendingSource.ShowOnUI);
     }
 
@@ -519,6 +574,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         decimal SpentAmount,
         DateTime? DueDate,
         decimal? InterestRate,
+        bool IsEnabled,
         bool ShowOnUI)
     {
         public static SpendingSourceDetailState Empty => new(
@@ -529,6 +585,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             0m,
             null,
             null,
+            true,
             true);
     }
 }
