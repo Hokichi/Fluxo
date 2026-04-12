@@ -41,6 +41,92 @@ public sealed record SpendingSourceMemorySnapshot(
     }
 }
 
+public sealed record ExpenseMemorySnapshot(
+    int ExpenseId,
+    int SpendingSourceId,
+    int TagId,
+    string Name,
+    decimal Amount,
+    ExpenseKind ExpenseKind,
+    ExpenseCategory ExpenseCategory,
+    DateTime? RecurringDate,
+    bool IsActive)
+{
+    public static ExpenseMemorySnapshot Create(Expense expense)
+    {
+        ArgumentNullException.ThrowIfNull(expense);
+
+        return new ExpenseMemorySnapshot(
+            expense.Id,
+            expense.SpendingSourceId,
+            expense.ExpenseTagId,
+            expense.Name,
+            expense.Amount,
+            expense.ExpenseKind,
+            expense.ExpenseCategory,
+            expense.RecurringDate,
+            expense.IsActive);
+    }
+}
+
+public sealed record ExpenseTagMemorySnapshot(
+    int ExpenseTagId,
+    string Name,
+    string HexCode)
+{
+    public static ExpenseTagMemorySnapshot Create(ExpenseTag expenseTag)
+    {
+        ArgumentNullException.ThrowIfNull(expenseTag);
+
+        return new ExpenseTagMemorySnapshot(
+            expenseTag.Id,
+            expenseTag.Name,
+            expenseTag.HexCode);
+    }
+}
+
+public sealed record SavingGoalMemorySnapshot(
+    int SavingGoalId,
+    string Name,
+    decimal TargetAmount,
+    decimal CurrentAmount,
+    DateTime SavingEndDate)
+{
+    public static SavingGoalMemorySnapshot Create(SavingGoal savingGoal)
+    {
+        ArgumentNullException.ThrowIfNull(savingGoal);
+
+        return new SavingGoalMemorySnapshot(
+            savingGoal.Id,
+            savingGoal.Name,
+            savingGoal.TargetAmount,
+            savingGoal.CurrentAmount,
+            savingGoal.SavingEndDate);
+    }
+}
+
+public sealed record UserSettingMemorySnapshot(
+    string Name,
+    string Value,
+    bool Exists)
+{
+    public static UserSettingMemorySnapshot Create(UserSettings userSettings)
+    {
+        ArgumentNullException.ThrowIfNull(userSettings);
+
+        return new UserSettingMemorySnapshot(
+            userSettings.Name,
+            userSettings.Value,
+            true);
+    }
+
+    public static UserSettingMemorySnapshot Missing(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return new UserSettingMemorySnapshot(name, string.Empty, false);
+    }
+}
+
 public sealed record ExpenseLogMemorySnapshot(
     int ExpenseId,
     int ExpenseLogId,
@@ -395,6 +481,201 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
             return;
 
         unitOfWork.SpendingSources.Remove(spendingSource);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class EditExpenseMemoryAction(
+    ExpenseMemorySnapshot before,
+    ExpenseMemorySnapshot after) : ILogMemoryAction
+{
+    public string Description => "Edit fixed expense";
+
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
+    }
+
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
+    }
+
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, ExpenseMemorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        var expense = await unitOfWork.Expenses.GetByIdAsync(snapshot.ExpenseId, cancellationToken);
+        if (expense is null)
+            return;
+
+        expense.Name = snapshot.Name;
+        expense.Amount = snapshot.Amount;
+        expense.ExpenseKind = snapshot.ExpenseKind;
+        expense.ExpenseCategory = snapshot.ExpenseCategory;
+        expense.RecurringDate = snapshot.RecurringDate;
+        expense.IsActive = snapshot.IsActive;
+        expense.SpendingSourceId = snapshot.SpendingSourceId;
+        expense.ExpenseTagId = snapshot.TagId;
+
+        unitOfWork.Expenses.Update(expense);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public string Description => "Delete fixed expense";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.Expenses.GetByIdAsync(snapshot.ExpenseId, cancellationToken) is not null)
+            return;
+
+        var spendingSource =
+            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                cancellationToken);
+        var expenseTag = await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId,
+            cancellationToken);
+
+        var expense = new Expense
+        {
+            Id = snapshot.ExpenseId,
+            Name = snapshot.Name,
+            Amount = snapshot.Amount,
+            ExpenseKind = snapshot.ExpenseKind,
+            ExpenseCategory = snapshot.ExpenseCategory,
+            RecurringDate = snapshot.RecurringDate,
+            IsActive = snapshot.IsActive,
+            SpendingSourceId = snapshot.SpendingSourceId,
+            ExpenseTagId = snapshot.TagId,
+            SpendingSource = spendingSource,
+            ExpenseTag = expenseTag
+        };
+
+        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var expense = await unitOfWork.Expenses.GetByIdAsync(snapshot.ExpenseId, cancellationToken);
+        if (expense is null)
+            return;
+
+        unitOfWork.Expenses.Remove(expense);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class DeleteExpenseTagMemoryAction(ExpenseTagMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public string Description => "Delete tag";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.ExpenseTags.GetByIdAsync(snapshot.ExpenseTagId, cancellationToken) is not null)
+            return;
+
+        var expenseTag = new ExpenseTag
+        {
+            Id = snapshot.ExpenseTagId,
+            Name = snapshot.Name,
+            HexCode = snapshot.HexCode
+        };
+
+        await unitOfWork.ExpenseTags.AddAsync(expenseTag, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var expenseTag = await unitOfWork.ExpenseTags.GetByIdAsync(snapshot.ExpenseTagId, cancellationToken);
+        if (expenseTag is null)
+            return;
+
+        unitOfWork.ExpenseTags.Remove(expenseTag);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public string Description => "Delete saving goal";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.SavingGoals.GetByIdAsync(snapshot.SavingGoalId, cancellationToken) is not null)
+            return;
+
+        var savingGoal = new SavingGoal
+        {
+            Id = snapshot.SavingGoalId,
+            Name = snapshot.Name,
+            TargetAmount = snapshot.TargetAmount,
+            CurrentAmount = snapshot.CurrentAmount,
+            SavingEndDate = snapshot.SavingEndDate
+        };
+
+        await unitOfWork.SavingGoals.AddAsync(savingGoal, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var savingGoal = await unitOfWork.SavingGoals.GetByIdAsync(snapshot.SavingGoalId, cancellationToken);
+        if (savingGoal is null)
+            return;
+
+        unitOfWork.SavingGoals.Remove(savingGoal);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class SetUserSettingMemoryAction(
+    UserSettingMemorySnapshot before,
+    UserSettingMemorySnapshot after) : ILogMemoryAction
+{
+    public string Description => "Update setting";
+
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
+    }
+
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
+    }
+
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, UserSettingMemorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        var existingSetting = await unitOfWork.UserSettings.GetByNameAsync(snapshot.Name, cancellationToken);
+
+        if (!snapshot.Exists)
+        {
+            if (existingSetting is null)
+                return;
+
+            unitOfWork.UserSettings.Remove(existingSetting);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        if (existingSetting is null)
+        {
+            await unitOfWork.UserSettings.AddAsync(new UserSettings
+            {
+                Name = snapshot.Name,
+                Value = snapshot.Value
+            }, cancellationToken);
+        }
+        else
+        {
+            existingSetting.Value = snapshot.Value;
+            unitOfWork.UserSettings.Update(existingSetting);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

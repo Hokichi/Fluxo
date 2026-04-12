@@ -49,6 +49,8 @@ public partial class MainWindow : Window
         _expenseCleanupService = expenseCleanupService;
         _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWorkFactory);
         DataContext = _mainVM;
+        _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
+        UpdateHistoryAvailability();
 
         Loaded += async (_, _) =>
         {
@@ -128,6 +130,7 @@ public partial class MainWindow : Window
             var markedIds = _mainVM.GetExpenseLogIdsMarkedForDeletion();
             await _expenseCleanupService.DeleteMarkedExpenseLogsAsync(markedIds);
             _hasCompletedPendingDeletionCleanup = true;
+            _logMemoryManager.StateChanged -= OnHistoryManagerStateChanged;
             _logMemoryManager.Dispose();
         }
         finally
@@ -355,19 +358,28 @@ public partial class MainWindow : Window
 
         if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
         {
+            OpenSettingsPopup();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)
+        {
             OpenSpendingSourcesListPopup();
             e.Handled = true;
             return;
         }
 
-        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused())
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused() &&
+            _logMemoryManager.CanUndo)
         {
             _ = UndoLogMemoryAsync();
             e.Handled = true;
             return;
         }
 
-        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused())
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused() &&
+            _logMemoryManager.CanRedo)
         {
             _ = RedoLogMemoryAsync();
             e.Handled = true;
@@ -431,8 +443,12 @@ public partial class MainWindow : Window
     private void OnSettingsButtonClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
-        FluxoMessageBox.Show(this, "Settings is not available yet.", "Settings", MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        OpenSettingsPopup();
+    }
+
+    private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
+    {
+        OpenAddSpendingSourcePopup();
     }
 
     public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
@@ -457,6 +473,18 @@ public partial class MainWindow : Window
     public void OpenSpendingSourcesListPopup()
     {
         var popup = new SpendingSourcesListPopup(_mainVM) { Owner = this };
+        popup.ShowDialog();
+    }
+
+    public void OpenAddSpendingSourcePopup()
+    {
+        var popup = new AddSpendingSourcePopup { Owner = this };
+        popup.ShowDialog();
+    }
+
+    public void OpenSettingsPopup()
+    {
+        var popup = new SettingsPopup(new SettingsVM(_mainVM, _unitOfWorkFactory)) { Owner = this };
         popup.ShowDialog();
     }
 
@@ -552,6 +580,9 @@ public partial class MainWindow : Window
 
     private async Task UndoLogMemoryAsync()
     {
+        if (!_logMemoryManager.CanUndo)
+            return;
+
         try
         {
             await _logMemoryManager.UndoAsync();
@@ -565,6 +596,9 @@ public partial class MainWindow : Window
 
     private async Task RedoLogMemoryAsync()
     {
+        if (!_logMemoryManager.CanRedo)
+            return;
+
         try
         {
             await _logMemoryManager.RedoAsync();
@@ -579,5 +613,19 @@ public partial class MainWindow : Window
     private static bool IsTextInputElementFocused()
     {
         return Keyboard.FocusedElement is TextBoxBase or PasswordBox or ComboBox;
+    }
+
+    private void OnHistoryManagerStateChanged(object? sender, EventArgs e)
+    {
+        UpdateHistoryAvailability();
+    }
+
+    private void UpdateHistoryAvailability()
+    {
+        if (UndoMenuButton is not null)
+            UndoMenuButton.IsEnabled = _logMemoryManager.CanUndo;
+
+        if (RedoMenuButton is not null)
+            RedoMenuButton.IsEnabled = _logMemoryManager.CanRedo;
     }
 }

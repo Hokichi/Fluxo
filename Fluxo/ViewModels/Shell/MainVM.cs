@@ -41,6 +41,11 @@ public partial class MainVM : ObservableRecipient
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
     private decimal _budgetUsageWarningPercentage = 0.90m;
     private decimal _creditUsageWarningPercentage = 0.30m;
+    private readonly HashSet<int> _hiddenFixedExpenseIds = [];
+    private readonly HashSet<int> _hiddenSavingGoalIds = [];
+    private readonly HashSet<int> _disabledSavingGoalIds = [];
+    private bool _isBudgetThresholdNotifEnabled = true;
+    private bool _isCreditDeadlineNotifEnabled = true;
 
     [ObservableProperty] private int _dailyAllowance;
 
@@ -77,6 +82,7 @@ public partial class MainVM : ObservableRecipient
     private decimal _allTimeWantsSpent;
     private decimal _allTimeInvestSpent;
     private decimal _lowAccountBalancePercentage = 0.20m;
+    private bool _isLowAccountBalanceNotifEnabled;
 
     [ObservableProperty]
     private ICollectionView _needs = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
@@ -158,6 +164,8 @@ public partial class MainVM : ObservableRecipient
     public bool HasOtherTags => OtherTags.Count > 0;
 
     public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
+
+    public decimal TotalIncomeAmount => _totalIncomeAmount;
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
@@ -692,7 +700,11 @@ public partial class MainVM : ObservableRecipient
     {
         SavingGoals.Clear();
 
-        foreach (var goal in savingGoals) SavingGoals.Add(goal);
+        foreach (var goal in savingGoals.Where(goal =>
+                     goal.ProgressRatio < 1m &&
+                     !_hiddenSavingGoalIds.Contains(goal.Id) &&
+                     !_disabledSavingGoalIds.Contains(goal.Id)))
+            SavingGoals.Add(goal);
 
         HasSavingGoals = SavingGoals.Count > 0;
     }
@@ -720,6 +732,7 @@ public partial class MainVM : ObservableRecipient
     private void RefreshDashboardMetrics()
     {
         _totalIncomeAmount = SpendingSources.Sum(source => source.Balance);
+        OnPropertyChanged(nameof(TotalIncomeAmount));
 
         NeedsAvailable = decimal.Round(_totalIncomeAmount * _needsThreshold, 2);
         WantsAvailable = decimal.Round(_totalIncomeAmount * _wantsThreshold, 2);
@@ -774,6 +787,9 @@ public partial class MainVM : ObservableRecipient
 
     private IEnumerable<NotificationItemVM> GetUpcomingCreditDeadlineNotifications()
     {
+        if (!_isCreditDeadlineNotifEnabled)
+            yield break;
+
         foreach (var source in SpendingSources.Where(source =>
                      source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
                      source.DueDate.HasValue))
@@ -798,6 +814,7 @@ public partial class MainVM : ObservableRecipient
 
         foreach (var expense in _expenses.Where(expense =>
                      expense.IsActive &&
+                     !_hiddenFixedExpenseIds.Contains(expense.Id) &&
                      expense.ExpenseKind == ExpenseKind.Fixed &&
                      expense.RecurringDate.HasValue))
         {
@@ -822,6 +839,7 @@ public partial class MainVM : ObservableRecipient
         var autoExpensesDueToday = _expenses
             .Where(expense =>
                 expense.IsActive &&
+                !_hiddenFixedExpenseIds.Contains(expense.Id) &&
                 expense.ExpenseKind == ExpenseKind.Fixed &&
                 expense.RecurringDate?.Date == DateTime.Today)
             .Select(expense => expense.Name)
@@ -845,6 +863,9 @@ public partial class MainVM : ObservableRecipient
 
     private IEnumerable<NotificationItemVM> GetBudgetThresholdNotifications()
     {
+        if (!_isBudgetThresholdNotifEnabled)
+            yield break;
+
         if (HasCrossedBudgetThreshold(NeedsSpent, NeedsAvailable))
             yield return CreateNotification(
                 "budget-threshold-needs",
@@ -896,7 +917,7 @@ public partial class MainVM : ObservableRecipient
 
     private IEnumerable<NotificationItemVM> GetLowAccountNotifications()
     {
-        if (!_isLowCreditNotifEnabled)
+        if (!_isLowAccountBalanceNotifEnabled)
             yield break;
 
         foreach (var source in SpendingSources.Where(source =>
@@ -941,7 +962,22 @@ public partial class MainVM : ObservableRecipient
             ParseDecimal(settingsByName, UserSettingNames.LowAccountBalancePercentage, 0.20m);
         _isFixedExpensesDeductionNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false);
+        _isCreditDeadlineNotifEnabled =
+            ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true);
+        _isBudgetThresholdNotifEnabled =
+            ParseBool(settingsByName, UserSettingNames.IsBudgetThresholdNotifEnabled, true);
         _isLowCreditNotifEnabled = ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false);
+        _isLowAccountBalanceNotifEnabled =
+            ParseBool(settingsByName, UserSettingNames.IsLowAccountBalanceNotifEnabled, _isLowCreditNotifEnabled);
+
+        _hiddenFixedExpenseIds.Clear();
+        _hiddenFixedExpenseIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds));
+
+        _hiddenSavingGoalIds.Clear();
+        _hiddenSavingGoalIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds));
+
+        _disabledSavingGoalIds.Clear();
+        _disabledSavingGoalIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.DisabledSavingGoalIds));
     }
 
     private bool HasCrossedBudgetThreshold(decimal spentAmount, decimal availableAmount)
@@ -980,6 +1016,21 @@ public partial class MainVM : ObservableRecipient
         if (settings.TryGetValue(name, out var value) && bool.TryParse(value, out var parsedValue)) return parsedValue;
 
         return defaultValue;
+    }
+
+    private static IReadOnlyCollection<int> ParseIdSet(IReadOnlyDictionary<string, string> settings, string name)
+    {
+        if (!settings.TryGetValue(name, out var value) || string.IsNullOrWhiteSpace(value))
+            return [];
+
+        return value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => int.TryParse(part, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id)
+                ? id
+                : -1)
+            .Where(id => id > 0)
+            .Distinct()
+            .ToArray();
     }
 
     private static NotificationItemVM CreateNotification(

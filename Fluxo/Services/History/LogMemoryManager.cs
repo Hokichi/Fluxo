@@ -29,6 +29,8 @@ public sealed class LogMemoryManager : IDisposable
 
     public bool CanRedo => _redoStack.Count > 0;
 
+    public event EventHandler? StateChanged;
+
     public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
     {
         if (_isExecuting || _undoStack.Count == 0)
@@ -44,6 +46,7 @@ public sealed class LogMemoryManager : IDisposable
             await _mainViewModel.ReloadCurrentDataAsync();
 
             _redoStack.Push(action);
+            RaiseStateChanged();
             return true;
         }
         catch
@@ -72,6 +75,7 @@ public sealed class LogMemoryManager : IDisposable
             await _mainViewModel.ReloadCurrentDataAsync();
 
             _undoStack.Push(action);
+            RaiseStateChanged();
             return true;
         }
         catch
@@ -92,6 +96,12 @@ public sealed class LogMemoryManager : IDisposable
 
         _undoStack.Push(action);
         _redoStack.Clear();
+        RaiseStateChanged();
+    }
+
+    private void RaiseStateChanged()
+    {
+        StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void Dispose()

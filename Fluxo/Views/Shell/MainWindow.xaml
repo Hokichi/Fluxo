@@ -69,7 +69,123 @@
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                 </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.45" />
+                    <Setter Property="Cursor" Value="Arrow" />
+                </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SpendingSourceAddButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="80" />
+            <Setter Property="Height" Value="100" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border
+                                x:Name="RootBorder"
+                                Background="{StaticResource Brush.Background.Surface}"
+                                CornerRadius="16"
+                                Opacity="0">
+                                <Border.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                </Border.RenderTransform>
+                            </Border>
+
+                            <Rectangle
+                                RadiusX="16"
+                                RadiusY="16"
+                                Stroke="{TemplateBinding Foreground}"
+                                StrokeDashArray="5"
+                                StrokeThickness="1" />
+
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <icons:PackIconEntypo
+                                    Width="24"
+                                    Height="24"
+                                    Margin="0,0,0,8"
+                                    HorizontalAlignment="Center"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    Kind="CircleWithPlus" />
+
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    Text="Add" />
+                            </StackPanel>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                <Setter TargetName="RootBorder" Property="Opacity" Value="1" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="RootBorder"
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                To="1.04"
+                                                Duration="0:0:0.12">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="RootBorder"
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                To="1.04"
+                                                Duration="0:0:0.12">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="RootBorder"
+                                                Storyboard.TargetProperty="Opacity"
+                                                To="0"
+                                                Duration="0:0:0.12" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="RootBorder"
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                To="1"
+                                                Duration="0:0:0.12">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="RootBorder"
+                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                To="1"
+                                                Duration="0:0:0.12">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="HeaderText" TargetType="TextBlock">
@@ -321,7 +437,7 @@
                                 Canvas.Left="8"
                                 Canvas.Top="8"
                                 Data="{Binding ProgressRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=40}"
-                                Stroke="{StaticResource Brush.Mint}"
+                                Stroke="{Binding ProgressRatio, Converter={StaticResource GoalProgressToBrushConverter}}"
                                 StrokeEndLineCap="Round"
                                 StrokeLineJoin="Round"
                                 StrokeStartLineCap="Round"
@@ -333,7 +449,7 @@
                             VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Foreground="{Binding ProgressRatio, Converter={StaticResource GoalProgressToBrushConverter}}"
                             Text="{Binding ProgressPercentage, StringFormat={}{0}%}" />
                     </Grid>
 
@@ -883,7 +999,7 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnUndoButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button x:Name="UndoMenuButton" Click="OnUndoButtonClick" IsEnabled="False" Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -905,7 +1021,7 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnRedoButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button x:Name="RedoMenuButton" Click="OnRedoButtonClick" IsEnabled="False" Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -1133,32 +1249,10 @@
                                 </ListView.ItemTemplate>
                             </ListView>
 
-                            <Grid Width="80" Height="100">
-                                <Rectangle
-                                    RadiusX="16"
-                                    RadiusY="16"
-                                    Stroke="{StaticResource Brush.Text.Muted}"
-                                    StrokeDashArray="5"
-                                    StrokeThickness="1" />
-
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <icons:PackIconEntypo
-                                        Width="24"
-                                        Height="24"
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Center"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Kind="CircleWithPlus" />
-
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Text="Add" />
-                                </StackPanel>
-                            </Grid>
+                            <Button
+                                x:Name="AddSpendingSourceButton"
+                                Click="OnAddSpendingSourceButtonClick"
+                                Style="{StaticResource SpendingSourceAddButtonStyle}" />
                         </StackPanel>
                     </c:FadingScrollViewer>
 

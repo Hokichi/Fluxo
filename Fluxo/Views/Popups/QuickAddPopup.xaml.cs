@@ -145,11 +145,11 @@ public partial class QuickAddPopup : BasePopup
     {
         if (_viewModel.IsExpense)
         {
-            ExpenseNameTextBox.Focus();
+            ExpenseAmountTextBox.Focus();
             return;
         }
 
-        IncomeNameTextBox.Focus();
+        IncomeAmountTextBox.Focus();
     }
 
     private void SyncNoteDocumentFromViewModel()

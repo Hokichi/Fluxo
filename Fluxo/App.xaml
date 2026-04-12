@@ -51,6 +51,7 @@
                     <cons:BrushToLighterBrushConverter x:Key="BrushToLighterBrushConverter" />
                     <cons:CornerRadiusConverter x:Key="CornerRadiusConverter" />
                     <cons:DateTimeToRelativeDateConverter x:Key="DateTimeToRelativeDateConverter" />
+                    <cons:GoalProgressToBrushConverter x:Key="GoalProgressToBrushConverter" />
                     <cons:NumberWithCommasConverter x:Key="NumberWithCommasConverter" />
                     <cons:ObjectToNullConverter x:Key="ObjectToNullConverter" />
                     <cons:ProgressToArcGeometryConverter x:Key="ProgressToArcGeometryConverter" />

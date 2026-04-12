@@ -1,0 +1,308 @@
+<c:BasePopup
+    x:Class="Fluxo.Views.Popups.SettingsPopup"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
+    PopupTitle="Settings"
+    ShowApplyButton="True"
+    ShowRevertButton="True">
+
+    <c:BasePopup.Resources>
+        <Style x:Key="PanelStyle" TargetType="Border">
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+        </Style>
+        <Style x:Key="TabButtonStyle" TargetType="RadioButton">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="RootBorder" Padding="{TemplateBinding Padding}" Background="{StaticResource Brush.Background.Surface}" BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="1" CornerRadius="14">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ActionButtonStyle" BasedOn="{StaticResource PopupTextButtonStyle}" TargetType="Button">
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="MinWidth" Value="112" />
+        </Style>
+        <Style x:Key="StepperButtonStyle" BasedOn="{StaticResource PopupTextButtonStyle}" TargetType="Button">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style x:Key="RowCardStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+        </Style>
+        <Style x:Key="BadgeStyle" TargetType="Border">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+        </Style>
+        <Style x:Key="TagDeleteButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="{Binding HexCode}" />
+                                <TextBlock Margin="8,0,0,0" FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding Name}" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ToggleSwitchStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="50" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Track" Background="{StaticResource Brush.Background.Hover}" BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="1" CornerRadius="15">
+                            <Ellipse x:Name="Thumb" Width="22" Height="22" Margin="4" HorizontalAlignment="Left" Fill="{StaticResource Brush.Text.Primary}">
+                                <Ellipse.RenderTransform><TranslateTransform x:Name="ThumbTransform" X="0" /></Ellipse.RenderTransform>
+                            </Ellipse>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="ThumbTransform" Storyboard.TargetProperty="X" To="20" Duration="0:0:0.14"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                                <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="ThumbTransform" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.14"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </c:BasePopup.Resources>
+
+    <Grid Width="1180" Height="760" Margin="24,0,24,24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="24" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource PanelStyle}">
+            <StackPanel>
+                <TextBlock FontFamily="{StaticResource Bold}" FontSize="14" Foreground="{StaticResource Brush.Text.Primary}" Text="Sections" />
+                <TextBlock Margin="0,6,0,16" FontFamily="{StaticResource Medium}" FontSize="11" Foreground="{StaticResource Brush.Text.Muted}" Text="Apply saves budget and notification changes. List actions save immediately." TextWrapping="Wrap" />
+                <RadioButton x:Name="BudgetTabButton" Content="Budget Allocation" GroupName="SettingsTabs" IsChecked="True" Style="{StaticResource TabButtonStyle}" />
+                <RadioButton x:Name="SourcesTabButton" Content="Spending Sources" GroupName="SettingsTabs" Style="{StaticResource TabButtonStyle}" />
+                <RadioButton x:Name="FixedExpensesTabButton" Content="Fixed Expenses" GroupName="SettingsTabs" Style="{StaticResource TabButtonStyle}" />
+                <RadioButton x:Name="GoalsTabButton" Content="Goals" GroupName="SettingsTabs" Style="{StaticResource TabButtonStyle}" />
+                <RadioButton x:Name="TagsTabButton" Content="Tags" GroupName="SettingsTabs" Style="{StaticResource TabButtonStyle}" />
+                <RadioButton x:Name="NotificationsTabButton" Content="Notifications" GroupName="SettingsTabs" Style="{StaticResource TabButtonStyle}" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Column="2">
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock FontFamily="{StaticResource Bold}" FontSize="16" Foreground="{StaticResource Brush.Text.Primary}" Text="Budget Allocation" />
+                        <TextBlock Margin="0,8,0,16" FontFamily="{StaticResource Medium}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" Text="Adjust how the current budget is split between Needs, Wants, and Invest." />
+                        <TextBlock Margin="0,0,0,12" FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Danger}" Text="{Binding BudgetAllocationErrorMessage}" Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                        <Border Style="{StaticResource RowCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock FontFamily="{StaticResource Bold}" FontSize="14" Foreground="{StaticResource Brush.Text.Primary}" Text="Needs" /><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Click="OnAllocationAdjustButtonClick" PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown" PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp" MouseLeave="OnAllocationAdjustButtonMouseLeave" Tag="Needs:-1" Style="{StaticResource StepperButtonStyle}" Content="-" /><TextBlock Width="56" VerticalAlignment="Center" TextAlignment="Center" FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}" /><Button Click="OnAllocationAdjustButtonClick" PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown" PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp" MouseLeave="OnAllocationAdjustButtonMouseLeave" Tag="Needs:+1" Style="{StaticResource StepperButtonStyle}" Content="+" /></StackPanel></Grid>
+                                <Slider Grid.Row="1" Margin="0,16,0,0" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding NeedsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="2" Margin="0,12,0,0" HorizontalAlignment="Right" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding NeedsAllocationAmountText}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource RowCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock FontFamily="{StaticResource Bold}" FontSize="14" Foreground="{StaticResource Brush.Text.Primary}" Text="Wants" /><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Click="OnAllocationAdjustButtonClick" PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown" PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp" MouseLeave="OnAllocationAdjustButtonMouseLeave" Tag="Wants:-1" Style="{StaticResource StepperButtonStyle}" Content="-" /><TextBlock Width="56" VerticalAlignment="Center" TextAlignment="Center" FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}" /><Button Click="OnAllocationAdjustButtonClick" PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown" PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp" MouseLeave="OnAllocationAdjustButtonMouseLeave" Tag="Wants:+1" Style="{StaticResource StepperButtonStyle}" Content="+" /></StackPanel></Grid>
+                                <Slider Grid.Row="1" Margin="0,16,0,0" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding WantsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="2" Margin="0,12,0,0" HorizontalAlignment="Right" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding WantsAllocationAmountText}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource RowCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock FontFamily="{StaticResource Bold}" FontSize="14" Foreground="{StaticResource Brush.Text.Primary}" Text="Invest" /><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Click="OnAllocationAdjustButtonClick" PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown" PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp" MouseLeave="OnAllocationAdjustButtonMouseLeave" Tag="Invest:-1" Style="{StaticResource StepperButtonStyle}" Content="-" /><TextBlock Width="56" VerticalAlignment="Center" TextAlignment="Center" FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}" /><Button Click="OnAllocationAdjustButtonClick" PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown" PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp" MouseLeave="OnAllocationAdjustButtonMouseLeave" Tag="Invest:+1" Style="{StaticResource StepperButtonStyle}" Content="+" /></StackPanel></Grid>
+                                <Slider Grid.Row="1" Margin="0,16,0,0" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding InvestAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="2" Margin="0,12,0,0" HorizontalAlignment="Right" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding InvestAllocationAmountText}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=SourcesTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <WrapPanel>
+                        <Button Click="OnChecksToggleClick" Content="Enable Checks" Style="{StaticResource ActionButtonStyle}" Tag="SpendingSources:EnableChecks" Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <Button Click="OnChecksToggleClick" Content="Disable Checks" Style="{StaticResource ActionButtonStyle}" Tag="SpendingSources:DisableChecks" Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Delete" Style="{StaticResource ActionButtonStyle}" Tag="SpendingSources:Delete" Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Hide" Style="{StaticResource ActionButtonStyle}" Tag="SpendingSources:Hide" Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Unhide" Style="{StaticResource ActionButtonStyle}" Tag="SpendingSources:Unhide" Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Disable" Style="{StaticResource ActionButtonStyle}" Tag="SpendingSources:Disable" Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Enable" Style="{StaticResource ActionButtonStyle}" Tag="SpendingSources:Enable" Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnAddPlaceholderClick" Content="Add" Style="{StaticResource ActionButtonStyle}" Tag="Add New Spending Source" />
+                    </WrapPanel>
+                    <ListView Grid.Row="1" Margin="0,8,0,0" Background="Transparent" BorderThickness="0" ItemsSource="{Binding SpendingSources}">
+                        <ListView.ItemContainerStyle><Style TargetType="ListViewItem"><Setter Property="Padding" Value="0" /><Setter Property="Margin" Value="0" /><Setter Property="BorderThickness" Value="0" /></Style></ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource RowCardStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsChecked, Mode=TwoWay}" Visibility="{Binding DataContext.IsSpendingSourceChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        <StackPanel Grid.Column="1"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding Name}" /><TextBlock Margin="0,6,0,0" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding TypeDisplayName}" /></StackPanel>
+                                        <TextBlock Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding PrimaryAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"><Border Style="{StaticResource BadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Warning}" Text="Hidden" /></Border><Border Style="{StaticResource BadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Danger}" Text="Disabled" /></Border></StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=FixedExpensesTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <WrapPanel>
+                        <Button Click="OnChecksToggleClick" Content="Enable Checks" Style="{StaticResource ActionButtonStyle}" Tag="FixedExpenses:EnableChecks" Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <Button Click="OnChecksToggleClick" Content="Disable Checks" Style="{StaticResource ActionButtonStyle}" Tag="FixedExpenses:DisableChecks" Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Delete" Style="{StaticResource ActionButtonStyle}" Tag="FixedExpenses:Delete" Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Hide" Style="{StaticResource ActionButtonStyle}" Tag="FixedExpenses:Hide" Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Unhide" Style="{StaticResource ActionButtonStyle}" Tag="FixedExpenses:Unhide" Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Disable" Style="{StaticResource ActionButtonStyle}" Tag="FixedExpenses:Disable" Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Enable" Style="{StaticResource ActionButtonStyle}" Tag="FixedExpenses:Enable" Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnAddPlaceholderClick" Content="Add" Style="{StaticResource ActionButtonStyle}" Tag="Add New Fixed Expense" />
+                    </WrapPanel>
+                    <ListView Grid.Row="1" Margin="0,8,0,0" Background="Transparent" BorderThickness="0" ItemsSource="{Binding FixedExpenses}">
+                        <ListView.ItemContainerStyle><Style TargetType="ListViewItem"><Setter Property="Padding" Value="0" /><Setter Property="Margin" Value="0" /><Setter Property="BorderThickness" Value="0" /></Style></ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource RowCardStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsChecked, Mode=TwoWay}" Visibility="{Binding DataContext.IsFixedExpenseChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        <StackPanel Grid.Column="1"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding Name}" /><TextBlock Margin="0,6,0,0" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding TagName}" /></StackPanel>
+                                        <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center"><TextBlock HorizontalAlignment="Right" FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" /><TextBlock Margin="0,6,0,0" HorizontalAlignment="Right" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Muted}" Text="{Binding SpendingSourceName}" /></StackPanel>
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"><Border Style="{StaticResource BadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Warning}" Text="Hidden" /></Border><Border Style="{StaticResource BadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Danger}" Text="Disabled" /></Border></StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=GoalsTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <WrapPanel>
+                        <Button Click="OnChecksToggleClick" Content="Enable Checks" Style="{StaticResource ActionButtonStyle}" Tag="Goals:EnableChecks" Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <Button Click="OnChecksToggleClick" Content="Disable Checks" Style="{StaticResource ActionButtonStyle}" Tag="Goals:DisableChecks" Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Delete" Style="{StaticResource ActionButtonStyle}" Tag="Goals:Delete" Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Hide" Style="{StaticResource ActionButtonStyle}" Tag="Goals:Hide" Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Unhide" Style="{StaticResource ActionButtonStyle}" Tag="Goals:Unhide" Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Disable" Style="{StaticResource ActionButtonStyle}" Tag="Goals:Disable" Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnBatchActionClick" Content="Enable" Style="{StaticResource ActionButtonStyle}" Tag="Goals:Enable" Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <Button Click="OnAddPlaceholderClick" Content="Add" Style="{StaticResource ActionButtonStyle}" Tag="Add New Goal" />
+                    </WrapPanel>
+                    <ListView Grid.Row="1" Margin="0,8,0,0" Background="Transparent" BorderThickness="0" ItemsSource="{Binding SavingGoals}">
+                        <ListView.ItemContainerStyle><Style TargetType="ListViewItem"><Setter Property="Padding" Value="0" /><Setter Property="Margin" Value="0" /><Setter Property="BorderThickness" Value="0" /></Style></ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource RowCardStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /><ColumnDefinition Width="140" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsChecked, Mode=TwoWay}" Visibility="{Binding DataContext.IsGoalChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        <StackPanel Grid.Column="1"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding Name}" /><TextBlock Margin="0,6,0,0" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding SavingEndDate, StringFormat=Ends {0:MMM d, yyyy}}" /></StackPanel>
+                                        <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center"><TextBlock HorizontalAlignment="Right" FontFamily="{StaticResource Bold}" Foreground="{Binding ProgressRatio, Converter={StaticResource GoalProgressToBrushConverter}}" Text="{Binding ProgressPercentage, StringFormat={}{0}%}" /><TextBlock Margin="0,6,0,0" HorizontalAlignment="Right" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Muted}" Text="{Binding CurrentAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" /></StackPanel>
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"><Border Style="{StaticResource BadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Warning}" Text="Hidden" /></Border><Border Style="{StaticResource BadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}"><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Danger}" Text="Disabled" /></Border></StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=TagsTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="16" Foreground="{StaticResource Brush.Text.Primary}" Text="Tags" />
+                    <TextBlock Margin="0,8,0,16" FontFamily="{StaticResource Medium}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" Text="Click a tag to delete it after confirmation." />
+                    <ItemsControl ItemsSource="{Binding Tags}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><Button Click="OnTagDeleteClick" Style="{StaticResource TagDeleteButtonStyle}" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=NotificationsTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="16" Foreground="{StaticResource Brush.Text.Primary}" Text="Notifications" />
+                    <TextBlock Margin="0,8,0,16" FontFamily="{StaticResource Medium}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" Text="These toggles are applied with the popup's Apply button." />
+                    <ItemsControl ItemsSource="{Binding NotificationSettings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource RowCardStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <StackPanel><TextBlock FontFamily="{StaticResource Bold}" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding Title}" /><TextBlock Margin="0,6,0,0" FontFamily="{StaticResource Medium}" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding Description}" TextWrapping="Wrap" /></StackPanel>
+                                        <ToggleButton Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding IsEnabled, Mode=TwoWay}" Style="{StaticResource ToggleSwitchStyle}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</c:BasePopup>

@@ -11,5 +11,11 @@ public static class UserSettingNames
     public const string InvestThreshold = nameof(InvestThreshold);
     public const string Salary = nameof(Salary);
     public const string IsFixedExpensesDeductionNotifEnabled = nameof(IsFixedExpensesDeductionNotifEnabled);
+    public const string IsCreditDeadlineNotifEnabled = nameof(IsCreditDeadlineNotifEnabled);
+    public const string IsBudgetThresholdNotifEnabled = nameof(IsBudgetThresholdNotifEnabled);
     public const string IsLowCreditNotifEnabled = nameof(IsLowCreditNotifEnabled);
+    public const string IsLowAccountBalanceNotifEnabled = nameof(IsLowAccountBalanceNotifEnabled);
+    public const string HiddenFixedExpenseIds = nameof(HiddenFixedExpenseIds);
+    public const string HiddenSavingGoalIds = nameof(HiddenSavingGoalIds);
+    public const string DisabledSavingGoalIds = nameof(DisabledSavingGoalIds);
 }
