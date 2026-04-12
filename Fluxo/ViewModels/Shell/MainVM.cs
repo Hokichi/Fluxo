@@ -500,6 +500,9 @@ public partial class MainVM : ObservableRecipient
     private void BuildDailySpinnerItems()
     {
         var currentWeekMonday = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1);
+        if (DateTime.Today.DayOfWeek == 0)
+            currentWeekMonday = currentWeekMonday.AddDays(-7);
+
         var firstDay = currentWeekMonday.AddDays(_spinnerPageOffset * 7);
 
         DaysOfWeek = new ObservableCollection<DayOfWeekVM>(

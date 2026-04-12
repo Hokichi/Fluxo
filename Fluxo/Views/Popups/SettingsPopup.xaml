@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     PopupTitle="Settings"
-    ShowApplyButton="True"
-    ShowRevertButton="True">
+    ShowRevertButton="True"
+    ShowSaveButton="True">
 
     <c:BasePopup.Resources>
         <Style x:Key="PanelStyle" TargetType="Border">
@@ -25,58 +25,38 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border
-                            x:Name="RootBorder"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="14">
-                            <Grid>
+                        <Border x:Name="RootBorder">
+                            <Grid Background="Transparent">
                                 <Border
                                     x:Name="SelectedStrip"
                                     Width="4"
-                                    Margin="8,8,0,8"
                                     HorizontalAlignment="Left"
                                     Background="{StaticResource Brush.Mint}"
-                                    CornerRadius="999"
                                     Visibility="Collapsed" />
                                 <StackPanel
-                                    Margin="20,0,12,0"
+                                    Margin="16,0,12,0"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <Viewbox
-                                        Width="12"
-                                        Height="12"
-                                        Stretch="Uniform">
-                                        <Path
-                                            x:Name="TabIcon"
-                                            Data="{StaticResource Info}"
-                                            Fill="{StaticResource Brush.Text.Muted}" />
-                                    </Viewbox>
+                                    <ContentPresenter />
                                     <TextBlock
-                                        Margin="8,0,0,0"
+                                        Margin="12,0,0,0"
                                         VerticalAlignment="Center"
                                         FontFamily="{TemplateBinding FontFamily}"
                                         FontSize="{TemplateBinding FontSize}"
                                         Foreground="{TemplateBinding Foreground}"
-                                        Text="{TemplateBinding Content}" />
+                                        Text="{TemplateBinding Tag}" />
                                 </StackPanel>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-                                <Setter TargetName="RootBorder" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hover}" />
-                                <Setter TargetName="TabIcon" Property="Fill"
-                                        Value="{StaticResource Brush.Text.Primary}" />
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-                                <Setter TargetName="RootBorder" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hovered}" />
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                                 <Setter TargetName="SelectedStrip" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="TabIcon" Property="Fill" Value="{StaticResource Brush.Mint}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -111,19 +91,13 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
-                        <Ellipse
-                            x:Name="ThumbCircle"
-                            Fill="{StaticResource Brush.Mint}"
-                            Stroke="{StaticResource Brush.Background.Surface}"
-                            StrokeThickness="2" />
+                        <Ellipse x:Name="ThumbCircle" Fill="{StaticResource Brush.Mint}" />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ThumbCircle" Property="Fill"
-                                        Value="{StaticResource Brush.Mint.Muted}" />
+                                <Setter TargetName="ThumbCircle" Property="Fill" Value="{StaticResource Brush.Mint.Muted}" />
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="ThumbCircle" Property="Fill"
-                                        Value="{StaticResource Brush.Mint.Muted}" />
+                                <Setter TargetName="ThumbCircle" Property="Fill" Value="{StaticResource Brush.Mint.Muted}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -137,7 +111,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="RepeatButton">
                         <Border
-                            Height="6"
+                            Height="4"
+                            Margin="0,0,-8,0"
                             Background="{TemplateBinding Background}"
                             CornerRadius="3" />
                     </ControlTemplate>
@@ -216,28 +191,22 @@
                             x:Name="CheckSurface"
                             Width="20"
                             Height="20"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
                             CornerRadius="10">
-                            <Viewbox Margin="4" Stretch="Uniform">
+                            <Viewbox Margin="2,2,4,4" Stretch="Uniform">
                                 <Path
                                     x:Name="CheckGlyph"
-                                    Data="{StaticResource UncheckAll}"
+                                    Data="{StaticResource CheckboxBlankOutline}"
                                     Fill="{StaticResource Brush.Text.Muted}" />
                             </Viewbox>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CheckSurface" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hovered}" />
+                                <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="CheckSurface" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hovered}" />
-                                <Setter TargetName="CheckSurface" Property="BorderBrush"
-                                        Value="{StaticResource Brush.Mint}" />
-                                <Setter TargetName="CheckGlyph" Property="Data" Value="{StaticResource CheckAll}" />
+                                <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                <Setter TargetName="CheckSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                <Setter TargetName="CheckGlyph" Property="Data" Value="{StaticResource CheckboxMarked}" />
                                 <Setter TargetName="CheckGlyph" Property="Fill" Value="{StaticResource Brush.Mint}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -276,16 +245,23 @@
                             <StackPanel Orientation="Horizontal">
                                 <Grid Width="10" Height="10">
                                     <Ellipse Fill="{Binding HexCode}" />
-                                    <Viewbox
-                                        Width="7"
-                                        Height="7"
-                                        Stretch="Uniform">
-                                        <Path
-                                            x:Name="DotCloseIcon"
-                                            Data="{StaticResource Close}"
-                                            Fill="{StaticResource Brush.Background.Surface}"
-                                            Opacity="0" />
-                                    </Viewbox>
+                                    <Rectangle
+                                        x:Name="DotCloseIcon"
+                                        Margin="2"
+                                        Fill="{StaticResource Brush.Background.Surface}"
+                                        Opacity="0">
+                                        <Rectangle.OpacityMask>
+                                            <DrawingBrush Stretch="Uniform">
+                                                <DrawingBrush.Drawing>
+                                                    <GeometryDrawing Geometry="{StaticResource Close}">
+                                                        <GeometryDrawing.Brush>
+                                                            <SolidColorBrush Color="Black" />
+                                                        </GeometryDrawing.Brush>
+                                                    </GeometryDrawing>
+                                                </DrawingBrush.Drawing>
+                                            </DrawingBrush>
+                                        </Rectangle.OpacityMask>
+                                    </Rectangle>
                                 </Grid>
                                 <TextBlock
                                     Margin="8,0,0,0"
@@ -296,8 +272,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TagBorder" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hovered}" />
+                                <Setter TargetName="TagBorder" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                                 <Setter TargetName="DotCloseIcon" Property="Opacity" Value="1" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -318,8 +293,8 @@
         </Style>
 
         <Style x:Key="ToggleSwitchStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="50" />
-            <Setter Property="Height" Value="30" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="20" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -329,11 +304,11 @@
                             Background="{StaticResource Brush.Background.Hover}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"
-                            CornerRadius="15">
+                            CornerRadius="10">
                             <Ellipse
                                 x:Name="Thumb"
-                                Width="22"
-                                Height="22"
+                                Width="8"
+                                Height="8"
                                 Margin="4"
                                 HorizontalAlignment="Left"
                                 Fill="{StaticResource Brush.Text.Primary}">
@@ -345,13 +320,14 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Track" Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Setter TargetName="Thumb" Property="Fill" Value="{StaticResource Brush.Background.Surface}" />
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
                                             <DoubleAnimation
                                                 Storyboard.TargetName="ThumbTransform"
                                                 Storyboard.TargetProperty="X"
-                                                To="20"
+                                                To="22"
                                                 Duration="0:0:0.14" />
                                         </Storyboard>
                                     </BeginStoryboard>
@@ -383,8 +359,8 @@
     </c:BasePopup.Resources>
 
     <Grid
-        Width="1180"
-        Height="760"
+        Width="800"
+        Height="450"
         Margin="24,0,24,24">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220" />
@@ -408,272 +384,315 @@
                     TextWrapping="Wrap" />
                 <RadioButton
                     x:Name="BudgetTabButton"
-                    Content="Budget Allocation"
                     GroupName="SettingsTabs"
                     IsChecked="True"
-                    Style="{StaticResource TabButtonStyle}" />
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="Budget Allocation">
+                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <DrawingBrush Stretch="Uniform">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource AccountBalanceWallet}" />
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </RadioButton>
+
                 <RadioButton
                     x:Name="SourcesTabButton"
-                    Content="Spending Sources"
                     GroupName="SettingsTabs"
-                    Style="{StaticResource TabButtonStyle}" />
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="Spending Sources">
+                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <DrawingBrush Stretch="Uniform">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource BookDollar}" />
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </RadioButton>
+
                 <RadioButton
                     x:Name="FixedExpensesTabButton"
-                    Content="Fixed Expenses"
                     GroupName="SettingsTabs"
-                    Style="{StaticResource TabButtonStyle}" />
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="Fixed Expenses">
+                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <DrawingBrush Stretch="Uniform">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource InvoiceLight}" />
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </RadioButton>
+
                 <RadioButton
                     x:Name="GoalsTabButton"
-                    Content="Goals"
                     GroupName="SettingsTabs"
-                    Style="{StaticResource TabButtonStyle}" />
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="Goals">
+                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <DrawingBrush Stretch="Uniform">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource BullseyeSolid}" />
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </RadioButton>
+
                 <RadioButton
                     x:Name="TagsTabButton"
-                    Content="Tags"
                     GroupName="SettingsTabs"
-                    Style="{StaticResource TabButtonStyle}" />
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="Tags">
+                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <DrawingBrush Stretch="Uniform">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource SolidPriceTagAlt}" />
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </RadioButton>
+
                 <RadioButton
                     x:Name="PersonalizationTabButton"
-                    Content="Personalization"
                     GroupName="SettingsTabs"
-                    Style="{StaticResource TabButtonStyle}" />
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="Personalization">
+                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <DrawingBrush Stretch="Uniform">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource AccountCircle}" />
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </RadioButton>
             </StackPanel>
         </Border>
 
         <Grid Grid.Column="2">
-            <Border Style="{StaticResource PanelStyle}"
-                    Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="16"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Budget Allocation" />
-                        <TextBlock
-                            Margin="0,8,0,16"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="11"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="Adjust how the current budget is split between Needs, Wants, and Invest." />
-                        <TextBlock
-                            Margin="0,0,0,12"
-                            FontFamily="{StaticResource Bold}"
-                            Foreground="{StaticResource Brush.Danger}"
-                            Text="{Binding BudgetAllocationErrorMessage}"
-                            Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
 
-                        <Border Style="{StaticResource RowCardStyle}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Needs" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <Button
-                                            Click="OnAllocationAdjustButtonClick"
-                                            Content="-"
-                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                            Style="{StaticResource StepperButtonStyle}"
-                                            Tag="Needs:-1" />
-                                        <TextBlock
-                                            Width="56"
-                                            VerticalAlignment="Center"
-                                            FontFamily="{StaticResource Bold}"
-                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                            Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
-                                            TextAlignment="Center" />
-                                        <Button
-                                            Click="OnAllocationAdjustButtonClick"
-                                            Content="+"
-                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                            Style="{StaticResource StepperButtonStyle}"
-                                            Tag="Needs:+1" />
-                                    </StackPanel>
-                                </Grid>
-                                <Slider
-                                    Grid.Row="1"
-                                    Margin="0,16,0,0"
-                                    IsSnapToTickEnabled="True"
-                                    Maximum="100"
-                                    Minimum="0"
-                                    Style="{StaticResource BudgetSliderStyle}"
-                                    TickFrequency="1"
-                                    Value="{Binding NeedsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock
-                                    Grid.Row="2"
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Right"
-                                    FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="{Binding NeedsAllocationAmountText}" />
-                            </Grid>
-                        </Border>
+                <StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="16"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Budget Allocation" />
+                    <TextBlock
+                        Margin="0,8,0,16"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="Adjust how the current budget is split between Needs, Wants, and Invest." />
 
-                        <Border Style="{StaticResource RowCardStyle}">
+                    <Border Style="{StaticResource RowCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
                             <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Wants" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <Button
-                                            Click="OnAllocationAdjustButtonClick"
-                                            Content="-"
-                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                            Style="{StaticResource StepperButtonStyle}"
-                                            Tag="Wants:-1" />
-                                        <TextBlock
-                                            Width="56"
-                                            VerticalAlignment="Center"
-                                            FontFamily="{StaticResource Bold}"
-                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                            Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
-                                            TextAlignment="Center" />
-                                        <Button
-                                            Click="OnAllocationAdjustButtonClick"
-                                            Content="+"
-                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                            Style="{StaticResource StepperButtonStyle}"
-                                            Tag="Wants:+1" />
-                                    </StackPanel>
-                                </Grid>
-                                <Slider
-                                    Grid.Row="1"
-                                    Margin="0,16,0,0"
-                                    IsSnapToTickEnabled="True"
-                                    Maximum="100"
-                                    Minimum="0"
-                                    Style="{StaticResource BudgetSliderStyle}"
-                                    TickFrequency="1"
-                                    Value="{Binding WantsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <TextBlock
-                                    Grid.Row="2"
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Right"
-                                    FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="{Binding WantsAllocationAmountText}" />
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="14"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Needs" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button
+                                        Click="OnAllocationAdjustButtonClick"
+                                        Content="-"
+                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                        Style="{StaticResource StepperButtonStyle}"
+                                        Tag="Needs:-1" />
+                                    <TextBlock
+                                        Width="56"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
+                                        TextAlignment="Center" />
+                                    <Button
+                                        Click="OnAllocationAdjustButtonClick"
+                                        Content="+"
+                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                        Style="{StaticResource StepperButtonStyle}"
+                                        Tag="Needs:+1" />
+                                </StackPanel>
                             </Grid>
-                        </Border>
+                            <Slider
+                                Grid.Row="1"
+                                IsSnapToTickEnabled="True"
+                                Maximum="100"
+                                Minimum="0"
+                                Style="{StaticResource BudgetSliderStyle}"
+                                TickFrequency="1"
+                                Value="{Binding NeedsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock
+                                Grid.Row="2"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="{Binding NeedsAllocationAmountText}" />
+                        </Grid>
+                    </Border>
 
-                        <Border Style="{StaticResource RowCardStyle}">
+                    <Border Style="{StaticResource RowCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
                             <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Invest" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <Button
-                                            Click="OnAllocationAdjustButtonClick"
-                                            Content="-"
-                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                            Style="{StaticResource StepperButtonStyle}"
-                                            Tag="Invest:-1" />
-                                        <TextBlock
-                                            Width="56"
-                                            VerticalAlignment="Center"
-                                            FontFamily="{StaticResource Bold}"
-                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                            Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
-                                            TextAlignment="Center" />
-                                        <Button
-                                            Click="OnAllocationAdjustButtonClick"
-                                            Content="+"
-                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                            Style="{StaticResource StepperButtonStyle}"
-                                            Tag="Invest:+1" />
-                                    </StackPanel>
-                                </Grid>
-                                <Slider
-                                    Grid.Row="1"
-                                    Margin="0,16,0,0"
-                                    IsSnapToTickEnabled="True"
-                                    Maximum="100"
-                                    Minimum="0"
-                                    Style="{StaticResource BudgetSliderStyle}"
-                                    TickFrequency="1"
-                                    Value="{Binding InvestAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <TextBlock
-                                    Grid.Row="2"
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Right"
-                                    FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="{Binding InvestAllocationAmountText}" />
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="14"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Wants" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button
+                                        Click="OnAllocationAdjustButtonClick"
+                                        Content="-"
+                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                        Style="{StaticResource StepperButtonStyle}"
+                                        Tag="Wants:-1" />
+                                    <TextBlock
+                                        Width="56"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
+                                        TextAlignment="Center" />
+                                    <Button
+                                        Click="OnAllocationAdjustButtonClick"
+                                        Content="+"
+                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                        Style="{StaticResource StepperButtonStyle}"
+                                        Tag="Wants:+1" />
+                                </StackPanel>
                             </Grid>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            <Slider
+                                Grid.Row="1"
+                                IsSnapToTickEnabled="True"
+                                Maximum="100"
+                                Minimum="0"
+                                Style="{StaticResource BudgetSliderStyle}"
+                                TickFrequency="1"
+                                Value="{Binding WantsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock
+                                Grid.Row="2"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="{Binding WantsAllocationAmountText}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource RowCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="14"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Invest" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button
+                                        Click="OnAllocationAdjustButtonClick"
+                                        Content="-"
+                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                        Style="{StaticResource StepperButtonStyle}"
+                                        Tag="Invest:-1" />
+                                    <TextBlock
+                                        Width="56"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
+                                        TextAlignment="Center" />
+                                    <Button
+                                        Click="OnAllocationAdjustButtonClick"
+                                        Content="+"
+                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                        Style="{StaticResource StepperButtonStyle}"
+                                        Tag="Invest:+1" />
+                                </StackPanel>
+                            </Grid>
+                            <Slider
+                                Grid.Row="1"
+                                IsSnapToTickEnabled="True"
+                                Maximum="100"
+                                Minimum="0"
+                                Style="{StaticResource BudgetSliderStyle}"
+                                TickFrequency="1"
+                                Value="{Binding InvestAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock
+                                Grid.Row="2"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="{Binding InvestAllocationAmountText}" />
+                        </Grid>
+                    </Border>
+
+                    <TextBlock
+                        Margin="0,0,0,12"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Danger}"
+                        Text="{Binding BudgetAllocationErrorMessage}"
+                        Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </StackPanel>
             </Border>
 
-            <Border Style="{StaticResource PanelStyle}"
-                    Visibility="{Binding IsChecked, ElementName=SourcesTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=SourcesTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                        <c:BalloonButton
-                            ButtonIcon="{StaticResource CheckAll}"
-                            Click="OnChecksToggleClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Tag="SpendingSources:EnableChecks"
-                            ToolTip="Enable selection"
-                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                        <c:BalloonButton
-                            ButtonIcon="{StaticResource UncheckAll}"
-                            Click="OnChecksToggleClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Tag="SpendingSources:DisableChecks"
-                            ToolTip="Disable selection"
-                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource CircleMinusSolid}"
                             Click="OnBatchActionClick"
@@ -711,6 +730,20 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Enable"
                             ToolTip="Enable selected"
+                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource EnableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:EnableChecks"
+                            ToolTip="Enable selection"
+                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource DisableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:DisableChecks"
+                            ToolTip="Disable selection"
                             Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource PlusSolid}"
@@ -765,28 +798,22 @@
                                                 VerticalAlignment="Center"
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}">
-                                                <Run
-                                                    Text="{Binding DataContext.SelectedCurrencySymbol, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}}" />
-                                                <Run
-                                                    Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                                                <Run Text="{Binding DataContext.SelectedCurrencySymbol, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}}" />
+                                                <Run Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                                             </TextBlock>
                                             <StackPanel
                                                 Grid.Column="3"
                                                 Margin="10,0,0,0"
                                                 VerticalAlignment="Center"
                                                 Orientation="Horizontal">
-                                                <Border Style="{StaticResource StateIconBadgeStyle}"
-                                                        Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
                                                     <Viewbox Margin="6" Stretch="Uniform">
-                                                        <Path Data="{StaticResource EyeOff}"
-                                                              Fill="{StaticResource Brush.Warning}" />
+                                                        <Path Data="{StaticResource EyeOff}" Fill="{StaticResource Brush.Warning}" />
                                                     </Viewbox>
                                                 </Border>
-                                                <Border Style="{StaticResource StateIconBadgeStyle}"
-                                                        Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                                <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                                     <Viewbox Margin="6" Stretch="Uniform">
-                                                        <Path Data="{StaticResource LightningSlashFill}"
-                                                              Fill="{StaticResource Brush.Danger}" />
+                                                        <Path Data="{StaticResource LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
                                                     </Viewbox>
                                                 </Border>
                                             </StackPanel>
@@ -841,10 +868,8 @@
                                     </Border>
                                     <DataTemplate.Triggers>
                                         <Trigger SourceName="ItemRoot" Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ItemRoot" Property="Background"
-                                                    Value="{StaticResource Brush.Background.Hovered}" />
-                                            <Setter TargetName="ItemRoot" Property="BorderBrush"
-                                                    Value="{StaticResource Brush.Border.Subtle}" />
+                                            <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                            <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
                                             <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
                                             <Setter TargetName="RowActions" Property="Opacity" Value="1" />
                                             <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="True" />
@@ -857,28 +882,13 @@
                 </Grid>
             </Border>
 
-            <Border Style="{StaticResource PanelStyle}"
-                    Visibility="{Binding IsChecked, ElementName=FixedExpensesTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=FixedExpensesTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                        <c:BalloonButton
-                            ButtonIcon="{StaticResource CheckAll}"
-                            Click="OnChecksToggleClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Tag="FixedExpenses:EnableChecks"
-                            ToolTip="Enable selection"
-                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                        <c:BalloonButton
-                            ButtonIcon="{StaticResource UncheckAll}"
-                            Click="OnChecksToggleClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Tag="FixedExpenses:DisableChecks"
-                            ToolTip="Disable selection"
-                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource CircleMinusSolid}"
                             Click="OnBatchActionClick"
@@ -916,6 +926,20 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Enable"
                             ToolTip="Enable selected"
+                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource EnableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="FixedExpenses:EnableChecks"
+                            ToolTip="Enable selection"
+                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource DisableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="FixedExpenses:DisableChecks"
+                            ToolTip="Disable selection"
                             Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource PlusSolid}"
@@ -972,10 +996,8 @@
                                                     HorizontalAlignment="Right"
                                                     FontFamily="{StaticResource Bold}"
                                                     Foreground="{StaticResource Brush.Text.Primary}">
-                                                    <Run
-                                                        Text="{Binding DataContext.SelectedCurrencySymbol, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}}" />
-                                                    <Run
-                                                        Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}" />
+                                                    <Run Text="{Binding DataContext.SelectedCurrencySymbol, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}}" />
+                                                    <Run Text="{Binding Amount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                                                 </TextBlock>
                                                 <TextBlock
                                                     Margin="0,5,0,0"
@@ -989,18 +1011,14 @@
                                                 Margin="10,0,0,0"
                                                 VerticalAlignment="Center"
                                                 Orientation="Horizontal">
-                                                <Border Style="{StaticResource StateIconBadgeStyle}"
-                                                        Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
                                                     <Viewbox Margin="6" Stretch="Uniform">
-                                                        <Path Data="{StaticResource EyeOff}"
-                                                              Fill="{StaticResource Brush.Warning}" />
+                                                        <Path Data="{StaticResource EyeOff}" Fill="{StaticResource Brush.Warning}" />
                                                     </Viewbox>
                                                 </Border>
-                                                <Border Style="{StaticResource StateIconBadgeStyle}"
-                                                        Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                                <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                                     <Viewbox Margin="6" Stretch="Uniform">
-                                                        <Path Data="{StaticResource LightningSlashFill}"
-                                                              Fill="{StaticResource Brush.Danger}" />
+                                                        <Path Data="{StaticResource LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
                                                     </Viewbox>
                                                 </Border>
                                             </StackPanel>
@@ -1055,10 +1073,8 @@
                                     </Border>
                                     <DataTemplate.Triggers>
                                         <Trigger SourceName="ItemRoot" Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ItemRoot" Property="Background"
-                                                    Value="{StaticResource Brush.Background.Hovered}" />
-                                            <Setter TargetName="ItemRoot" Property="BorderBrush"
-                                                    Value="{StaticResource Brush.Border.Subtle}" />
+                                            <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                            <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
                                             <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
                                             <Setter TargetName="RowActions" Property="Opacity" Value="1" />
                                             <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="True" />
@@ -1071,28 +1087,13 @@
                 </Grid>
             </Border>
 
-            <Border Style="{StaticResource PanelStyle}"
-                    Visibility="{Binding IsChecked, ElementName=GoalsTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=GoalsTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                        <c:BalloonButton
-                            ButtonIcon="{StaticResource CheckAll}"
-                            Click="OnChecksToggleClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Tag="Goals:EnableChecks"
-                            ToolTip="Enable selection"
-                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                        <c:BalloonButton
-                            ButtonIcon="{StaticResource UncheckAll}"
-                            Click="OnChecksToggleClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Tag="Goals:DisableChecks"
-                            ToolTip="Disable selection"
-                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource CircleMinusSolid}"
                             Click="OnBatchActionClick"
@@ -1130,6 +1131,20 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Enable"
                             ToolTip="Enable selected"
+                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource EnableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="Goals:EnableChecks"
+                            ToolTip="Enable selection"
+                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource DisableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="Goals:DisableChecks"
+                            ToolTip="Disable selection"
                             Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource PlusSolid}"
@@ -1192,10 +1207,8 @@
                                                     HorizontalAlignment="Right"
                                                     FontFamily="{StaticResource Medium}"
                                                     Foreground="{StaticResource Brush.Text.Muted}">
-                                                    <Run
-                                                        Text="{Binding DataContext.SelectedCurrencySymbol, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}}" />
-                                                    <Run
-                                                        Text="{Binding CurrentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                                                    <Run Text="{Binding DataContext.SelectedCurrencySymbol, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}}" />
+                                                    <Run Text="{Binding CurrentAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                                                 </TextBlock>
                                             </StackPanel>
                                             <StackPanel
@@ -1203,18 +1216,14 @@
                                                 Margin="10,0,0,0"
                                                 VerticalAlignment="Center"
                                                 Orientation="Horizontal">
-                                                <Border Style="{StaticResource StateIconBadgeStyle}"
-                                                        Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
                                                     <Viewbox Margin="6" Stretch="Uniform">
-                                                        <Path Data="{StaticResource EyeOff}"
-                                                              Fill="{StaticResource Brush.Warning}" />
+                                                        <Path Data="{StaticResource EyeOff}" Fill="{StaticResource Brush.Warning}" />
                                                     </Viewbox>
                                                 </Border>
-                                                <Border Style="{StaticResource StateIconBadgeStyle}"
-                                                        Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                                <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                                     <Viewbox Margin="6" Stretch="Uniform">
-                                                        <Path Data="{StaticResource LightningSlashFill}"
-                                                              Fill="{StaticResource Brush.Danger}" />
+                                                        <Path Data="{StaticResource LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
                                                     </Viewbox>
                                                 </Border>
                                             </StackPanel>
@@ -1269,10 +1278,8 @@
                                     </Border>
                                     <DataTemplate.Triggers>
                                         <Trigger SourceName="ItemRoot" Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ItemRoot" Property="Background"
-                                                    Value="{StaticResource Brush.Background.Hovered}" />
-                                            <Setter TargetName="ItemRoot" Property="BorderBrush"
-                                                    Value="{StaticResource Brush.Border.Subtle}" />
+                                            <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                            <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
                                             <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
                                             <Setter TargetName="RowActions" Property="Opacity" Value="1" />
                                             <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="True" />
@@ -1285,8 +1292,7 @@
                 </Grid>
             </Border>
 
-            <Border Style="{StaticResource PanelStyle}"
-                    Visibility="{Binding IsChecked, ElementName=TagsTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=TagsTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -1325,8 +1331,7 @@
                 </StackPanel>
             </Border>
 
-            <Border Style="{StaticResource PanelStyle}"
-                    Visibility="{Binding IsChecked, ElementName=PersonalizationTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=PersonalizationTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock
@@ -1416,10 +1421,12 @@
 
                         <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
                             <Button
+                                Width="160"
                                 Click="OnResetAllSettingsClick"
                                 Content="Reset All Settings"
                                 Style="{StaticResource PopupTextButtonStyle}" />
                             <Button
+                                Width="160"
                                 Margin="8,0,0,0"
                                 Click="OnDeleteAllDataClick"
                                 Content="Delete All Data"

@@ -30,7 +30,7 @@ public partial class SettingsPopup : BasePopup
         _allocationRepeatTimer.Tick += OnAllocationRepeatTick;
     }
 
-    protected override async void OnApplyButtonClick()
+    protected override async void OnSaveButtonClick()
     {
         var result = await _viewModel.ApplyConfigurationAsync();
         if (!result.IsSuccess)

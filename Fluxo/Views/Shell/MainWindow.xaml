@@ -60,8 +60,7 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="12">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="Center" />
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -74,6 +73,27 @@
                     <Setter Property="Opacity" Value="0.45" />
                     <Setter Property="Cursor" Value="Arrow" />
                 </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="IncomeSources" TargetType="ListViewItem">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ShowOnUI}" Value="False">
+                    <Setter Property="Margin" Value="0" />
+                </DataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -500,12 +520,10 @@
                                                 Text="{Binding DayName}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground"
-                                                                Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                <Setter Property="Foreground"
-                                                                        Value="{StaticResource Brush.Mint}" />
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
                                                                 <Setter Property="Effect">
                                                                     <Setter.Value>
                                                                         <DropShadowEffect
@@ -530,12 +548,10 @@
                                                 Text="{Binding DayNumber}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground"
-                                                                Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                <Setter Property="Foreground"
-                                                                        Value="{StaticResource Brush.Text.Primary}" />
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
                                                                 <Setter Property="Effect">
                                                                     <Setter.Value>
                                                                         <DropShadowEffect
@@ -564,9 +580,7 @@
                                                         <MultiDataTrigger>
                                                             <MultiDataTrigger.Conditions>
                                                                 <Condition Binding="{Binding IsSelected}" Value="False" />
-                                                                <Condition
-                                                                    Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                                                    Value="True" />
+                                                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True" />
                                                             </MultiDataTrigger.Conditions>
                                                             <MultiDataTrigger.EnterActions>
                                                                 <BeginStoryboard>
@@ -837,11 +851,8 @@
                                     <Style TargetType="icons:PackIconUnicons">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                         <Style.Triggers>
-                                            <DataTrigger
-                                                Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
-                                                Value="True">
-                                                <Setter Property="Foreground"
-                                                        Value="{StaticResource Brush.Text.Primary}" />
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
                                                 <Setter Property="Effect">
                                                     <Setter.Value>
                                                         <DropShadowEffect
@@ -888,11 +899,8 @@
                                     <Style TargetType="icons:PackIconUnicons">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                         <Style.Triggers>
-                                            <DataTrigger
-                                                Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
-                                                Value="True">
-                                                <Setter Property="Foreground"
-                                                        Value="{StaticResource Brush.Text.Primary}" />
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
                                                 <Setter Property="Effect">
                                                     <Setter.Value>
                                                         <DropShadowEffect
@@ -945,8 +953,7 @@
                                 MouseEnter="OnHeaderMenuPopupMouseEnter"
                                 MouseLeave="OnHeaderMenuPopupMouseLeave">
                                 <StackPanel>
-                                    <Button Click="OnQuickAddButtonClick"
-                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button Click="OnQuickAddButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -968,8 +975,7 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnSpendingSourcesButtonClick"
-                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button Click="OnSpendingSourcesButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -991,8 +997,11 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button x:Name="UndoMenuButton" Click="OnUndoButtonClick" IsEnabled="False"
-                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button
+                                        x:Name="UndoMenuButton"
+                                        Click="OnUndoButtonClick"
+                                        IsEnabled="False"
+                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -1014,8 +1023,11 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button x:Name="RedoMenuButton" Click="OnRedoButtonClick" IsEnabled="False"
-                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button
+                                        x:Name="RedoMenuButton"
+                                        Click="OnRedoButtonClick"
+                                        IsEnabled="False"
+                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -1037,8 +1049,7 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnSettingsButtonClick"
-                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button Click="OnSettingsButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -1207,6 +1218,7 @@
                                 Background="Transparent"
                                 BorderBrush="Transparent"
                                 BorderThickness="0"
+                                ItemContainerStyle="{StaticResource IncomeSources}"
                                 ItemsSource="{Binding SpendingSources}"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
@@ -1215,28 +1227,6 @@
                                         <StackPanel Orientation="Horizontal" />
                                     </ItemsPanelTemplate>
                                 </ListView.ItemsPanel>
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="Margin" Value="0,0,8,0" />
-                                        <Setter Property="Padding" Value="0" />
-                                        <Setter Property="Background" Value="Transparent" />
-                                        <Setter Property="BorderThickness" Value="0" />
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListViewItem">
-                                                    <ContentPresenter />
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ShowOnUI}" Value="False">
-                                                <Setter Property="Margin" Value="0" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ListView.ItemContainerStyle>
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <components:IncomeSource />
@@ -1482,8 +1472,7 @@
                                         CornerRadius="12"
                                         Cursor="Hand">
                                         <Border.InputBindings>
-                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}"
-                                                          MouseAction="LeftClick" />
+                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
                                         </Border.InputBindings>
                                         <Border.Style>
                                             <Style TargetType="Border">
@@ -1512,8 +1501,7 @@
                                         CornerRadius="12"
                                         Cursor="Hand">
                                         <Border.InputBindings>
-                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}"
-                                                          MouseAction="LeftClick" />
+                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
                                         </Border.InputBindings>
                                         <Border.Style>
                                             <Style TargetType="Border">
@@ -1700,8 +1688,7 @@
                                         Grid.Row="2"
                                         VerticalScrollBarVisibility="Auto"
                                         Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}"
-                                                      ItemsSource="{Binding Notifications}" />
+                                        <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}" ItemsSource="{Binding Notifications}" />
                                     </ScrollViewer>
                                 </Grid>
                             </Border>
@@ -1749,8 +1736,7 @@
                                         Grid.Row="2"
                                         VerticalScrollBarVisibility="Auto"
                                         Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}"
-                                                      ItemsSource="{Binding SavingGoals}" />
+                                        <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}" ItemsSource="{Binding SavingGoals}" />
                                     </ScrollViewer>
                                 </Grid>
                             </Border>

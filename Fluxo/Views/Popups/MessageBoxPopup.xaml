@@ -30,9 +30,7 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="12">
-                            <ContentPresenter
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center" />
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -93,9 +91,7 @@
                 VerticalAlignment="Top"
                 CornerRadius="24">
                 <Viewbox Margin="12">
-                    <Path
-                        x:Name="MessageIcon"
-                        Stretch="Uniform" />
+                    <Path x:Name="MessageIcon" Stretch="Uniform" />
                 </Viewbox>
             </Border>
 
