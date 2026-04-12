@@ -10,7 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell"
-    Title="MainWindow"
+    Title="Fluxo"
     Width="1600"
     Height="900"
     MinWidth="1600"

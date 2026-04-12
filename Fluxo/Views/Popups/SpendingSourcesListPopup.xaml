@@ -29,8 +29,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -106,7 +105,7 @@
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="18">
-            <c:FadingScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="600">
+            <c:FadingScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
                 <ItemsControl x:Name="SourcesList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -199,18 +198,22 @@
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="{Binding Name}" />
                                             <Border
+                                                Width="12"
+                                                Height="12"
                                                 Margin="8,0,0,0"
-                                                Padding="8,2"
-                                                Background="{StaticResource Brush.Background.Hover}"
-                                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                                BorderThickness="1"
-                                                CornerRadius="999"
                                                 Visibility="{Binding IsDisabled, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                <TextBlock
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="9"
-                                                    Foreground="{StaticResource Brush.Warning}"
-                                                    Text="Hidden" />
+                                                <Viewbox Stretch="Uniform">
+                                                    <Path Data="{StaticResource LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
+                                                </Viewbox>
+                                            </Border>
+                                            <Border
+                                                Width="12"
+                                                Height="12"
+                                                Margin="8,0,0,0"
+                                                Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                                <Viewbox Stretch="Uniform">
+                                                    <Path Data="{StaticResource EyeOff}" Fill="{StaticResource Brush.Warning}" />
+                                                </Viewbox>
                                             </Border>
                                         </StackPanel>
                                         <TextBlock
@@ -228,8 +231,7 @@
                                             FontSize="12"
                                             Foreground="{StaticResource Brush.Text.Primary}">
                                             <Run Text="$" />
-                                            <Run
-                                                Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                                            <Run Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                                         </TextBlock>
                                         <TextBlock
                                             Margin="0,6,0,0"

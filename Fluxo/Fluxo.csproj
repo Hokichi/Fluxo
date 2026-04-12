@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,6 +43,10 @@
     <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-MediumItalic.ttf" />
     <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Regular.ttf" />
     <None Remove="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
