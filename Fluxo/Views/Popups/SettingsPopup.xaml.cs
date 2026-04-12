@@ -95,16 +95,29 @@ public partial class SettingsPopup : BasePopup
         if (parts.Length != 2 || !Enum.TryParse<SettingsBatchAction>(parts[1], out var action))
             return;
 
+        if (!TryParseBatchTarget(parts[0], out var target))
+            return;
+
         if (action == SettingsBatchAction.Delete &&
             FluxoMessageBox.Show(this, "Delete the selected items?", "Settings", MessageBoxButton.YesNo,
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
-        var result = parts[0] switch
+        if (_viewModel.ShouldWarnBeforeApplyingToAll(target, action) &&
+            FluxoMessageBox.Show(this,
+                action == SettingsBatchAction.Hide
+                    ? "This will hide all items in this section. Continue?"
+                    : "This will disable all items in this section. Continue?",
+                "Settings",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        var result = target switch
         {
-            "SpendingSources" => await _viewModel.ExecuteSpendingSourceActionAsync(action),
-            "FixedExpenses" => await _viewModel.ExecuteFixedExpenseActionAsync(action),
-            "Goals" => await _viewModel.ExecuteGoalActionAsync(action),
+            SettingsBatchTarget.SpendingSources => await _viewModel.ExecuteSpendingSourceActionAsync(action),
+            SettingsBatchTarget.FixedExpenses => await _viewModel.ExecuteFixedExpenseActionAsync(action),
+            SettingsBatchTarget.Goals => await _viewModel.ExecuteGoalActionAsync(action),
             _ => SettingsOperationResult.Failure("Unsupported settings action.")
         };
 
@@ -141,6 +154,19 @@ public partial class SettingsPopup : BasePopup
                     _viewModel.ClearSelections(SettingsBatchTarget.Goals);
                 break;
         }
+    }
+
+    private void OnSelectionActionClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag })
+            return;
+
+        var parts = tag.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2 || !TryParseBatchTarget(parts[0], out var target))
+            return;
+
+        var shouldCheck = string.Equals(parts[1], "CheckAll", StringComparison.Ordinal);
+        _viewModel.SetSelections(target, shouldCheck);
     }
 
     private void OnAddPlaceholderClick(object sender, RoutedEventArgs e)
@@ -321,6 +347,19 @@ public partial class SettingsPopup : BasePopup
 
         delta = string.Equals(parts[1], "+1", StringComparison.Ordinal) ? 1 : -1;
         return true;
+    }
+
+    private static bool TryParseBatchTarget(string value, out SettingsBatchTarget target)
+    {
+        target = value switch
+        {
+            "SpendingSources" => SettingsBatchTarget.SpendingSources,
+            "FixedExpenses" => SettingsBatchTarget.FixedExpenses,
+            "Goals" => SettingsBatchTarget.Goals,
+            _ => default
+        };
+
+        return value is "SpendingSources" or "FixedExpenses" or "Goals";
     }
 
     private void ShowMessage(string? message, string title)

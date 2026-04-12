@@ -51,12 +51,55 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
+    <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="FontFamily" Value="{DynamicResource Medium}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border
+                        x:Name="InputRoot"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="12">
+                        <ScrollViewer
+                            x:Name="PART_ContentHost"
+                            Margin="{TemplateBinding Padding}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="InputRoot" Property="Background"
+                                    Value="{DynamicResource Brush.Background.Hovered}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style
         x:Key="PopupTextInputStyle"
-        BasedOn="{StaticResource PopupTextBoxStyle}"
+        BasedOn="{StaticResource RoundedTextInputStyle}"
         TargetType="TextBox">
         <Setter Property="FontSize" Value="13" />
     </Style>
+
+    <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextInputStyle}" />
 
     <Style TargetType="{x:Type c:BasePopup}">
         <Setter Property="Template">

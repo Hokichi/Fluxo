@@ -69,6 +69,32 @@ public partial class SettingsVM : ObservableObject
     public string NeedsAllocationAmountText => BuildAllocationAmountText(NeedsAllocationPercentage);
     public string WantsAllocationAmountText => BuildAllocationAmountText(WantsAllocationPercentage);
     public string InvestAllocationAmountText => BuildAllocationAmountText(InvestAllocationPercentage);
+    public bool AreAllSpendingSourcesChecked => SpendingSources.Count > 0 && SpendingSources.All(item => item.IsChecked);
+    public bool AreAllFixedExpensesChecked => FixedExpenses.Count > 0 && FixedExpenses.All(item => item.IsChecked);
+    public bool AreAllGoalsChecked => SavingGoals.Count > 0 && SavingGoals.All(item => item.IsChecked);
+    public bool ShouldShowSpendingSourceHideAction =>
+        IsSpendingSourceChecksEnabled && ShouldShowHideAction(SpendingSources);
+
+    public bool ShouldShowSpendingSourceDisableAction =>
+        IsSpendingSourceChecksEnabled && ShouldShowDisableAction(SpendingSources);
+
+    public bool ShouldShowFixedExpenseHideAction =>
+        IsFixedExpenseChecksEnabled && ShouldShowHideAction(FixedExpenses);
+
+    public bool ShouldShowFixedExpenseDisableAction =>
+        IsFixedExpenseChecksEnabled && ShouldShowDisableAction(FixedExpenses);
+
+    public bool ShouldShowGoalHideAction =>
+        IsGoalChecksEnabled && ShouldShowHideAction(SavingGoals);
+
+    public bool ShouldShowGoalDisableAction =>
+        IsGoalChecksEnabled && ShouldShowDisableAction(SavingGoals);
+    public bool ShowSpendingSourceCheckAllButton => IsSpendingSourceChecksEnabled && !AreAllSpendingSourcesChecked;
+    public bool ShowSpendingSourceUncheckAllButton => IsSpendingSourceChecksEnabled && AreAllSpendingSourcesChecked;
+    public bool ShowFixedExpenseCheckAllButton => IsFixedExpenseChecksEnabled && !AreAllFixedExpensesChecked;
+    public bool ShowFixedExpenseUncheckAllButton => IsFixedExpenseChecksEnabled && AreAllFixedExpensesChecked;
+    public bool ShowGoalCheckAllButton => IsGoalChecksEnabled && !AreAllGoalsChecked;
+    public bool ShowGoalUncheckAllButton => IsGoalChecksEnabled && AreAllGoalsChecked;
 
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
@@ -92,6 +118,21 @@ public partial class SettingsVM : ObservableObject
     partial void OnPreferredAppNameChanged(string value)
     {
         OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+    }
+
+    partial void OnIsSpendingSourceChecksEnabledChanged(bool value)
+    {
+        OnSelectionStateChanged();
+    }
+
+    partial void OnIsFixedExpenseChecksEnabledChanged(bool value)
+    {
+        OnSelectionStateChanged();
+    }
+
+    partial void OnIsGoalChecksEnabledChanged(bool value)
+    {
+        OnSelectionStateChanged();
     }
 
     partial void OnSelectedCurrencyCodeChanged(string value)
@@ -165,6 +206,9 @@ public partial class SettingsVM : ObservableObject
         IsSpendingSourceChecksEnabled = false;
         IsFixedExpenseChecksEnabled = false;
         IsGoalChecksEnabled = false;
+        AttachSelectableItemHandlers(SpendingSources);
+        AttachSelectableItemHandlers(FixedExpenses);
+        AttachSelectableItemHandlers(SavingGoals);
         ValidateBudgetAllocation();
         OnPropertyChanged(nameof(TotalBudgetAmount));
         OnPropertyChanged(nameof(SelectedCurrencySymbol));
@@ -172,6 +216,7 @@ public partial class SettingsVM : ObservableObject
         OnPropertyChanged(nameof(WantsAllocationAmountText));
         OnPropertyChanged(nameof(InvestAllocationAmountText));
         OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+        OnSelectionStateChanged();
     }
 
     public void IncrementAllocation(BudgetAllocationSegment segment, int delta)
@@ -265,8 +310,26 @@ public partial class SettingsVM : ObservableObject
 
     public void ClearSelections(SettingsBatchTarget target)
     {
+        SetSelections(target, false);
+    }
+
+    public void SetSelections(SettingsBatchTarget target, bool isChecked)
+    {
         foreach (var item in GetSelectableItems(target))
-            item.IsChecked = false;
+            item.IsChecked = isChecked;
+    }
+
+    public bool ShouldWarnBeforeApplyingToAll(SettingsBatchTarget target, SettingsBatchAction action)
+    {
+        if (action is not (SettingsBatchAction.Hide or SettingsBatchAction.Disable))
+            return false;
+
+        var selectableItems = GetSelectableItems(target).ToArray();
+        if (selectableItems.Length == 0)
+            return false;
+
+        var selectedCount = selectableItems.Count(item => item.IsChecked);
+        return selectedCount == selectableItems.Length;
     }
 
     public async Task<SettingsOperationResult> ExecuteSpendingSourceActionAsync(
@@ -970,6 +1033,68 @@ public partial class SettingsVM : ObservableObject
             _ => []
         };
     }
+
+    private void AttachSelectableItemHandlers<T>(IEnumerable<T> items)
+        where T : ISettingsSelectableItem, INotifyPropertyChanged
+    {
+        foreach (var item in items)
+        {
+            item.PropertyChanged -= OnSelectableItemPropertyChanged;
+            item.PropertyChanged += OnSelectableItemPropertyChanged;
+        }
+    }
+
+    private void OnSelectableItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ISettingsSelectableItem.IsChecked))
+            OnSelectionStateChanged();
+    }
+
+    private void OnSelectionStateChanged()
+    {
+        OnPropertyChanged(nameof(AreAllSpendingSourcesChecked));
+        OnPropertyChanged(nameof(AreAllFixedExpensesChecked));
+        OnPropertyChanged(nameof(AreAllGoalsChecked));
+        OnPropertyChanged(nameof(ShouldShowSpendingSourceHideAction));
+        OnPropertyChanged(nameof(ShouldShowSpendingSourceDisableAction));
+        OnPropertyChanged(nameof(ShouldShowFixedExpenseHideAction));
+        OnPropertyChanged(nameof(ShouldShowFixedExpenseDisableAction));
+        OnPropertyChanged(nameof(ShouldShowGoalHideAction));
+        OnPropertyChanged(nameof(ShouldShowGoalDisableAction));
+        OnPropertyChanged(nameof(ShowSpendingSourceCheckAllButton));
+        OnPropertyChanged(nameof(ShowSpendingSourceUncheckAllButton));
+        OnPropertyChanged(nameof(ShowFixedExpenseCheckAllButton));
+        OnPropertyChanged(nameof(ShowFixedExpenseUncheckAllButton));
+        OnPropertyChanged(nameof(ShowGoalCheckAllButton));
+        OnPropertyChanged(nameof(ShowGoalUncheckAllButton));
+    }
+
+    private static bool ShouldShowHideAction<T>(IReadOnlyCollection<T> items)
+        where T : ISettingsSelectableItem
+    {
+        if (items.Count == 0)
+            return true;
+
+        var scopedItems = GetScopedItems(items);
+        return scopedItems.Any(item => !item.IsHidden);
+    }
+
+    private static bool ShouldShowDisableAction<T>(IReadOnlyCollection<T> items)
+        where T : ISettingsSelectableItem
+    {
+        if (items.Count == 0)
+            return true;
+
+        var scopedItems = GetScopedItems(items);
+        return scopedItems.Any(item => item.IsEnabled);
+    }
+
+    private static IReadOnlyList<T> GetScopedItems<T>(IReadOnlyCollection<T> items)
+        where T : ISettingsSelectableItem
+    {
+        var selectedItems = items.Where(item => item.IsChecked).ToArray();
+        return selectedItems.Length > 0 ? selectedItems : items.ToArray();
+    }
 }
 
 public enum BudgetAllocationSegment
@@ -998,6 +1123,8 @@ public enum SettingsBatchTarget
 public interface ISettingsSelectableItem
 {
     bool IsChecked { get; set; }
+    bool IsHidden { get; }
+    bool IsEnabled { get; }
 }
 
 public readonly record struct BudgetAllocationSnapshot(int Needs, int Wants, int Invest);

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace Fluxo.ViewModels.Popups;
 
@@ -7,7 +8,7 @@ public partial class AddTagVM : ObservableObject
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _selectedColorHex = "#3FE0A1";
 
-    public IReadOnlyList<TagColorOptionVM> ColorOptions { get; } =
+    public ObservableCollection<TagColorOptionVM> ColorOptions { get; } =
     [
         new("Mint", "#3FE0A1"),
         new("Ocean", "#4DA3FF"),
@@ -22,6 +23,25 @@ public partial class AddTagVM : ObservableObject
         new("Slate", "#7C8796"),
         new("Teal", "#14B8A6")
     ];
+
+    public void AddCustomColorToFront(string hexCode)
+    {
+        var normalized = NormalizeHex(hexCode);
+        var existingMatch = ColorOptions.FirstOrDefault(option =>
+            string.Equals(option.HexCode, normalized, StringComparison.OrdinalIgnoreCase));
+        if (existingMatch is not null)
+            ColorOptions.Remove(existingMatch);
+
+        ColorOptions.Insert(0, new TagColorOptionVM("Custom", normalized));
+        ColorOptions.RemoveAt(ColorOptions.Count - 1);
+        SelectedColorHex = normalized;
+    }
+
+    private static string NormalizeHex(string value)
+    {
+        var normalized = (value ?? string.Empty).Trim().TrimStart('#').ToUpperInvariant();
+        return normalized.Length == 6 ? $"#{normalized}" : "#3FE0A1";
+    }
 }
 
 public sealed record TagColorOptionVM(string Name, string HexCode);

@@ -198,7 +198,7 @@
                             <TextBox
                                 x:Name="ExpenseNameTextBox"
                                 IsReadOnly="{Binding AreFieldsReadOnly}"
-                                Style="{StaticResource PopupTextInputStyle}"
+                                Style="{StaticResource PopupTextBoxStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         </Border>
                     </StackPanel>

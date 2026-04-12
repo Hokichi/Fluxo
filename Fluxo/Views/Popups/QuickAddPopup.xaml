@@ -238,7 +238,7 @@
                             <Border Style="{StaticResource PopupFieldBorderStyle}">
                                 <TextBox
                                     x:Name="ExpenseNameTextBox"
-                                    Style="{StaticResource PopupTextInputStyle}"
+                                    Style="{StaticResource PopupTextBoxStyle}"
                                     Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </Border>
                         </StackPanel>
@@ -297,7 +297,7 @@
                             <Border Style="{StaticResource PopupFieldBorderStyle}">
                                 <TextBox
                                     x:Name="IncomeNameTextBox"
-                                    Style="{StaticResource PopupTextInputStyle}"
+                                    Style="{StaticResource PopupTextBoxStyle}"
                                     Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </Border>
                         </StackPanel>

@@ -714,7 +714,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Unhide"
                             ToolTip="Unhide selected"
-                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowSpendingSourceHideAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningSlashFill}"
                             Click="OnBatchActionClick"
@@ -722,7 +722,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Disable"
                             ToolTip="Disable selected"
-                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowSpendingSourceDisableAction, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningFill}"
                             Click="OnBatchActionClick"
@@ -730,7 +730,21 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Enable"
                             ToolTip="Enable selected"
-                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowSpendingSourceDisableAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource CheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:CheckAll"
+                            ToolTip="Check all"
+                            Visibility="{Binding ShowSpendingSourceCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource UncheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:UncheckAll"
+                            ToolTip="Uncheck all"
+                            Visibility="{Binding ShowSpendingSourceUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource EnableChecks}"
                             Click="OnChecksToggleClick"
@@ -770,13 +784,14 @@
                                         CornerRadius="14">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="34" />
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <CheckBox
+                                                Margin="0,0,12,0"
                                                 VerticalAlignment="Center"
                                                 IsChecked="{Binding IsChecked, Mode=TwoWay}"
                                                 Style="{StaticResource ItemCheckBoxStyle}"
@@ -903,14 +918,14 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Hide"
                             ToolTip="Hide selected"
-                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowFixedExpenseHideAction, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource Eye}"
                             Click="OnBatchActionClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Unhide"
                             ToolTip="Unhide selected"
-                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowFixedExpenseHideAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningSlashFill}"
                             Click="OnBatchActionClick"
@@ -918,7 +933,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Disable"
                             ToolTip="Disable selected"
-                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowFixedExpenseDisableAction, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningFill}"
                             Click="OnBatchActionClick"
@@ -926,7 +941,21 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Enable"
                             ToolTip="Enable selected"
-                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowFixedExpenseDisableAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource CheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="FixedExpenses:CheckAll"
+                            ToolTip="Check all"
+                            Visibility="{Binding ShowFixedExpenseCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource UncheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="FixedExpenses:UncheckAll"
+                            ToolTip="Uncheck all"
+                            Visibility="{Binding ShowFixedExpenseUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource EnableChecks}"
                             Click="OnChecksToggleClick"
@@ -966,13 +995,14 @@
                                         CornerRadius="14">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="34" />
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <CheckBox
+                                                Margin="0,0,12,0"
                                                 VerticalAlignment="Center"
                                                 IsChecked="{Binding IsChecked, Mode=TwoWay}"
                                                 Style="{StaticResource ItemCheckBoxStyle}"
@@ -1108,14 +1138,14 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Hide"
                             ToolTip="Hide selected"
-                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowGoalHideAction, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource Eye}"
                             Click="OnBatchActionClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Unhide"
                             ToolTip="Unhide selected"
-                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowGoalHideAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningSlashFill}"
                             Click="OnBatchActionClick"
@@ -1123,7 +1153,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Disable"
                             ToolTip="Disable selected"
-                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowGoalDisableAction, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningFill}"
                             Click="OnBatchActionClick"
@@ -1131,7 +1161,21 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Enable"
                             ToolTip="Enable selected"
-                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShouldShowGoalDisableAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource CheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="Goals:CheckAll"
+                            ToolTip="Check all"
+                            Visibility="{Binding ShowGoalCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <c:BalloonButton
+                            ButtonIcon="{StaticResource UncheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="Goals:UncheckAll"
+                            ToolTip="Uncheck all"
+                            Visibility="{Binding ShowGoalUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource EnableChecks}"
                             Click="OnChecksToggleClick"
@@ -1171,13 +1215,14 @@
                                         CornerRadius="14">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="34" />
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="160" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <CheckBox
+                                                Margin="0,0,12,0"
                                                 VerticalAlignment="Center"
                                                 IsChecked="{Binding IsChecked, Mode=TwoWay}"
                                                 Style="{StaticResource ItemCheckBoxStyle}"

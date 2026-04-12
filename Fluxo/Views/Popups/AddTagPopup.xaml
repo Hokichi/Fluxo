@@ -21,7 +21,10 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        <Style x:Key="FieldTextBoxStyle" BasedOn="{StaticResource PopupTextInputStyle}" TargetType="TextBox">
+        <Style
+            x:Key="FieldTextBoxStyle"
+            BasedOn="{StaticResource PopupTextInputStyle}"
+            TargetType="TextBox">
             <Setter Property="Padding" Value="12,10" />
             <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
@@ -58,12 +61,10 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ColorChip" Property="BorderBrush"
-                                                    Value="{StaticResource Brush.Text.Primary}" />
+                                            <Setter TargetName="ColorChip" Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="ColorChip" Property="BorderBrush"
-                                                    Value="{StaticResource Brush.Text.Primary}" />
+                                            <Setter TargetName="ColorChip" Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
                                             <Setter TargetName="ColorChip" Property="BorderThickness" Value="2" />
                                             <Setter TargetName="TickPath" Property="Opacity" Value="1" />
                                         </Trigger>
@@ -79,6 +80,42 @@
                     <ItemsPanelTemplate>
                         <WrapPanel />
                     </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CustomColorButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="2,0,0,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid
+                            Width="30"
+                            Height="30"
+                            Background="Transparent">
+                            <Ellipse
+                                Stroke="{TemplateBinding BorderBrush}"
+                                StrokeDashArray="2,2"
+                                StrokeThickness="{TemplateBinding BorderThickness}" />
+                            <Viewbox Margin="9" Stretch="Uniform">
+                                <Path
+                                    x:Name="Plus"
+                                    Data="{StaticResource PlusSolid}"
+                                    Fill="{StaticResource Brush.Text.Muted}" />
+                            </Viewbox>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
+                                <Setter TargetName="Plus" Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -109,11 +146,24 @@
                     Margin="0,14,0,8"
                     Style="{StaticResource FieldLabelStyle}"
                     Text="Color" />
-                <ListBox
-                    ItemsSource="{Binding ColorOptions}"
-                    SelectedValue="{Binding SelectedColorHex, Mode=TwoWay}"
-                    SelectedValuePath="HexCode"
-                    Style="{StaticResource ColorSelectorListBoxStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ListBox
+                        Grid.Column="0"
+                        ItemsSource="{Binding ColorOptions}"
+                        SelectedValue="{Binding SelectedColorHex, Mode=TwoWay}"
+                        SelectedValuePath="HexCode"
+                        Style="{StaticResource ColorSelectorListBoxStyle}" />
+                    <Button
+                        Grid.Column="1"
+                        VerticalAlignment="Top"
+                        Click="OnAddCustomColorClick"
+                        Style="{StaticResource CustomColorButtonStyle}"
+                        ToolTip="Custom color" />
+                </Grid>
             </StackPanel>
         </Border>
     </Grid>

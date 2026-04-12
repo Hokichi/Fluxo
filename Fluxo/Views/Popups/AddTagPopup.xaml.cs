@@ -39,4 +39,11 @@ public partial class AddTagPopup : BasePopup
 
         FluxoMessageBox.Show(this, message, "Add New Tag", MessageBoxButton.OK, MessageBoxImage.Information);
     }
+
+    private void OnAddCustomColorClick(object sender, RoutedEventArgs e)
+    {
+        var pickerPopup = new AddTagColorPickerPopup(_viewModel.SelectedColorHex) { Owner = this };
+        if (pickerPopup.ShowDialog() == true && !string.IsNullOrWhiteSpace(pickerPopup.SelectedHexColor))
+            _viewModel.AddCustomColorToFront(pickerPopup.SelectedHexColor);
+    }
 }
