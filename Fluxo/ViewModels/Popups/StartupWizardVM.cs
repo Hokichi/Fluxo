@@ -31,6 +31,9 @@ public partial class StartupWizardVM : ObservableObject
 
         foreach (var option in BuildCurrencyOptions())
             CurrencyOptions.Add(option);
+
+        for (var i = 0; i < TotalSteps; i++)
+            StepDots.Add(new WizardStepDotVM(i, i == 0));
     }
 
     public ObservableCollection<StartupWizardSpendingSourceItemVM> SpendingSources { get; } = [];
@@ -38,18 +41,19 @@ public partial class StartupWizardVM : ObservableObject
     public ObservableCollection<StartupWizardSavingGoalItemVM> SavingGoals { get; } = [];
     public ObservableCollection<SettingsNotificationOptionVM> NotificationSettings { get; } = [];
     public ObservableCollection<SettingsCurrencyOptionVM> CurrencyOptions { get; } = [];
+    public ObservableCollection<WizardStepDotVM> StepDots { get; } = [];
 
-    public int TotalSteps => 7;
-    public bool IsFirstStep => CurrentStepIndex == 0;
+    public int TotalSteps => 8;
+    public bool IsGreetingStep => CurrentStepIndex == 0;
+    public bool IsMiddleStep => CurrentStepIndex >= 1 && CurrentStepIndex <= 6;
     public bool IsFinalStep => CurrentStepIndex == TotalSteps - 1;
-    public bool IsStep1Active => CurrentStepIndex == 0;
-    public bool IsStep2Active => CurrentStepIndex == 1;
-    public bool IsStep3Active => CurrentStepIndex == 2;
-    public bool IsStep4Active => CurrentStepIndex == 3;
-    public bool IsStep5Active => CurrentStepIndex == 4;
-    public bool IsStep6Active => CurrentStepIndex == 5;
-    public bool IsStep7Active => CurrentStepIndex == 6;
-    public string StepCounterText => $"Step {CurrentStepIndex + 1} of {TotalSteps}";
+    public bool IsStep1Active => CurrentStepIndex == 1;
+    public bool IsStep2Active => CurrentStepIndex == 2;
+    public bool IsStep3Active => CurrentStepIndex == 3;
+    public bool IsStep4Active => CurrentStepIndex == 4;
+    public bool IsStep5Active => CurrentStepIndex == 5;
+    public bool IsStep6Active => CurrentStepIndex == 6;
+    public string StepCounterText => $"Step {CurrentStepIndex} of {TotalSteps - 2}";
     public decimal TotalBudgetAmount => ParseSalaryAmount();
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
@@ -61,29 +65,32 @@ public partial class StartupWizardVM : ObservableObject
 
     public string CurrentStepTitle => CurrentStepIndex switch
     {
-        0 => "Tell us about you",
-        1 => "Add spending sources",
-        2 => "Add fixed expenses",
-        3 => "Add savings goals",
-        4 => "Budget allocation",
-        5 => "Notification preferences",
+        0 => "Let's get started",
+        1 => "Tell us about you",
+        2 => "Add spending sources",
+        3 => "Add fixed expenses",
+        4 => "Add savings goals",
+        5 => "Budget allocation",
+        6 => "Notification preferences",
         _ => "Welcome to Fluxo"
     };
 
     public string CurrentStepDescription => CurrentStepIndex switch
     {
-        0 => "Set your display name and optionally add a salary baseline.",
-        1 => "Add the accounts and sources you spend from most often.",
-        2 => "Add recurring fixed expenses so Fluxo can account for them upfront.",
-        3 => "Add a few goals to start tracking progress right away.",
-        4 => "Split your salary into Needs, Wants, and Invest.",
-        5 => "Choose which reminders and alerts Fluxo should show.",
+        0 => "Fluxo helps you take control of your finances with smart budgeting, spending tracking, and savings goals.",
+        1 => "Set your display name and optionally add a salary baseline.",
+        2 => "Add the accounts and sources you spend from most often.",
+        3 => "Add recurring fixed expenses so Fluxo can account for them upfront.",
+        4 => "Add a few goals to start tracking progress right away.",
+        5 => "Split your salary into Needs, Wants, and Invest.",
+        6 => "Choose which reminders and alerts Fluxo should show.",
         _ => $"You're ready, {ResolvedUsername}. Fluxo is all set to open."
     };
 
     partial void OnCurrentStepIndexChanged(int value)
     {
-        OnPropertyChanged(nameof(IsFirstStep));
+        OnPropertyChanged(nameof(IsGreetingStep));
+        OnPropertyChanged(nameof(IsMiddleStep));
         OnPropertyChanged(nameof(IsFinalStep));
         OnPropertyChanged(nameof(IsStep1Active));
         OnPropertyChanged(nameof(IsStep2Active));
@@ -91,10 +98,12 @@ public partial class StartupWizardVM : ObservableObject
         OnPropertyChanged(nameof(IsStep4Active));
         OnPropertyChanged(nameof(IsStep5Active));
         OnPropertyChanged(nameof(IsStep6Active));
-        OnPropertyChanged(nameof(IsStep7Active));
         OnPropertyChanged(nameof(StepCounterText));
         OnPropertyChanged(nameof(CurrentStepTitle));
         OnPropertyChanged(nameof(CurrentStepDescription));
+
+        foreach (var dot in StepDots)
+            dot.IsActive = dot.StepIndex == value;
     }
 
     partial void OnSelectedCurrencyCodeChanged(string value)
@@ -184,14 +193,131 @@ public partial class StartupWizardVM : ObservableObject
         return new AddSpendingSourceVM(_mainViewModel, _unitOfWorkFactory);
     }
 
+    public async Task<AddSpendingSourceVM> CreateEditSpendingSourceViewModelAsync(int id)
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var source = await unitOfWork.SpendingSources.GetByIdAsync(id);
+        if (source is null)
+            return CreateAddSpendingSourceViewModel();
+
+        var vm = new AddSpendingSourceVM(_mainViewModel, _unitOfWorkFactory) { EditingId = source.Id };
+        vm.NameText = source.Name;
+        vm.SelectedSpendingSourceType = source.SpendingSourceType;
+        vm.ShowOnUI = source.ShowOnUI;
+        vm.IsEnabled = source.IsEnabled;
+
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            vm.PrimaryAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
+            vm.SpentAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
+            vm.AccountLimitText = source.AccountLimit.ToString("N2", CultureInfo.InvariantCulture);
+            vm.DueDate = source.DueDate;
+        }
+        else
+        {
+            vm.PrimaryAmountText = source.Balance.ToString("N2", CultureInfo.InvariantCulture);
+        }
+
+        if (source.SpendingSourceType == SpendingSourceType.Saving && source.InterestRate.HasValue)
+            vm.ApyText = source.InterestRate.Value.ToString("N2", CultureInfo.InvariantCulture);
+
+        return vm;
+    }
+
     public AddFixedExpenseVM CreateAddFixedExpenseViewModel()
     {
         return new AddFixedExpenseVM(_mainViewModel, _unitOfWorkFactory);
     }
 
+    public async Task<AddFixedExpenseVM> CreateEditFixedExpenseViewModelAsync(int id)
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var expense = await unitOfWork.Expenses.GetByIdAsync(id);
+        if (expense is null)
+            return CreateAddFixedExpenseViewModel();
+
+        var vm = new AddFixedExpenseVM(_mainViewModel, _unitOfWorkFactory) { EditingId = expense.Id };
+        vm.NameText = expense.Name;
+        vm.AmountText = expense.Amount.ToString("N2", CultureInfo.InvariantCulture);
+        vm.SelectedCategory = expense.ExpenseCategory;
+        vm.DueDate = expense.RecurringDate ?? DateTime.Today;
+        vm.IsActive = expense.IsActive;
+
+        if (expense.SpendingSourceId > 0)
+        {
+            var matchingSource = vm.SpendingSources.FirstOrDefault(s => s.Id == expense.SpendingSourceId);
+            if (matchingSource is not null)
+                vm.SelectedSpendingSource = matchingSource;
+        }
+
+        if (expense.ExpenseTag is not null)
+            vm.TagNameText = expense.ExpenseTag.Name;
+
+        return vm;
+    }
+
     public AddSavingGoalVM CreateAddSavingGoalViewModel()
     {
         return new AddSavingGoalVM(_mainViewModel, _unitOfWorkFactory);
+    }
+
+    public async Task<AddSavingGoalVM> CreateEditSavingGoalViewModelAsync(int id)
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var goal = await unitOfWork.SavingGoals.GetByIdAsync(id);
+        if (goal is null)
+            return CreateAddSavingGoalViewModel();
+
+        return new AddSavingGoalVM(_mainViewModel, _unitOfWorkFactory)
+        {
+            EditingId = goal.Id,
+            NameText = goal.Name,
+            TargetAmountText = goal.TargetAmount.ToString("N2", CultureInfo.InvariantCulture),
+            CurrentAmountText = goal.CurrentAmount.ToString("N2", CultureInfo.InvariantCulture),
+            EndDate = goal.SavingEndDate
+        };
+    }
+
+    public async Task DeleteSpendingSourceAsync(int id)
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var source = await unitOfWork.SpendingSources.GetByIdAsync(id);
+        if (source is not null)
+        {
+            unitOfWork.SpendingSources.Remove(source);
+            await unitOfWork.SaveChangesAsync();
+            await _mainViewModel.ReloadCurrentDataAsync();
+        }
+
+        await RefreshSpendingSourcesAsync();
+    }
+
+    public async Task DeleteFixedExpenseAsync(int id)
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var expense = await unitOfWork.Expenses.GetByIdAsync(id);
+        if (expense is not null)
+        {
+            unitOfWork.Expenses.Remove(expense);
+            await unitOfWork.SaveChangesAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
+        }
+
+        await RefreshFixedExpensesAsync();
+    }
+
+    public async Task DeleteSavingGoalAsync(int id)
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var goal = await unitOfWork.SavingGoals.GetByIdAsync(id);
+        if (goal is not null)
+        {
+            unitOfWork.SavingGoals.Remove(goal);
+            await unitOfWork.SaveChangesAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
+        }
+
+        await RefreshSavingGoalsAsync();
     }
 
     public async Task RefreshCollectionsAsync()
@@ -273,9 +399,9 @@ public partial class StartupWizardVM : ObservableObject
     {
         return CurrentStepIndex switch
         {
-            0 => await SavePersonalizationAsync(),
-            4 => await SaveBudgetAllocationAsync(),
-            5 => await SaveNotificationsAsync(),
+            1 => await SavePersonalizationAsync(),
+            5 => await SaveBudgetAllocationAsync(),
+            6 => await SaveNotificationsAsync(),
             _ => SettingsOperationResult.Success()
         };
     }
@@ -521,5 +647,18 @@ public sealed record StartupWizardSavingGoalItemVM(
         goal.TargetAmount,
         goal.SavingEndDate)
     {
+    }
+}
+
+public sealed partial class WizardStepDotVM : ObservableObject
+{
+    [ObservableProperty] private bool _isActive;
+
+    public int StepIndex { get; }
+
+    public WizardStepDotVM(int stepIndex, bool isActive)
+    {
+        StepIndex = stepIndex;
+        _isActive = isActive;
     }
 }

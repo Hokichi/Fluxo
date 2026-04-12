@@ -26,6 +26,8 @@ public partial class AddSpendingSourceVM : ObservableObject
     [ObservableProperty] private bool _showOnUI = true;
     [ObservableProperty] private string _spentAmountText = string.Empty;
 
+    public int? EditingId { get; init; }
+
     public AddSpendingSourceVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
     {
         _mainViewModel = mainViewModel;
@@ -85,24 +87,45 @@ public partial class AddSpendingSourceVM : ObservableObject
 
             var existingSources = await unitOfWork.SpendingSources.GetAllAsync();
             if (existingSources.Any(source =>
+                    source.Id != (EditingId ?? -1) &&
                     string.Equals(source.Name, input.Name, StringComparison.OrdinalIgnoreCase)))
                 return AddSpendingSourceResult.Failure(
                     $"A spending source named \"{input.Name}\" already exists.");
 
-            var spendingSource = new SpendingSource
-            {
-                Name = input.Name,
-                SpendingSourceType = input.SpendingSourceType,
-                AccountLimit = input.AccountLimit,
-                SpentAmount = input.SpentAmount,
-                Balance = input.Balance,
-                DueDate = input.DueDate,
-                InterestRate = input.InterestRate,
-                ShowOnUI = input.ShowOnUI,
-                IsEnabled = input.IsEnabled
-            };
+            SpendingSource spendingSource;
 
-            await unitOfWork.SpendingSources.AddAsync(spendingSource);
+            if (EditingId.HasValue)
+            {
+                spendingSource = existingSources.FirstOrDefault(s => s.Id == EditingId.Value)
+                                 ?? throw new InvalidOperationException("Spending source not found.");
+                spendingSource.Name = input.Name;
+                spendingSource.SpendingSourceType = input.SpendingSourceType;
+                spendingSource.AccountLimit = input.AccountLimit;
+                spendingSource.SpentAmount = input.SpentAmount;
+                spendingSource.Balance = input.Balance;
+                spendingSource.DueDate = input.DueDate;
+                spendingSource.InterestRate = input.InterestRate;
+                spendingSource.ShowOnUI = input.ShowOnUI;
+                spendingSource.IsEnabled = input.IsEnabled;
+                unitOfWork.SpendingSources.Update(spendingSource);
+            }
+            else
+            {
+                spendingSource = new SpendingSource
+                {
+                    Name = input.Name,
+                    SpendingSourceType = input.SpendingSourceType,
+                    AccountLimit = input.AccountLimit,
+                    SpentAmount = input.SpentAmount,
+                    Balance = input.Balance,
+                    DueDate = input.DueDate,
+                    InterestRate = input.InterestRate,
+                    ShowOnUI = input.ShowOnUI,
+                    IsEnabled = input.IsEnabled
+                };
+                await unitOfWork.SpendingSources.AddAsync(spendingSource);
+            }
+
             await unitOfWork.SaveChangesAsync();
 
             WeakReferenceMessenger.Default.Send(

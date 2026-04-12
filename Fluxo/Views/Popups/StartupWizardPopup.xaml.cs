@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
 
@@ -108,5 +109,74 @@ public partial class StartupWizardPopup : BasePopup
     {
         new AddSavingGoalPopup(_viewModel.CreateAddSavingGoalViewModel()) { Owner = this }.ShowDialog();
         await _viewModel.RefreshSavingGoalsAsync();
+    }
+
+    private async void OnEditSpendingSourceClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int id })
+            return;
+
+        var vm = await _viewModel.CreateEditSpendingSourceViewModelAsync(id);
+        new AddSpendingSourcePopup(vm) { Owner = this }.ShowDialog();
+        await _viewModel.RefreshSpendingSourcesAsync();
+    }
+
+    private async void OnDeleteSpendingSourceClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int id })
+            return;
+
+        var result = FluxoMessageBox.Show(this,
+            "Are you sure you want to delete this spending source?",
+            "Delete Spending Source", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+            await _viewModel.DeleteSpendingSourceAsync(id);
+    }
+
+    private async void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int id })
+            return;
+
+        var vm = await _viewModel.CreateEditFixedExpenseViewModelAsync(id);
+        new AddFixedExpensePopup(vm) { Owner = this }.ShowDialog();
+        await _viewModel.RefreshFixedExpensesAsync();
+    }
+
+    private async void OnDeleteFixedExpenseClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int id })
+            return;
+
+        var result = FluxoMessageBox.Show(this,
+            "Are you sure you want to delete this fixed expense?",
+            "Delete Fixed Expense", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+            await _viewModel.DeleteFixedExpenseAsync(id);
+    }
+
+    private async void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int id })
+            return;
+
+        var vm = await _viewModel.CreateEditSavingGoalViewModelAsync(id);
+        new AddSavingGoalPopup(vm) { Owner = this }.ShowDialog();
+        await _viewModel.RefreshSavingGoalsAsync();
+    }
+
+    private async void OnDeleteSavingGoalClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int id })
+            return;
+
+        var result = FluxoMessageBox.Show(this,
+            "Are you sure you want to delete this saving goal?",
+            "Delete Saving Goal", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+            await _viewModel.DeleteSavingGoalAsync(id);
     }
 }

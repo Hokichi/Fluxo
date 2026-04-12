@@ -17,6 +17,8 @@ public partial class AddSavingGoalVM : ObservableObject
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _targetAmountText = string.Empty;
 
+    public int? EditingId { get; init; }
+
     public AddSavingGoalVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
     {
         _mainViewModel = mainViewModel;
@@ -37,15 +39,30 @@ public partial class AddSavingGoalVM : ObservableObject
         {
             await using var unitOfWork = _unitOfWorkFactory();
 
-            var savingGoal = new SavingGoal
+            if (EditingId.HasValue)
             {
-                Name = input.Name,
-                TargetAmount = input.TargetAmount,
-                CurrentAmount = input.CurrentAmount,
-                SavingEndDate = input.EndDate
-            };
+                var existing = await unitOfWork.SavingGoals.GetByIdAsync(EditingId.Value);
+                if (existing is null)
+                    return AddSavingGoalResult.Failure("Saving goal not found.");
 
-            await unitOfWork.SavingGoals.AddAsync(savingGoal);
+                existing.Name = input.Name;
+                existing.TargetAmount = input.TargetAmount;
+                existing.CurrentAmount = input.CurrentAmount;
+                existing.SavingEndDate = input.EndDate;
+                unitOfWork.SavingGoals.Update(existing);
+            }
+            else
+            {
+                var savingGoal = new SavingGoal
+                {
+                    Name = input.Name,
+                    TargetAmount = input.TargetAmount,
+                    CurrentAmount = input.CurrentAmount,
+                    SavingEndDate = input.EndDate
+                };
+                await unitOfWork.SavingGoals.AddAsync(savingGoal);
+            }
+
             await unitOfWork.SaveChangesAsync();
             await _mainViewModel.ReloadCurrentDataAsync(true);
 

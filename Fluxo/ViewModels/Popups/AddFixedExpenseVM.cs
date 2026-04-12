@@ -25,6 +25,8 @@ public partial class AddFixedExpenseVM : ObservableObject
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private string _tagNameText = "General";
 
+    public int? EditingId { get; init; }
+
     public AddFixedExpenseVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
     {
         _mainViewModel = mainViewModel;
@@ -81,19 +83,37 @@ public partial class AddFixedExpenseVM : ObservableObject
                 await unitOfWork.SaveChangesAsync();
             }
 
-            var expense = new Expense
+            if (EditingId.HasValue)
             {
-                Name = input.Name,
-                Amount = input.Amount,
-                ExpenseKind = ExpenseKind.Fixed,
-                ExpenseCategory = input.Category,
-                RecurringDate = input.DueDate,
-                SpendingSourceId = spendingSource.Id,
-                ExpenseTagId = tag.Id,
-                IsActive = input.IsActive
-            };
+                var existing = await unitOfWork.Expenses.GetByIdAsync(EditingId.Value);
+                if (existing is null)
+                    return AddFixedExpenseResult.Failure("Fixed expense not found.");
 
-            await unitOfWork.Expenses.AddAsync(expense);
+                existing.Name = input.Name;
+                existing.Amount = input.Amount;
+                existing.ExpenseCategory = input.Category;
+                existing.RecurringDate = input.DueDate;
+                existing.SpendingSourceId = spendingSource.Id;
+                existing.ExpenseTagId = tag.Id;
+                existing.IsActive = input.IsActive;
+                unitOfWork.Expenses.Update(existing);
+            }
+            else
+            {
+                var expense = new Expense
+                {
+                    Name = input.Name,
+                    Amount = input.Amount,
+                    ExpenseKind = ExpenseKind.Fixed,
+                    ExpenseCategory = input.Category,
+                    RecurringDate = input.DueDate,
+                    SpendingSourceId = spendingSource.Id,
+                    ExpenseTagId = tag.Id,
+                    IsActive = input.IsActive
+                };
+                await unitOfWork.Expenses.AddAsync(expense);
+            }
+
             await unitOfWork.SaveChangesAsync();
             await _mainViewModel.ReloadCurrentDataAsync(true);
 

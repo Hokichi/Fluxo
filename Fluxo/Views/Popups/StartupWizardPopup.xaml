@@ -15,18 +15,7 @@
             <Setter Property="CornerRadius" Value="18" />
         </Style>
 
-        <Style x:Key="StepPillStyle" TargetType="Border">
-            <Setter Property="Height" Value="34" />
-            <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="Padding" Value="14,0" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="17" />
-        </Style>
-
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Margin" Value="0,0,0,16" />
             <Setter Property="Padding" Value="16" />
             <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
@@ -76,6 +65,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="40" />
             <Setter Property="MinWidth" Value="120" />
@@ -158,6 +148,43 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="SidebarStepStyle" TargetType="Border">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style x:Key="CardActionButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </c:BasePopup.Resources>
 
     <Grid
@@ -165,376 +192,765 @@
         Height="560"
         Margin="24,0,24,24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal">
-            <Border Style="{StaticResource StepPillStyle}">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="{Binding StepCounterText}" />
-            </Border>
-            <Border Style="{StaticResource StepPillStyle}">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Medium}"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="{Binding CurrentStepTitle}" />
-            </Border>
-        </StackPanel>
-
+        <!--  Greeting Page (Step 0)  -->
         <Border
-            Grid.Row="1"
-            Margin="0,16,0,16"
-            Style="{StaticResource PanelStyle}">
+            Style="{StaticResource PanelStyle}"
+            Visibility="{Binding IsGreetingStep, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <StackPanel>
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <Border
+                        Width="84"
+                        Height="84"
+                        HorizontalAlignment="Center"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="42">
+                        <Viewbox Margin="20" Stretch="Uniform">
+                            <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
+                        </Viewbox>
+                    </Border>
                     <TextBlock
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
-                        FontSize="22"
+                        FontSize="28"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="{Binding CurrentStepTitle}" />
                     <TextBlock
-                        Margin="0,8,0,0"
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
                         FontFamily="{StaticResource Medium}"
+                        FontSize="13"
                         Foreground="{StaticResource Brush.Text.Secondary}"
                         Text="{Binding CurrentStepDescription}"
-                        TextWrapping="Wrap" />
+                        TextAlignment="Center"
+                        TextWrapping="Wrap"
+                        MaxWidth="420" />
+                    <TextBlock
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="We'll walk you through a few quick steps to set things up." />
                 </StackPanel>
-
-                <ScrollViewer
-                    Grid.Row="1"
-                    Margin="0,22,0,0"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid Visibility="{Binding IsStep1Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="20" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Username" />
-                                    <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding UsernameText, UpdateSourceTrigger=PropertyChanged}" />
-                                </StackPanel>
-                            </Border>
-                            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Salary (Optional)" />
-                                    <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding SalaryText, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock
-                                        Margin="0,12,0,0"
-                                        FontFamily="{StaticResource Medium}"
-                                        FontSize="11"
-                                        Foreground="{StaticResource Brush.Text.Secondary}"
-                                        Text="This helps Fluxo preview your starting budget allocation." />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-
-                        <StackPanel Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Button Click="OnAddSpendingSourceClick" Style="{StaticResource AddTileButtonStyle}" />
-                            <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding SpendingSources}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <primitives:UniformGrid Columns="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Style="{StaticResource CardStyle}">
-                                            <StackPanel>
-                                                <TextBlock
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="15"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="{Binding Name}" />
-                                                <TextBlock
-                                                    Margin="0,8,0,0"
-                                                    FontFamily="{StaticResource Medium}"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="{Binding TypeLabel}" />
-                                                <TextBlock
-                                                    Margin="0,12,0,0"
-                                                    FontFamily="{StaticResource Bold}"
-                                                    Foreground="{StaticResource Brush.Mint}">
-                                                    <Run Text="{Binding PrimaryAmountLabel}" />
-                                                    <Run Text=": " />
-                                                    <Run Text="{Binding PrimaryAmount, StringFormat={}{0:N2}}" />
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-
-                        <StackPanel Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Button Click="OnAddFixedExpenseClick" Style="{StaticResource AddTileButtonStyle}" />
-                            <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding FixedExpenses}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <primitives:UniformGrid Columns="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Style="{StaticResource CardStyle}">
-                                            <StackPanel>
-                                                <TextBlock
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="15"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="{Binding Name}" />
-                                                <TextBlock
-                                                    Margin="0,8,0,0"
-                                                    FontFamily="{StaticResource Medium}"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}">
-                                                    <Run Text="{Binding CategoryLabel}" />
-                                                    <Run Text=" • " />
-                                                    <Run Text="{Binding SpendingSourceName}" />
-                                                </TextBlock>
-                                                <TextBlock
-                                                    Margin="0,12,0,0"
-                                                    FontFamily="{StaticResource Bold}"
-                                                    Foreground="{StaticResource Brush.Warning}"
-                                                    Text="{Binding Amount, StringFormat={}{0:N2}}" />
-                                                <TextBlock
-                                                    Margin="0,8,0,0"
-                                                    FontFamily="{StaticResource Medium}"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="{Binding DueDate, StringFormat=Due {0:MMM d}}" />
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-
-                        <StackPanel Visibility="{Binding IsStep4Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Button Click="OnAddSavingGoalClick" Style="{StaticResource AddTileButtonStyle}" />
-                            <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding SavingGoals}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <primitives:UniformGrid Columns="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Style="{StaticResource CardStyle}">
-                                            <StackPanel>
-                                                <TextBlock
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="15"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="{Binding Name}" />
-                                                <TextBlock
-                                                    Margin="0,8,0,0"
-                                                    FontFamily="{StaticResource Medium}"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="{Binding SavingEndDate, StringFormat=Target {0:MMM d, yyyy}}" />
-                                                <TextBlock
-                                                    Margin="0,12,0,0"
-                                                    FontFamily="{StaticResource Bold}"
-                                                    Foreground="{StaticResource Brush.Mint}">
-                                                    <Run Text="{Binding CurrentAmount, StringFormat={}{0:N2}}" />
-                                                    <Run Text=" / " />
-                                                    <Run Text="{Binding TargetAmount, StringFormat={}{0:N2}}" />
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-
-                        <StackPanel Visibility="{Binding IsStep5Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Border Style="{StaticResource CardStyle}">
-                                <StackPanel>
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Needs" />
-                                    <Slider
-                                        Margin="0,14,0,0"
-                                        Maximum="100"
-                                        Minimum="0"
-                                        Style="{StaticResource BudgetSliderStyle}"
-                                        TickFrequency="1"
-                                        Value="{Binding NeedsAllocationPercentage, Mode=TwoWay}" />
-                                    <DockPanel Margin="0,8,0,0">
-                                        <TextBlock
-                                            DockPanel.Dock="Left"
-                                            FontFamily="{StaticResource Bold}"
-                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                            Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}" />
-                                        <TextBlock
-                                            HorizontalAlignment="Right"
-                                            FontFamily="{StaticResource Medium}"
-                                            Foreground="{StaticResource Brush.Text.Secondary}"
-                                            Text="{Binding NeedsAllocationAmountText}" />
-                                    </DockPanel>
-                                </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource CardStyle}">
-                                <StackPanel>
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Wants" />
-                                    <Slider
-                                        Margin="0,14,0,0"
-                                        Maximum="100"
-                                        Minimum="0"
-                                        Style="{StaticResource BudgetSliderStyle}"
-                                        TickFrequency="1"
-                                        Value="{Binding WantsAllocationPercentage, Mode=TwoWay}" />
-                                    <DockPanel Margin="0,8,0,0">
-                                        <TextBlock
-                                            DockPanel.Dock="Left"
-                                            FontFamily="{StaticResource Bold}"
-                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                            Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}" />
-                                        <TextBlock
-                                            HorizontalAlignment="Right"
-                                            FontFamily="{StaticResource Medium}"
-                                            Foreground="{StaticResource Brush.Text.Secondary}"
-                                            Text="{Binding WantsAllocationAmountText}" />
-                                    </DockPanel>
-                                </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource CardStyle}">
-                                <StackPanel>
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Invest" />
-                                    <Slider
-                                        Margin="0,14,0,0"
-                                        Maximum="100"
-                                        Minimum="0"
-                                        Style="{StaticResource BudgetSliderStyle}"
-                                        TickFrequency="1"
-                                        Value="{Binding InvestAllocationPercentage, Mode=TwoWay}" />
-                                    <DockPanel Margin="0,8,0,0">
-                                        <TextBlock
-                                            DockPanel.Dock="Left"
-                                            FontFamily="{StaticResource Bold}"
-                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                            Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}" />
-                                        <TextBlock
-                                            HorizontalAlignment="Right"
-                                            FontFamily="{StaticResource Medium}"
-                                            Foreground="{StaticResource Brush.Text.Secondary}"
-                                            Text="{Binding InvestAllocationAmountText}" />
-                                    </DockPanel>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-
-                        <ItemsControl ItemsSource="{Binding NotificationSettings}" Visibility="{Binding IsStep6Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource CardStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock
-                                                    FontFamily="{StaticResource Bold}"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="{Binding Title}" />
-                                                <TextBlock
-                                                    Margin="0,6,0,0"
-                                                    FontFamily="{StaticResource Medium}"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="{Binding Description}"
-                                                    TextWrapping="Wrap" />
-                                            </StackPanel>
-                                            <ToggleButton
-                                                Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                IsChecked="{Binding IsEnabled, Mode=TwoWay}"
-                                                Style="{StaticResource ToggleSwitchStyle}" />
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <Border Style="{StaticResource CardStyle}" Visibility="{Binding IsStep7Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <StackPanel Margin="0,24,0,24" HorizontalAlignment="Center">
-                                <Border
-                                    Width="84"
-                                    Height="84"
-                                    Background="{StaticResource Brush.Background.Surface}"
-                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                    BorderThickness="1"
-                                    CornerRadius="42">
-                                    <Viewbox Margin="20" Stretch="Uniform">
-                                        <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
-                                    </Viewbox>
-                                </Border>
-                                <TextBlock
-                                    Margin="0,18,0,0"
-                                    HorizontalAlignment="Center"
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="28"
-                                    Foreground="{StaticResource Brush.Text.Primary}">
-                                    <Run Text="Welcome to Fluxo, " />
-                                    <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
-                                </TextBlock>
-                                <TextBlock
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Center"
-                                    FontFamily="{StaticResource Medium}"
-                                    FontSize="12"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="Your dashboard, goals, and reminders are ready to go."
-                                    TextAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </ScrollViewer>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2">
+        <!--  Middle Steps (1-6): Sidebar + Content  -->
+        <Grid Visibility="{Binding IsMiddleStep, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Sidebar  -->
+            <Border Style="{StaticResource PanelStyle}">
+                <StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="14"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Setup Steps" />
+                    <TextBlock
+                        Margin="0,6,0,16"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="{Binding StepCounterText}" />
+
+                    <!--  Step 1  -->
+                    <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border.Resources>
+                            <Style TargetType="Border" BasedOn="{StaticResource SidebarStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStep1Active}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Resources>
+                        <Grid>
+                            <Border
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="2"
+                                Visibility="{Binding IsStep1Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Viewbox Width="12" Height="12">
+                                    <Path Data="{StaticResource AccountCircle}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                </Viewbox>
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="About you" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Step 2  -->
+                    <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border.Resources>
+                            <Style TargetType="Border" BasedOn="{StaticResource SidebarStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStep2Active}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Resources>
+                        <Grid>
+                            <Border
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="2"
+                                Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Viewbox Width="12" Height="12">
+                                    <Path Data="{StaticResource BookDollar}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                </Viewbox>
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="Spending sources" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Step 3  -->
+                    <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border.Resources>
+                            <Style TargetType="Border" BasedOn="{StaticResource SidebarStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStep3Active}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Resources>
+                        <Grid>
+                            <Border
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="2"
+                                Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Viewbox Width="12" Height="12">
+                                    <Path Data="{StaticResource InvoiceLight}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                </Viewbox>
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="Fixed expenses" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Step 4  -->
+                    <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border.Resources>
+                            <Style TargetType="Border" BasedOn="{StaticResource SidebarStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStep4Active}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Resources>
+                        <Grid>
+                            <Border
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="2"
+                                Visibility="{Binding IsStep4Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Viewbox Width="12" Height="12">
+                                    <Path Data="{StaticResource BullseyeSolid}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                </Viewbox>
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="Savings goals" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Step 5  -->
+                    <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border.Resources>
+                            <Style TargetType="Border" BasedOn="{StaticResource SidebarStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStep5Active}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Resources>
+                        <Grid>
+                            <Border
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="2"
+                                Visibility="{Binding IsStep5Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Viewbox Width="12" Height="12">
+                                    <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                </Viewbox>
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="Budget allocation" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Step 6  -->
+                    <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border.Resources>
+                            <Style TargetType="Border" BasedOn="{StaticResource SidebarStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStep6Active}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Resources>
+                        <Grid>
+                            <Border
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="2"
+                                Visibility="{Binding IsStep6Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Viewbox Width="12" Height="12">
+                                    <Path Data="{StaticResource RegularBell}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                </Viewbox>
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="Notifications" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  Content Area  -->
+            <Border Grid.Column="2" Style="{StaticResource PanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="22"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding CurrentStepTitle}" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding CurrentStepDescription}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        Grid.Row="1"
+                        Margin="0,22,0,0"
+                        VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <!--  Step 1: Personalization  -->
+                            <Grid Visibility="{Binding IsStep1Active, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Username" />
+                                        <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding UsernameText, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Salary (Optional)" />
+                                        <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding SalaryText, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock
+                                            Margin="0,12,0,0"
+                                            FontFamily="{StaticResource Medium}"
+                                            FontSize="11"
+                                            Foreground="{StaticResource Brush.Text.Secondary}"
+                                            Text="This helps Fluxo preview your starting budget allocation." />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!--  Step 2: Spending Sources  -->
+                            <StackPanel Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Button Click="OnAddSpendingSourceClick" Style="{StaticResource AddTileButtonStyle}" />
+                                <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding SpendingSources}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <primitives:UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Margin" Value="0,0,12,12" />
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource CardStyle}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <Button
+                                                            Click="OnEditSpendingSourceClick"
+                                                            Style="{StaticResource CardActionButtonStyle}"
+                                                            Tag="{Binding Id}">
+                                                            <Viewbox Width="10" Height="10">
+                                                                <Path Data="{StaticResource Edit}" Fill="{StaticResource Brush.Text.Muted}" />
+                                                            </Viewbox>
+                                                        </Button>
+                                                        <Button
+                                                            Margin="4,0,0,0"
+                                                            Click="OnDeleteSpendingSourceClick"
+                                                            Style="{StaticResource CardActionButtonStyle}"
+                                                            Tag="{Binding Id}">
+                                                            <Viewbox Width="10" Height="10">
+                                                                <Path Data="{StaticResource Close}" Fill="{StaticResource Brush.Text.Muted}" />
+                                                            </Viewbox>
+                                                        </Button>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="1" Margin="0,4,0,0">
+                                                        <TextBlock
+                                                            FontFamily="{StaticResource Bold}"
+                                                            FontSize="15"
+                                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                                            Text="{Binding Name}" />
+                                                        <TextBlock
+                                                            Margin="0,8,0,0"
+                                                            FontFamily="{StaticResource Medium}"
+                                                            Foreground="{StaticResource Brush.Text.Secondary}"
+                                                            Text="{Binding TypeLabel}" />
+                                                        <TextBlock
+                                                            Margin="0,12,0,0"
+                                                            FontFamily="{StaticResource Bold}"
+                                                            Foreground="{StaticResource Brush.Mint}">
+                                                            <Run Text="{Binding PrimaryAmountLabel}" />
+                                                            <Run Text=": " />
+                                                            <Run Text="{Binding PrimaryAmount, StringFormat={}{0:N2}}" />
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!--  Step 3: Fixed Expenses  -->
+                            <StackPanel Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Button Click="OnAddFixedExpenseClick" Style="{StaticResource AddTileButtonStyle}" />
+                                <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding FixedExpenses}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <primitives:UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Margin" Value="0,0,12,12" />
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource CardStyle}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <Button
+                                                            Click="OnEditFixedExpenseClick"
+                                                            Style="{StaticResource CardActionButtonStyle}"
+                                                            Tag="{Binding Id}">
+                                                            <Viewbox Width="10" Height="10">
+                                                                <Path Data="{StaticResource Edit}" Fill="{StaticResource Brush.Text.Muted}" />
+                                                            </Viewbox>
+                                                        </Button>
+                                                        <Button
+                                                            Margin="4,0,0,0"
+                                                            Click="OnDeleteFixedExpenseClick"
+                                                            Style="{StaticResource CardActionButtonStyle}"
+                                                            Tag="{Binding Id}">
+                                                            <Viewbox Width="10" Height="10">
+                                                                <Path Data="{StaticResource Close}" Fill="{StaticResource Brush.Text.Muted}" />
+                                                            </Viewbox>
+                                                        </Button>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="1" Margin="0,4,0,0">
+                                                        <TextBlock
+                                                            FontFamily="{StaticResource Bold}"
+                                                            FontSize="15"
+                                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                                            Text="{Binding Name}" />
+                                                        <TextBlock
+                                                            Margin="0,8,0,0"
+                                                            FontFamily="{StaticResource Medium}"
+                                                            Foreground="{StaticResource Brush.Text.Secondary}">
+                                                            <Run Text="{Binding CategoryLabel}" />
+                                                            <Run Text=" · " />
+                                                            <Run Text="{Binding SpendingSourceName}" />
+                                                        </TextBlock>
+                                                        <TextBlock
+                                                            Margin="0,12,0,0"
+                                                            FontFamily="{StaticResource Bold}"
+                                                            Foreground="{StaticResource Brush.Warning}"
+                                                            Text="{Binding Amount, StringFormat={}{0:N2}}" />
+                                                        <TextBlock
+                                                            Margin="0,8,0,0"
+                                                            FontFamily="{StaticResource Medium}"
+                                                            Foreground="{StaticResource Brush.Text.Secondary}"
+                                                            Text="{Binding DueDate, StringFormat=Due {0:MMM d}}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!--  Step 4: Savings Goals  -->
+                            <StackPanel Visibility="{Binding IsStep4Active, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Button Click="OnAddSavingGoalClick" Style="{StaticResource AddTileButtonStyle}" />
+                                <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding SavingGoals}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <primitives:UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Margin" Value="0,0,12,12" />
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource CardStyle}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <Button
+                                                            Click="OnEditSavingGoalClick"
+                                                            Style="{StaticResource CardActionButtonStyle}"
+                                                            Tag="{Binding Id}">
+                                                            <Viewbox Width="10" Height="10">
+                                                                <Path Data="{StaticResource Edit}" Fill="{StaticResource Brush.Text.Muted}" />
+                                                            </Viewbox>
+                                                        </Button>
+                                                        <Button
+                                                            Margin="4,0,0,0"
+                                                            Click="OnDeleteSavingGoalClick"
+                                                            Style="{StaticResource CardActionButtonStyle}"
+                                                            Tag="{Binding Id}">
+                                                            <Viewbox Width="10" Height="10">
+                                                                <Path Data="{StaticResource Close}" Fill="{StaticResource Brush.Text.Muted}" />
+                                                            </Viewbox>
+                                                        </Button>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="1" Margin="0,4,0,0">
+                                                        <TextBlock
+                                                            FontFamily="{StaticResource Bold}"
+                                                            FontSize="15"
+                                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                                            Text="{Binding Name}" />
+                                                        <TextBlock
+                                                            Margin="0,8,0,0"
+                                                            FontFamily="{StaticResource Medium}"
+                                                            Foreground="{StaticResource Brush.Text.Secondary}"
+                                                            Text="{Binding SavingEndDate, StringFormat=Target {0:MMM d, yyyy}}" />
+                                                        <TextBlock
+                                                            Margin="0,12,0,0"
+                                                            FontFamily="{StaticResource Bold}"
+                                                            Foreground="{StaticResource Brush.Mint}">
+                                                            <Run Text="{Binding CurrentAmount, StringFormat={}{0:N2}}" />
+                                                            <Run Text=" / " />
+                                                            <Run Text="{Binding TargetAmount, StringFormat={}{0:N2}}" />
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!--  Step 5: Budget Allocation  -->
+                            <StackPanel Visibility="{Binding IsStep5Active, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Border Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <TextBlock
+                                            FontFamily="{StaticResource Bold}"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="Needs" />
+                                        <Slider
+                                            Margin="0,14,0,0"
+                                            Maximum="100"
+                                            Minimum="0"
+                                            Style="{StaticResource BudgetSliderStyle}"
+                                            TickFrequency="1"
+                                            Value="{Binding NeedsAllocationPercentage, Mode=TwoWay}" />
+                                        <DockPanel Margin="0,8,0,0">
+                                            <TextBlock
+                                                DockPanel.Dock="Left"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}" />
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontFamily="{StaticResource Medium}"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding NeedsAllocationAmountText}" />
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <TextBlock
+                                            FontFamily="{StaticResource Bold}"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="Wants" />
+                                        <Slider
+                                            Margin="0,14,0,0"
+                                            Maximum="100"
+                                            Minimum="0"
+                                            Style="{StaticResource BudgetSliderStyle}"
+                                            TickFrequency="1"
+                                            Value="{Binding WantsAllocationPercentage, Mode=TwoWay}" />
+                                        <DockPanel Margin="0,8,0,0">
+                                            <TextBlock
+                                                DockPanel.Dock="Left"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}" />
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontFamily="{StaticResource Medium}"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding WantsAllocationAmountText}" />
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <TextBlock
+                                            FontFamily="{StaticResource Bold}"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="Invest" />
+                                        <Slider
+                                            Margin="0,14,0,0"
+                                            Maximum="100"
+                                            Minimum="0"
+                                            Style="{StaticResource BudgetSliderStyle}"
+                                            TickFrequency="1"
+                                            Value="{Binding InvestAllocationPercentage, Mode=TwoWay}" />
+                                        <DockPanel Margin="0,8,0,0">
+                                            <TextBlock
+                                                DockPanel.Dock="Left"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}" />
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontFamily="{StaticResource Medium}"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding InvestAllocationAmountText}" />
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!--  Step 6: Notifications  -->
+                            <ItemsControl ItemsSource="{Binding NotificationSettings}" Visibility="{Binding IsStep6Active, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,12" Style="{StaticResource CardStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource Bold}"
+                                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                                        Text="{Binding Title}" />
+                                                    <TextBlock
+                                                        Margin="0,6,0,0"
+                                                        FontFamily="{StaticResource Medium}"
+                                                        Foreground="{StaticResource Brush.Text.Secondary}"
+                                                        Text="{Binding Description}"
+                                                        TextWrapping="Wrap" />
+                                                </StackPanel>
+                                                <ToggleButton
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                    Style="{StaticResource ToggleSwitchStyle}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!--  Welcome Page (Step 7)  -->
+        <Border
+            Style="{StaticResource PanelStyle}"
+            Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid>
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <Border
+                        Width="84"
+                        Height="84"
+                        HorizontalAlignment="Center"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="42">
+                        <Viewbox Margin="20" Stretch="Uniform">
+                            <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
+                        </Viewbox>
+                    </Border>
+                    <TextBlock
+                        Margin="0,18,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Text="Welcome to Fluxo, " />
+                        <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="12"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="Your dashboard, goals, and reminders are ready to go."
+                        TextAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  Navigation Bar  -->
+        <Grid Grid.Row="1" Margin="0,16,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+
+            <!--  Back Button  -->
             <Button
+                HorizontalAlignment="Left"
                 Click="OnBackClick"
-                Content="Back"
-                Style="{StaticResource ActionButtonStyle}" />
-            <Button
+                Content="&lt; Back"
+                Style="{StaticResource ActionButtonStyle}"
+                Visibility="{Binding IsGreetingStep, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+
+            <!--  Dot Navigator  -->
+            <ItemsControl
                 Grid.Column="1"
-                Margin="10,0,0,0"
-                Click="OnNextClick"
-                Content="Next"
-                Style="{StaticResource PrimaryActionButtonStyle}"
-                Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-            <Button
+                VerticalAlignment="Center"
+                ItemsSource="{Binding StepDots}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Ellipse
+                            Width="8"
+                            Height="8"
+                            Margin="3,0">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{StaticResource Brush.Text.Muted}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                            <Setter Property="Fill" Value="{StaticResource Brush.Mint}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!--  Next / Open Fluxo  -->
+            <StackPanel
                 Grid.Column="2"
-                Margin="10,0,0,0"
-                Click="OnFinishClick"
-                Content="Open Fluxo"
-                Style="{StaticResource PrimaryActionButtonStyle}"
-                Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+                <Button
+                    Click="OnNextClick"
+                    Content="Next &gt;"
+                    Style="{StaticResource PrimaryActionButtonStyle}"
+                    Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                <Button
+                    Click="OnFinishClick"
+                    Content="Open Fluxo"
+                    Style="{StaticResource PrimaryActionButtonStyle}"
+                    Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </StackPanel>
         </Grid>
     </Grid>
 </c:BasePopup>
