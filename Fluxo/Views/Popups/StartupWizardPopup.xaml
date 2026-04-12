@@ -14,6 +14,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="18" />
         </Style>
+
         <Style x:Key="StepPillStyle" TargetType="Border">
             <Setter Property="Height" Value="34" />
             <Setter Property="Margin" Value="0,0,8,0" />
@@ -23,6 +24,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="17" />
         </Style>
+
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Margin" Value="0,0,0,16" />
             <Setter Property="Padding" Value="16" />
@@ -31,6 +33,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="16" />
         </Style>
+
         <Style x:Key="AddTileButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -41,7 +44,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border
-                            Height="152"
+                            Height="80"
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"
@@ -240,7 +243,8 @@
                         </Grid>
 
                         <StackPanel Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <ItemsControl ItemsSource="{Binding SpendingSources}">
+                            <Button Click="OnAddSpendingSourceClick" Style="{StaticResource AddTileButtonStyle}" />
+                            <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding SpendingSources}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <primitives:UniformGrid Columns="2" />
@@ -273,11 +277,11 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Button Click="OnAddSpendingSourceClick" Style="{StaticResource AddTileButtonStyle}" />
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <ItemsControl ItemsSource="{Binding FixedExpenses}">
+                            <Button Click="OnAddFixedExpenseClick" Style="{StaticResource AddTileButtonStyle}" />
+                            <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding FixedExpenses}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <primitives:UniformGrid Columns="2" />
@@ -315,11 +319,11 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Button Click="OnAddFixedExpenseClick" Style="{StaticResource AddTileButtonStyle}" />
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsStep4Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <ItemsControl ItemsSource="{Binding SavingGoals}">
+                            <Button Click="OnAddSavingGoalClick" Style="{StaticResource AddTileButtonStyle}" />
+                            <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding SavingGoals}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <primitives:UniformGrid Columns="2" />
@@ -352,7 +356,6 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Button Click="OnAddSavingGoalClick" Style="{StaticResource AddTileButtonStyle}" />
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsStep5Active, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -366,6 +369,7 @@
                                         Margin="0,14,0,0"
                                         Maximum="100"
                                         Minimum="0"
+                                        Style="{StaticResource BudgetSliderStyle}"
                                         TickFrequency="1"
                                         Value="{Binding NeedsAllocationPercentage, Mode=TwoWay}" />
                                     <DockPanel Margin="0,8,0,0">
@@ -392,6 +396,7 @@
                                         Margin="0,14,0,0"
                                         Maximum="100"
                                         Minimum="0"
+                                        Style="{StaticResource BudgetSliderStyle}"
                                         TickFrequency="1"
                                         Value="{Binding WantsAllocationPercentage, Mode=TwoWay}" />
                                     <DockPanel Margin="0,8,0,0">
@@ -418,6 +423,7 @@
                                         Margin="0,14,0,0"
                                         Maximum="100"
                                         Minimum="0"
+                                        Style="{StaticResource BudgetSliderStyle}"
                                         TickFrequency="1"
                                         Value="{Binding InvestAllocationPercentage, Mode=TwoWay}" />
                                     <DockPanel Margin="0,8,0,0">
@@ -489,7 +495,6 @@
                                     Foreground="{StaticResource Brush.Text.Primary}">
                                     <Run Text="Welcome to Fluxo, " />
                                     <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
-                                    <Run Text="." />
                                 </TextBlock>
                                 <TextBlock
                                     Margin="0,12,0,0"
