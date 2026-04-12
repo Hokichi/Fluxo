@@ -46,7 +46,7 @@ public partial class MainVM : ObservableRecipient
     private decimal _allTimeInvestSpent;
     private decimal _allTimeNeedsSpent;
     private decimal _allTimeWantsSpent;
-    [ObservableProperty] private string _appDisplayName = "Fluxo";
+    [ObservableProperty] private string _username = "User";
     private decimal _budgetUsageWarningPercentage = 0.90m;
     [ObservableProperty] private bool _canNavigateForward;
     private decimal _creditUsageWarningPercentage = 0.30m;
@@ -497,9 +497,11 @@ public partial class MainVM : ObservableRecipient
             case MainContentViewMode.Daily:
                 BuildDailySpinnerItems();
                 break;
+
             case MainContentViewMode.Weekly:
                 BuildWeeklySpinnerItems();
                 break;
+
             case MainContentViewMode.Monthly:
                 BuildMonthlySpinnerItems();
                 break;
@@ -607,9 +609,11 @@ public partial class MainVM : ObservableRecipient
             case MainContentViewMode.Daily:
                 _savedDailyDate = date;
                 break;
+
             case MainContentViewMode.Weekly:
                 _savedWeeklyDate = date;
                 break;
+
             case MainContentViewMode.Monthly:
                 _savedMonthlyDate = date;
                 break;
@@ -981,7 +985,8 @@ public partial class MainVM : ObservableRecipient
         _isLowCreditNotifEnabled = ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false);
         _isLowAccountBalanceNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsLowAccountBalanceNotifEnabled, _isLowCreditNotifEnabled);
-        AppDisplayName = ParseString(settingsByName, UserSettingNames.PreferredDisplayName, "Fluxo");
+
+        Username = ParseString(settingsByName, UserSettingNames.PreferredDisplayName, "User");
 
         _hiddenFixedExpenseIds.Clear();
         _hiddenFixedExpenseIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds));

@@ -735,26 +735,33 @@ public partial class SettingsVM : ObservableObject
                 ? []
                 : await unitOfWork.UserSettings.GetAllAsync();
 
+            foreach (var setting in settings)
+                unitOfWork.UserSettings.Remove(setting);
+
+            foreach (var tag in tags)
+                unitOfWork.ExpenseTags.Remove(tag);
+
+            foreach (var spendingSource in spendingSources)
+                unitOfWork.SpendingSources.Remove(spendingSource);
+
+            foreach (var expense in expenses)
+                unitOfWork.Expenses.Remove(expense);
+
             foreach (var expenseLog in expenseLogs)
                 unitOfWork.ExpenseLogs.Remove(expenseLog);
 
             foreach (var incomeLog in incomeLogs)
                 unitOfWork.IncomeLogs.Remove(incomeLog);
 
-            foreach (var expense in expenses)
-                unitOfWork.Expenses.Remove(expense);
-
             foreach (var savingGoal in savingGoals)
                 unitOfWork.SavingGoals.Remove(savingGoal);
 
-            foreach (var spendingSource in spendingSources)
-                unitOfWork.SpendingSources.Remove(spendingSource);
-
-            foreach (var tag in tags)
-                unitOfWork.ExpenseTags.Remove(tag);
-
-            foreach (var setting in settings)
-                unitOfWork.UserSettings.Remove(setting);
+            if (!keepSettings)
+                await unitOfWork.UserSettings.AddAsync(new UserSettings
+                {
+                    Name = UserSettingNames.IsFirstRun,
+                    Value = bool.TrueString
+                });
 
             await unitOfWork.SaveChangesAsync();
             await _mainViewModel.ReloadCurrentDataAsync(true);

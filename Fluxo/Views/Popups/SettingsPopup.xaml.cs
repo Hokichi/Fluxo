@@ -78,7 +78,6 @@ public partial class SettingsPopup : BasePopup
             }
 
             _allowClose = true;
-            Close();
         }
         finally
         {

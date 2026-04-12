@@ -821,7 +821,27 @@
                             FontFamily="{StaticResource Bold}"
                             FontSize="18"
                             Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding AppDisplayName}" />
+                            Text="Fluxo" />
+
+                        <Border
+                            Width="1"
+                            Height="32"
+                            Margin="16,0"
+                            Background="{StaticResource Brush.Border.Subtle}" />
+
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="14">
+                            <Run
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Welcome back," />
+                            <Run
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Username}" />
+                        </TextBlock>
                     </StackPanel>
 
                     <Grid Grid.Column="1">

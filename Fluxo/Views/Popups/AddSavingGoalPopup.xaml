@@ -1,0 +1,86 @@
+<c:BasePopup
+    x:Class="Fluxo.Views.Popups.AddSavingGoalPopup"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
+    Width="560"
+    PopupTitle="Add Goal"
+    ShowSaveButton="True">
+
+    <c:BasePopup.Resources>
+        <Style x:Key="PanelStyle" TargetType="Border">
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+        </Style>
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+        <Style x:Key="FieldTextBoxStyle" BasedOn="{StaticResource PopupTextInputStyle}" TargetType="TextBox">
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </c:BasePopup.Resources>
+
+    <Grid Margin="24,0,24,24">
+        <Border Style="{StaticResource PanelStyle}">
+            <StackPanel>
+                <TextBlock
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="16"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="Add Goal" />
+                <TextBlock
+                    Margin="0,8,0,18"
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="Add a savings goal so Fluxo can track progress from day one." />
+
+                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Goal Name" />
+                <TextBox
+                    x:Name="NameTextBox"
+                    Style="{StaticResource FieldTextBoxStyle}"
+                    Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Target Amount" />
+                        <TextBox
+                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                            Style="{StaticResource FieldTextBoxStyle}"
+                            Text="{Binding TargetAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
+                        <TextBox
+                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                            Style="{StaticResource FieldTextBoxStyle}"
+                            Text="{Binding CurrentAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock
+                    Margin="0,14,0,8"
+                    Style="{StaticResource FieldLabelStyle}"
+                    Text="Target Date" />
+                <components:DateSelector SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</c:BasePopup>

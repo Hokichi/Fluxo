@@ -1,0 +1,191 @@
+using System.Collections.ObjectModel;
+using System.Globalization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Shell;
+
+namespace Fluxo.ViewModels.Popups;
+
+public partial class AddFixedExpenseVM : ObservableObject
+{
+    private const string DefaultTagColor = "#75B798";
+
+    private readonly MainVM _mainViewModel;
+    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+
+    [ObservableProperty] private string _amountText = string.Empty;
+    [ObservableProperty] private DateTime _dueDate = DateTime.Today;
+    [ObservableProperty] private bool _isActive = true;
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private string _nameText = string.Empty;
+    [ObservableProperty] private ExpenseCategory _selectedCategory = ExpenseCategory.Needs;
+    [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty] private string _tagNameText = "General";
+
+    public AddFixedExpenseVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
+    {
+        _mainViewModel = mainViewModel;
+        _unitOfWorkFactory = unitOfWorkFactory;
+
+        foreach (var spendingSource in _mainViewModel.SpendingSources
+                     .Where(source => source.IsEnabled)
+                     .OrderBy(source => source.Name))
+            SpendingSources.Add(spendingSource);
+
+        SelectedSpendingSource = SpendingSources.FirstOrDefault();
+    }
+
+    public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
+
+    public IReadOnlyList<ExpenseCategoryOption> Categories { get; } =
+    [
+        new("Needs", ExpenseCategory.Needs),
+        new("Wants", ExpenseCategory.Wants),
+        new("Invest", ExpenseCategory.Savings)
+    ];
+
+    public async Task<AddFixedExpenseResult> SaveAsync()
+    {
+        if (IsBusy)
+            return AddFixedExpenseResult.Failure("A fixed expense is already being saved.");
+
+        if (!TryBuildInput(out var input, out var validationMessage))
+            return AddFixedExpenseResult.Failure(validationMessage);
+
+        IsBusy = true;
+
+        try
+        {
+            await using var unitOfWork = _unitOfWorkFactory();
+
+            var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(input.SpendingSourceId);
+            if (spendingSource is null)
+                return AddFixedExpenseResult.Failure("Please choose a valid spending source.");
+
+            var existingTags = await unitOfWork.ExpenseTags.GetAllAsync();
+            var tag = existingTags.FirstOrDefault(existing =>
+                string.Equals(existing.Name, input.TagName, StringComparison.OrdinalIgnoreCase));
+
+            if (tag is null)
+            {
+                tag = new ExpenseTag
+                {
+                    Name = input.TagName,
+                    HexCode = DefaultTagColor
+                };
+
+                await unitOfWork.ExpenseTags.AddAsync(tag);
+                await unitOfWork.SaveChangesAsync();
+            }
+
+            var expense = new Expense
+            {
+                Name = input.Name,
+                Amount = input.Amount,
+                ExpenseKind = ExpenseKind.Fixed,
+                ExpenseCategory = input.Category,
+                RecurringDate = input.DueDate,
+                SpendingSourceId = spendingSource.Id,
+                ExpenseTagId = tag.Id,
+                IsActive = input.IsActive
+            };
+
+            await unitOfWork.Expenses.AddAsync(expense);
+            await unitOfWork.SaveChangesAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
+
+            return AddFixedExpenseResult.Success(true);
+        }
+        catch (Exception exception)
+        {
+            return AddFixedExpenseResult.Failure($"Unable to create this fixed expense.\n\n{exception.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private bool TryBuildInput(out AddFixedExpenseInput input, out string validationMessage)
+    {
+        input = default;
+        validationMessage = string.Empty;
+
+        var name = (NameText ?? string.Empty).Trim();
+        if (name.Length == 0)
+        {
+            validationMessage = "Please enter an expense name.";
+            return false;
+        }
+
+        if (!TryParseDecimal(AmountText, out var amount) || amount <= 0m)
+        {
+            validationMessage = "Please enter a valid amount greater than zero.";
+            return false;
+        }
+
+        if (SelectedSpendingSource is null)
+        {
+            validationMessage = "Please select a spending source.";
+            return false;
+        }
+
+        var tagName = string.IsNullOrWhiteSpace(TagNameText) ? "General" : TagNameText.Trim();
+
+        input = new AddFixedExpenseInput(
+            name,
+            amount,
+            SelectedCategory,
+            SelectedSpendingSource.Id,
+            DueDate.Date,
+            tagName,
+            IsActive);
+
+        return true;
+    }
+
+    private static bool TryParseDecimal(string text, out decimal value)
+    {
+        value = 0m;
+        var normalizedText = (text ?? string.Empty)
+            .Trim()
+            .Replace(CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol, string.Empty, StringComparison.Ordinal)
+            .Replace(",", string.Empty, StringComparison.Ordinal)
+            .Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedText))
+            return false;
+
+        return decimal.TryParse(normalizedText, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+                   CultureInfo.CurrentCulture, out value) ||
+               decimal.TryParse(normalizedText, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+                   CultureInfo.InvariantCulture, out value);
+    }
+
+    public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
+
+    public readonly record struct AddFixedExpenseResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
+    {
+        public static AddFixedExpenseResult Success(bool shouldClose = false)
+        {
+            return new AddFixedExpenseResult(true, shouldClose, null);
+        }
+
+        public static AddFixedExpenseResult Failure(string? errorMessage)
+        {
+            return new AddFixedExpenseResult(false, false, errorMessage);
+        }
+    }
+
+    private readonly record struct AddFixedExpenseInput(
+        string Name,
+        decimal Amount,
+        ExpenseCategory Category,
+        int SpendingSourceId,
+        DateTime DueDate,
+        string TagName,
+        bool IsActive);
+}

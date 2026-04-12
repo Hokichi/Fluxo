@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces;
 using Fluxo.Resources.CustomControls;
 using Fluxo.Services.History;
@@ -59,7 +60,7 @@ public partial class MainWindow : Window
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
             FadeIn();
-            await _mainVM.Initialize();
+            await RunStartupFlowAsync();
         };
 
         Closing += OnWindowClosing;
@@ -476,6 +477,12 @@ public partial class MainWindow : Window
         popup.ShowDialog();
     }
 
+    public void OpenStartupWizardPopup()
+    {
+        var popup = new StartupWizardPopup(new StartupWizardVM(_mainVM, _unitOfWorkFactory)) { Owner = this };
+        popup.ShowDialog();
+    }
+
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
     {
         using var unitOfWork = _unitOfWorkFactory();
@@ -615,6 +622,53 @@ public partial class MainWindow : Window
 
         if (RedoMenuButton is not null)
             RedoMenuButton.IsEnabled = _logMemoryManager.CanRedo;
+    }
+
+    private async Task RunStartupFlowAsync()
+    {
+        try
+        {
+            var shouldOpenWizard = await EnsureFirstRunSettingAsync();
+            var loaderPopup = new StartupLoaderPopup { Owner = this };
+
+            try
+            {
+                loaderPopup.Show();
+                await _mainVM.Initialize();
+            }
+            finally
+            {
+                loaderPopup.CloseLoader();
+            }
+
+            if (shouldOpenWizard)
+                OpenStartupWizardPopup();
+        }
+        catch (Exception exception)
+        {
+            FluxoMessageBox.Show(this, $"Unable to finish startup.\n\n{exception.Message}", "Fluxo",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Close();
+        }
+    }
+
+    private async Task<bool> EnsureFirstRunSettingAsync()
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var existingSetting = await unitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun);
+
+        if (existingSetting is null)
+        {
+            await unitOfWork.UserSettings.AddAsync(new Fluxo.Core.Entities.UserSettings
+            {
+                Name = UserSettingNames.IsFirstRun,
+                Value = bool.TrueString
+            });
+            await unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        return !bool.TryParse(existingSetting.Value, out var isFirstRun) || isFirstRun;
     }
 
     [StructLayout(LayoutKind.Sequential)]
