@@ -1,8 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
 using Fluxo.Views.Shell;
 
 namespace Fluxo.Resources.CustomControls;
@@ -161,21 +159,37 @@ public class BasePopup : Window
         Close();
     }
 
-    protected virtual void OnSaveButtonClick() { }
+    protected virtual void OnSaveButtonClick()
+    {
+    }
 
-    protected virtual void OnSaveAndCreateNewButtonClick() { }
+    protected virtual void OnSaveAndCreateNewButtonClick()
+    {
+    }
 
-    protected virtual void OnApplyButtonClick() { }
+    protected virtual void OnApplyButtonClick()
+    {
+    }
 
-    protected virtual void OnRevertButtonClick() { }
+    protected virtual void OnRevertButtonClick()
+    {
+    }
 
-    protected virtual void OnEditButtonClick() { }
+    protected virtual void OnEditButtonClick()
+    {
+    }
 
-    protected virtual void OnDeleteButtonClick() { }
+    protected virtual void OnDeleteButtonClick()
+    {
+    }
 
-    protected virtual void OnCloneButtonClick() { }
+    protected virtual void OnCloneButtonClick()
+    {
+    }
 
-    protected virtual void OnCancelButtonClick() { }
+    protected virtual void OnCancelButtonClick()
+    {
+    }
 
     // ── Keyboard shortcuts ──────────────────────────────────────────
 
@@ -196,6 +210,7 @@ public class BasePopup : Window
                     OnSaveAndCreateNewButtonClick();
                     e.Handled = true;
                 }
+
                 break;
 
             case Key.Enter when Keyboard.Modifiers == ModifierKeys.None:
@@ -209,6 +224,7 @@ public class BasePopup : Window
                     OnSaveButtonClick();
                     e.Handled = true;
                 }
+
                 break;
             case Key.Delete:
                 OnDeleteButtonClick();

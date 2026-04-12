@@ -9,9 +9,9 @@ public sealed class LogMemoryManager : IDisposable
 {
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
     private readonly Stack<ILogMemoryAction> _redoStack = [];
     private readonly Stack<ILogMemoryAction> _undoStack = [];
+    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
     private bool _isDisposed;
     private bool _isExecuting;
 
@@ -28,6 +28,15 @@ public sealed class LogMemoryManager : IDisposable
     public bool CanUndo => _undoStack.Count > 0;
 
     public bool CanRedo => _redoStack.Count > 0;
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _messenger.UnregisterAll(this);
+        _isDisposed = true;
+    }
 
     public event EventHandler? StateChanged;
 
@@ -102,14 +111,5 @@ public sealed class LogMemoryManager : IDisposable
     private void RaiseStateChanged()
     {
         StateChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    public void Dispose()
-    {
-        if (_isDisposed)
-            return;
-
-        _messenger.UnregisterAll(this);
-        _isDisposed = true;
     }
 }

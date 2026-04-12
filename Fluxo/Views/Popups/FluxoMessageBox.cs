@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Windows;
 
 namespace Fluxo.Views.Popups;
@@ -20,8 +19,8 @@ public static class FluxoMessageBox
     private static Window? GetActiveWindow()
     {
         return Application.Current?.Windows
-            .OfType<Window>()
-            .FirstOrDefault(window => window.IsActive)
-            ?? Application.Current?.MainWindow;
+                   .OfType<Window>()
+                   .FirstOrDefault(window => window.IsActive)
+               ?? Application.Current?.MainWindow;
     }
 }

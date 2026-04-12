@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
-using Fluxo.Views.Popups;
 using Fluxo.Views.Shell;
 
 namespace Fluxo.Views.Components;

@@ -140,7 +140,8 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                         <Run Text="$" />
-                        <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                        <Run
+                            Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                     </TextBlock>
                     <TextBox
                         x:Name="PrimaryAmountTextBox"
@@ -178,7 +179,8 @@
                         Style="{StaticResource PopupTextButtonStyle}" />
 
                     <StackPanel Grid.Row="2">
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -187,9 +189,13 @@
                             <TextBlock
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"><Run Text="$" /><Run Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}}" /></TextBlock>
+                                Foreground="{StaticResource Brush.Text.Secondary}">
+                                <Run Text="$" />
+                                <Run Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}}" />
+                            </TextBlock>
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -198,9 +204,13 @@
                             <TextBlock
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"><Run Text="$" /><Run Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}}" /></TextBlock>
+                                Foreground="{StaticResource Brush.Text.Secondary}">
+                                <Run Text="$" />
+                                <Run Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}}" />
+                            </TextBlock>
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -212,7 +222,9 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}"><Run Text="$" /><Run Text="{Binding SpentAmountText}" /></TextBlock>
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
+                            </TextBlock>
                             <TextBox
                                 Grid.Column="1"
                                 Width="120"
@@ -222,7 +234,8 @@
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -232,7 +245,9 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}"><Run Text="$" /><Run Text="{Binding AccountLimitText}" /></TextBlock>
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                <Run Text="$" /><Run Text="{Binding AccountLimitText}" />
+                            </TextBlock>
                             <TextBox
                                 Grid.Column="1"
                                 Width="120"
@@ -242,7 +257,8 @@
                                 Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -259,7 +275,8 @@
                                 SelectedDate="{Binding DueDate, Mode=TwoWay}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -269,7 +286,9 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}"><Run Text="$" /><Run Text="{Binding SpentAmountText}" /></TextBlock>
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
+                            </TextBlock>
                             <TextBox
                                 Grid.Column="1"
                                 Width="120"
@@ -279,7 +298,8 @@
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -296,7 +316,8 @@
                                 SelectedDate="{Binding DueDate, Mode=TwoWay}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -305,9 +326,14 @@
                             <TextBlock
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"><Run Text="$" /><Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" /></TextBlock>
+                                Foreground="{StaticResource Brush.Text.Secondary}">
+                                <Run Text="$" />
+                                <Run
+                                    Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                            </TextBlock>
                         </Grid>
-                        <Grid Margin="0,0,0,10" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -448,12 +474,16 @@
                                                     FontSize="12">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
-                                                            <Setter Property="Text" Value="{Binding Amount, StringFormat=+${0:N2}}" />
+                                                            <Setter Property="Foreground"
+                                                                    Value="{StaticResource Brush.Success}" />
+                                                            <Setter Property="Text"
+                                                                    Value="{Binding Amount, StringFormat=+${0:N2}}" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsExpense}" Value="True">
-                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
-                                                                    <Setter Property="Text" Value="{Binding Amount, StringFormat=-${0:N2}}" />
+                                                                    <Setter Property="Foreground"
+                                                                            Value="{StaticResource Brush.Danger}" />
+                                                                    <Setter Property="Text"
+                                                                            Value="{Binding Amount, StringFormat=-${0:N2}}" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>

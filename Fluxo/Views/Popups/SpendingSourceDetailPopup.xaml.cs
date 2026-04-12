@@ -199,7 +199,8 @@ public partial class SpendingSourceDetailPopup : BasePopup
     {
         var existingText = textBox.Text ?? string.Empty;
         return textBox.SelectionLength > 0
-            ? existingText.Remove(textBox.SelectionStart, textBox.SelectionLength).Insert(textBox.SelectionStart, newText)
+            ? existingText.Remove(textBox.SelectionStart, textBox.SelectionLength)
+                .Insert(textBox.SelectionStart, newText)
             : existingText.Insert(textBox.SelectionStart, newText);
     }
 }

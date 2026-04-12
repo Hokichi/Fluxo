@@ -49,7 +49,7 @@ public partial class TransferFundsPopup : BasePopup
     {
         var proposedText = textBox.SelectionLength > 0
             ? (textBox.Text ?? string.Empty).Remove(textBox.SelectionStart, textBox.SelectionLength)
-                .Insert(textBox.SelectionStart, newText)
+            .Insert(textBox.SelectionStart, newText)
             : (textBox.Text ?? string.Empty).Insert(textBox.SelectionStart, newText);
 
         if (string.IsNullOrWhiteSpace(proposedText))

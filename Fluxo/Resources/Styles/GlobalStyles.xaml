@@ -19,7 +19,8 @@
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="ThumbBody" Property="Opacity" Value="1" />
-                            <Setter TargetName="ThumbBody" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="ThumbBody" Property="Background"
+                                    Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -45,7 +46,8 @@
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="ThumbBody" Property="Opacity" Value="1" />
-                            <Setter TargetName="ThumbBody" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="ThumbBody" Property="Background"
+                                    Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -293,13 +295,16 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="ItemBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            <Setter TargetName="ItemBackground" Property="Background"
+                                    Value="{StaticResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="ItemBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            <Setter TargetName="ItemBackground" Property="Background"
+                                    Value="{StaticResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="ItemBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            <Setter TargetName="ItemBackground" Property="Background"
+                                    Value="{StaticResource Brush.Background.Hover}" />
                             <Setter TargetName="SelectedCheckmark" Property="Opacity" Value="1" />
                         </Trigger>
                     </ControlTemplate.Triggers>

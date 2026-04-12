@@ -162,10 +162,12 @@
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="">
+                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}"
+                                                     Value="">
                                             <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="{x:Null}">
+                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}"
+                                                     Value="{x:Null}">
                                             <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>

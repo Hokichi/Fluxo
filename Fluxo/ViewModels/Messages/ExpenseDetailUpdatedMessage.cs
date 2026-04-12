@@ -33,7 +33,8 @@ public sealed record ExpenseDetailUpdate(
 
     public bool AffectsVisibleMoneyOut =>
         (ChangedFields &
-         (ExpenseDetailChangedFields.Amount | ExpenseDetailChangedFields.Date | ExpenseDetailChangedFields.SpendingSource)) != 0;
+         (ExpenseDetailChangedFields.Amount | ExpenseDetailChangedFields.Date |
+          ExpenseDetailChangedFields.SpendingSource)) != 0;
 
     public bool AffectsSpendingSourceState =>
         (ChangedFields & (ExpenseDetailChangedFields.Amount | ExpenseDetailChangedFields.SpendingSource)) != 0;

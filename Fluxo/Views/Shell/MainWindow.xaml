@@ -60,7 +60,8 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="12">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -223,29 +224,6 @@
                 <DataTrigger Binding="{Binding Severity}" Value="{x:Static coreEnums:NotificationSeverity.Danger}">
                     <Setter Property="Background" Value="{StaticResource Brush.Danger}" />
                 </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="NotificationActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
-            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <ContentPresenter />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-                </Trigger>
             </Style.Triggers>
         </Style>
 
@@ -522,10 +500,12 @@
                                                 Text="{Binding DayName}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Setter Property="Foreground"
+                                                                Value="{StaticResource Brush.Text.Muted}" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                                                <Setter Property="Foreground"
+                                                                        Value="{StaticResource Brush.Mint}" />
                                                                 <Setter Property="Effect">
                                                                     <Setter.Value>
                                                                         <DropShadowEffect
@@ -550,10 +530,12 @@
                                                 Text="{Binding DayNumber}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                        <Setter Property="Foreground"
+                                                                Value="{StaticResource Brush.Text.Muted}" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                                                <Setter Property="Foreground"
+                                                                        Value="{StaticResource Brush.Text.Primary}" />
                                                                 <Setter Property="Effect">
                                                                     <Setter.Value>
                                                                         <DropShadowEffect
@@ -582,7 +564,9 @@
                                                         <MultiDataTrigger>
                                                             <MultiDataTrigger.Conditions>
                                                                 <Condition Binding="{Binding IsSelected}" Value="False" />
-                                                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True" />
+                                                                <Condition
+                                                                    Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                                                    Value="True" />
                                                             </MultiDataTrigger.Conditions>
                                                             <MultiDataTrigger.EnterActions>
                                                                 <BeginStoryboard>
@@ -853,8 +837,11 @@
                                     <Style TargetType="icons:PackIconUnicons">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                            <DataTrigger
+                                                Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                Value="True">
+                                                <Setter Property="Foreground"
+                                                        Value="{StaticResource Brush.Text.Primary}" />
                                                 <Setter Property="Effect">
                                                     <Setter.Value>
                                                         <DropShadowEffect
@@ -901,8 +888,11 @@
                                     <Style TargetType="icons:PackIconUnicons">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                            <DataTrigger
+                                                Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                Value="True">
+                                                <Setter Property="Foreground"
+                                                        Value="{StaticResource Brush.Text.Primary}" />
                                                 <Setter Property="Effect">
                                                     <Setter.Value>
                                                         <DropShadowEffect
@@ -955,7 +945,8 @@
                                 MouseEnter="OnHeaderMenuPopupMouseEnter"
                                 MouseLeave="OnHeaderMenuPopupMouseLeave">
                                 <StackPanel>
-                                    <Button Click="OnQuickAddButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button Click="OnQuickAddButtonClick"
+                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -977,7 +968,8 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnSpendingSourcesButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button Click="OnSpendingSourcesButtonClick"
+                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -999,7 +991,8 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button x:Name="UndoMenuButton" Click="OnUndoButtonClick" IsEnabled="False" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button x:Name="UndoMenuButton" Click="OnUndoButtonClick" IsEnabled="False"
+                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -1021,7 +1014,8 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button x:Name="RedoMenuButton" Click="OnRedoButtonClick" IsEnabled="False" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button x:Name="RedoMenuButton" Click="OnRedoButtonClick" IsEnabled="False"
+                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -1043,7 +1037,8 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnSettingsButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button Click="OnSettingsButtonClick"
+                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -1487,7 +1482,8 @@
                                         CornerRadius="12"
                                         Cursor="Hand">
                                         <Border.InputBindings>
-                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}"
+                                                          MouseAction="LeftClick" />
                                         </Border.InputBindings>
                                         <Border.Style>
                                             <Style TargetType="Border">
@@ -1516,7 +1512,8 @@
                                         CornerRadius="12"
                                         Cursor="Hand">
                                         <Border.InputBindings>
-                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                                            <MouseBinding Command="{Binding ClearSelectedTagCommand}"
+                                                          MouseAction="LeftClick" />
                                         </Border.InputBindings>
                                         <Border.Style>
                                             <Style TargetType="Border">
@@ -1703,7 +1700,8 @@
                                         Grid.Row="2"
                                         VerticalScrollBarVisibility="Auto"
                                         Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}" ItemsSource="{Binding Notifications}" />
+                                        <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}"
+                                                      ItemsSource="{Binding Notifications}" />
                                     </ScrollViewer>
                                 </Grid>
                             </Border>
@@ -1751,7 +1749,8 @@
                                         Grid.Row="2"
                                         VerticalScrollBarVisibility="Auto"
                                         Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}" ItemsSource="{Binding SavingGoals}" />
+                                        <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}"
+                                                      ItemsSource="{Binding SavingGoals}" />
                                     </ScrollViewer>
                                 </Grid>
                             </Border>

@@ -250,9 +250,15 @@ public partial class TransferFundsVM : ObservableObject
 
     public readonly record struct TransferFundsResult(bool IsSuccess, string? ErrorMessage)
     {
-        public static TransferFundsResult Success() => new(true, null);
+        public static TransferFundsResult Success()
+        {
+            return new TransferFundsResult(true, null);
+        }
 
-        public static TransferFundsResult Failure(string? errorMessage) => new(false, errorMessage);
+        public static TransferFundsResult Failure(string? errorMessage)
+        {
+            return new TransferFundsResult(false, errorMessage);
+        }
     }
 
     private readonly record struct TransferFundsInput(

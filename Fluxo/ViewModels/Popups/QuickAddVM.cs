@@ -14,22 +14,31 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class QuickAddVM : ObservableObject
 {
-    private readonly MainVM _mainViewModel;
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
+    private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IUnitOfWork _uow;
-    private bool _isUpdatingTagCollections;
 
     [ObservableProperty] private string _amountText = string.Empty;
     [ObservableProperty] private bool _isExpense = true;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
+    private bool _isUpdatingTagCollections;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
+
+    public QuickAddVM(MainVM mainViewModel, IUnitOfWork uoW)
+    {
+        _mainViewModel = mainViewModel;
+        _uow = uoW;
+
+        ReloadChoicesFromMainViewModel();
+        ResetForm(false);
+    }
 
     public IReadOnlyList<ExpenseCategoryOption> ExpenseCategories { get; } =
     [
@@ -55,15 +64,6 @@ public partial class QuickAddVM : ObservableObject
     }
 
     public bool HasMoreTags => OverflowTags.Count > 0;
-
-    public QuickAddVM(MainVM mainViewModel, IUnitOfWork uoW)
-    {
-        _mainViewModel = mainViewModel;
-        _uow = uoW;
-
-        ReloadChoicesFromMainViewModel();
-        ResetForm(keepCurrentType: false);
-    }
 
     public void InitializeFromDraft(QuickAddDraft draft)
     {
@@ -195,12 +195,13 @@ public partial class QuickAddVM : ObservableObject
                         incomeLog.AddedOn,
                         incomeLog.Notes))));
             }
+
             await _mainViewModel.ReloadCurrentDataAsync();
 
             if (resetAfterSave)
             {
                 ReloadChoicesFromMainViewModel();
-                ResetForm(keepCurrentType: true);
+                ResetForm(true);
             }
 
             return QuickAddSubmissionResult.Success();
@@ -424,7 +425,8 @@ public partial class QuickAddVM : ObservableObject
         var selectedSpendingSourceId = SelectedSpendingSource?.Id;
 
         var filteredSources = _availableSpendingSources
-            .Where(source => IsExpense || source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+            .Where(source =>
+                IsExpense || source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
             .OrderBy(source => source.Name)
             .ToList();
 
@@ -432,15 +434,23 @@ public partial class QuickAddVM : ObservableObject
 
         SelectedSpendingSource = selectedSpendingSourceId is null
             ? SpendingSources.FirstOrDefault()
-            : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ?? SpendingSources.FirstOrDefault();
+            : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ??
+              SpendingSources.FirstOrDefault();
     }
 
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
 
     public readonly record struct QuickAddSubmissionResult(bool IsSuccess, string? ErrorMessage)
     {
-        public static QuickAddSubmissionResult Success() => new(true, null);
-        public static QuickAddSubmissionResult Failure(string? errorMessage) => new(false, errorMessage);
+        public static QuickAddSubmissionResult Success()
+        {
+            return new QuickAddSubmissionResult(true, null);
+        }
+
+        public static QuickAddSubmissionResult Failure(string? errorMessage)
+        {
+            return new QuickAddSubmissionResult(false, errorMessage);
+        }
     }
 
     public readonly record struct QuickAddDraft(

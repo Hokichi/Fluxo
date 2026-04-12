@@ -19,19 +19,19 @@ public partial class SettingsVM : ObservableObject
     private const string DefaultCurrencyCode = "USD";
 
     private readonly MainVM _mainViewModel;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
-    private BudgetAllocationSnapshot _savedBudgetAllocation = new(50, 30, 20);
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
-    private string _savedPreferredAppName = string.Empty;
-    private string _savedCurrencyCode = DefaultCurrencyCode;
+    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
 
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
+    [ObservableProperty] private int _investAllocationPercentage;
     [ObservableProperty] private bool _isFixedExpenseChecksEnabled;
     [ObservableProperty] private bool _isGoalChecksEnabled;
     [ObservableProperty] private bool _isSpendingSourceChecksEnabled;
-    [ObservableProperty] private int _investAllocationPercentage;
     [ObservableProperty] private int _needsAllocationPercentage;
     [ObservableProperty] private string _preferredAppName = string.Empty;
+    private BudgetAllocationSnapshot _savedBudgetAllocation = new(50, 30, 20);
+    private string _savedCurrencyCode = DefaultCurrencyCode;
+    private string _savedPreferredAppName = string.Empty;
     [ObservableProperty] private string _selectedCurrencyCode = DefaultCurrencyCode;
     [ObservableProperty] private int _wantsAllocationPercentage;
 
@@ -69,14 +69,30 @@ public partial class SettingsVM : ObservableObject
     public string NeedsAllocationAmountText => BuildAllocationAmountText(NeedsAllocationPercentage);
     public string WantsAllocationAmountText => BuildAllocationAmountText(WantsAllocationPercentage);
     public string InvestAllocationAmountText => BuildAllocationAmountText(InvestAllocationPercentage);
+
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
             string.Equals(option.Code, SelectedCurrencyCode, StringComparison.OrdinalIgnoreCase))?.Symbol ?? "$";
 
-    partial void OnNeedsAllocationPercentageChanged(int value) => OnAllocationChanged();
-    partial void OnWantsAllocationPercentageChanged(int value) => OnAllocationChanged();
-    partial void OnInvestAllocationPercentageChanged(int value) => OnAllocationChanged();
-    partial void OnPreferredAppNameChanged(string value) => OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+    partial void OnNeedsAllocationPercentageChanged(int value)
+    {
+        OnAllocationChanged();
+    }
+
+    partial void OnWantsAllocationPercentageChanged(int value)
+    {
+        OnAllocationChanged();
+    }
+
+    partial void OnInvestAllocationPercentageChanged(int value)
+    {
+        OnAllocationChanged();
+    }
+
+    partial void OnPreferredAppNameChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+    }
 
     partial void OnSelectedCurrencyCodeChanged(string value)
     {
@@ -100,7 +116,8 @@ public partial class SettingsVM : ObservableObject
         await using var unitOfWork = _unitOfWorkFactory();
 
         var settings = await unitOfWork.UserSettings.GetAllAsync();
-        var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
+        var settingsByName =
+            settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
         var hiddenFixedExpenseIds = ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds);
         var hiddenSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds);
         var disabledSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.DisabledSavingGoalIds);
@@ -114,7 +131,8 @@ public partial class SettingsVM : ObservableObject
             InvestAllocationPercentage);
         PreferredAppName = ParseString(settingsByName, UserSettingNames.PreferredDisplayName, string.Empty);
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
-        SelectedCurrencyCode = ParseCurrencyCode(settingsByName, UserSettingNames.PreferredCurrencyCode, DefaultCurrencyCode);
+        SelectedCurrencyCode =
+            ParseCurrencyCode(settingsByName, UserSettingNames.PreferredCurrencyCode, DefaultCurrencyCode);
         _savedCurrencyCode = SelectedCurrencyCode;
 
         LoadNotificationSettings(settingsByName);
@@ -163,9 +181,11 @@ public partial class SettingsVM : ObservableObject
             case BudgetAllocationSegment.Needs:
                 NeedsAllocationPercentage = Math.Clamp(NeedsAllocationPercentage + delta, 0, 100);
                 break;
+
             case BudgetAllocationSegment.Wants:
                 WantsAllocationPercentage = Math.Clamp(WantsAllocationPercentage + delta, 0, 100);
                 break;
+
             case BudgetAllocationSegment.Invest:
                 InvestAllocationPercentage = Math.Clamp(InvestAllocationPercentage + delta, 0, 100);
                 break;
@@ -181,9 +201,11 @@ public partial class SettingsVM : ObservableObject
             case BudgetAllocationSegment.Needs:
                 NeedsAllocationPercentage = roundedValue;
                 break;
+
             case BudgetAllocationSegment.Wants:
                 WantsAllocationPercentage = roundedValue;
                 break;
+
             case BudgetAllocationSegment.Invest:
                 InvestAllocationPercentage = roundedValue;
                 break;
@@ -283,6 +305,7 @@ public partial class SettingsVM : ObservableObject
                     }
 
                     break;
+
                 case SettingsBatchAction.Hide:
                 case SettingsBatchAction.Unhide:
                 case SettingsBatchAction.Disable:
@@ -302,14 +325,17 @@ public partial class SettingsVM : ObservableObject
                                 spendingSource.ShowOnUI = false;
                                 updated = true;
                                 break;
+
                             case SettingsBatchAction.Unhide when !spendingSource.ShowOnUI:
                                 spendingSource.ShowOnUI = true;
                                 updated = true;
                                 break;
+
                             case SettingsBatchAction.Disable when spendingSource.IsEnabled:
                                 spendingSource.IsEnabled = false;
                                 updated = true;
                                 break;
+
                             case SettingsBatchAction.Enable when !spendingSource.IsEnabled:
                                 spendingSource.IsEnabled = true;
                                 updated = true;
@@ -381,6 +407,7 @@ public partial class SettingsVM : ObservableObject
                     }
 
                     break;
+
                 case SettingsBatchAction.Disable:
                 case SettingsBatchAction.Enable:
                     foreach (var selectedItem in selectedItems)
@@ -412,6 +439,7 @@ public partial class SettingsVM : ObservableObject
                     }
 
                     break;
+
                 case SettingsBatchAction.Hide:
                 case SettingsBatchAction.Unhide:
                     var hiddenFixedExpenseIds = ParseIdSet(await GetSettingsDictionaryAsync(unitOfWork),
@@ -475,6 +503,7 @@ public partial class SettingsVM : ObservableObject
                     }
 
                     break;
+
                 case SettingsBatchAction.Hide:
                 case SettingsBatchAction.Unhide:
                     var hiddenGoalIds = ParseIdSet(await GetSettingsDictionaryAsync(unitOfWork),
@@ -488,6 +517,7 @@ public partial class SettingsVM : ObservableObject
                     await UpdateIdSetSettingAsync(unitOfWork, UserSettingNames.HiddenSavingGoalIds, hiddenGoalIds,
                         actions);
                     break;
+
                 case SettingsBatchAction.Disable:
                 case SettingsBatchAction.Enable:
                     var disabledGoalIds = ParseIdSet(await GetSettingsDictionaryAsync(unitOfWork),
@@ -620,7 +650,7 @@ public partial class SettingsVM : ObservableObject
             var savingGoals = await unitOfWork.SavingGoals.GetAllAsync();
             var spendingSources = await unitOfWork.SpendingSources.GetAllAsync();
             var tags = await unitOfWork.ExpenseTags.GetAllAsync();
-            IReadOnlyList<UserSettings> settings = keepSettings
+            var settings = keepSettings
                 ? []
                 : await unitOfWork.UserSettings.GetAllAsync();
 
@@ -899,7 +929,7 @@ public partial class SettingsVM : ObservableObject
         return normalized.Length == 7 &&
                normalized[0] == '#' &&
                normalized.Skip(1).All(static character => char.IsDigit(character) ||
-                   (character >= 'A' && character <= 'F'));
+                                                          (character >= 'A' && character <= 'F'));
     }
 
     private static HashSet<int> ParseIdSet(IReadOnlyDictionary<string, string> settings, string name)
@@ -909,7 +939,8 @@ public partial class SettingsVM : ObservableObject
 
         return value
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(part => int.TryParse(part, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : -1)
+            .Select(part =>
+                int.TryParse(part, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : -1)
             .Where(id => id > 0)
             .ToHashSet();
     }
@@ -973,8 +1004,15 @@ public readonly record struct BudgetAllocationSnapshot(int Needs, int Wants, int
 
 public readonly record struct SettingsOperationResult(bool IsSuccess, string? ErrorMessage)
 {
-    public static SettingsOperationResult Success() => new(true, null);
-    public static SettingsOperationResult Failure(string? errorMessage) => new(false, errorMessage);
+    public static SettingsOperationResult Success()
+    {
+        return new SettingsOperationResult(true, null);
+    }
+
+    public static SettingsOperationResult Failure(string? errorMessage)
+    {
+        return new SettingsOperationResult(false, errorMessage);
+    }
 }
 
 public partial class SettingsNotificationOptionVM : ObservableObject

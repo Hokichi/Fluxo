@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
 
@@ -29,34 +30,34 @@ public partial class MessageBoxPopup : BasePopup
         switch (buttons)
         {
             case MessageBoxButton.OK:
-                ConfigureButton(PrimaryButton, "OK", MessageBoxResult.OK, isDefault: true);
+                ConfigureButton(PrimaryButton, "OK", MessageBoxResult.OK, true);
                 PrimaryButton.IsCancel = true;
                 break;
 
             case MessageBoxButton.OKCancel:
-                ConfigureButton(PrimaryButton, "OK", MessageBoxResult.OK, isDefault: true);
+                ConfigureButton(PrimaryButton, "OK", MessageBoxResult.OK, true);
                 ConfigureButton(SecondaryButton, "Cancel", MessageBoxResult.Cancel, isCancel: true);
                 break;
 
             case MessageBoxButton.YesNo:
-                ConfigureButton(PrimaryButton, "Yes", MessageBoxResult.Yes, isDefault: true);
+                ConfigureButton(PrimaryButton, "Yes", MessageBoxResult.Yes, true);
                 ConfigureButton(SecondaryButton, "No", MessageBoxResult.No, isCancel: true);
                 break;
 
             case MessageBoxButton.YesNoCancel:
-                ConfigureButton(PrimaryButton, "Yes", MessageBoxResult.Yes, isDefault: true);
+                ConfigureButton(PrimaryButton, "Yes", MessageBoxResult.Yes, true);
                 ConfigureButton(SecondaryButton, "No", MessageBoxResult.No);
                 ConfigureButton(TertiaryButton, "Cancel", MessageBoxResult.Cancel, isCancel: true);
                 break;
 
             default:
-                ConfigureButton(PrimaryButton, "OK", MessageBoxResult.OK, isDefault: true);
+                ConfigureButton(PrimaryButton, "OK", MessageBoxResult.OK, true);
                 PrimaryButton.IsCancel = true;
                 break;
         }
     }
 
-    private void ConfigureButton(System.Windows.Controls.Button button, string content, MessageBoxResult result,
+    private void ConfigureButton(Button button, string content, MessageBoxResult result,
         bool isDefault = false, bool isCancel = false)
     {
         button.Content = content;
@@ -106,7 +107,7 @@ public partial class MessageBoxPopup : BasePopup
 
     private void SetResultFrom(object sender)
     {
-        if (sender is System.Windows.Controls.Button { Tag: MessageBoxResult result })
+        if (sender is Button { Tag: MessageBoxResult result })
             Result = result;
 
         Close();

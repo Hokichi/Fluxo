@@ -13,21 +13,17 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class SpendingSourceDetailVM : ObservableObject
 {
-    private readonly MainVM _mainViewModel;
-    private readonly int _spendingSourceId;
-    private readonly IUnitOfWork _uow;
-    private SpendingSourceDetailState _savedState = SpendingSourceDetailState.Empty;
-
     [ObservableProperty] private string _accountLimitText = string.Empty;
     [ObservableProperty] private string _apyText = string.Empty;
     [ObservableProperty] private DateTime? _dueDate;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEditing;
+    [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _primaryAmountText = string.Empty;
-    [ObservableProperty] private bool _isEnabled = true;
+    private SpendingSourceDetailState _savedState = SpendingSourceDetailState.Empty;
     [ObservableProperty] private bool _showOnUI = true;
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
     [ObservableProperty] private string _spentAmountText = string.Empty;
@@ -35,19 +31,19 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public SpendingSourceDetailVM(MainVM mainViewModel, int spendingSourceId, IUnitOfWork uow)
     {
-        _mainViewModel = mainViewModel;
-        _spendingSourceId = spendingSourceId;
-        _uow = uow;
+        MainViewModel = mainViewModel;
+        SpendingSourceId = spendingSourceId;
+        UnitOfWork = uow;
     }
 
     public ObservableCollection<SpendingSourceActivityItemVM> RecentActivities { get; } = [];
     public ObservableCollection<SpendingSourceTrendItemVM> Trends { get; } = [];
 
-    public MainVM MainViewModel => _mainViewModel;
+    public MainVM MainViewModel { get; }
 
-    public IUnitOfWork UnitOfWork => _uow;
+    public IUnitOfWork UnitOfWork { get; }
 
-    public int SpendingSourceId => _spendingSourceId;
+    public int SpendingSourceId { get; }
 
     public string PopupTitle => "Income Detail";
 
@@ -59,7 +55,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public bool IsSaving => SpendingSourceType == SpendingSourceType.Saving;
 
-    public bool CanTransfer => IsEnabled && SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL) && !IsEditing;
+    public bool CanTransfer => IsEnabled &&
+                               SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL) &&
+                               !IsEditing;
 
     public bool CanDelete => !IsEditing;
 
@@ -119,7 +117,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public async Task<bool> LoadAsync()
     {
-        return await RefreshAsync(resetDraft: true);
+        return await RefreshAsync(true);
     }
 
     public void BeginEditing()
@@ -152,7 +150,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var spendingSource = await _uow.SpendingSources.GetByIdAsync(_spendingSourceId);
+            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
@@ -160,15 +158,15 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
             ApplyInput(spendingSource, input);
 
-            _uow.SpendingSources.Update(spendingSource);
-            await _uow.SaveChangesAsync();
+            UnitOfWork.SpendingSources.Update(spendingSource);
+            await UnitOfWork.SaveChangesAsync();
 
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)));
 
-            await _mainViewModel.ReloadCurrentDataAsync();
-            await RefreshAsync(resetDraft: true);
+            await MainViewModel.ReloadCurrentDataAsync();
+            await RefreshAsync(true);
             IsEditing = false;
 
             return SpendingSourceDetailResult.Success();
@@ -199,22 +197,22 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var spendingSource = await _uow.SpendingSources.GetByIdAsync(_spendingSourceId);
+            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
             spendingSource.ShowOnUI = !spendingSource.ShowOnUI;
-            _uow.SpendingSources.Update(spendingSource);
-            await _uow.SaveChangesAsync();
+            UnitOfWork.SpendingSources.Update(spendingSource);
+            await UnitOfWork.SaveChangesAsync();
 
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)));
 
-            await _mainViewModel.ReloadCurrentDataAsync();
-            await RefreshAsync(resetDraft: true);
+            await MainViewModel.ReloadCurrentDataAsync();
+            await RefreshAsync(true);
 
             return SpendingSourceDetailResult.Success();
         }
@@ -241,22 +239,22 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var spendingSource = await _uow.SpendingSources.GetByIdAsync(_spendingSourceId);
+            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
             spendingSource.IsEnabled = !spendingSource.IsEnabled;
-            _uow.SpendingSources.Update(spendingSource);
-            await _uow.SaveChangesAsync();
+            UnitOfWork.SpendingSources.Update(spendingSource);
+            await UnitOfWork.SaveChangesAsync();
 
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)));
 
-            await _mainViewModel.ReloadCurrentDataAsync();
-            await RefreshAsync(resetDraft: true);
+            await MainViewModel.ReloadCurrentDataAsync();
+            await RefreshAsync(true);
 
             return SpendingSourceDetailResult.Success();
         }
@@ -280,30 +278,28 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var expenseLogs = await _uow.ExpenseLogs.GetBySpendingSourceIdAsync(_spendingSourceId);
-            var incomeLogs = await _uow.IncomeLogs.GetBySpendingSourceIdAsync(_spendingSourceId);
+            var expenseLogs = await UnitOfWork.ExpenseLogs.GetBySpendingSourceIdAsync(SpendingSourceId);
+            var incomeLogs = await UnitOfWork.IncomeLogs.GetBySpendingSourceIdAsync(SpendingSourceId);
 
             if (expenseLogs.Any(log => !log.IsForDeletion) || incomeLogs.Count > 0)
-            {
                 return SpendingSourceDetailResult.Failure(
                     "This spending source still has activity, so it can't be deleted yet.");
-            }
 
-            var spendingSource = await _uow.SpendingSources.GetByIdAsync(_spendingSourceId);
+            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
             var snapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
-            _uow.SpendingSources.Remove(spendingSource);
-            await _uow.SaveChangesAsync();
+            UnitOfWork.SpendingSources.Remove(spendingSource);
+            await UnitOfWork.SaveChangesAsync();
 
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new DeleteSpendingSourceMemoryAction(snapshot)));
 
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await MainViewModel.ReloadCurrentDataAsync();
 
-            return SpendingSourceDetailResult.Success(shouldClose: true);
+            return SpendingSourceDetailResult.Success(true);
         }
         catch (Exception exception)
         {
@@ -323,21 +319,22 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     private async Task<bool> RefreshAsync(bool resetDraft)
     {
-        var spendingSource = await _uow.SpendingSources.GetByIdAsync(_spendingSourceId);
+        var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
         if (spendingSource is null)
             return false;
 
-        var expenseLogs = (await _uow.ExpenseLogs.GetBySpendingSourceIdAsync(_spendingSourceId))
+        var expenseLogs = (await UnitOfWork.ExpenseLogs.GetBySpendingSourceIdAsync(SpendingSourceId))
             .Where(log => !log.IsForDeletion)
             .ToList();
-        var incomeLogs = (await _uow.IncomeLogs.GetBySpendingSourceIdAsync(_spendingSourceId)).ToList();
+        var incomeLogs = (await UnitOfWork.IncomeLogs.GetBySpendingSourceIdAsync(SpendingSourceId)).ToList();
 
         MoneyIn = incomeLogs.Sum(log => log.Amount);
         MoneyOut = expenseLogs.Sum(log => log.Amount);
 
         ReplaceCollection(RecentActivities, BuildActivities(expenseLogs, incomeLogs));
         ReplaceCollection(Trends, BuildTrends(expenseLogs, incomeLogs));
-        TrendMaximum = Math.Max(1m, Trends.SelectMany(item => new[] { item.IncomeAmount, item.ExpenseAmount }).DefaultIfEmpty(1m).Max());
+        TrendMaximum = Math.Max(1m,
+            Trends.SelectMany(item => new[] { item.IncomeAmount, item.ExpenseAmount }).DefaultIfEmpty(1m).Max());
 
         _savedState = CreateState(spendingSource);
 
@@ -412,15 +409,15 @@ public partial class SpendingSourceDetailVM : ObservableObject
         }
 
         input = new SpendingSourceDetailState(
-            Name: name,
-            SpendingSourceType: SpendingSourceType,
-            PrimaryAmount: primaryAmount,
-            AccountLimit: accountLimit,
-            SpentAmount: spentAmount,
-            DueDate: DueDate?.Date,
-            InterestRate: interestRate,
-            IsEnabled: IsEnabled,
-            ShowOnUI: ShowOnUI);
+            name,
+            SpendingSourceType,
+            primaryAmount,
+            accountLimit,
+            spentAmount,
+            DueDate?.Date,
+            interestRate,
+            IsEnabled,
+            ShowOnUI);
 
         return true;
     }
@@ -436,13 +433,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.ShowOnUI = input.ShowOnUI;
 
         if (input.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
-        {
             spendingSource.SpentAmount = input.SpentAmount;
-        }
         else
-        {
             spendingSource.Balance = input.PrimaryAmount;
-        }
     }
 
     private static SpendingSourceDetailState CreateState(SpendingSource spendingSource)
@@ -470,14 +463,14 @@ public partial class SpendingSourceDetailVM : ObservableObject
             log.Expense?.Name?.Trim() is { Length: > 0 } expenseName ? expenseName : "Expense",
             string.IsNullOrWhiteSpace(log.Notes) ? "Expense" : log.Notes.Trim(),
             log.Amount,
-            IsExpense: true));
+            true));
 
         var incomeActivities = incomeLogs.Select(log => new SpendingSourceActivityItemVM(
             log.AddedOn,
             BuildIncomeTitle(log.Notes),
             string.IsNullOrWhiteSpace(log.Notes) ? "Income" : log.Notes.Trim(),
             log.Amount,
-            IsExpense: false));
+            false));
 
         return expenseActivities
             .Concat(incomeActivities)
@@ -503,10 +496,10 @@ public partial class SpendingSourceDetailVM : ObservableObject
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
 
         return months.Select(month => new SpendingSourceTrendItemVM(
-            month,
-            month.Year == DateTime.Today.Year ? month.ToString("MMM") : month.ToString("MMM yy"),
-            incomeByMonth.GetValueOrDefault(month),
-            expenseByMonth.GetValueOrDefault(month)))
+                month,
+                month.Year == DateTime.Today.Year ? month.ToString("MMM") : month.ToString("MMM yy"),
+                incomeByMonth.GetValueOrDefault(month),
+                expenseByMonth.GetValueOrDefault(month)))
             .ToList();
     }
 
@@ -561,9 +554,15 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public readonly record struct SpendingSourceDetailResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
     {
-        public static SpendingSourceDetailResult Success(bool shouldClose = false) => new(true, shouldClose, null);
+        public static SpendingSourceDetailResult Success(bool shouldClose = false)
+        {
+            return new SpendingSourceDetailResult(true, shouldClose, null);
+        }
 
-        public static SpendingSourceDetailResult Failure(string? errorMessage) => new(false, false, errorMessage);
+        public static SpendingSourceDetailResult Failure(string? errorMessage)
+        {
+            return new SpendingSourceDetailResult(false, false, errorMessage);
+        }
     }
 
     private readonly record struct SpendingSourceDetailState(

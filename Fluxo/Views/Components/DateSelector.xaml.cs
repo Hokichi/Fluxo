@@ -31,8 +31,6 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
         Loaded += (_, _) => RebuildView();
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     public ObservableCollection<CalendarDayItem> Days { get; } = [];
     public ObservableCollection<CalendarChoiceItem> Months { get; } = [];
     public ObservableCollection<CalendarChoiceItem> Years { get; } = [];
@@ -78,6 +76,8 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
     public bool IsDayMode => _displayMode == DisplayMode.Day;
     public bool IsMonthMode => _displayMode == DisplayMode.Month;
     public bool IsYearMode => _displayMode == DisplayMode.Year;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     private static void OnSelectedDateChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
     {
@@ -206,7 +206,7 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
         var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
         var leadingDayOffset = ((int)firstDayOfMonth.DayOfWeek + 6) % 7;
         var totalCells = leadingDayOffset + lastDayOfMonth.Day;
-        var totalVisibleDays = ((totalCells + 6) / 7) * 7;
+        var totalVisibleDays = (totalCells + 6) / 7 * 7;
         var firstVisibleDay = firstDayOfMonth.AddDays(-leadingDayOffset);
 
         for (var index = 0; index < totalVisibleDays; index++)
@@ -240,12 +240,10 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
         Years.Clear();
 
         for (var year = _yearRangeStart; year < _yearRangeStart + 12; year++)
-        {
             Years.Add(new CalendarChoiceItem(
                 year.ToString(CultureInfo.InvariantCulture),
                 year,
                 SelectedDate.Year == year));
-        }
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

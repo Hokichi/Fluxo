@@ -53,8 +53,12 @@
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                            <Condition
+                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}"
+                                                Value="True" />
+                                            <Condition
+                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}"
+                                                Value="False" />
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="Visibility" Value="Visible" />
                                     </MultiDataTrigger>
@@ -67,8 +71,10 @@
                         <Border.Clip>
                             <MultiBinding Converter="{StaticResource BorderCornerClipConverter}">
                                 <Binding Path="CornerRadius" RelativeSource="{RelativeSource Self}" />
-                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
-                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
+                                <Binding Path="ActualWidth"
+                                         RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
+                                <Binding Path="ActualHeight"
+                                         RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
                             </MultiBinding>
                         </Border.Clip>
                         <Border
@@ -85,8 +91,12 @@
                                     <Style.Triggers>
                                         <MultiDataTrigger>
                                             <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
-                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                                <Condition
+                                                    Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}"
+                                                    Value="True" />
+                                                <Condition
+                                                    Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}"
+                                                    Value="False" />
                                             </MultiDataTrigger.Conditions>
                                             <Setter Property="Visibility" Value="Visible" />
                                             <MultiDataTrigger.EnterActions>
@@ -137,8 +147,12 @@
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                            <Condition
+                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}"
+                                                Value="True" />
+                                            <Condition
+                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}"
+                                                Value="False" />
                                         </MultiDataTrigger.Conditions>
                                         <MultiDataTrigger.EnterActions>
                                             <BeginStoryboard>
@@ -423,7 +437,9 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                    <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Style="{StaticResource ExpenseListViewStyle}" />
+                    <ListView
+                        ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        Style="{StaticResource ExpenseListViewStyle}" />
                 </customControls:FadingScrollViewer>
             </Grid>
         </Grid>

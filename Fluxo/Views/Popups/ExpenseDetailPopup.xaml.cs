@@ -121,7 +121,7 @@ public partial class ExpenseDetailPopup : BasePopup
         }
     }
 
-    private void OnNoteTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    private void OnNoteTextChanged(object sender, TextChangedEventArgs e)
     {
         if (_isSyncingNoteDocument)
             return;

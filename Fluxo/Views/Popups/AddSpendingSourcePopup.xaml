@@ -59,18 +59,22 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="TickBox" Property="Background" Value="{StaticResource Brush.Mint}" />
                                 <Setter TargetName="TickBox" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                                <Setter TargetName="TickPath" Property="Fill" Value="{StaticResource Brush.Background.Surface}" />
+                                <Setter TargetName="TickPath" Property="Fill"
+                                        Value="{StaticResource Brush.Background.Surface}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TickBox" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="TickBox" Property="Background"
+                                        Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsMouseOver" Value="True" />
                                     <Condition Property="IsChecked" Value="True" />
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="TickBox" Property="Background" Value="{StaticResource Brush.Mint.Muted}" />
-                                <Setter TargetName="TickBox" Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                                <Setter TargetName="TickBox" Property="Background"
+                                        Value="{StaticResource Brush.Mint.Muted}" />
+                                <Setter TargetName="TickBox" Property="BorderBrush"
+                                        Value="{StaticResource Brush.Mint.Muted}" />
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -138,7 +142,8 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel
+                                Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"
@@ -146,7 +151,8 @@
                                     Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
-                            <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Margin="0,14,0,0"
+                                        Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Account Limit" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"
@@ -154,12 +160,14 @@
                                     Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
-                            <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Margin="0,14,0,0"
+                                        Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Due Date" />
                                 <components:DateSelector SelectedDate="{Binding DueDate, Mode=TwoWay}" />
                             </StackPanel>
 
-                            <StackPanel Margin="0,14,0,0" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Margin="0,14,0,0"
+                                        Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"

@@ -29,7 +29,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="RootBorder" Property="Background"
+                                        Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -227,7 +228,8 @@
                                             FontSize="12"
                                             Foreground="{StaticResource Brush.Text.Primary}">
                                             <Run Text="$" />
-                                            <Run Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                                            <Run
+                                                Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                                         </TextBlock>
                                         <TextBlock
                                             Margin="0,6,0,0"

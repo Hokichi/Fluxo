@@ -415,7 +415,8 @@ public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot s
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
+        var spendingSource =
+            await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
         if (spendingSource is null)
             return;
 
@@ -514,7 +515,8 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
 
     public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
+        var spendingSource =
+            await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
         if (spendingSource is null)
             return;
 
@@ -768,7 +770,8 @@ internal static class LogMemoryPersistence
         int spendingSourceId, CancellationToken cancellationToken)
     {
         var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(spendingSourceId, cancellationToken);
-        return spendingSource ?? throw new InvalidOperationException($"Unable to find spending source {spendingSourceId}.");
+        return spendingSource ??
+               throw new InvalidOperationException($"Unable to find spending source {spendingSourceId}.");
     }
 
     internal static async Task<ExpenseTag> GetRequiredExpenseTagAsync(IUnitOfWork unitOfWork, int expenseTagId,

@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
@@ -27,6 +26,7 @@ public partial class SpendingSourcesListPopup : BasePopup
         var ownerWindow = Owner as MainWindow;
         Close();
 
-        ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenSpendingSourceDetailPopup(spendingSource)));
+        ownerWindow?.Dispatcher.BeginInvoke(new Action(() =>
+            ownerWindow.OpenSpendingSourceDetailPopup(spendingSource)));
     }
 }

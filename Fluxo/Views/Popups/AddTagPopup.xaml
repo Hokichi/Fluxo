@@ -58,10 +58,12 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ColorChip" Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
+                                            <Setter TargetName="ColorChip" Property="BorderBrush"
+                                                    Value="{StaticResource Brush.Text.Primary}" />
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="ColorChip" Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
+                                            <Setter TargetName="ColorChip" Property="BorderBrush"
+                                                    Value="{StaticResource Brush.Text.Primary}" />
                                             <Setter TargetName="ColorChip" Property="BorderThickness" Value="2" />
                                             <Setter TargetName="TickPath" Property="Opacity" Value="1" />
                                         </Trigger>

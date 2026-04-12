@@ -33,7 +33,7 @@ public partial class QuickAddPopup : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
-        var result = await _viewModel.SaveAsync(resetAfterSave: false);
+        var result = await _viewModel.SaveAsync(false);
         if (!result.IsSuccess)
         {
             ShowValidationMessage(result.ErrorMessage);
@@ -46,7 +46,7 @@ public partial class QuickAddPopup : BasePopup
 
     protected override async void OnSaveAndCreateNewButtonClick()
     {
-        var result = await _viewModel.SaveAsync(resetAfterSave: true);
+        var result = await _viewModel.SaveAsync(true);
         if (!result.IsSuccess)
         {
             ShowValidationMessage(result.ErrorMessage);
@@ -83,7 +83,7 @@ public partial class QuickAddPopup : BasePopup
 
             if (confirmation == MessageBoxResult.Yes)
             {
-                var result = await _viewModel.SaveAsync(resetAfterSave: false);
+                var result = await _viewModel.SaveAsync(false);
                 if (!result.IsSuccess)
                 {
                     ShowValidationMessage(result.ErrorMessage);
@@ -99,7 +99,7 @@ public partial class QuickAddPopup : BasePopup
         }
     }
 
-    private void OnNoteTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    private void OnNoteTextChanged(object sender, TextChangedEventArgs e)
     {
         if (_isSyncingNoteDocument)
             return;

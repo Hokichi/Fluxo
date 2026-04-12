@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Fluxo.Resources.CustomControls;
@@ -11,13 +10,13 @@ namespace Fluxo.Views.Popups;
 
 public partial class SettingsPopup : BasePopup
 {
-    private readonly SettingsVM _viewModel;
     private readonly DispatcherTimer _allocationHoldDelayTimer = new() { Interval = TimeSpan.FromSeconds(5) };
     private readonly DispatcherTimer _allocationRepeatTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private readonly SettingsVM _viewModel;
     private bool _allowClose;
-    private bool _isHandlingCloseRequest;
-    private BudgetAllocationSegment _heldAllocationSegment;
     private int _heldAllocationDelta;
+    private BudgetAllocationSegment _heldAllocationSegment;
+    private bool _isHandlingCloseRequest;
 
     public SettingsPopup(SettingsVM viewModel)
     {
@@ -182,9 +181,15 @@ public partial class SettingsPopup : BasePopup
 
         var result = parts[0] switch
         {
-            "SpendingSources" when sender is FrameworkElement { DataContext: SettingsSpendingSourceItemVM sourceItem } =>
+            "SpendingSources" when sender is FrameworkElement
+                {
+                    DataContext: SettingsSpendingSourceItemVM sourceItem
+                } =>
                 await _viewModel.ExecuteSpendingSourceItemActionAsync(sourceItem.Id, action),
-            "FixedExpenses" when sender is FrameworkElement { DataContext: SettingsFixedExpenseItemVM fixedExpenseItem } =>
+            "FixedExpenses" when sender is FrameworkElement
+                {
+                    DataContext: SettingsFixedExpenseItemVM fixedExpenseItem
+                } =>
                 await _viewModel.ExecuteFixedExpenseItemActionAsync(fixedExpenseItem.Id, action),
             "Goals" when sender is FrameworkElement { DataContext: SettingsSavingGoalItemVM goalItem } =>
                 await _viewModel.ExecuteGoalItemActionAsync(goalItem.Id, action),
@@ -258,7 +263,8 @@ public partial class SettingsPopup : BasePopup
 
     private void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement { Tag: string tag } || !TryParseAllocationTag(tag, out var segment, out var delta))
+        if (sender is not FrameworkElement { Tag: string tag } ||
+            !TryParseAllocationTag(tag, out var segment, out var delta))
             return;
 
         _viewModel.IncrementAllocation(segment, delta);
@@ -266,7 +272,8 @@ public partial class SettingsPopup : BasePopup
 
     private void OnAllocationAdjustButtonMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not FrameworkElement { Tag: string tag } || !TryParseAllocationTag(tag, out var segment, out var delta))
+        if (sender is not FrameworkElement { Tag: string tag } ||
+            !TryParseAllocationTag(tag, out var segment, out var delta))
             return;
 
         _heldAllocationSegment = segment;

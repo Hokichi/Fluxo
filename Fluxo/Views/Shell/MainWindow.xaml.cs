@@ -9,8 +9,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
-using Fluxo.Resources.CustomControls;
 using Fluxo.Core.Interfaces;
+using Fluxo.Resources.CustomControls;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -27,17 +27,19 @@ public partial class MainWindow : Window
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 200; // ms
     private readonly IExpenseCleanupService _expenseCleanupService;
+    private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
     private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _isClosing;
-    private bool _isMaximized;
-    private Rect _currentBounds;
-    private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private bool _isHeaderMenuPinned;
+    private bool _isMaximized;
     private bool _isPointerOverHeaderMenuButton;
     private bool _isPointerOverHeaderMenuPopup;
-    private readonly LogMemoryManager _logMemoryManager;
+
+    private EventHandler? _renderHandler;
     private Rect _restoreBounds;
 
     public MainWindow(MainVM mainVM, Func<IUnitOfWork> unitOfWorkFactory, IExpenseCleanupService expenseCleanupService)
@@ -177,7 +179,7 @@ public partial class MainWindow : Window
 
         var workArea = GetMonitorWorkArea();
         _currentBounds = workArea;
-        AnimateBounds(_restoreBounds, workArea, maximizing: true);
+        AnimateBounds(_restoreBounds, workArea, true);
     }
 
     private void AnimateToRestored()
@@ -190,10 +192,8 @@ public partial class MainWindow : Window
         UpdateExpandRestoreButtonIcon();
 
         _currentBounds = _restoreBounds;
-        AnimateBounds(from, _restoreBounds, maximizing: false);
+        AnimateBounds(from, _restoreBounds, false);
     }
-
-    private EventHandler? _renderHandler;
 
     private void AnimateBounds(Rect from, Rect to, bool maximizing)
     {
@@ -269,21 +269,6 @@ public partial class MainWindow : Window
 
     [DllImport("user32.dll")]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MONITORINFO
-    {
-        public int cbSize;
-        public RECT rcMonitor;
-        public RECT rcWork;
-        public uint dwFlags;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct RECT
-    {
-        public int Left, Top, Right, Bottom;
-    }
 
     // ── Shared UI helpers ───────────────────────────────────────────
 
@@ -396,7 +381,7 @@ public partial class MainWindow : Window
     {
         _isPointerOverHeaderMenuButton = true;
         _headerMenuCloseTimer.Stop();
-        OpenHeaderMenu(pinned: false);
+        OpenHeaderMenu(false);
     }
 
     private void OnHeaderMenuButtonMouseLeave(object sender, MouseEventArgs e)
@@ -419,7 +404,7 @@ public partial class MainWindow : Window
 
     private void OnHeaderMenuButtonClick(object sender, RoutedEventArgs e)
     {
-        OpenHeaderMenu(pinned: true);
+        OpenHeaderMenu(true);
     }
 
     private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)
@@ -630,5 +615,20 @@ public partial class MainWindow : Window
 
         if (RedoMenuButton is not null)
             RedoMenuButton.IsEnabled = _logMemoryManager.CanRedo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left, Top, Right, Bottom;
     }
 }

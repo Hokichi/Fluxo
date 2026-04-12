@@ -1,3 +1,4 @@
+using System.Reflection;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
@@ -6,18 +7,10 @@ namespace Fluxo.Data.Repositories;
 
 public class Repository<T>(FluxoDbContext dbContext) : IRepository<T> where T : class
 {
-    private static readonly System.Reflection.PropertyInfo? IdProperty = typeof(T).GetProperty("Id");
+    private static readonly PropertyInfo? IdProperty = typeof(T).GetProperty("Id");
 
     protected FluxoDbContext DbContext { get; } = dbContext;
     protected DbSet<T> DbSet { get; } = dbContext.Set<T>();
-
-    protected T? FindTrackedEntity(int id)
-    {
-        if (IdProperty?.PropertyType != typeof(int))
-            return null;
-
-        return DbSet.Local.FirstOrDefault(entity => IdProperty.GetValue(entity) is int entityId && entityId == id);
-    }
 
     public virtual async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -54,5 +47,13 @@ public class Repository<T>(FluxoDbContext dbContext) : IRepository<T> where T : 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    protected T? FindTrackedEntity(int id)
+    {
+        if (IdProperty?.PropertyType != typeof(int))
+            return null;
+
+        return DbSet.Local.FirstOrDefault(entity => IdProperty.GetValue(entity) is int entityId && entityId == id);
     }
 }

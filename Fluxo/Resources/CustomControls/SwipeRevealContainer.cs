@@ -31,13 +31,13 @@ public class SwipeRevealContainer : ContentControl
             new PropertyMetadata(false));
 
     private static SwipeRevealContainer? _currentlyRevealed;
+    private readonly TranslateTransform _translateTransform = new();
 
     private Border? _contentBorder;
+    private double _currentOffset;
     private bool _isDragging;
     private bool _isPointerDown;
     private Point _startPoint;
-    private readonly TranslateTransform _translateTransform = new();
-    private double _currentOffset;
 
     static SwipeRevealContainer()
     {

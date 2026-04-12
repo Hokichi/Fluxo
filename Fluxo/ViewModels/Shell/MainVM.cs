@@ -27,25 +27,29 @@ namespace Fluxo.ViewModels.Shell;
 
 public partial class MainVM : ObservableRecipient
 {
+    private readonly HashSet<int> _disabledSavingGoalIds = [];
     private readonly HashSet<int> _expenseLogIdsMarkedForDeletion = [];
     private readonly List<ExpenseVM> _expenses = [];
+    private readonly HashSet<int> _hiddenFixedExpenseIds = [];
+    private readonly HashSet<int> _hiddenSavingGoalIds = [];
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
 
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
 
-    private readonly IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>
+    private readonly EntityReadUnitOfWork
         _readUnitOfWork;
+
+    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
 
     private readonly IUserSettingsRepository _userSettingsRepository;
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
+    private decimal _allTimeInvestSpent;
+    private decimal _allTimeNeedsSpent;
+    private decimal _allTimeWantsSpent;
+    [ObservableProperty] private string _appDisplayName = "Fluxo";
     private decimal _budgetUsageWarningPercentage = 0.90m;
+    [ObservableProperty] private bool _canNavigateForward;
     private decimal _creditUsageWarningPercentage = 0.30m;
-    private readonly HashSet<int> _hiddenFixedExpenseIds = [];
-    private readonly HashSet<int> _hiddenSavingGoalIds = [];
-    private readonly HashSet<int> _disabledSavingGoalIds = [];
-    private bool _isBudgetThresholdNotifEnabled = true;
-    private bool _isCreditDeadlineNotifEnabled = true;
 
     [ObservableProperty] private int _dailyAllowance;
 
@@ -62,9 +66,13 @@ public partial class MainVM : ObservableRecipient
     [ObservableProperty] private int _investPercentage;
     [ObservableProperty] private decimal _investSpent;
     private decimal _investThreshold = 0.2m;
+    [ObservableProperty] private bool _isAtCurrentPeriod = true;
+    private bool _isBudgetThresholdNotifEnabled = true;
+    private bool _isCreditDeadlineNotifEnabled = true;
     private bool _isFixedExpensesDeductionNotifEnabled;
     private bool _isInitialized;
     [ObservableProperty] private bool _isInvestEmpty;
+    private bool _isLowAccountBalanceNotifEnabled;
     private bool _isLowCreditNotifEnabled;
 
     [ObservableProperty] private bool _isNeedsEmpty;
@@ -72,17 +80,7 @@ public partial class MainVM : ObservableRecipient
 
     private bool _isSynchronizingTagSelections;
     [ObservableProperty] private bool _isWantsEmpty;
-    [ObservableProperty] private bool _canNavigateForward;
-    [ObservableProperty] private bool _isAtCurrentPeriod = true;
-    private DateTime _savedDailyDate = DateTime.Today;
-    private DateTime _savedWeeklyDate = DateTime.Today;
-    private DateTime _savedMonthlyDate = DateTime.Today;
-    private int _spinnerPageOffset;
-    private decimal _allTimeNeedsSpent;
-    private decimal _allTimeWantsSpent;
-    private decimal _allTimeInvestSpent;
     private decimal _lowAccountBalancePercentage = 0.20m;
-    private bool _isLowAccountBalanceNotifEnabled;
 
     [ObservableProperty]
     private ICollectionView _needs = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
@@ -94,8 +92,10 @@ public partial class MainVM : ObservableRecipient
     [ObservableProperty] private decimal _needsSpent;
     private decimal _needsThreshold = 0.5m;
     [ObservableProperty] private int _notificationCount;
-    [ObservableProperty] private string _appDisplayName = "Fluxo";
     [ObservableProperty] private ObservableCollection<ExpenseTagVM> _otherTags = [];
+    private DateTime _savedDailyDate = DateTime.Today;
+    private DateTime _savedMonthlyDate = DateTime.Today;
+    private DateTime _savedWeeklyDate = DateTime.Today;
     [ObservableProperty] private DayOfWeekVM _selectedDay = new();
     [ObservableProperty] private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
     [ObservableProperty] private ExpenseTagVM? _selectedOtherTag;
@@ -103,10 +103,9 @@ public partial class MainVM : ObservableRecipient
     [ObservableProperty] private ExpenseTagVM? _selectedVisibleTag;
 
     [ObservableProperty] private ObservableCollection<SpendingSourceVM> _spendingSources = [];
+    private int _spinnerPageOffset;
 
     [ObservableProperty] private ObservableCollection<ExpenseTagVM> _tags = [];
-
-    private decimal _totalIncomeAmount;
 
     [ObservableProperty] private decimal _totalSpent;
 
@@ -166,7 +165,7 @@ public partial class MainVM : ObservableRecipient
 
     public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
 
-    public decimal TotalIncomeAmount => _totalIncomeAmount;
+    public decimal TotalIncomeAmount { get; private set; }
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
@@ -455,26 +454,26 @@ public partial class MainVM : ObservableRecipient
             case MainContentViewMode.Daily:
                 var todayMonday = today.AddDays(-(int)today.DayOfWeek + 1);
                 var refMonday = referenceDate.AddDays(-(int)referenceDate.DayOfWeek + 1);
-                _spinnerPageOffset = (int)(refMonday - todayMonday).Days / 7;
+                _spinnerPageOffset = (refMonday - todayMonday).Days / 7;
                 break;
 
             case MainContentViewMode.Weekly:
                 var todayWeekMonday = today.AddDays(-(int)today.DayOfWeek + 1);
                 var todayWeekNum = ISOWeek.GetWeekOfYear(today);
-                var todayGroupStart = ((todayWeekNum - 1) / 4) * 4;
+                var todayGroupStart = (todayWeekNum - 1) / 4 * 4;
                 var todayBaseMonday = todayWeekMonday.AddDays(-(todayWeekNum - 1 - todayGroupStart) * 7);
 
                 var refWeekMonday = referenceDate.AddDays(-(int)referenceDate.DayOfWeek + 1);
                 var refWeekNum = ISOWeek.GetWeekOfYear(refWeekMonday);
-                var refGroupStart = ((refWeekNum - 1) / 4) * 4;
+                var refGroupStart = (refWeekNum - 1) / 4 * 4;
                 var refBaseMonday = refWeekMonday.AddDays(-(refWeekNum - 1 - refGroupStart) * 7);
 
-                _spinnerPageOffset = (int)(refBaseMonday - todayBaseMonday).Days / 28;
+                _spinnerPageOffset = (refBaseMonday - todayBaseMonday).Days / 28;
                 break;
 
             case MainContentViewMode.Monthly:
-                var todayGroupMonth = ((today.Month - 1) / 4) * 4 + 1;
-                var refGroupMonth = ((referenceDate.Month - 1) / 4) * 4 + 1;
+                var todayGroupMonth = (today.Month - 1) / 4 * 4 + 1;
+                var refGroupMonth = (referenceDate.Month - 1) / 4 * 4 + 1;
                 var todayBase = new DateTime(today.Year, todayGroupMonth, 1);
                 var refBase = new DateTime(referenceDate.Year, refGroupMonth, 1);
                 _spinnerPageOffset = ((refBase.Year - todayBase.Year) * 12 + refBase.Month - todayBase.Month) / 4;
@@ -522,7 +521,7 @@ public partial class MainVM : ObservableRecipient
         var today = DateTime.Today;
         var currentWeekMonday = today.AddDays(-(int)today.DayOfWeek + 1);
         var currentWeekNumber = ISOWeek.GetWeekOfYear(today);
-        var groupStart = ((currentWeekNumber - 1) / 4) * 4;
+        var groupStart = (currentWeekNumber - 1) / 4 * 4;
         var baseMonday = currentWeekMonday.AddDays(-(currentWeekNumber - 1 - groupStart) * 7);
         var firstMonday = baseMonday.AddDays(_spinnerPageOffset * 28);
 
@@ -545,7 +544,7 @@ public partial class MainVM : ObservableRecipient
     {
         var today = DateTime.Today;
         var currentMonth = today.Month;
-        var groupStartMonth = ((currentMonth - 1) / 4) * 4 + 1;
+        var groupStartMonth = (currentMonth - 1) / 4 * 4 + 1;
         var baseDate = new DateTime(today.Year, groupStartMonth, 1);
         var firstMonth = baseDate.AddMonths(_spinnerPageOffset * 4);
 
@@ -565,7 +564,7 @@ public partial class MainVM : ObservableRecipient
 
     private void SelectSpinnerItemForDate(DateTime referenceDate)
     {
-        DayOfWeekVM? match = SelectedMainContentViewMode switch
+        var match = SelectedMainContentViewMode switch
         {
             MainContentViewMode.Daily =>
                 DaysOfWeek.FirstOrDefault(d => d.Date.Date == referenceDate.Date),
@@ -732,12 +731,12 @@ public partial class MainVM : ObservableRecipient
 
     private void RefreshDashboardMetrics()
     {
-        _totalIncomeAmount = SpendingSources.Sum(source => source.Balance);
+        TotalIncomeAmount = SpendingSources.Sum(source => source.Balance);
         OnPropertyChanged(nameof(TotalIncomeAmount));
 
-        NeedsAvailable = decimal.Round(_totalIncomeAmount * _needsThreshold, 2);
-        WantsAvailable = decimal.Round(_totalIncomeAmount * _wantsThreshold, 2);
-        InvestAvailable = decimal.Round(_totalIncomeAmount * _investThreshold, 2);
+        NeedsAvailable = decimal.Round(TotalIncomeAmount * _needsThreshold, 2);
+        WantsAvailable = decimal.Round(TotalIncomeAmount * _wantsThreshold, 2);
+        InvestAvailable = decimal.Round(TotalIncomeAmount * _investThreshold, 2);
 
         NeedsSpent = _allTimeNeedsSpent;
         WantsSpent = _allTimeWantsSpent;
@@ -756,7 +755,7 @@ public partial class MainVM : ObservableRecipient
     {
         var daysLeft = Math.Max(1,
             DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month) - DateTime.Today.Day);
-        return (int)((_totalIncomeAmount - TotalSpent) / daysLeft);
+        return (int)((TotalIncomeAmount - TotalSpent) / daysLeft);
     }
 
     private static int CalculatePercentage(decimal spentAmount, decimal availableAmount)
@@ -1346,7 +1345,8 @@ public partial class MainVM : ObservableRecipient
         if (trackedExpenseLog.Id > 0)
             _expenseLogIdsMarkedForDeletion.Add(trackedExpenseLog.Id);
 
-        AddToAllTimeSpent(trackedExpenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs, -trackedExpenseLog.Amount);
+        AddToAllTimeSpent(trackedExpenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
+            -trackedExpenseLog.Amount);
         RefreshVisibleMoneyOutMetrics([trackedExpenseLog.SpendingSource.Id]);
         RefreshDashboardMetrics();
         RefreshNotifications();

@@ -14,26 +14,39 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class ExpenseDetailVM : ObservableObject
 {
-    private readonly MainVM _mainViewModel;
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
     private readonly ExpenseLogVM _expenseLog;
+    private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IUnitOfWork _uow;
-    private ExpenseDetailSavedState _savedState = new(string.Empty, 0m, string.Empty, DateTime.Today,
-        ExpenseCategory.Needs, 0, 0);
-    private bool _isUpdatingTagCollections;
 
     [ObservableProperty] private string _amountText = string.Empty;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
+    private bool _isUpdatingTagCollections;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private string _popupTitle = "Expense Detail";
+
+    private ExpenseDetailSavedState _savedState = new(string.Empty, 0m, string.Empty, DateTime.Today,
+        ExpenseCategory.Needs, 0, 0);
+
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
+
+    public ExpenseDetailVM(MainVM mainViewModel, ExpenseLogVM expenseLog, IUnitOfWork uow)
+    {
+        _mainViewModel = mainViewModel;
+        _expenseLog = expenseLog;
+        _uow = uow;
+
+        ReloadChoicesFromMainViewModel();
+        _savedState = CreateSavedState(expenseLog);
+        LoadFromSavedState();
+    }
 
     public IReadOnlyList<ExpenseCategoryOption> ExpenseCategories { get; } =
     [
@@ -49,17 +62,6 @@ public partial class ExpenseDetailVM : ObservableObject
     public bool AreFieldsReadOnly => !IsEditing;
     public bool CanEditFields => IsEditing;
     public bool HasMoreTags => OverflowTags.Count > 0;
-
-    public ExpenseDetailVM(MainVM mainViewModel, ExpenseLogVM expenseLog, IUnitOfWork uow)
-    {
-        _mainViewModel = mainViewModel;
-        _expenseLog = expenseLog;
-        _uow = uow;
-
-        ReloadChoicesFromMainViewModel();
-        _savedState = CreateSavedState(expenseLog);
-        LoadFromSavedState();
-    }
 
     partial void OnIsEditingChanged(bool value)
     {
@@ -411,7 +413,8 @@ public partial class ExpenseDetailVM : ObservableObject
             savedState.TagId);
     }
 
-    private static ExpenseDetailChangedFields GetChangedFields(ExpenseDetailInput input, ExpenseDetailSavedState savedState)
+    private static ExpenseDetailChangedFields GetChangedFields(ExpenseDetailInput input,
+        ExpenseDetailSavedState savedState)
     {
         var changedFields = ExpenseDetailChangedFields.None;
 
@@ -443,8 +446,15 @@ public partial class ExpenseDetailVM : ObservableObject
 
     public readonly record struct ExpenseDetailSaveResult(bool IsSuccess, string? ErrorMessage)
     {
-        public static ExpenseDetailSaveResult Success() => new(true, null);
-        public static ExpenseDetailSaveResult Failure(string? errorMessage) => new(false, errorMessage);
+        public static ExpenseDetailSaveResult Success()
+        {
+            return new ExpenseDetailSaveResult(true, null);
+        }
+
+        public static ExpenseDetailSaveResult Failure(string? errorMessage)
+        {
+            return new ExpenseDetailSaveResult(false, errorMessage);
+        }
     }
 
     private readonly record struct ExpenseDetailInput(

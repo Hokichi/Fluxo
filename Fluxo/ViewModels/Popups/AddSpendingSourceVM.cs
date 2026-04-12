@@ -86,10 +86,8 @@ public partial class AddSpendingSourceVM : ObservableObject
             var existingSources = await unitOfWork.SpendingSources.GetAllAsync();
             if (existingSources.Any(source =>
                     string.Equals(source.Name, input.Name, StringComparison.OrdinalIgnoreCase)))
-            {
                 return AddSpendingSourceResult.Failure(
                     $"A spending source named \"{input.Name}\" already exists.");
-            }
 
             var spendingSource = new SpendingSource
             {
@@ -112,7 +110,7 @@ public partial class AddSpendingSourceVM : ObservableObject
                     SpendingSourceMemorySnapshot.Create(spendingSource))));
 
             await _mainViewModel.ReloadCurrentDataAsync();
-            return AddSpendingSourceResult.Success(shouldClose: true);
+            return AddSpendingSourceResult.Success(true);
         }
         catch (Exception exception)
         {
@@ -186,15 +184,15 @@ public partial class AddSpendingSourceVM : ObservableObject
         }
 
         input = new AddSpendingSourceInput(
-            Name: name,
-            SpendingSourceType: SelectedSpendingSourceType,
-            Balance: IsCreditLike ? 0m : primaryAmount,
-            SpentAmount: IsCreditLike ? spentAmount : 0m,
-            AccountLimit: IsCredit ? accountLimit : 0m,
-            DueDate: IsCreditLike ? DueDate?.Date : null,
-            InterestRate: IsSaving ? interestRate : null,
-            ShowOnUI: ShowOnUI,
-            IsEnabled: IsEnabled);
+            name,
+            SelectedSpendingSourceType,
+            IsCreditLike ? 0m : primaryAmount,
+            IsCreditLike ? spentAmount : 0m,
+            IsCredit ? accountLimit : 0m,
+            IsCreditLike ? DueDate?.Date : null,
+            IsSaving ? interestRate : null,
+            ShowOnUI,
+            IsEnabled);
 
         return true;
     }
@@ -219,8 +217,15 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     public readonly record struct AddSpendingSourceResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
     {
-        public static AddSpendingSourceResult Success(bool shouldClose = false) => new(true, shouldClose, null);
-        public static AddSpendingSourceResult Failure(string? errorMessage) => new(false, false, errorMessage);
+        public static AddSpendingSourceResult Success(bool shouldClose = false)
+        {
+            return new AddSpendingSourceResult(true, shouldClose, null);
+        }
+
+        public static AddSpendingSourceResult Failure(string? errorMessage)
+        {
+            return new AddSpendingSourceResult(false, false, errorMessage);
+        }
     }
 
     public readonly record struct SpendingSourceTypeOption(string Label, SpendingSourceType Value);

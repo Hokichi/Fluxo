@@ -93,7 +93,8 @@
                 <ItemsControl x:Name="ResultsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border MouseLeftButtonUp="OnResultItemClick" Style="{StaticResource SearchResultItemStyle}">
+                            <Border MouseLeftButtonUp="OnResultItemClick"
+                                    Style="{StaticResource SearchResultItemStyle}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -122,8 +123,10 @@
                                                 Background="{Binding Expense.ExpenseTag.HexCode}">
                                                 <Border.CornerRadius>
                                                     <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
-                                                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                                                        <Binding Path="ActualWidth"
+                                                                 RelativeSource="{RelativeSource Self}" />
+                                                        <Binding Path="ActualHeight"
+                                                                 RelativeSource="{RelativeSource Self}" />
                                                     </MultiBinding>
                                                 </Border.CornerRadius>
                                                 <TextBlock

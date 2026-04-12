@@ -210,10 +210,12 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="">
+                                                <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}"
+                                                             Value="">
                                                     <Setter Property="Visibility" Value="Visible" />
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="{x:Null}">
+                                                <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}"
+                                                             Value="{x:Null}">
                                                     <Setter Property="Visibility" Value="Visible" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -243,7 +245,8 @@
 
                         <StackPanel Grid.Column="2">
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
-                            <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                            <components:DateSelector x:Name="ExpenseTransactionDateSelector"
+                                                     SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
                         </StackPanel>
                     </Grid>
 
@@ -321,10 +324,14 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Collapsed" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Text, ElementName=IncomeAmountTextBox}" Value="">
+                                                    <DataTrigger
+                                                        Binding="{Binding Text, ElementName=IncomeAmountTextBox}"
+                                                        Value="">
                                                         <Setter Property="Visibility" Value="Visible" />
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Text, ElementName=IncomeAmountTextBox}" Value="{x:Null}">
+                                                    <DataTrigger
+                                                        Binding="{Binding Text, ElementName=IncomeAmountTextBox}"
+                                                        Value="{x:Null}">
                                                         <Setter Property="Visibility" Value="Visible" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -357,7 +364,8 @@
 
                         <StackPanel Grid.Column="2">
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
-                            <components:DateSelector x:Name="IncomeTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                            <components:DateSelector x:Name="IncomeTransactionDateSelector"
+                                                     SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>

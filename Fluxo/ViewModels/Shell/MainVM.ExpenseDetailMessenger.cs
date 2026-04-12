@@ -37,11 +37,9 @@ public partial class MainVM
         Dictionary<int, SpendingSourceVM>? refreshedSources = null;
 
         if (update.AffectsTagOrdering)
-        {
             refreshedTags = (await readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync())
                 .Select(result => result.Tag)
                 .ToList();
-        }
 
         if (update.AffectsSpendingSourceState)
         {
@@ -121,7 +119,8 @@ public partial class MainVM
             return;
         }
 
-        var targetCollection = GetExpenseCollection(updatedExpenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs);
+        var targetCollection =
+            GetExpenseCollection(updatedExpenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs);
 
         if (currentCollection is not null && !ReferenceEquals(currentCollection, targetCollection))
             currentCollection.Remove(trackedExpenseLog);
@@ -176,7 +175,8 @@ public partial class MainVM
     private void ApplyAllTimeExpenseDelta(ExpenseDetailSnapshot previousState, ExpenseLogVM updatedExpenseLog)
     {
         AddToAllTimeSpent(previousState.Category, -previousState.Amount);
-        AddToAllTimeSpent(updatedExpenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs, updatedExpenseLog.Amount);
+        AddToAllTimeSpent(updatedExpenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
+            updatedExpenseLog.Amount);
     }
 
     private void AddToAllTimeSpent(ExpenseCategory category, decimal amountDelta)
@@ -209,7 +209,8 @@ public partial class MainVM
         {
             MainContentViewMode.Daily => targetDate == selectedDate.Date,
             MainContentViewMode.Weekly => targetDate >= selectedDate.Date && targetDate < selectedDate.Date.AddDays(7),
-            MainContentViewMode.Monthly => targetDate.Year == selectedDate.Year && targetDate.Month == selectedDate.Month,
+            MainContentViewMode.Monthly => targetDate.Year == selectedDate.Year &&
+                                           targetDate.Month == selectedDate.Month,
             _ => false
         };
     }

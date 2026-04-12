@@ -44,7 +44,6 @@
         <ComboBox
             Grid.Row="6"
             DisplayMemberPath="Name"
-            ItemContainerStyle="{StaticResource FluxoComboBoxItemStyle}"
             ItemsSource="{Binding Targets}"
             SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
             Style="{StaticResource FluxoComboBoxStyle}" />
