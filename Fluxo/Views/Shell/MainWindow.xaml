@@ -823,7 +823,7 @@
                             FontFamily="{StaticResource Bold}"
                             FontSize="18"
                             Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Fluxo" />
+                            Text="{Binding AppDisplayName}" />
                     </StackPanel>
 
                     <Grid Grid.Column="1">

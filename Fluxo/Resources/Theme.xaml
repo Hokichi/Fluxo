@@ -14,6 +14,7 @@
     <SolidColorBrush x:Key="Brush.Background.Surface" Color="{StaticResource Color.Background.Surface}" />
     <SolidColorBrush x:Key="Brush.Background.Elevated" Color="{StaticResource Color.Background.Elevated}" />
     <SolidColorBrush x:Key="Brush.Background.Hover" Color="{StaticResource Color.Background.Hover}" />
+    <SolidColorBrush x:Key="Brush.Background.Hovered" Color="{StaticResource Color.Background.Hover}" />
 
     <!--  =============================  -->
     <!--  PRIMARY ACCENT (MIDNIGHT BLUE)  -->

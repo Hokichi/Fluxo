@@ -16,10 +16,14 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class SettingsVM : ObservableObject
 {
+    private const string DefaultCurrencyCode = "USD";
+
     private readonly MainVM _mainViewModel;
     private readonly Func<IUnitOfWork> _unitOfWorkFactory;
     private BudgetAllocationSnapshot _savedBudgetAllocation = new(50, 30, 20);
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
+    private string _savedPreferredAppName = string.Empty;
+    private string _savedCurrencyCode = DefaultCurrencyCode;
 
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
     [ObservableProperty] private bool _isFixedExpenseChecksEnabled;
@@ -27,12 +31,17 @@ public partial class SettingsVM : ObservableObject
     [ObservableProperty] private bool _isSpendingSourceChecksEnabled;
     [ObservableProperty] private int _investAllocationPercentage;
     [ObservableProperty] private int _needsAllocationPercentage;
+    [ObservableProperty] private string _preferredAppName = string.Empty;
+    [ObservableProperty] private string _selectedCurrencyCode = DefaultCurrencyCode;
     [ObservableProperty] private int _wantsAllocationPercentage;
 
     public SettingsVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
     {
         _mainViewModel = mainViewModel;
         _unitOfWorkFactory = unitOfWorkFactory;
+
+        ReplaceCollection(CurrencyOptions, BuildCurrencyOptions());
+        SelectedCurrencyCode = DefaultCurrencyCode;
     }
 
     public ObservableCollection<SettingsSpendingSourceItemVM> SpendingSources { get; } = [];
@@ -40,6 +49,7 @@ public partial class SettingsVM : ObservableObject
     public ObservableCollection<SettingsSavingGoalItemVM> SavingGoals { get; } = [];
     public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
     public ObservableCollection<SettingsNotificationOptionVM> NotificationSettings { get; } = [];
+    public ObservableCollection<SettingsCurrencyOptionVM> CurrencyOptions { get; } = [];
 
     public decimal TotalBudgetAmount => _mainViewModel.TotalIncomeAmount;
 
@@ -49,6 +59,8 @@ public partial class SettingsVM : ObservableObject
         NeedsAllocationPercentage != _savedBudgetAllocation.Needs ||
         WantsAllocationPercentage != _savedBudgetAllocation.Wants ||
         InvestAllocationPercentage != _savedBudgetAllocation.Invest ||
+        !string.Equals((PreferredAppName ?? string.Empty).Trim(), _savedPreferredAppName, StringComparison.Ordinal) ||
+        !string.Equals(SelectedCurrencyCode, _savedCurrencyCode, StringComparison.Ordinal) ||
         NotificationSettings.Any(setting =>
             _savedNotificationSettings.TryGetValue(setting.SettingName, out var savedValue)
                 ? savedValue != setting.IsEnabled
@@ -57,10 +69,31 @@ public partial class SettingsVM : ObservableObject
     public string NeedsAllocationAmountText => BuildAllocationAmountText(NeedsAllocationPercentage);
     public string WantsAllocationAmountText => BuildAllocationAmountText(WantsAllocationPercentage);
     public string InvestAllocationAmountText => BuildAllocationAmountText(InvestAllocationPercentage);
+    public string SelectedCurrencySymbol =>
+        CurrencyOptions.FirstOrDefault(option =>
+            string.Equals(option.Code, SelectedCurrencyCode, StringComparison.OrdinalIgnoreCase))?.Symbol ?? "$";
 
     partial void OnNeedsAllocationPercentageChanged(int value) => OnAllocationChanged();
     partial void OnWantsAllocationPercentageChanged(int value) => OnAllocationChanged();
     partial void OnInvestAllocationPercentageChanged(int value) => OnAllocationChanged();
+    partial void OnPreferredAppNameChanged(string value) => OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+
+    partial void OnSelectedCurrencyCodeChanged(string value)
+    {
+        if (CurrencyOptions.All(option => !string.Equals(option.Code, value, StringComparison.OrdinalIgnoreCase)))
+        {
+            var fallbackCode = CurrencyOptions.FirstOrDefault()?.Code ?? DefaultCurrencyCode;
+            if (!string.Equals(SelectedCurrencyCode, fallbackCode, StringComparison.Ordinal))
+                SelectedCurrencyCode = fallbackCode;
+            return;
+        }
+
+        OnPropertyChanged(nameof(SelectedCurrencySymbol));
+        OnPropertyChanged(nameof(NeedsAllocationAmountText));
+        OnPropertyChanged(nameof(WantsAllocationAmountText));
+        OnPropertyChanged(nameof(InvestAllocationAmountText));
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+    }
 
     public async Task LoadAsync()
     {
@@ -79,6 +112,10 @@ public partial class SettingsVM : ObservableObject
             NeedsAllocationPercentage,
             WantsAllocationPercentage,
             InvestAllocationPercentage);
+        PreferredAppName = ParseString(settingsByName, UserSettingNames.PreferredDisplayName, string.Empty);
+        _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
+        SelectedCurrencyCode = ParseCurrencyCode(settingsByName, UserSettingNames.PreferredCurrencyCode, DefaultCurrencyCode);
+        _savedCurrencyCode = SelectedCurrencyCode;
 
         LoadNotificationSettings(settingsByName);
 
@@ -112,6 +149,7 @@ public partial class SettingsVM : ObservableObject
         IsGoalChecksEnabled = false;
         ValidateBudgetAllocation();
         OnPropertyChanged(nameof(TotalBudgetAmount));
+        OnPropertyChanged(nameof(SelectedCurrencySymbol));
         OnPropertyChanged(nameof(NeedsAllocationAmountText));
         OnPropertyChanged(nameof(WantsAllocationAmountText));
         OnPropertyChanged(nameof(InvestAllocationAmountText));
@@ -167,6 +205,10 @@ public partial class SettingsVM : ObservableObject
             WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
         await UpdateUserSettingAsync(unitOfWork, UserSettingNames.InvestThreshold,
             InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
+        await UpdateUserSettingAsync(unitOfWork, UserSettingNames.PreferredDisplayName,
+            string.IsNullOrWhiteSpace(PreferredAppName) ? null : PreferredAppName.Trim(), actions);
+        await UpdateUserSettingAsync(unitOfWork, UserSettingNames.PreferredCurrencyCode,
+            SelectedCurrencyCode, actions);
 
         foreach (var notificationSetting in NotificationSettings)
             await UpdateUserSettingAsync(unitOfWork, notificationSetting.SettingName,
@@ -188,6 +230,8 @@ public partial class SettingsVM : ObservableObject
         NeedsAllocationPercentage = _savedBudgetAllocation.Needs;
         WantsAllocationPercentage = _savedBudgetAllocation.Wants;
         InvestAllocationPercentage = _savedBudgetAllocation.Invest;
+        PreferredAppName = _savedPreferredAppName;
+        SelectedCurrencyCode = _savedCurrencyCode;
 
         foreach (var notificationSetting in NotificationSettings)
             if (_savedNotificationSettings.TryGetValue(notificationSetting.SettingName, out var savedValue))
@@ -203,9 +247,12 @@ public partial class SettingsVM : ObservableObject
             item.IsChecked = false;
     }
 
-    public async Task<SettingsOperationResult> ExecuteSpendingSourceActionAsync(SettingsBatchAction action)
+    public async Task<SettingsOperationResult> ExecuteSpendingSourceActionAsync(
+        SettingsBatchAction action,
+        IReadOnlyCollection<int>? selectedIdsOverride = null)
     {
-        var selectedIds = SpendingSources.Where(item => item.IsChecked).Select(item => item.Id).ToArray();
+        var selectedIds = NormalizeSelectionIds(selectedIdsOverride, SpendingSources.Select(item => item.Id),
+            SpendingSources.Where(item => item.IsChecked).Select(item => item.Id));
         if (selectedIds.Length == 0)
             return SettingsOperationResult.Failure("Select at least one spending source first.");
 
@@ -297,9 +344,14 @@ public partial class SettingsVM : ObservableObject
         }
     }
 
-    public async Task<SettingsOperationResult> ExecuteFixedExpenseActionAsync(SettingsBatchAction action)
+    public async Task<SettingsOperationResult> ExecuteFixedExpenseActionAsync(
+        SettingsBatchAction action,
+        IReadOnlyCollection<int>? selectedIdsOverride = null)
     {
-        var selectedItems = FixedExpenses.Where(item => item.IsChecked).ToArray();
+        var selectedIds = NormalizeSelectionIds(selectedIdsOverride, FixedExpenses.Select(item => item.Id),
+            FixedExpenses.Where(item => item.IsChecked).Select(item => item.Id));
+        var selectedItemIds = selectedIds.ToHashSet();
+        var selectedItems = FixedExpenses.Where(item => selectedItemIds.Contains(item.Id)).ToArray();
         if (selectedItems.Length == 0)
             return SettingsOperationResult.Failure("Select at least one fixed expense first.");
 
@@ -392,9 +444,14 @@ public partial class SettingsVM : ObservableObject
         }
     }
 
-    public async Task<SettingsOperationResult> ExecuteGoalActionAsync(SettingsBatchAction action)
+    public async Task<SettingsOperationResult> ExecuteGoalActionAsync(
+        SettingsBatchAction action,
+        IReadOnlyCollection<int>? selectedIdsOverride = null)
     {
-        var selectedItems = SavingGoals.Where(item => item.IsChecked).ToArray();
+        var selectedIds = NormalizeSelectionIds(selectedIdsOverride, SavingGoals.Select(item => item.Id),
+            SavingGoals.Where(item => item.IsChecked).Select(item => item.Id));
+        var selectedItemIds = selectedIds.ToHashSet();
+        var selectedItems = SavingGoals.Where(item => selectedItemIds.Contains(item.Id)).ToArray();
         if (selectedItems.Length == 0)
             return SettingsOperationResult.Failure("Select at least one goal first.");
 
@@ -461,6 +518,149 @@ public partial class SettingsVM : ObservableObject
             return SettingsOperationResult.Failure(
                 $"Unable to update the selected goals.\n\n{exception.Message}");
         }
+    }
+
+    public Task<SettingsOperationResult> ExecuteSpendingSourceItemActionAsync(int itemId, SettingsBatchAction action)
+    {
+        return ExecuteSpendingSourceActionAsync(action, [itemId]);
+    }
+
+    public Task<SettingsOperationResult> ExecuteFixedExpenseItemActionAsync(int itemId, SettingsBatchAction action)
+    {
+        return ExecuteFixedExpenseActionAsync(action, [itemId]);
+    }
+
+    public Task<SettingsOperationResult> ExecuteGoalItemActionAsync(int itemId, SettingsBatchAction action)
+    {
+        return ExecuteGoalActionAsync(action, [itemId]);
+    }
+
+    public async Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode)
+    {
+        var trimmedName = (name ?? string.Empty).Trim();
+        var normalizedHexCode = NormalizeHexColor(hexCode);
+
+        if (trimmedName.Length == 0)
+            return SettingsOperationResult.Failure("Please enter a tag name.");
+
+        if (!IsHexColor(normalizedHexCode))
+            return SettingsOperationResult.Failure("Please choose a valid tag color.");
+
+        await using var unitOfWork = _unitOfWorkFactory();
+
+        try
+        {
+            var existingTags = await unitOfWork.ExpenseTags.GetAllAsync();
+            if (existingTags.Any(tag => string.Equals(tag.Name, trimmedName, StringComparison.OrdinalIgnoreCase)))
+                return SettingsOperationResult.Failure($"A tag named \"{trimmedName}\" already exists.");
+
+            await unitOfWork.ExpenseTags.AddAsync(new ExpenseTag
+            {
+                Name = trimmedName,
+                HexCode = normalizedHexCode
+            });
+
+            await unitOfWork.SaveChangesAsync();
+            await _mainViewModel.ReloadCurrentDataAsync();
+            await LoadAsync();
+
+            return SettingsOperationResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return SettingsOperationResult.Failure(
+                $"Unable to create this tag.\n\n{exception.Message}");
+        }
+    }
+
+    public async Task<SettingsOperationResult> ResetAllSettingsAsync()
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+
+        try
+        {
+            var settings = await unitOfWork.UserSettings.GetAllAsync();
+            var actions = new List<ILogMemoryAction>();
+
+            foreach (var setting in settings)
+            {
+                unitOfWork.UserSettings.Remove(setting);
+                actions.Add(new SetUserSettingMemoryAction(
+                    UserSettingMemorySnapshot.Create(setting),
+                    UserSettingMemorySnapshot.Missing(setting.Name)));
+            }
+
+            if (settings.Count > 0)
+            {
+                await unitOfWork.SaveChangesAsync();
+                RecordActions(actions);
+            }
+
+            await _mainViewModel.ReloadCurrentDataAsync();
+            await LoadAsync();
+
+            return SettingsOperationResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return SettingsOperationResult.Failure(
+                $"Unable to reset settings.\n\n{exception.Message}");
+        }
+    }
+
+    public async Task<SettingsOperationResult> DeleteAllDataAsync(bool keepSettings)
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+
+        try
+        {
+            var expenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync();
+            var incomeLogs = await unitOfWork.IncomeLogs.GetAllAsync();
+            var expenses = await unitOfWork.Expenses.GetAllAsync();
+            var savingGoals = await unitOfWork.SavingGoals.GetAllAsync();
+            var spendingSources = await unitOfWork.SpendingSources.GetAllAsync();
+            var tags = await unitOfWork.ExpenseTags.GetAllAsync();
+            IReadOnlyList<UserSettings> settings = keepSettings
+                ? []
+                : await unitOfWork.UserSettings.GetAllAsync();
+
+            foreach (var expenseLog in expenseLogs)
+                unitOfWork.ExpenseLogs.Remove(expenseLog);
+
+            foreach (var incomeLog in incomeLogs)
+                unitOfWork.IncomeLogs.Remove(incomeLog);
+
+            foreach (var expense in expenses)
+                unitOfWork.Expenses.Remove(expense);
+
+            foreach (var savingGoal in savingGoals)
+                unitOfWork.SavingGoals.Remove(savingGoal);
+
+            foreach (var spendingSource in spendingSources)
+                unitOfWork.SpendingSources.Remove(spendingSource);
+
+            foreach (var tag in tags)
+                unitOfWork.ExpenseTags.Remove(tag);
+
+            foreach (var setting in settings)
+                unitOfWork.UserSettings.Remove(setting);
+
+            await unitOfWork.SaveChangesAsync();
+            await _mainViewModel.ReloadCurrentDataAsync();
+            await LoadAsync();
+
+            return SettingsOperationResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return SettingsOperationResult.Failure(
+                $"Unable to delete all data.\n\n{exception.Message}");
+        }
+    }
+
+    public AddSpendingSourceVM CreateAddSpendingSourceViewModel()
+    {
+        return new AddSpendingSourceVM(_mainViewModel, _unitOfWorkFactory);
     }
 
     public async Task<SettingsOperationResult> DeleteTagAsync(ExpenseTagVM tag)
@@ -550,7 +750,9 @@ public partial class SettingsVM : ObservableObject
     private string BuildAllocationAmountText(int percentage)
     {
         var allocatedAmount = decimal.Round(TotalBudgetAmount * percentage / 100m, 2);
-        return $"{percentage}% of ${TotalBudgetAmount.ToString("N2", CultureInfo.InvariantCulture)} = ${allocatedAmount.ToString("N2", CultureInfo.InvariantCulture)}";
+        var symbol = SelectedCurrencySymbol;
+        return
+            $"{percentage}% of {symbol}{TotalBudgetAmount.ToString("N2", CultureInfo.InvariantCulture)} = {symbol}{allocatedAmount.ToString("N2", CultureInfo.InvariantCulture)}";
     }
 
     private void OnAllocationChanged()
@@ -615,11 +817,49 @@ public partial class SettingsVM : ObservableObject
         await UpdateUserSettingAsync(unitOfWork, name, value, actions);
     }
 
+    private static int[] NormalizeSelectionIds(IReadOnlyCollection<int>? selectedIdsOverride,
+        IEnumerable<int> validIds,
+        IEnumerable<int> fallbackIds)
+    {
+        var validIdSet = validIds.ToHashSet();
+        var source = selectedIdsOverride is { Count: > 0 } ? selectedIdsOverride : fallbackIds;
+
+        return source
+            .Where(id => id > 0 && validIdSet.Contains(id))
+            .Distinct()
+            .ToArray();
+    }
+
+    private static IReadOnlyList<SettingsCurrencyOptionVM> BuildCurrencyOptions()
+    {
+        return
+        [
+            new SettingsCurrencyOptionVM("USD", "US Dollar", "$"),
+            new SettingsCurrencyOptionVM("EUR", "Euro", "€"),
+            new SettingsCurrencyOptionVM("GBP", "British Pound", "£"),
+            new SettingsCurrencyOptionVM("JPY", "Japanese Yen", "¥"),
+            new SettingsCurrencyOptionVM("THB", "Thai Baht", "฿"),
+            new SettingsCurrencyOptionVM("AUD", "Australian Dollar", "A$"),
+            new SettingsCurrencyOptionVM("CAD", "Canadian Dollar", "C$"),
+            new SettingsCurrencyOptionVM("SGD", "Singapore Dollar", "S$"),
+            new SettingsCurrencyOptionVM("VND", "Vietnamese Dong", "₫"),
+            new SettingsCurrencyOptionVM("INR", "Indian Rupee", "₹")
+        ];
+    }
+
     private static void ReplaceCollection<T>(ObservableCollection<T> collection, IEnumerable<T> items)
     {
         collection.Clear();
         foreach (var item in items)
             collection.Add(item);
+    }
+
+    private static string ParseString(IReadOnlyDictionary<string, string> settings, string name, string defaultValue)
+    {
+        if (!settings.TryGetValue(name, out var value))
+            return defaultValue;
+
+        return value?.Trim() ?? defaultValue;
     }
 
     private static int ParsePercentage(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)
@@ -631,11 +871,35 @@ public partial class SettingsVM : ObservableObject
         return (int)Math.Round(parsedValue, MidpointRounding.AwayFromZero);
     }
 
+    private string ParseCurrencyCode(IReadOnlyDictionary<string, string> settings, string name, string defaultValue)
+    {
+        var code = ParseString(settings, name, defaultValue).ToUpperInvariant();
+        if (CurrencyOptions.Any(option => string.Equals(option.Code, code, StringComparison.OrdinalIgnoreCase)))
+            return code;
+
+        return defaultValue;
+    }
+
     private static bool ParseBool(IReadOnlyDictionary<string, string> settings, string name, bool defaultValue)
     {
         return settings.TryGetValue(name, out var value) && bool.TryParse(value, out var parsedValue)
             ? parsedValue
             : defaultValue;
+    }
+
+    private static string NormalizeHexColor(string hexCode)
+    {
+        var normalized = (hexCode ?? string.Empty).Trim().TrimStart('#').ToUpperInvariant();
+        return $"#{normalized}";
+    }
+
+    private static bool IsHexColor(string hexCode)
+    {
+        var normalized = NormalizeHexColor(hexCode);
+        return normalized.Length == 7 &&
+               normalized[0] == '#' &&
+               normalized.Skip(1).All(static character => char.IsDigit(character) ||
+                   (character >= 'A' && character <= 'F'));
     }
 
     private static HashSet<int> ParseIdSet(IReadOnlyDictionary<string, string> settings, string name)
@@ -728,6 +992,11 @@ public partial class SettingsNotificationOptionVM : ObservableObject
     public string Title { get; }
     public string Description { get; }
     public string SettingName { get; }
+}
+
+public sealed record SettingsCurrencyOptionVM(string Code, string Name, string Symbol)
+{
+    public string DisplayName => $"{Name} ({Code})";
 }
 
 public partial class SettingsSpendingSourceItemVM : ObservableObject, ISettingsSelectableItem

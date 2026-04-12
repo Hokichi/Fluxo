@@ -151,11 +151,95 @@ public partial class SettingsPopup : BasePopup
 
         if (string.Equals(title, "Add New Spending Source", StringComparison.Ordinal))
         {
-            new AddSpendingSourcePopup { Owner = this }.ShowDialog();
+            new AddSpendingSourcePopup(_viewModel.CreateAddSpendingSourceViewModel()) { Owner = this }.ShowDialog();
             return;
         }
 
         new FeaturePlaceholderPopup(title, "This creation flow is still being built.") { Owner = this }.ShowDialog();
+    }
+
+    private async void OnRowActionClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag })
+            return;
+
+        var parts = tag.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2 || !Enum.TryParse<SettingsBatchAction>(parts[1], out var action))
+            return;
+
+        var itemLabel = sender switch
+        {
+            FrameworkElement { DataContext: SettingsSpendingSourceItemVM sourceItem } => sourceItem.Name,
+            FrameworkElement { DataContext: SettingsFixedExpenseItemVM fixedExpenseItem } => fixedExpenseItem.Name,
+            FrameworkElement { DataContext: SettingsSavingGoalItemVM goalItem } => goalItem.Name,
+            _ => "this item"
+        };
+
+        if (action == SettingsBatchAction.Delete &&
+            FluxoMessageBox.Show(this, $"Delete \"{itemLabel}\"?", "Settings", MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        var result = parts[0] switch
+        {
+            "SpendingSources" when sender is FrameworkElement { DataContext: SettingsSpendingSourceItemVM sourceItem } =>
+                await _viewModel.ExecuteSpendingSourceItemActionAsync(sourceItem.Id, action),
+            "FixedExpenses" when sender is FrameworkElement { DataContext: SettingsFixedExpenseItemVM fixedExpenseItem } =>
+                await _viewModel.ExecuteFixedExpenseItemActionAsync(fixedExpenseItem.Id, action),
+            "Goals" when sender is FrameworkElement { DataContext: SettingsSavingGoalItemVM goalItem } =>
+                await _viewModel.ExecuteGoalItemActionAsync(goalItem.Id, action),
+            _ => SettingsOperationResult.Failure("Unsupported settings action.")
+        };
+
+        if (!result.IsSuccess)
+            ShowMessage(result.ErrorMessage, "Settings");
+    }
+
+    private void OnAddTagClick(object sender, RoutedEventArgs e)
+    {
+        new AddTagPopup(_viewModel) { Owner = this }.ShowDialog();
+    }
+
+    private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)
+    {
+        if (FluxoMessageBox.Show(this,
+                "Reset all settings to defaults? This keeps your existing data.",
+                "Reset Settings",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        var result = await _viewModel.ResetAllSettingsAsync();
+        if (!result.IsSuccess)
+            ShowMessage(result.ErrorMessage, "Reset Settings");
+    }
+
+    private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)
+    {
+        var choice = FluxoMessageBox.Show(this,
+            "Delete all data?\n\nYes = Keep current settings\nNo = Delete settings too\nCancel = Keep everything",
+            "Delete All Data",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Warning);
+
+        if (choice == MessageBoxResult.Cancel)
+            return;
+
+        var keepSettings = choice == MessageBoxResult.Yes;
+        var confirmation = FluxoMessageBox.Show(this,
+            keepSettings
+                ? "This will permanently delete all data and keep your current settings. Continue?"
+                : "This will permanently delete all data and settings. Continue?",
+            "Delete All Data",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmation != MessageBoxResult.Yes)
+            return;
+
+        var result = await _viewModel.DeleteAllDataAsync(keepSettings);
+        if (!result.IsSuccess)
+            ShowMessage(result.ErrorMessage, "Delete All Data");
     }
 
     private async void OnTagDeleteClick(object sender, RoutedEventArgs e)

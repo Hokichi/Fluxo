@@ -94,6 +94,7 @@ public partial class MainVM : ObservableRecipient
     [ObservableProperty] private decimal _needsSpent;
     private decimal _needsThreshold = 0.5m;
     [ObservableProperty] private int _notificationCount;
+    [ObservableProperty] private string _appDisplayName = "Fluxo";
     [ObservableProperty] private ObservableCollection<ExpenseTagVM> _otherTags = [];
     [ObservableProperty] private DayOfWeekVM _selectedDay = new();
     [ObservableProperty] private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
@@ -969,6 +970,7 @@ public partial class MainVM : ObservableRecipient
         _isLowCreditNotifEnabled = ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false);
         _isLowAccountBalanceNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsLowAccountBalanceNotifEnabled, _isLowCreditNotifEnabled);
+        AppDisplayName = ParseString(settingsByName, UserSettingNames.PreferredDisplayName, "Fluxo");
 
         _hiddenFixedExpenseIds.Clear();
         _hiddenFixedExpenseIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds));
@@ -1016,6 +1018,15 @@ public partial class MainVM : ObservableRecipient
         if (settings.TryGetValue(name, out var value) && bool.TryParse(value, out var parsedValue)) return parsedValue;
 
         return defaultValue;
+    }
+
+    private static string ParseString(IReadOnlyDictionary<string, string> settings, string name, string defaultValue)
+    {
+        if (!settings.TryGetValue(name, out var value))
+            return defaultValue;
+
+        var trimmed = (value ?? string.Empty).Trim();
+        return trimmed.Length == 0 ? defaultValue : trimmed;
     }
 
     private static IReadOnlyCollection<int> ParseIdSet(IReadOnlyDictionary<string, string> settings, string name)

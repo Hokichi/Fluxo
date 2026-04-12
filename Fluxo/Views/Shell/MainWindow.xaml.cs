@@ -478,7 +478,10 @@ public partial class MainWindow : Window
 
     public void OpenAddSpendingSourcePopup()
     {
-        var popup = new AddSpendingSourcePopup { Owner = this };
+        var popup = new AddSpendingSourcePopup(new AddSpendingSourceVM(_mainVM, _unitOfWorkFactory))
+        {
+            Owner = this
+        };
         popup.ShowDialog();
     }
 

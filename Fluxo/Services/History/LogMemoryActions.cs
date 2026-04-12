@@ -409,6 +409,44 @@ public sealed class DeleteExpenseLogMemoryAction(int expenseLogId) : ILogMemoryA
     }
 }
 
+public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public string Description => "Add spending source";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
+        if (spendingSource is null)
+            return;
+
+        unitOfWork.SpendingSources.Remove(spendingSource);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken) is not null)
+            return;
+
+        var spendingSource = new SpendingSource
+        {
+            Id = snapshot.SpendingSourceId,
+            Name = snapshot.Name,
+            SpendingSourceType = snapshot.SpendingSourceType,
+            AccountLimit = snapshot.AccountLimit,
+            SpentAmount = snapshot.SpentAmount,
+            Balance = snapshot.Balance,
+            DueDate = snapshot.DueDate,
+            InterestRate = snapshot.InterestRate,
+            ShowOnUI = snapshot.ShowOnUI,
+            IsEnabled = snapshot.IsEnabled
+        };
+
+        await unitOfWork.SpendingSources.AddAsync(spendingSource, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
 public sealed class EditSpendingSourceMemoryAction(
     SpendingSourceMemorySnapshot before,
     SpendingSourceMemorySnapshot after) : ILogMemoryAction
