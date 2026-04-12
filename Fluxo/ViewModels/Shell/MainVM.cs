@@ -80,6 +80,7 @@ public partial class MainVM : ObservableRecipient
 
     private bool _isSynchronizingTagSelections;
     [ObservableProperty] private bool _isWantsEmpty;
+    private bool _suppressSavingGoalNotifications;
     private decimal _lowAccountBalancePercentage = 0.20m;
 
     [ObservableProperty]
@@ -335,7 +336,7 @@ public partial class MainVM : ObservableRecipient
         return _expenseLogIdsMarkedForDeletion.ToArray();
     }
 
-    internal async Task ReloadCurrentDataAsync()
+    internal async Task ReloadCurrentDataAsync(bool suppressGoalNotifications = false)
     {
         var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
         var expenses = await _readUnitOfWork.Expenses.GetAllAsync();
@@ -346,7 +347,15 @@ public partial class MainVM : ObservableRecipient
 
         LoadExpenses(expenses);
         CacheAllTimeExpenseTotals(allExpenseLogs);
-        LoadSavingGoals(savingGoals);
+        _suppressSavingGoalNotifications = suppressGoalNotifications;
+        try
+        {
+            LoadSavingGoals(savingGoals);
+        }
+        finally
+        {
+            _suppressSavingGoalNotifications = false;
+        }
         LoadTags(allTags);
 
         if (SelectedMainContentViewMode == MainContentViewMode.AllTime)
@@ -1234,7 +1243,7 @@ public partial class MainVM : ObservableRecipient
             {
                 goal.PropertyChanged += OnSavingGoalPropertyChanged;
 
-                if (_isInitialized)
+                if (_isInitialized && !_suppressSavingGoalNotifications)
                     UpsertEventNotification(CreateNotification(
                         goal.Id > 0 ? $"saving-goal-created-{goal.Id}" : $"saving-goal-created-{Guid.NewGuid():N}",
                         "New saving goal created",

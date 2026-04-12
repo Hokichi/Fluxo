@@ -247,16 +247,11 @@ public partial class SettingsPopup : BasePopup
 
     private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)
     {
-        var choice = FluxoMessageBox.Show(this,
-            "Delete all data?\n\nYes = Keep current settings\nNo = Delete settings too\nCancel = Keep everything",
-            "Delete All Data",
-            MessageBoxButton.YesNoCancel,
-            MessageBoxImage.Warning);
-
-        if (choice == MessageBoxResult.Cancel)
+        var optionsPopup = new DeleteAllDataPopup { Owner = this };
+        if (optionsPopup.ShowDialog() != true || optionsPopup.Choice == DeleteAllDataChoice.Cancel)
             return;
 
-        var keepSettings = choice == MessageBoxResult.Yes;
+        var keepSettings = optionsPopup.Choice == DeleteAllDataChoice.KeepSettings;
         var confirmation = FluxoMessageBox.Show(this,
             keepSettings
                 ? "This will permanently delete all data and keep your current settings. Continue?"

@@ -707,14 +707,14 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Hide"
                             ToolTip="Hide selected"
-                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShowSpendingSourceHideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource Eye}"
                             Click="OnBatchActionClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Unhide"
                             ToolTip="Unhide selected"
-                            Visibility="{Binding ShouldShowSpendingSourceHideAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowSpendingSourceUnhideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningSlashFill}"
                             Click="OnBatchActionClick"
@@ -722,7 +722,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Disable"
                             ToolTip="Disable selected"
-                            Visibility="{Binding ShouldShowSpendingSourceDisableAction, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShowSpendingSourceDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningFill}"
                             Click="OnBatchActionClick"
@@ -730,7 +730,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:Enable"
                             ToolTip="Enable selected"
-                            Visibility="{Binding ShouldShowSpendingSourceDisableAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowSpendingSourceEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource CheckAll}"
                             Click="OnSelectionActionClick"
@@ -918,14 +918,14 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Hide"
                             ToolTip="Hide selected"
-                            Visibility="{Binding ShouldShowFixedExpenseHideAction, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShowFixedExpenseHideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource Eye}"
                             Click="OnBatchActionClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Unhide"
                             ToolTip="Unhide selected"
-                            Visibility="{Binding ShouldShowFixedExpenseHideAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowFixedExpenseUnhideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningSlashFill}"
                             Click="OnBatchActionClick"
@@ -933,7 +933,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Disable"
                             ToolTip="Disable selected"
-                            Visibility="{Binding ShouldShowFixedExpenseDisableAction, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShowFixedExpenseDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningFill}"
                             Click="OnBatchActionClick"
@@ -941,7 +941,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:Enable"
                             ToolTip="Enable selected"
-                            Visibility="{Binding ShouldShowFixedExpenseDisableAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowFixedExpenseEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource CheckAll}"
                             Click="OnSelectionActionClick"
@@ -1138,14 +1138,14 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Hide"
                             ToolTip="Hide selected"
-                            Visibility="{Binding ShouldShowGoalHideAction, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShowGoalHideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource Eye}"
                             Click="OnBatchActionClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Unhide"
                             ToolTip="Unhide selected"
-                            Visibility="{Binding ShouldShowGoalHideAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowGoalUnhideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningSlashFill}"
                             Click="OnBatchActionClick"
@@ -1153,7 +1153,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Disable"
                             ToolTip="Disable selected"
-                            Visibility="{Binding ShouldShowGoalDisableAction, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ShowGoalDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource LightningFill}"
                             Click="OnBatchActionClick"
@@ -1161,7 +1161,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:Enable"
                             ToolTip="Enable selected"
-                            Visibility="{Binding ShouldShowGoalDisableAction, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowGoalEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource CheckAll}"
                             Click="OnSelectionActionClick"
@@ -1396,7 +1396,7 @@
                                 <TextBlock
                                     FontFamily="{StaticResource Bold}"
                                     Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="App Name" />
+                                    Text="Username" />
                                 <TextBox
                                     Margin="0,8,0,0"
                                     Padding="12,10"

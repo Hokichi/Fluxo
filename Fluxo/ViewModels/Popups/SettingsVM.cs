@@ -72,23 +72,41 @@ public partial class SettingsVM : ObservableObject
     public bool AreAllSpendingSourcesChecked => SpendingSources.Count > 0 && SpendingSources.All(item => item.IsChecked);
     public bool AreAllFixedExpensesChecked => FixedExpenses.Count > 0 && FixedExpenses.All(item => item.IsChecked);
     public bool AreAllGoalsChecked => SavingGoals.Count > 0 && SavingGoals.All(item => item.IsChecked);
-    public bool ShouldShowSpendingSourceHideAction =>
+    public bool ShowSpendingSourceHideActionButton =>
         IsSpendingSourceChecksEnabled && ShouldShowHideAction(SpendingSources);
 
-    public bool ShouldShowSpendingSourceDisableAction =>
+    public bool ShowSpendingSourceUnhideActionButton =>
+        IsSpendingSourceChecksEnabled && !ShouldShowHideAction(SpendingSources);
+
+    public bool ShowSpendingSourceDisableActionButton =>
         IsSpendingSourceChecksEnabled && ShouldShowDisableAction(SpendingSources);
 
-    public bool ShouldShowFixedExpenseHideAction =>
+    public bool ShowSpendingSourceEnableActionButton =>
+        IsSpendingSourceChecksEnabled && !ShouldShowDisableAction(SpendingSources);
+
+    public bool ShowFixedExpenseHideActionButton =>
         IsFixedExpenseChecksEnabled && ShouldShowHideAction(FixedExpenses);
 
-    public bool ShouldShowFixedExpenseDisableAction =>
+    public bool ShowFixedExpenseUnhideActionButton =>
+        IsFixedExpenseChecksEnabled && !ShouldShowHideAction(FixedExpenses);
+
+    public bool ShowFixedExpenseDisableActionButton =>
         IsFixedExpenseChecksEnabled && ShouldShowDisableAction(FixedExpenses);
 
-    public bool ShouldShowGoalHideAction =>
+    public bool ShowFixedExpenseEnableActionButton =>
+        IsFixedExpenseChecksEnabled && !ShouldShowDisableAction(FixedExpenses);
+
+    public bool ShowGoalHideActionButton =>
         IsGoalChecksEnabled && ShouldShowHideAction(SavingGoals);
 
-    public bool ShouldShowGoalDisableAction =>
+    public bool ShowGoalUnhideActionButton =>
+        IsGoalChecksEnabled && !ShouldShowHideAction(SavingGoals);
+
+    public bool ShowGoalDisableActionButton =>
         IsGoalChecksEnabled && ShouldShowDisableAction(SavingGoals);
+
+    public bool ShowGoalEnableActionButton =>
+        IsGoalChecksEnabled && !ShouldShowDisableAction(SavingGoals);
     public bool ShowSpendingSourceCheckAllButton => IsSpendingSourceChecksEnabled && !AreAllSpendingSourcesChecked;
     public bool ShowSpendingSourceUncheckAllButton => IsSpendingSourceChecksEnabled && AreAllSpendingSourcesChecked;
     public bool ShowFixedExpenseCheckAllButton => IsFixedExpenseChecksEnabled && !AreAllFixedExpensesChecked;
@@ -286,7 +304,7 @@ public partial class SettingsVM : ObservableObject
 
         await unitOfWork.SaveChangesAsync();
         RecordActions(actions);
-        await _mainViewModel.ReloadCurrentDataAsync();
+        await _mainViewModel.ReloadCurrentDataAsync(true);
         await LoadAsync();
 
         return SettingsOperationResult.Success();
@@ -421,7 +439,7 @@ public partial class SettingsVM : ObservableObject
 
             await unitOfWork.SaveChangesAsync();
             RecordActions(actions);
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -523,7 +541,7 @@ public partial class SettingsVM : ObservableObject
 
             await unitOfWork.SaveChangesAsync();
             RecordActions(actions);
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -601,7 +619,7 @@ public partial class SettingsVM : ObservableObject
 
             await unitOfWork.SaveChangesAsync();
             RecordActions(actions);
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -654,7 +672,7 @@ public partial class SettingsVM : ObservableObject
             });
 
             await unitOfWork.SaveChangesAsync();
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -689,7 +707,7 @@ public partial class SettingsVM : ObservableObject
                 RecordActions(actions);
             }
 
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -739,7 +757,7 @@ public partial class SettingsVM : ObservableObject
                 unitOfWork.UserSettings.Remove(setting);
 
             await unitOfWork.SaveChangesAsync();
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -778,7 +796,7 @@ public partial class SettingsVM : ObservableObject
             await unitOfWork.SaveChangesAsync();
 
             RecordActions([new DeleteExpenseTagMemoryAction(snapshot)]);
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -1055,12 +1073,18 @@ public partial class SettingsVM : ObservableObject
         OnPropertyChanged(nameof(AreAllSpendingSourcesChecked));
         OnPropertyChanged(nameof(AreAllFixedExpensesChecked));
         OnPropertyChanged(nameof(AreAllGoalsChecked));
-        OnPropertyChanged(nameof(ShouldShowSpendingSourceHideAction));
-        OnPropertyChanged(nameof(ShouldShowSpendingSourceDisableAction));
-        OnPropertyChanged(nameof(ShouldShowFixedExpenseHideAction));
-        OnPropertyChanged(nameof(ShouldShowFixedExpenseDisableAction));
-        OnPropertyChanged(nameof(ShouldShowGoalHideAction));
-        OnPropertyChanged(nameof(ShouldShowGoalDisableAction));
+        OnPropertyChanged(nameof(ShowSpendingSourceHideActionButton));
+        OnPropertyChanged(nameof(ShowSpendingSourceUnhideActionButton));
+        OnPropertyChanged(nameof(ShowSpendingSourceDisableActionButton));
+        OnPropertyChanged(nameof(ShowSpendingSourceEnableActionButton));
+        OnPropertyChanged(nameof(ShowFixedExpenseHideActionButton));
+        OnPropertyChanged(nameof(ShowFixedExpenseUnhideActionButton));
+        OnPropertyChanged(nameof(ShowFixedExpenseDisableActionButton));
+        OnPropertyChanged(nameof(ShowFixedExpenseEnableActionButton));
+        OnPropertyChanged(nameof(ShowGoalHideActionButton));
+        OnPropertyChanged(nameof(ShowGoalUnhideActionButton));
+        OnPropertyChanged(nameof(ShowGoalDisableActionButton));
+        OnPropertyChanged(nameof(ShowGoalEnableActionButton));
         OnPropertyChanged(nameof(ShowSpendingSourceCheckAllButton));
         OnPropertyChanged(nameof(ShowSpendingSourceUncheckAllButton));
         OnPropertyChanged(nameof(ShowFixedExpenseCheckAllButton));
