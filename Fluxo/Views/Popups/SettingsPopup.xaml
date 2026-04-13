@@ -1397,6 +1397,12 @@
                         <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
                             <Button
                                 Width="160"
+                                Click="OnRunSetupWizardClick"
+                                Content="Run Setup Wizard"
+                                Style="{StaticResource PopupTextButtonStyle}" />
+                            <Button
+                                Width="160"
+                                Margin="8,0,0,0"
                                 Click="OnResetAllSettingsClick"
                                 Content="Reset All Settings"
                                 Style="{StaticResource PopupTextButtonStyle}" />

@@ -684,6 +684,27 @@ public partial class SettingsVM : ObservableObject
         }
     }
 
+    public async Task EnableSetupWizardAsync()
+    {
+        await using var unitOfWork = _unitOfWorkFactory();
+        var setting = await unitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun);
+        if (setting is null)
+        {
+            await unitOfWork.UserSettings.AddAsync(new UserSettings
+            {
+                Name = UserSettingNames.IsFirstRun,
+                Value = bool.TrueString
+            });
+        }
+        else
+        {
+            setting.Value = bool.TrueString;
+            unitOfWork.UserSettings.Update(setting);
+        }
+
+        await unitOfWork.SaveChangesAsync();
+    }
+
     public async Task<SettingsOperationResult> ResetAllSettingsAsync()
     {
         await using var unitOfWork = _unitOfWorkFactory();

@@ -39,26 +39,28 @@ public partial class App : Application
             var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
             var unitOfWorkFactory = _serviceProvider!.GetRequiredService<Func<IUnitOfWork>>();
 
-            var shouldOpenWizard = await EnsureFirstRunSettingAsync(unitOfWorkFactory);
+            var isFirstRun = await EnsureFirstRunSettingAsync(unitOfWorkFactory);
 
-            var loaderPopup = new StartupLoaderPopup();
-            try
-            {
-                loaderPopup.Show();
-                await mainVM.Initialize();
-            }
-            finally
-            {
-                loaderPopup.CloseLoader();
-            }
-
-            if (shouldOpenWizard)
+            if (isFirstRun)
             {
                 var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWorkFactory))
                 {
                     WindowStartupLocation = WindowStartupLocation.CenterScreen
                 };
                 wizard.ShowDialog();
+            }
+            else
+            {
+                var loaderPopup = new StartupLoaderPopup();
+                try
+                {
+                    loaderPopup.Show();
+                    await mainVM.Initialize();
+                }
+                finally
+                {
+                    loaderPopup.CloseLoader();
+                }
             }
 
             var mainWindow = _serviceProvider!.GetRequiredService<MainWindow>();

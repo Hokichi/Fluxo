@@ -79,8 +79,32 @@ public partial class StartupWizardPopup : BasePopup
     {
         var result = await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
+        {
             FluxoMessageBox.Show(this, result.ErrorMessage, "Startup Wizard",
                 MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (_viewModel.IsLoadingStep)
+            await RunLoadingStepAsync();
+    }
+
+    private async Task RunLoadingStepAsync()
+    {
+        try
+        {
+            await _viewModel.InitializeMainViewModelAsync();
+        }
+        catch (Exception exception)
+        {
+            FluxoMessageBox.Show(this, $"Unable to load data.\n\n{exception.Message}",
+                "Startup Wizard", MessageBoxButton.OK, MessageBoxImage.Information);
+            _allowClose = true;
+            Close();
+            return;
+        }
+
+        await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
     }
 
     private async void OnFinishClick(object sender, RoutedEventArgs e)
@@ -207,14 +231,6 @@ public partial class StartupWizardPopup : BasePopup
         try
         {
             var fromStep = _viewModel.CurrentStepIndex;
-            var bothMiddle = IsMiddleStep(fromStep) && IsMiddleStep(fromStep == 0 ? 1 : fromStep + (_viewModel.CurrentStepIndex >= fromStep ? 0 : 0));
-
-            // Peek at what the next step will be: for GoBack it's fromStep-1
-            // We detect direction by checking if this is a back or forward action
-            // But since GoBack always decrements and we call changeStep() after fade-out,
-            // we need to figure out if both from and to are middle steps.
-            // For GoBack: toStep = fromStep - 1
-            // We'll use a simpler approach: animate, change, then animate in.
 
             if (IsCrossSectionTransition(fromStep, isForward: false))
             {

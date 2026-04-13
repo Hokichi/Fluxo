@@ -50,9 +50,10 @@
                                         Width="24"
                                         Height="24"
                                         Stretch="Uniform">
-                                        <Path Data="{StaticResource PlusSolid}" Fill="{StaticResource Brush.Text.Muted}" />
+                                        <Path x:Name="AddIcon" Data="{StaticResource PlusSolid}" Fill="{StaticResource Brush.Text.Muted}" />
                                     </Viewbox>
                                     <TextBlock
+                                        x:Name="AddLabel"
                                         Margin="0,10,0,0"
                                         HorizontalAlignment="Center"
                                         FontFamily="{StaticResource Bold}"
@@ -61,6 +62,12 @@
                                 </StackPanel>
                             </Grid>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="AddIcon" Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
+                                <Setter TargetName="AddLabel" Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -809,6 +816,13 @@
                                         </DockPanel>
                                     </StackPanel>
                                 </Border>
+
+                                <TextBlock
+                                    Margin="0,12,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Danger}"
+                                    Text="{Binding BudgetAllocationErrorMessage}"
+                                    Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
                             </StackPanel>
 
                             <!--  Step 6: Notifications  -->
@@ -849,7 +863,52 @@
             </Border>
         </Grid>
 
-        <!--  Welcome Page (Step 7)  -->
+        <!--  Loading Page (Step 7)  -->
+        <Border
+            Style="{StaticResource PanelStyle}"
+            Visibility="{Binding IsLoadingStep, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid>
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <Border
+                        Width="84"
+                        Height="84"
+                        HorizontalAlignment="Center"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="42">
+                        <Viewbox Margin="20" Stretch="Uniform">
+                            <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
+                        </Viewbox>
+                    </Border>
+                    <TextBlock
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding CurrentStepTitle}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="{Binding CurrentStepDescription}"
+                        TextAlignment="Center" />
+                    <ProgressBar
+                        Width="240"
+                        Height="8"
+                        Margin="0,28,0,0"
+                        Foreground="{StaticResource Brush.Mint}"
+                        IsIndeterminate="True" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  Welcome Page (Step 8)  -->
         <Border
             Style="{StaticResource PanelStyle}"
             Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -892,7 +951,10 @@
         </Grid>
 
         <!--  Navigation Bar  -->
-        <Grid Grid.Row="1" Margin="0,16,0,0">
+        <Grid
+            Grid.Row="1"
+            Margin="0,16,0,0"
+            Visibility="{Binding IsLoadingStep, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />

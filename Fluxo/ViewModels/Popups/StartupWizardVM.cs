@@ -17,6 +17,7 @@ public partial class StartupWizardVM : ObservableObject
     private readonly Func<IUnitOfWork> _unitOfWorkFactory;
 
     [ObservableProperty] private int _currentStepIndex;
+    [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
     [ObservableProperty] private int _investAllocationPercentage = 20;
     [ObservableProperty] private int _needsAllocationPercentage = 50;
     [ObservableProperty] private string _salaryText = string.Empty;
@@ -43,9 +44,10 @@ public partial class StartupWizardVM : ObservableObject
     public ObservableCollection<SettingsCurrencyOptionVM> CurrencyOptions { get; } = [];
     public ObservableCollection<WizardStepDotVM> StepDots { get; } = [];
 
-    public int TotalSteps => 8;
+    public int TotalSteps => 9;
     public bool IsGreetingStep => CurrentStepIndex == 0;
     public bool IsMiddleStep => CurrentStepIndex >= 1 && CurrentStepIndex <= 6;
+    public bool IsLoadingStep => CurrentStepIndex == 7;
     public bool IsFinalStep => CurrentStepIndex == TotalSteps - 1;
     public bool IsStep1Active => CurrentStepIndex == 1;
     public bool IsStep2Active => CurrentStepIndex == 2;
@@ -53,11 +55,12 @@ public partial class StartupWizardVM : ObservableObject
     public bool IsStep4Active => CurrentStepIndex == 4;
     public bool IsStep5Active => CurrentStepIndex == 5;
     public bool IsStep6Active => CurrentStepIndex == 6;
-    public string StepCounterText => $"Step {CurrentStepIndex} of {TotalSteps - 2}";
+    public string StepCounterText => $"Step {CurrentStepIndex} of 6";
     public decimal TotalBudgetAmount => ParseSalaryAmount();
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
             string.Equals(option.Code, SelectedCurrencyCode, StringComparison.OrdinalIgnoreCase))?.Symbol ?? "$";
+    public bool HasBudgetAllocationError => !string.IsNullOrWhiteSpace(BudgetAllocationErrorMessage);
     public string NeedsAllocationAmountText => BuildAllocationAmountText(NeedsAllocationPercentage);
     public string WantsAllocationAmountText => BuildAllocationAmountText(WantsAllocationPercentage);
     public string InvestAllocationAmountText => BuildAllocationAmountText(InvestAllocationPercentage);
@@ -72,6 +75,7 @@ public partial class StartupWizardVM : ObservableObject
         4 => "Add savings goals",
         5 => "Budget allocation",
         6 => "Notification preferences",
+        7 => "Getting things ready",
         _ => "Welcome to Fluxo"
     };
 
@@ -84,6 +88,7 @@ public partial class StartupWizardVM : ObservableObject
         4 => "Add a few goals to start tracking progress right away.",
         5 => "Split your salary into Needs, Wants, and Invest.",
         6 => "Choose which reminders and alerts Fluxo should show.",
+        7 => "Fluxo is loading your data. This will only take a moment.",
         _ => $"You're ready, {ResolvedUsername}. Fluxo is all set to open."
     };
 
@@ -91,6 +96,7 @@ public partial class StartupWizardVM : ObservableObject
     {
         OnPropertyChanged(nameof(IsGreetingStep));
         OnPropertyChanged(nameof(IsMiddleStep));
+        OnPropertyChanged(nameof(IsLoadingStep));
         OnPropertyChanged(nameof(IsFinalStep));
         OnPropertyChanged(nameof(IsStep1Active));
         OnPropertyChanged(nameof(IsStep2Active));
@@ -117,16 +123,19 @@ public partial class StartupWizardVM : ObservableObject
     partial void OnNeedsAllocationPercentageChanged(int value)
     {
         OnPropertyChanged(nameof(NeedsAllocationAmountText));
+        ValidateBudgetAllocation();
     }
 
     partial void OnWantsAllocationPercentageChanged(int value)
     {
         OnPropertyChanged(nameof(WantsAllocationAmountText));
+        ValidateBudgetAllocation();
     }
 
     partial void OnInvestAllocationPercentageChanged(int value)
     {
         OnPropertyChanged(nameof(InvestAllocationAmountText));
+        ValidateBudgetAllocation();
     }
 
     partial void OnSalaryTextChanged(string value)
@@ -166,14 +175,14 @@ public partial class StartupWizardVM : ObservableObject
         return SettingsOperationResult.Success();
     }
 
+    public async Task InitializeMainViewModelAsync()
+    {
+        await _mainViewModel.Initialize();
+    }
+
     public async Task<SettingsOperationResult> CompleteAsync()
     {
-        var result = await PersistAllAsync();
-        if (!result.IsSuccess)
-            return result;
-
         await SaveIsFirstRunAsync(false);
-        await _mainViewModel.ReloadCurrentDataAsync(true);
         return SettingsOperationResult.Success();
     }
 
@@ -184,7 +193,12 @@ public partial class StartupWizardVM : ObservableObject
             return result;
 
         await SaveIsFirstRunAsync(false);
-        await _mainViewModel.ReloadCurrentDataAsync(true);
+
+        if (!_mainViewModel.IsInitialized)
+            await _mainViewModel.Initialize();
+        else
+            await _mainViewModel.ReloadCurrentDataAsync(true);
+
         return SettingsOperationResult.Success();
     }
 
@@ -432,6 +446,15 @@ public partial class StartupWizardVM : ObservableObject
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.PreferredCurrencyCode, SelectedCurrencyCode);
         await unitOfWork.SaveChangesAsync();
         return SettingsOperationResult.Success();
+    }
+
+    private void ValidateBudgetAllocation()
+    {
+        var total = NeedsAllocationPercentage + WantsAllocationPercentage + InvestAllocationPercentage;
+        BudgetAllocationErrorMessage = total == 100
+            ? string.Empty
+            : $"Needs, Wants, and Invest must add up to 100%. Current total: {total}%";
+        OnPropertyChanged(nameof(HasBudgetAllocationError));
     }
 
     private async Task<SettingsOperationResult> SaveBudgetAllocationAsync()

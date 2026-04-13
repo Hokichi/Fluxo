@@ -71,6 +71,7 @@ public partial class MainVM : ObservableRecipient
     private bool _isCreditDeadlineNotifEnabled = true;
     private bool _isFixedExpensesDeductionNotifEnabled;
     private bool _isInitialized;
+    public bool IsInitialized => _isInitialized;
     [ObservableProperty] private bool _isInvestEmpty;
     private bool _isLowAccountBalanceNotifEnabled;
     private bool _isLowCreditNotifEnabled;

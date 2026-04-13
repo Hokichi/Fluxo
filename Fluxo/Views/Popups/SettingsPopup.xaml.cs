@@ -230,6 +230,20 @@ public partial class SettingsPopup : BasePopup
         new AddTagPopup(_viewModel) { Owner = this }.ShowDialog();
     }
 
+    private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
+    {
+        if (FluxoMessageBox.Show(this,
+                "Running the setup wizard will close the app. You can relaunch it to start the wizard.",
+                "Run Setup Wizard",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        await _viewModel.EnableSetupWizardAsync();
+        _allowClose = true;
+        Application.Current.Shutdown();
+    }
+
     private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)
     {
         if (FluxoMessageBox.Show(this,
