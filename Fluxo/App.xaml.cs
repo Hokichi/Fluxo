@@ -1,6 +1,11 @@
 using System.Windows;
+using Fluxo.Core.Constants;
+using Fluxo.Core.Interfaces;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
+using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Shell;
+using Fluxo.Views.Popups;
 using Fluxo.Views.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,12 +29,67 @@ public partial class App : Application
         _serviceProvider = services.BuildServiceProvider();
     }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-        // Create and show the main window using the DI container
-        var mainWindow = _serviceProvider!.GetRequiredService<MainWindow>();
-        mainWindow.Show();
+        try
+        {
+            var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
+            var unitOfWorkFactory = _serviceProvider!.GetRequiredService<Func<IUnitOfWork>>();
+
+            var shouldOpenWizard = await EnsureFirstRunSettingAsync(unitOfWorkFactory);
+
+            var loaderPopup = new StartupLoaderPopup();
+            try
+            {
+                loaderPopup.Show();
+                await mainVM.Initialize();
+            }
+            finally
+            {
+                loaderPopup.CloseLoader();
+            }
+
+            if (shouldOpenWizard)
+            {
+                var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWorkFactory))
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
+                wizard.ShowDialog();
+            }
+
+            var mainWindow = _serviceProvider!.GetRequiredService<MainWindow>();
+            MainWindow = mainWindow;
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            mainWindow.Show();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show($"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+        }
+    }
+
+    private static async Task<bool> EnsureFirstRunSettingAsync(Func<IUnitOfWork> unitOfWorkFactory)
+    {
+        await using var unitOfWork = unitOfWorkFactory();
+        var existingSetting = await unitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun);
+
+        if (existingSetting is null)
+        {
+            await unitOfWork.UserSettings.AddAsync(new Core.Entities.UserSettings
+            {
+                Name = UserSettingNames.IsFirstRun,
+                Value = bool.TrueString
+            });
+            await unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        return !bool.TryParse(existingSetting.Value, out var isFirstRun) || isFirstRun;
     }
 }
