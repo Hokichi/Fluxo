@@ -72,6 +72,7 @@ public partial class SettingsVM : ObservableObject
     public bool AreAllSpendingSourcesChecked => SpendingSources.Count > 0 && SpendingSources.All(item => item.IsChecked);
     public bool AreAllFixedExpensesChecked => FixedExpenses.Count > 0 && FixedExpenses.All(item => item.IsChecked);
     public bool AreAllGoalsChecked => SavingGoals.Count > 0 && SavingGoals.All(item => item.IsChecked);
+
     public bool ShowSpendingSourceHideActionButton =>
         IsSpendingSourceChecksEnabled && ShouldShowHideAction(SpendingSources);
 
@@ -107,6 +108,7 @@ public partial class SettingsVM : ObservableObject
 
     public bool ShowGoalEnableActionButton =>
         IsGoalChecksEnabled && !ShouldShowDisableAction(SavingGoals);
+
     public bool ShowSpendingSourceCheckAllButton => IsSpendingSourceChecksEnabled && !AreAllSpendingSourcesChecked;
     public bool ShowSpendingSourceUncheckAllButton => IsSpendingSourceChecksEnabled && AreAllSpendingSourcesChecked;
     public bool ShowFixedExpenseCheckAllButton => IsFixedExpenseChecksEnabled && !AreAllFixedExpensesChecked;
@@ -682,27 +684,6 @@ public partial class SettingsVM : ObservableObject
             return SettingsOperationResult.Failure(
                 $"Unable to create this tag.\n\n{exception.Message}");
         }
-    }
-
-    public async Task EnableSetupWizardAsync()
-    {
-        await using var unitOfWork = _unitOfWorkFactory();
-        var setting = await unitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun);
-        if (setting is null)
-        {
-            await unitOfWork.UserSettings.AddAsync(new UserSettings
-            {
-                Name = UserSettingNames.IsFirstRun,
-                Value = bool.TrueString
-            });
-        }
-        else
-        {
-            setting.Value = bool.TrueString;
-            unitOfWork.UserSettings.Update(setting);
-        }
-
-        await unitOfWork.SaveChangesAsync();
     }
 
     public async Task<SettingsOperationResult> ResetAllSettingsAsync()

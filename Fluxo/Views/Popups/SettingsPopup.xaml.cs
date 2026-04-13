@@ -142,11 +142,13 @@ public partial class SettingsPopup : BasePopup
                 if (!isEnabled)
                     _viewModel.ClearSelections(SettingsBatchTarget.SpendingSources);
                 break;
+
             case "FixedExpenses":
                 _viewModel.IsFixedExpenseChecksEnabled = isEnabled;
                 if (!isEnabled)
                     _viewModel.ClearSelections(SettingsBatchTarget.FixedExpenses);
                 break;
+
             case "Goals":
                 _viewModel.IsGoalChecksEnabled = isEnabled;
                 if (!isEnabled)
@@ -207,14 +209,14 @@ public partial class SettingsPopup : BasePopup
         var result = parts[0] switch
         {
             "SpendingSources" when sender is FrameworkElement
-                {
-                    DataContext: SettingsSpendingSourceItemVM sourceItem
-                } =>
+            {
+                DataContext: SettingsSpendingSourceItemVM sourceItem
+            } =>
                 await _viewModel.ExecuteSpendingSourceItemActionAsync(sourceItem.Id, action),
             "FixedExpenses" when sender is FrameworkElement
-                {
-                    DataContext: SettingsFixedExpenseItemVM fixedExpenseItem
-                } =>
+            {
+                DataContext: SettingsFixedExpenseItemVM fixedExpenseItem
+            } =>
                 await _viewModel.ExecuteFixedExpenseItemActionAsync(fixedExpenseItem.Id, action),
             "Goals" when sender is FrameworkElement { DataContext: SettingsSavingGoalItemVM goalItem } =>
                 await _viewModel.ExecuteGoalItemActionAsync(goalItem.Id, action),
@@ -239,7 +241,6 @@ public partial class SettingsPopup : BasePopup
                 MessageBoxImage.Question) != MessageBoxResult.Yes)
             return;
 
-        await _viewModel.EnableSetupWizardAsync();
         _allowClose = true;
         Close();
         await ((App)Application.Current).RunSetupWizardAsync();
@@ -290,7 +291,6 @@ public partial class SettingsPopup : BasePopup
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question) == MessageBoxResult.Yes)
         {
-            await _viewModel.EnableSetupWizardAsync();
             _allowClose = true;
             Close();
             await ((App)Application.Current).RunSetupWizardAsync();
