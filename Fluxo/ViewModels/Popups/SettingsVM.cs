@@ -317,6 +317,12 @@ public partial class SettingsVM : ObservableObject
             return SettingsOperationResult.Success();
 
         await unitOfWork.SaveChangesAsync();
+
+        var newUsername = string.IsNullOrWhiteSpace(PreferredAppName) ? "User" : PreferredAppName.Trim();
+        var currentUsername = string.IsNullOrEmpty(_savedPreferredAppName) ? "User" : _savedPreferredAppName;
+        if (!string.Equals(newUsername, currentUsername, StringComparison.Ordinal))
+            WeakReferenceMessenger.Default.Send(new UsernameChangedMessage(newUsername));
+
         RecordActions(actions);
         await _mainViewModel.ReloadCurrentDataAsync(true);
         await LoadAsync();

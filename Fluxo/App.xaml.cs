@@ -82,7 +82,7 @@ public partial class App : Application
         var unitOfWorkFactory = _serviceProvider!.GetRequiredService<Func<IUnitOfWork>>();
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
-        MainWindow?.Close();
+        MainWindow?.Hide();
 
         var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWorkFactory))
         {
@@ -90,10 +90,10 @@ public partial class App : Application
         };
         wizard.ShowDialog();
 
-        var mainWindow = _serviceProvider!.GetRequiredService<MainWindow>();
-        MainWindow = mainWindow;
+        await mainVM.Initialize();
+
         ShutdownMode = ShutdownMode.OnMainWindowClose;
-        mainWindow.Show();
+        MainWindow?.Show();
     }
 
     private static async Task<bool> EnsureFirstRunSettingAsync(Func<IUnitOfWork> unitOfWorkFactory)

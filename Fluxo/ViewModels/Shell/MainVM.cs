@@ -139,6 +139,8 @@ public partial class MainVM : ObservableRecipient
         AttachExpenseLogCollectionHandlers(_investSource);
         WeakReferenceMessenger.Default.Register<MainVM, ExpenseDetailUpdatedMessage>(this,
             static (recipient, message) => recipient.HandleExpenseDetailUpdatedMessage(message));
+        WeakReferenceMessenger.Default.Register<MainVM, UsernameChangedMessage>(this,
+            static (recipient, message) => recipient.Username = message.Value);
     }
 
     public ObservableCollection<NotificationItemVM> Notifications { get; } = [];
