@@ -1394,25 +1394,30 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width=" 8" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width=" 8" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
                             <Button
-                                Width="160"
+                                Grid.Column="0"
                                 Click="OnRunSetupWizardClick"
                                 Content="Run Setup Wizard"
                                 Style="{StaticResource PopupTextButtonStyle}" />
                             <Button
-                                Width="160"
-                                Margin="8,0,0,0"
+                                Grid.Column="2"
                                 Click="OnResetAllSettingsClick"
                                 Content="Reset All Settings"
                                 Style="{StaticResource PopupTextButtonStyle}" />
                             <Button
-                                Width="160"
-                                Margin="8,0,0,0"
+                                Grid.Column="4"
                                 Click="OnDeleteAllDataClick"
                                 Content="Delete All Data"
                                 Style="{StaticResource DangerActionButtonStyle}" />
-                        </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </Border>

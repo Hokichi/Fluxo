@@ -756,9 +756,6 @@ public partial class SettingsVM : ObservableObject
                 ? []
                 : await unitOfWork.UserSettings.GetAllAsync();
 
-            foreach (var setting in settings)
-                unitOfWork.UserSettings.Remove(setting);
-
             foreach (var tag in tags)
                 unitOfWork.ExpenseTags.Remove(tag);
 
@@ -778,11 +775,10 @@ public partial class SettingsVM : ObservableObject
                 unitOfWork.SavingGoals.Remove(savingGoal);
 
             if (!keepSettings)
-                await unitOfWork.UserSettings.AddAsync(new UserSettings
-                {
-                    Name = UserSettingNames.IsFirstRun,
-                    Value = bool.TrueString
-                });
+            {
+                foreach (var setting in settings)
+                    unitOfWork.UserSettings.Remove(setting);
+            }
 
             await unitOfWork.SaveChangesAsync();
             await _mainViewModel.ReloadCurrentDataAsync(true);
