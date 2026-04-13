@@ -22,7 +22,7 @@ namespace Fluxo.Views.Shell;
 /// <summary>
 ///     Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : Window, IPopupHost
 {
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 200; // ms
