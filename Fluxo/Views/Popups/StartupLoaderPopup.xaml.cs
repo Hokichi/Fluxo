@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.Views.Popups;
 
@@ -10,6 +11,7 @@ public partial class StartupLoaderPopup : Window
     public StartupLoaderPopup()
     {
         InitializeComponent();
+
         Closing += OnClosing;
         Loaded += OnLoaded;
         Closed += OnClosed;

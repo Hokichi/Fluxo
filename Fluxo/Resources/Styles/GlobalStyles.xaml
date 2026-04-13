@@ -460,7 +460,7 @@
                 <ControlTemplate TargetType="Slider">
                     <Grid>
                         <Border
-                            Height="6"
+                            Height="4"
                             VerticalAlignment="Center"
                             Background="{StaticResource Brush.Background.Hover}"
                             CornerRadius="3" />

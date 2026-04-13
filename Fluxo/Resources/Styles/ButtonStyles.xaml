@@ -29,6 +29,7 @@
                                 Height="{TemplateBinding IconSize}"
                                 HorizontalAlignment="Center"
                                 Fill="{TemplateBinding Foreground}"
+                                IsHitTestVisible="False"
                                 Stretch="Uniform" />
                         </StackPanel>
                     </Grid>
