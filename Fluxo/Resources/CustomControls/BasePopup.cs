@@ -1,11 +1,15 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Fluxo.Views.Shell;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
+using System.Windows.Shapes;
 
 namespace Fluxo.Resources.CustomControls;
 
-public class BasePopup : Window
+[TemplatePart(Name = "PART_ContentRoot",  Type = typeof(FrameworkElement))]
+[TemplatePart(Name = "PART_PopupOverlay", Type = typeof(UIElement))]
+public class BasePopup : Window, IPopupHost
 {
     private const int OverlayAnimDuration = 200; // ms
 
@@ -47,7 +51,9 @@ public class BasePopup : Window
         DependencyProperty.Register(nameof(ShowCancelButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
-    private MainWindow? _ownerWindow;
+    private IPopupHost? _popupHost;
+    private FrameworkElement? _contentRoot;
+    private UIElement? _popupOverlay;
 
     static BasePopup()
     {
@@ -144,6 +150,9 @@ public class BasePopup : Window
         WireButton("PART_DeleteButton", _ => OnDeleteButtonClick());
         WireButton("PART_CloneButton", _ => OnCloneButtonClick());
         WireButton("PART_CancelButton", _ => OnCancelButtonClick());
+
+        _contentRoot  = GetTemplateChild("PART_ContentRoot")  as FrameworkElement;
+        _popupOverlay = GetTemplateChild("PART_PopupOverlay") as UIElement;
     }
 
     private void WireButton(string partName, Action<RoutedEventArgs> handler)
@@ -233,16 +242,49 @@ public class BasePopup : Window
         }
     }
 
-    // ── Overlay & blur on MainWindow ────────────────────────────────
+    // ── Overlay & blur on owner ─────────────────────────────────────
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        _ownerWindow = Owner as MainWindow;
-        _ownerWindow?.ShowPopupOverlay();
+        _popupHost = Owner as IPopupHost;
+        _popupHost?.ShowPopupOverlay();
     }
 
     private void OnClosed(object? sender, EventArgs e)
     {
-        _ownerWindow?.HidePopupOverlay();
+        _popupHost?.HidePopupOverlay();
+    }
+
+    public void ShowPopupOverlay()
+    {
+        if (_contentRoot is null || _popupOverlay is null) return;
+
+        _contentRoot.Effect = new BlurEffect { Radius = 20, RenderingBias = RenderingBias.Performance };
+
+        _popupOverlay.Visibility = Visibility.Visible;
+        var fadeIn = new DoubleAnimation(0, 0.5, TimeSpan.FromMilliseconds(OverlayAnimDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        _popupOverlay.BeginAnimation(OpacityProperty, fadeIn);
+    }
+
+    public void HidePopupOverlay()
+    {
+        if (_contentRoot is null || _popupOverlay is null) return;
+
+        _contentRoot.Effect = null;
+
+        var fadeOut = new DoubleAnimation(0.5, 0, TimeSpan.FromMilliseconds(OverlayAnimDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+        fadeOut.Completed += (_, _) =>
+        {
+            _popupOverlay.BeginAnimation(OpacityProperty, null);
+            _popupOverlay.Opacity = 0;
+            _popupOverlay.Visibility = Visibility.Collapsed;
+        };
+        _popupOverlay.BeginAnimation(OpacityProperty, fadeOut);
     }
 }
