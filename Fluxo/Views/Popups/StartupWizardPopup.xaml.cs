@@ -184,6 +184,19 @@ public partial class StartupWizardPopup : BasePopup
             await _viewModel.DeleteSavingGoalAsync(id);
     }
 
+    private Border? GetStripeForStep(int stepIndex) => stepIndex switch
+    {
+        1 => Step1Stripe,
+        2 => Step2Stripe,
+        3 => Step3Stripe,
+        4 => Step4Stripe,
+        5 => Step5Stripe,
+        6 => Step6Stripe,
+        _ => null
+    };
+
+    private bool IsMiddleStep(int stepIndex) => stepIndex >= 1 && stepIndex <= 6;
+
     private async Task AnimateStepTransitionAsync(Action changeStep)
     {
         if (_isAnimating)
@@ -193,9 +206,38 @@ public partial class StartupWizardPopup : BasePopup
 
         try
         {
-            await FadeOutAsync();
-            changeStep();
-            await FadeInAsync();
+            var fromStep = _viewModel.CurrentStepIndex;
+            var bothMiddle = IsMiddleStep(fromStep) && IsMiddleStep(fromStep == 0 ? 1 : fromStep + (_viewModel.CurrentStepIndex >= fromStep ? 0 : 0));
+
+            // Peek at what the next step will be: for GoBack it's fromStep-1
+            // We detect direction by checking if this is a back or forward action
+            // But since GoBack always decrements and we call changeStep() after fade-out,
+            // we need to figure out if both from and to are middle steps.
+            // For GoBack: toStep = fromStep - 1
+            // We'll use a simpler approach: animate, change, then animate in.
+
+            if (IsCrossSectionTransition(fromStep, isForward: false))
+            {
+                await FadeElementAsync(ContentContainer, 1, 0);
+                changeStep();
+                SyncStripeOpacities();
+                await FadeElementAsync(ContentContainer, 0, 1);
+            }
+            else
+            {
+                var oldStripe = GetStripeForStep(fromStep);
+                await Task.WhenAll(
+                    FadeElementAsync(ContentColumn, 1, 0),
+                    oldStripe is not null ? FadeElementAsync(oldStripe, 1, 0) : Task.CompletedTask);
+
+                changeStep();
+                var newStripe = GetStripeForStep(_viewModel.CurrentStepIndex);
+                SyncStripeOpacities();
+
+                await Task.WhenAll(
+                    FadeElementAsync(ContentColumn, 0, 1),
+                    newStripe is not null ? FadeElementAsync(newStripe, 0, 1) : Task.CompletedTask);
+            }
         }
         finally
         {
@@ -213,10 +255,33 @@ public partial class StartupWizardPopup : BasePopup
 
         try
         {
-            await FadeOutAsync();
-            var result = await changeStepAsync();
-            await FadeInAsync();
-            return result;
+            var fromStep = _viewModel.CurrentStepIndex;
+
+            if (IsCrossSectionTransition(fromStep, isForward: true))
+            {
+                await FadeElementAsync(ContentContainer, 1, 0);
+                var result = await changeStepAsync();
+                SyncStripeOpacities();
+                await FadeElementAsync(ContentContainer, 0, 1);
+                return result;
+            }
+            else
+            {
+                var oldStripe = GetStripeForStep(fromStep);
+                await Task.WhenAll(
+                    FadeElementAsync(ContentColumn, 1, 0),
+                    oldStripe is not null ? FadeElementAsync(oldStripe, 1, 0) : Task.CompletedTask);
+
+                var result = await changeStepAsync();
+                var newStripe = GetStripeForStep(_viewModel.CurrentStepIndex);
+                SyncStripeOpacities();
+
+                await Task.WhenAll(
+                    FadeElementAsync(ContentColumn, 0, 1),
+                    newStripe is not null ? FadeElementAsync(newStripe, 0, 1) : Task.CompletedTask);
+
+                return result;
+            }
         }
         finally
         {
@@ -224,27 +289,35 @@ public partial class StartupWizardPopup : BasePopup
         }
     }
 
-    private Task FadeOutAsync()
+    private bool IsCrossSectionTransition(int fromStep, bool isForward)
     {
-        var tcs = new TaskCompletionSource();
-        var animation = new DoubleAnimation(1, 0, FadeDuration)
-        {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
-        };
-        animation.Completed += (_, _) => tcs.SetResult();
-        ContentContainer.BeginAnimation(OpacityProperty, animation);
-        return tcs.Task;
+        var toStep = isForward ? fromStep + 1 : fromStep - 1;
+        return !(IsMiddleStep(fromStep) && IsMiddleStep(toStep));
     }
 
-    private Task FadeInAsync()
+    private void SyncStripeOpacities()
+    {
+        for (var i = 1; i <= 6; i++)
+        {
+            var stripe = GetStripeForStep(i);
+            if (stripe is null) continue;
+            stripe.BeginAnimation(OpacityProperty, null);
+            stripe.Opacity = i == _viewModel.CurrentStepIndex ? 1 : 0;
+        }
+    }
+
+    private Task FadeElementAsync(UIElement element, double from, double to)
     {
         var tcs = new TaskCompletionSource();
-        var animation = new DoubleAnimation(0, 1, FadeDuration)
+        var animation = new DoubleAnimation(from, to, FadeDuration)
         {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            EasingFunction = new QuadraticEase
+            {
+                EasingMode = to < from ? EasingMode.EaseIn : EasingMode.EaseOut
+            }
         };
         animation.Completed += (_, _) => tcs.SetResult();
-        ContentContainer.BeginAnimation(OpacityProperty, animation);
+        element.BeginAnimation(OpacityProperty, animation);
         return tcs.Task;
     }
 }

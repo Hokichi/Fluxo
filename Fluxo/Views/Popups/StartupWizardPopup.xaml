@@ -281,11 +281,12 @@
                         </Border.Resources>
                         <Grid>
                             <Border
+                                x:Name="Step1Stripe"
                                 Width="4"
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
                                 CornerRadius="2"
-                                Visibility="{Binding IsStep1Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Opacity="1" />
                             <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
                                 <Viewbox Width="12" Height="12">
                                     <Path Data="{StaticResource AccountCircle}" Fill="{StaticResource Brush.Text.Secondary}" />
@@ -317,7 +318,7 @@
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
                                 CornerRadius="2"
-                                Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Opacity="0" x:Name="Step2Stripe" />
                             <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
                                 <Viewbox Width="12" Height="12">
                                     <Path Data="{StaticResource BookDollar}" Fill="{StaticResource Brush.Text.Secondary}" />
@@ -349,7 +350,7 @@
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
                                 CornerRadius="2"
-                                Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Opacity="0" x:Name="Step3Stripe" />
                             <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
                                 <Viewbox Width="12" Height="12">
                                     <Path Data="{StaticResource InvoiceLight}" Fill="{StaticResource Brush.Text.Secondary}" />
@@ -381,7 +382,7 @@
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
                                 CornerRadius="2"
-                                Visibility="{Binding IsStep4Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Opacity="0" x:Name="Step4Stripe" />
                             <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
                                 <Viewbox Width="12" Height="12">
                                     <Path Data="{StaticResource BullseyeSolid}" Fill="{StaticResource Brush.Text.Secondary}" />
@@ -413,7 +414,7 @@
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
                                 CornerRadius="2"
-                                Visibility="{Binding IsStep5Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Opacity="0" x:Name="Step5Stripe" />
                             <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
                                 <Viewbox Width="12" Height="12">
                                     <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Text.Secondary}" />
@@ -445,7 +446,7 @@
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
                                 CornerRadius="2"
-                                Visibility="{Binding IsStep6Active, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Opacity="0" x:Name="Step6Stripe" />
                             <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
                                 <Viewbox Width="12" Height="12">
                                     <Path Data="{StaticResource RegularBell}" Fill="{StaticResource Brush.Text.Secondary}" />
@@ -463,7 +464,7 @@
             </Border>
 
             <!--  Content Area  -->
-            <Border Grid.Column="2" Style="{StaticResource PanelStyle}">
+            <Border x:Name="ContentColumn" Grid.Column="2" Style="{StaticResource PanelStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
