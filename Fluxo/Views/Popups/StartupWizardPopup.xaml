@@ -196,6 +196,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <Grid x:Name="ContentContainer">
         <!--  Greeting Page (Step 0)  -->
         <Border
             Style="{StaticResource PanelStyle}"
@@ -887,6 +888,7 @@
                 </StackPanel>
             </Grid>
         </Border>
+        </Grid>
 
         <!--  Navigation Bar  -->
         <Grid Grid.Row="1" Margin="0,16,0,0">

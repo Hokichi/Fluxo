@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
 
@@ -8,8 +9,11 @@ namespace Fluxo.Views.Popups;
 
 public partial class StartupWizardPopup : BasePopup
 {
+    private static readonly Duration FadeDuration = new(TimeSpan.FromMilliseconds(150));
+
     private readonly StartupWizardVM _viewModel;
     private bool _allowClose;
+    private bool _isAnimating;
     private bool _isHandlingClose;
 
     public StartupWizardPopup(StartupWizardVM viewModel)
@@ -66,14 +70,14 @@ public partial class StartupWizardPopup : BasePopup
         }
     }
 
-    private void OnBackClick(object sender, RoutedEventArgs e)
+    private async void OnBackClick(object sender, RoutedEventArgs e)
     {
-        _viewModel.GoBack();
+        await AnimateStepTransitionAsync(_viewModel.GoBack);
     }
 
     private async void OnNextClick(object sender, RoutedEventArgs e)
     {
-        var result = await _viewModel.GoNextAsync();
+        var result = await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
             FluxoMessageBox.Show(this, result.ErrorMessage, "Startup Wizard",
                 MessageBoxButton.OK, MessageBoxImage.Information);
@@ -178,5 +182,69 @@ public partial class StartupWizardPopup : BasePopup
 
         if (result == MessageBoxResult.Yes)
             await _viewModel.DeleteSavingGoalAsync(id);
+    }
+
+    private async Task AnimateStepTransitionAsync(Action changeStep)
+    {
+        if (_isAnimating)
+            return;
+
+        _isAnimating = true;
+
+        try
+        {
+            await FadeOutAsync();
+            changeStep();
+            await FadeInAsync();
+        }
+        finally
+        {
+            _isAnimating = false;
+        }
+    }
+
+    private async Task<SettingsOperationResult> AnimateStepTransitionAsync(
+        Func<Task<SettingsOperationResult>> changeStepAsync)
+    {
+        if (_isAnimating)
+            return SettingsOperationResult.Success();
+
+        _isAnimating = true;
+
+        try
+        {
+            await FadeOutAsync();
+            var result = await changeStepAsync();
+            await FadeInAsync();
+            return result;
+        }
+        finally
+        {
+            _isAnimating = false;
+        }
+    }
+
+    private Task FadeOutAsync()
+    {
+        var tcs = new TaskCompletionSource();
+        var animation = new DoubleAnimation(1, 0, FadeDuration)
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+        };
+        animation.Completed += (_, _) => tcs.SetResult();
+        ContentContainer.BeginAnimation(OpacityProperty, animation);
+        return tcs.Task;
+    }
+
+    private Task FadeInAsync()
+    {
+        var tcs = new TaskCompletionSource();
+        var animation = new DoubleAnimation(0, 1, FadeDuration)
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        animation.Completed += (_, _) => tcs.SetResult();
+        ContentContainer.BeginAnimation(OpacityProperty, animation);
+        return tcs.Task;
     }
 }
