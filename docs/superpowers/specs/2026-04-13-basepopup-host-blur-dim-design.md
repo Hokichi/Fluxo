@@ -46,13 +46,11 @@ The inner `Grid` (currently unnamed) is given the name `PART_ContentRoot`. A new
       Grid.RowSpan="2"
       Fill="#80000000"
       Opacity="0"
-      Visibility="Collapsed"
-      IsHitTestVisible="False" />
+      Visibility="Collapsed" />
   </Grid>
 </Border>
 ```
 
-- `IsHitTestVisible="False"` — the overlay does not block mouse interaction with underlying popup UI.
 - `Fill="#80000000"` — semi-transparent dark fill; opacity is driven by animation, not this alpha value.
 - Starts as `Collapsed` + `Opacity="0"` to avoid any flicker.
 
