@@ -168,6 +168,8 @@ public partial class MainVM : ObservableRecipient
 
     public decimal TotalIncomeAmount { get; private set; }
 
+    public event EventHandler OnFinishingInit;
+
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
         SynchronizeTagSelections(value);
@@ -398,6 +400,8 @@ public partial class MainVM : ObservableRecipient
         _isInitialized = true;
         RefreshExpenseViews();
         RefreshNotifications();
+
+        OnFinishingInit?.Invoke(this, EventArgs.Empty);
     }
 
     private async Task ReloadDataForSelectedItem(DayOfWeekVM selectedItem,
