@@ -76,6 +76,26 @@ public partial class App : Application
         }
     }
 
+    public async Task RunSetupWizardAsync()
+    {
+        var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
+        var unitOfWorkFactory = _serviceProvider!.GetRequiredService<Func<IUnitOfWork>>();
+
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        MainWindow?.Close();
+
+        var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWorkFactory))
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
+        wizard.ShowDialog();
+
+        var mainWindow = _serviceProvider!.GetRequiredService<MainWindow>();
+        MainWindow = mainWindow;
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
+        mainWindow.Show();
+    }
+
     private static async Task<bool> EnsureFirstRunSettingAsync(Func<IUnitOfWork> unitOfWorkFactory)
     {
         await using var unitOfWork = unitOfWorkFactory();

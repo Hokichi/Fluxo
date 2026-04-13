@@ -233,7 +233,7 @@ public partial class SettingsPopup : BasePopup
     private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
     {
         if (FluxoMessageBox.Show(this,
-                "Running the setup wizard will close the app. You can relaunch it to start the wizard.",
+                "This will close the current window and open the setup wizard. Continue?",
                 "Run Setup Wizard",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question) != MessageBoxResult.Yes)
@@ -241,7 +241,8 @@ public partial class SettingsPopup : BasePopup
 
         await _viewModel.EnableSetupWizardAsync();
         _allowClose = true;
-        Application.Current.Shutdown();
+        Close();
+        await ((App)Application.Current).RunSetupWizardAsync();
     }
 
     private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)
@@ -278,7 +279,22 @@ public partial class SettingsPopup : BasePopup
 
         var result = await _viewModel.DeleteAllDataAsync(keepSettings);
         if (!result.IsSuccess)
+        {
             ShowMessage(result.ErrorMessage, "Delete All Data");
+            return;
+        }
+
+        if (FluxoMessageBox.Show(this,
+                "All data has been deleted. Would you like to run the setup wizard?",
+                "Setup Wizard",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            await _viewModel.EnableSetupWizardAsync();
+            _allowClose = true;
+            Close();
+            await ((App)Application.Current).RunSetupWizardAsync();
+        }
     }
 
     private async void OnTagDeleteClick(object sender, RoutedEventArgs e)
