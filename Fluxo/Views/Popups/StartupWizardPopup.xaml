@@ -339,7 +339,10 @@
                                     Margin="14,0,0,0"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <Viewbox Width="12" Height="12">
+                                    <Viewbox
+                                        Width="12"
+                                        Height="12"
+                                        Margin="0,0,0,-12">
                                         <Path Data="{StaticResource BookDollar}" Fill="{StaticResource Brush.Text.Secondary}" />
                                     </Viewbox>
                                     <TextBlock
