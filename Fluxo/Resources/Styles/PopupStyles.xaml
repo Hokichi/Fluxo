@@ -110,7 +110,7 @@
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
                         CornerRadius="16">
-                        <Grid>
+                        <Grid x:Name="PART_ContentRoot">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="60" />
                                 <RowDefinition Height="*" />
@@ -275,6 +275,14 @@
 
                             <!--  Main Content  -->
                             <ContentPresenter Grid.Row="1" />
+
+                            <!--  Popup overlay: dims and blocks interaction when a child popup is open  -->
+                            <Rectangle
+                                x:Name="PART_PopupOverlay"
+                                Grid.RowSpan="2"
+                                Fill="#80000000"
+                                Opacity="0"
+                                Visibility="Collapsed" />
                         </Grid>
                     </Border>
                 </ControlTemplate>
