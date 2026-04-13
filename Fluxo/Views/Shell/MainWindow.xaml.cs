@@ -36,6 +36,7 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isClosing;
     private bool _isHeaderMenuPinned;
     private bool _isMaximized;
+    private bool _wasMinimized;
     private bool _isPointerOverHeaderMenuButton;
     private bool _isPointerOverHeaderMenuPopup;
 
@@ -61,8 +62,9 @@ public partial class MainWindow : Window, IPopupHost
             FadeIn();
         };
 
-        Closing += OnWindowClosing;
-        Deactivated += OnWindowDeactivated;
+        Closing      += OnWindowClosing;
+        Deactivated  += OnWindowDeactivated;
+        StateChanged += OnWindowStateChanged;
         PreviewKeyDown += OnPreviewKeyDown;
         PreviewMouseLeftButtonDown += OnWindowPreviewMouseLeftButtonDown;
         _headerMenuCloseTimer.Tick += OnHeaderMenuCloseTimerTick;
@@ -142,12 +144,22 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnMinimizeWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        FadeOut(() =>
+        FadeOut(() => SystemCommands.MinimizeWindow(this));
+    }
+
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized)
         {
-            SystemCommands.MinimizeWindow(this);
+            _wasMinimized = true;
             BeginAnimation(OpacityProperty, null);
-            Opacity = 1;
-        });
+            Opacity = 0;
+        }
+        else if (WindowState == WindowState.Normal && _wasMinimized)
+        {
+            _wasMinimized = false;
+            FadeIn();
+        }
     }
 
     private void OnExpandRestoreWindow(object sender, RoutedEventArgs e)

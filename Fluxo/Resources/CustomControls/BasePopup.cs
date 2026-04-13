@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -11,6 +12,7 @@ namespace Fluxo.Resources.CustomControls;
 public class BasePopup : Window, IPopupHost
 {
     private const int OverlayAnimDuration = 200; // ms
+    private const int PopupAnimDuration   = 180; // ms
 
     // --- PopupTitle ---
     public static readonly DependencyProperty PopupTitleProperty =
@@ -53,6 +55,7 @@ public class BasePopup : Window, IPopupHost
     private IPopupHost? _popupHost;
     private FrameworkElement? _contentRoot;
     private UIElement? _popupOverlay;
+    private bool _isAnimatingClose;
 
     static BasePopup()
     {
@@ -69,13 +72,15 @@ public class BasePopup : Window, IPopupHost
         SizeToContent = SizeToContent.WidthAndHeight;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
+        Opacity = 0;
 
         // Implicit styles in App.Resources don't auto-apply to derived types,
         // so bind the Style explicitly to the BasePopup resource key.
         SetResourceReference(StyleProperty, typeof(BasePopup));
 
-        Loaded += OnLoaded;
-        Closed += OnClosed;
+        Loaded   += OnLoaded;
+        Closing  += OnClosing;
+        Closed   += OnClosed;
     }
 
     public string PopupTitle
@@ -247,11 +252,35 @@ public class BasePopup : Window, IPopupHost
     {
         _popupHost = Owner as IPopupHost;
         _popupHost?.ShowPopupOverlay();
+
+        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(PopupAnimDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        BeginAnimation(OpacityProperty, fadeIn);
+    }
+
+    private void OnClosing(object? sender, CancelEventArgs e)
+    {
+        if (_isAnimatingClose) return;
+
+        e.Cancel = true;
+        _isAnimatingClose = true;
+
+        _popupHost?.HidePopupOverlay();
+
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(PopupAnimDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+        fadeOut.Completed += (_, _) => Close();
+        BeginAnimation(OpacityProperty, fadeOut);
     }
 
     private void OnClosed(object? sender, EventArgs e)
     {
-        _popupHost?.HidePopupOverlay();
+        if (!_isAnimatingClose)
+            _popupHost?.HidePopupOverlay();
     }
 
     public void ShowPopupOverlay()
