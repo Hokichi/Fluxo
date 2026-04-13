@@ -414,7 +414,23 @@
         <Grid Grid.Column="2">
             <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
 
+                <Grid>
                 <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasSpendingSources}" Value="False">
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <BlurEffect Radius="6" />
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Opacity" Value="0.4" />
+                                    <Setter Property="IsHitTestVisible" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
                     <TextBlock
                         FontFamily="{StaticResource Bold}"
                         FontSize="16"
@@ -614,6 +630,15 @@
                         Text="{Binding BudgetAllocationErrorMessage}"
                         Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </StackPanel>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="13"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="Add An Income Source To Adjust Allocation"
+                    Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                </Grid>
             </Border>
 
             <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=SourcesTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -681,7 +706,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="SpendingSources:EnableChecks"
                             ToolTip="Enable selection"
-                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowSpendingSourceEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource DisableChecks}"
                             Click="OnChecksToggleClick"
@@ -824,6 +849,15 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="No Spending Source Available"
+                        Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </Grid>
             </Border>
 
@@ -892,7 +926,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:EnableChecks"
                             ToolTip="Enable selection"
-                            Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowFixedExpenseEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource DisableChecks}"
                             Click="OnChecksToggleClick"
@@ -1044,6 +1078,15 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="No Fixed Expense Available"
+                        Visibility="{Binding HasFixedExpenses, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </Grid>
             </Border>
 
@@ -1112,7 +1155,7 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Goals:EnableChecks"
                             ToolTip="Enable selection"
-                            Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            Visibility="{Binding ShowGoalEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <c:BalloonButton
                             ButtonIcon="{StaticResource DisableChecks}"
                             Click="OnChecksToggleClick"
@@ -1264,6 +1307,15 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="No Goal Available"
+                        Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </Grid>
             </Border>
 

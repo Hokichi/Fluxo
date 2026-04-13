@@ -116,6 +116,14 @@ public partial class SettingsVM : ObservableObject
     public bool ShowGoalCheckAllButton => IsGoalChecksEnabled && !AreAllGoalsChecked;
     public bool ShowGoalUncheckAllButton => IsGoalChecksEnabled && AreAllGoalsChecked;
 
+    public bool HasSpendingSources => SpendingSources.Count > 0;
+    public bool HasFixedExpenses => FixedExpenses.Count > 0;
+    public bool HasSavingGoals => SavingGoals.Count > 0;
+
+    public bool ShowSpendingSourceEnableChecksButton => !IsSpendingSourceChecksEnabled && HasSpendingSources;
+    public bool ShowFixedExpenseEnableChecksButton => !IsFixedExpenseChecksEnabled && HasFixedExpenses;
+    public bool ShowGoalEnableChecksButton => !IsGoalChecksEnabled && HasSavingGoals;
+
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
             string.Equals(option.Code, SelectedCurrencyCode, StringComparison.OrdinalIgnoreCase))?.Symbol ?? "$";
@@ -222,6 +230,10 @@ public partial class SettingsVM : ObservableObject
                 Name = item.Tag.Name,
                 HexCode = item.Tag.HexCode
             }));
+
+        OnPropertyChanged(nameof(HasSpendingSources));
+        OnPropertyChanged(nameof(HasFixedExpenses));
+        OnPropertyChanged(nameof(HasSavingGoals));
 
         IsSpendingSourceChecksEnabled = false;
         IsFixedExpenseChecksEnabled = false;
@@ -1096,6 +1108,9 @@ public partial class SettingsVM : ObservableObject
         OnPropertyChanged(nameof(ShowFixedExpenseUncheckAllButton));
         OnPropertyChanged(nameof(ShowGoalCheckAllButton));
         OnPropertyChanged(nameof(ShowGoalUncheckAllButton));
+        OnPropertyChanged(nameof(ShowSpendingSourceEnableChecksButton));
+        OnPropertyChanged(nameof(ShowFixedExpenseEnableChecksButton));
+        OnPropertyChanged(nameof(ShowGoalEnableChecksButton));
     }
 
     private static bool ShouldShowHideAction<T>(IReadOnlyCollection<T> items)
