@@ -44,10 +44,10 @@ public partial class StartupWizardVM : ObservableObject
     public ObservableCollection<SettingsCurrencyOptionVM> CurrencyOptions { get; } = [];
     public ObservableCollection<WizardStepDotVM> StepDots { get; } = [];
 
-    public int TotalSteps => 9;
+    public int TotalSteps => 10;
     public bool IsGreetingStep => CurrentStepIndex == 0;
-    public bool IsMiddleStep => CurrentStepIndex >= 1 && CurrentStepIndex <= 6;
-    public bool IsLoadingStep => CurrentStepIndex == 7;
+    public bool IsMiddleStep => CurrentStepIndex >= 1 && CurrentStepIndex <= 7;
+    public bool IsLoadingStep => CurrentStepIndex == 8;
     public bool IsFinalStep => CurrentStepIndex == TotalSteps - 1;
     public bool IsStep1Active => CurrentStepIndex == 1;
     public bool IsStep2Active => CurrentStepIndex == 2;
@@ -55,8 +55,9 @@ public partial class StartupWizardVM : ObservableObject
     public bool IsStep4Active => CurrentStepIndex == 4;
     public bool IsStep5Active => CurrentStepIndex == 5;
     public bool IsStep6Active => CurrentStepIndex == 6;
-    public string StepCounterText => $"Step {CurrentStepIndex} of 6";
-    public decimal TotalBudgetAmount => ParseSalaryAmount();
+    public bool IsStep7Active => CurrentStepIndex == 7;
+    public string StepCounterText => $"Step {CurrentStepIndex} of 7";
+    public decimal TotalBudgetAmount => CalculateTotalBudgetAmount();
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
             string.Equals(option.Code, SelectedCurrencyCode, StringComparison.OrdinalIgnoreCase))?.Symbol ?? "$";
@@ -75,7 +76,8 @@ public partial class StartupWizardVM : ObservableObject
         4 => "Add savings goals",
         5 => "Budget allocation",
         6 => "Notification preferences",
-        7 => "Getting things ready",
+        7 => "Setup summary",
+        8 => "Getting things ready",
         _ => "Welcome to Fluxo"
     };
 
@@ -88,7 +90,8 @@ public partial class StartupWizardVM : ObservableObject
         4 => "Add a few goals to start tracking progress right away.",
         5 => "Split your salary into Needs, Wants, and Invest.",
         6 => "Choose which reminders and alerts Fluxo should show.",
-        7 => "Fluxo is loading your data. This will only take a moment.",
+        7 => "Here's a summary of everything you've set up.",
+        8 => "Fluxo is loading your data. This will only take a moment.",
         _ => $"You're ready, {ResolvedUsername}. Fluxo is all set to open."
     };
 
@@ -104,12 +107,16 @@ public partial class StartupWizardVM : ObservableObject
         OnPropertyChanged(nameof(IsStep4Active));
         OnPropertyChanged(nameof(IsStep5Active));
         OnPropertyChanged(nameof(IsStep6Active));
+        OnPropertyChanged(nameof(IsStep7Active));
         OnPropertyChanged(nameof(StepCounterText));
         OnPropertyChanged(nameof(CurrentStepTitle));
         OnPropertyChanged(nameof(CurrentStepDescription));
 
         foreach (var dot in StepDots)
             dot.IsActive = dot.StepIndex == value;
+
+        if (value == 7)
+            RefreshReportProperties();
     }
 
     partial void OnSelectedCurrencyCodeChanged(string value)
@@ -159,8 +166,22 @@ public partial class StartupWizardVM : ObservableObject
 
     public void GoBack()
     {
-        if (CurrentStepIndex > 0)
-            CurrentStepIndex--;
+        if (CurrentStepIndex <= 0)
+            return;
+
+        if (IsFinalStep)
+        {
+            CurrentStepIndex = 6;
+            return;
+        }
+
+        CurrentStepIndex--;
+    }
+
+    public void NavigateToStep(int stepIndex)
+    {
+        if (stepIndex >= 0 && stepIndex < TotalSteps && stepIndex != CurrentStepIndex)
+            CurrentStepIndex = stepIndex;
     }
 
     public async Task<SettingsOperationResult> GoNextAsync()
@@ -347,6 +368,11 @@ public partial class StartupWizardVM : ObservableObject
         ReplaceCollection(SpendingSources, (await unitOfWork.SpendingSources.GetAllAsync())
             .OrderBy(source => source.Name)
             .Select(source => new StartupWizardSpendingSourceItemVM(source)));
+
+        OnPropertyChanged(nameof(TotalBudgetAmount));
+        OnPropertyChanged(nameof(NeedsAllocationAmountText));
+        OnPropertyChanged(nameof(WantsAllocationAmountText));
+        OnPropertyChanged(nameof(InvestAllocationAmountText));
     }
 
     public async Task RefreshFixedExpensesAsync()
@@ -416,8 +442,15 @@ public partial class StartupWizardVM : ObservableObject
             1 => await SavePersonalizationAsync(),
             5 => await SaveBudgetAllocationAsync(),
             6 => await SaveNotificationsAsync(),
+            7 => PersistReportStep(),
             _ => SettingsOperationResult.Success()
         };
+    }
+
+    private SettingsOperationResult PersistReportStep()
+    {
+        RefreshReportProperties();
+        return SettingsOperationResult.Success();
     }
 
     private async Task<SettingsOperationResult> PersistAllAsync()
@@ -536,6 +569,42 @@ public partial class StartupWizardVM : ObservableObject
     private decimal ParseSalaryAmount()
     {
         return TryParseSalary(out var salary) ? salary : 0m;
+    }
+
+    private decimal CalculateTotalBudgetAmount()
+    {
+        var sourcesTotal = SpendingSources.Sum(source => source.PrimaryAmount);
+        return sourcesTotal > 0 ? sourcesTotal : ParseSalaryAmount();
+    }
+
+    public string ReportUsernameText => ResolvedUsername;
+    public string ReportCurrencyText => SelectedCurrencyCode;
+    public string ReportSalaryText => string.IsNullOrWhiteSpace(SalaryText)
+        ? "Not set"
+        : $"{SelectedCurrencySymbol}{ParseSalaryAmount().ToString("N2", CultureInfo.InvariantCulture)}";
+    public int ReportSpendingSourceCount => SpendingSources.Count;
+    public int ReportFixedExpenseCount => FixedExpenses.Count;
+    public int ReportSavingGoalCount => SavingGoals.Count;
+    public string ReportTotalBalanceText =>
+        $"{SelectedCurrencySymbol}{SpendingSources.Sum(s => s.PrimaryAmount).ToString("N2", CultureInfo.InvariantCulture)}";
+    public string ReportTotalFixedExpenseText =>
+        $"{SelectedCurrencySymbol}{FixedExpenses.Sum(e => e.Amount).ToString("N2", CultureInfo.InvariantCulture)}";
+    public string ReportBudgetAllocationText =>
+        $"Needs {NeedsAllocationPercentage}% / Wants {WantsAllocationPercentage}% / Invest {InvestAllocationPercentage}%";
+    public int ReportNotificationsEnabledCount => NotificationSettings.Count(n => n.IsEnabled);
+
+    public void RefreshReportProperties()
+    {
+        OnPropertyChanged(nameof(ReportUsernameText));
+        OnPropertyChanged(nameof(ReportCurrencyText));
+        OnPropertyChanged(nameof(ReportSalaryText));
+        OnPropertyChanged(nameof(ReportSpendingSourceCount));
+        OnPropertyChanged(nameof(ReportFixedExpenseCount));
+        OnPropertyChanged(nameof(ReportSavingGoalCount));
+        OnPropertyChanged(nameof(ReportTotalBalanceText));
+        OnPropertyChanged(nameof(ReportTotalFixedExpenseText));
+        OnPropertyChanged(nameof(ReportBudgetAllocationText));
+        OnPropertyChanged(nameof(ReportNotificationsEnabledCount));
     }
 
     private string BuildAllocationAmountText(int percentage)

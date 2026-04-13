@@ -208,6 +208,18 @@ public partial class StartupWizardPopup : BasePopup
             await _viewModel.DeleteSavingGoalAsync(id);
     }
 
+    private async void OnDotClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: WizardStepDotVM dot })
+            return;
+
+        var targetStep = dot.StepIndex;
+        if (targetStep == _viewModel.CurrentStepIndex)
+            return;
+
+        await AnimateStepTransitionAsync(() => _viewModel.NavigateToStep(targetStep));
+    }
+
     private Border? GetStripeForStep(int stepIndex) => stepIndex switch
     {
         1 => Step1Stripe,
@@ -216,10 +228,11 @@ public partial class StartupWizardPopup : BasePopup
         4 => Step4Stripe,
         5 => Step5Stripe,
         6 => Step6Stripe,
+        7 => Step7Stripe,
         _ => null
     };
 
-    private bool IsMiddleStep(int stepIndex) => stepIndex >= 1 && stepIndex <= 6;
+    private bool IsMiddleStep(int stepIndex) => stepIndex >= 1 && stepIndex <= 7;
 
     private async Task AnimateStepTransitionAsync(Action changeStep)
     {
@@ -313,7 +326,7 @@ public partial class StartupWizardPopup : BasePopup
 
     private void SyncStripeOpacities()
     {
-        for (var i = 1; i <= 6; i++)
+        for (var i = 1; i <= 7; i++)
         {
             var stripe = GetStripeForStep(i);
             if (stripe is null) continue;
