@@ -36,12 +36,40 @@ public class Repository<T>(FluxoDbContext dbContext) : IRepository<T> where T : 
 
     public void Update(T entity)
     {
-        DbSet.Update(entity);
+        // If we're already tracking a different instance with the same key,
+        // copy values into the tracked instance instead of attaching a duplicate.
+        if (IdProperty?.GetValue(entity) is int id)
+        {
+            var tracked = FindTrackedEntity(id);
+            if (tracked != null)
+            {
+                DbContext.Entry(tracked).CurrentValues.SetValues(entity);
+                return;
+            }
+        }
+
+        // Use Entry().State instead of DbSet.Update() to avoid recursively attaching
+        // navigation properties, which can cause duplicate tracking conflicts.
+        DbContext.Entry(entity).State = EntityState.Modified;
     }
 
     public void Remove(T entity)
     {
-        DbSet.Remove(entity);
+        // If we're already tracking a different instance with the same key,
+        // mark the tracked instance as deleted instead of attaching a duplicate.
+        if (IdProperty?.GetValue(entity) is int id)
+        {
+            var tracked = FindTrackedEntity(id);
+            if (tracked != null)
+            {
+                DbContext.Entry(tracked).State = EntityState.Deleted;
+                return;
+            }
+        }
+
+        // Use Entry().State instead of DbSet.Remove() to avoid recursively attaching
+        // navigation properties, which can cause duplicate tracking conflicts.
+        DbContext.Entry(entity).State = EntityState.Deleted;
     }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
