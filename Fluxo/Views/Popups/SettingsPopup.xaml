@@ -413,231 +413,230 @@
 
         <Grid Grid.Column="2">
             <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}">
-
                 <Grid>
-                <StackPanel>
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasSpendingSources}" Value="False">
-                                    <Setter Property="Effect">
-                                        <Setter.Value>
-                                            <BlurEffect Radius="6" />
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Setter Property="Opacity" Value="0.4" />
-                                    <Setter Property="IsHitTestVisible" Value="False" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSpendingSources}" Value="False">
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <BlurEffect Radius="15" />
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="Opacity" Value="0.4" />
+                                        <Setter Property="IsHitTestVisible" Value="False" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="16"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Budget Allocation" />
+                        <TextBlock
+                            Margin="0,8,0,16"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="Adjust how the current budget is split between Needs, Wants, and Invest." />
+
+                        <Border Style="{StaticResource RowCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="14"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="Needs" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button
+                                            Click="OnAllocationAdjustButtonClick"
+                                            Content="-"
+                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                            Style="{StaticResource StepperButtonStyle}"
+                                            Tag="Needs:-1" />
+                                        <TextBlock
+                                            Width="56"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
+                                            TextAlignment="Center" />
+                                        <Button
+                                            Click="OnAllocationAdjustButtonClick"
+                                            Content="+"
+                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                            Style="{StaticResource StepperButtonStyle}"
+                                            Tag="Needs:+1" />
+                                    </StackPanel>
+                                </Grid>
+                                <Slider
+                                    Grid.Row="1"
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="100"
+                                    Minimum="0"
+                                    Style="{StaticResource BudgetSliderStyle}"
+                                    TickFrequency="1"
+                                    Value="{Binding NeedsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Grid.Row="2"
+                                    HorizontalAlignment="Right"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding NeedsAllocationAmountText}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource RowCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="14"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="Wants" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button
+                                            Click="OnAllocationAdjustButtonClick"
+                                            Content="-"
+                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                            Style="{StaticResource StepperButtonStyle}"
+                                            Tag="Wants:-1" />
+                                        <TextBlock
+                                            Width="56"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
+                                            TextAlignment="Center" />
+                                        <Button
+                                            Click="OnAllocationAdjustButtonClick"
+                                            Content="+"
+                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                            Style="{StaticResource StepperButtonStyle}"
+                                            Tag="Wants:+1" />
+                                    </StackPanel>
+                                </Grid>
+                                <Slider
+                                    Grid.Row="1"
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="100"
+                                    Minimum="0"
+                                    Style="{StaticResource BudgetSliderStyle}"
+                                    TickFrequency="1"
+                                    Value="{Binding WantsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Grid.Row="2"
+                                    HorizontalAlignment="Right"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding WantsAllocationAmountText}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource RowCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="14"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="Invest" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button
+                                            Click="OnAllocationAdjustButtonClick"
+                                            Content="-"
+                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                            Style="{StaticResource StepperButtonStyle}"
+                                            Tag="Invest:-1" />
+                                        <TextBlock
+                                            Width="56"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
+                                            TextAlignment="Center" />
+                                        <Button
+                                            Click="OnAllocationAdjustButtonClick"
+                                            Content="+"
+                                            MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                            PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                            PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                            Style="{StaticResource StepperButtonStyle}"
+                                            Tag="Invest:+1" />
+                                    </StackPanel>
+                                </Grid>
+                                <Slider
+                                    Grid.Row="1"
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="100"
+                                    Minimum="0"
+                                    Style="{StaticResource BudgetSliderStyle}"
+                                    TickFrequency="1"
+                                    Value="{Binding InvestAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Grid.Row="2"
+                                    HorizontalAlignment="Right"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding InvestAllocationAmountText}" />
+                            </Grid>
+                        </Border>
+
+                        <TextBlock
+                            Margin="0,0,0,12"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Danger}"
+                            Text="{Binding BudgetAllocationErrorMessage}"
+                            Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </StackPanel>
                     <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
-                        FontSize="16"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="Budget Allocation" />
-                    <TextBlock
-                        Margin="0,8,0,16"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
+                        FontSize="13"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Adjust how the current budget is split between Needs, Wants, and Invest." />
-
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Needs" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="-"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Needs:-1" />
-                                    <TextBlock
-                                        Width="56"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
-                                        TextAlignment="Center" />
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="+"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Needs:+1" />
-                                </StackPanel>
-                            </Grid>
-                            <Slider
-                                Grid.Row="1"
-                                IsSnapToTickEnabled="True"
-                                Maximum="100"
-                                Minimum="0"
-                                Style="{StaticResource BudgetSliderStyle}"
-                                TickFrequency="1"
-                                Value="{Binding NeedsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                                Grid.Row="2"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding NeedsAllocationAmountText}" />
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Wants" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="-"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Wants:-1" />
-                                    <TextBlock
-                                        Width="56"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
-                                        TextAlignment="Center" />
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="+"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Wants:+1" />
-                                </StackPanel>
-                            </Grid>
-                            <Slider
-                                Grid.Row="1"
-                                IsSnapToTickEnabled="True"
-                                Maximum="100"
-                                Minimum="0"
-                                Style="{StaticResource BudgetSliderStyle}"
-                                TickFrequency="1"
-                                Value="{Binding WantsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                                Grid.Row="2"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding WantsAllocationAmountText}" />
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Invest" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="-"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Invest:-1" />
-                                    <TextBlock
-                                        Width="56"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
-                                        TextAlignment="Center" />
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="+"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Invest:+1" />
-                                </StackPanel>
-                            </Grid>
-                            <Slider
-                                Grid.Row="1"
-                                IsSnapToTickEnabled="True"
-                                Maximum="100"
-                                Minimum="0"
-                                Style="{StaticResource BudgetSliderStyle}"
-                                TickFrequency="1"
-                                Value="{Binding InvestAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                                Grid.Row="2"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding InvestAllocationAmountText}" />
-                        </Grid>
-                    </Border>
-
-                    <TextBlock
-                        Margin="0,0,0,12"
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Danger}"
-                        Text="{Binding BudgetAllocationErrorMessage}"
-                        Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="13"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="Add An Income Source To Adjust Allocation"
-                    Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        Text="Add An Income Source To Adjust Allocation"
+                        Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </Grid>
             </Border>
 
@@ -850,9 +849,10 @@
                         </ItemsControl>
                     </ScrollViewer>
                     <TextBlock
-                        Grid.Row="1"
-                        Margin="0,24,0,0"
+                        Grid.RowSpan="2"
+                        Margin="0,24"
                         HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="13"
                         Foreground="{StaticResource Brush.Text.Secondary}"
@@ -1079,9 +1079,10 @@
                         </ItemsControl>
                     </ScrollViewer>
                     <TextBlock
-                        Grid.Row="1"
-                        Margin="0,24,0,0"
+                        Grid.RowSpan="2"
+                        Margin="0,24"
                         HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="13"
                         Foreground="{StaticResource Brush.Text.Secondary}"
@@ -1308,9 +1309,10 @@
                         </ItemsControl>
                     </ScrollViewer>
                     <TextBlock
-                        Grid.Row="1"
-                        Margin="0,24,0,0"
+                        Grid.RowSpan="2"
+                        Margin="0,24"
                         HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="13"
                         Foreground="{StaticResource Brush.Text.Secondary}"
@@ -1342,7 +1344,7 @@
                         FontFamily="{StaticResource Medium}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Hover a tag to reveal delete." />
+                        Text="Click to remove tags." />
                     <ItemsControl ItemsSource="{Binding Tags}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
