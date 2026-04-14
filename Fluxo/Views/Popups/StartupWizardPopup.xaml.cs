@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
 
@@ -15,6 +17,10 @@ public partial class StartupWizardPopup : BasePopup
     private bool _allowClose;
     private bool _isAnimating;
     private bool _isHandlingClose;
+    private readonly DispatcherTimer _allocationHoldDelayTimer = new() { Interval = TimeSpan.FromSeconds(5) };
+    private readonly DispatcherTimer _allocationRepeatTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private int _heldAllocationDelta;
+    private BudgetAllocationSegment _heldAllocationSegment;
 
     public StartupWizardPopup(StartupWizardVM viewModel)
     {
@@ -23,6 +29,8 @@ public partial class StartupWizardPopup : BasePopup
         DataContext = viewModel;
         Loaded += OnLoadedAsync;
         Closing += OnClosingAsync;
+        _allocationHoldDelayTimer.Tick += OnAllocationHoldDelayTick;
+        _allocationRepeatTimer.Tick += OnAllocationRepeatTick;
     }
 
     private async void OnLoadedAsync(object sender, RoutedEventArgs e)
@@ -77,6 +85,29 @@ public partial class StartupWizardPopup : BasePopup
 
     private async void OnNextClick(object sender, RoutedEventArgs e)
     {
+        if (_viewModel.IsStep2Active && !_viewModel.HasSpendingSources)
+        {
+            var dialogResult = FluxoMessageBox.Show(this,
+                "A spending source is required to calculate and if there are no available sources, Fixed expenses and Saving goals setup will be skipped. Do you want to continue without adding a source?",
+                "Startup Wizard",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (dialogResult == MessageBoxResult.Yes)
+            {
+                await AnimateStepTransitionAsync(() =>
+                {
+                    _viewModel.NavigateToStep(5);
+                });
+                return;
+            }
+            else
+            {
+                OnAddSpendingSourceClick(sender, e);
+                return;
+            }
+        }
+
         var result = await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
         {
@@ -218,6 +249,64 @@ public partial class StartupWizardPopup : BasePopup
             return;
 
         await AnimateStepTransitionAsync(() => _viewModel.NavigateToStep(targetStep));
+    }
+
+    private void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag } ||
+            !TryParseAllocationTag(tag, out var segment, out var delta))
+            return;
+        _viewModel.IncrementAllocation(segment, delta);
+    }
+
+    private void OnAllocationAdjustButtonMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag } ||
+            !TryParseAllocationTag(tag, out var segment, out var delta))
+            return;
+        _heldAllocationSegment = segment;
+        _heldAllocationDelta = delta;
+        _allocationRepeatTimer.Stop();
+        _allocationHoldDelayTimer.Stop();
+        _allocationHoldDelayTimer.Start();
+    }
+
+    private void OnAllocationAdjustButtonMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        StopAllocationTimers();
+    }
+
+    private void OnAllocationAdjustButtonMouseLeave(object sender, MouseEventArgs e)
+    {
+        StopAllocationTimers();
+    }
+
+    private void OnAllocationHoldDelayTick(object? sender, EventArgs e)
+    {
+        _allocationHoldDelayTimer.Stop();
+        _allocationRepeatTimer.Start();
+    }
+
+    private void OnAllocationRepeatTick(object? sender, EventArgs e)
+    {
+        _viewModel.IncrementAllocation(_heldAllocationSegment, _heldAllocationDelta);
+    }
+
+    private void StopAllocationTimers()
+    {
+        _allocationHoldDelayTimer.Stop();
+        _allocationRepeatTimer.Stop();
+    }
+
+    private static bool TryParseAllocationTag(string tag, out BudgetAllocationSegment segment, out int delta)
+    {
+        segment = default;
+        delta = 0;
+        var parts = tag.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2 || !Enum.TryParse(parts[0], out segment))
+            return false;
+        delta = string.Equals(parts[1], "+1", StringComparison.Ordinal) ? 1 : -1;
+        return true;
     }
 
     private Border? GetStripeForStep(int stepIndex) => stepIndex switch
