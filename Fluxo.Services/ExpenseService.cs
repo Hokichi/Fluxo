@@ -24,6 +24,11 @@ public sealed class ExpenseService(IUnitOfWork unitOfWork, IMapper mapper) : IEx
 
     public async Task AddAsync(ExpenseDto dto, CancellationToken cancellationToken = default)
     {
+        // Validate source exists before staging any entities.
+        var source = await unitOfWork.SpendingSources.GetByIdAsync(dto.SpendingSourceId, cancellationToken);
+        if (source is null)
+            throw new InvalidOperationException($"SpendingSource with id {dto.SpendingSourceId} was not found.");
+
         // Build the entity manually so EF can track it and resolve the ExpenseLog FK.
         var expense = new Expense
         {
@@ -51,10 +56,6 @@ public sealed class ExpenseService(IUnitOfWork unitOfWork, IMapper mapper) : IEx
         await unitOfWork.ExpenseLogs.AddAsync(log, cancellationToken);
 
         // Deduct from spending source.
-        var source = await unitOfWork.SpendingSources.GetByIdAsync(dto.SpendingSourceId, cancellationToken);
-        if (source is null)
-            throw new InvalidOperationException($"SpendingSource with id {dto.SpendingSourceId} was not found.");
-
         source.Balance -= dto.Amount;
         source.SpentAmount += dto.Amount;
         unitOfWork.SpendingSources.Update(source);

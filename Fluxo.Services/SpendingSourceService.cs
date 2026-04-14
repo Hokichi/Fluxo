@@ -35,10 +35,13 @@ public sealed class SpendingSourceService(IUnitOfWork unitOfWork, IMapper mapper
         var marked = await unitOfWork.SpendingSources.GetMarkedForDeletionAsync(cancellationToken);
         if (marked.Count == 0) return;
 
+        var markedIds = marked.Select(s => s.Id).ToHashSet();
+
+        // Load all expenses once to avoid a table scan per source.
+        var allExpenses = await unitOfWork.Expenses.GetAllAsync(cancellationToken);
+
         foreach (var source in marked)
         {
-            // Collect all expense IDs for this source so we can remove their logs first.
-            var allExpenses = await unitOfWork.Expenses.GetAllAsync(cancellationToken);
             var sourceExpenseIds = allExpenses
                 .Where(e => e.SpendingSourceId == source.Id)
                 .Select(e => e.Id)
@@ -47,6 +50,18 @@ public sealed class SpendingSourceService(IUnitOfWork unitOfWork, IMapper mapper
             foreach (var expenseId in sourceExpenseIds)
             {
                 var logs = await unitOfWork.ExpenseLogs.GetByExpenseIdAsync(expenseId, cancellationToken);
+
+                // Restore balance on any OTHER spending source referenced by these logs.
+                foreach (var grp in logs.GroupBy(l => l.SpendingSourceId).Where(g => !markedIds.Contains(g.Key)))
+                {
+                    var affectedSource = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, cancellationToken);
+                    if (affectedSource is null) continue;
+                    var total = grp.Sum(l => l.Amount);
+                    affectedSource.Balance += total;
+                    affectedSource.SpentAmount -= total;
+                    unitOfWork.SpendingSources.Update(affectedSource);
+                }
+
                 foreach (var log in logs)
                     unitOfWork.ExpenseLogs.Remove(log);
 
