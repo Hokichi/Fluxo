@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Fluxo.Core.Enums;
+using Fluxo.Core.Filters;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 
@@ -19,19 +20,19 @@ public partial class MainVM
         if (!update.HasChanges)
             return;
 
-        var expenseLogEntity = await _unitOfWork.ExpenseLogs.GetByLogIdAsync(update.ExpenseLogId);
-        if (expenseLogEntity is null || expenseLogEntity.Expense is null || expenseLogEntity.SpendingSource is null)
+        var logDto = await _expenseLogService.GetByLogIdAsync(update.ExpenseLogId);
+        if (logDto is null || logDto.Expense is null || logDto.SpendingSource is null)
             return;
 
-        var updatedExpenseLog = _mapper.Map<ExpenseLogVM>(expenseLogEntity);
+        var updatedExpenseLog = _mapper.Map<ExpenseLogVM>(logDto);
 
         IReadOnlyList<ExpenseTagVM>? refreshedTags = null;
         Dictionary<int, SpendingSourceVM>? refreshedSources = null;
 
         if (update.AffectsTagOrdering)
         {
-            var tagResults = await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync();
-            refreshedTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(tagResults.Select(r => r.Tag).ToList());
+            refreshedTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
+                await _tagService.GetTagsOrderedByExpenseCountAsync(new ExpenseFilter()));
         }
 
         if (update.AffectsSpendingSourceState)
@@ -40,9 +41,9 @@ public partial class MainVM
 
             foreach (var sourceId in GetAffectedSpendingSourceIds(update.PreviousState, updatedExpenseLog))
             {
-                var sourceEntity = await _unitOfWork.SpendingSources.GetByIdAsync(sourceId);
-                if (sourceEntity is not null)
-                    refreshedSources[sourceId] = _mapper.Map<SpendingSourceVM>(sourceEntity);
+                var sourceDto = await _spendingSourceService.GetByIdAsync(sourceId);
+                if (sourceDto is not null)
+                    refreshedSources[sourceId] = _mapper.Map<SpendingSourceVM>(sourceDto);
             }
         }
 

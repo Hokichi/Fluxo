@@ -15,6 +15,12 @@ public sealed class SpendingSourceService(IUnitOfWork unitOfWork, IMapper mapper
         return mapper.Map<IReadOnlyList<SpendingSourceDto>>(sources);
     }
 
+    public async Task<SpendingSourceDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var source = await unitOfWork.SpendingSources.GetByIdAsync(id, cancellationToken);
+        return source is null ? null : mapper.Map<SpendingSourceDto>(source);
+    }
+
     public async Task<IReadOnlyList<SpendingSourceDto>> SearchAsync(SpendingSourceFilter filter,
         CancellationToken cancellationToken = default)
     {

@@ -13,6 +13,12 @@ public sealed class ExpenseLogService(IUnitOfWork unitOfWork, IMapper mapper) : 
         return mapper.Map<IReadOnlyList<ExpenseLogDto>>(logs);
     }
 
+    public async Task<ExpenseLogDto?> GetByLogIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var log = await unitOfWork.ExpenseLogs.GetByLogIdAsync(id, cancellationToken);
+        return log is null ? null : mapper.Map<ExpenseLogDto>(log);
+    }
+
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var log = await unitOfWork.ExpenseLogs.GetByLogIdAsync(id, cancellationToken);

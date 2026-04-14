@@ -6,6 +6,7 @@ namespace Fluxo.Core.Interfaces.Services;
 public interface ISpendingSourceService
 {
     Task<IReadOnlyList<SpendingSourceDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<SpendingSourceDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SpendingSourceDto>> SearchAsync(SpendingSourceFilter filter, CancellationToken cancellationToken = default);
     Task AddAsync(SpendingSourceDto dto, CancellationToken cancellationToken = default);
     Task DeleteAsync(CancellationToken cancellationToken = default);

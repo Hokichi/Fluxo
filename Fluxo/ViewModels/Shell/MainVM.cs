@@ -8,9 +8,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
+using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
@@ -28,12 +30,14 @@ public partial class MainVM : ObservableRecipient
     private readonly HashSet<int> _hiddenSavingGoalIds = [];
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
     private readonly IMapper _mapper;
+    private readonly IExpenseService _expenseService;
+    private readonly IExpenseLogService _expenseLogService;
+    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly ITagService _tagService;
 
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
 
-    private readonly IUnitOfWork _unitOfWork;
-
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork; // kept for SavingGoals and IncomeLogs (no service)
 
     private readonly IUserSettingsRepository _userSettingsRepository;
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
@@ -114,14 +118,20 @@ public partial class MainVM : ObservableRecipient
     private decimal _wantsThreshold = 0.3m;
 
     public MainVM(
+        IExpenseService expenseService,
+        IExpenseLogService expenseLogService,
+        ISpendingSourceService spendingSourceService,
+        ITagService tagService,
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        Func<IUnitOfWork> unitOfWorkFactory,
         IUserSettingsRepository userSettingsRepository)
     {
+        _expenseService = expenseService;
+        _expenseLogService = expenseLogService;
+        _spendingSourceService = spendingSourceService;
+        _tagService = tagService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _unitOfWorkFactory = unitOfWorkFactory;
         _userSettingsRepository = userSettingsRepository;
 
         Notifications.CollectionChanged += OnNotificationsCollectionChanged;
@@ -310,18 +320,14 @@ public partial class MainVM : ObservableRecipient
         if (expenseLog is null)
             return;
 
-        await using var unitOfWork = _unitOfWorkFactory();
-        var trackedExpenseLog = await unitOfWork.ExpenseLogs.GetByIdAsync(expenseLog.Id);
-        if (trackedExpenseLog is null || trackedExpenseLog.IsForDeletion)
+        if (expenseLog.IsForDeletion)
             return;
 
-        trackedExpenseLog.IsForDeletion = true;
-        unitOfWork.ExpenseLogs.Update(trackedExpenseLog);
-        await unitOfWork.SaveChangesAsync();
+        await _expenseLogService.DeleteAsync(expenseLog.Id);
 
         ApplyDeletedExpenseLogToUi(expenseLog);
         WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
-            new DeleteExpenseLogMemoryAction(trackedExpenseLog.Id)));
+            new DeleteExpenseLogMemoryAction(expenseLog.Id)));
     }
 
     internal IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs()
@@ -336,17 +342,18 @@ public partial class MainVM : ObservableRecipient
 
     internal async Task ReloadCurrentDataAsync(bool suppressGoalNotifications = false)
     {
-        var spendingSourceEntities = await _unitOfWork.SpendingSources.GetAllAsync();
-        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(spendingSourceEntities);
-        var expenseEntities = await _unitOfWork.Expenses.GetAllAsync();
-        var expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(expenseEntities);
-        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
-        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
-        var savingGoalEntities = await _unitOfWork.SavingGoals.GetAllAsync();
-        var savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(savingGoalEntities);
-        var tagResults = await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync();
-        var allTagEntities = tagResults.Select(r => r.Tag).ToList();
-        var allTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(allTagEntities);
+        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
+            await _spendingSourceService.GetAllAsync());
+        var expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(
+            await _expenseService.GetAllAsync());
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
+            await _expenseLogService.GetAllAsync());
+        // SavingGoals: no service — two-step map: Entity → DTO → VM
+        var savingGoalDtos = _mapper.Map<IReadOnlyList<SavingGoalDto>>(
+            await _unitOfWork.SavingGoals.GetAllAsync());
+        var savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(savingGoalDtos);
+        var allTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
+            await _tagService.GetAllAsync());
 
         LoadExpenses(expenses);
         CacheAllTimeExpenseTotals(allExpenseLogs);
@@ -380,22 +387,25 @@ public partial class MainVM : ObservableRecipient
         NavigateSpinnerToDate(DateTime.Today);
         await LoadUserSettingsAsync();
 
-        var spendingSourceEntities = await _unitOfWork.SpendingSources.GetAllAsync();
-        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(spendingSourceEntities);
-        var expenseEntities = await _unitOfWork.Expenses.GetAllAsync();
-        var expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(expenseEntities);
-        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
-        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
+        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
+            await _spendingSourceService.GetAllAsync());
+        var expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(
+            await _expenseService.GetAllAsync());
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
+            await _expenseLogService.GetAllAsync());
         var today = DateTime.Today;
         var periodExpenseLogs = allExpenseLogs.Where(log => log.DeductedOn.Date == today).ToList();
-        var allIncomeLogEntities = await _unitOfWork.IncomeLogs.GetAllAsync();
-        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(allIncomeLogEntities);
+        // IncomeLogs: no service — two-step map: Entity → DTO → VM
+        var incomeLogDtos = _mapper.Map<IReadOnlyList<IncomeLogDto>>(
+            await _unitOfWork.IncomeLogs.GetAllAsync());
+        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(incomeLogDtos);
         var periodIncomeLogs = allIncomeLogs.Where(log => log.AddedOn.Date == today).ToList();
-        var savingGoalEntities = await _unitOfWork.SavingGoals.GetAllAsync();
-        var savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(savingGoalEntities);
-        var tagResults = await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync();
-        var allTagEntities = tagResults.Select(r => r.Tag).ToList();
-        var allTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(allTagEntities);
+        // SavingGoals: no service — two-step map: Entity → DTO → VM
+        var savingGoalDtos = _mapper.Map<IReadOnlyList<SavingGoalDto>>(
+            await _unitOfWork.SavingGoals.GetAllAsync());
+        var savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(savingGoalDtos);
+        var allTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
+            await _tagService.GetAllAsync());
 
         LoadExpenses(expenses);
         CacheAllTimeExpenseTotals(allExpenseLogs);
@@ -419,10 +429,11 @@ public partial class MainVM : ObservableRecipient
         IReadOnlyList<ExpenseLogVM> periodExpenseLogs;
         IReadOnlyList<IncomeLogVM> periodIncomeLogs;
 
-        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
-        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
-        var allIncomeLogEntities = await _unitOfWork.IncomeLogs.GetAllAsync();
-        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(allIncomeLogEntities);
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
+            await _expenseLogService.GetAllAsync());
+        var incomeLogDtos = _mapper.Map<IReadOnlyList<IncomeLogDto>>(
+            await _unitOfWork.IncomeLogs.GetAllAsync());
+        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(incomeLogDtos);
 
         switch (SelectedMainContentViewMode)
         {
@@ -465,10 +476,11 @@ public partial class MainVM : ObservableRecipient
 
     private async Task LoadAllTimeData(IEnumerable<SpendingSourceVM>? spendingSources = null)
     {
-        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
-        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
-        var allIncomeLogEntities = await _unitOfWork.IncomeLogs.GetAllAsync();
-        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(allIncomeLogEntities);
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
+            await _expenseLogService.GetAllAsync());
+        var incomeLogDtos = _mapper.Map<IReadOnlyList<IncomeLogDto>>(
+            await _unitOfWork.IncomeLogs.GetAllAsync());
+        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(incomeLogDtos);
 
         LoadSpendingSources(spendingSources ?? SpendingSources, allIncomeLogs, allExpenseLogs);
         LoadExpenseLogs(allExpenseLogs);
