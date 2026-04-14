@@ -22,7 +22,7 @@ public sealed class ExpenseLogService(IUnitOfWork unitOfWork, IMapper mapper) : 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var log = await unitOfWork.ExpenseLogs.GetByLogIdAsync(id, cancellationToken);
-        if (log is null) return;
+        if (log is null || log.IsForDeletion) return;
 
         log.IsForDeletion = true;
         unitOfWork.ExpenseLogs.Update(log);
