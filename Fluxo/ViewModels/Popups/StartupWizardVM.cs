@@ -88,7 +88,7 @@ public partial class StartupWizardVM : ObservableObject
         2 => "Add the accounts and sources you spend from most often.",
         3 => "Add recurring fixed expenses so Fluxo can account for them upfront.",
         4 => "Add a few goals to start tracking progress right away.",
-        5 => "Split your salary into Needs, Wants, and Invest.",
+        5 => "Split your budget into Needs, Wants, and Invest.",
         6 => "Choose which reminders and alerts Fluxo should show.",
         7 => "Here's a summary of everything you've set up.",
         8 => "Fluxo is loading your data. This will only take a moment.",
@@ -573,9 +573,26 @@ public partial class StartupWizardVM : ObservableObject
 
     private decimal CalculateTotalBudgetAmount()
     {
-        var sourcesTotal = SpendingSources.Sum(source => source.PrimaryAmount);
-        return sourcesTotal > 0 ? sourcesTotal : ParseSalaryAmount();
+        return SpendingSources.Sum(source => source.PrimaryAmount);
     }
+
+    public void IncrementAllocation(BudgetAllocationSegment segment, int delta)
+    {
+        switch (segment)
+        {
+            case BudgetAllocationSegment.Needs:
+                NeedsAllocationPercentage = Math.Clamp(NeedsAllocationPercentage + delta, 0, 100);
+                break;
+            case BudgetAllocationSegment.Wants:
+                WantsAllocationPercentage = Math.Clamp(WantsAllocationPercentage + delta, 0, 100);
+                break;
+            case BudgetAllocationSegment.Invest:
+                InvestAllocationPercentage = Math.Clamp(InvestAllocationPercentage + delta, 0, 100);
+                break;
+        }
+    }
+
+    public bool HasSpendingSources => SpendingSources.Count > 0;
 
     public string ReportUsernameText => ResolvedUsername;
     public string ReportCurrencyText => SelectedCurrencyCode;
