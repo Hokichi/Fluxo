@@ -110,6 +110,11 @@
             <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="0,0,0,8" />
@@ -367,7 +372,9 @@
                         </Border>
 
                         <!--  Step 3  -->
-                        <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border
+                            Style="{StaticResource SidebarStepStyle}"
+                            Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Border.Resources>
                                 <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
                                     <Style.Triggers>
@@ -403,7 +410,9 @@
                         </Border>
 
                         <!--  Step 4  -->
-                        <Border Style="{StaticResource SidebarStepStyle}">
+                        <Border
+                            Style="{StaticResource SidebarStepStyle}"
+                            Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Border.Resources>
                                 <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
                                     <Style.Triggers>
@@ -1319,6 +1328,7 @@
                 Orientation="Horizontal">
                 <Button
                     Click="OnNextClick"
+                    IsEnabled="{Binding IsNextEnabled}"
                     Style="{StaticResource PrimaryActionButtonStyle}"
                     Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                     <StackPanel VerticalAlignment="Center" Orientation="Horizontal">

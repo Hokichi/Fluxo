@@ -111,6 +111,7 @@ public partial class StartupWizardVM : ObservableObject
         OnPropertyChanged(nameof(StepCounterText));
         OnPropertyChanged(nameof(CurrentStepTitle));
         OnPropertyChanged(nameof(CurrentStepDescription));
+        OnPropertyChanged(nameof(IsNextEnabled));
 
         foreach (var dot in StepDots)
             dot.IsActive = dot.StepIndex == value;
@@ -379,6 +380,7 @@ public partial class StartupWizardVM : ObservableObject
         OnPropertyChanged(nameof(NeedsAllocationAmountText));
         OnPropertyChanged(nameof(WantsAllocationAmountText));
         OnPropertyChanged(nameof(InvestAllocationAmountText));
+        OnPropertyChanged(nameof(HasSpendingSources));
     }
 
     public async Task RefreshFixedExpensesAsync()
@@ -494,6 +496,7 @@ public partial class StartupWizardVM : ObservableObject
             ? string.Empty
             : $"Needs, Wants, and Invest must add up to 100%. Current total: {total}%";
         OnPropertyChanged(nameof(HasBudgetAllocationError));
+        OnPropertyChanged(nameof(IsNextEnabled));
     }
 
     private async Task<SettingsOperationResult> SaveBudgetAllocationAsync()
@@ -599,6 +602,7 @@ public partial class StartupWizardVM : ObservableObject
     }
 
     public bool HasSpendingSources => SpendingSources.Count > 0;
+    public bool IsNextEnabled => !(IsStep5Active && HasBudgetAllocationError);
 
     public string ReportUsernameText => ResolvedUsername;
     public string ReportCurrencyText => SelectedCurrencyCode;
