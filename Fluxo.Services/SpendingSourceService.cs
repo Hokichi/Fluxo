@@ -33,8 +33,30 @@ public sealed class SpendingSourceService(IUnitOfWork unitOfWork, IMapper mapper
     public async Task DeleteAsync(CancellationToken cancellationToken = default)
     {
         var marked = await unitOfWork.SpendingSources.GetMarkedForDeletionAsync(cancellationToken);
+        if (marked.Count == 0) return;
+
         foreach (var source in marked)
+        {
+            // Collect all expense IDs for this source so we can remove their logs first.
+            var allExpenses = await unitOfWork.Expenses.GetAllAsync(cancellationToken);
+            var sourceExpenseIds = allExpenses
+                .Where(e => e.SpendingSourceId == source.Id)
+                .Select(e => e.Id)
+                .ToList();
+
+            foreach (var expenseId in sourceExpenseIds)
+            {
+                var logs = await unitOfWork.ExpenseLogs.GetByExpenseIdAsync(expenseId, cancellationToken);
+                foreach (var log in logs)
+                    unitOfWork.ExpenseLogs.Remove(log);
+
+                var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(expenseId, cancellationToken);
+                if (expense is not null)
+                    unitOfWork.Expenses.Remove(expense);
+            }
+
             unitOfWork.SpendingSources.Remove(source);
+        }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

@@ -18,7 +18,11 @@ public sealed class TagService(IUnitOfWork unitOfWork, IMapper mapper) : ITagSer
     public async Task<IReadOnlyList<ExpenseTagDto>> GetTagsOrderedByExpenseCountAsync(ExpenseFilter filter,
         CancellationToken cancellationToken = default)
     {
-        // SearchAsync includes ExpenseTag navigations — group in memory after fetch.
+        // The existing tag repository aggregation methods (GetTagsByCountDescendingAsync,
+        // GetTodayTagsByCountDescendingAsync) do not accept an ExpenseFilter, so they cannot
+        // replicate the same composable filtering as ExpenseService.SearchAsync. We use
+        // SearchAsync (which eager-loads ExpenseTag navigations) and group in memory to support
+        // arbitrary filter combinations.
         var expenses = await unitOfWork.Expenses.SearchAsync(filter, cancellationToken);
 
         var tags = expenses
@@ -54,6 +58,9 @@ public sealed class TagService(IUnitOfWork unitOfWork, IMapper mapper) : ITagSer
         var tag = await unitOfWork.ExpenseTags.GetByIdAsync(id, cancellationToken);
         if (tag is null) return;
 
+        // Note: if any Expense rows reference this tag, the database will reject this delete
+        // with a referential integrity error (FK is Restrict). Callers must ensure the tag is
+        // not in use before invoking this method.
         unitOfWork.ExpenseTags.Remove(tag);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

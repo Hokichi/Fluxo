@@ -52,12 +52,12 @@ public sealed class ExpenseService(IUnitOfWork unitOfWork, IMapper mapper) : IEx
 
         // Deduct from spending source.
         var source = await unitOfWork.SpendingSources.GetByIdAsync(dto.SpendingSourceId, cancellationToken);
-        if (source is not null)
-        {
-            source.Balance -= dto.Amount;
-            source.SpentAmount += dto.Amount;
-            unitOfWork.SpendingSources.Update(source);
-        }
+        if (source is null)
+            throw new InvalidOperationException($"SpendingSource with id {dto.SpendingSourceId} was not found.");
+
+        source.Balance -= dto.Amount;
+        source.SpentAmount += dto.Amount;
+        unitOfWork.SpendingSources.Update(source);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -76,6 +76,18 @@ public sealed class ExpenseService(IUnitOfWork unitOfWork, IMapper mapper) : IEx
     {
         // FK deletes are Restrict — remove logs before removing the expense.
         var logs = await unitOfWork.ExpenseLogs.GetByExpenseIdAsync(id, cancellationToken);
+
+        // Restore balance on each affected spending source before deleting logs.
+        foreach (var grp in logs.GroupBy(l => l.SpendingSourceId))
+        {
+            var source = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, cancellationToken);
+            if (source is null) continue;
+            var total = grp.Sum(l => l.Amount);
+            source.Balance += total;
+            source.SpentAmount -= total;
+            unitOfWork.SpendingSources.Update(source);
+        }
+
         foreach (var log in logs)
             unitOfWork.ExpenseLogs.Remove(log);
 
