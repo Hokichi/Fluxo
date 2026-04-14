@@ -175,6 +175,12 @@ public partial class StartupWizardVM : ObservableObject
             return;
         }
 
+        if (CurrentStepIndex == 5 && !HasSpendingSources)
+        {
+            CurrentStepIndex = 2;
+            return;
+        }
+
         CurrentStepIndex--;
     }
 

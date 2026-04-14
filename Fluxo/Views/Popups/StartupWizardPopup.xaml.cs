@@ -248,6 +248,9 @@ public partial class StartupWizardPopup : BasePopup
         if (targetStep == _viewModel.CurrentStepIndex)
             return;
 
+        if ((targetStep == 3 || targetStep == 4) && !_viewModel.HasSpendingSources)
+            return;
+
         await AnimateStepTransitionAsync(() => _viewModel.NavigateToStep(targetStep));
     }
 
