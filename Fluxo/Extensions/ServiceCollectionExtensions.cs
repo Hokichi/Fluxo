@@ -9,6 +9,7 @@ using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Persistence;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Shell;
+using Fluxo.Views.Shell.Main;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 

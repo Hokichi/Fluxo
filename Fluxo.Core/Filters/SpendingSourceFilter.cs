@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Fluxo.Core.Enums;
+
+namespace Fluxo.Core.Filters
+{
+    public class SpendingSourceFilter
+    {
+        public string? Name { get; set; }
+        public SpendingSourceType? Type { get; set; }
+        public bool ShowOnUIOnly { get; set; }
+        public bool EnabledOnly { get; set; }
+    }
+}

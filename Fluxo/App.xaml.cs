@@ -7,6 +7,8 @@ using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
 using Fluxo.Views.Shell;
+using Fluxo.Views.Shell.Main;
+using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo;

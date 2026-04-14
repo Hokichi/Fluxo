@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Fluxo.ViewModels.Entities;
 using Fluxo.Views.Shell;
+using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Components;
 

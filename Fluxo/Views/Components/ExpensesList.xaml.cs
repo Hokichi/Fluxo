@@ -6,6 +6,7 @@ using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.Views.Shell;
+using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Components;
 

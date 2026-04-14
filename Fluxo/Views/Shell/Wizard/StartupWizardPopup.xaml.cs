@@ -6,8 +6,9 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Views.Popups;
 
-namespace Fluxo.Views.Popups;
+namespace Fluxo.Views.Shell.Wizard;
 
 public partial class StartupWizardPopup : BasePopup
 {

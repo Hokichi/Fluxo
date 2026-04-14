@@ -1,5 +1,5 @@
 <c:BasePopup
-    x:Class="Fluxo.Views.Popups.SettingsPopup"
+    x:Class="Fluxo.Views.Popups.Settings.SettingsPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
