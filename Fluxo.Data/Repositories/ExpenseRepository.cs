@@ -1,5 +1,5 @@
 using Fluxo.Core.Entities;
-using Fluxo.Core.Enums;
+using Fluxo.Core.Filters;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
@@ -14,69 +14,48 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
         return await QueryWithNavigations().ToListAsync(cancellationToken);
     }
 
-    public override async Task<Expense?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Expense?> GetByExpenseIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        if (FindTrackedEntity(id) is { } trackedExpense)
-            return trackedExpense;
+        if (FindTrackedEntity(id) is { } tracked)
+            return tracked;
 
         return await QueryWithNavigations()
-            .FirstOrDefaultAsync(expense => expense.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Expense>> GetByDayAsync(DateTime day, CancellationToken cancellationToken = default)
-    {
-        var start = day.Date;
-        var end = start.AddDays(1);
-        return await QueryWithNavigations()
-            .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<Expense>> GetByWeekAsync(DateTime startOfWeek, DateTime endOfWeek,
+    public async Task<IReadOnlyList<Expense>> SearchAsync(ExpenseFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var start = startOfWeek.Date;
-        var end = endOfWeek.Date.AddDays(1);
-        return await QueryWithNavigations()
-            .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
-            .ToListAsync(cancellationToken);
-    }
+        var query = QueryWithNavigations();
 
-    public async Task<IReadOnlyList<Expense>> GetByMonthAsync(int month, CancellationToken cancellationToken = default)
-    {
-        return await QueryWithNavigations()
-            .Where(expense => expense.RecurringDate != null && expense.RecurringDate.Value.Month == month)
-            .ToListAsync(cancellationToken);
-    }
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            query = query.Where(e => e.Name.Contains(filter.Name));
 
-    public async Task<IReadOnlyList<Expense>> GetByKindAsync(ExpenseKind kind,
-        CancellationToken cancellationToken = default)
-    {
-        return await QueryWithNavigations()
-            .Where(expense => expense.ExpenseKind == kind)
-            .ToListAsync(cancellationToken);
-    }
+        if (filter.StartDate.HasValue)
+            query = query.Where(e => e.RecurringDate >= filter.StartDate);
 
-    public async Task<IReadOnlyList<Expense>> GetByCategoryAsync(ExpenseCategory category,
-        CancellationToken cancellationToken = default)
-    {
-        return await QueryWithNavigations()
-            .Where(expense => expense.ExpenseCategory == category)
-            .ToListAsync(cancellationToken);
-    }
+        if (filter.EndDate.HasValue)
+            query = query.Where(e => e.RecurringDate <= filter.EndDate);
 
-    public async Task<IReadOnlyList<Expense>> GetByTagIdAsync(int tagId, CancellationToken cancellationToken = default)
-    {
-        return await QueryWithNavigations()
-            .Where(expense => expense.ExpenseTagId == tagId)
-            .ToListAsync(cancellationToken);
+        if (filter.Category.HasValue)
+            query = query.Where(e => e.ExpenseCategory == filter.Category);
+
+        if (filter.Kind.HasValue)
+            query = query.Where(e => e.ExpenseKind == filter.Kind);
+
+        if (filter.TagId.HasValue)
+            query = query.Where(e => e.ExpenseTagId == filter.TagId);
+        else if (filter.Tag is not null)
+            query = query.Where(e => e.ExpenseTagId == filter.Tag.Id);
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     private IQueryable<Expense> QueryWithNavigations()
     {
         return DbSet
             .AsNoTrackingWithIdentityResolution()
-            .Include(expense => expense.ExpenseTag)
-            .Include(expense => expense.SpendingSource);
+            .Include(e => e.ExpenseTag)
+            .Include(e => e.SpendingSource);
     }
 }
