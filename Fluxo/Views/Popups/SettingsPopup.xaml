@@ -1395,7 +1395,7 @@
                                     Text="Currency" />
                                 <Border
                                     Margin="0,8,0,0"
-                                    Padding="12,10"
+                                    Padding="8,4"
                                     Background="{StaticResource Brush.Background.Surface}"
                                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                                     BorderThickness="1"
