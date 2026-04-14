@@ -278,8 +278,10 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var expenseLogs = await UnitOfWork.ExpenseLogs.GetBySpendingSourceIdAsync(SpendingSourceId);
-            var incomeLogs = await UnitOfWork.IncomeLogs.GetBySpendingSourceIdAsync(SpendingSourceId);
+            var allExpenseLogs = await UnitOfWork.ExpenseLogs.GetAllAsync();
+            var expenseLogs = allExpenseLogs.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
+            var allIncomeLogs = await UnitOfWork.IncomeLogs.GetAllAsync();
+            var incomeLogs = allIncomeLogs.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
 
             if (expenseLogs.Any(log => !log.IsForDeletion) || incomeLogs.Count > 0)
                 return SpendingSourceDetailResult.Failure(
@@ -323,10 +325,12 @@ public partial class SpendingSourceDetailVM : ObservableObject
         if (spendingSource is null)
             return false;
 
-        var expenseLogs = (await UnitOfWork.ExpenseLogs.GetBySpendingSourceIdAsync(SpendingSourceId))
-            .Where(log => !log.IsForDeletion)
+        var allExpenseLogs = await UnitOfWork.ExpenseLogs.GetAllAsync();
+        var expenseLogs = allExpenseLogs
+            .Where(log => log.SpendingSourceId == SpendingSourceId && !log.IsForDeletion)
             .ToList();
-        var incomeLogs = (await UnitOfWork.IncomeLogs.GetBySpendingSourceIdAsync(SpendingSourceId)).ToList();
+        var allIncomeLogsRaw = await UnitOfWork.IncomeLogs.GetAllAsync();
+        var incomeLogs = allIncomeLogsRaw.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
 
         MoneyIn = incomeLogs.Sum(log => log.Amount);
         MoneyOut = expenseLogs.Sum(log => log.Amount);

@@ -2,19 +2,11 @@ using System.Collections.ObjectModel;
 using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
-using EntityReadUnitOfWork = Fluxo.Core.Interfaces.IViewModelReadUnitOfWork<
-    Fluxo.ViewModels.Entities.ExpenseVM,
-    Fluxo.ViewModels.Entities.ExpenseLogVM,
-    Fluxo.ViewModels.Entities.IncomeLogVM,
-    Fluxo.ViewModels.Entities.ExpenseTagVM,
-    Fluxo.ViewModels.Entities.SavingGoalVM,
-    Fluxo.ViewModels.Entities.SpendingSourceVM>;
 
 namespace Fluxo.ViewModels.Shell;
 
 public partial class MainVM
 {
-    private readonly Func<EntityReadUnitOfWork> _readUnitOfWorkFactory;
     private bool _isApplyingExpenseDetailRefresh;
 
     private void HandleExpenseDetailUpdatedMessage(ExpenseDetailUpdatedMessage message)
@@ -27,19 +19,20 @@ public partial class MainVM
         if (!update.HasChanges)
             return;
 
-        using var readUnitOfWork = _readUnitOfWorkFactory();
-
-        var updatedExpenseLog = await readUnitOfWork.ExpenseLogs.GetByIdAsync(update.ExpenseLogId);
-        if (updatedExpenseLog is null || updatedExpenseLog.Expense is null || updatedExpenseLog.SpendingSource is null)
+        var expenseLogEntity = await _unitOfWork.ExpenseLogs.GetByLogIdAsync(update.ExpenseLogId);
+        if (expenseLogEntity is null || expenseLogEntity.Expense is null || expenseLogEntity.SpendingSource is null)
             return;
+
+        var updatedExpenseLog = _mapper.Map<ExpenseLogVM>(expenseLogEntity);
 
         IReadOnlyList<ExpenseTagVM>? refreshedTags = null;
         Dictionary<int, SpendingSourceVM>? refreshedSources = null;
 
         if (update.AffectsTagOrdering)
-            refreshedTags = (await readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync())
-                .Select(result => result.Tag)
-                .ToList();
+        {
+            var tagResults = await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync();
+            refreshedTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(tagResults.Select(r => r.Tag).ToList());
+        }
 
         if (update.AffectsSpendingSourceState)
         {
@@ -47,9 +40,9 @@ public partial class MainVM
 
             foreach (var sourceId in GetAffectedSpendingSourceIds(update.PreviousState, updatedExpenseLog))
             {
-                var source = await readUnitOfWork.SpendingSources.GetByIdAsync(sourceId);
-                if (source is not null)
-                    refreshedSources[sourceId] = source;
+                var sourceEntity = await _unitOfWork.SpendingSources.GetByIdAsync(sourceId);
+                if (sourceEntity is not null)
+                    refreshedSources[sourceId] = _mapper.Map<SpendingSourceVM>(sourceEntity);
             }
         }
 

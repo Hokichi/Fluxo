@@ -386,7 +386,8 @@ public partial class StartupWizardVM : ObservableObject
     public async Task RefreshFixedExpensesAsync()
     {
         await using var unitOfWork = _unitOfWorkFactory();
-        ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetByKindAsync(ExpenseKind.Fixed))
+        ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetAllAsync())
+            .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
             .OrderBy(expense => expense.Name)
             .Select(expense => new StartupWizardFixedExpenseItemVM(expense)));
     }

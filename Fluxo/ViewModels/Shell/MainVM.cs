@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Data;
+using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -15,13 +16,6 @@ using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Notifications;
-using EntityReadUnitOfWork = Fluxo.Core.Interfaces.IViewModelReadUnitOfWork<
-    Fluxo.ViewModels.Entities.ExpenseVM,
-    Fluxo.ViewModels.Entities.ExpenseLogVM,
-    Fluxo.ViewModels.Entities.IncomeLogVM,
-    Fluxo.ViewModels.Entities.ExpenseTagVM,
-    Fluxo.ViewModels.Entities.SavingGoalVM,
-    Fluxo.ViewModels.Entities.SpendingSourceVM>;
 
 namespace Fluxo.ViewModels.Shell;
 
@@ -33,11 +27,11 @@ public partial class MainVM : ObservableRecipient
     private readonly HashSet<int> _hiddenFixedExpenseIds = [];
     private readonly HashSet<int> _hiddenSavingGoalIds = [];
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
+    private readonly IMapper _mapper;
 
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
 
-    private readonly EntityReadUnitOfWork
-        _readUnitOfWork;
+    private readonly IUnitOfWork _unitOfWork;
 
     private readonly Func<IUnitOfWork> _unitOfWorkFactory;
 
@@ -120,15 +114,14 @@ public partial class MainVM : ObservableRecipient
     private decimal _wantsThreshold = 0.3m;
 
     public MainVM(
-        IViewModelReadUnitOfWork<ExpenseVM, ExpenseLogVM, IncomeLogVM, ExpenseTagVM, SavingGoalVM, SpendingSourceVM>
-            readUnitOfWork,
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
         Func<IUnitOfWork> unitOfWorkFactory,
-        Func<EntityReadUnitOfWork> readUnitOfWorkFactory,
         IUserSettingsRepository userSettingsRepository)
     {
-        _readUnitOfWork = readUnitOfWork;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
         _unitOfWorkFactory = unitOfWorkFactory;
-        _readUnitOfWorkFactory = readUnitOfWorkFactory;
         _userSettingsRepository = userSettingsRepository;
 
         Notifications.CollectionChanged += OnNotificationsCollectionChanged;
@@ -343,12 +336,17 @@ public partial class MainVM : ObservableRecipient
 
     internal async Task ReloadCurrentDataAsync(bool suppressGoalNotifications = false)
     {
-        var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
-        var expenses = await _readUnitOfWork.Expenses.GetAllAsync();
-        var allExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
-        var savingGoals = await _readUnitOfWork.SavingGoals.GetAllAsync();
-        var allTags = (await _readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync()).Select(tag => tag.Tag)
-            .ToList();
+        var spendingSourceEntities = await _unitOfWork.SpendingSources.GetAllAsync();
+        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(spendingSourceEntities);
+        var expenseEntities = await _unitOfWork.Expenses.GetAllAsync();
+        var expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(expenseEntities);
+        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
+        var savingGoalEntities = await _unitOfWork.SavingGoals.GetAllAsync();
+        var savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(savingGoalEntities);
+        var tagResults = await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync();
+        var allTagEntities = tagResults.Select(r => r.Tag).ToList();
+        var allTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(allTagEntities);
 
         LoadExpenses(expenses);
         CacheAllTimeExpenseTotals(allExpenseLogs);
@@ -382,14 +380,22 @@ public partial class MainVM : ObservableRecipient
         NavigateSpinnerToDate(DateTime.Today);
         await LoadUserSettingsAsync();
 
-        var spendingSources = await _readUnitOfWork.SpendingSources.GetAllAsync();
-        var expenses = await _readUnitOfWork.Expenses.GetAllAsync();
-        var allExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
-        var periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(DateTime.Today);
-        var periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(DateTime.Today);
-        var savingGoals = await _readUnitOfWork.SavingGoals.GetAllAsync();
-        var allTags = (await _readUnitOfWork.ExpenseTags.GetTagsByCountDescendingAsync()).Select(tag => tag.Tag)
-            .ToList();
+        var spendingSourceEntities = await _unitOfWork.SpendingSources.GetAllAsync();
+        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(spendingSourceEntities);
+        var expenseEntities = await _unitOfWork.Expenses.GetAllAsync();
+        var expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(expenseEntities);
+        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
+        var today = DateTime.Today;
+        var periodExpenseLogs = allExpenseLogs.Where(log => log.DeductedOn.Date == today).ToList();
+        var allIncomeLogEntities = await _unitOfWork.IncomeLogs.GetAllAsync();
+        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(allIncomeLogEntities);
+        var periodIncomeLogs = allIncomeLogs.Where(log => log.AddedOn.Date == today).ToList();
+        var savingGoalEntities = await _unitOfWork.SavingGoals.GetAllAsync();
+        var savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(savingGoalEntities);
+        var tagResults = await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync();
+        var allTagEntities = tagResults.Select(r => r.Tag).ToList();
+        var allTags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(allTagEntities);
 
         LoadExpenses(expenses);
         CacheAllTimeExpenseTotals(allExpenseLogs);
@@ -413,25 +419,39 @@ public partial class MainVM : ObservableRecipient
         IReadOnlyList<ExpenseLogVM> periodExpenseLogs;
         IReadOnlyList<IncomeLogVM> periodIncomeLogs;
 
+        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
+        var allIncomeLogEntities = await _unitOfWork.IncomeLogs.GetAllAsync();
+        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(allIncomeLogEntities);
+
         switch (SelectedMainContentViewMode)
         {
             case MainContentViewMode.Daily:
-                var day = selectedItem.Date;
-                periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByDayAsync(day);
-                periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByDayAsync(day);
+                var day = selectedItem.Date.Date;
+                periodExpenseLogs = allExpenseLogs.Where(log => log.DeductedOn.Date == day).ToList();
+                periodIncomeLogs = allIncomeLogs.Where(log => log.AddedOn.Date == day).ToList();
                 break;
 
             case MainContentViewMode.Weekly:
-                var startOfWeek = selectedItem.Date;
-                var endOfWeek = startOfWeek.AddDays(6);
-                periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByWeekAsync(startOfWeek, endOfWeek);
-                periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByWeekAsync(startOfWeek, endOfWeek);
+                var startOfWeek = selectedItem.Date.Date;
+                var endOfWeek = startOfWeek.AddDays(6).Date;
+                periodExpenseLogs = allExpenseLogs
+                    .Where(log => log.DeductedOn.Date >= startOfWeek && log.DeductedOn.Date <= endOfWeek)
+                    .ToList();
+                periodIncomeLogs = allIncomeLogs
+                    .Where(log => log.AddedOn.Date >= startOfWeek && log.AddedOn.Date <= endOfWeek)
+                    .ToList();
                 break;
 
             case MainContentViewMode.Monthly:
                 var month = selectedItem.Date.Month;
-                periodExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetByMonthAsync(month);
-                periodIncomeLogs = await _readUnitOfWork.IncomeLogs.GetByMonthAsync(month);
+                var year = selectedItem.Date.Year;
+                periodExpenseLogs = allExpenseLogs
+                    .Where(log => log.DeductedOn.Month == month && log.DeductedOn.Year == year)
+                    .ToList();
+                periodIncomeLogs = allIncomeLogs
+                    .Where(log => log.AddedOn.Month == month && log.AddedOn.Year == year)
+                    .ToList();
                 break;
 
             default:
@@ -445,8 +465,10 @@ public partial class MainVM : ObservableRecipient
 
     private async Task LoadAllTimeData(IEnumerable<SpendingSourceVM>? spendingSources = null)
     {
-        var allExpenseLogs = await _readUnitOfWork.ExpenseLogs.GetAllAsync();
-        var allIncomeLogs = await _readUnitOfWork.IncomeLogs.GetAllAsync();
+        var allExpenseLogEntities = await _unitOfWork.ExpenseLogs.GetAllAsync();
+        var allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(allExpenseLogEntities);
+        var allIncomeLogEntities = await _unitOfWork.IncomeLogs.GetAllAsync();
+        var allIncomeLogs = _mapper.Map<IReadOnlyList<IncomeLogVM>>(allIncomeLogEntities);
 
         LoadSpendingSources(spendingSources ?? SpendingSources, allIncomeLogs, allExpenseLogs);
         LoadExpenseLogs(allExpenseLogs);

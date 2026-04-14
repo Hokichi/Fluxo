@@ -211,7 +211,8 @@ public partial class SettingsVM : ObservableObject
             .ThenBy(source => source.Name)
             .Select(source => new SettingsSpendingSourceItemVM(source)));
 
-        ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetByKindAsync(ExpenseKind.Fixed))
+        ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetAllAsync())
+            .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
             .OrderBy(expense => expense.Name)
             .Select(expense => new SettingsFixedExpenseItemVM(expense, hiddenFixedExpenseIds.Contains(expense.Id))));
 
@@ -393,8 +394,10 @@ public partial class SettingsVM : ObservableObject
                         if (spendingSource is null)
                             continue;
 
-                        var expenseLogs = await unitOfWork.ExpenseLogs.GetBySpendingSourceIdAsync(selectedId);
-                        var incomeLogs = await unitOfWork.IncomeLogs.GetBySpendingSourceIdAsync(selectedId);
+                        var allExpenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync();
+                        var expenseLogs = allExpenseLogs.Where(log => log.SpendingSourceId == selectedId).ToList();
+                        var allIncomeLogs = await unitOfWork.IncomeLogs.GetAllAsync();
+                        var incomeLogs = allIncomeLogs.Where(log => log.SpendingSourceId == selectedId).ToList();
 
                         if (expenseLogs.Any(log => !log.IsForDeletion) || incomeLogs.Count > 0)
                             return SettingsOperationResult.Failure(
@@ -809,7 +812,8 @@ public partial class SettingsVM : ObservableObject
             if (expenseTag is null)
                 return SettingsOperationResult.Failure("That tag could not be found anymore.");
 
-            var linkedExpenses = await unitOfWork.Expenses.GetByTagIdAsync(tag.Id);
+            var allExpenses = await unitOfWork.Expenses.GetAllAsync();
+            var linkedExpenses = allExpenses.Where(e => e.ExpenseTagId == tag.Id).ToList();
             if (linkedExpenses.Count > 0)
                 return SettingsOperationResult.Failure(
                     $"{tag.Name} is still assigned to one or more expenses, so it can't be deleted yet.");
