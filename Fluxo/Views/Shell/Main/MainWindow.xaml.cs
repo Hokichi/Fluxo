@@ -16,8 +16,10 @@ using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Settings;
+using Fluxo.Views.Shell.Wizard;
 
-namespace Fluxo.Views.Shell;
+namespace Fluxo.Views.Shell.Main;
 
 /// <summary>
 ///     Interaction logic for MainWindow.xaml

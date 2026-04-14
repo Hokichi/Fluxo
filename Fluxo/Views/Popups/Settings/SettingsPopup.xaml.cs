@@ -6,7 +6,7 @@ using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 
-namespace Fluxo.Views.Popups;
+namespace Fluxo.Views.Popups.Settings;
 
 public partial class SettingsPopup : BasePopup
 {
