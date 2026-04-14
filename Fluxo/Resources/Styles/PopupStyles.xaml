@@ -29,8 +29,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="RootBorder" Property="Background"
-                                    Value="{StaticResource Brush.Background.Elevated}" />
+                            <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="RootBorder" Property="Opacity" Value="0.45" />
@@ -52,7 +51,7 @@
     </Style>
 
     <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
-        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="Padding" Value="8,6" />
         <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
@@ -80,8 +79,7 @@
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="InputRoot" Property="Background"
-                                    Value="{DynamicResource Brush.Background.Hovered}" />
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
@@ -99,7 +97,7 @@
         <Setter Property="FontSize" Value="13" />
     </Style>
 
-    <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextInputStyle}" />
+    <Style BasedOn="{StaticResource RoundedTextInputStyle}" TargetType="TextBox" />
 
     <Style TargetType="{x:Type c:BasePopup}">
         <Setter Property="Template">

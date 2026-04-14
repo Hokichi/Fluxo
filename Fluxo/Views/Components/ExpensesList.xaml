@@ -136,7 +136,7 @@
 
                     <Border
                         x:Name="ExpenseItemBorder"
-                        Padding="12,10"
+                        
                         Background="Transparent"
                         CornerRadius="12">
                         <Border.RenderTransform>

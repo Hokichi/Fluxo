@@ -602,7 +602,8 @@
                                             FontFamily="{StaticResource Medium}"
                                             FontSize="11"
                                             Foreground="{StaticResource Brush.Text.Secondary}"
-                                            Text="This helps Fluxo preview your starting budget allocation." />
+                                            Text="This helps Fluxo preview your starting budget allocation."
+                                            TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
                             </Grid>

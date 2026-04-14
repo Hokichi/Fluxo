@@ -73,7 +73,7 @@
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Category" />
                         <Border
-                            Padding="12,10"
+                            
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"
@@ -90,7 +90,7 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Spending Source" />
                         <Border
-                            Padding="12,10"
+                            
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"

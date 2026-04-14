@@ -1383,7 +1383,6 @@
                                     Text="Username" />
                                 <TextBox
                                     Margin="0,8,0,0"
-                                    Padding="12,10"
                                     Background="{StaticResource Brush.Background.Surface}"
                                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                                     BorderThickness="1"
