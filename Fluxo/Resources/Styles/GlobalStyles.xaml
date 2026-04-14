@@ -15,11 +15,11 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
                     <Border
+                        Padding="{TemplateBinding Padding}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="4"
-                        Padding="{TemplateBinding Padding}">
+                        CornerRadius="4">
                         <ContentPresenter />
                     </Border>
                 </ControlTemplate>
@@ -361,7 +361,7 @@
                             IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border Background="{TemplateBinding Background}">
+                                    <Border Padding="12,10" Background="{TemplateBinding Background}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />

@@ -22,8 +22,10 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        <Style x:Key="FieldTextBoxStyle" BasedOn="{StaticResource PopupTextInputStyle}" TargetType="TextBox">
-            <Setter Property="Padding" Value="12,10" />
+        <Style
+            x:Key="FieldTextBoxStyle"
+            BasedOn="{StaticResource PopupTextInputStyle}"
+            TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -73,7 +75,6 @@
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Category" />
                         <Border
-                            
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"
@@ -90,7 +91,6 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Spending Source" />
                         <Border
-                            
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"
@@ -112,9 +112,7 @@
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Tag" />
-                        <TextBox
-                            Style="{StaticResource FieldTextBoxStyle}"
-                            Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <CheckBox
                             Margin="0,16,0,0"
