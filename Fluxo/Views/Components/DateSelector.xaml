@@ -13,6 +13,7 @@
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="40" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -75,8 +76,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBackground" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="ButtonBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -105,8 +105,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="HeaderButtonBackground" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="HeaderButtonBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -149,14 +148,11 @@
                         <ControlTemplate.Triggers>
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
-                                    <Condition
-                                        Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource Self}}"
-                                        Value="True" />
+                                    <Condition Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
                                     <Condition Binding="{Binding IsSelected}" Value="False" />
                                 </MultiDataTrigger.Conditions>
 
-                                <Setter TargetName="DayBackground" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="DayBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             </MultiDataTrigger>
 
                             <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
@@ -209,8 +205,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ChoiceBackground" Property="Background"
-                                        Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="ChoiceBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                 <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
@@ -320,8 +315,7 @@
                         </Button>
                     </Grid>
 
-                    <StackPanel Margin="0,14,0,0"
-                                Visibility="{Binding IsDayMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Margin="0,14,0,0" Visibility="{Binding IsDayMode, Converter={StaticResource BoolToVisibilityConverter}}">
                         <UniformGrid Margin="0,0,0,10" Columns="7">
                             <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Mon" />
                             <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Tue" />

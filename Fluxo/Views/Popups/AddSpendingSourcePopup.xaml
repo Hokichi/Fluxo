@@ -130,7 +130,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"
@@ -151,7 +151,7 @@
                                 <components:DateSelector SelectedDate="{Binding DueDate, Mode=TwoWay}" />
                             </StackPanel>
 
-                            <StackPanel Margin="0,0,0,0" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"
