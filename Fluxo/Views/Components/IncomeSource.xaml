@@ -29,6 +29,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
         <Style x:Key="BankIconStyle" TargetType="Rectangle">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -40,6 +41,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
         <Style x:Key="CreditCardIconStyle" TargetType="Rectangle">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -51,6 +53,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
         <Style x:Key="PiggyBankIconStyle" TargetType="Rectangle">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -59,6 +62,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
         <Style x:Key="CheckingCashDetailsStyle" TargetType="StackPanel">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -70,6 +74,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
         <Style x:Key="CreditDetailsStyle" TargetType="StackPanel">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -79,174 +84,317 @@
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
-    <Border
-        MouseLeftButtonDown="OnRootMouseLeftButtonDown"
-        BorderBrush="{StaticResource Brush.Border.Subtle}"
-        BorderThickness="1"
-        CornerRadius="16">
-        <Border.Background>
-            <SolidColorBrush Color="{StaticResource Color.Background.Surface}" />
-        </Border.Background>
-        <Border.Style>
-            <Style TargetType="Border">
-                <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Trigger.EnterActions>
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <ColorAnimation
-                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                        To="{StaticResource Color.Background.Elevated}"
-                                        Duration="0:0:0.2" />
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </Trigger.EnterActions>
-                        <Trigger.ExitActions>
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <ColorAnimation
-                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                        To="{StaticResource Color.Background.Surface}"
-                                        Duration="0:0:0.2" />
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </Trigger.ExitActions>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-        </Border.Style>
-        <StackPanel Margin="12" IsHitTestVisible="False">
-            <StackPanel Orientation="Horizontal">
-                <Border
-                    x:Name="AccentBorder"
-                    Width="20"
-                    Height="20"
-                    CornerRadius="16"
-                    Style="{StaticResource IncomeSourceAccentStyle}">
-                    <Grid>
-                        <Rectangle
-                            Margin="6"
-                            Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                            Style="{StaticResource BankIconStyle}">
-                            <Rectangle.OpacityMask>
-                                <DrawingBrush Stretch="Uniform">
-                                    <DrawingBrush.Drawing>
-                                        <GeometryDrawing Geometry="{StaticResource Bank}">
-                                            <GeometryDrawing.Brush>
-                                                <SolidColorBrush Color="Black" />
-                                            </GeometryDrawing.Brush>
-                                        </GeometryDrawing>
-                                    </DrawingBrush.Drawing>
-                                </DrawingBrush>
-                            </Rectangle.OpacityMask>
-                        </Rectangle>
-                        <Rectangle
-                            Margin="6"
-                            Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                            Style="{StaticResource CreditCardIconStyle}">
-                            <Rectangle.OpacityMask>
-                                <DrawingBrush Stretch="Uniform">
-                                    <DrawingBrush.Drawing>
-                                        <GeometryDrawing Geometry="{StaticResource CreditCardAlt}">
-                                            <GeometryDrawing.Brush>
-                                                <SolidColorBrush Color="Black" />
-                                            </GeometryDrawing.Brush>
-                                        </GeometryDrawing>
-                                    </DrawingBrush.Drawing>
-                                </DrawingBrush>
-                            </Rectangle.OpacityMask>
-                        </Rectangle>
-                        <Rectangle
-                            Margin="6"
-                            Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                            Style="{StaticResource PiggyBankIconStyle}">
-                            <Rectangle.OpacityMask>
-                                <DrawingBrush Stretch="Uniform">
-                                    <DrawingBrush.Drawing>
-                                        <GeometryDrawing Geometry="{StaticResource PiggyBank}">
-                                            <GeometryDrawing.Brush>
-                                                <SolidColorBrush Color="Black" />
-                                            </GeometryDrawing.Brush>
-                                        </GeometryDrawing>
-                                    </DrawingBrush.Drawing>
-                                </DrawingBrush>
-                            </Rectangle.OpacityMask>
-                        </Rectangle>
-                    </Grid>
-                </Border>
-                <TextBlock
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="13"
-                    Foreground="{StaticResource Brush.Text.Muted}"
-                    Text="{Binding Name}" />
-            </StackPanel>
 
-            <TextBlock
-                Margin="0,8,0,0"
-                VerticalAlignment="Center"
-                FontFamily="{StaticResource Bold}"
-                FontSize="20"
-                Foreground="{StaticResource Brush.Text.Primary}"
-                Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+    <Grid>
+        <Border
+            x:Name="SourceCard"
+            BorderBrush="{StaticResource Brush.Border.Subtle}"
+            BorderThickness="1"
+            CornerRadius="16"
+            MouseLeftButtonDown="OnRootMouseLeftButtonDown"
+            PreviewMouseRightButtonUp="OnRootPreviewMouseRightButtonUp">
+            <Border.Background>
+                <SolidColorBrush Color="{StaticResource Color.Background.Surface}" />
+            </Border.Background>
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation
+                                            Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                            To="{StaticResource Color.Background.Elevated}"
+                                            Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation
+                                            Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                            To="{StaticResource Color.Background.Surface}"
+                                            Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
 
-            <Grid Margin="0,8,0,0">
-                <StackPanel Orientation="Horizontal" Style="{StaticResource CheckingCashDetailsStyle}">
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Success}"
-                        Text="↓" />
-                    <TextBlock
-                        Margin="4,0,0,0"
-                        FontFamily="{StaticResource Medium}"
-                        Foreground="{StaticResource Brush.Success}"
-                        Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0} In}" />
+            <StackPanel Margin="12" IsHitTestVisible="False">
+                <StackPanel Orientation="Horizontal">
                     <Border
-                        Width="1"
-                        Height="12"
-                        Margin="6,0,4,0"
-                        Background="{StaticResource Brush.Text.Muted}" />
+                        x:Name="AccentBorder"
+                        Width="20"
+                        Height="20"
+                        CornerRadius="16"
+                        Style="{StaticResource IncomeSourceAccentStyle}">
+                        <Grid>
+                            <Rectangle
+                                Margin="6"
+                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                Style="{StaticResource BankIconStyle}">
+                                <Rectangle.OpacityMask>
+                                    <DrawingBrush Stretch="Uniform">
+                                        <DrawingBrush.Drawing>
+                                            <GeometryDrawing Geometry="{StaticResource Bank}">
+                                                <GeometryDrawing.Brush>
+                                                    <SolidColorBrush Color="Black" />
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                            <Rectangle
+                                Margin="6"
+                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                Style="{StaticResource CreditCardIconStyle}">
+                                <Rectangle.OpacityMask>
+                                    <DrawingBrush Stretch="Uniform">
+                                        <DrawingBrush.Drawing>
+                                            <GeometryDrawing Geometry="{StaticResource CreditCardAlt}">
+                                                <GeometryDrawing.Brush>
+                                                    <SolidColorBrush Color="Black" />
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                            <Rectangle
+                                Margin="6"
+                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                Style="{StaticResource PiggyBankIconStyle}">
+                                <Rectangle.OpacityMask>
+                                    <DrawingBrush Stretch="Uniform">
+                                        <DrawingBrush.Drawing>
+                                            <GeometryDrawing Geometry="{StaticResource PiggyBank}">
+                                                <GeometryDrawing.Brush>
+                                                    <SolidColorBrush Color="Black" />
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                        </Grid>
+                    </Border>
+
                     <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Danger}"
-                        Text="↑" />
-                    <TextBlock
-                        Margin="4,0,0,0"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
                         FontFamily="{StaticResource Medium}"
-                        Foreground="{StaticResource Brush.Danger}"
-                        Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0} Out}" />
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="{Binding Name}" />
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Style="{StaticResource CreditDetailsStyle}">
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="10"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Spent:" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="20"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
 
-                    <ProgressBar
-                        Width="80"
-                        Height="3"
-                        Margin="5,3,0,0"
-                        VerticalAlignment="Center"
-                        Maximum="{Binding AccountLimit}"
-                        Style="{StaticResource RoundedProgressBarStyle}"
-                        Value="{Binding SpentAmount}" />
+                <Grid Margin="0,8,0,0">
+                    <StackPanel Orientation="Horizontal" Style="{StaticResource CheckingCashDetailsStyle}">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Success}"
+                            Text="↓" />
+                        <TextBlock
+                            Margin="4,0,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Success}"
+                            Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0} In}" />
+                        <Border
+                            Width="1"
+                            Height="12"
+                            Margin="6,0,4,0"
+                            Background="{StaticResource Brush.Text.Muted}" />
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Danger}"
+                            Text="↑" />
+                        <TextBlock
+                            Margin="4,0,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Danger}"
+                            Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0} Out}" />
+                    </StackPanel>
 
-                    <TextBlock
-                        Margin="5,1,0,0"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="10"
-                        Foreground="{StaticResource Brush.Text.Secondary}">
-                        <Run Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
-                        <Run Text="/" />
-                        <Run Text="{Binding AccountLimit, Converter={StaticResource NumberWithCommasConverter}}" />
-                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Style="{StaticResource CreditDetailsStyle}">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="10"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="Spent:" />
+
+                        <ProgressBar
+                            Width="80"
+                            Height="3"
+                            Margin="5,3,0,0"
+                            VerticalAlignment="Center"
+                            Maximum="{Binding AccountLimit}"
+                            Style="{StaticResource RoundedProgressBarStyle}"
+                            Value="{Binding SpentAmount}" />
+
+                        <TextBlock
+                            Margin="5,1,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="10"
+                            Foreground="{StaticResource Brush.Text.Secondary}">
+                            <Run Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                            <Run Text="/" />
+                            <Run Text="{Binding AccountLimit, Converter={StaticResource NumberWithCommasConverter}}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Popup
+            x:Name="SourceActionsPopup"
+            AllowsTransparency="True"
+            IsOpen="False"
+            Placement="Bottom"
+            PlacementTarget="{Binding ElementName=SourceCard}"
+            PopupAnimation="Fade"
+            StaysOpen="False"
+            VerticalOffset="8">
+            <Border
+                Width="220"
+                Padding="8"
+                Background="{StaticResource Brush.Background.Elevated}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="18">
+                <StackPanel>
+                    <Button Click="OnViewActionClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Viewbox Width="14" Height="14">
+                                <Path
+                                    Data="{StaticResource Eye}"
+                                    Fill="{StaticResource Brush.Info}"
+                                    Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="View" />
+                        </Grid>
+                    </Button>
+
+                    <Button Click="OnDeleteActionClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Viewbox Width="14" Height="14">
+                                <Path
+                                    Data="{StaticResource CircleMinusSolid}"
+                                    Fill="{StaticResource Brush.Danger}"
+                                    Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Delete" />
+                        </Grid>
+                    </Button>
+
+                    <Button Click="OnHideActionClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Viewbox Width="14" Height="14">
+                                <Path
+                                    Data="{StaticResource EyeOff}"
+                                    Fill="{StaticResource Brush.Warning}"
+                                    Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Hide" />
+                        </Grid>
+                    </Button>
+
+                    <Button
+                        Click="OnDisableActionClick"
+                        IsEnabled="{Binding IsEnabled}"
+                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Viewbox Width="14" Height="14">
+                                <Path
+                                    Data="{StaticResource LightningSlashFill}"
+                                    Fill="{StaticResource Brush.Warning}"
+                                    Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Disable" />
+                        </Grid>
+                    </Button>
+
+                    <Button
+                        Click="OnTransferActionClick"
+                        IsEnabled="{Binding CanTransfer}"
+                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Viewbox Width="14" Height="14">
+                                <Path
+                                    Data="{StaticResource Exchange}"
+                                    Fill="{StaticResource Brush.Mint}"
+                                    Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Transfer" />
+                        </Grid>
+                    </Button>
                 </StackPanel>
-            </Grid>
-        </StackPanel>
-    </Border>
+            </Border>
+        </Popup>
+    </Grid>
 </UserControl>

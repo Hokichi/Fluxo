@@ -500,6 +500,33 @@ public partial class MainWindow : Window, IPopupHost
         popup.ShowDialog();
     }
 
+    public async Task ExecuteDeleteSpendingSourceActionAsync(SpendingSourceVM spendingSource)
+    {
+        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Delete, true);
+    }
+
+    public async Task ExecuteHideSpendingSourceActionAsync(SpendingSourceVM spendingSource)
+    {
+        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Hide);
+    }
+
+    public async Task ExecuteDisableSpendingSourceActionAsync(SpendingSourceVM spendingSource)
+    {
+        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Disable);
+    }
+
+    public void OpenTransferFundsPopup(SpendingSourceVM spendingSource)
+    {
+        ArgumentNullException.ThrowIfNull(spendingSource);
+
+        if (!spendingSource.CanTransfer)
+            return;
+
+        var transferVm = new TransferFundsVM(_mainVM, spendingSource, _unitOfWork);
+        var popup = new TransferFundsPopup(transferVm) { Owner = this };
+        popup.ShowDialog();
+    }
+
     // ── Popup overlay & blur ────────────────────────────────────────
 
     public void ShowPopupOverlay()
@@ -529,6 +556,34 @@ public partial class MainWindow : Window, IPopupHost
             PopupOverlay.Visibility = Visibility.Collapsed;
         };
         PopupOverlay.BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    private async Task ExecuteSpendingSourceSettingsActionAsync(SpendingSourceVM spendingSource,
+        SettingsBatchAction action,
+        bool requireDeleteConfirmation = false)
+    {
+        ArgumentNullException.ThrowIfNull(spendingSource);
+
+        if (requireDeleteConfirmation &&
+            FluxoMessageBox.Show(this, $"Delete \"{spendingSource.Name}\"?", "Settings", MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            var settingsViewModel = new SettingsVM(_mainVM, _unitOfWork);
+            await settingsViewModel.LoadAsync();
+
+            var result = await settingsViewModel.ExecuteSpendingSourceItemActionAsync(spendingSource.Id, action);
+            if (!result.IsSuccess)
+                FluxoMessageBox.Show(this, result.ErrorMessage, "Settings", MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+        }
+        catch (Exception exception)
+        {
+            FluxoMessageBox.Show(this, $"Unable to update this spending source.\n\n{exception.Message}", "Settings",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void OpenHeaderMenu(bool pinned)
