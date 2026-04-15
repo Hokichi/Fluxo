@@ -23,6 +23,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
         ConfigureSpendingSource(modelBuilder.Entity<SpendingSource>());
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
+        ConfigureReferenceAutoIncludes(modelBuilder);
     }
 
     private static void ConfigureExpense(EntityTypeBuilder<Expense> entity)
@@ -124,5 +125,24 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.Property(settings => settings.Name).IsRequired();
         entity.Property(settings => settings.Value).IsRequired();
+    }
+
+    private static void ConfigureReferenceAutoIncludes(ModelBuilder modelBuilder)
+    {
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (entityType.ClrType is null)
+                continue;
+
+            foreach (var navigation in entityType.GetNavigations())
+            {
+                if (navigation.IsCollection)
+                    continue;
+
+                modelBuilder.Entity(entityType.ClrType)
+                    .Navigation(navigation.Name)
+                    .AutoInclude();
+            }
+        }
     }
 }

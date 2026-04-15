@@ -2,6 +2,7 @@ using System.Reflection;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Fluxo.Data.Repositories;
 
@@ -22,7 +23,10 @@ public class Repository<T>(FluxoDbContext dbContext) : IRepository<T> where T : 
     public virtual async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         if (FindTrackedEntity(id) is { } trackedEntity)
+        {
+            await EnsureReferenceNavigationsLoadedAsync(trackedEntity, cancellationToken);
             return trackedEntity;
+        }
 
         return await DbSet
             .AsNoTracking()
@@ -83,5 +87,38 @@ public class Repository<T>(FluxoDbContext dbContext) : IRepository<T> where T : 
             return null;
 
         return DbSet.Local.FirstOrDefault(entity => IdProperty.GetValue(entity) is int entityId && entityId == id);
+    }
+
+    protected virtual async Task EnsureReferenceNavigationsLoadedAsync(
+        T entity,
+        CancellationToken cancellationToken)
+    {
+        await LoadReferenceNavigationsAsync(
+            DbContext.Entry(entity),
+            new HashSet<object>(),
+            cancellationToken);
+    }
+
+    private async Task LoadReferenceNavigationsAsync(
+        EntityEntry entry,
+        ISet<object> visited,
+        CancellationToken cancellationToken)
+    {
+        if (!visited.Add(entry.Entity))
+            return;
+
+        foreach (var reference in entry.References)
+        {
+            if (!reference.IsLoaded)
+                await reference.LoadAsync(cancellationToken);
+
+            if (reference.CurrentValue is not null)
+            {
+                await LoadReferenceNavigationsAsync(
+                    DbContext.Entry(reference.CurrentValue),
+                    visited,
+                    cancellationToken);
+            }
+        }
     }
 }
