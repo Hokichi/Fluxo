@@ -34,7 +34,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
             FluxoMessageBox.Show(this, "This spending source could not be loaded.", "Income Detail",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             _allowClose = true;
-            Close();
+            _ = Dispatcher.BeginInvoke(new System.Action(Close));
             return;
         }
 
@@ -171,7 +171,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
         if (result.ShouldClose)
         {
             _allowClose = true;
-            Close();
+            _ = Dispatcher.BeginInvoke(new System.Action(Close));
         }
     }
 
@@ -197,7 +197,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
             }
 
             _allowClose = true;
-            Close();
+            _ = Dispatcher.BeginInvoke(new System.Action(Close));
         }
         finally
         {

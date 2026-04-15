@@ -86,9 +86,8 @@ public class BasePopup : Window, IPopupHost
         // so bind the Style explicitly to the BasePopup resource key.
         SetResourceReference(StyleProperty, typeof(BasePopup));
 
-        Loaded   += OnLoaded;
-        Closing  += OnClosing;
-        Closed   += OnClosed;
+        Loaded += OnLoaded;
+        Closed += OnClosed;
     }
 
     public string PopupTitle
@@ -283,13 +282,21 @@ public class BasePopup : Window, IPopupHost
         BeginAnimation(OpacityProperty, fadeIn);
     }
 
-    private void OnClosing(object? sender, CancelEventArgs e)
+    protected override void OnClosing(CancelEventArgs e)
     {
+        // Let popup-specific Closing handlers run first.
+        base.OnClosing(e);
+
+        // Respect cancellation from popup-specific logic (e.g. unsaved-change prompts).
+        if (e.Cancel)
+            return;
+
         // Preserve modal dialog results (true/false) by letting WPF finish the close immediately.
         if (DialogResult.HasValue)
             return;
 
-        if (_isAnimatingClose) return;
+        if (_isAnimatingClose)
+            return;
 
         e.Cancel = true;
         _isAnimatingClose = true;

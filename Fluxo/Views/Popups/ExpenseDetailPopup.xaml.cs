@@ -113,7 +113,7 @@ public partial class ExpenseDetailPopup : BasePopup
             }
 
             _allowClose = true;
-            Close();
+            _ = Dispatcher.BeginInvoke(new System.Action(Close));
         }
         finally
         {
