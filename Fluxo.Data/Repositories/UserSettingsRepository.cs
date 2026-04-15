@@ -32,16 +32,36 @@ public sealed class UserSettingsRepository(FluxoDbContext dbContext) : IUserSett
 
     public void Update(UserSettings entity)
     {
-        _dbSet.Update(entity);
+        var tracked = FindTrackedByName(entity.Name);
+        if (tracked is not null)
+        {
+            _dbContext.Entry(tracked).CurrentValues.SetValues(entity);
+            return;
+        }
+
+        _dbContext.Entry(entity).State = EntityState.Modified;
     }
 
     public void Remove(UserSettings entity)
     {
-        _dbSet.Remove(entity);
+        var tracked = FindTrackedByName(entity.Name);
+        if (tracked is not null)
+        {
+            _dbContext.Entry(tracked).State = EntityState.Deleted;
+            return;
+        }
+
+        _dbContext.Entry(entity).State = EntityState.Deleted;
     }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private UserSettings? FindTrackedByName(string name)
+    {
+        return _dbSet.Local.FirstOrDefault(setting =>
+            string.Equals(setting.Name, name, StringComparison.Ordinal));
     }
 }

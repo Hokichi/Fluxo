@@ -3,6 +3,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
+using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
@@ -72,7 +73,7 @@ public partial class App : Application
         }
         catch (Exception exception)
         {
-            MessageBox.Show($"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo",
+            FluxoMessageBox.Show(null, $"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo",
                 MessageBoxButton.OK, MessageBoxImage.Error);
 
             Shutdown();
@@ -117,5 +118,3 @@ public partial class App : Application
         return !bool.TryParse(existingSetting.Value, out var isFirstRun) || isFirstRun;
     }
 }
-
-

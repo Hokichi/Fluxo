@@ -4,55 +4,55 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
-                                <!--  Step 2: Spending Sources  -->
-                                <StackPanel Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <ItemsControl ItemsSource="{Binding SpendingSources}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <primitives:UniformGrid Columns="2" />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemContainerStyle>
-                                            <Style TargetType="ContentPresenter">
-                                                <Setter Property="Margin" Value="0,0,12,12" />
-                                            </Style>
-                                        </ItemsControl.ItemContainerStyle>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Style="{StaticResource CardStyle}">
-                                                    <Grid>
-                                                        <StackPanel
-                                                            HorizontalAlignment="Right"
-                                                            VerticalAlignment="Bottom"
-                                                            Orientation="Horizontal">
-                                                            <c:BalloonButton Click="OnEditSpendingSourceClick" Style="{StaticResource EditButton}" />
-                                                            <c:BalloonButton Click="OnDeleteSpendingSourceClick" Style="{StaticResource DeleteButton}" />
-                                                        </StackPanel>
-                                                        <StackPanel Margin="0,4,0,0">
-                                                            <TextBlock
-                                                                FontFamily="{StaticResource Bold}"
-                                                                FontSize="15"
-                                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                                Text="{Binding Name}" />
-                                                            <TextBlock
-                                                                Margin="0,8,0,0"
-                                                                FontFamily="{StaticResource Medium}"
-                                                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                                                Text="{Binding TypeLabel}" />
-                                                            <TextBlock
-                                                                Margin="0,12,0,0"
-                                                                FontFamily="{StaticResource Bold}"
-                                                                Foreground="{StaticResource Brush.Mint}">
-                                                                <Run Text="{Binding PrimaryAmountLabel}" />
-                                                                <Run Text=": " />
-                                                                <Run Text="{Binding PrimaryAmount, StringFormat={}{0:N2}}" />
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
+    <!--  Step 2: Spending Sources  -->
+    <StackPanel Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}">
+        <ItemsControl ItemsSource="{Binding SpendingSources}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <primitives:UniformGrid Columns="2" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Margin" Value="0,0,12,12" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <StackPanel
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                                <c:BalloonButton Click="OnEditSpendingSourceClick" Style="{StaticResource EditButton}" />
+                                <c:BalloonButton Click="OnDeleteSpendingSourceClick" Style="{StaticResource DeleteButton}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,4,0,0">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="15"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding Name}" />
+                                <TextBlock
+                                    Margin="0,8,0,0"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding TypeLabel}" />
+                                <TextBlock
+                                    Margin="0,12,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Mint}">
+                                    <Run Text="{Binding PrimaryAmountLabel}" />
+                                    <Run Text=": " />
+                                    <Run Text="{Binding PrimaryAmount, StringFormat={}{0:N2}}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
 
 </UserControl>

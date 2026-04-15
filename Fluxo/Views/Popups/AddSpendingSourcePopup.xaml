@@ -127,15 +127,6 @@
                                     SelectedValuePath="Value"
                                     Style="{StaticResource FluxoComboBoxStyle}" />
                             </Border>
-
-                            <TextBlock
-                                Margin="0,14,0,8"
-                                Style="{StaticResource FieldLabelStyle}"
-                                Text="{Binding PrimaryAmountLabel}" />
-                            <TextBox
-                                PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                Style="{StaticResource FieldTextBoxStyle}"
-                                Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
