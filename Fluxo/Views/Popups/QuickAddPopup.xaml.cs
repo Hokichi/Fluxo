@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -11,8 +10,6 @@ namespace Fluxo.Views.Popups;
 public partial class QuickAddPopup : BasePopup
 {
     private readonly QuickAddVM _viewModel;
-    private bool _allowClose;
-    private bool _isHandlingCloseRequest;
     private bool _isSyncingNoteDocument;
 
     public QuickAddPopup(QuickAddVM viewModel)
@@ -25,9 +22,9 @@ public partial class QuickAddPopup : BasePopup
         Loaded += (_, _) =>
         {
             SyncNoteDocumentFromViewModel();
+            _viewModel.BeginChangeTracking();
             FocusPrimaryInput();
         };
-        Closing += OnPopupClosing;
     }
 
     protected override async void OnSaveButtonClick()
@@ -39,7 +36,6 @@ public partial class QuickAddPopup : BasePopup
             return;
         }
 
-        _allowClose = true;
         Close();
     }
 
@@ -53,6 +49,7 @@ public partial class QuickAddPopup : BasePopup
         }
 
         NoteRichTextBox.Document.Blocks.Clear();
+        _viewModel.BeginChangeTracking();
         FocusPrimaryInput();
     }
 
@@ -64,38 +61,22 @@ public partial class QuickAddPopup : BasePopup
         base.OnPreviewKeyDown(e);
     }
 
-    private async void OnPopupClosing(object? sender, CancelEventArgs e)
+    protected override void OnCloseButtonClick()
     {
-        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasValidEntryToPersistOnClose())
-            return;
-
-        _isHandlingCloseRequest = true;
-
-        try
+        if (_viewModel.HasChanges)
         {
             var confirmation = FluxoMessageBox.Show(
                 this,
-                "Save this transaction before closing?",
+                "Close without saving your changes?",
                 "Add New Transaction",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
-            if (confirmation == MessageBoxResult.Yes)
-            {
-                var result = await _viewModel.SaveAsync(false);
-                if (!result.IsSuccess)
-                {
-                    ShowValidationMessage(result.ErrorMessage);
-                    return;
-                }
-            }
+            if (confirmation != MessageBoxResult.Yes)
+                return;
+        }
 
-            _allowClose = true;
-        }
-        finally
-        {
-            _isHandlingCloseRequest = false;
-        }
+        base.OnCloseButtonClick();
     }
 
     private void OnNoteTextChanged(object sender, TextChangedEventArgs e)

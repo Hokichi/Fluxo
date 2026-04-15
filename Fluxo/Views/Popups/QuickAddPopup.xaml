@@ -6,6 +6,8 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
+    IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add New Transaction"
     ShowSaveAndCreateNewButton="True"
     ShowSaveButton="True"

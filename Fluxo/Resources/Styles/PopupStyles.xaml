@@ -139,6 +139,7 @@
                                         x:Name="PART_SaveAndCreateNewButton"
                                         Width="28"
                                         Height="28"
+                                        IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
                                         Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource ContentSaveMove}"
                                         CornerRadius="8"

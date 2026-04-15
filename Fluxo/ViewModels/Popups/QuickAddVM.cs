@@ -14,10 +14,15 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class QuickAddVM : ObservableObject
 {
+    private const int NoSpendingSourceId = -1;
+    private const int NoTagId = -1;
+
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IUnitOfWork _uow;
+    private FormState _initialState;
+    private bool _isChangeTrackingInitialized;
 
     [ObservableProperty] private string _amountText = string.Empty;
     [ObservableProperty] private bool _isExpense = true;
@@ -38,6 +43,7 @@ public partial class QuickAddVM : ObservableObject
 
         ReloadChoicesFromMainViewModel();
         ResetForm(false);
+        _initialState = CaptureState();
     }
 
     public IReadOnlyList<ExpenseCategoryOption> ExpenseCategories { get; } =
@@ -50,6 +56,15 @@ public partial class QuickAddVM : ObservableObject
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
+    public bool CanSave => !IsSaving && AreRequiredFieldsFilled();
+    public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+
+    public void BeginChangeTracking()
+    {
+        _initialState = CaptureState();
+        _isChangeTrackingInitialized = true;
+        NotifyFormStateChanged();
+    }
 
     public bool IsIncome
     {
@@ -64,6 +79,15 @@ public partial class QuickAddVM : ObservableObject
     }
 
     public bool HasMoreTags => OverflowTags.Count > 0;
+
+    partial void OnAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
+    partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
+    partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnNoteTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnSelectedDateChanged(DateTime value) => NotifyFormStateChanged();
+    partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
+    partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
 
     public void InitializeFromDraft(QuickAddDraft draft)
     {
@@ -93,10 +117,13 @@ public partial class QuickAddVM : ObservableObject
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
+        NotifyFormStateChanged();
     }
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
+        NotifyFormStateChanged();
+
         if (_isUpdatingTagCollections || value is null)
             return;
 
@@ -420,6 +447,39 @@ public partial class QuickAddVM : ObservableObject
             target.Add(item);
     }
 
+    private bool AreRequiredFieldsFilled()
+    {
+        if (string.IsNullOrWhiteSpace(NameText) || string.IsNullOrWhiteSpace(AmountText))
+            return false;
+
+        if (SelectedSpendingSource is null)
+            return false;
+
+        if (IsExpense && SelectedTag is null)
+            return false;
+
+        return true;
+    }
+
+    private FormState CaptureState()
+    {
+        return new FormState(
+            IsExpense,
+            NameText ?? string.Empty,
+            AmountText ?? string.Empty,
+            NoteText ?? string.Empty,
+            SelectedDate.Date,
+            SelectedExpenseCategory,
+            SelectedSpendingSource?.Id ?? NoSpendingSourceId,
+            SelectedTag?.Id ?? NoTagId);
+    }
+
+    private void NotifyFormStateChanged()
+    {
+        OnPropertyChanged(nameof(CanSave));
+        OnPropertyChanged(nameof(HasChanges));
+    }
+
     private void RefreshSpendingSources()
     {
         var selectedSpendingSourceId = SelectedSpendingSource?.Id;
@@ -472,4 +532,14 @@ public partial class QuickAddVM : ObservableObject
         string Note,
         ExpenseCategory? Category,
         int? TagId);
+
+    private readonly record struct FormState(
+        bool IsExpense,
+        string NameText,
+        string AmountText,
+        string NoteText,
+        DateTime SelectedDate,
+        ExpenseCategory SelectedExpenseCategory,
+        int SelectedSpendingSourceId,
+        int SelectedTagId);
 }

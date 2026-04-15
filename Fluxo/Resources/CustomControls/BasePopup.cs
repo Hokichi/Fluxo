@@ -32,6 +32,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(ShowSaveAndCreateNewButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsSaveAndCreateNewButtonEnabledProperty =
+        DependencyProperty.Register(nameof(IsSaveAndCreateNewButtonEnabled), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
     public static readonly DependencyProperty ShowApplyButtonProperty =
         DependencyProperty.Register(nameof(ShowApplyButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
@@ -109,6 +113,12 @@ public class BasePopup : Window, IPopupHost
     {
         get => (bool)GetValue(ShowSaveAndCreateNewButtonProperty);
         set => SetValue(ShowSaveAndCreateNewButtonProperty, value);
+    }
+
+    public bool IsSaveAndCreateNewButtonEnabled
+    {
+        get => (bool)GetValue(IsSaveAndCreateNewButtonEnabledProperty);
+        set => SetValue(IsSaveAndCreateNewButtonEnabledProperty, value);
     }
 
     public bool ShowApplyButton
@@ -228,7 +238,7 @@ public class BasePopup : Window, IPopupHost
                 break;
 
             case Key.Enter when Keyboard.Modifiers == ModifierKeys.Shift:
-                if (ShowSaveAndCreateNewButton)
+                if (ShowSaveAndCreateNewButton && IsSaveAndCreateNewButtonEnabled)
                 {
                     OnSaveAndCreateNewButtonClick();
                     e.Handled = true;
