@@ -57,6 +57,60 @@ public partial class SpendingSourceDetailPopup : BasePopup
             ShowValidationMessage(result.ErrorMessage);
     }
 
+    private void OnHeaderNameTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount < 2 || _viewModel.IsEditing)
+            return;
+
+        BeginInlineHeaderEditing(NameTextBox);
+        e.Handled = true;
+    }
+
+    private void OnHeaderAmountTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount < 2 || _viewModel.IsEditing)
+            return;
+
+        BeginInlineHeaderEditing(PrimaryAmountTextBox);
+        e.Handled = true;
+    }
+
+    private void OnCreditSpentTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount < 2 || _viewModel.IsEditing)
+            return;
+
+        BeginInlineHeaderEditing(CreditSpentAmountTextBox);
+        e.Handled = true;
+    }
+
+    private void OnCreditLimitTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount < 2 || _viewModel.IsEditing)
+            return;
+
+        BeginInlineHeaderEditing(CreditLimitTextBox);
+        e.Handled = true;
+    }
+
+    private void OnBnplSpentTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount < 2 || _viewModel.IsEditing)
+            return;
+
+        BeginInlineHeaderEditing(BnplSpentAmountTextBox);
+        e.Handled = true;
+    }
+
+    private void OnSavingApyTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount < 2 || _viewModel.IsEditing)
+            return;
+
+        BeginInlineHeaderEditing(SavingApyTextBox);
+        e.Handled = true;
+    }
+
     private async void OnDisableButtonClick(object sender, RoutedEventArgs e)
     {
         var result = await _viewModel.ToggleEnabledAsync();
@@ -203,5 +257,15 @@ public partial class SpendingSourceDetailPopup : BasePopup
             ? existingText.Remove(textBox.SelectionStart, textBox.SelectionLength)
                 .Insert(textBox.SelectionStart, newText)
             : existingText.Insert(textBox.SelectionStart, newText);
+    }
+
+    private void BeginInlineHeaderEditing(TextBox targetTextBox)
+    {
+        if (!_viewModel.IsEditing)
+            _viewModel.BeginEditing();
+
+        targetTextBox.Focus();
+        targetTextBox.CaretIndex = targetTextBox.Text?.Length ?? 0;
+        targetTextBox.SelectionLength = 0;
     }
 }

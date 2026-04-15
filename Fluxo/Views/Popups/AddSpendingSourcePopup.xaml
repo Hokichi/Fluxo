@@ -124,7 +124,15 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                            <StackPanel Visibility="{Binding IsCashLike, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
+                                <TextBox
+                                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
+                                    Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"

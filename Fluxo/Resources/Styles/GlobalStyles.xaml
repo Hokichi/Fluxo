@@ -463,7 +463,20 @@
         </Setter>
     </Style>
 
-    
+    <Style x:Key="BudgetTrackButtonStyle" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border
+                        Height="4"
+                        Margin="0,0,-8,0"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="3" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <Style x:Key="BudgetSliderStyle" TargetType="Slider">
         <Setter Property="Height" Value="24" />

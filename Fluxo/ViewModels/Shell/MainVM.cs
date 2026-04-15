@@ -812,7 +812,7 @@ public partial class MainVM : ObservableRecipient
     {
         var daysLeft = Math.Max(1,
             DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month) - DateTime.Today.Day);
-        return (int)((TotalIncomeAmount - TotalSpent) / daysLeft);
+        return (int)((TotalIncomeAmount * (1 - _investThreshold)  - TotalSpent) / daysLeft);
     }
 
     private static int CalculatePercentage(decimal spentAmount, decimal availableAmount)

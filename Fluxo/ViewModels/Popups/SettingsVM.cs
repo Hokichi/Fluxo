@@ -800,6 +800,65 @@ public partial class SettingsVM : ObservableObject
         return new AddSpendingSourceVM(_mainViewModel, _unitOfWork);
     }
 
+    public AddFixedExpenseVM CreateAddFixedExpenseViewModel()
+    {
+        return new AddFixedExpenseVM(_mainViewModel, _unitOfWork);
+    }
+
+    public AddSavingGoalVM CreateAddSavingGoalViewModel()
+    {
+        return new AddSavingGoalVM(_mainViewModel, _unitOfWork);
+    }
+
+    public async Task RefreshSpendingSourcesAsync()
+    {
+        var unitOfWork = _unitOfWork;
+        ReplaceCollection(SpendingSources, (await unitOfWork.SpendingSources.GetAllAsync())
+            .OrderByDescending(source => source.ShowOnUI)
+            .ThenBy(source => source.Name)
+            .Select(source => new SettingsSpendingSourceItemVM(source)));
+
+        AttachSelectableItemHandlers(SpendingSources);
+        OnPropertyChanged(nameof(HasSpendingSources));
+        OnSelectionStateChanged();
+    }
+
+    public async Task RefreshFixedExpensesAsync()
+    {
+        var unitOfWork = _unitOfWork;
+        var settingsByName = await GetSettingsDictionaryAsync(unitOfWork);
+        var hiddenFixedExpenseIds = ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds);
+
+        ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetAllAsync())
+            .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
+            .OrderBy(expense => expense.Name)
+            .Select(expense => new SettingsFixedExpenseItemVM(expense, hiddenFixedExpenseIds.Contains(expense.Id))));
+
+        AttachSelectableItemHandlers(FixedExpenses);
+        OnPropertyChanged(nameof(HasFixedExpenses));
+        OnSelectionStateChanged();
+    }
+
+    public async Task RefreshSavingGoalsAsync()
+    {
+        var unitOfWork = _unitOfWork;
+        var settingsByName = await GetSettingsDictionaryAsync(unitOfWork);
+        var hiddenSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds);
+        var disabledSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.DisabledSavingGoalIds);
+
+        ReplaceCollection(SavingGoals, (await unitOfWork.SavingGoals.GetAllAsync())
+            .OrderBy(goal => goal.SavingEndDate)
+            .ThenBy(goal => goal.Name)
+            .Select(goal => new SettingsSavingGoalItemVM(
+                goal,
+                hiddenSavingGoalIds.Contains(goal.Id),
+                !disabledSavingGoalIds.Contains(goal.Id))));
+
+        AttachSelectableItemHandlers(SavingGoals);
+        OnPropertyChanged(nameof(HasSavingGoals));
+        OnSelectionStateChanged();
+    }
+
     public async Task<SettingsOperationResult> DeleteTagAsync(ExpenseTagVM tag)
     {
         ArgumentNullException.ThrowIfNull(tag);

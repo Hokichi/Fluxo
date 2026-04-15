@@ -110,7 +110,10 @@
                             shell:WindowChrome.IsHitTestVisibleInChrome="True"
                             Command="{Binding NavigateSpinnerBackCommand}"
                             Style="{StaticResource SpinnerArrowButtonStyle}">
-                            <icons:PackIconUnicons Height="12" Kind="AngleLeft" Style="{StaticResource SpinnerArrowIconStyle}" />
+                            <icons:PackIconUnicons
+                                Height="12"
+                                Kind="AngleLeft"
+                                Style="{StaticResource SpinnerArrowIconStyle}" />
                         </Button>
 
                         <ListView
@@ -138,7 +141,10 @@
                             Command="{Binding NavigateSpinnerForwardCommand}"
                             IsEnabled="{Binding CanNavigateForward}"
                             Style="{StaticResource SpinnerArrowButtonStyle}">
-                            <icons:PackIconUnicons Height="12" Kind="AngleRight" Style="{StaticResource SpinnerArrowIconStyle}" />
+                            <icons:PackIconUnicons
+                                Height="12"
+                                Kind="AngleRight"
+                                Style="{StaticResource SpinnerArrowIconStyle}" />
                         </Button>
                     </Grid>
 
@@ -472,7 +478,7 @@
                                             <TextBlock
                                                 Margin="0,12,0,0"
                                                 FontFamily="{StaticResource Bold}"
-                                                FontSize="24"
+                                                FontSize="20"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="{Binding TotalSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                                         </StackPanel>
@@ -484,7 +490,7 @@
                                             <TextBlock
                                                 Margin="0,12,0,0"
                                                 FontFamily="{StaticResource Bold}"
-                                                FontSize="24"
+                                                FontSize="20"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="{Binding DailyAllowance, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
                                         </StackPanel>

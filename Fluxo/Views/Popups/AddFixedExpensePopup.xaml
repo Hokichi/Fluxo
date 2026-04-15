@@ -22,7 +22,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        
+
     </c:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
@@ -68,6 +68,7 @@
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Category" />
                         <Border
+                            Padding="8,4"
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"
@@ -84,6 +85,7 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Spending Source" />
                         <Border
+                            Padding="8,4"
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"

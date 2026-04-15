@@ -176,7 +176,7 @@ public partial class SettingsPopup : BasePopup
         _viewModel.SetSelections(target, shouldCheck);
     }
 
-    public void OnAddPlaceholderClick(object sender, RoutedEventArgs e)
+    public async void OnAddPlaceholderClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string title })
             return;
@@ -184,6 +184,21 @@ public partial class SettingsPopup : BasePopup
         if (string.Equals(title, "Add New Spending Source", StringComparison.Ordinal))
         {
             new AddSpendingSourcePopup(_viewModel.CreateAddSpendingSourceViewModel()) { Owner = this }.ShowDialog();
+            await _viewModel.RefreshSpendingSourcesAsync();
+            return;
+        }
+
+        if (string.Equals(title, "Add New Fixed Expense", StringComparison.Ordinal))
+        {
+            new AddFixedExpensePopup(_viewModel.CreateAddFixedExpenseViewModel()) { Owner = this }.ShowDialog();
+            await _viewModel.RefreshFixedExpensesAsync();
+            return;
+        }
+
+        if (string.Equals(title, "Add New Goal", StringComparison.Ordinal))
+        {
+            new AddSavingGoalPopup(_viewModel.CreateAddSavingGoalViewModel()) { Owner = this }.ShowDialog();
+            await _viewModel.RefreshSavingGoalsAsync();
             return;
         }
 

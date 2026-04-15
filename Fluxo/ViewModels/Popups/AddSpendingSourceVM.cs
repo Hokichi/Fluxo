@@ -49,7 +49,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     public bool IsCreditLike => IsCredit || IsBnpl;
     public bool IsSaving => SelectedSpendingSourceType == SpendingSourceType.Saving;
     public bool IsCashLike => SelectedSpendingSourceType is SpendingSourceType.Checking or SpendingSourceType.Cash;
-    public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : "Current balance";
+    public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
 
     partial void OnSelectedSpendingSourceTypeChanged(SpendingSourceType value)
     {

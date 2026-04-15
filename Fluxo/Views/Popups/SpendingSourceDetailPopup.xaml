@@ -24,8 +24,52 @@
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
 
+        <Style x:Key="InlineHeaderTextBoxBaseStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CaretBrush" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
+        <Style
+            x:Key="InlineHeaderNameTextBoxStyle"
+            BasedOn="{StaticResource InlineHeaderTextBoxBaseStyle}"
+            TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="MinWidth" Value="24" />
+        </Style>
 
+        <Style
+            x:Key="InlineHeaderAmountTextBoxStyle"
+            BasedOn="{StaticResource InlineHeaderTextBoxBaseStyle}"
+            TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="MinWidth" Value="24" />
+            <Setter Property="HorizontalContentAlignment" Value="Right" />
+            <Setter Property="TextAlignment" Value="Right" />
+        </Style>
+
+        <Style
+            x:Key="InlineDetailValueTextBoxStyle"
+            BasedOn="{StaticResource InlineHeaderTextBoxBaseStyle}"
+            TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+            <Setter Property="HorizontalContentAlignment" Value="Right" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="MinWidth" Value="24" />
+        </Style>
     </c:BasePopup.Resources>
 
     <Grid MaxHeight="600" Margin="24,0,24,24">
@@ -67,11 +111,13 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Text.Primary}"
+                        Cursor="IBeam"
+                        MouseLeftButtonDown="OnHeaderNameTextMouseLeftButtonDown"
                         Text="{Binding NameText}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                     <TextBox
                         x:Name="NameTextBox"
-                        Style="{StaticResource DetailInputStyle}"
+                        Style="{StaticResource InlineHeaderNameTextBoxStyle}"
                         Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </StackPanel>
@@ -89,18 +135,28 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="26"
                         Foreground="{StaticResource Brush.Text.Primary}"
+                        Cursor="IBeam"
+                        MouseLeftButtonDown="OnHeaderAmountTextMouseLeftButtonDown"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                         <Run Text="$" />
                         <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                     </TextBlock>
-                    <TextBox
-                        x:Name="PrimaryAmountTextBox"
+                    <StackPanel
                         Margin="0,6,0,0"
-                        HorizontalContentAlignment="Right"
-                        PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                        Style="{StaticResource DetailInputStyle}"
-                        Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}"
-                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="26"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="$" />
+                        <TextBox
+                            x:Name="PrimaryAmountTextBox"
+                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                            Style="{StaticResource InlineHeaderAmountTextBoxStyle}"
+                            Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>
@@ -167,15 +223,16 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
+                                Cursor="IBeam"
+                                MouseLeftButtonDown="OnCreditSpentTextMouseLeftButtonDown"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
                             </TextBlock>
                             <TextBox
+                                x:Name="CreditSpentAmountTextBox"
                                 Grid.Column="1"
-                                Width="120"
-                                HorizontalContentAlignment="Right"
                                 PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                Style="{StaticResource DetailInputStyle}"
+                                Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
@@ -189,15 +246,16 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
+                                Cursor="IBeam"
+                                MouseLeftButtonDown="OnCreditLimitTextMouseLeftButtonDown"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="$" /><Run Text="{Binding AccountLimitText}" />
                             </TextBlock>
                             <TextBox
+                                x:Name="CreditLimitTextBox"
                                 Grid.Column="1"
-                                Width="120"
-                                HorizontalContentAlignment="Right"
                                 PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                Style="{StaticResource DetailInputStyle}"
+                                Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
@@ -228,15 +286,16 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
+                                Cursor="IBeam"
+                                MouseLeftButtonDown="OnBnplSpentTextMouseLeftButtonDown"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
                             </TextBlock>
                             <TextBox
+                                x:Name="BnplSpentAmountTextBox"
                                 Grid.Column="1"
-                                Width="120"
-                                HorizontalContentAlignment="Right"
                                 PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                Style="{StaticResource DetailInputStyle}"
+                                Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
@@ -281,26 +340,43 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
+                                Cursor="IBeam"
+                                MouseLeftButtonDown="OnSavingApyTextMouseLeftButtonDown"
                                 Text="{Binding ApyText, StringFormat={}{0}%}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                             <TextBox
+                                x:Name="SavingApyTextBox"
                                 Grid.Column="1"
-                                Width="120"
-                                HorizontalContentAlignment="Right"
                                 PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                Style="{StaticResource DetailInputStyle}"
+                                Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                     </StackPanel>
 
-                    <UniformGrid Grid.Row="5" Width="Auto">
+                    <UniformGrid
+                        Grid.Row="5"
+                        Width="Auto"
+                        Height="Auto"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Columns="3"
+                        Rows="2">
                         <c:BalloonButton Click="OnDisableButtonClick" Style="{StaticResource DisableActionButtonStyle}" />
                         <c:BalloonButton
-                            ButtonIcon="{StaticResource Pen}"
                             Click="OnEditButtonClick"
-                            Style="{StaticResource DetailActionBalloonButtonStyle}"
-                            ToolTip="{Binding EditButtonLabel}" />
+                            ToolTip="{Binding EditButtonLabel}">
+                            <c:BalloonButton.Style>
+                                <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type c:BalloonButton}">
+                                    <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                            <Setter Property="ButtonIcon" Value="{StaticResource ContentSave}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </c:BalloonButton.Style>
+                        </c:BalloonButton>
                         <c:BalloonButton
                             ButtonIcon="{StaticResource Exchange}"
                             Click="OnTransferButtonClick"
