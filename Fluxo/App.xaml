@@ -64,6 +64,9 @@
                 <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/GlobalStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/PopupStyles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/MainWindowStyles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/SettingsStyle.xaml" />
+                <ResourceDictionary Source="Resources/Styles/StartupWizardStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

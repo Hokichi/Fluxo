@@ -28,7 +28,6 @@ public partial class MainWindow : Window, IPopupHost
 {
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 200; // ms
-    private readonly IExpenseCleanupService _expenseCleanupService;
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
@@ -45,13 +44,12 @@ public partial class MainWindow : Window, IPopupHost
     private EventHandler? _renderHandler;
     private Rect _restoreBounds;
 
-    public MainWindow(MainVM mainVM, IUnitOfWork unitOfWork, IExpenseCleanupService expenseCleanupService)
+    public MainWindow(MainVM mainVM, IUnitOfWork unitOfWork)
     {
         InitializeComponent();
 
         _mainVM = mainVM;
         _unitOfWork = unitOfWork;
-        _expenseCleanupService = expenseCleanupService;
         _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWork);
         DataContext = _mainVM;
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
@@ -64,8 +62,8 @@ public partial class MainWindow : Window, IPopupHost
             FadeIn();
         };
 
-        Closing      += OnWindowClosing;
-        Deactivated  += OnWindowDeactivated;
+        Closing += OnWindowClosing;
+        Deactivated += OnWindowDeactivated;
         StateChanged += OnWindowStateChanged;
         PreviewKeyDown += OnPreviewKeyDown;
         PreviewMouseLeftButtonDown += OnWindowPreviewMouseLeftButtonDown;
@@ -133,7 +131,6 @@ public partial class MainWindow : Window, IPopupHost
         try
         {
             var markedIds = _mainVM.GetExpenseLogIdsMarkedForDeletion();
-            await _expenseCleanupService.DeleteMarkedExpenseLogsAsync(markedIds);
             _hasCompletedPendingDeletionCleanup = true;
             _logMemoryManager.StateChanged -= OnHistoryManagerStateChanged;
             _logMemoryManager.Dispose();
@@ -636,7 +633,6 @@ public partial class MainWindow : Window, IPopupHost
             RedoMenuButton.IsEnabled = _logMemoryManager.CanRedo;
     }
 
-
     [StructLayout(LayoutKind.Sequential)]
     private struct MONITORINFO
     {
@@ -652,5 +648,3 @@ public partial class MainWindow : Window, IPopupHost
         public int Left, Top, Right, Bottom;
     }
 }
-
-

@@ -1,8 +1,8 @@
 using AutoMapper;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Mappings;
-using Fluxo.Services;
 using Fluxo.Services.Mappings;
+using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;

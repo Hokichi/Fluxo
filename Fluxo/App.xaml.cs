@@ -74,6 +74,7 @@ public partial class App : Application
         {
             MessageBox.Show($"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo",
                 MessageBoxButton.OK, MessageBoxImage.Error);
+
             Shutdown();
         }
     }

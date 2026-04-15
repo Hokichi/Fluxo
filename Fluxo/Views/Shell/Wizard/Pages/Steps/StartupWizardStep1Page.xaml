@@ -1,0 +1,34 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.Steps.StartupWizardStep1Page"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
+    xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
+                                <!--  Step 1: Personalization  -->
+                                <Grid Visibility="{Binding IsStep1Active, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="20" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Username" />
+                                            <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding UsernameText, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Salary (Optional)" />
+                                            <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding SalaryText, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBlock
+                                                Margin="0,12,0,0"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="11"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="This helps Fluxo preview your starting budget allocation."
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+</UserControl>

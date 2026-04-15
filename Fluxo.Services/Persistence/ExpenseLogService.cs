@@ -3,7 +3,7 @@ using Fluxo.Core.DTO;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Services;
 
-namespace Fluxo.Services;
+namespace Fluxo.Services.Persistence;
 
 public sealed class ExpenseLogService(IUnitOfWork unitOfWork, IMapper mapper) : IExpenseLogService
 {

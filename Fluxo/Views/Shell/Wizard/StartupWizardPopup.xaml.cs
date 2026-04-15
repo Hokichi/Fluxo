@@ -153,25 +153,25 @@ public partial class StartupWizardPopup : BasePopup
         Close();
     }
 
-    private async void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
+    public async void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
     {
         new AddSpendingSourcePopup(_viewModel.CreateAddSpendingSourceViewModel()) { Owner = this }.ShowDialog();
         await _viewModel.RefreshSpendingSourcesAsync();
     }
 
-    private async void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
+    public async void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
     {
         new AddFixedExpensePopup(_viewModel.CreateAddFixedExpenseViewModel()) { Owner = this }.ShowDialog();
         await _viewModel.RefreshFixedExpensesAsync();
     }
 
-    private async void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
+    public async void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
     {
         new AddSavingGoalPopup(_viewModel.CreateAddSavingGoalViewModel()) { Owner = this }.ShowDialog();
         await _viewModel.RefreshSavingGoalsAsync();
     }
 
-    private async void OnEditSpendingSourceClick(object sender, RoutedEventArgs e)
+    public async void OnEditSpendingSourceClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
@@ -181,7 +181,7 @@ public partial class StartupWizardPopup : BasePopup
         await _viewModel.RefreshSpendingSourcesAsync();
     }
 
-    private async void OnDeleteSpendingSourceClick(object sender, RoutedEventArgs e)
+    public async void OnDeleteSpendingSourceClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
@@ -194,7 +194,7 @@ public partial class StartupWizardPopup : BasePopup
             await _viewModel.DeleteSpendingSourceAsync(id);
     }
 
-    private async void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)
+    public async void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
@@ -204,7 +204,7 @@ public partial class StartupWizardPopup : BasePopup
         await _viewModel.RefreshFixedExpensesAsync();
     }
 
-    private async void OnDeleteFixedExpenseClick(object sender, RoutedEventArgs e)
+    public async void OnDeleteFixedExpenseClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
@@ -217,7 +217,7 @@ public partial class StartupWizardPopup : BasePopup
             await _viewModel.DeleteFixedExpenseAsync(id);
     }
 
-    private async void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
+    public async void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
@@ -227,7 +227,7 @@ public partial class StartupWizardPopup : BasePopup
         await _viewModel.RefreshSavingGoalsAsync();
     }
 
-    private async void OnDeleteSavingGoalClick(object sender, RoutedEventArgs e)
+    public async void OnDeleteSavingGoalClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
@@ -255,7 +255,7 @@ public partial class StartupWizardPopup : BasePopup
         await AnimateStepTransitionAsync(() => _viewModel.NavigateToStep(targetStep));
     }
 
-    private void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
+    public void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag } ||
             !TryParseAllocationTag(tag, out var segment, out var delta))
@@ -263,7 +263,7 @@ public partial class StartupWizardPopup : BasePopup
         _viewModel.IncrementAllocation(segment, delta);
     }
 
-    private void OnAllocationAdjustButtonMouseDown(object sender, MouseButtonEventArgs e)
+    public void OnAllocationAdjustButtonMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag } ||
             !TryParseAllocationTag(tag, out var segment, out var delta))
@@ -275,12 +275,12 @@ public partial class StartupWizardPopup : BasePopup
         _allocationHoldDelayTimer.Start();
     }
 
-    private void OnAllocationAdjustButtonMouseUp(object sender, MouseButtonEventArgs e)
+    public void OnAllocationAdjustButtonMouseUp(object sender, MouseButtonEventArgs e)
     {
         StopAllocationTimers();
     }
 
-    private void OnAllocationAdjustButtonMouseLeave(object sender, MouseEventArgs e)
+    public void OnAllocationAdjustButtonMouseLeave(object sender, MouseEventArgs e)
     {
         StopAllocationTimers();
     }
@@ -313,17 +313,7 @@ public partial class StartupWizardPopup : BasePopup
         return true;
     }
 
-    private Border? GetStripeForStep(int stepIndex) => stepIndex switch
-    {
-        1 => Step1Stripe,
-        2 => Step2Stripe,
-        3 => Step3Stripe,
-        4 => Step4Stripe,
-        5 => Step5Stripe,
-        6 => Step6Stripe,
-        7 => Step7Stripe,
-        _ => null
-    };
+    private Border? GetStripeForStep(int stepIndex) => MiddleStepPage?.GetStripeForStep(stepIndex);
 
     private bool IsMiddleStep(int stepIndex) => stepIndex >= 1 && stepIndex <= 7;
 
@@ -348,8 +338,9 @@ public partial class StartupWizardPopup : BasePopup
             else
             {
                 var oldStripe = GetStripeForStep(fromStep);
+                var contentColumn = MiddleStepPage?.ContentColumnElement;
                 await Task.WhenAll(
-                    FadeElementAsync(ContentColumn, 1, 0),
+                    contentColumn is not null ? FadeElementAsync(contentColumn, 1, 0) : Task.CompletedTask,
                     oldStripe is not null ? FadeElementAsync(oldStripe, 1, 0) : Task.CompletedTask);
 
                 changeStep();
@@ -357,7 +348,7 @@ public partial class StartupWizardPopup : BasePopup
                 SyncStripeOpacities();
 
                 await Task.WhenAll(
-                    FadeElementAsync(ContentColumn, 0, 1),
+                    contentColumn is not null ? FadeElementAsync(contentColumn, 0, 1) : Task.CompletedTask,
                     newStripe is not null ? FadeElementAsync(newStripe, 0, 1) : Task.CompletedTask);
             }
         }
@@ -390,8 +381,9 @@ public partial class StartupWizardPopup : BasePopup
             else
             {
                 var oldStripe = GetStripeForStep(fromStep);
+                var contentColumn = MiddleStepPage?.ContentColumnElement;
                 await Task.WhenAll(
-                    FadeElementAsync(ContentColumn, 1, 0),
+                    contentColumn is not null ? FadeElementAsync(contentColumn, 1, 0) : Task.CompletedTask,
                     oldStripe is not null ? FadeElementAsync(oldStripe, 1, 0) : Task.CompletedTask);
 
                 var result = await changeStepAsync();
@@ -399,7 +391,7 @@ public partial class StartupWizardPopup : BasePopup
                 SyncStripeOpacities();
 
                 await Task.WhenAll(
-                    FadeElementAsync(ContentColumn, 0, 1),
+                    contentColumn is not null ? FadeElementAsync(contentColumn, 0, 1) : Task.CompletedTask,
                     newStripe is not null ? FadeElementAsync(newStripe, 0, 1) : Task.CompletedTask);
 
                 return result;

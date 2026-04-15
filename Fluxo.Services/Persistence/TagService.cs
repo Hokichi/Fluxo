@@ -5,7 +5,7 @@ using Fluxo.Core.Filters;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Services;
 
-namespace Fluxo.Services;
+namespace Fluxo.Services.Persistence;
 
 public sealed class TagService(IUnitOfWork unitOfWork, IMapper mapper) : ITagService
 {

@@ -91,7 +91,7 @@ public partial class SettingsPopup : BasePopup
         }
     }
 
-    private async void OnBatchActionClick(object sender, RoutedEventArgs e)
+    public async void OnBatchActionClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag })
             return;
@@ -130,7 +130,7 @@ public partial class SettingsPopup : BasePopup
             ShowMessage(result.ErrorMessage, "Settings");
     }
 
-    private void OnChecksToggleClick(object sender, RoutedEventArgs e)
+    public void OnChecksToggleClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag })
             return;
@@ -163,7 +163,7 @@ public partial class SettingsPopup : BasePopup
         }
     }
 
-    private void OnSelectionActionClick(object sender, RoutedEventArgs e)
+    public void OnSelectionActionClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag })
             return;
@@ -176,7 +176,7 @@ public partial class SettingsPopup : BasePopup
         _viewModel.SetSelections(target, shouldCheck);
     }
 
-    private void OnAddPlaceholderClick(object sender, RoutedEventArgs e)
+    public void OnAddPlaceholderClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string title })
             return;
@@ -190,7 +190,7 @@ public partial class SettingsPopup : BasePopup
         new FeaturePlaceholderPopup(title, "This creation flow is still being built.") { Owner = this }.ShowDialog();
     }
 
-    private async void OnRowActionClick(object sender, RoutedEventArgs e)
+    public async void OnRowActionClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag })
             return;
@@ -317,7 +317,7 @@ public partial class SettingsPopup : BasePopup
             ShowMessage(result.ErrorMessage, "Tags");
     }
 
-    private void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
+    public void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag } ||
             !TryParseAllocationTag(tag, out var segment, out var delta))
@@ -326,7 +326,7 @@ public partial class SettingsPopup : BasePopup
         _viewModel.IncrementAllocation(segment, delta);
     }
 
-    private void OnAllocationAdjustButtonMouseDown(object sender, MouseButtonEventArgs e)
+    public void OnAllocationAdjustButtonMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag } ||
             !TryParseAllocationTag(tag, out var segment, out var delta))
@@ -339,12 +339,12 @@ public partial class SettingsPopup : BasePopup
         _allocationHoldDelayTimer.Start();
     }
 
-    private void OnAllocationAdjustButtonMouseUp(object sender, MouseButtonEventArgs e)
+    public void OnAllocationAdjustButtonMouseUp(object sender, MouseButtonEventArgs e)
     {
         StopAllocationTimers();
     }
 
-    private void OnAllocationAdjustButtonMouseLeave(object sender, MouseEventArgs e)
+    public void OnAllocationAdjustButtonMouseLeave(object sender, MouseEventArgs e)
     {
         StopAllocationTimers();
     }
