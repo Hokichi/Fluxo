@@ -1,126 +1,45 @@
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
-using Fluxo.ViewModels.Popups;
+using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Popups;
 
 public partial class QuickAddPopup : BasePopup
 {
-    private readonly QuickAddVM _viewModel;
-    private bool _isSyncingNoteDocument;
-
-    public QuickAddPopup(QuickAddVM viewModel)
+    public QuickAddPopup()
     {
         InitializeComponent();
-
-        _viewModel = viewModel;
-        DataContext = viewModel;
-
-        Loaded += (_, _) =>
-        {
-            SyncNoteDocumentFromViewModel();
-            _viewModel.BeginChangeTracking();
-            FocusPrimaryInput();
-        };
     }
 
-    protected override async void OnSaveButtonClick()
+    private void OnNewSpendingSourceClick(object sender, RoutedEventArgs e)
     {
-        var result = await _viewModel.SaveAsync(false);
-        if (!result.IsSuccess)
+        OpenSelectedPopup(mainWindow => mainWindow.OpenAddSpendingSourcePopup());
+    }
+
+    private void OnNewTransactionClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenAddNewTransactionPopup());
+    }
+
+    private void OnNewSavingGoalClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenAddSavingGoalPopup());
+    }
+
+    private void OnNewFixedExpenseClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenAddFixedExpensePopup());
+    }
+
+    private void OpenSelectedPopup(Action<MainWindow> openPopupAction)
+    {
+        if (Owner is not MainWindow ownerWindow)
         {
-            ShowValidationMessage(result.ErrorMessage);
+            Close();
             return;
         }
 
         Close();
+        ownerWindow.Dispatcher.BeginInvoke(new Action(() => openPopupAction(ownerWindow)));
     }
-
-    protected override async void OnSaveAndCreateNewButtonClick()
-    {
-        var result = await _viewModel.SaveAsync(true);
-        if (!result.IsSuccess)
-        {
-            ShowValidationMessage(result.ErrorMessage);
-            return;
-        }
-
-        NoteRichTextBox.Document.Blocks.Clear();
-        _viewModel.BeginChangeTracking();
-        FocusPrimaryInput();
-    }
-
-    protected override void OnPreviewKeyDown(KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter && NoteRichTextBox.IsKeyboardFocusWithin && Keyboard.Modifiers != ModifierKeys.Shift)
-            return;
-
-        base.OnPreviewKeyDown(e);
-    }
-
-    protected override void OnCloseButtonClick()
-    {
-        if (_viewModel.HasChanges)
-        {
-            var confirmation = FluxoMessageBox.Show(
-                this,
-                "Close without saving your changes?",
-                "Add New Transaction",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (confirmation != MessageBoxResult.Yes)
-                return;
-        }
-
-        base.OnCloseButtonClick();
-    }
-
-    private void OnNoteTextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_isSyncingNoteDocument)
-            return;
-
-        _viewModel.NoteText = new TextRange(NoteRichTextBox.Document.ContentStart, NoteRichTextBox.Document.ContentEnd)
-            .Text
-            .Trim();
-    }
-
-    private void ShowValidationMessage(string? message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
-            return;
-
-        FluxoMessageBox.Show(this, message, "Add New Transaction", MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
-    private void FocusPrimaryInput()
-    {
-        if (_viewModel.IsExpense)
-        {
-            ExpenseAmountTextBox.Focus();
-            return;
-        }
-
-        IncomeAmountTextBox.Focus();
-    }
-
-    private void SyncNoteDocumentFromViewModel()
-    {
-        _isSyncingNoteDocument = true;
-
-        try
-        {
-            var noteText = _viewModel.NoteText ?? string.Empty;
-            new TextRange(NoteRichTextBox.Document.ContentStart, NoteRichTextBox.Document.ContentEnd).Text = noteText;
-        }
-        finally
-        {
-            _isSyncingNoteDocument = false;
-        }
-    }
-
 }

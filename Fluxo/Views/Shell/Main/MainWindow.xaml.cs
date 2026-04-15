@@ -448,12 +448,23 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
-        var unitOfWork = _unitOfWork;
-        var popupViewModel = new QuickAddVM(_mainVM, unitOfWork);
+        if (draft is { } popupDraft)
+        {
+            OpenAddNewTransactionPopup(popupDraft);
+            return;
+        }
+
+        var popup = new QuickAddPopup { Owner = this };
+        popup.ShowDialog();
+    }
+
+    public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
+    {
+        var popupViewModel = new QuickAddVM(_mainVM, _unitOfWork);
         if (draft is { } popupDraft)
             popupViewModel.InitializeFromDraft(popupDraft);
 
-        var popup = new QuickAddPopup(popupViewModel) { Owner = this };
+        var popup = new AddNewTransaction(popupViewModel) { Owner = this };
         popup.ShowDialog();
     }
 
@@ -474,6 +485,24 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenAddSpendingSourcePopup()
     {
         var popup = new AddSpendingSourcePopup(new AddSpendingSourceVM(_mainVM, _unitOfWork))
+        {
+            Owner = this
+        };
+        popup.ShowDialog();
+    }
+
+    public void OpenAddFixedExpensePopup()
+    {
+        var popup = new AddFixedExpensePopup(new AddFixedExpenseVM(_mainVM, _unitOfWork))
+        {
+            Owner = this
+        };
+        popup.ShowDialog();
+    }
+
+    public void OpenAddSavingGoalPopup()
+    {
+        var popup = new AddSavingGoalPopup(new AddSavingGoalVM(_mainVM, _unitOfWork))
         {
             Owner = this
         };

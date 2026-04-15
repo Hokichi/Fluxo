@@ -59,9 +59,7 @@
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Amount" />
-                        <c:MoneyTextBox
-                            Style="{StaticResource PopupSurfaceTextBoxStyle}"
-                            Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
+                        <c:MoneyTextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
                             Margin="0,14,0,8"
@@ -80,6 +78,12 @@
                                 SelectedValuePath="Value"
                                 Style="{StaticResource FluxoComboBoxStyle}" />
                         </Border>
+
+                        <CheckBox
+                            Margin="0,16,0,0"
+                            Content="Active"
+                            IsChecked="{Binding IsActive, Mode=TwoWay}"
+                            Style="{StaticResource ItemCheckBoxStyle}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
@@ -108,11 +112,6 @@
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Tag" />
                         <TextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
-
-                        <CheckBox
-                            Margin="0,16,0,0"
-                            Content="Active"
-                            IsChecked="{Binding IsActive, Mode=TwoWay}" />
                     </StackPanel>
                 </Grid>
             </StackPanel>

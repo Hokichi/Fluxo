@@ -66,7 +66,7 @@ public partial class ExpenseDetailPopup : BasePopup
 
         Close();
 
-        ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenQuickAddPopup(draft)));
+        ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenAddNewTransactionPopup(draft)));
     }
 
     protected override void OnCancelButtonClick()
