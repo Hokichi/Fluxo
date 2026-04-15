@@ -1,0 +1,119 @@
+<UserControl
+    x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsPersonalizationTab"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource PanelStyle}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="16"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="Personalization" />
+                <TextBlock
+                    Margin="0,8,0,16"
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="Set your app display preferences and notification behavior." />
+
+                <Border Style="{StaticResource RowCardStyle}">
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Username" />
+                        <TextBox
+                            Margin="0,8,0,0"
+                            Background="{StaticResource Brush.Background.Surface}"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            Style="{StaticResource PopupTextInputStyle}"
+                            Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            Margin="0,14,0,0"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Currency" />
+                        <Border
+                            Margin="0,8,0,0"
+                            Padding="8,4"
+                            Background="{StaticResource Brush.Background.Surface}"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <ComboBox
+                                DisplayMemberPath="DisplayName"
+                                ItemsSource="{Binding CurrencyOptions}"
+                                SelectedValue="{Binding SelectedCurrencyCode, Mode=TwoWay}"
+                                SelectedValuePath="Code"
+                                Style="{StaticResource FluxoComboBoxStyle}" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock
+                    Margin="0,8,0,8"
+                    FontFamily="{StaticResource Bold}"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="Notifications" />
+                <ItemsControl ItemsSource="{Binding NotificationSettings}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource RowCardStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock
+                                            FontFamily="{StaticResource Bold}"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="{Binding Title}" />
+                                        <TextBlock
+                                            Margin="0,6,0,0"
+                                            FontFamily="{StaticResource Medium}"
+                                            Foreground="{StaticResource Brush.Text.Secondary}"
+                                            Text="{Binding Description}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <ToggleButton
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                        Style="{StaticResource ToggleSwitchStyle}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Grid.Column="0"
+                        Click="OnRunSetupWizardClick"
+                        Content="Run Setup Wizard"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                    <Button
+                        Grid.Column="2"
+                        Click="OnResetAllSettingsClick"
+                        Content="Reset All Settings"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                    <Button
+                        Grid.Column="4"
+                        Click="OnDeleteAllDataClick"
+                        Content="Delete All Data"
+                        Style="{StaticResource DangerActionButtonStyle}" />
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

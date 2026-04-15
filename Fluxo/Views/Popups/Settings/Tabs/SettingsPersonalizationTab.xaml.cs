@@ -1,0 +1,94 @@
+using System.Windows;
+using System.Windows.Controls;
+using Fluxo.Resources.CustomControls;
+using Fluxo.ViewModels.Popups;
+
+namespace Fluxo.Views.Popups.Settings.Tabs;
+
+public partial class SettingsPersonalizationTab : UserControl
+{
+    public SettingsPersonalizationTab()
+    {
+        InitializeComponent();
+    }
+
+    private SettingsVM? ViewModel => DataContext as SettingsVM;
+
+    private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is null)
+            return;
+
+        if (FluxoMessageBox.Show(Window.GetWindow(this),
+                "This will close the current window and open the setup wizard. Continue?",
+                "Run Setup Wizard",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        if (Window.GetWindow(this) is SettingsPopup popup)
+            popup.AllowCloseAndClose();
+
+        await ((App)Application.Current).RunSetupWizardAsync();
+    }
+
+    private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is null)
+            return;
+
+        if (FluxoMessageBox.Show(Window.GetWindow(this),
+                "Reset all settings to defaults? This keeps your existing data.",
+                "Reset Settings",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        var result = await ViewModel.ResetAllSettingsAsync();
+        if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
+            FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Reset Settings", MessageBoxButton.OK,
+                MessageBoxImage.Information);
+    }
+
+    private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is null)
+            return;
+
+        var optionsPopup = new DeleteAllDataPopup { Owner = Window.GetWindow(this) };
+        if (optionsPopup.ShowDialog() != true || optionsPopup.Choice == DeleteAllDataChoice.Cancel)
+            return;
+
+        var keepSettings = optionsPopup.Choice == DeleteAllDataChoice.KeepSettings;
+        var confirmation = FluxoMessageBox.Show(Window.GetWindow(this),
+            keepSettings
+                ? "This will permanently delete all data and keep your current settings. Continue?"
+                : "This will permanently delete all data and settings. Continue?",
+            "Delete All Data",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmation != MessageBoxResult.Yes)
+            return;
+
+        var result = await ViewModel.DeleteAllDataAsync(keepSettings);
+        if (!result.IsSuccess)
+        {
+            FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Delete All Data", MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (FluxoMessageBox.Show(Window.GetWindow(this),
+                "All data has been deleted. Would you like to run the setup wizard?",
+                "Setup Wizard",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            if (Window.GetWindow(this) is SettingsPopup popup)
+                popup.AllowCloseAndClose();
+
+            await ((App)Application.Current).RunSetupWizardAsync();
+        }
+    }
+}

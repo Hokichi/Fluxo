@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:pages="clr-namespace:Fluxo.Views.Shell.Wizard.Pages"
     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
     PopupTitle="Welcome to Fluxo"
     ShowInTaskbar="True">
@@ -182,6 +183,84 @@
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Background" Value="Transparent" />
         </Style>
+        <Style
+            x:Key="Step1SidebarStepStyle"
+            BasedOn="{StaticResource SidebarStepStyle}"
+            TargetType="Border">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsStep1Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style
+            x:Key="Step2SidebarStepStyle"
+            BasedOn="{StaticResource SidebarStepStyle}"
+            TargetType="Border">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsStep2Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style
+            x:Key="Step3SidebarStepStyle"
+            BasedOn="{StaticResource SidebarStepStyle}"
+            TargetType="Border">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsStep3Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style
+            x:Key="Step4SidebarStepStyle"
+            BasedOn="{StaticResource SidebarStepStyle}"
+            TargetType="Border">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsStep4Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style
+            x:Key="Step5SidebarStepStyle"
+            BasedOn="{StaticResource SidebarStepStyle}"
+            TargetType="Border">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsStep5Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style
+            x:Key="Step6SidebarStepStyle"
+            BasedOn="{StaticResource SidebarStepStyle}"
+            TargetType="Border">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsStep6Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style
+            x:Key="Step7SidebarStepStyle"
+            BasedOn="{StaticResource SidebarStepStyle}"
+            TargetType="Border">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WizardStepDotStyle" TargetType="Ellipse">
+            <Setter Property="Fill" Value="{StaticResource Brush.Text.Muted}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="Fill" Value="{StaticResource Brush.Mint}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
 
         <Style
             x:Key="CardActionButtonStyle"
@@ -230,48 +309,7 @@
 
         <Grid x:Name="ContentContainer">
             <!--  Greeting Page (Step 0)  -->
-            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsGreetingStep, Converter={StaticResource BoolToVisibilityConverter}}">
-                <Grid>
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border
-                            Width="84"
-                            Height="84"
-                            HorizontalAlignment="Center"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="42">
-                            <Viewbox Margin="20" Stretch="Uniform">
-                                <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
-                            </Viewbox>
-                        </Border>
-                        <TextBlock
-                            Margin="0,24,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="28"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding CurrentStepTitle}" />
-                        <TextBlock
-                            MaxWidth="420"
-                            Margin="0,12,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="13"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding CurrentStepDescription}"
-                            TextAlignment="Center"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,24,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="11"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Text="We'll walk you through a few quick steps to set things up." />
-                    </StackPanel>
-                </Grid>
-            </Border>
+            <pages:StartupWizardGreetingPage Visibility="{Binding IsGreetingStep, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Middle Steps (1-6): Sidebar + Content  -->
             <Grid Visibility="{Binding IsMiddleStep, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -297,16 +335,7 @@
                             Text="{Binding StepCounterText}" />
 
                         <!--  Step 1  -->
-                        <Border Style="{StaticResource SidebarStepStyle}">
-                            <Border.Resources>
-                                <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStep1Active}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Resources>
+                        <Border Style="{StaticResource Step1SidebarStepStyle}">
                             <Grid>
                                 <Border
                                     x:Name="Step1Stripe"
@@ -333,16 +362,7 @@
                         </Border>
 
                         <!--  Step 2  -->
-                        <Border Style="{StaticResource SidebarStepStyle}">
-                            <Border.Resources>
-                                <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStep2Active}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Resources>
+                        <Border Style="{StaticResource Step2SidebarStepStyle}">
                             <Grid>
                                 <Border
                                     x:Name="Step2Stripe"
@@ -373,17 +393,8 @@
 
                         <!--  Step 3  -->
                         <Border
-                            Style="{StaticResource SidebarStepStyle}"
+                            Style="{StaticResource Step3SidebarStepStyle}"
                             Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Border.Resources>
-                                <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStep3Active}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Resources>
                             <Grid>
                                 <Border
                                     x:Name="Step3Stripe"
@@ -411,17 +422,8 @@
 
                         <!--  Step 4  -->
                         <Border
-                            Style="{StaticResource SidebarStepStyle}"
+                            Style="{StaticResource Step4SidebarStepStyle}"
                             Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Border.Resources>
-                                <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStep4Active}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Resources>
                             <Grid>
                                 <Border
                                     x:Name="Step4Stripe"
@@ -448,16 +450,7 @@
                         </Border>
 
                         <!--  Step 5  -->
-                        <Border Style="{StaticResource SidebarStepStyle}">
-                            <Border.Resources>
-                                <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStep5Active}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Resources>
+                        <Border Style="{StaticResource Step5SidebarStepStyle}">
                             <Grid>
                                 <Border
                                     x:Name="Step5Stripe"
@@ -484,16 +477,7 @@
                         </Border>
 
                         <!--  Step 6  -->
-                        <Border Style="{StaticResource SidebarStepStyle}">
-                            <Border.Resources>
-                                <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStep6Active}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Resources>
+                        <Border Style="{StaticResource Step6SidebarStepStyle}">
                             <Grid>
                                 <Border
                                     x:Name="Step6Stripe"
@@ -520,16 +504,7 @@
                         </Border>
 
                         <!--  Step 7  -->
-                        <Border Style="{StaticResource SidebarStepStyle}">
-                            <Border.Resources>
-                                <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Resources>
+                        <Border Style="{StaticResource Step7SidebarStepStyle}">
                             <Grid>
                                 <Border
                                     x:Name="Step7Stripe"
@@ -1181,82 +1156,10 @@
             </Grid>
 
             <!--  Loading Page (Step 8)  -->
-            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsLoadingStep, Converter={StaticResource BoolToVisibilityConverter}}">
-                <Grid>
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border
-                            Width="84"
-                            Height="84"
-                            HorizontalAlignment="Center"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="42">
-                            <Viewbox Margin="20" Stretch="Uniform">
-                                <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
-                            </Viewbox>
-                        </Border>
-                        <TextBlock
-                            Margin="0,24,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="28"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding CurrentStepTitle}" />
-                        <TextBlock
-                            Margin="0,12,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="13"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding CurrentStepDescription}"
-                            TextAlignment="Center" />
-                        <ProgressBar
-                            Width="240"
-                            Height="8"
-                            Margin="0,28,0,0"
-                            Foreground="{StaticResource Brush.Mint}"
-                            IsIndeterminate="True" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+            <pages:StartupWizardLoadingPage Visibility="{Binding IsLoadingStep, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Welcome Page (Step 9)  -->
-            <Border Style="{StaticResource PanelStyle}" Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityConverter}}">
-                <Grid>
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border
-                            Width="84"
-                            Height="84"
-                            HorizontalAlignment="Center"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="42">
-                            <Viewbox Margin="20" Stretch="Uniform">
-                                <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
-                            </Viewbox>
-                        </Border>
-                        <TextBlock
-                            Margin="0,18,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="28"
-                            Foreground="{StaticResource Brush.Text.Primary}">
-                            <Run Text="Welcome to Fluxo, " />
-                            <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
-                        </TextBlock>
-                        <TextBlock
-                            Margin="0,12,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="Your dashboard, goals, and reminders are ready to go."
-                            TextAlignment="Center" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+            <pages:StartupWizardFinalPage Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityConverter}}" />
         </Grid>
 
         <!--  Navigation Bar  -->
@@ -1305,18 +1208,8 @@
                             Height="8"
                             Margin="3,0"
                             Cursor="Hand"
-                            MouseLeftButtonDown="OnDotClick">
-                            <Ellipse.Style>
-                                <Style TargetType="Ellipse">
-                                    <Setter Property="Fill" Value="{StaticResource Brush.Text.Muted}" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                            <Setter Property="Fill" Value="{StaticResource Brush.Mint}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Ellipse.Style>
-                        </Ellipse>
+                            MouseLeftButtonDown="OnDotClick"
+                            Style="{StaticResource WizardStepDotStyle}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

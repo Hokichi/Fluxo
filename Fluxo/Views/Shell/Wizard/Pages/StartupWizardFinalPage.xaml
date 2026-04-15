@@ -1,0 +1,40 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.StartupWizardFinalPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource PanelStyle}">
+        <Grid>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border
+                    Width="84"
+                    Height="84"
+                    HorizontalAlignment="Center"
+                    Background="{StaticResource Brush.Background.Surface}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="42">
+                    <Viewbox Margin="20" Stretch="Uniform">
+                        <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
+                    </Viewbox>
+                </Border>
+                <TextBlock
+                    Margin="0,18,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="28"
+                    Foreground="{StaticResource Brush.Text.Primary}">
+                    <Run Text="Welcome to Fluxo, " />
+                    <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="12"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="Your dashboard, goals, and reminders are ready to go."
+                    TextAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

@@ -42,6 +42,12 @@ public partial class SettingsPopup : BasePopup
         _viewModel.RevertConfigurationChanges();
     }
 
+    public void AllowCloseAndClose()
+    {
+        _allowClose = true;
+        Close();
+    }
+
     private async void OnLoadedAsync(object sender, RoutedEventArgs e)
     {
         try
