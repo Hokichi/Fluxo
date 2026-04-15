@@ -67,9 +67,8 @@
                 BorderBrush="{DynamicResource Brush.Border.Subtle}"
                 BorderThickness="1"
                 CornerRadius="12">
-                <TextBox
+                <c:MoneyTextBox
                     x:Name="AmountTextBox"
-                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                     Style="{StaticResource PopupTextBoxStyle}"
                     Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
             </Border>

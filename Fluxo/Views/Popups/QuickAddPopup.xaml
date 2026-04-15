@@ -118,10 +118,8 @@
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
                         <Border Style="{StaticResource PopupFieldBorderStyle}">
                             <Grid>
-                                <TextBox
+                                <c:MoneyTextBox
                                     x:Name="ExpenseAmountTextBox"
-                                    DataObject.Pasting="OnAmountTextBoxPasting"
-                                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                                     Style="{StaticResource PopupTextBoxStyle}"
                                     Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 <TextBlock
@@ -232,10 +230,8 @@
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
                             <Border Style="{StaticResource PopupFieldBorderStyle}">
                                 <Grid>
-                                    <TextBox
+                                    <c:MoneyTextBox
                                         x:Name="IncomeAmountTextBox"
-                                        DataObject.Pasting="OnAmountTextBoxPasting"
-                                        PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                                         Style="{StaticResource PopupTextBoxStyle}"
                                         Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock

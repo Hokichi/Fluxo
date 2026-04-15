@@ -127,24 +127,21 @@
                         <StackPanel Grid.Column="2">
                             <StackPanel Visibility="{Binding IsCashLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
-                                <TextBox
-                                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                                <c:MoneyTextBox
                                     Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                     Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
-                                <TextBox
-                                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                                <c:MoneyTextBox
                                     Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                     Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Account Limit" />
-                                <TextBox
-                                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                                <c:MoneyTextBox
                                     Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                     Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
@@ -156,8 +153,7 @@
 
                             <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
-                                <TextBox
-                                    PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                                <c:MoneyTextBox
                                     Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                     Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -206,14 +205,6 @@ public partial class SpendingSourceDetailPopup : BasePopup
         }
     }
 
-    private void OnAmountTextBoxPreviewTextInput(object sender, TextCompositionEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
-
-        e.Handled = !IsValidAmountInput(textBox, e.Text);
-    }
-
     private void ShowValidationMessage(string? message)
     {
         if (!string.IsNullOrWhiteSpace(message))
@@ -227,36 +218,6 @@ public partial class SpendingSourceDetailPopup : BasePopup
 
         _reopenSourcesOnClose = false;
         ownerWindow.Dispatcher.BeginInvoke(new Action(ownerWindow.OpenSpendingSourcesListPopup));
-    }
-
-    private static bool IsValidAmountInput(TextBox textBox, string newText)
-    {
-        var proposedText = GetProposedText(textBox, newText);
-        if (string.IsNullOrWhiteSpace(proposedText))
-            return true;
-
-        var separators = new HashSet<char> { '.', CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator[0] };
-        var separatorCount = 0;
-        foreach (var character in proposedText)
-        {
-            if (char.IsDigit(character))
-                continue;
-            if (!separators.Contains(character))
-                return false;
-            if (++separatorCount > 1)
-                return false;
-        }
-
-        return true;
-    }
-
-    private static string GetProposedText(TextBox textBox, string newText)
-    {
-        var existingText = textBox.Text ?? string.Empty;
-        return textBox.SelectionLength > 0
-            ? existingText.Remove(textBox.SelectionStart, textBox.SelectionLength)
-                .Insert(textBox.SelectionStart, newText)
-            : existingText.Insert(textBox.SelectionStart, newText);
     }
 
     private void BeginInlineHeaderEditing(TextBox targetTextBox)

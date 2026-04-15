@@ -1,7 +1,4 @@
-using System.Globalization;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups;
 
@@ -32,41 +29,8 @@ public partial class TransferFundsPopup : BasePopup
         Close();
     }
 
-    private void OnAmountTextBoxPreviewTextInput(object sender, TextCompositionEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
-
-        e.Handled = !IsValidAmountInput(textBox, e.Text);
-    }
-
     protected override void OnApplyButtonClick()
     {
         base.OnCloseButtonClick();
-    }
-
-    private static bool IsValidAmountInput(TextBox textBox, string newText)
-    {
-        var proposedText = textBox.SelectionLength > 0
-            ? (textBox.Text ?? string.Empty).Remove(textBox.SelectionStart, textBox.SelectionLength)
-            .Insert(textBox.SelectionStart, newText)
-            : (textBox.Text ?? string.Empty).Insert(textBox.SelectionStart, newText);
-
-        if (string.IsNullOrWhiteSpace(proposedText))
-            return true;
-
-        var separators = new HashSet<char> { '.', CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator[0] };
-        var separatorCount = 0;
-        foreach (var character in proposedText)
-        {
-            if (char.IsDigit(character))
-                continue;
-            if (!separators.Contains(character))
-                return false;
-            if (++separatorCount > 1)
-                return false;
-        }
-
-        return true;
     }
 }

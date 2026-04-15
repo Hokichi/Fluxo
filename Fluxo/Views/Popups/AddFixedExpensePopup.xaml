@@ -59,8 +59,7 @@
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Amount" />
-                        <TextBox
-                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                        <c:MoneyTextBox
                             Style="{StaticResource PopupSurfaceTextBoxStyle}"
                             Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 

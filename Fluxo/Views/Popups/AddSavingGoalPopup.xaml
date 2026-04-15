@@ -56,16 +56,14 @@
 
                     <StackPanel>
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Target Amount" />
-                        <TextBox
-                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                        <c:MoneyTextBox
                             Style="{StaticResource FieldTextBoxStyle}"
                             Text="{Binding TargetAmountText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
-                        <TextBox
-                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
+                        <c:MoneyTextBox
                             Style="{StaticResource FieldTextBoxStyle}"
                             Text="{Binding CurrentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>

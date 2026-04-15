@@ -151,9 +151,8 @@
                             FontSize="26"
                             Foreground="{StaticResource Brush.Text.Primary}"
                             Text="$" />
-                        <TextBox
+                        <c:MoneyTextBox
                             x:Name="PrimaryAmountTextBox"
-                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                             Style="{StaticResource InlineHeaderAmountTextBoxStyle}"
                             Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
@@ -228,10 +227,9 @@
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
                             </TextBlock>
-                            <TextBox
+                            <c:MoneyTextBox
                                 x:Name="CreditSpentAmountTextBox"
                                 Grid.Column="1"
-                                PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -251,10 +249,9 @@
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="$" /><Run Text="{Binding AccountLimitText}" />
                             </TextBlock>
-                            <TextBox
+                            <c:MoneyTextBox
                                 x:Name="CreditLimitTextBox"
                                 Grid.Column="1"
-                                PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -291,10 +288,9 @@
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
                             </TextBlock>
-                            <TextBox
+                            <c:MoneyTextBox
                                 x:Name="BnplSpentAmountTextBox"
                                 Grid.Column="1"
-                                PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -344,10 +340,9 @@
                                 MouseLeftButtonDown="OnSavingApyTextMouseLeftButtonDown"
                                 Text="{Binding ApyText, StringFormat={}{0}%}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                            <TextBox
+                            <c:MoneyTextBox
                                 x:Name="SavingApyTextBox"
                                 Grid.Column="1"
-                                PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
                                 Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />

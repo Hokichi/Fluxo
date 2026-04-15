@@ -90,11 +90,9 @@
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
                 <Border Style="{StaticResource PopupFieldBorderStyle}">
                     <Grid>
-                        <TextBox
+                        <c:MoneyTextBox
                             x:Name="ExpenseAmountTextBox"
-                            DataObject.Pasting="OnAmountTextBoxPasting"
                             IsReadOnly="{Binding AreFieldsReadOnly}"
-                            PreviewTextInput="OnAmountTextBoxPreviewTextInput"
                             Style="{StaticResource PopupTextBoxStyle}"
                             Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock
