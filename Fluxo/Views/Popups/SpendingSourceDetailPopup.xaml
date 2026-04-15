@@ -225,7 +225,7 @@
                                 Cursor="IBeam"
                                 MouseLeftButtonDown="OnCreditSpentTextMouseLeftButtonDown"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
+                                <Run Text="$" /><Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
                             </TextBlock>
                             <c:MoneyTextBox
                                 x:Name="CreditSpentAmountTextBox"
@@ -247,7 +247,7 @@
                                 Cursor="IBeam"
                                 MouseLeftButtonDown="OnCreditLimitTextMouseLeftButtonDown"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <Run Text="$" /><Run Text="{Binding AccountLimitText}" />
+                                <Run Text="$" /><Run Text="{Binding AccountLimitText, Converter={StaticResource MoneyDisplayConverter}}" />
                             </TextBlock>
                             <c:MoneyTextBox
                                 x:Name="CreditLimitTextBox"
@@ -286,7 +286,7 @@
                                 Cursor="IBeam"
                                 MouseLeftButtonDown="OnBnplSpentTextMouseLeftButtonDown"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <Run Text="$" /><Run Text="{Binding SpentAmountText}" />
+                                <Run Text="$" /><Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
                             </TextBlock>
                             <c:MoneyTextBox
                                 x:Name="BnplSpentAmountTextBox"

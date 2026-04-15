@@ -12,6 +12,9 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class AddSpendingSourceVM : ObservableObject
 {
+    private const string BalanceUpdateTagColor = "#e8ca5f";
+    private const string BalanceUpdateTagName = "Balance Update";
+
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
     private FormState _initialState;
@@ -65,13 +68,21 @@ public partial class AddSpendingSourceVM : ObservableObject
     public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
 
     partial void OnAccountLimitTextChanged(string value) => NotifyFormStateChanged();
+
     partial void OnApyTextChanged(string value) => NotifyFormStateChanged();
+
     partial void OnDueDateChanged(DateTime? value) => NotifyFormStateChanged();
+
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnIsEnabledChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+
     partial void OnPrimaryAmountTextChanged(string value) => NotifyFormStateChanged();
+
     partial void OnShowOnUIChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnSpentAmountTextChanged(string value) => NotifyFormStateChanged();
 
     partial void OnSelectedSpendingSourceTypeChanged(SpendingSourceType value)
@@ -118,11 +129,15 @@ public partial class AddSpendingSourceVM : ObservableObject
                     $"A spending source named \"{input.Name}\" already exists.");
 
             SpendingSource spendingSource;
+            SpendingSourceMemorySnapshot? beforeSnapshot = null;
+            var previousSpentAmount = 0m;
 
             if (EditingId.HasValue)
             {
                 spendingSource = existingSources.FirstOrDefault(s => s.Id == EditingId.Value)
                                  ?? throw new InvalidOperationException("Spending source not found.");
+                beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
+                previousSpentAmount = spendingSource.SpentAmount;
                 spendingSource.Name = input.Name;
                 spendingSource.SpendingSourceType = input.SpendingSourceType;
                 spendingSource.AccountLimit = input.AccountLimit;
@@ -152,10 +167,30 @@ public partial class AddSpendingSourceVM : ObservableObject
             }
 
             await unitOfWork.SaveChangesAsync();
+            var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
+            var autoTransactionSnapshot = await TryCreateBalanceUpdateTransactionAsync(
+                unitOfWork,
+                spendingSource,
+                previousSpentAmount,
+                input.SpentAmount,
+                EditingId.HasValue);
 
-            WeakReferenceMessenger.Default.Send(
-                new RecordLogMemoryMessage(new AddSpendingSourceMemoryAction(
-                    SpendingSourceMemorySnapshot.Create(spendingSource))));
+            ILogMemoryAction sourceAction = EditingId.HasValue
+                ? new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)
+                : new AddSpendingSourceMemoryAction(afterSnapshot);
+
+            ILogMemoryAction historyAction = autoTransactionSnapshot is null
+                ? sourceAction
+                : new CompositeLogMemoryAction(
+                    sourceAction.Description,
+                    [
+                        sourceAction,
+                        new AddExpenseLogMemoryAction(
+                            autoTransactionSnapshot,
+                            shouldAdjustSpendingSourceTotals: false)
+                    ]);
+
+            WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(historyAction));
 
             await _mainViewModel.ReloadCurrentDataAsync();
             return AddSpendingSourceResult.Success(true);
@@ -169,6 +204,98 @@ public partial class AddSpendingSourceVM : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    private static decimal CalculateBalanceUpdateAmount(
+        SpendingSourceType sourceType,
+        bool isEdit,
+        decimal currentSpentAmount,
+        decimal previousSpentAmount)
+    {
+        if (sourceType != SpendingSourceType.Credit)
+            return 0m;
+
+        return isEdit
+            ? currentSpentAmount - previousSpentAmount
+            : currentSpentAmount;
+    }
+
+    private static async Task<ExpenseTag> ResolveBalanceUpdateTagAsync(IUnitOfWork unitOfWork)
+    {
+        var tags = await unitOfWork.ExpenseTags.GetAllAsync();
+        var existingTag = tags.FirstOrDefault(tag =>
+            string.Equals(tag.Name, BalanceUpdateTagName, StringComparison.OrdinalIgnoreCase));
+        if (existingTag is not null)
+            return existingTag;
+
+        var balanceUpdateTag = new ExpenseTag
+        {
+            Name = BalanceUpdateTagName,
+            HexCode = BalanceUpdateTagColor
+        };
+
+        await unitOfWork.ExpenseTags.AddAsync(balanceUpdateTag);
+        await unitOfWork.SaveChangesAsync();
+        return balanceUpdateTag;
+    }
+
+    private static async Task<ExpenseLogMemorySnapshot?> TryCreateBalanceUpdateTransactionAsync(
+        IUnitOfWork unitOfWork,
+        SpendingSource spendingSource,
+        decimal previousSpentAmount,
+        decimal currentSpentAmount,
+        bool isEdit)
+    {
+        var triggerAmount = CalculateBalanceUpdateAmount(
+            spendingSource.SpendingSourceType,
+            isEdit,
+            currentSpentAmount,
+            previousSpentAmount);
+        if (triggerAmount <= 0m)
+            return null;
+
+        var balanceUpdateTag = await ResolveBalanceUpdateTagAsync(unitOfWork);
+        var expense = new Expense
+        {
+            Name = $"Balance Update For {spendingSource.Name}",
+            Amount = triggerAmount,
+            ExpenseKind = ExpenseKind.Manual,
+            ExpenseCategory = ExpenseCategory.Needs,
+            RecurringDate = DateTime.Today,
+            IsActive = false,
+            SpendingSourceId = spendingSource.Id,
+            ExpenseTagId = balanceUpdateTag.Id
+        };
+
+        await unitOfWork.Expenses.AddAsync(expense);
+
+        var expenseLog = new ExpenseLog
+        {
+            Expense = expense,
+            SpendingSourceId = spendingSource.Id,
+            Amount = triggerAmount,
+            DeductedOn = DateTime.Now,
+            Notes = string.Empty,
+            IsForDeletion = false
+        };
+
+        await unitOfWork.ExpenseLogs.AddAsync(expenseLog);
+        await unitOfWork.SaveChangesAsync();
+
+        return new ExpenseLogMemorySnapshot(
+            expense.Id,
+            expenseLog.Id,
+            expense.Name,
+            expense.Amount,
+            expense.ExpenseKind,
+            expense.ExpenseCategory,
+            expense.RecurringDate,
+            expense.IsActive,
+            spendingSource.Id,
+            balanceUpdateTag.Id,
+            expenseLog.DeductedOn,
+            expenseLog.Notes,
+            expenseLog.IsForDeletion);
     }
 
     private bool TryBuildInput(out AddSpendingSourceInput input, out string validationMessage)

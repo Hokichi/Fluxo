@@ -7,7 +7,9 @@ namespace Fluxo.Services.History;
 public interface ILogMemoryAction
 {
     string Description { get; }
+
     Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
+
     Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
 }
 
@@ -187,7 +189,9 @@ public sealed record IncomeLogMemorySnapshot(
     }
 }
 
-public sealed class AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot) : ILogMemoryAction
+public sealed class AddExpenseLogMemoryAction(
+    ExpenseLogMemorySnapshot snapshot,
+    bool shouldAdjustSpendingSourceTotals = true) : ILogMemoryAction
 {
     public string Description => "Add expense";
 
@@ -197,8 +201,11 @@ public sealed class AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot)
         if (expenseLog is null)
             return;
 
-        LogMemoryPersistence.RevertExpenseFromSpendingSource(expenseLog.SpendingSource, expenseLog.Amount);
-        unitOfWork.SpendingSources.Update(expenseLog.SpendingSource);
+        if (shouldAdjustSpendingSourceTotals)
+        {
+            LogMemoryPersistence.RevertExpenseFromSpendingSource(expenseLog.SpendingSource, expenseLog.Amount);
+            unitOfWork.SpendingSources.Update(expenseLog.SpendingSource);
+        }
 
         var expense = expenseLog.Expense;
         unitOfWork.ExpenseLogs.Remove(expenseLog);
@@ -224,9 +231,10 @@ public sealed class AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot)
         if (await unitOfWork.ExpenseLogs.GetByIdAsync(snapshot.ExpenseLogId, cancellationToken) is not null)
             return;
 
-        var spendingSource =
+        if (shouldAdjustSpendingSourceTotals)
             await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
                 cancellationToken);
+
         var expense = new Expense
         {
             Id = snapshot.ExpenseId,
@@ -254,8 +262,14 @@ public sealed class AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot)
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
         await unitOfWork.ExpenseLogs.AddAsync(expenseLog, cancellationToken);
 
-        LogMemoryPersistence.ApplyExpenseToSpendingSource(spendingSource, snapshot.Amount);
-        unitOfWork.SpendingSources.Update(spendingSource);
+        if (shouldAdjustSpendingSourceTotals)
+        {
+            var spendingSource =
+                await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                    cancellationToken);
+            LogMemoryPersistence.ApplyExpenseToSpendingSource(spendingSource, snapshot.Amount);
+            unitOfWork.SpendingSources.Update(spendingSource);
+        }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

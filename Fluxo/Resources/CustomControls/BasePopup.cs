@@ -285,6 +285,10 @@ public class BasePopup : Window, IPopupHost
 
     private void OnClosing(object? sender, CancelEventArgs e)
     {
+        // Preserve modal dialog results (true/false) by letting WPF finish the close immediately.
+        if (DialogResult.HasValue)
+            return;
+
         if (_isAnimatingClose) return;
 
         e.Cancel = true;
