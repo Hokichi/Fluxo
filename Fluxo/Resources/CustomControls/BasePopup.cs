@@ -24,6 +24,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(ShowSaveButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsSaveButtonEnabledProperty =
+        DependencyProperty.Register(nameof(IsSaveButtonEnabled), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
     public static readonly DependencyProperty ShowSaveAndCreateNewButtonProperty =
         DependencyProperty.Register(nameof(ShowSaveAndCreateNewButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
@@ -93,6 +97,12 @@ public class BasePopup : Window, IPopupHost
     {
         get => (bool)GetValue(ShowSaveButtonProperty);
         set => SetValue(ShowSaveButtonProperty, value);
+    }
+
+    public bool IsSaveButtonEnabled
+    {
+        get => (bool)GetValue(IsSaveButtonEnabledProperty);
+        set => SetValue(IsSaveButtonEnabledProperty, value);
     }
 
     public bool ShowSaveAndCreateNewButton
@@ -234,8 +244,11 @@ public class BasePopup : Window, IPopupHost
                 }
                 else if (ShowSaveButton)
                 {
-                    OnSaveButtonClick();
-                    e.Handled = true;
+                    if (IsSaveButtonEnabled)
+                    {
+                        OnSaveButtonClick();
+                        e.Handled = true;
+                    }
                 }
 
                 break;

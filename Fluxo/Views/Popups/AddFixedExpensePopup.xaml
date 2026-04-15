@@ -5,6 +5,7 @@
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     Width="620"
+    IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add Fixed Expense"
     ShowSaveButton="True">
 

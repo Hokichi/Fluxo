@@ -154,6 +154,7 @@
                                         x:Name="PART_SaveButton"
                                         Width="28"
                                         Height="28"
+                                        IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
                                         Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource ContentSave}"
                                         CornerRadius="8"

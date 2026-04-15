@@ -14,6 +14,8 @@ public partial class AddSpendingSourceVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
+    private FormState _initialState;
+    private bool _isChangeTrackingInitialized;
 
     [ObservableProperty] private string _accountLimitText = string.Empty;
     [ObservableProperty] private string _apyText = string.Empty;
@@ -33,6 +35,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
         DueDate = DateTime.Today.AddDays(14);
+        _initialState = CaptureState();
     }
 
     public IReadOnlyList<SpendingSourceTypeOption> SpendingSourceTypes { get; } =
@@ -44,12 +47,32 @@ public partial class AddSpendingSourceVM : ObservableObject
         new("Savings", SpendingSourceType.Saving)
     ];
 
+    public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
+    public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+
+    public void BeginChangeTracking()
+    {
+        _initialState = CaptureState();
+        _isChangeTrackingInitialized = true;
+        NotifyFormStateChanged();
+    }
+
     public bool IsCredit => SelectedSpendingSourceType == SpendingSourceType.Credit;
     public bool IsBnpl => SelectedSpendingSourceType == SpendingSourceType.BNPL;
     public bool IsCreditLike => IsCredit || IsBnpl;
     public bool IsSaving => SelectedSpendingSourceType == SpendingSourceType.Saving;
     public bool IsCashLike => SelectedSpendingSourceType is SpendingSourceType.Checking or SpendingSourceType.Cash;
     public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
+
+    partial void OnAccountLimitTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnApyTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnDueDateChanged(DateTime? value) => NotifyFormStateChanged();
+    partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
+    partial void OnIsEnabledChanged(bool value) => NotifyFormStateChanged();
+    partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnPrimaryAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnShowOnUIChanged(bool value) => NotifyFormStateChanged();
+    partial void OnSpentAmountTextChanged(string value) => NotifyFormStateChanged();
 
     partial void OnSelectedSpendingSourceTypeChanged(SpendingSourceType value)
     {
@@ -69,6 +92,8 @@ public partial class AddSpendingSourceVM : ObservableObject
 
         if (!IsSaving)
             ApyText = string.Empty;
+
+        NotifyFormStateChanged();
     }
 
     public async Task<AddSpendingSourceResult> SaveAsync()
@@ -238,6 +263,49 @@ public partial class AddSpendingSourceVM : ObservableObject
                    CultureInfo.InvariantCulture, out value);
     }
 
+    private bool AreRequiredFieldsFilled()
+    {
+        if (string.IsNullOrWhiteSpace(NameText))
+            return false;
+
+        if (IsCashLike && string.IsNullOrWhiteSpace(PrimaryAmountText))
+            return false;
+
+        if (IsCreditLike && string.IsNullOrWhiteSpace(SpentAmountText))
+            return false;
+
+        if (IsCredit && string.IsNullOrWhiteSpace(AccountLimitText))
+            return false;
+
+        if (IsSaving && string.IsNullOrWhiteSpace(ApyText))
+            return false;
+
+        if (IsCreditLike && DueDate is null)
+            return false;
+
+        return true;
+    }
+
+    private FormState CaptureState()
+    {
+        return new FormState(
+            NameText ?? string.Empty,
+            PrimaryAmountText ?? string.Empty,
+            SpentAmountText ?? string.Empty,
+            AccountLimitText ?? string.Empty,
+            ApyText ?? string.Empty,
+            DueDate?.Date,
+            SelectedSpendingSourceType,
+            ShowOnUI,
+            IsEnabled);
+    }
+
+    private void NotifyFormStateChanged()
+    {
+        OnPropertyChanged(nameof(CanSave));
+        OnPropertyChanged(nameof(HasChanges));
+    }
+
     public readonly record struct AddSpendingSourceResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
     {
         public static AddSpendingSourceResult Success(bool shouldClose = false)
@@ -261,6 +329,17 @@ public partial class AddSpendingSourceVM : ObservableObject
         decimal AccountLimit,
         DateTime? DueDate,
         decimal? InterestRate,
+        bool ShowOnUI,
+        bool IsEnabled);
+
+    private readonly record struct FormState(
+        string NameText,
+        string PrimaryAmountText,
+        string SpentAmountText,
+        string AccountLimitText,
+        string ApyText,
+        DateTime? DueDate,
+        SpendingSourceType SpendingSourceType,
         bool ShowOnUI,
         bool IsEnabled);
 }

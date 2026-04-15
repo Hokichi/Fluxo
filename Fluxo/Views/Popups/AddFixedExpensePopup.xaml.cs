@@ -16,7 +16,11 @@ public partial class AddFixedExpensePopup : BasePopup
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = viewModel;
-        Loaded += (_, _) => NameTextBox.Focus();
+        Loaded += (_, _) =>
+        {
+            _viewModel.BeginChangeTracking();
+            NameTextBox.Focus();
+        };
     }
 
     protected override async void OnSaveButtonClick()
@@ -30,6 +34,23 @@ public partial class AddFixedExpensePopup : BasePopup
 
         if (result.ShouldClose)
             Close();
+    }
+
+    protected override void OnCloseButtonClick()
+    {
+        if (_viewModel.HasChanges)
+        {
+            var confirmation = FluxoMessageBox.Show(this,
+                "Close without saving your changes?",
+                "Add Fixed Expense",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmation != MessageBoxResult.Yes)
+                return;
+        }
+
+        base.OnCloseButtonClick();
     }
 
     private void OnAmountTextBoxPreviewTextInput(object sender, TextCompositionEventArgs e)

@@ -12,9 +12,12 @@ namespace Fluxo.ViewModels.Popups;
 public partial class AddFixedExpenseVM : ObservableObject
 {
     private const string DefaultTagColor = "#75B798";
+    private const int NoSpendingSourceId = -1;
 
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
+    private FormState _initialState;
+    private bool _isChangeTrackingInitialized;
 
     [ObservableProperty] private string _amountText = string.Empty;
     [ObservableProperty] private DateTime _dueDate = DateTime.Today;
@@ -38,6 +41,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             SpendingSources.Add(spendingSource);
 
         SelectedSpendingSource = SpendingSources.FirstOrDefault();
+        _initialState = CaptureState();
     }
 
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
@@ -48,6 +52,25 @@ public partial class AddFixedExpenseVM : ObservableObject
         new("Wants", ExpenseCategory.Wants),
         new("Invest", ExpenseCategory.Savings)
     ];
+
+    public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
+    public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+
+    public void BeginChangeTracking()
+    {
+        _initialState = CaptureState();
+        _isChangeTrackingInitialized = true;
+        NotifyFormStateChanged();
+    }
+
+    partial void OnAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnDueDateChanged(DateTime value) => NotifyFormStateChanged();
+    partial void OnIsActiveChanged(bool value) => NotifyFormStateChanged();
+    partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
+    partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnSelectedCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
+    partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
+    partial void OnTagNameTextChanged(string value) => NotifyFormStateChanged();
 
     public async Task<AddFixedExpenseResult> SaveAsync()
     {
@@ -185,6 +208,32 @@ public partial class AddFixedExpenseVM : ObservableObject
                    CultureInfo.InvariantCulture, out value);
     }
 
+    private bool AreRequiredFieldsFilled()
+    {
+        return !string.IsNullOrWhiteSpace(NameText) &&
+               !string.IsNullOrWhiteSpace(AmountText) &&
+               !string.IsNullOrWhiteSpace(TagNameText) &&
+               SelectedSpendingSource is not null;
+    }
+
+    private FormState CaptureState()
+    {
+        return new FormState(
+            NameText ?? string.Empty,
+            AmountText ?? string.Empty,
+            SelectedCategory,
+            SelectedSpendingSource?.Id ?? NoSpendingSourceId,
+            DueDate.Date,
+            TagNameText ?? string.Empty,
+            IsActive);
+    }
+
+    private void NotifyFormStateChanged()
+    {
+        OnPropertyChanged(nameof(CanSave));
+        OnPropertyChanged(nameof(HasChanges));
+    }
+
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
 
     public readonly record struct AddFixedExpenseResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
@@ -207,6 +256,15 @@ public partial class AddFixedExpenseVM : ObservableObject
         int SpendingSourceId,
         DateTime DueDate,
         string TagName,
+        bool IsActive);
+
+    private readonly record struct FormState(
+        string NameText,
+        string AmountText,
+        ExpenseCategory SelectedCategory,
+        int SelectedSpendingSourceId,
+        DateTime DueDate,
+        string TagNameText,
         bool IsActive);
 }
 

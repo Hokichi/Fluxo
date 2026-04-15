@@ -5,6 +5,7 @@
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     Width="560"
+    IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add Goal"
     ShowSaveButton="True">
 

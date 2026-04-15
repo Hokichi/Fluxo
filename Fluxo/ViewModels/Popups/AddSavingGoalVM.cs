@@ -10,6 +10,8 @@ public partial class AddSavingGoalVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
+    private FormState _initialState;
+    private bool _isChangeTrackingInitialized;
 
     [ObservableProperty] private string _currentAmountText = string.Empty;
     [ObservableProperty] private DateTime _endDate = DateTime.Today.AddMonths(3);
@@ -23,7 +25,24 @@ public partial class AddSavingGoalVM : ObservableObject
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
+        _initialState = CaptureState();
     }
+
+    public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
+    public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+
+    public void BeginChangeTracking()
+    {
+        _initialState = CaptureState();
+        _isChangeTrackingInitialized = true;
+        NotifyFormStateChanged();
+    }
+
+    partial void OnCurrentAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnEndDateChanged(DateTime value) => NotifyFormStateChanged();
+    partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
+    partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnTargetAmountTextChanged(string value) => NotifyFormStateChanged();
 
     public async Task<AddSavingGoalResult> SaveAsync()
     {
@@ -130,6 +149,28 @@ public partial class AddSavingGoalVM : ObservableObject
                    CultureInfo.InvariantCulture, out value);
     }
 
+    private bool AreRequiredFieldsFilled()
+    {
+        return !string.IsNullOrWhiteSpace(NameText) &&
+               !string.IsNullOrWhiteSpace(TargetAmountText) &&
+               !string.IsNullOrWhiteSpace(CurrentAmountText);
+    }
+
+    private FormState CaptureState()
+    {
+        return new FormState(
+            NameText ?? string.Empty,
+            TargetAmountText ?? string.Empty,
+            CurrentAmountText ?? string.Empty,
+            EndDate.Date);
+    }
+
+    private void NotifyFormStateChanged()
+    {
+        OnPropertyChanged(nameof(CanSave));
+        OnPropertyChanged(nameof(HasChanges));
+    }
+
     public readonly record struct AddSavingGoalResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
     {
         public static AddSavingGoalResult Success(bool shouldClose = false)
@@ -147,6 +188,12 @@ public partial class AddSavingGoalVM : ObservableObject
         string Name,
         decimal TargetAmount,
         decimal CurrentAmount,
+        DateTime EndDate);
+
+    private readonly record struct FormState(
+        string NameText,
+        string TargetAmountText,
+        string CurrentAmountText,
         DateTime EndDate);
 }
 
