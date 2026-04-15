@@ -84,6 +84,9 @@ public class MoneyTextBox : TextBox
             if (char.IsDigit(character))
                 continue;
 
+            if (IsGroupSeparator(character))
+                continue;
+
             if (!IsDecimalSeparator(character))
                 return false;
 
@@ -100,6 +103,12 @@ public class MoneyTextBox : TextBox
     {
         var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
         return character == '.' || decimalSeparator.Contains(character);
+    }
+
+    private static bool IsGroupSeparator(char character)
+    {
+        var groupSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
+        return groupSeparator.Contains(character);
     }
 
     private static string BuildCanonicalNumber(string text)
