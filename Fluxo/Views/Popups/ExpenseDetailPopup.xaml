@@ -20,16 +20,12 @@
         </Style>
 
         <Style x:Key="PopupFieldBorderStyle" TargetType="Border">
-            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Padding" Value="12" />
             <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="12" />
         </Style>
-
-        
-
-        
 
         <Style
             x:Key="PopupComboBoxStyle"
@@ -68,7 +64,6 @@
             <Setter Property="Margin" Value="0,0,8,8" />
         </Style>
 
-        
 
         <DataTemplate x:Key="PopupTagTemplate">
             <ToggleButton
@@ -107,12 +102,10 @@
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}"
-                                                     Value="">
+                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="">
                                             <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}"
-                                                     Value="{x:Null}">
+                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="{x:Null}">
                                             <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -166,7 +159,7 @@
 
                     <StackPanel Grid.Column="0">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Category" />
-                        <Border Style="{StaticResource PopupFieldBorderStyle}">
+                        <Border Padding="8,2" Style="{StaticResource PopupFieldBorderStyle}">
                             <ComboBox
                                 x:Name="ExpenseCategoryComboBox"
                                 DisplayMemberPath="Label"
@@ -180,7 +173,7 @@
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
-                        <Border Style="{StaticResource PopupFieldBorderStyle}">
+                        <Border Padding="8,2" Style="{StaticResource PopupFieldBorderStyle}">
                             <ComboBox
                                 x:Name="ExpenseSpendingSourceComboBox"
                                 DisplayMemberPath="Name"

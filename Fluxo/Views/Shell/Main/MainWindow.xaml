@@ -409,6 +409,12 @@
                         HorizontalScrollBarVisibility="Auto"
                         VerticalScrollBarVisibility="Disabled">
                         <StackPanel Orientation="Horizontal">
+                            <Button
+                                x:Name="AddSpendingSourceButton"
+                                Margin="0,0,8,0"
+                                Click="OnAddSpendingSourceButtonClick"
+                                Style="{StaticResource SpendingSourceAddButtonStyle}" />
+
                             <ListView
                                 HorizontalAlignment="Left"
                                 Background="Transparent"
@@ -429,11 +435,6 @@
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
                             </ListView>
-
-                            <Button
-                                x:Name="AddSpendingSourceButton"
-                                Click="OnAddSpendingSourceButtonClick"
-                                Style="{StaticResource SpendingSourceAddButtonStyle}" />
                         </StackPanel>
                     </c:FadingScrollViewer>
 
@@ -510,23 +511,12 @@
                                             <ColumnDefinition />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock>
-                                                <Run
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="20"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="{Binding NeedsSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                                                <Run
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="12"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="/" />
-                                                <Run
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="12"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="{Binding NeedsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                                            </TextBlock>
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding NeedsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
 
                                             <ProgressBar
                                                 Height="3"
@@ -557,23 +547,12 @@
                                             Grid.Column="1"
                                             Margin="24,0,0,0"
                                             VerticalAlignment="Center">
-                                            <TextBlock>
-                                                <Run
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="20"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="{Binding WantsSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                                                <Run
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="12"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="/" />
-                                                <Run
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="12"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="{Binding WantsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                                            </TextBlock>
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding WantsAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
 
                                             <ProgressBar
                                                 Height="3"
@@ -604,23 +583,12 @@
                                             Grid.Column="2"
                                             Margin="24,0,0,0"
                                             VerticalAlignment="Center">
-                                            <TextBlock>
-                                                <Run
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="20"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="{Binding InvestSpent, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                                                <Run
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="12"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="/" />
-                                                <Run
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="12"
-                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                    Text="{Binding InvestAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
-                                            </TextBlock>
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding InvestAvailable, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
 
                                             <ProgressBar
                                                 Height="3"
