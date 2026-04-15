@@ -1,10 +1,10 @@
 <c:BasePopup
-    x:Name="Root"
     x:Class="Fluxo.Views.Popups.SpendingSourceDetailPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
+    x:Name="Root"
     Width="1080"
     MaxHeight="800"
     PopupTitle="Income Detail">
@@ -17,64 +17,15 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="18" />
         </Style>
-        <Style x:Key="DetailInputStyle" TargetType="TextBox">
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-        </Style>
+
         <Style x:Key="LeftSideLabelStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        <Style
-            x:Key="DetailActionBalloonButtonStyle"
-            BasedOn="{StaticResource {x:Type c:BalloonButton}}"
-            TargetType="{x:Type c:BalloonButton}">
-            <Setter Property="Width" Value="48" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="CornerRadius" Value="14" />
-            <Setter Property="CurveHeight" Value="10" />
-            <Setter Property="IconSize" Value="14" />
-            <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Hover}" />
-            <Setter Property="HoveredBackground" Value="{StaticResource Brush.Background.Elevated}" />
-            <Style.Triggers>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Opacity" Value="0.4" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style
-            x:Key="DisableActionButtonStyle"
-            BasedOn="{StaticResource DetailActionBalloonButtonStyle}"
-            TargetType="{x:Type c:BalloonButton}">
-            <Setter Property="ButtonIcon" Value="{StaticResource LightningSlashFill}" />
-            <Setter Property="HoveredBackground" Value="{StaticResource Brush.Warning}" />
-            <Setter Property="ToolTip" Value="Disable source" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
-                    <Setter Property="ButtonIcon" Value="{StaticResource LightningFill}" />
-                    <Setter Property="ToolTip" Value="Enable source" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style
-            x:Key="HideActionButtonStyle"
-            BasedOn="{StaticResource DetailActionBalloonButtonStyle}"
-            TargetType="{x:Type c:BalloonButton}">
-            <Setter Property="ButtonIcon" Value="{StaticResource EyeOff}" />
-            <Setter Property="HoveredBackground" Value="{StaticResource Brush.Primary.Hover}" />
-            <Setter Property="ToolTip" Value="Hide source" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsHidden}" Value="True">
-                    <Setter Property="ButtonIcon" Value="{StaticResource Eye}" />
-                    <Setter Property="ToolTip" Value="Unhide source" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+
+
+
     </c:BasePopup.Resources>
 
     <Grid MaxHeight="600" Margin="24,0,24,24">
@@ -140,8 +91,7 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                         <Run Text="$" />
-                        <Run
-                            Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                        <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                     </TextBlock>
                     <TextBox
                         x:Name="PrimaryAmountTextBox"
@@ -179,8 +129,7 @@
                         Style="{StaticResource PopupTextButtonStyle}" />
 
                     <StackPanel Grid.Row="2">
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -194,8 +143,7 @@
                                 <Run Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -209,15 +157,12 @@
                                 <Run Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock
-                                Style="{StaticResource LeftSideLabelStyle}"
-                                Text="Spent" />
+                            <TextBlock Style="{StaticResource LeftSideLabelStyle}" Text="Spent" />
                             <TextBlock
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
@@ -234,8 +179,7 @@
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -257,8 +201,7 @@
                                 Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -275,8 +218,7 @@
                                 SelectedDate="{Binding DueDate, Mode=TwoWay}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -298,8 +240,7 @@
                                 Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -316,8 +257,7 @@
                                 SelectedDate="{Binding DueDate, Mode=TwoWay}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -328,12 +268,10 @@
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}">
                                 <Run Text="$" />
-                                <Run
-                                    Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                                <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                         </Grid>
-                        <Grid Margin="0,0,0,10"
-                              Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -356,30 +294,14 @@
                         </Grid>
                     </StackPanel>
 
-                    <Grid Grid.Row="5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="12" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                    <UniformGrid Grid.Row="5" Width="Auto">
+                        <c:BalloonButton Click="OnDisableButtonClick" Style="{StaticResource DisableActionButtonStyle}" />
                         <c:BalloonButton
-                            Click="OnDisableButtonClick"
-                            Style="{StaticResource DisableActionButtonStyle}" />
-                        <c:BalloonButton
-                            Grid.Column="2"
                             ButtonIcon="{StaticResource Pen}"
                             Click="OnEditButtonClick"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="{Binding EditButtonLabel}" />
                         <c:BalloonButton
-                            Grid.Column="4"
                             ButtonIcon="{StaticResource Exchange}"
                             Click="OnTransferButtonClick"
                             HoveredBackground="{StaticResource Brush.Mint}"
@@ -387,28 +309,23 @@
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Transfer funds" />
                         <c:BalloonButton
-                            Grid.Row="2"
                             Click="OnHideOrUnhideButtonClick"
                             IsEnabled="{Binding CanHideOrUnhide}"
                             Style="{StaticResource HideActionButtonStyle}" />
                         <c:BalloonButton
-                            Grid.Row="2"
-                            Grid.Column="2"
                             ButtonIcon="{StaticResource SourceSwitch}"
                             Click="OnBackToSourcesButtonClick"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Back to sources" />
                         <c:BalloonButton
-                            Grid.Row="2"
-                            Grid.Column="4"
                             ButtonIcon="{StaticResource CircleMinusSolid}"
                             Click="OnDeleteButtonClick"
                             HoveredBackground="{StaticResource Brush.Danger}"
                             IsEnabled="{Binding CanDelete}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Delete source" />
-                    </Grid>
+                    </UniformGrid>
                 </Grid>
             </Border>
 
@@ -474,16 +391,12 @@
                                                     FontSize="12">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground"
-                                                                    Value="{StaticResource Brush.Success}" />
-                                                            <Setter Property="Text"
-                                                                    Value="{Binding Amount, StringFormat=+${0:N2}}" />
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                                                            <Setter Property="Text" Value="{Binding Amount, StringFormat=+${0:N2}}" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsExpense}" Value="True">
-                                                                    <Setter Property="Foreground"
-                                                                            Value="{StaticResource Brush.Danger}" />
-                                                                    <Setter Property="Text"
-                                                                            Value="{Binding Amount, StringFormat=-${0:N2}}" />
+                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                                                    <Setter Property="Text" Value="{Binding Amount, StringFormat=-${0:N2}}" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -567,3 +480,5 @@
         </Grid>
     </Grid>
 </c:BasePopup>
+
+

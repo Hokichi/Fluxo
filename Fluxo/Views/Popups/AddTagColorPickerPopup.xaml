@@ -15,18 +15,9 @@
             <Setter Property="CornerRadius" Value="18" />
         </Style>
 
-        <Style x:Key="FieldTextBoxStyle" BasedOn="{StaticResource PopupTextInputStyle}" TargetType="TextBox">
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
+        
 
-        <Style x:Key="ActionTextButtonStyle" BasedOn="{StaticResource PopupTextButtonStyle}" TargetType="Button">
-            <Setter Property="Height" Value="34" />
-            <Setter Property="MinWidth" Value="90" />
-            <Setter Property="Padding" Value="14,0" />
-        </Style>
+        
 
         <Style x:Key="HueSliderThumbStyle" TargetType="Thumb">
             <Setter Property="Width" Value="18" />
@@ -169,3 +160,5 @@
         </Border>
     </Grid>
 </c:BasePopup>
+
+

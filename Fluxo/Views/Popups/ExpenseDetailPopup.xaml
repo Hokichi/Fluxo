@@ -27,22 +27,9 @@
             <Setter Property="CornerRadius" Value="12" />
         </Style>
 
-        <Style x:Key="PopupTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
-            <Setter Property="FontFamily" Value="{DynamicResource Medium}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
+        
 
-        <Style
-            x:Key="PopupTextInputStyle"
-            BasedOn="{StaticResource PopupTextBoxStyle}"
-            TargetType="TextBox">
-            <Setter Property="FontSize" Value="13" />
-        </Style>
+        
 
         <Style
             x:Key="PopupComboBoxStyle"
@@ -81,47 +68,7 @@
             <Setter Property="Margin" Value="0,0,8,8" />
         </Style>
 
-        <Style x:Key="PopupTagToggleStyle" TargetType="ToggleButton">
-            <Setter Property="Height" Value="28" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
-            <Setter Property="FontFamily" Value="{DynamicResource Bold}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border
-                            Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="14">
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontFamily="{TemplateBinding FontFamily}"
-                                FontSize="{TemplateBinding FontSize}"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="{TemplateBinding Content}" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
-                </Trigger>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Mint}" />
-                    <Setter Property="BorderThickness" Value="0" />
-                    <Setter Property="Foreground" Value="{DynamicResource Brush.Background.Surface}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+        
 
         <DataTemplate x:Key="PopupTagTemplate">
             <ToggleButton
@@ -338,3 +285,5 @@
         </Grid>
     </Border>
 </c:BasePopup>
+
+

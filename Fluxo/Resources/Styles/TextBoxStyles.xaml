@@ -1,0 +1,99 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Style x:Key="PopupTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="FontFamily" Value="{DynamicResource Medium}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+<Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="FontFamily" Value="{DynamicResource Medium}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border
+                        x:Name="InputRoot"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="12">
+                        <ScrollViewer
+                            x:Name="PART_ContentHost"
+                            Margin="{TemplateBinding Padding}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+<Style
+            x:Key="FieldTextBoxStyle"
+            BasedOn="{StaticResource RoundedTextInputStyle}"
+            TargetType="TextBox">
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+<Style x:Key="SearchTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
+            <Setter Property="FontFamily" Value="{DynamicResource Regular}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+<Style x:Key="DetailInputStyle" TargetType="TextBox">
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+
+<Style
+    x:Key="PopupSurfaceTextBoxStyle"
+    BasedOn="{StaticResource RoundedTextInputStyle}"
+    TargetType="TextBox">
+    <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+    <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+    <Setter Property="BorderThickness" Value="1" />
+</Style>
+
+<Style BasedOn="{StaticResource RoundedTextInputStyle}" TargetType="TextBox" />
+</ResourceDictionary>

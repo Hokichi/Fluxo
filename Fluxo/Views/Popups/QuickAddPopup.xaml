@@ -19,41 +19,7 @@
             <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}" />
         </Style>
 
-        <Style x:Key="SegmentedToggleOptionStyle" TargetType="RadioButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}" />
-            <Setter Property="FontFamily" Value="{DynamicResource Bold}" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="MinWidth" Value="128" />
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
-                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
-                </Trigger>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Mint}" />
-                    <Setter Property="Foreground" Value="{DynamicResource Brush.Background.Surface}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+        
 
         <Style x:Key="PopupFieldBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="12,10" />
@@ -100,47 +66,7 @@
             <Setter Property="Margin" Value="0,0,8,8" />
         </Style>
 
-        <Style x:Key="PopupTagToggleStyle" TargetType="ToggleButton">
-            <Setter Property="Height" Value="28" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
-            <Setter Property="FontFamily" Value="{DynamicResource Bold}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border
-                            Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="14">
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontFamily="{TemplateBinding FontFamily}"
-                                FontSize="{TemplateBinding FontSize}"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="{TemplateBinding Content}" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
-                </Trigger>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Mint}" />
-                    <Setter Property="BorderThickness" Value="0" />
-                    <Setter Property="Foreground" Value="{DynamicResource Brush.Background.Surface}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+        
 
         <DataTemplate x:Key="PopupTagTemplate">
             <ToggleButton
@@ -461,3 +387,4 @@
         </Grid>
     </Border>
 </c:BasePopup>
+

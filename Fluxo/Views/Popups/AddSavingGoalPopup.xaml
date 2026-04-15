@@ -22,12 +22,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        <Style x:Key="FieldTextBoxStyle" BasedOn="{StaticResource PopupTextInputStyle}" TargetType="TextBox">
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
+        
     </c:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
@@ -84,3 +79,4 @@
         </Border>
     </Grid>
 </c:BasePopup>
+

@@ -5,78 +5,7 @@
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     Width="560"
     PopupTitle="Delete All Data">
-
-    <c:BasePopup.Resources>
-        <Style x:Key="OptionButtonStyle" TargetType="Button">
-            <Setter Property="Margin" Value="0,0,0,10" />
-            <Setter Property="Padding" Value="14,12" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="OptionCard"
-                            Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="14"
-                            RenderTransformOrigin="0.5,0.5">
-                            <Border.RenderTransform>
-                                <TranslateTransform Y="0" />
-                            </Border.RenderTransform>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="13"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Tag}" />
-                                    <TextBlock
-                                        Margin="0,5,0,0"
-                                        FontFamily="{StaticResource Medium}"
-                                        FontSize="11"
-                                        Foreground="{StaticResource Brush.Text.Secondary}"
-                                        Text="{TemplateBinding Content}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-                                <Viewbox Grid.Column="1" Width="16" Height="16" VerticalAlignment="Center">
-                                    <Path Data="{StaticResource AngleRight}" Fill="{StaticResource Brush.Text.Muted}" />
-                                </Viewbox>
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="OptionCard" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                                <Setter TargetName="OptionCard" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                                <Setter TargetName="OptionCard" Property="RenderTransform">
-                                    <Setter.Value>
-                                        <TranslateTransform Y="-2" />
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="OptionCard" Property="RenderTransform">
-                                    <Setter.Value>
-                                        <TranslateTransform Y="0" />
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </c:BasePopup.Resources>
-
-    <Grid Margin="24,0,24,24">
+<Grid Margin="24,0,24,24">
         <StackPanel>
             <Button
                 Click="OnKeepSettingsClick"
@@ -97,3 +26,5 @@
         </StackPanel>
     </Grid>
 </c:BasePopup>
+
+

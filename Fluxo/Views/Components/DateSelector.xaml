@@ -8,110 +8,11 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <Style x:Key="SelectorButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Height" Value="40" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="12">
-                            <Grid Margin="12,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+        
 
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Medium}"
-                                    FontSize="13"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="{Binding FormattedSelectedDate, ElementName=Root}" />
+        
 
-                                <Path
-                                    Grid.Column="1"
-                                    Width="14"
-                                    Height="14"
-                                    Margin="12,0,0,0"
-                                    VerticalAlignment="Center"
-                                    Data="{StaticResource Calendar}"
-                                    Fill="{StaticResource Brush.Text.Muted}"
-                                    Stretch="Uniform" />
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CalendarNavButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="28" />
-            <Setter Property="Height" Value="28" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="ButtonBackground"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="10">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="HeaderButtonBackground"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="10">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="HeaderButtonBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        
 
         <Style x:Key="WeekdayLabelStyle" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -120,103 +21,9 @@
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
         </Style>
 
-        <Style x:Key="CalendarDayButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="34" />
-            <Setter Property="Height" Value="34" />
-            <Setter Property="Margin" Value="2" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="DayBackground"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="11"
-                            SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
-                                    <Condition Binding="{Binding IsSelected}" Value="False" />
-                                </MultiDataTrigger.Conditions>
+        
 
-                                <Setter TargetName="DayBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                            </MultiDataTrigger>
-
-                            <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
-                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
-                            </DataTrigger>
-
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding IsSelected}" Value="False" />
-                                    <Condition Binding="{Binding IsToday}" Value="True" />
-                                </MultiDataTrigger.Conditions>
-                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                                <Setter Property="BorderThickness" Value="1" />
-                            </MultiDataTrigger>
-
-                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
-                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                                <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
-                            </DataTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CalendarChoiceButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="78" />
-            <Setter Property="Height" Value="38" />
-            <Setter Property="Margin" Value="4" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="ChoiceBackground"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="12">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ChoiceBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                            </Trigger>
-                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
-                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                                <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
-                            </DataTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        
     </UserControl.Resources>
 
     <Grid>

@@ -22,13 +22,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        <Style
-            x:Key="FieldTextBoxStyle"
-            BasedOn="{StaticResource PopupTextInputStyle}"
-            TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-        </Style>
+        
         <Style x:Key="SelectorToggleStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="0,0,16,0" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
@@ -107,7 +101,7 @@
                             <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Source Name" />
                             <TextBox
                                 x:Name="NameTextBox"
-                                Style="{StaticResource FieldTextBoxStyle}"
+                                Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                 Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}" />
 
                             <TextBlock
@@ -134,7 +128,7 @@
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                    Style="{StaticResource FieldTextBoxStyle}"
+                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                     Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
@@ -142,7 +136,7 @@
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Account Limit" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                    Style="{StaticResource FieldTextBoxStyle}"
+                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                     Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
@@ -155,7 +149,7 @@
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
                                 <TextBox
                                     PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                                    Style="{StaticResource FieldTextBoxStyle}"
+                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
                                     Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </StackPanel>
@@ -176,3 +170,5 @@
         </Border>
     </Grid>
 </c:BasePopup>
+
+

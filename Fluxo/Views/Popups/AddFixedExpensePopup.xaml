@@ -22,14 +22,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        <Style
-            x:Key="FieldTextBoxStyle"
-            BasedOn="{StaticResource PopupTextInputStyle}"
-            TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
+        
     </c:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
@@ -58,7 +51,7 @@
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Expense Name" />
                         <TextBox
                             x:Name="NameTextBox"
-                            Style="{StaticResource FieldTextBoxStyle}"
+                            Style="{StaticResource PopupSurfaceTextBoxStyle}"
                             Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
@@ -67,7 +60,7 @@
                             Text="Amount" />
                         <TextBox
                             PreviewTextInput="OnAmountTextBoxPreviewTextInput"
-                            Style="{StaticResource FieldTextBoxStyle}"
+                            Style="{StaticResource PopupSurfaceTextBoxStyle}"
                             Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
@@ -112,7 +105,7 @@
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Tag" />
-                        <TextBox Style="{StaticResource FieldTextBoxStyle}" Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <CheckBox
                             Margin="0,16,0,0"
@@ -124,3 +117,5 @@
         </Border>
     </Grid>
 </c:BasePopup>
+
+

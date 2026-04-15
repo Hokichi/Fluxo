@@ -28,7 +28,7 @@
                             Background="{StaticResource Brush.Background.Surface}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="1"
-                            Style="{StaticResource PopupTextInputStyle}"
+                            Style="{StaticResource RoundedTextInputStyle}"
                             Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock
                             Margin="0,14,0,0"
@@ -117,3 +117,4 @@
         </ScrollViewer>
     </Border>
 </UserControl>
+

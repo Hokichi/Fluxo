@@ -8,34 +8,7 @@
     PopupTitle="Spending Sources">
 
     <c:BasePopup.Resources>
-        <Style x:Key="SourceButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="RootBorder"
-                            Padding="16"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="16">
-                            <ContentPresenter />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        
 
         <Style x:Key="AccentStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />

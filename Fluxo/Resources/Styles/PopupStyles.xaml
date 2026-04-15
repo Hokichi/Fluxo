@@ -5,101 +5,9 @@
 
     <BooleanToVisibilityConverter x:Key="PopupBoolToVisibility" />
 
-    <Style x:Key="PopupTextButtonStyle" TargetType="Button">
-        <Setter Property="Height" Value="40" />
-        <Setter Property="Padding" Value="14,0" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border
-                        x:Name="RootBorder"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="12">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="RootBorder" Property="Opacity" Value="0.45" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
+    
 
-    <Style x:Key="PopupTextBoxStyle" TargetType="TextBox">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
-        <Setter Property="FontFamily" Value="{DynamicResource Medium}" />
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-    </Style>
-
-    <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
-        <Setter Property="Padding" Value="8,6" />
-        <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
-        <Setter Property="FontFamily" Value="{DynamicResource Medium}" />
-        <Setter Property="FontSize" Value="13" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TextBox">
-                    <Border
-                        x:Name="InputRoot"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="12">
-                        <ScrollViewer
-                            x:Name="PART_ContentHost"
-                            Margin="{TemplateBinding Padding}"
-                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style
-        x:Key="PopupTextInputStyle"
-        BasedOn="{StaticResource RoundedTextInputStyle}"
-        TargetType="TextBox">
-        <Setter Property="FontSize" Value="13" />
-    </Style>
-
-    <Style BasedOn="{StaticResource RoundedTextInputStyle}" TargetType="TextBox" />
-
-    <Style TargetType="{x:Type c:BasePopup}">
+<Style TargetType="{x:Type c:BasePopup}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type c:BasePopup}">
@@ -288,3 +196,6 @@
         </Setter>
     </Style>
 </ResourceDictionary>
+
+
+
