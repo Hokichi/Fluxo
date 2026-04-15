@@ -11,14 +11,14 @@ public sealed class LogMemoryManager : IDisposable
     private readonly IMessenger _messenger;
     private readonly Stack<ILogMemoryAction> _redoStack = [];
     private readonly Stack<ILogMemoryAction> _undoStack = [];
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
     private bool _isDisposed;
     private bool _isExecuting;
 
-    public LogMemoryManager(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory, IMessenger? messenger = null)
+    public LogMemoryManager(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _unitOfWork = unitOfWork;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
 
         _messenger.Register<LogMemoryManager, RecordLogMemoryMessage>(this, static (recipient, message) =>
@@ -50,7 +50,7 @@ public sealed class LogMemoryManager : IDisposable
         {
             _isExecuting = true;
 
-            await using var unitOfWork = _unitOfWorkFactory();
+            var unitOfWork = _unitOfWork;
             await action.UndoAsync(unitOfWork, cancellationToken);
             await _mainViewModel.ReloadCurrentDataAsync();
 
@@ -79,7 +79,7 @@ public sealed class LogMemoryManager : IDisposable
         {
             _isExecuting = true;
 
-            await using var unitOfWork = _unitOfWorkFactory();
+            var unitOfWork = _unitOfWork;
             await action.RedoAsync(unitOfWork, cancellationToken);
             await _mainViewModel.ReloadCurrentDataAsync();
 

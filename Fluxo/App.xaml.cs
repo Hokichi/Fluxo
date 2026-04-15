@@ -39,13 +39,13 @@ public partial class App : Application
         try
         {
             var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
-            var unitOfWorkFactory = _serviceProvider!.GetRequiredService<Func<IUnitOfWork>>();
+            var unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
 
-            var isFirstRun = await EnsureFirstRunSettingAsync(unitOfWorkFactory);
+            var isFirstRun = await EnsureFirstRunSettingAsync(unitOfWork);
 
             if (isFirstRun)
             {
-                var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWorkFactory))
+                var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWork))
                 {
                     WindowStartupLocation = WindowStartupLocation.CenterScreen
                 };
@@ -81,12 +81,12 @@ public partial class App : Application
     public async Task RunSetupWizardAsync()
     {
         var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
-        var unitOfWorkFactory = _serviceProvider!.GetRequiredService<Func<IUnitOfWork>>();
+        var unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         MainWindow?.Hide();
 
-        var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWorkFactory))
+        var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWork))
         {
             WindowStartupLocation = WindowStartupLocation.CenterScreen
         };
@@ -98,9 +98,8 @@ public partial class App : Application
         MainWindow?.Show();
     }
 
-    private static async Task<bool> EnsureFirstRunSettingAsync(Func<IUnitOfWork> unitOfWorkFactory)
+    private static async Task<bool> EnsureFirstRunSettingAsync(IUnitOfWork unitOfWork)
     {
-        await using var unitOfWork = unitOfWorkFactory();
         var existingSetting = await unitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun);
 
         if (existingSetting is null)
@@ -117,3 +116,5 @@ public partial class App : Application
         return !bool.TryParse(existingSetting.Value, out var isFirstRun) || isFirstRun;
     }
 }
+
+

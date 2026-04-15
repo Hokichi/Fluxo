@@ -14,7 +14,7 @@ public partial class StartupWizardVM : ObservableObject
     private const string DefaultCurrencyCode = "USD";
 
     private readonly MainVM _mainViewModel;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
 
     [ObservableProperty] private int _currentStepIndex;
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
@@ -25,10 +25,10 @@ public partial class StartupWizardVM : ObservableObject
     [ObservableProperty] private string _usernameText = "User";
     [ObservableProperty] private int _wantsAllocationPercentage = 30;
 
-    public StartupWizardVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
+    public StartupWizardVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _unitOfWork = unitOfWork;
 
         foreach (var option in BuildCurrencyOptions())
             CurrencyOptions.Add(option);
@@ -232,17 +232,17 @@ public partial class StartupWizardVM : ObservableObject
 
     public AddSpendingSourceVM CreateAddSpendingSourceViewModel()
     {
-        return new AddSpendingSourceVM(_mainViewModel, _unitOfWorkFactory);
+        return new AddSpendingSourceVM(_mainViewModel, _unitOfWork);
     }
 
     public async Task<AddSpendingSourceVM> CreateEditSpendingSourceViewModelAsync(int id)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var source = await unitOfWork.SpendingSources.GetByIdAsync(id);
         if (source is null)
             return CreateAddSpendingSourceViewModel();
 
-        var vm = new AddSpendingSourceVM(_mainViewModel, _unitOfWorkFactory) { EditingId = source.Id };
+        var vm = new AddSpendingSourceVM(_mainViewModel, _unitOfWork) { EditingId = source.Id };
         vm.NameText = source.Name;
         vm.SelectedSpendingSourceType = source.SpendingSourceType;
         vm.ShowOnUI = source.ShowOnUI;
@@ -268,17 +268,17 @@ public partial class StartupWizardVM : ObservableObject
 
     public AddFixedExpenseVM CreateAddFixedExpenseViewModel()
     {
-        return new AddFixedExpenseVM(_mainViewModel, _unitOfWorkFactory);
+        return new AddFixedExpenseVM(_mainViewModel, _unitOfWork);
     }
 
     public async Task<AddFixedExpenseVM> CreateEditFixedExpenseViewModelAsync(int id)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var expense = await unitOfWork.Expenses.GetByIdAsync(id);
         if (expense is null)
             return CreateAddFixedExpenseViewModel();
 
-        var vm = new AddFixedExpenseVM(_mainViewModel, _unitOfWorkFactory) { EditingId = expense.Id };
+        var vm = new AddFixedExpenseVM(_mainViewModel, _unitOfWork) { EditingId = expense.Id };
         vm.NameText = expense.Name;
         vm.AmountText = expense.Amount.ToString("N2", CultureInfo.InvariantCulture);
         vm.SelectedCategory = expense.ExpenseCategory;
@@ -300,17 +300,17 @@ public partial class StartupWizardVM : ObservableObject
 
     public AddSavingGoalVM CreateAddSavingGoalViewModel()
     {
-        return new AddSavingGoalVM(_mainViewModel, _unitOfWorkFactory);
+        return new AddSavingGoalVM(_mainViewModel, _unitOfWork);
     }
 
     public async Task<AddSavingGoalVM> CreateEditSavingGoalViewModelAsync(int id)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var goal = await unitOfWork.SavingGoals.GetByIdAsync(id);
         if (goal is null)
             return CreateAddSavingGoalViewModel();
 
-        return new AddSavingGoalVM(_mainViewModel, _unitOfWorkFactory)
+        return new AddSavingGoalVM(_mainViewModel, _unitOfWork)
         {
             EditingId = goal.Id,
             NameText = goal.Name,
@@ -322,7 +322,7 @@ public partial class StartupWizardVM : ObservableObject
 
     public async Task DeleteSpendingSourceAsync(int id)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var source = await unitOfWork.SpendingSources.GetByIdAsync(id);
         if (source is not null)
         {
@@ -336,7 +336,7 @@ public partial class StartupWizardVM : ObservableObject
 
     public async Task DeleteFixedExpenseAsync(int id)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var expense = await unitOfWork.Expenses.GetByIdAsync(id);
         if (expense is not null)
         {
@@ -350,7 +350,7 @@ public partial class StartupWizardVM : ObservableObject
 
     public async Task DeleteSavingGoalAsync(int id)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var goal = await unitOfWork.SavingGoals.GetByIdAsync(id);
         if (goal is not null)
         {
@@ -371,7 +371,7 @@ public partial class StartupWizardVM : ObservableObject
 
     public async Task RefreshSpendingSourcesAsync()
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         ReplaceCollection(SpendingSources, (await unitOfWork.SpendingSources.GetAllAsync())
             .OrderBy(source => source.Name)
             .Select(source => new StartupWizardSpendingSourceItemVM(source)));
@@ -385,7 +385,7 @@ public partial class StartupWizardVM : ObservableObject
 
     public async Task RefreshFixedExpensesAsync()
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetAllAsync())
             .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
             .OrderBy(expense => expense.Name)
@@ -394,7 +394,7 @@ public partial class StartupWizardVM : ObservableObject
 
     public async Task RefreshSavingGoalsAsync()
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         ReplaceCollection(SavingGoals, (await unitOfWork.SavingGoals.GetAllAsync())
             .OrderBy(goal => goal.SavingEndDate)
             .ThenBy(goal => goal.Name)
@@ -403,7 +403,7 @@ public partial class StartupWizardVM : ObservableObject
 
     private async Task LoadSettingsAsync()
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var settings = await unitOfWork.UserSettings.GetAllAsync();
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 
@@ -481,7 +481,7 @@ public partial class StartupWizardVM : ObservableObject
         if (!TryParseSalary(out _))
             return SettingsOperationResult.Failure("Salary must be a valid amount.");
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.PreferredDisplayName, username);
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.Salary,
             string.IsNullOrWhiteSpace(SalaryText) ? null : ParseSalaryAmount().ToString(CultureInfo.InvariantCulture));
@@ -507,7 +507,7 @@ public partial class StartupWizardVM : ObservableObject
             return SettingsOperationResult.Failure(
                 $"Needs, Wants, and Invest must add up to 100%. Current total: {total}%");
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.NeedsThreshold,
             NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.WantsThreshold,
@@ -520,7 +520,7 @@ public partial class StartupWizardVM : ObservableObject
 
     private async Task<SettingsOperationResult> SaveNotificationsAsync()
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         foreach (var notificationSetting in NotificationSettings)
             await UpsertUserSettingAsync(unitOfWork, notificationSetting.SettingName,
                 notificationSetting.IsEnabled.ToString(CultureInfo.InvariantCulture));
@@ -531,7 +531,7 @@ public partial class StartupWizardVM : ObservableObject
 
     private async Task SaveIsFirstRunAsync(bool isFirstRun)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.IsFirstRun, isFirstRun.ToString());
         await unitOfWork.SaveChangesAsync();
     }
@@ -782,3 +782,5 @@ public sealed partial class WizardStepDotVM : ObservableObject
         _isActive = isActive;
     }
 }
+
+

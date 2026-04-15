@@ -9,7 +9,7 @@ namespace Fluxo.ViewModels.Popups;
 public partial class AddSavingGoalVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
 
     [ObservableProperty] private string _currentAmountText = string.Empty;
     [ObservableProperty] private DateTime _endDate = DateTime.Today.AddMonths(3);
@@ -19,10 +19,10 @@ public partial class AddSavingGoalVM : ObservableObject
 
     public int? EditingId { get; init; }
 
-    public AddSavingGoalVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
+    public AddSavingGoalVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<AddSavingGoalResult> SaveAsync()
@@ -37,7 +37,7 @@ public partial class AddSavingGoalVM : ObservableObject
 
         try
         {
-            await using var unitOfWork = _unitOfWorkFactory();
+            var unitOfWork = _unitOfWork;
 
             if (EditingId.HasValue)
             {
@@ -149,3 +149,4 @@ public partial class AddSavingGoalVM : ObservableObject
         decimal CurrentAmount,
         DateTime EndDate);
 }
+

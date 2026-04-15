@@ -20,7 +20,7 @@ public partial class SettingsVM : ObservableObject
 
     private readonly MainVM _mainViewModel;
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
 
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
     [ObservableProperty] private int _investAllocationPercentage;
@@ -35,10 +35,10 @@ public partial class SettingsVM : ObservableObject
     [ObservableProperty] private string _selectedCurrencyCode = DefaultCurrencyCode;
     [ObservableProperty] private int _wantsAllocationPercentage;
 
-    public SettingsVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
+    public SettingsVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _unitOfWork = unitOfWork;
 
         ReplaceCollection(CurrencyOptions, BuildCurrencyOptions());
         SelectedCurrencyCode = DefaultCurrencyCode;
@@ -182,7 +182,7 @@ public partial class SettingsVM : ObservableObject
 
     public async Task LoadAsync()
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
 
         var settings = await unitOfWork.UserSettings.GetAllAsync();
         var settingsByName =
@@ -296,7 +296,7 @@ public partial class SettingsVM : ObservableObject
         if (HasBudgetAllocationError)
             return SettingsOperationResult.Failure(BudgetAllocationErrorMessage);
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var actions = new List<ILogMemoryAction>();
 
         await UpdateUserSettingAsync(unitOfWork, UserSettingNames.NeedsThreshold,
@@ -380,7 +380,7 @@ public partial class SettingsVM : ObservableObject
         if (selectedIds.Length == 0)
             return SettingsOperationResult.Failure("Select at least one spending source first.");
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var actions = new List<ILogMemoryAction>();
 
         try
@@ -485,7 +485,7 @@ public partial class SettingsVM : ObservableObject
         if (selectedItems.Length == 0)
             return SettingsOperationResult.Failure("Select at least one fixed expense first.");
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var actions = new List<ILogMemoryAction>();
 
         try
@@ -587,7 +587,7 @@ public partial class SettingsVM : ObservableObject
         if (selectedItems.Length == 0)
             return SettingsOperationResult.Failure("Select at least one goal first.");
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var actions = new List<ILogMemoryAction>();
 
         try
@@ -680,7 +680,7 @@ public partial class SettingsVM : ObservableObject
         if (!IsHexColor(normalizedHexCode))
             return SettingsOperationResult.Failure("Please choose a valid tag color.");
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
 
         try
         {
@@ -709,7 +709,7 @@ public partial class SettingsVM : ObservableObject
 
     public async Task<SettingsOperationResult> ResetAllSettingsAsync()
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
 
         try
         {
@@ -744,7 +744,7 @@ public partial class SettingsVM : ObservableObject
 
     public async Task<SettingsOperationResult> DeleteAllDataAsync(bool keepSettings)
     {
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
 
         try
         {
@@ -797,14 +797,14 @@ public partial class SettingsVM : ObservableObject
 
     public AddSpendingSourceVM CreateAddSpendingSourceViewModel()
     {
-        return new AddSpendingSourceVM(_mainViewModel, _unitOfWorkFactory);
+        return new AddSpendingSourceVM(_mainViewModel, _unitOfWork);
     }
 
     public async Task<SettingsOperationResult> DeleteTagAsync(ExpenseTagVM tag)
     {
         ArgumentNullException.ThrowIfNull(tag);
 
-        await using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
 
         try
         {
@@ -1305,3 +1305,4 @@ public partial class SettingsSavingGoalItemVM : ObservableObject, ISettingsSelec
     public decimal ProgressRatio => TargetAmount <= 0 ? 0m : Math.Clamp(CurrentAmount / TargetAmount, 0m, 1m);
     public int ProgressPercentage => (int)Math.Round(ProgressRatio * 100m, MidpointRounding.AwayFromZero);
 }
+

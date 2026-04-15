@@ -14,7 +14,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     private const string DefaultTagColor = "#75B798";
 
     private readonly MainVM _mainViewModel;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
 
     [ObservableProperty] private string _amountText = string.Empty;
     [ObservableProperty] private DateTime _dueDate = DateTime.Today;
@@ -27,10 +27,10 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     public int? EditingId { get; init; }
 
-    public AddFixedExpenseVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
+    public AddFixedExpenseVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _unitOfWork = unitOfWork;
 
         foreach (var spendingSource in _mainViewModel.SpendingSources
                      .Where(source => source.IsEnabled)
@@ -61,7 +61,7 @@ public partial class AddFixedExpenseVM : ObservableObject
 
         try
         {
-            await using var unitOfWork = _unitOfWorkFactory();
+            var unitOfWork = _unitOfWork;
 
             var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(input.SpendingSourceId);
             if (spendingSource is null)
@@ -209,3 +209,4 @@ public partial class AddFixedExpenseVM : ObservableObject
         string TagName,
         bool IsActive);
 }
+

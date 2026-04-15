@@ -32,7 +32,7 @@ public partial class MainWindow : Window, IPopupHost
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _isClosing;
@@ -45,14 +45,14 @@ public partial class MainWindow : Window, IPopupHost
     private EventHandler? _renderHandler;
     private Rect _restoreBounds;
 
-    public MainWindow(MainVM mainVM, Func<IUnitOfWork> unitOfWorkFactory, IExpenseCleanupService expenseCleanupService)
+    public MainWindow(MainVM mainVM, IUnitOfWork unitOfWork, IExpenseCleanupService expenseCleanupService)
     {
         InitializeComponent();
 
         _mainVM = mainVM;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _unitOfWork = unitOfWork;
         _expenseCleanupService = expenseCleanupService;
-        _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWorkFactory);
+        _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWork);
         DataContext = _mainVM;
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
         UpdateHistoryAvailability();
@@ -451,7 +451,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
-        using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var popupViewModel = new QuickAddVM(_mainVM, unitOfWork);
         if (draft is { } popupDraft)
             popupViewModel.InitializeFromDraft(popupDraft);
@@ -462,7 +462,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
     {
-        using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, unitOfWork);
         var popup = new ExpenseDetailPopup(popupViewModel) { Owner = this };
         popup.ShowDialog();
@@ -476,7 +476,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAddSpendingSourcePopup()
     {
-        var popup = new AddSpendingSourcePopup(new AddSpendingSourceVM(_mainVM, _unitOfWorkFactory))
+        var popup = new AddSpendingSourcePopup(new AddSpendingSourceVM(_mainVM, _unitOfWork))
         {
             Owner = this
         };
@@ -485,19 +485,19 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenSettingsPopup()
     {
-        var popup = new SettingsPopup(new SettingsVM(_mainVM, _unitOfWorkFactory)) { Owner = this };
+        var popup = new SettingsPopup(new SettingsVM(_mainVM, _unitOfWork)) { Owner = this };
         popup.ShowDialog();
     }
 
     public void OpenStartupWizardPopup()
     {
-        var popup = new StartupWizardPopup(new StartupWizardVM(_mainVM, _unitOfWorkFactory)) { Owner = this };
+        var popup = new StartupWizardPopup(new StartupWizardVM(_mainVM, _unitOfWork)) { Owner = this };
         popup.ShowDialog();
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
     {
-        using var unitOfWork = _unitOfWorkFactory();
+        var unitOfWork = _unitOfWork;
         var popupViewModel = new SpendingSourceDetailVM(_mainVM, spendingSource.Id, unitOfWork);
         var popup = new SpendingSourceDetailPopup(popupViewModel) { Owner = this };
         popup.ShowDialog();
@@ -652,3 +652,5 @@ public partial class MainWindow : Window, IPopupHost
         public int Left, Top, Right, Bottom;
     }
 }
+
+

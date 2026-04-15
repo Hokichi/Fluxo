@@ -13,7 +13,7 @@ namespace Fluxo.ViewModels.Popups;
 public partial class AddSpendingSourceVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
-    private readonly Func<IUnitOfWork> _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
 
     [ObservableProperty] private string _accountLimitText = string.Empty;
     [ObservableProperty] private string _apyText = string.Empty;
@@ -28,10 +28,10 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     public int? EditingId { get; init; }
 
-    public AddSpendingSourceVM(MainVM mainViewModel, Func<IUnitOfWork> unitOfWorkFactory)
+    public AddSpendingSourceVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _unitOfWork = unitOfWork;
         DueDate = DateTime.Today.AddDays(14);
     }
 
@@ -83,7 +83,7 @@ public partial class AddSpendingSourceVM : ObservableObject
 
         try
         {
-            await using var unitOfWork = _unitOfWorkFactory();
+            var unitOfWork = _unitOfWork;
 
             var existingSources = await unitOfWork.SpendingSources.GetAllAsync();
             if (existingSources.Any(source =>
