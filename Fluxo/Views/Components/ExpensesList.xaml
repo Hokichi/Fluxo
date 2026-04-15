@@ -53,12 +53,8 @@
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
-                                            <Condition
-                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}"
-                                                Value="True" />
-                                            <Condition
-                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}"
-                                                Value="False" />
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="Visibility" Value="Visible" />
                                     </MultiDataTrigger>
@@ -71,10 +67,8 @@
                         <Border.Clip>
                             <MultiBinding Converter="{StaticResource BorderCornerClipConverter}">
                                 <Binding Path="CornerRadius" RelativeSource="{RelativeSource Self}" />
-                                <Binding Path="ActualWidth"
-                                         RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
-                                <Binding Path="ActualHeight"
-                                         RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
+                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
                             </MultiBinding>
                         </Border.Clip>
                         <Border
@@ -91,12 +85,8 @@
                                     <Style.Triggers>
                                         <MultiDataTrigger>
                                             <MultiDataTrigger.Conditions>
-                                                <Condition
-                                                    Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}"
-                                                    Value="True" />
-                                                <Condition
-                                                    Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}"
-                                                    Value="False" />
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
                                             </MultiDataTrigger.Conditions>
                                             <Setter Property="Visibility" Value="Visible" />
                                             <MultiDataTrigger.EnterActions>
@@ -104,7 +94,7 @@
                                                     <Storyboard>
                                                         <DoubleAnimation
                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                                            To="4"
+                                                            To="2"
                                                             Duration="0:0:0.15">
                                                             <DoubleAnimation.EasingFunction>
                                                                 <CubicEase EasingMode="EaseOut" />
@@ -136,7 +126,6 @@
 
                     <Border
                         x:Name="ExpenseItemBorder"
-                        
                         Background="Transparent"
                         CornerRadius="12">
                         <Border.RenderTransform>
@@ -147,12 +136,8 @@
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
-                                            <Condition
-                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}"
-                                                Value="True" />
-                                            <Condition
-                                                Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}"
-                                                Value="False" />
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
                                         </MultiDataTrigger.Conditions>
                                         <MultiDataTrigger.EnterActions>
                                             <BeginStoryboard>
@@ -188,6 +173,7 @@
                         </Border.Style>
                         <Grid
                             MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
+                            Margin="4 8"
                             HorizontalAlignment="Stretch"
                             ClipToBounds="True">
                             <Grid.ColumnDefinitions>
@@ -273,7 +259,7 @@
             x:Key="ExpenseListFadingScrollViewerStyle"
             BasedOn="{StaticResource {x:Type customControls:FadingScrollViewer}}"
             TargetType="{x:Type customControls:FadingScrollViewer}">
-            <Setter Property="Margin" Value="0" />
+            <Setter Property="Margin" Value="12,0,12,0" />
             <Setter Property="FadedEdgeThickness" Value="20" />
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
@@ -281,10 +267,6 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type customControls:FadingScrollViewer}">
                         <Grid x:Name="Grid" Background="{TemplateBinding Background}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="24" />
-                            </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
@@ -303,7 +285,8 @@
                             <ScrollBar
                                 x:Name="PART_VerticalScrollBar"
                                 Grid.Row="0"
-                                Grid.Column="1"
+                                Margin="0,0,-16,0"
+                                HorizontalAlignment="Right"
                                 AutomationProperties.AutomationId="VerticalScrollBar"
                                 Cursor="Arrow"
                                 Maximum="{TemplateBinding ScrollableHeight}"
@@ -315,7 +298,6 @@
                             <ScrollBar
                                 x:Name="PART_HorizontalScrollBar"
                                 Grid.Row="1"
-                                Grid.Column="0"
                                 AutomationProperties.AutomationId="HorizontalScrollBar"
                                 Cursor="Arrow"
                                 Maximum="{TemplateBinding ScrollableWidth}"
@@ -350,6 +332,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="VerticalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -437,9 +420,7 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                    <ListView
-                        ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                        Style="{StaticResource ExpenseListViewStyle}" />
+                    <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Style="{StaticResource ExpenseListViewStyle}" />
                 </customControls:FadingScrollViewer>
             </Grid>
         </Grid>
