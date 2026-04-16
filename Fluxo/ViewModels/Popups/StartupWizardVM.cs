@@ -1,11 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Converters;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups;
@@ -329,7 +331,8 @@ public partial class StartupWizardVM : ObservableObject
         {
             unitOfWork.SpendingSources.Remove(source);
             await unitOfWork.SaveChangesAsync();
-            await _mainViewModel.ReloadCurrentDataAsync();
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
         }
 
         await RefreshSpendingSourcesAsync();
@@ -343,7 +346,8 @@ public partial class StartupWizardVM : ObservableObject
         {
             unitOfWork.Expenses.Remove(expense);
             await unitOfWork.SaveChangesAsync();
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
         }
 
         await RefreshFixedExpensesAsync();
@@ -357,7 +361,8 @@ public partial class StartupWizardVM : ObservableObject
         {
             unitOfWork.SavingGoals.Remove(goal);
             await unitOfWork.SaveChangesAsync();
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.SavingGoals));
         }
 
         await RefreshSavingGoalsAsync();
@@ -488,6 +493,8 @@ public partial class StartupWizardVM : ObservableObject
             string.IsNullOrWhiteSpace(SalaryText) ? null : ParseSalaryAmount().ToString(CultureInfo.InvariantCulture));
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.PreferredCurrencyCode, SelectedCurrencyCode);
         await unitOfWork.SaveChangesAsync();
+        WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+            DashboardDataInvalidationScope.All));
         return SettingsOperationResult.Success();
     }
 
@@ -516,6 +523,8 @@ public partial class StartupWizardVM : ObservableObject
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.InvestThreshold,
             InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture));
         await unitOfWork.SaveChangesAsync();
+        WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+            DashboardDataInvalidationScope.Budget));
         return SettingsOperationResult.Success();
     }
 
@@ -527,6 +536,8 @@ public partial class StartupWizardVM : ObservableObject
                 notificationSetting.IsEnabled.ToString(CultureInfo.InvariantCulture));
 
         await unitOfWork.SaveChangesAsync();
+        WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+            DashboardDataInvalidationScope.Notifications));
         return SettingsOperationResult.Success();
     }
 

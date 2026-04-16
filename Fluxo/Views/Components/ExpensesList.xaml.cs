@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
-using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Components;
@@ -30,6 +29,9 @@ public partial class ExpensesList : UserControl
 
     public static readonly DependencyProperty DotColorProperty = DependencyProperty.Register(
         nameof(DotColor), typeof(Brush), typeof(ExpensesList), new PropertyMetadata(null));
+
+    public static readonly DependencyProperty DeleteCommandProperty = DependencyProperty.Register(
+        nameof(DeleteCommand), typeof(ICommand), typeof(ExpensesList), new PropertyMetadata(default(ICommand)));
 
     public ExpensesList()
     {
@@ -64,6 +66,12 @@ public partial class ExpensesList : UserControl
     {
         get => (Brush)GetValue(DotColorProperty);
         set => SetValue(DotColorProperty, value);
+    }
+
+    public ICommand DeleteCommand
+    {
+        get => (ICommand)GetValue(DeleteCommandProperty);
+        set => SetValue(DeleteCommandProperty, value);
     }
 
     private void OnExpenseDetailButtonClick(object sender, RoutedEventArgs e)

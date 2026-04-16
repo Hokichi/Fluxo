@@ -1,0 +1,351 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Main.Sections.BudgetAllocationPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Views.Components">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.ColumnSpan="2"
+                Margin="0,16,24,16"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="16">
+
+                <Grid Margin="40,24,20,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock
+                            FontFamily="{StaticResource Light}"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="SPENT" />
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="20"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding TotalSpent, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding TotalSpent, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock
+                            FontFamily="{StaticResource Light}"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="ALLOWANCE" />
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="20"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding DailyAllowance, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding DailyAllowance, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border
+                Grid.Column="2"
+                Margin="0,16,8,16"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <Grid Margin="32,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding NeedsAvailable, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding NeedsAvailable, Converter={StaticResource MoneyFullDisplayConverter}}" />
+
+                        <ProgressBar
+                            Height="3"
+                            Margin="0,8,0,0"
+                            Foreground="{StaticResource Brush.Category.Needs}"
+                            Maximum="100"
+                            Style="{StaticResource RoundedProgressBarStyle}"
+                            Value="{Binding NeedsPercentage}" />
+
+                        <Grid>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                FontFamily="{StaticResource Light}"
+                                Foreground="{StaticResource Brush.Text.Muted}">
+                                <Run Text="NEEDS" />
+                            </TextBlock>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Light}"
+                                Foreground="{StaticResource Brush.Text.Muted}">
+                                <Run Text="{Binding NeedsPercentage, StringFormat={}{0}%}" />
+                                <Run Text="SPENT" />
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="24,0,0,0"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding WantsAvailable, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding WantsAvailable, Converter={StaticResource MoneyFullDisplayConverter}}" />
+
+                        <ProgressBar
+                            Height="3"
+                            Margin="0,8,0,0"
+                            Foreground="{StaticResource Brush.Category.Wants}"
+                            Maximum="100"
+                            Style="{StaticResource RoundedProgressBarStyle}"
+                            Value="{Binding WantsPercentage}" />
+
+                        <Grid>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                FontFamily="{StaticResource Light}"
+                                Foreground="{StaticResource Brush.Text.Muted}">
+                                <Run Text="WANTS" />
+                            </TextBlock>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Light}"
+                                Foreground="{StaticResource Brush.Text.Muted}">
+                                <Run Text="{Binding WantsPercentage, StringFormat={}{0}%}" />
+                                <Run Text="SPENT" />
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Column="2"
+                        Margin="24,0,0,0"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding InvestAvailable, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding InvestAvailable, Converter={StaticResource MoneyFullDisplayConverter}}" />
+
+                        <ProgressBar
+                            Height="3"
+                            Margin="0,8,0,0"
+                            Foreground="{StaticResource Brush.Category.Investments}"
+                            Maximum="100"
+                            Style="{StaticResource RoundedProgressBarStyle}"
+                            Value="{Binding InvestPercentage}" />
+
+                        <Grid>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                FontFamily="{StaticResource Light}"
+                                Foreground="{StaticResource Brush.Text.Muted}">
+                                <Run Text="INVEST" />
+                            </TextBlock>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Light}"
+                                Foreground="{StaticResource Brush.Text.Muted}">
+                                <Run Text="{Binding InvestPercentage, StringFormat={}{0}%}" />
+                                <Run Text="SPENT" />
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,0,0,16"
+            Orientation="Horizontal">
+            <Grid Margin="16,0,0,0" VerticalAlignment="Center">
+                <Border
+                    x:Name="AllTagUnselected"
+                    Height="24"
+                    Padding="12,0"
+                    Background="{StaticResource Brush.Background.Surface}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Cursor="Hand"
+                    Style="{StaticResource AllTagUnselectedBorderStyle}">
+                    <Border.InputBindings>
+                        <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                    </Border.InputBindings>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="All" />
+                </Border>
+
+                <Border
+                    x:Name="AllTagSelected"
+                    Height="24"
+                    Padding="12,0"
+                    Background="{StaticResource Brush.Mint}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Cursor="Hand"
+                    Style="{StaticResource AllTagSelectedBorderStyle}">
+                    <Border.InputBindings>
+                        <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
+                    </Border.InputBindings>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Background.Surface}"
+                        Text="All" />
+                </Border>
+            </Grid>
+
+            <ListView
+                Margin="0,12,0,0"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                BorderThickness="0"
+                ItemContainerStyle="{StaticResource ListViewItemStyle}"
+                ItemTemplate="{StaticResource Tags}"
+                ItemsSource="{Binding Tags}"
+                PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                SelectedItem="{Binding SelectedVisibleTag}">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+            </ListView>
+
+            <ToggleButton
+                x:Name="MoreTagsButton"
+                Margin="16,0,0,0"
+                VerticalAlignment="Center"
+                Content="More"
+                Style="{StaticResource TagToggleButtonStyle}"
+                Tag="{Binding IsSelectedTagInOtherTags}"
+                Visibility="{Binding HasOtherTags, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+            <Popup
+                AllowsTransparency="True"
+                DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                IsOpen="{Binding IsChecked, ElementName=MoreTagsButton, Mode=TwoWay}"
+                Placement="Bottom"
+                PlacementTarget="{Binding ElementName=MoreTagsButton}"
+                PopupAnimation="Fade"
+                StaysOpen="False"
+                VerticalOffset="8">
+                <Border
+                    Padding="12"
+                    Background="{StaticResource Brush.Background.Elevated}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="16">
+                    <Grid MaxWidth="320">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="More tags" />
+
+                        <ScrollViewer
+                            Grid.Row="2"
+                            MaxHeight="240"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                            <ListView
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource PopupTagListViewItemStyle}"
+                                ItemTemplate="{StaticResource PopupTags}"
+                                ItemsSource="{Binding OtherTags}"
+                                PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                SelectedItem="{Binding SelectedOtherTag}"
+                                SelectionChanged="OnMoreTagsSelectionChanged">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                            </ListView>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Popup>
+        </StackPanel>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <components:ExpensesList
+                DeleteCommand="{Binding DeleteExpenseLogCommand}"
+                DotColor="{StaticResource Brush.Category.Needs}"
+                IsListEmpty="{Binding IsNeedsEmpty}"
+                ItemsSource="{Binding Needs}"
+                SpentAmount="{Binding NeedsSpent}"
+                Title="NEEDS" />
+
+            <components:ExpensesList
+                Grid.Column="2"
+                DeleteCommand="{Binding DeleteExpenseLogCommand}"
+                DotColor="{StaticResource Brush.Category.Wants}"
+                IsListEmpty="{Binding IsWantsEmpty}"
+                ItemsSource="{Binding Wants}"
+                SpentAmount="{Binding WantsSpent}"
+                Title="WANTS" />
+
+            <components:ExpensesList
+                Grid.Column="4"
+                DeleteCommand="{Binding DeleteExpenseLogCommand}"
+                DotColor="{StaticResource Brush.Category.Investments}"
+                IsListEmpty="{Binding IsInvestEmpty}"
+                ItemsSource="{Binding Invest}"
+                SpentAmount="{Binding InvestSpent}"
+                Title="INVEST &amp; SAVINGS" />
+        </Grid>
+    </Grid>
+</UserControl>

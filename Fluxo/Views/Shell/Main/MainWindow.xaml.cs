@@ -29,11 +29,17 @@ public partial class MainWindow : Window, IPopupHost
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 200; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private readonly BudgetAllocationPanelVM _budgetAllocationPanelVM;
+    private readonly DaySpinnerVM _daySpinnerVM;
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
+    private readonly NotificationPanelVM _notificationPanelVM;
+    private readonly SavingGoalsPanelVM _savingGoalsPanelVM;
+    private readonly MainViewModeToggleVM _viewModeToggleVM;
     private readonly IUnitOfWork _unitOfWork;
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
+    private bool _hasInitializedDashboardPanels;
     private bool _isClosing;
     private bool _isHeaderMenuPinned;
     private bool _isMaximized;
@@ -44,19 +50,43 @@ public partial class MainWindow : Window, IPopupHost
     private EventHandler? _renderHandler;
     private Rect _restoreBounds;
 
-    public MainWindow(MainVM mainVM, IUnitOfWork unitOfWork)
+    public MainWindow(
+        MainVM mainVM,
+        IUnitOfWork unitOfWork,
+        DaySpinnerVM daySpinnerVM,
+        MainViewModeToggleVM viewModeToggleVM,
+        BudgetAllocationPanelVM budgetAllocationPanelVM,
+        NotificationPanelVM notificationPanelVM,
+        SavingGoalsPanelVM savingGoalsPanelVM)
     {
         InitializeComponent();
 
         _mainVM = mainVM;
         _unitOfWork = unitOfWork;
+        _daySpinnerVM = daySpinnerVM;
+        _viewModeToggleVM = viewModeToggleVM;
+        _budgetAllocationPanelVM = budgetAllocationPanelVM;
+        _notificationPanelVM = notificationPanelVM;
+        _savingGoalsPanelVM = savingGoalsPanelVM;
         _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWork);
+
         DataContext = _mainVM;
+        DaySpinnerControlHost.DataContext = _daySpinnerVM;
+        ViewModeToggleControlHost.DataContext = _viewModeToggleVM;
+        BudgetAllocationPanelHost.DataContext = _budgetAllocationPanelVM;
+        NotificationPanelHost.DataContext = _notificationPanelVM;
+        SavingGoalsPanelHost.DataContext = _savingGoalsPanelVM;
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
         UpdateHistoryAvailability();
 
-        Loaded += (_, _) =>
+        Loaded += async (_, _) =>
         {
+            if (!_hasInitializedDashboardPanels)
+            {
+                _hasInitializedDashboardPanels = true;
+                await InitializeDashboardPanelsAsync();
+            }
+
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
             FadeIn();
@@ -282,36 +312,24 @@ public partial class MainWindow : Window, IPopupHost
 
     // ── Shared UI helpers ───────────────────────────────────────────
 
-    private void OnTagListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private async Task InitializeDashboardPanelsAsync()
     {
-        if (sender is not ListView listView)
-            return;
-
-        // Find the ListViewItem that was clicked
-        if (e.OriginalSource is not DependencyObject source)
-            return;
-
-        var listViewItem = FindAncestor<ListViewItem>(source);
-        if (listViewItem is null)
-            return;
-
-        // If the clicked item is already selected, deselect it
-        if (listViewItem.IsSelected)
+        try
         {
-            listView.SelectedItem = null;
-            e.Handled = true;
+            await _budgetAllocationPanelVM.LoadAsync();
+            await _notificationPanelVM.LoadAsync();
+            await _savingGoalsPanelVM.LoadAsync();
+            _viewModeToggleVM.SetSelectedMainContentViewCommand.Execute(_viewModeToggleVM.SelectedMainContentViewMode);
         }
-    }
-
-    private void OnMoreTagsSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (MoreTagsButton?.IsChecked != true)
-            return;
-
-        if (e.AddedItems.Count == 0 && e.RemovedItems.Count == 0)
-            return;
-
-        MoreTagsButton.IsChecked = false;
+        catch (Exception exception)
+        {
+            FluxoMessageBox.Show(
+                this,
+                $"Unable to initialize dashboard panels.\n\n{exception.Message}",
+                "Dashboard",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 
     private static bool IsInteractiveElement(DependencyObject source)

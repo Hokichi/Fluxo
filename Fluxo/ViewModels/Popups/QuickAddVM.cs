@@ -223,6 +223,9 @@ public partial class QuickAddVM : ObservableObject
                         incomeLog.Notes))));
             }
 
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
+
             await _mainViewModel.ReloadCurrentDataAsync();
 
             if (resetAfterSave)

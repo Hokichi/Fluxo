@@ -1,7 +1,9 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups;
@@ -83,7 +85,8 @@ public partial class AddSavingGoalVM : ObservableObject
             }
 
             await unitOfWork.SaveChangesAsync();
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.SavingGoals));
 
             return AddSavingGoalResult.Success(true);
         }

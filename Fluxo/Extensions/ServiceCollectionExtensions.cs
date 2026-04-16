@@ -1,4 +1,5 @@
 using AutoMapper;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Mappings;
 using Fluxo.Services.Mappings;
@@ -34,7 +35,14 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddUIData(this IServiceCollection services)
     {
+        services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
+
         services.AddSingleton<MainVM>();
+        services.AddSingleton<DaySpinnerVM>();
+        services.AddSingleton<MainViewModeToggleVM>();
+        services.AddSingleton<BudgetAllocationPanelVM>();
+        services.AddSingleton<NotificationPanelVM>();
+        services.AddSingleton<SavingGoalsPanelVM>();
         services.AddSingleton<DayOfWeekVM>();
         services.AddTransient<ExpenseVM>();
         services.AddTransient<ExpenseLogVM>();

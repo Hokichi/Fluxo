@@ -164,6 +164,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await MainViewModel.ReloadCurrentDataAsync();
             await RefreshAsync(true);
@@ -210,6 +212,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await MainViewModel.ReloadCurrentDataAsync();
             await RefreshAsync(true);
@@ -252,6 +256,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot)));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await MainViewModel.ReloadCurrentDataAsync();
             await RefreshAsync(true);
@@ -298,6 +304,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new DeleteSpendingSourceMemoryAction(snapshot)));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await MainViewModel.ReloadCurrentDataAsync();
 

@@ -141,6 +141,9 @@ public partial class TransferFundsVM : ObservableObject
                             incomeLog.Notes))
                     ])));
 
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
+
             await _mainViewModel.ReloadCurrentDataAsync();
             return TransferFundsResult.Success();
         }

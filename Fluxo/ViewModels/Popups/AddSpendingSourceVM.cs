@@ -191,6 +191,8 @@ public partial class AddSpendingSourceVM : ObservableObject
                     ]);
 
             WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(historyAction));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await _mainViewModel.ReloadCurrentDataAsync();
             return AddSpendingSourceResult.Success(true);

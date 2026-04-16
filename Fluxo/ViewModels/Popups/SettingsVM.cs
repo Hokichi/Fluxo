@@ -325,6 +325,8 @@ public partial class SettingsVM : ObservableObject
             WeakReferenceMessenger.Default.Send(new UsernameChangedMessage(newUsername));
 
         RecordActions(actions);
+        WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+            DashboardDataInvalidationScope.All));
         await _mainViewModel.ReloadCurrentDataAsync(true);
         await LoadAsync();
 
@@ -462,6 +464,8 @@ public partial class SettingsVM : ObservableObject
 
             await unitOfWork.SaveChangesAsync();
             RecordActions(actions);
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
@@ -564,7 +568,8 @@ public partial class SettingsVM : ObservableObject
 
             await unitOfWork.SaveChangesAsync();
             RecordActions(actions);
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -642,7 +647,8 @@ public partial class SettingsVM : ObservableObject
 
             await unitOfWork.SaveChangesAsync();
             RecordActions(actions);
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.SavingGoals));
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -695,6 +701,8 @@ public partial class SettingsVM : ObservableObject
             });
 
             await unitOfWork.SaveChangesAsync();
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
@@ -730,6 +738,8 @@ public partial class SettingsVM : ObservableObject
                 RecordActions(actions);
             }
 
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
@@ -783,6 +793,8 @@ public partial class SettingsVM : ObservableObject
             }
 
             await unitOfWork.SaveChangesAsync();
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync(true);
             await LoadAsync();
 
@@ -880,6 +892,8 @@ public partial class SettingsVM : ObservableObject
             var snapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
             unitOfWork.ExpenseTags.Remove(expenseTag);
             await unitOfWork.SaveChangesAsync();
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.All));
 
             RecordActions([new DeleteExpenseTagMemoryAction(snapshot)]);
             await _mainViewModel.ReloadCurrentDataAsync(true);

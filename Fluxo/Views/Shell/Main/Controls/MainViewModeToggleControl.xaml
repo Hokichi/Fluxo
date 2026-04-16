@@ -1,0 +1,42 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Main.Controls.MainViewModeToggleControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
+    <Border
+        Padding="4"
+        Background="{StaticResource Brush.Background.Surface}"
+        BorderBrush="{StaticResource Brush.Border.Subtle}"
+        BorderThickness="1"
+        CornerRadius="14">
+        <StackPanel Orientation="Horizontal">
+            <Button
+                Command="{Binding SetSelectedMainContentViewCommand}"
+                CommandParameter="{x:Static viewModels:MainContentViewMode.Daily}"
+                Content="Day"
+                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                Tag="{Binding IsDailyViewSelected}" />
+            <Button
+                Margin="4,0,0,0"
+                Command="{Binding SetSelectedMainContentViewCommand}"
+                CommandParameter="{x:Static viewModels:MainContentViewMode.Weekly}"
+                Content="Week"
+                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                Tag="{Binding IsWeeklyViewSelected}" />
+            <Button
+                Margin="4,0,0,0"
+                Command="{Binding SetSelectedMainContentViewCommand}"
+                CommandParameter="{x:Static viewModels:MainContentViewMode.Monthly}"
+                Content="Month"
+                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                Tag="{Binding IsMonthlyViewSelected}" />
+            <Button
+                Margin="4,0,0,0"
+                Command="{Binding SetSelectedMainContentViewCommand}"
+                CommandParameter="{x:Static viewModels:MainContentViewMode.AllTime}"
+                Content="All-time"
+                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                Tag="{Binding IsAllTimeViewSelected}" />
+        </StackPanel>
+    </Border>
+</UserControl>
