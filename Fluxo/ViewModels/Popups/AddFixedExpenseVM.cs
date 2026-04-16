@@ -101,7 +101,8 @@ public partial class AddFixedExpenseVM : ObservableObject
                 tag = new ExpenseTag
                 {
                     Name = input.TagName,
-                    HexCode = DefaultTagColor
+                    HexCode = DefaultTagColor,
+                    IconName = string.Empty
                 };
 
                 await unitOfWork.ExpenseTags.AddAsync(tag);

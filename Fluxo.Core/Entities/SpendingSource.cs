@@ -10,7 +10,7 @@ public sealed class SpendingSource
     public decimal AccountLimit { get; set; }
     public decimal SpentAmount { get; set; }
     public decimal Balance { get; set; }
-    public int MonthlyDueDate { get; set; }
+    public int? MonthlyDueDate { get; set; }
     public decimal? InterestRate { get; set; }
     public bool ShowOnUI { get; set; }
     public bool IsEnabled { get; set; }

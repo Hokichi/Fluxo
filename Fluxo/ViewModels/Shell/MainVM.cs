@@ -850,7 +850,7 @@ public partial class MainVM : ObservableRecipient
 
         foreach (var source in SpendingSources.Where(source =>
                      source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
-                     source.MonthlyDueDate > 0))
+                     source.MonthlyDueDate.HasValue))
         {
             var dueDate = MonthlyDueDateHelper.ResolveUpcomingDate(source.MonthlyDueDate, DateTime.Today);
             if (!dueDate.HasValue)

@@ -104,6 +104,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
         OnPropertyChanged(nameof(CanTransfer));
         OnPropertyChanged(nameof(DisplayPrimaryAmount));
         OnPropertyChanged(nameof(PrimaryAmountLabel));
+
+        if (value is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+            DueDate = null;
     }
 
     partial void OnPrimaryAmountTextChanged(string value)
@@ -421,6 +424,12 @@ public partial class SpendingSourceDetailVM : ObservableObject
             return false;
         }
 
+        if (SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL && DueDate is null)
+        {
+            validationMessage = "Credit and BNPL sources require a due date.";
+            return false;
+        }
+
         input = new SpendingSourceDetailState(
             name,
             SpendingSourceType,
@@ -440,7 +449,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.Name = input.Name;
         spendingSource.AccountLimit = input.AccountLimit;
         spendingSource.SpentAmount = input.SpentAmount;
-        spendingSource.MonthlyDueDate = input.DueDate?.Date.Day ?? 0;
+        spendingSource.MonthlyDueDate = input.DueDate?.Date.Day;
         spendingSource.InterestRate = input.InterestRate;
         spendingSource.IsEnabled = input.IsEnabled;
         spendingSource.ShowOnUI = input.ShowOnUI;

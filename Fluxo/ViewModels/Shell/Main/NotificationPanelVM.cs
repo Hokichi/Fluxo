@@ -175,7 +175,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         foreach (var source in _spendingSources.Where(source =>
                      source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
-                     source.MonthlyDueDate > 0))
+                     source.MonthlyDueDate.HasValue))
         {
             var dueDate = MonthlyDueDateHelper.ResolveUpcomingDate(source.MonthlyDueDate, DateTime.Today);
             if (!dueDate.HasValue)

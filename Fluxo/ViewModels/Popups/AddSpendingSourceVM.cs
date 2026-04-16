@@ -367,7 +367,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             IsCreditLike ? 0m : primaryAmount,
             IsCreditLike ? spentAmount : 0m,
             IsCredit ? accountLimit : 0m,
-            IsCreditLike ? DueDate?.Date.Day : 0,
+            IsCreditLike ? DueDate?.Date.Day : null,
             IsSaving ? interestRate : null,
             ShowOnUI,
             IsEnabled);
@@ -457,7 +457,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         decimal Balance,
         decimal SpentAmount,
         decimal AccountLimit,
-        int MonthlyDueDate,
+        int? MonthlyDueDate,
         decimal? InterestRate,
         bool ShowOnUI,
         bool IsEnabled);

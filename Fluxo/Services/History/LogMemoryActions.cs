@@ -20,7 +20,7 @@ public sealed record SpendingSourceMemorySnapshot(
     decimal AccountLimit,
     decimal SpentAmount,
     decimal Balance,
-    int MonthlyDueDate,
+    int? MonthlyDueDate,
     decimal? InterestRate,
     bool ShowOnUI,
     bool IsEnabled)

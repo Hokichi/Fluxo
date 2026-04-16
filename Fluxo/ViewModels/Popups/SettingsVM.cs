@@ -229,7 +229,8 @@ public partial class SettingsVM : ObservableObject
             {
                 Id = item.Tag.Id,
                 Name = item.Tag.Name,
-                HexCode = item.Tag.HexCode
+                HexCode = item.Tag.HexCode,
+                IconName = item.Tag.IconName
             }));
 
         OnPropertyChanged(nameof(HasSpendingSources));
@@ -697,7 +698,8 @@ public partial class SettingsVM : ObservableObject
             await unitOfWork.ExpenseTags.AddAsync(new ExpenseTag
             {
                 Name = trimmedName,
-                HexCode = normalizedHexCode
+                HexCode = normalizedHexCode,
+                IconName = string.Empty
             });
 
             await unitOfWork.SaveChangesAsync();

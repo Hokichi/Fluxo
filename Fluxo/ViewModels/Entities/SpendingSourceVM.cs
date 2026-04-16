@@ -10,7 +10,7 @@ public partial class SpendingSourceVM : ObservableObject
     [ObservableProperty] private int _id;
     [ObservableProperty] private decimal? _interestRate;
     [ObservableProperty] private bool _isEnabled;
-    [ObservableProperty] private int _monthlyDueDate;
+    [ObservableProperty] private int? _monthlyDueDate;
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;
     [ObservableProperty] private string _name = string.Empty;
