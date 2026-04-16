@@ -264,7 +264,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             Amount = triggerAmount,
             ExpenseKind = ExpenseKind.Manual,
             ExpenseCategory = ExpenseCategory.Needs,
-            RecurringDate = DateTime.Today,
+            RecurringDate = DateTime.Today.Day,
             IsActive = false,
             SpendingSourceId = spendingSource.Id,
             ExpenseTagId = balanceUpdateTag.Id

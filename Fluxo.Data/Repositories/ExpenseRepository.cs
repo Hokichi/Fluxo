@@ -32,10 +32,16 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
             query = query.Where(e => e.Name.Contains(filter.Name));
 
         if (filter.StartDate.HasValue)
-            query = query.Where(e => e.RecurringDate >= filter.StartDate);
+        {
+            var startDay = Math.Clamp(filter.StartDate.Value.Day, 1, 28);
+            query = query.Where(e => e.RecurringDate >= startDay);
+        }
 
         if (filter.EndDate.HasValue)
-            query = query.Where(e => e.RecurringDate <= filter.EndDate);
+        {
+            var endDay = Math.Clamp(filter.EndDate.Value.Day, 1, 28);
+            query = query.Where(e => e.RecurringDate <= endDay);
+        }
 
         if (filter.Category.HasValue)
             query = query.Where(e => e.ExpenseCategory == filter.Category);

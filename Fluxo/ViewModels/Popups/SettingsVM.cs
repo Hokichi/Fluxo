@@ -1348,7 +1348,7 @@ public partial class SettingsFixedExpenseItemVM : ObservableObject, ISettingsSel
     public decimal Amount { get; }
     public string TagName { get; }
     public string SpendingSourceName { get; }
-    public DateTime? RecurringDate { get; }
+    public int? RecurringDate { get; }
     public bool IsEnabled { get; }
     public bool IsHidden { get; }
 }

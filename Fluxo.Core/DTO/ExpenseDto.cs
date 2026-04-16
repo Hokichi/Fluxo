@@ -13,6 +13,6 @@ public class ExpenseDto
     public decimal Amount { get; set; }
     public ExpenseKind ExpenseKind { get; set; }
     public ExpenseCategory ExpenseCategory { get; set; }
-    public DateTime? RecurringDate { get; set; }
+    public int? RecurringDate { get; set; }
     public bool IsActive { get; set; }
 }

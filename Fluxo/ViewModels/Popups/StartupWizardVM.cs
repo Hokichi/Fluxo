@@ -286,7 +286,9 @@ public partial class StartupWizardVM : ObservableObject
         vm.NameText = expense.Name;
         vm.AmountText = expense.Amount.ToString("N2", CultureInfo.InvariantCulture);
         vm.SelectedCategory = expense.ExpenseCategory;
-        vm.DueDate = expense.RecurringDate ?? DateTime.Today;
+        vm.RecurringDateText = MonthlyDueDateHelper.Normalize(expense.RecurringDate)?.ToString(CultureInfo.InvariantCulture) ??
+                               MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
+                               MonthlyDueDateHelper.MinMonthlyDay.ToString(CultureInfo.InvariantCulture);
         vm.IsActive = expense.IsActive;
 
         if (expense.SpendingSourceId > 0)
@@ -758,8 +760,10 @@ public sealed record StartupWizardFixedExpenseItemVM(
     decimal Amount,
     string CategoryLabel,
     string SpendingSourceName,
-    DateTime? DueDate)
+    int? DueDate)
 {
+    public string DueDateDisplay => DueDate.HasValue ? $"Due day {DueDate.Value}" : "No due day";
+
     public StartupWizardFixedExpenseItemVM(Expense expense) : this(
         expense.Id,
         expense.Name,

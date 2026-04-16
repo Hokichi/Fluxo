@@ -51,7 +51,7 @@ public sealed record ExpenseMemorySnapshot(
     decimal Amount,
     ExpenseKind ExpenseKind,
     ExpenseCategory ExpenseCategory,
-    DateTime? RecurringDate,
+    int? RecurringDate,
     bool IsActive)
 {
     public static ExpenseMemorySnapshot Create(Expense expense)
@@ -138,7 +138,7 @@ public sealed record ExpenseLogMemorySnapshot(
     decimal Amount,
     ExpenseKind ExpenseKind,
     ExpenseCategory ExpenseCategory,
-    DateTime? RecurringDate,
+    int? RecurringDate,
     bool IsActive,
     int SpendingSourceId,
     int TagId,

@@ -79,7 +79,7 @@ public partial class TransferFundsVM : ObservableObject
                 Amount = input.Amount,
                 ExpenseKind = ExpenseKind.Manual,
                 ExpenseCategory = ExpenseCategory.Savings,
-                RecurringDate = input.Date,
+                RecurringDate = input.Date.Day,
                 IsActive = false,
                 SpendingSourceId = source.Id,
                 ExpenseTagId = expenseTag.Id

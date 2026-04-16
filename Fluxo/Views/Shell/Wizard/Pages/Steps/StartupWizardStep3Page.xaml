@@ -52,7 +52,7 @@
                                                                 Margin="0,8,0,0"
                                                                 FontFamily="{StaticResource Medium}"
                                                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                                                Text="{Binding DueDate, StringFormat=Due {0:MMM d}}" />
+                                                                Text="{Binding DueDateDisplay}" />
                                                         </StackPanel>
                                                     </Grid>
                                                 </Border>

@@ -159,7 +159,7 @@ public partial class QuickAddVM : ObservableObject
                     Amount = input.Amount,
                     ExpenseKind = ExpenseKind.Manual,
                     ExpenseCategory = input.Category!.Value,
-                    RecurringDate = input.Date,
+                    RecurringDate = input.Date.Day,
                     IsActive = false,
                     SpendingSourceId = spendingSource.Id,
                     ExpenseTagId = expenseTag.Id

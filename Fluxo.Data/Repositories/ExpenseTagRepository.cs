@@ -28,9 +28,9 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
     public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
         CancellationToken cancellationToken = default)
     {
-        var (start, end) = GetDayRange(DateTime.Today);
+        var todayDay = DateTime.Today.Day;
         var countsByTagId = await DbContext.Expenses
-            .Where(expense => expense.RecurringDate >= start && expense.RecurringDate < end)
+            .Where(expense => expense.RecurringDate == todayDay)
             .GroupBy(expense => EF.Property<int>(expense, "ExpenseTagId"))
             .Select(group => new { TagId = group.Key, Count = group.Count() })
             .ToDictionaryAsync(item => item.TagId, item => item.Count, cancellationToken);
@@ -42,11 +42,5 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
             .Select(tag => (Tag: tag, Count: countsByTagId.GetValueOrDefault(tag.Id)))
             .OrderByDescending(item => item.Count)
             .ToList();
-    }
-
-    private static (DateTime Start, DateTime End) GetDayRange(DateTime date)
-    {
-        var start = date.Date;
-        return (start, start.AddDays(1));
     }
 }

@@ -12,6 +12,6 @@ public partial class ExpenseVM : ObservableObject
     [ObservableProperty] private int _id;
     [ObservableProperty] private bool _isActive;
     [ObservableProperty] private string _name = string.Empty;
-    [ObservableProperty] private DateTime? _recurringDate;
+    [ObservableProperty] private int? _recurringDate;
     [ObservableProperty] private SpendingSourceVM _spendingSource = new();
 }

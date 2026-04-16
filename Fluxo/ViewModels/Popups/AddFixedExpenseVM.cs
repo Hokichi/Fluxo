@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
@@ -22,10 +23,10 @@ public partial class AddFixedExpenseVM : ObservableObject
     private bool _isChangeTrackingInitialized;
 
     [ObservableProperty] private string _amountText = string.Empty;
-    [ObservableProperty] private DateTime _dueDate = DateTime.Today;
     [ObservableProperty] private bool _isActive = true;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _nameText = string.Empty;
+    [ObservableProperty] private string _recurringDateText = string.Empty;
     [ObservableProperty] private ExpenseCategory _selectedCategory = ExpenseCategory.Needs;
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private string _tagNameText = "General";
@@ -42,6 +43,8 @@ public partial class AddFixedExpenseVM : ObservableObject
                      .OrderBy(source => source.Name))
             SpendingSources.Add(spendingSource);
 
+        RecurringDateText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
+                            MonthlyDueDateHelper.MinMonthlyDay.ToString(CultureInfo.InvariantCulture);
         SelectedSpendingSource = SpendingSources.FirstOrDefault();
         _initialState = CaptureState();
     }
@@ -66,10 +69,10 @@ public partial class AddFixedExpenseVM : ObservableObject
     }
 
     partial void OnAmountTextChanged(string value) => NotifyFormStateChanged();
-    partial void OnDueDateChanged(DateTime value) => NotifyFormStateChanged();
     partial void OnIsActiveChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnRecurringDateTextChanged(string value) => NotifyFormStateChanged();
     partial void OnSelectedCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
     partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
     partial void OnTagNameTextChanged(string value) => NotifyFormStateChanged();
@@ -118,7 +121,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                 existing.Name = input.Name;
                 existing.Amount = input.Amount;
                 existing.ExpenseCategory = input.Category;
-                existing.RecurringDate = input.DueDate;
+                existing.RecurringDate = input.RecurringDate;
                 existing.SpendingSourceId = spendingSource.Id;
                 existing.ExpenseTagId = tag.Id;
                 existing.IsActive = input.IsActive;
@@ -132,7 +135,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                     Amount = input.Amount,
                     ExpenseKind = ExpenseKind.Fixed,
                     ExpenseCategory = input.Category,
-                    RecurringDate = input.DueDate,
+                    RecurringDate = input.RecurringDate,
                     SpendingSourceId = spendingSource.Id,
                     ExpenseTagId = tag.Id,
                     IsActive = input.IsActive
@@ -181,13 +184,18 @@ public partial class AddFixedExpenseVM : ObservableObject
         }
 
         var tagName = string.IsNullOrWhiteSpace(TagNameText) ? "General" : TagNameText.Trim();
+        if (!TryParseRecurringDate(RecurringDateText, out var recurringDate))
+        {
+            validationMessage = "Recurring date must be a number between 1 and 28.";
+            return false;
+        }
 
         input = new AddFixedExpenseInput(
             name,
             amount,
             SelectedCategory,
             SelectedSpendingSource.Id,
-            DueDate.Date,
+            recurringDate,
             tagName,
             IsActive);
 
@@ -212,10 +220,18 @@ public partial class AddFixedExpenseVM : ObservableObject
                    CultureInfo.InvariantCulture, out value);
     }
 
+    private static bool TryParseRecurringDate(string text, out int recurringDate)
+    {
+        recurringDate = 0;
+        return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out recurringDate) &&
+               recurringDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
+    }
+
     private bool AreRequiredFieldsFilled()
     {
         return !string.IsNullOrWhiteSpace(NameText) &&
                !string.IsNullOrWhiteSpace(AmountText) &&
+               TryParseRecurringDate(RecurringDateText, out _) &&
                !string.IsNullOrWhiteSpace(TagNameText) &&
                SelectedSpendingSource is not null;
     }
@@ -227,7 +243,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             AmountText ?? string.Empty,
             SelectedCategory,
             SelectedSpendingSource?.Id ?? NoSpendingSourceId,
-            DueDate.Date,
+            RecurringDateText ?? string.Empty,
             TagNameText ?? string.Empty,
             IsActive);
     }
@@ -258,7 +274,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         decimal Amount,
         ExpenseCategory Category,
         int SpendingSourceId,
-        DateTime DueDate,
+        int RecurringDate,
         string TagName,
         bool IsActive);
 
@@ -267,7 +283,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         string AmountText,
         ExpenseCategory SelectedCategory,
         int SelectedSpendingSourceId,
-        DateTime DueDate,
+        string RecurringDateText,
         string TagNameText,
         bool IsActive);
 }

@@ -204,14 +204,18 @@ public partial class NotificationPanelVM : ObservableRecipient,
                      expense.ExpenseKind == ExpenseKind.Fixed &&
                      expense.RecurringDate.HasValue))
         {
-            var recurringDate = expense.RecurringDate!.Value.Date;
-            if ((recurringDate - DateTime.Today).Days != _deadlineReminderDays)
+            var recurringDate = MonthlyDueDateHelper.ResolveUpcomingDate(expense.RecurringDate, DateTime.Today);
+            if (!recurringDate.HasValue)
+                continue;
+
+            var upcomingRecurringDate = recurringDate.Value.Date;
+            if ((upcomingRecurringDate - DateTime.Today).Days != _deadlineReminderDays)
                 continue;
 
             yield return CreateNotification(
-                $"recurring-deadline-{expense.Id}-{recurringDate:yyyyMMdd}",
+                $"recurring-deadline-{expense.Id}-{upcomingRecurringDate:yyyyMMdd}",
                 $"{expense.Name} deducts in {_deadlineReminderDays} days",
-                $"{expense.Name} is scheduled for {recurringDate:MMM d}.",
+                $"{expense.Name} is scheduled for {upcomingRecurringDate:MMM d}.",
                 NotificationSeverity.Warning);
         }
     }
@@ -226,7 +230,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
                 expense.IsActive &&
                 !_hiddenFixedExpenseIds.Contains(expense.Id) &&
                 expense.ExpenseKind == ExpenseKind.Fixed &&
-                expense.RecurringDate?.Date == DateTime.Today)
+                MonthlyDueDateHelper.ResolveUpcomingDate(expense.RecurringDate, DateTime.Today)?.Date == DateTime.Today)
             .Select(expense => expense.Name)
             .ToList();
 

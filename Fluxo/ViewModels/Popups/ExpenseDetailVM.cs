@@ -150,7 +150,7 @@ public partial class ExpenseDetailVM : ObservableObject
             expense.Name = resolvedName;
             expense.Amount = input.Amount;
             expense.ExpenseCategory = input.Category;
-            expense.RecurringDate = input.Date;
+            expense.RecurringDate = input.Date.Day;
             expense.SpendingSource = newSpendingSource;
             expense.ExpenseTag = expenseTag;
 
