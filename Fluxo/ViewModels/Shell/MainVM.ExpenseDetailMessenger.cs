@@ -137,7 +137,7 @@ public partial class MainVM
             trackedSource.SpendingSourceType = refreshedSource.SpendingSourceType;
             trackedSource.AccountLimit = refreshedSource.AccountLimit;
             trackedSource.Balance = refreshedSource.Balance;
-            trackedSource.DueDate = refreshedSource.DueDate;
+            trackedSource.MonthlyDueDate = refreshedSource.MonthlyDueDate;
             trackedSource.InterestRate = refreshedSource.InterestRate;
             trackedSource.ShowOnUI = refreshedSource.ShowOnUI;
             trackedSource.IsEnabled = refreshedSource.IsEnabled;

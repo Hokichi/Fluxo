@@ -143,7 +143,7 @@ public partial class AddSpendingSourceVM : ObservableObject
                 spendingSource.AccountLimit = input.AccountLimit;
                 spendingSource.SpentAmount = input.SpentAmount;
                 spendingSource.Balance = input.Balance;
-                spendingSource.DueDate = input.DueDate;
+                spendingSource.MonthlyDueDate = input.MonthlyDueDate;
                 spendingSource.InterestRate = input.InterestRate;
                 spendingSource.ShowOnUI = input.ShowOnUI;
                 spendingSource.IsEnabled = input.IsEnabled;
@@ -158,7 +158,7 @@ public partial class AddSpendingSourceVM : ObservableObject
                     AccountLimit = input.AccountLimit,
                     SpentAmount = input.SpentAmount,
                     Balance = input.Balance,
-                    DueDate = input.DueDate,
+                    MonthlyDueDate = input.MonthlyDueDate,
                     InterestRate = input.InterestRate,
                     ShowOnUI = input.ShowOnUI,
                     IsEnabled = input.IsEnabled
@@ -233,7 +233,8 @@ public partial class AddSpendingSourceVM : ObservableObject
         var balanceUpdateTag = new ExpenseTag
         {
             Name = BalanceUpdateTagName,
-            HexCode = BalanceUpdateTagColor
+            HexCode = BalanceUpdateTagColor,
+            IconName = string.Empty
         };
 
         await unitOfWork.ExpenseTags.AddAsync(balanceUpdateTag);
@@ -366,7 +367,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             IsCreditLike ? 0m : primaryAmount,
             IsCreditLike ? spentAmount : 0m,
             IsCredit ? accountLimit : 0m,
-            IsCreditLike ? DueDate?.Date : null,
+            IsCreditLike ? DueDate?.Date.Day : 0,
             IsSaving ? interestRate : null,
             ShowOnUI,
             IsEnabled);
@@ -456,7 +457,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         decimal Balance,
         decimal SpentAmount,
         decimal AccountLimit,
-        DateTime? DueDate,
+        int MonthlyDueDate,
         decimal? InterestRate,
         bool ShowOnUI,
         bool IsEnabled);

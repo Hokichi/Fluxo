@@ -20,7 +20,7 @@ public sealed record SpendingSourceMemorySnapshot(
     decimal AccountLimit,
     decimal SpentAmount,
     decimal Balance,
-    DateTime? DueDate,
+    int MonthlyDueDate,
     decimal? InterestRate,
     bool ShowOnUI,
     bool IsEnabled)
@@ -36,7 +36,7 @@ public sealed record SpendingSourceMemorySnapshot(
             spendingSource.AccountLimit,
             spendingSource.SpentAmount,
             spendingSource.Balance,
-            spendingSource.DueDate,
+            spendingSource.MonthlyDueDate,
             spendingSource.InterestRate,
             spendingSource.ShowOnUI,
             spendingSource.IsEnabled);
@@ -74,7 +74,8 @@ public sealed record ExpenseMemorySnapshot(
 public sealed record ExpenseTagMemorySnapshot(
     int ExpenseTagId,
     string Name,
-    string HexCode)
+    string HexCode,
+    string IconName)
 {
     public static ExpenseTagMemorySnapshot Create(ExpenseTag expenseTag)
     {
@@ -83,7 +84,8 @@ public sealed record ExpenseTagMemorySnapshot(
         return new ExpenseTagMemorySnapshot(
             expenseTag.Id,
             expenseTag.Name,
-            expenseTag.HexCode);
+            expenseTag.HexCode,
+            expenseTag.IconName);
     }
 }
 
@@ -451,7 +453,7 @@ public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot s
             AccountLimit = snapshot.AccountLimit,
             SpentAmount = snapshot.SpentAmount,
             Balance = snapshot.Balance,
-            DueDate = snapshot.DueDate,
+            MonthlyDueDate = snapshot.MonthlyDueDate,
             InterestRate = snapshot.InterestRate,
             ShowOnUI = snapshot.ShowOnUI,
             IsEnabled = snapshot.IsEnabled
@@ -490,7 +492,7 @@ public sealed class EditSpendingSourceMemoryAction(
         spendingSource.AccountLimit = snapshot.AccountLimit;
         spendingSource.SpentAmount = snapshot.SpentAmount;
         spendingSource.Balance = snapshot.Balance;
-        spendingSource.DueDate = snapshot.DueDate;
+        spendingSource.MonthlyDueDate = snapshot.MonthlyDueDate;
         spendingSource.InterestRate = snapshot.InterestRate;
         spendingSource.ShowOnUI = snapshot.ShowOnUI;
         spendingSource.IsEnabled = snapshot.IsEnabled;
@@ -517,7 +519,7 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
             AccountLimit = snapshot.AccountLimit,
             SpentAmount = snapshot.SpentAmount,
             Balance = snapshot.Balance,
-            DueDate = snapshot.DueDate,
+            MonthlyDueDate = snapshot.MonthlyDueDate,
             InterestRate = snapshot.InterestRate,
             ShowOnUI = snapshot.ShowOnUI,
             IsEnabled = snapshot.IsEnabled
@@ -634,7 +636,8 @@ public sealed class DeleteExpenseTagMemoryAction(ExpenseTagMemorySnapshot snapsh
         {
             Id = snapshot.ExpenseTagId,
             Name = snapshot.Name,
-            HexCode = snapshot.HexCode
+            HexCode = snapshot.HexCode,
+            IconName = snapshot.IconName
         };
 
         await unitOfWork.ExpenseTags.AddAsync(expenseTag, cancellationToken);

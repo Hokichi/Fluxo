@@ -9,6 +9,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Notifications;
 
@@ -174,16 +175,20 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         foreach (var source in _spendingSources.Where(source =>
                      source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
-                     source.DueDate.HasValue))
+                     source.MonthlyDueDate > 0))
         {
-            var dueDate = source.DueDate!.Value.Date;
-            if ((dueDate - DateTime.Today).Days != _deadlineReminderDays)
+            var dueDate = MonthlyDueDateHelper.ResolveUpcomingDate(source.MonthlyDueDate, DateTime.Today);
+            if (!dueDate.HasValue)
+                continue;
+
+            var upcomingDueDate = dueDate.Value.Date;
+            if ((upcomingDueDate - DateTime.Today).Days != _deadlineReminderDays)
                 continue;
 
             yield return CreateNotification(
-                $"credit-deadline-{source.Id}-{dueDate:yyyyMMdd}",
+                $"credit-deadline-{source.Id}-{upcomingDueDate:yyyyMMdd}",
                 $"{source.Name} payment is coming up",
-                $"{source.Name} is due on {dueDate:MMM d}.",
+                $"{source.Name} is due on {upcomingDueDate:MMM d}.",
                 NotificationSeverity.Warning);
         }
     }

@@ -90,6 +90,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.Property(tag => tag.Name).IsRequired();
         entity.Property(tag => tag.HexCode).IsRequired();
+        entity.Property(tag => tag.IconName).IsRequired();
     }
 
     private static void ConfigureSavingGoal(EntityTypeBuilder<SavingGoal> entity)
@@ -113,6 +114,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(source => source.AccountLimit).HasColumnType("TEXT");
         entity.Property(source => source.SpentAmount).HasColumnType("TEXT");
         entity.Property(source => source.Balance).HasColumnType("TEXT");
+        entity.Property(source => source.MonthlyDueDate);
         entity.Property(source => source.IsEnabled);
         entity.Property(source => source.ShowOnUI);
         entity.Property(source => source.InterestRate).HasColumnType("TEXT");

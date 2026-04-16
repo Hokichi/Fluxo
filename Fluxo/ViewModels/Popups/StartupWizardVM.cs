@@ -7,6 +7,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
@@ -256,7 +257,7 @@ public partial class StartupWizardVM : ObservableObject
             vm.PrimaryAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
             vm.SpentAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
             vm.AccountLimitText = source.AccountLimit.ToString("N2", CultureInfo.InvariantCulture);
-            vm.DueDate = source.DueDate;
+            vm.DueDate = MonthlyDueDateHelper.ToPickerDate(source.MonthlyDueDate);
         }
         else
         {

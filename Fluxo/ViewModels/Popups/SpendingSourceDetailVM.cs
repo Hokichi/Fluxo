@@ -6,6 +6,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Services.History;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
@@ -439,7 +440,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.Name = input.Name;
         spendingSource.AccountLimit = input.AccountLimit;
         spendingSource.SpentAmount = input.SpentAmount;
-        spendingSource.DueDate = input.DueDate;
+        spendingSource.MonthlyDueDate = input.DueDate?.Date.Day ?? 0;
         spendingSource.InterestRate = input.InterestRate;
         spendingSource.IsEnabled = input.IsEnabled;
         spendingSource.ShowOnUI = input.ShowOnUI;
@@ -460,7 +461,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
                 : spendingSource.Balance,
             spendingSource.AccountLimit,
             spendingSource.SpentAmount,
-            spendingSource.DueDate,
+            MonthlyDueDateHelper.ToPickerDate(spendingSource.MonthlyDueDate),
             spendingSource.InterestRate,
             spendingSource.IsEnabled,
             spendingSource.ShowOnUI);

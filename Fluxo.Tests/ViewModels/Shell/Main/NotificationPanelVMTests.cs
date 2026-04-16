@@ -19,7 +19,7 @@ public class NotificationPanelVMTests
                 Id = 1,
                 Name = "Visa",
                 SpendingSourceType = SpendingSourceType.Credit,
-                DueDate = dueDate,
+                MonthlyDueDate = dueDate.Day,
                 AccountLimit = 1000m,
                 SpentAmount = 250m
             }
