@@ -24,6 +24,7 @@ namespace Fluxo.ViewModels.Shell;
 
 public partial class MainVM : ObservableRecipient
 {
+    // 1. private readonly fields
     private readonly HashSet<int> _disabledSavingGoalIds = [];
     private readonly HashSet<int> _expenseLogIdsMarkedForDeletion = [];
     private readonly List<ExpenseVM> _expenses = [];
@@ -35,89 +36,95 @@ public partial class MainVM : ObservableRecipient
     private readonly IExpenseLogService _expenseLogService;
     private readonly ISpendingSourceService _spendingSourceService;
     private readonly ITagService _tagService;
-
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
-
     private readonly IUnitOfWork _unitOfWork; // kept for SavingGoals and IncomeLogs (no service)
-
     private readonly IUserSettingsRepository _userSettingsRepository;
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
+
+    // 2. private fields
     private decimal _allTimeInvestSpent;
     private decimal _allTimeNeedsSpent;
     private decimal _allTimeWantsSpent;
-    [ObservableProperty] private string _username = "User";
     private decimal _budgetUsageWarningPercentage = 0.90m;
-    [ObservableProperty] private bool _canNavigateForward;
     private decimal _creditUsageWarningPercentage = 0.30m;
-
-    [ObservableProperty] private int _dailyAllowance;
-
-    [ObservableProperty] private ObservableCollection<DayOfWeekVM> _daysOfWeek = [];
     private int _deadlineReminderDays = 7;
-
-    [ObservableProperty] private bool _hasNotifications;
-    [ObservableProperty] private bool _hasSavingGoals;
-
-    [ObservableProperty]
-    private ICollectionView _invest = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
-
-    [ObservableProperty] private decimal _investAvailable;
-    [ObservableProperty] private int _investPercentage;
-    [ObservableProperty] private decimal _investSpent;
     private decimal _investThreshold = 0.2m;
-    [ObservableProperty] private bool _isAtCurrentPeriod = true;
     private bool _isBudgetThresholdNotifEnabled = true;
     private bool _isCreditDeadlineNotifEnabled = true;
     private bool _isFixedExpensesDeductionNotifEnabled;
     private bool _isInitialized;
-    public bool IsInitialized => _isInitialized;
-    [ObservableProperty] private bool _isInvestEmpty;
     private bool _isLowAccountBalanceNotifEnabled;
     private bool _isLowCreditNotifEnabled;
-
-    [ObservableProperty] private bool _isNeedsEmpty;
-    [ObservableProperty] private bool _isNotificationPanelOpen;
-
     private bool _isSynchronizingTagSelections;
-    [ObservableProperty] private bool _isWantsEmpty;
     private bool _suppressSavingGoalNotifications;
     private decimal _lowAccountBalancePercentage = 0.20m;
-
-    [ObservableProperty]
-    private ICollectionView _needs = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
-
-    [ObservableProperty] private decimal _needsAvailable;
-
-    [ObservableProperty] private int _needsPercentage;
-
-    [ObservableProperty] private decimal _needsSpent;
     private decimal _needsThreshold = 0.5m;
-    [ObservableProperty] private int _notificationCount;
-    [ObservableProperty] private ObservableCollection<ExpenseTagVM> _otherTags = [];
     private DateTime _savedDailyDate = DateTime.Today;
     private DateTime _savedMonthlyDate = DateTime.Today;
     private DateTime _savedWeeklyDate = DateTime.Today;
-    [ObservableProperty] private DayOfWeekVM _selectedDay = new();
-    [ObservableProperty] private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
-    [ObservableProperty] private ExpenseTagVM? _selectedOtherTag;
-    [ObservableProperty] private ExpenseTagVM? _selectedTag;
-    [ObservableProperty] private ExpenseTagVM? _selectedVisibleTag;
-
-    [ObservableProperty] private ObservableCollection<SpendingSourceVM> _spendingSources = [];
     private int _spinnerPageOffset;
-
-    [ObservableProperty] private ObservableCollection<ExpenseTagVM> _tags = [];
-
-    [ObservableProperty] private decimal _totalSpent;
-
-    [ObservableProperty]
-    private ICollectionView _wants = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
-
-    [ObservableProperty] private decimal _wantsAvailable;
-    [ObservableProperty] private int _wantsPercentage;
-    [ObservableProperty] private decimal _wantsSpent;
     private decimal _wantsThreshold = 0.3m;
 
+    // 3. [ObservableProperty] private fields
+    // User & Navigation
+    [ObservableProperty] private string _username = "User";
+    [ObservableProperty] private bool _canNavigateForward;
+
+    // Period & Day
+    [ObservableProperty] private bool _isAtCurrentPeriod = true;
+    [ObservableProperty] private ObservableCollection<DayOfWeekVM> _daysOfWeek = [];
+    [ObservableProperty] private DayOfWeekVM _selectedDay = new();
+    [ObservableProperty] private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
+
+    // Budget Summary
+    [ObservableProperty] private int _dailyAllowance;
+    [ObservableProperty] private decimal _totalSpent;
+
+    // Available
+    [ObservableProperty] private decimal _needsAvailable;
+    [ObservableProperty] private decimal _wantsAvailable;
+    [ObservableProperty] private decimal _investAvailable;
+
+    // Spent
+    [ObservableProperty] private decimal _needsSpent;
+    [ObservableProperty] private decimal _wantsSpent;
+    [ObservableProperty] private decimal _investSpent;
+
+    // Percentage
+    [ObservableProperty] private int _needsPercentage;
+    [ObservableProperty] private int _wantsPercentage;
+    [ObservableProperty] private int _investPercentage;
+
+    // Empty State
+    [ObservableProperty] private bool _isNeedsEmpty;
+    [ObservableProperty] private bool _isWantsEmpty;
+    [ObservableProperty] private bool _isInvestEmpty;
+
+    // Collection Views
+    [ObservableProperty] private ICollectionView _needs = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
+    [ObservableProperty] private ICollectionView _wants = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
+    [ObservableProperty] private ICollectionView _invest = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
+
+    // Tags
+    [ObservableProperty] private ObservableCollection<ExpenseTagVM> _tags = [];
+    [ObservableProperty] private ObservableCollection<ExpenseTagVM> _otherTags = [];
+    [ObservableProperty] private ExpenseTagVM? _selectedTag;
+    [ObservableProperty] private ExpenseTagVM? _selectedVisibleTag;
+    [ObservableProperty] private ExpenseTagVM? _selectedOtherTag;
+
+    // Spending Sources
+    [ObservableProperty] private ObservableCollection<SpendingSourceVM> _spendingSources = [];
+
+    // Notifications
+    [ObservableProperty] private bool _hasNotifications;
+    [ObservableProperty] private int _notificationCount;
+    [ObservableProperty] private bool _isNotificationPanelOpen;
+
+    // Saving Goals
+    [ObservableProperty] private bool _hasSavingGoals;
+
+    // 4. public properties
+    public bool IsInitialized => _isInitialized;
     public MainVM(
         IExpenseService expenseService,
         IExpenseLogService expenseLogService,
