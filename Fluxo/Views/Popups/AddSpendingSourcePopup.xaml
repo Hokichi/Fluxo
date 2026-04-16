@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
-    xmlns:components="clr-namespace:Fluxo.Views.Components"
     Width="620"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add New Income Source"
@@ -23,7 +22,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        
+
         <Style x:Key="SelectorToggleStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="0,0,16,0" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
@@ -127,35 +126,35 @@
                         <StackPanel Grid.Column="2">
                             <StackPanel Visibility="{Binding IsCashLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
-                                <c:MoneyTextBox
-                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
-                                    Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                                <c:MoneyTextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
-                                <c:MoneyTextBox
-                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
-                                    Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                                <c:MoneyTextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Account Limit" />
-                                <c:MoneyTextBox
-                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
-                                    Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
+                                <c:MoneyTextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Due Date" />
-                                <components:DateSelector SelectedDate="{Binding DueDate, Mode=TwoWay}" />
+                                <TextBox
+                                    x:Name="MonthlyDueDateTextBox"
+                                    DataObject.Pasting="OnMonthlyDueDatePasting"
+                                    MaxLength="2"
+                                    PreviewKeyDown="OnMonthlyDueDatePreviewKeyDown"
+                                    PreviewTextInput="OnMonthlyDueDatePreviewTextInput"
+                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
+                                    Text="{Binding MonthlyDueDateText, UpdateSourceTrigger=PropertyChanged}"
+                                    ToolTip="Enter a day between 1 and 28" />
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
-                                <c:MoneyTextBox
-                                    Style="{StaticResource PopupSurfaceTextBoxStyle}"
-                                    Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
+                                <c:MoneyTextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>

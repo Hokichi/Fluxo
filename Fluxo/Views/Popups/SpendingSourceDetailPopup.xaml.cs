@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.Views.Shell;
@@ -228,5 +229,56 @@ public partial class SpendingSourceDetailPopup : BasePopup
         targetTextBox.Focus();
         targetTextBox.CaretIndex = targetTextBox.Text?.Length ?? 0;
         targetTextBox.SelectionLength = 0;
+    }
+
+    private void OnMonthlyDueDatePreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Space)
+            e.Handled = true;
+    }
+
+    private void OnMonthlyDueDatePreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        if (sender is TextBox textBox)
+            e.Handled = !WouldResultInValidMonthlyDueDate(textBox, e.Text);
+    }
+
+    private void OnMonthlyDueDatePasting(object sender, DataObjectPastingEventArgs e)
+    {
+        if (sender is not TextBox textBox)
+            return;
+
+        if (!e.SourceDataObject.GetDataPresent(DataFormats.Text))
+        {
+            e.CancelCommand();
+            return;
+        }
+
+        var pastedText = e.SourceDataObject.GetData(DataFormats.Text) as string ?? string.Empty;
+        if (!WouldResultInValidMonthlyDueDate(textBox, pastedText))
+            e.CancelCommand();
+    }
+
+    private static bool WouldResultInValidMonthlyDueDate(TextBox textBox, string incomingText)
+    {
+        if (string.IsNullOrEmpty(incomingText))
+            return true;
+
+        foreach (var character in incomingText)
+            if (!char.IsDigit(character))
+                return false;
+
+        var currentText = textBox.Text ?? string.Empty;
+        var nextText = currentText
+            .Remove(textBox.SelectionStart, textBox.SelectionLength)
+            .Insert(textBox.SelectionStart, incomingText);
+
+        if (nextText.Length == 0)
+            return true;
+
+        if (!int.TryParse(nextText, out var monthlyDueDate))
+            return false;
+
+        return monthlyDueDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
     }
 }

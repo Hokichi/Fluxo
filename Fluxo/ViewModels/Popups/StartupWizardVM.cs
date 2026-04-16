@@ -257,7 +257,7 @@ public partial class StartupWizardVM : ObservableObject
             vm.PrimaryAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
             vm.SpentAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
             vm.AccountLimitText = source.AccountLimit.ToString("N2", CultureInfo.InvariantCulture);
-            vm.DueDate = MonthlyDueDateHelper.ToPickerDate(source.MonthlyDueDate);
+            vm.MonthlyDueDateText = MonthlyDueDateHelper.Normalize(source.MonthlyDueDate)?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         }
         else
         {

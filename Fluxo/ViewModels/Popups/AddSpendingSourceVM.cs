@@ -5,6 +5,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Services.History;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
@@ -22,9 +23,9 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     [ObservableProperty] private string _accountLimitText = string.Empty;
     [ObservableProperty] private string _apyText = string.Empty;
-    [ObservableProperty] private DateTime? _dueDate;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEnabled = true;
+    [ObservableProperty] private string _monthlyDueDateText = string.Empty;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _primaryAmountText = string.Empty;
     [ObservableProperty] private SpendingSourceType _selectedSpendingSourceType = SpendingSourceType.Checking;
@@ -37,7 +38,6 @@ public partial class AddSpendingSourceVM : ObservableObject
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
-        DueDate = DateTime.Today.AddDays(14);
         _initialState = CaptureState();
     }
 
@@ -71,11 +71,11 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     partial void OnApyTextChanged(string value) => NotifyFormStateChanged();
 
-    partial void OnDueDateChanged(DateTime? value) => NotifyFormStateChanged();
-
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
 
     partial void OnIsEnabledChanged(bool value) => NotifyFormStateChanged();
+
+    partial void OnMonthlyDueDateTextChanged(string value) => NotifyFormStateChanged();
 
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
 
@@ -98,7 +98,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         {
             AccountLimitText = string.Empty;
             SpentAmountText = string.Empty;
-            DueDate = null;
+            MonthlyDueDateText = string.Empty;
         }
 
         if (!IsSaving)
@@ -355,10 +355,22 @@ public partial class AddSpendingSourceVM : ObservableObject
             return false;
         }
 
-        if (IsCreditLike && DueDate is null)
+        int? monthlyDueDate = null;
+        if (IsCreditLike)
         {
-            validationMessage = "Credit and BNPL sources require a due date.";
-            return false;
+            if (string.IsNullOrWhiteSpace(MonthlyDueDateText))
+            {
+                validationMessage = "Credit and BNPL sources require a due date.";
+                return false;
+            }
+
+            if (!TryParseMonthlyDueDate(MonthlyDueDateText, out var parsedMonthlyDueDate))
+            {
+                validationMessage = "Due date must be a number between 1 and 28.";
+                return false;
+            }
+
+            monthlyDueDate = parsedMonthlyDueDate;
         }
 
         input = new AddSpendingSourceInput(
@@ -367,7 +379,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             IsCreditLike ? 0m : primaryAmount,
             IsCreditLike ? spentAmount : 0m,
             IsCredit ? accountLimit : 0m,
-            IsCreditLike ? DueDate?.Date.Day : null,
+            monthlyDueDate,
             IsSaving ? interestRate : null,
             ShowOnUI,
             IsEnabled);
@@ -393,6 +405,13 @@ public partial class AddSpendingSourceVM : ObservableObject
                    CultureInfo.InvariantCulture, out value);
     }
 
+    private static bool TryParseMonthlyDueDate(string text, out int monthlyDueDate)
+    {
+        monthlyDueDate = 0;
+        return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out monthlyDueDate) &&
+               monthlyDueDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
+    }
+
     private bool AreRequiredFieldsFilled()
     {
         if (string.IsNullOrWhiteSpace(NameText))
@@ -410,7 +429,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         if (IsSaving && string.IsNullOrWhiteSpace(ApyText))
             return false;
 
-        if (IsCreditLike && DueDate is null)
+        if (IsCreditLike && !TryParseMonthlyDueDate(MonthlyDueDateText, out _))
             return false;
 
         return true;
@@ -424,7 +443,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             SpentAmountText ?? string.Empty,
             AccountLimitText ?? string.Empty,
             ApyText ?? string.Empty,
-            DueDate?.Date,
+            MonthlyDueDateText ?? string.Empty,
             SelectedSpendingSourceType,
             ShowOnUI,
             IsEnabled);
@@ -468,7 +487,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         string SpentAmountText,
         string AccountLimitText,
         string ApyText,
-        DateTime? DueDate,
+        string MonthlyDueDateText,
         SpendingSourceType SpendingSourceType,
         bool ShowOnUI,
         bool IsEnabled);

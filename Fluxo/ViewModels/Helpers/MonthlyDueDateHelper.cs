@@ -2,20 +2,30 @@ namespace Fluxo.ViewModels.Helpers;
 
 public static class MonthlyDueDateHelper
 {
-    public static DateTime? ResolveUpcomingDate(int? monthlyDueDate, DateTime today)
+    public const int MinMonthlyDay = 1;
+    public const int MaxMonthlyDay = 28;
+
+    public static int? Normalize(int? monthlyDueDate)
     {
-        if (monthlyDueDate is null or < 1 or > 31)
+        if (!monthlyDueDate.HasValue || monthlyDueDate.Value < MinMonthlyDay)
             return null;
 
-        var dueDay = monthlyDueDate.Value;
-        var currentMonthDay = Math.Min(dueDay, DateTime.DaysInMonth(today.Year, today.Month));
-        var dueDate = new DateTime(today.Year, today.Month, currentMonthDay);
+        return Math.Min(monthlyDueDate.Value, MaxMonthlyDay);
+    }
+
+    public static DateTime? ResolveUpcomingDate(int? monthlyDueDate, DateTime today)
+    {
+        var normalizedDueDate = Normalize(monthlyDueDate);
+        if (!normalizedDueDate.HasValue)
+            return null;
+
+        var dueDay = normalizedDueDate.Value;
+        var dueDate = new DateTime(today.Year, today.Month, dueDay);
         if (dueDate.Date >= today.Date)
             return dueDate;
 
         var nextMonth = today.AddMonths(1);
-        var nextMonthDay = Math.Min(dueDay, DateTime.DaysInMonth(nextMonth.Year, nextMonth.Month));
-        return new DateTime(nextMonth.Year, nextMonth.Month, nextMonthDay);
+        return new DateTime(nextMonth.Year, nextMonth.Month, dueDay);
     }
 
     public static DateTime? ToPickerDate(int? monthlyDueDate)

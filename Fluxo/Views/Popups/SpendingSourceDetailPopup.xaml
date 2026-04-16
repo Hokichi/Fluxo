@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
-    xmlns:components="clr-namespace:Fluxo.Views.Components"
     x:Name="Root"
     Width="1080"
     MaxHeight="800"
@@ -263,12 +262,21 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding DueDate, StringFormat={}{0:MMM d, yyyy}}"
+                                Text="{Binding MonthlyDueDateDisplay}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                            <components:DateSelector
+                            <TextBox
+                                x:Name="CreditMonthlyDueDateTextBox"
                                 Grid.Column="1"
-                                SelectedDate="{Binding DueDate, Mode=TwoWay}"
-                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Width="64"
+                                HorizontalAlignment="Right"
+                                MaxLength="2"
+                                PreviewKeyDown="OnMonthlyDueDatePreviewKeyDown"
+                                PreviewTextInput="OnMonthlyDueDatePreviewTextInput"
+                                Style="{StaticResource InlineDetailValueTextBoxStyle}"
+                                Text="{Binding MonthlyDueDateText, UpdateSourceTrigger=PropertyChanged}"
+                                ToolTip="Enter a day between 1 and 28"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
+                                DataObject.Pasting="OnMonthlyDueDatePasting" />
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
@@ -303,12 +311,21 @@
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding DueDate, StringFormat={}{0:MMM d, yyyy}}"
+                                Text="{Binding MonthlyDueDateDisplay}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                            <components:DateSelector
+                            <TextBox
+                                x:Name="BnplMonthlyDueDateTextBox"
                                 Grid.Column="1"
-                                SelectedDate="{Binding DueDate, Mode=TwoWay}"
-                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Width="64"
+                                HorizontalAlignment="Right"
+                                MaxLength="2"
+                                PreviewKeyDown="OnMonthlyDueDatePreviewKeyDown"
+                                PreviewTextInput="OnMonthlyDueDatePreviewTextInput"
+                                Style="{StaticResource InlineDetailValueTextBoxStyle}"
+                                Text="{Binding MonthlyDueDateText, UpdateSourceTrigger=PropertyChanged}"
+                                ToolTip="Enter a day between 1 and 28"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
+                                DataObject.Pasting="OnMonthlyDueDatePasting" />
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>

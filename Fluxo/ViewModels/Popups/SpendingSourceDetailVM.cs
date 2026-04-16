@@ -16,10 +16,10 @@ public partial class SpendingSourceDetailVM : ObservableObject
 {
     [ObservableProperty] private string _accountLimitText = string.Empty;
     [ObservableProperty] private string _apyText = string.Empty;
-    [ObservableProperty] private DateTime? _dueDate;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isEnabled = true;
+    [ObservableProperty] private string _monthlyDueDateText = string.Empty;
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;
     [ObservableProperty] private string _nameText = string.Empty;
@@ -76,6 +76,10 @@ public partial class SpendingSourceDetailVM : ObservableObject
         ? "Spent"
         : "Balance";
 
+    public string MonthlyDueDateDisplay => TryParseMonthlyDueDate(MonthlyDueDateText, out var dueDay)
+        ? $"Day {dueDay}"
+        : "Not set";
+
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(CanTransfer));
@@ -106,7 +110,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         OnPropertyChanged(nameof(PrimaryAmountLabel));
 
         if (value is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
-            DueDate = null;
+            MonthlyDueDateText = string.Empty;
     }
 
     partial void OnPrimaryAmountTextChanged(string value)
@@ -117,6 +121,11 @@ public partial class SpendingSourceDetailVM : ObservableObject
     partial void OnSpentAmountTextChanged(string value)
     {
         OnPropertyChanged(nameof(DisplayPrimaryAmount));
+    }
+
+    partial void OnMonthlyDueDateTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(MonthlyDueDateDisplay));
     }
 
     public async Task<bool> LoadAsync()
@@ -368,7 +377,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         SpentAmountText = FormatDecimal(state.SpentAmount);
         AccountLimitText = FormatDecimal(state.AccountLimit);
         ApyText = state.InterestRate.HasValue ? FormatDecimal(state.InterestRate.Value) : string.Empty;
-        DueDate = state.DueDate;
+        MonthlyDueDateText = state.MonthlyDueDate?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         IsEnabled = state.IsEnabled;
         ShowOnUI = state.ShowOnUI;
     }
@@ -424,10 +433,22 @@ public partial class SpendingSourceDetailVM : ObservableObject
             return false;
         }
 
-        if (SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL && DueDate is null)
+        int? monthlyDueDate = null;
+        if (SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
         {
-            validationMessage = "Credit and BNPL sources require a due date.";
-            return false;
+            if (string.IsNullOrWhiteSpace(MonthlyDueDateText))
+            {
+                validationMessage = "Credit and BNPL sources require a due date.";
+                return false;
+            }
+
+            if (!TryParseMonthlyDueDate(MonthlyDueDateText, out var parsedMonthlyDueDate))
+            {
+                validationMessage = "Due date must be a number between 1 and 28.";
+                return false;
+            }
+
+            monthlyDueDate = parsedMonthlyDueDate;
         }
 
         input = new SpendingSourceDetailState(
@@ -436,7 +457,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             primaryAmount,
             accountLimit,
             spentAmount,
-            DueDate?.Date,
+            monthlyDueDate,
             interestRate,
             IsEnabled,
             ShowOnUI);
@@ -449,7 +470,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.Name = input.Name;
         spendingSource.AccountLimit = input.AccountLimit;
         spendingSource.SpentAmount = input.SpentAmount;
-        spendingSource.MonthlyDueDate = input.DueDate?.Date.Day;
+        spendingSource.MonthlyDueDate = input.MonthlyDueDate;
         spendingSource.InterestRate = input.InterestRate;
         spendingSource.IsEnabled = input.IsEnabled;
         spendingSource.ShowOnUI = input.ShowOnUI;
@@ -470,7 +491,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
                 : spendingSource.Balance,
             spendingSource.AccountLimit,
             spendingSource.SpentAmount,
-            MonthlyDueDateHelper.ToPickerDate(spendingSource.MonthlyDueDate),
+            MonthlyDueDateHelper.Normalize(spendingSource.MonthlyDueDate),
             spendingSource.InterestRate,
             spendingSource.IsEnabled,
             spendingSource.ShowOnUI);
@@ -561,6 +582,13 @@ public partial class SpendingSourceDetailVM : ObservableObject
                    CultureInfo.InvariantCulture, out value);
     }
 
+    private static bool TryParseMonthlyDueDate(string text, out int monthlyDueDate)
+    {
+        monthlyDueDate = 0;
+        return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out monthlyDueDate) &&
+               monthlyDueDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
+    }
+
     private static decimal ParseDecimalOrDefault(string text)
     {
         return TryParseDecimal(text, out var value) ? value : 0m;
@@ -593,7 +621,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         decimal PrimaryAmount,
         decimal AccountLimit,
         decimal SpentAmount,
-        DateTime? DueDate,
+        int? MonthlyDueDate,
         decimal? InterestRate,
         bool IsEnabled,
         bool ShowOnUI)
