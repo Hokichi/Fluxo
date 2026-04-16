@@ -129,8 +129,8 @@
                                                 Margin="16,0,0,0"
                                                 VerticalAlignment="Center"
                                                 FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}">
-                                                <Run Text="{Binding DataContext.SelectedCurrencySymbol, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}}" />
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                ToolTip="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}">
                                                 <Run Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                                             </TextBlock>
                                             <StackPanel

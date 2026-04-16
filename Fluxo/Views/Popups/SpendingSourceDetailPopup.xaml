@@ -137,8 +137,8 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Cursor="IBeam"
                         MouseLeftButtonDown="OnHeaderAmountTextMouseLeftButtonDown"
+                        ToolTip="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                        <Run Text="$" />
                         <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                     </TextBlock>
                     <StackPanel
@@ -146,11 +146,6 @@
                         HorizontalAlignment="Right"
                         Orientation="Horizontal"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="26"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="$" />
                         <c:MoneyTextBox
                             x:Name="PrimaryAmountTextBox"
                             Style="{StaticResource InlineHeaderAmountTextBoxStyle}"
@@ -193,8 +188,8 @@
                             <TextBlock
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}">
-                                <Run Text="$" />
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                ToolTip="{Binding MoneyIn, Converter={StaticResource MoneyFullDisplayConverter}}">
                                 <Run Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                         </Grid>
@@ -207,8 +202,8 @@
                             <TextBlock
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}">
-                                <Run Text="$" />
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                ToolTip="{Binding MoneyOut, Converter={StaticResource MoneyFullDisplayConverter}}">
                                 <Run Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                         </Grid>
@@ -224,8 +219,9 @@
                                 Foreground="{StaticResource Brush.Text.Secondary}"
                                 Cursor="IBeam"
                                 MouseLeftButtonDown="OnCreditSpentTextMouseLeftButtonDown"
+                                ToolTip="{Binding SpentAmountText, Converter={StaticResource MoneyFullDisplayConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <Run Text="$" /><Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
+                                <Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
                             </TextBlock>
                             <c:MoneyTextBox
                                 x:Name="CreditSpentAmountTextBox"
@@ -246,8 +242,9 @@
                                 Foreground="{StaticResource Brush.Text.Secondary}"
                                 Cursor="IBeam"
                                 MouseLeftButtonDown="OnCreditLimitTextMouseLeftButtonDown"
+                                ToolTip="{Binding AccountLimitText, Converter={StaticResource MoneyFullDisplayConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <Run Text="$" /><Run Text="{Binding AccountLimitText, Converter={StaticResource MoneyDisplayConverter}}" />
+                                <Run Text="{Binding AccountLimitText, Converter={StaticResource MoneyDisplayConverter}}" />
                             </TextBlock>
                             <c:MoneyTextBox
                                 x:Name="CreditLimitTextBox"
@@ -285,8 +282,9 @@
                                 Foreground="{StaticResource Brush.Text.Secondary}"
                                 Cursor="IBeam"
                                 MouseLeftButtonDown="OnBnplSpentTextMouseLeftButtonDown"
+                                ToolTip="{Binding SpentAmountText, Converter={StaticResource MoneyFullDisplayConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <Run Text="$" /><Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
+                                <Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
                             </TextBlock>
                             <c:MoneyTextBox
                                 x:Name="BnplSpentAmountTextBox"
@@ -321,8 +319,8 @@
                             <TextBlock
                                 Grid.Column="1"
                                 FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}">
-                                <Run Text="$" />
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                ToolTip="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}">
                                 <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                         </Grid>
@@ -463,11 +461,13 @@
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
-                                                            <Setter Property="Text" Value="{Binding Amount, StringFormat=+${0:N2}}" />
+                                                            <Setter Property="Text" Value="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=+{0}}" />
+                                                            <Setter Property="ToolTip" Value="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=+{0}}" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsExpense}" Value="True">
                                                                     <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
-                                                                    <Setter Property="Text" Value="{Binding Amount, StringFormat=-${0:N2}}" />
+                                                                    <Setter Property="Text" Value="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=-{0}}" />
+                                                                    <Setter Property="ToolTip" Value="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=-{0}}" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -531,14 +531,16 @@
                                                     FontFamily="{StaticResource Medium}"
                                                     FontSize="10"
                                                     Foreground="{StaticResource Brush.Success}"
-                                                    Text="{Binding IncomeAmount, StringFormat=+${0:N0}}" />
+                                                    Text="{Binding IncomeAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=+{0}}"
+                                                    ToolTip="{Binding IncomeAmount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=+{0}}" />
                                                 <TextBlock
                                                     Margin="0,6,0,0"
                                                     HorizontalAlignment="Right"
                                                     FontFamily="{StaticResource Medium}"
                                                     FontSize="10"
                                                     Foreground="{StaticResource Brush.Danger}"
-                                                    Text="{Binding ExpenseAmount, StringFormat=-${0:N0}}" />
+                                                    Text="{Binding ExpenseAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=-{0}}"
+                                                    ToolTip="{Binding ExpenseAmount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=-{0}}" />
                                             </StackPanel>
                                         </Grid>
                                     </DataTemplate>

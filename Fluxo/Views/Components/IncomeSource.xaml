@@ -200,7 +200,8 @@
                     FontFamily="{StaticResource Bold}"
                     FontSize="20"
                     Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                    Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}"
+                    ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
 
                 <Grid Margin="0,8,0,0">
                     <StackPanel Orientation="Horizontal" Style="{StaticResource CheckingCashDetailsStyle}">
@@ -212,7 +213,8 @@
                             Margin="4,0,0,0"
                             FontFamily="{StaticResource Medium}"
                             Foreground="{StaticResource Brush.Success}"
-                            Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0} In}" />
+                            Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}{0} In}"
+                            ToolTip="{Binding MoneyIn, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat={}{0} In}" />
                         <Border
                             Width="1"
                             Height="12"
@@ -226,7 +228,8 @@
                             Margin="4,0,0,0"
                             FontFamily="{StaticResource Medium}"
                             Foreground="{StaticResource Brush.Danger}"
-                            Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0} Out}" />
+                            Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}{0} Out}"
+                            ToolTip="{Binding MoneyOut, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat={}{0} Out}" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Style="{StaticResource CreditDetailsStyle}">
@@ -252,6 +255,12 @@
                             FontFamily="{StaticResource Medium}"
                             FontSize="10"
                             Foreground="{StaticResource Brush.Text.Secondary}">
+                            <TextBlock.ToolTip>
+                                <MultiBinding StringFormat="{}{0}/{1}">
+                                    <Binding Path="SpentAmount" Converter="{StaticResource MoneyFullDisplayConverter}" />
+                                    <Binding Path="AccountLimit" Converter="{StaticResource MoneyFullDisplayConverter}" />
+                                </MultiBinding>
+                            </TextBlock.ToolTip>
                             <Run Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
                             <Run Text="/" />
                             <Run Text="{Binding AccountLimit, Converter={StaticResource NumberWithCommasConverter}}" />

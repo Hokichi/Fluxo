@@ -63,7 +63,8 @@
                                                 HorizontalAlignment="Right"
                                                 FontFamily="{StaticResource Medium}"
                                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                                Text="{Binding NeedsAllocationAmountText}" />
+                                                Text="{Binding NeedsAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
+                                                ToolTip="{Binding NeedsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
                                         </Grid>
                                     </Border>
                                     <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
@@ -123,7 +124,8 @@
                                                 HorizontalAlignment="Right"
                                                 FontFamily="{StaticResource Medium}"
                                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                                Text="{Binding WantsAllocationAmountText}" />
+                                                Text="{Binding WantsAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
+                                                ToolTip="{Binding WantsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
                                         </Grid>
                                     </Border>
                                     <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
@@ -183,7 +185,8 @@
                                                 HorizontalAlignment="Right"
                                                 FontFamily="{StaticResource Medium}"
                                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                                Text="{Binding InvestAllocationAmountText}" />
+                                                Text="{Binding InvestAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
+                                                ToolTip="{Binding InvestAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
                                         </Grid>
                                     </Border>
 

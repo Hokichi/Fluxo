@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Converters;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
@@ -609,14 +610,21 @@ public partial class StartupWizardVM : ObservableObject
     public string ReportCurrencyText => SelectedCurrencyCode;
     public string ReportSalaryText => string.IsNullOrWhiteSpace(SalaryText)
         ? "Not set"
-        : $"{SelectedCurrencySymbol}{ParseSalaryAmount().ToString("N2", CultureInfo.InvariantCulture)}";
+        : MoneyFormatUtility.ToCompactText(ParseSalaryAmount(), CultureInfo.CurrentCulture);
+    public string ReportSalaryTooltipText => string.IsNullOrWhiteSpace(SalaryText)
+        ? string.Empty
+        : MoneyFormatUtility.ToFullText(ParseSalaryAmount(), CultureInfo.CurrentCulture);
     public int ReportSpendingSourceCount => SpendingSources.Count;
     public int ReportFixedExpenseCount => FixedExpenses.Count;
     public int ReportSavingGoalCount => SavingGoals.Count;
     public string ReportTotalBalanceText =>
-        $"{SelectedCurrencySymbol}{SpendingSources.Sum(s => s.PrimaryAmount).ToString("N2", CultureInfo.InvariantCulture)}";
+        MoneyFormatUtility.ToCompactText(SpendingSources.Sum(s => s.PrimaryAmount), CultureInfo.CurrentCulture);
+    public string ReportTotalBalanceTooltipText =>
+        MoneyFormatUtility.ToFullText(SpendingSources.Sum(s => s.PrimaryAmount), CultureInfo.CurrentCulture);
     public string ReportTotalFixedExpenseText =>
-        $"{SelectedCurrencySymbol}{FixedExpenses.Sum(e => e.Amount).ToString("N2", CultureInfo.InvariantCulture)}";
+        MoneyFormatUtility.ToCompactText(FixedExpenses.Sum(e => e.Amount), CultureInfo.CurrentCulture);
+    public string ReportTotalFixedExpenseTooltipText =>
+        MoneyFormatUtility.ToFullText(FixedExpenses.Sum(e => e.Amount), CultureInfo.CurrentCulture);
     public string ReportBudgetAllocationText =>
         $"Needs {NeedsAllocationPercentage}% / Wants {WantsAllocationPercentage}% / Invest {InvestAllocationPercentage}%";
     public int ReportNotificationsEnabledCount => NotificationSettings.Count(n => n.IsEnabled);
@@ -626,11 +634,14 @@ public partial class StartupWizardVM : ObservableObject
         OnPropertyChanged(nameof(ReportUsernameText));
         OnPropertyChanged(nameof(ReportCurrencyText));
         OnPropertyChanged(nameof(ReportSalaryText));
+        OnPropertyChanged(nameof(ReportSalaryTooltipText));
         OnPropertyChanged(nameof(ReportSpendingSourceCount));
         OnPropertyChanged(nameof(ReportFixedExpenseCount));
         OnPropertyChanged(nameof(ReportSavingGoalCount));
         OnPropertyChanged(nameof(ReportTotalBalanceText));
+        OnPropertyChanged(nameof(ReportTotalBalanceTooltipText));
         OnPropertyChanged(nameof(ReportTotalFixedExpenseText));
+        OnPropertyChanged(nameof(ReportTotalFixedExpenseTooltipText));
         OnPropertyChanged(nameof(ReportBudgetAllocationText));
         OnPropertyChanged(nameof(ReportNotificationsEnabledCount));
     }
@@ -638,7 +649,7 @@ public partial class StartupWizardVM : ObservableObject
     private string BuildAllocationAmountText(int percentage)
     {
         var amount = decimal.Round(TotalBudgetAmount * percentage / 100m, 2);
-        return $"{SelectedCurrencySymbol}{amount.ToString("N2", CultureInfo.InvariantCulture)}";
+        return amount.ToString("N2", CultureInfo.CurrentCulture);
     }
 
     private static IReadOnlyList<SettingsCurrencyOptionVM> BuildCurrencyOptions()

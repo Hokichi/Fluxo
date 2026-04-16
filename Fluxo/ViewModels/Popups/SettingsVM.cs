@@ -947,9 +947,7 @@ public partial class SettingsVM : ObservableObject
     private string BuildAllocationAmountText(int percentage)
     {
         var allocatedAmount = decimal.Round(TotalBudgetAmount * percentage / 100m, 2);
-        var symbol = SelectedCurrencySymbol;
-        return
-            $"{symbol}{allocatedAmount.ToString("N2", CultureInfo.InvariantCulture)}";
+        return allocatedAmount.ToString("N2", CultureInfo.CurrentCulture);
     }
 
     private void OnAllocationChanged()

@@ -42,10 +42,11 @@
                                 <TextBlock
                                     Margin="0,12,0,0"
                                     FontFamily="{StaticResource Bold}"
-                                    Foreground="{StaticResource Brush.Mint}">
+                                    Foreground="{StaticResource Brush.Mint}"
+                                    ToolTip="{Binding PrimaryAmount, Converter={StaticResource MoneyFullDisplayConverter}}">
                                     <Run Text="{Binding PrimaryAmountLabel}" />
                                     <Run Text=": " />
-                                    <Run Text="{Binding PrimaryAmount, StringFormat={}{0:N2}}" />
+                                    <Run Text="{Binding PrimaryAmount, Converter={StaticResource NumberWithCommasConverter}}" />
                                 </TextBlock>
                             </StackPanel>
                         </Grid>

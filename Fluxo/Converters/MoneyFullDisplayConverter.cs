@@ -3,11 +3,11 @@ using System.Windows.Data;
 
 namespace Fluxo.Converters;
 
-public class NumberWithCommasConverter : IValueConverter
+public class MoneyFullDisplayConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        return MoneyFormatUtility.ToCompactText(value, culture);
+        return MoneyFormatUtility.ToFullText(value, culture);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

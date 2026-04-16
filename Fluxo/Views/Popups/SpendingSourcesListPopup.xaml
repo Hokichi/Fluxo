@@ -202,8 +202,8 @@
                                             HorizontalAlignment="Right"
                                             FontFamily="{StaticResource Bold}"
                                             FontSize="12"
-                                            Foreground="{StaticResource Brush.Text.Primary}">
-                                            <Run Text="$" />
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            ToolTip="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}">
                                             <Run Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                                         </TextBlock>
                                         <TextBlock

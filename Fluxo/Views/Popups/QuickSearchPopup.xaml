@@ -130,7 +130,8 @@
                                             FontFamily="{DynamicResource Bold}"
                                             FontSize="13"
                                             Foreground="{DynamicResource Brush.Text.Primary}"
-                                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}${0}}" />
+                                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
+                                            ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
                                         <TextBlock
                                             MaxWidth="120"
                                             Margin="0,6,0,0"

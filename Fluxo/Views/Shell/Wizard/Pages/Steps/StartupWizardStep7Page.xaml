@@ -52,7 +52,8 @@
                                                 Margin="0,4,0,0"
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="{Binding ReportSalaryText}" />
+                                                Text="{Binding ReportSalaryText}"
+                                                ToolTip="{Binding ReportSalaryTooltipText}" />
                                         </StackPanel>
                                     </Border>
 
@@ -87,7 +88,8 @@
                                                     FontFamily="{StaticResource Medium}"
                                                     FontSize="11"
                                                     Foreground="{StaticResource Brush.Text.Muted}"
-                                                    Text="{Binding ReportTotalBalanceText}" />
+                                                    Text="{Binding ReportTotalBalanceText}"
+                                                    ToolTip="{Binding ReportTotalBalanceTooltipText}" />
                                             </StackPanel>
                                         </Border>
 
@@ -112,7 +114,8 @@
                                                     FontFamily="{StaticResource Medium}"
                                                     FontSize="11"
                                                     Foreground="{StaticResource Brush.Text.Muted}"
-                                                    Text="{Binding ReportTotalFixedExpenseText}" />
+                                                    Text="{Binding ReportTotalFixedExpenseText}"
+                                                    ToolTip="{Binding ReportTotalFixedExpenseTooltipText}" />
                                             </StackPanel>
                                         </Border>
 

@@ -238,10 +238,14 @@
                             FontFamily="{StaticResource Medium}"
                             FontSize="11"
                             Foreground="{StaticResource Brush.Text.Secondary}">
-                            <Run Text="$" />
+                            <TextBlock.ToolTip>
+                                <MultiBinding StringFormat="{}{0}/{1}">
+                                    <Binding Path="CurrentAmount" Converter="{StaticResource MoneyFullDisplayConverter}" />
+                                    <Binding Path="TargetAmount" Converter="{StaticResource MoneyFullDisplayConverter}" />
+                                </MultiBinding>
+                            </TextBlock.ToolTip>
                             <Run Text="{Binding CurrentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
                             <Run Text="/" />
-                            <Run Text="$" />
                             <Run Text="{Binding TargetAmount, Converter={StaticResource NumberWithCommasConverter}}" />
                         </TextBlock>
                     </StackPanel>

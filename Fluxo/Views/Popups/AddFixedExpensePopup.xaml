@@ -78,12 +78,6 @@
                                 SelectedValuePath="Value"
                                 Style="{StaticResource FluxoComboBoxStyle}" />
                         </Border>
-
-                        <CheckBox
-                            Margin="0,16,0,0"
-                            Content="Active"
-                            IsChecked="{Binding IsActive, Mode=TwoWay}"
-                            Style="{StaticResource ItemCheckBoxStyle}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
