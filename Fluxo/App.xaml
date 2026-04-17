@@ -45,7 +45,6 @@
                 <ResourceDictionary>
                     <cons:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
                     <cons:BoolToVisibilityInvertedConverter x:Key="BoolToVisibilityInvertedConverter" />
-                    <cons:BoolToNotificationIconConverter x:Key="BoolToNotificationIconConverter" />
                     <cons:BorderCornerClipConverter x:Key="BorderCornerClipConverter" />
                     <cons:BrushToColorConverter x:Key="BrushToColorConverter" />
                     <cons:BrushToLighterBrushConverter x:Key="BrushToLighterBrushConverter" />

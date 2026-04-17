@@ -94,7 +94,7 @@
                     CornerRadius="28">
                     <Viewbox Margin="14">
                         <Path
-                            Data="{StaticResource Bank}"
+                            Data="{StaticResource SpendingSourceDetailPopup.Bank}"
                             Fill="{StaticResource Brush.Mint}"
                             Stretch="Uniform" />
                     </Viewbox>
@@ -378,17 +378,17 @@
                             ToolTip="{Binding EditButtonLabel}">
                             <c:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type c:BalloonButton}">
-                                    <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
+                                    <Setter Property="ButtonIcon" Value="{StaticResource SpendingSourceDetailPopup.Pen}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                                            <Setter Property="ButtonIcon" Value="{StaticResource ContentSave}" />
+                                            <Setter Property="ButtonIcon" Value="{StaticResource SpendingSourceDetailPopup.ContentSave}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </c:BalloonButton.Style>
                         </c:BalloonButton>
                         <c:BalloonButton
-                            ButtonIcon="{StaticResource Exchange}"
+                            ButtonIcon="{StaticResource SpendingSourceDetailPopup.Exchange}"
                             Click="OnTransferButtonClick"
                             HoveredBackground="{StaticResource Brush.Mint}"
                             IsEnabled="{Binding CanTransfer}"
@@ -399,13 +399,13 @@
                             IsEnabled="{Binding CanHideOrUnhide}"
                             Style="{StaticResource HideActionButtonStyle}" />
                         <c:BalloonButton
-                            ButtonIcon="{StaticResource SourceSwitch}"
+                            ButtonIcon="{StaticResource SpendingSourceDetailPopup.SourceSwitch}"
                             Click="OnBackToSourcesButtonClick"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Back to sources" />
                         <c:BalloonButton
-                            ButtonIcon="{StaticResource CircleMinusSolid}"
+                            ButtonIcon="{StaticResource SpendingSourceDetailPopup.CircleMinusSolid}"
                             Click="OnDeleteButtonClick"
                             HoveredBackground="{StaticResource Brush.Danger}"
                             IsEnabled="{Binding CanDelete}"
@@ -570,5 +570,6 @@
         </Grid>
     </Grid>
 </c:BasePopup>
+
 
 

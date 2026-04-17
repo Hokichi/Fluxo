@@ -46,7 +46,7 @@
                                         <Viewbox Margin="8" Stretch="Uniform">
                                             <Path
                                                 x:Name="TickPath"
-                                                Data="{StaticResource Check}"
+                                                Data="{StaticResource AddTagPopup.Check}"
                                                 Fill="{StaticResource Brush.Background.Surface}"
                                                 Opacity="0" />
                                         </Viewbox>
@@ -125,5 +125,6 @@
         </Border>
     </Grid>
 </c:BasePopup>
+
 
 

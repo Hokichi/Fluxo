@@ -20,7 +20,7 @@
                         Height="32"
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        ButtonIcon="{StaticResource Info}"
+                        ButtonIcon="{StaticResource ExpensesList.Info}"
                         Click="OnExpenseDetailButtonClick"
                         DefaultBackground="{StaticResource Brush.Background.Surface}"
                         HoveredBackground="{StaticResource Brush.Info}"
@@ -33,7 +33,7 @@
                         Height="32"
                         Margin="0,0,8,0"
                         VerticalAlignment="Center"
-                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                        ButtonIcon="{StaticResource ExpensesList.CircleMinusSolid}"
                         Command="{Binding DeleteCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
                         CommandParameter="{Binding}"
                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -428,3 +428,4 @@
         </Grid>
     </Grid>
 </UserControl>
+

@@ -46,7 +46,7 @@
                     Width="14"
                     Height="14"
                     VerticalAlignment="Center"
-                    Data="{DynamicResource MagnifyingGlass}"
+                    Data="{DynamicResource QuickSearchPopup.MagnifyingGlass}"
                     Fill="{DynamicResource Brush.Text.Muted}"
                     Stretch="Uniform" />
 
@@ -152,4 +152,5 @@
         </Border>
     </Grid>
 </c:BasePopup>
+
 

@@ -34,7 +34,7 @@
                         <Viewbox Margin="2,2,4,4" Stretch="Uniform">
                             <Path
                                 x:Name="CheckGlyph"
-                                Data="{StaticResource CheckboxBlankOutline}"
+                                Data="{StaticResource SettingsStyle.CheckboxBlankOutline}"
                                 Fill="{StaticResource Brush.Text.Muted}" />
                         </Viewbox>
                     </Border>
@@ -45,7 +45,7 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                             <Setter TargetName="CheckSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                            <Setter TargetName="CheckGlyph" Property="Data" Value="{StaticResource CheckboxMarked}" />
+                            <Setter TargetName="CheckGlyph" Property="Data" Value="{StaticResource SettingsStyle.CheckboxMarked}" />
                             <Setter TargetName="CheckGlyph" Property="Fill" Value="{StaticResource Brush.Mint}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -70,7 +70,7 @@
                             <Viewbox Margin="2,2,4,4" Stretch="Uniform">
                                 <Path
                                     x:Name="CheckGlyph"
-                                    Data="{StaticResource CheckboxBlankOutline}"
+                                    Data="{StaticResource SettingsStyle.CheckboxBlankOutline}"
                                     Fill="{StaticResource Brush.Text.Muted}" />
                             </Viewbox>
                         </Border>
@@ -84,7 +84,7 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                             <Setter TargetName="CheckSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                            <Setter TargetName="CheckGlyph" Property="Data" Value="{StaticResource CheckboxMarked}" />
+                            <Setter TargetName="CheckGlyph" Property="Data" Value="{StaticResource SettingsStyle.CheckboxMarked}" />
                             <Setter TargetName="CheckGlyph" Property="Fill" Value="{StaticResource Brush.Mint}" />
                         </Trigger>
                     </ControlTemplate.Triggers>

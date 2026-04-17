@@ -201,7 +201,7 @@ public partial class MainWindow : Window, IPopupHost
         if (ExpandRestoreButton is null)
             return;
 
-        var iconKey = _isMaximized ? "CompressAlt" : "ExpandAlt";
+        var iconKey = _isMaximized ? "MainWindow.CompressAlt" : "MainWindow.ExpandAlt";
         ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
     }
 
@@ -755,3 +755,4 @@ public partial class MainWindow : Window, IPopupHost
         public int Left, Top, Right, Bottom;
     }
 }
+

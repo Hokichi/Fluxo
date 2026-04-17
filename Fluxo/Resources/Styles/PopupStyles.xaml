@@ -50,7 +50,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource CloneRegular}"
+                                        ButtonIcon="{StaticResource PopupStyles.CloneRegular}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -65,7 +65,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                                        ButtonIcon="{StaticResource PopupStyles.CircleMinusSolid}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -80,7 +80,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource Edit}"
+                                        ButtonIcon="{StaticResource PopupStyles.Edit}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -95,7 +95,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource RegularUndo}"
+                                        ButtonIcon="{StaticResource PopupStyles.RegularUndo}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -110,7 +110,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource Check}"
+                                        ButtonIcon="{StaticResource PopupStyles.Check}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -125,7 +125,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource Ban}"
+                                        ButtonIcon="{StaticResource PopupStyles.Ban}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -140,7 +140,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource ContentSaveMove}"
+                                        ButtonIcon="{StaticResource PopupStyles.ContentSaveMove}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -156,7 +156,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource ContentSave}"
+                                        ButtonIcon="{StaticResource PopupStyles.ContentSave}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -172,7 +172,7 @@
                                         Width="28"
                                         Height="28"
                                         Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource Close}"
+                                        ButtonIcon="{StaticResource PopupStyles.Close}"
                                         CornerRadius="8"
                                         CurveHeight="8"
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -198,6 +198,7 @@
         </Setter>
     </Style>
 </ResourceDictionary>
+
 
 
 

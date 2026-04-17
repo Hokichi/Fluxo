@@ -310,7 +310,7 @@
                                 Height="10"
                                 Margin="12,0,0,0"
                                 VerticalAlignment="Center"
-                                Data="{StaticResource Check}"
+                                Data="{StaticResource GlobalStyles.Check}"
                                 Fill="{TemplateBinding Foreground}"
                                 Opacity="0"
                                 Stretch="Uniform" />
@@ -387,7 +387,7 @@
                                                 Width="8"
                                                 Height="8"
                                                 VerticalAlignment="Center"
-                                                Data="{StaticResource AngleDown}"
+                                                Data="{StaticResource GlobalStyles.AngleDown}"
                                                 Fill="{StaticResource Brush.Text.Muted}"
                                                 RenderTransformOrigin="0.5,0.5"
                                                 Stretch="Uniform" />

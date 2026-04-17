@@ -14,7 +14,7 @@
                     BorderThickness="1"
                     CornerRadius="42">
                     <Viewbox Margin="20" Stretch="Uniform">
-                        <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
+                        <Path Data="{StaticResource StartupWizardFinalPage.AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
                     </Viewbox>
                 </Border>
                 <TextBlock
@@ -38,3 +38,4 @@
         </Grid>
     </Border>
 </UserControl>
+

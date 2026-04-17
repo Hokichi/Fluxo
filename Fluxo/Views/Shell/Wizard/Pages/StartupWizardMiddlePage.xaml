@@ -43,7 +43,7 @@
                                 Width="12"
                                 Height="12"
                                 Margin="0,0,0,-12">
-                                <Path Data="{StaticResource BookDollar}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                <Path Data="{StaticResource StartupWizardMiddlePage.BookDollar}" Fill="{StaticResource Brush.Text.Secondary}" />
                             </Viewbox>
                             <TextBlock
                                 Margin="10,0,0,0"
@@ -70,7 +70,7 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                             <Viewbox Width="12" Height="12">
-                                <Path Data="{StaticResource InvoiceLight}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                <Path Data="{StaticResource StartupWizardMiddlePage.InvoiceLight}" Fill="{StaticResource Brush.Text.Secondary}" />
                             </Viewbox>
                             <TextBlock
                                 Margin="10,0,0,0"
@@ -97,7 +97,7 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                             <Viewbox Width="12" Height="12">
-                                <Path Data="{StaticResource BullseyeSolid}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                <Path Data="{StaticResource StartupWizardMiddlePage.BullseyeSolid}" Fill="{StaticResource Brush.Text.Secondary}" />
                             </Viewbox>
                             <TextBlock
                                 Margin="10,0,0,0"
@@ -124,7 +124,7 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                             <Viewbox Width="12" Height="12">
-                                <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                <Path Data="{StaticResource StartupWizardMiddlePage.AccountBalanceWallet}" Fill="{StaticResource Brush.Text.Secondary}" />
                             </Viewbox>
                             <TextBlock
                                 Margin="10,0,0,0"
@@ -151,7 +151,7 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                             <Viewbox Width="12" Height="12">
-                                <Path Data="{StaticResource RegularBell}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                <Path Data="{StaticResource StartupWizardMiddlePage.RegularBell}" Fill="{StaticResource Brush.Text.Secondary}" />
                             </Viewbox>
                             <TextBlock
                                 Margin="10,0,0,0"
@@ -178,7 +178,7 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                             <Viewbox Width="12" Height="12">
-                                <Path Data="{StaticResource InvoiceLight}" Fill="{StaticResource Brush.Text.Secondary}" />
+                                <Path Data="{StaticResource StartupWizardMiddlePage.InvoiceLight}" Fill="{StaticResource Brush.Text.Secondary}" />
                             </Viewbox>
                             <TextBlock
                                 Margin="10,0,0,0"
@@ -250,3 +250,4 @@
         </Border>
     </Grid>
 </UserControl>
+

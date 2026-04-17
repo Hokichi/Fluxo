@@ -110,7 +110,7 @@
                         Orientation="Horizontal">
                         <c:BalloonButton
                             x:Name="HeaderMenuButton"
-                            ButtonIcon="{StaticResource BarsSolid}"
+                            ButtonIcon="{StaticResource MainWindow.BarsSolid}"
                             Click="OnHeaderMenuButtonClick"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Background.Hover}"
@@ -167,7 +167,7 @@
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
-                                                    Data="{StaticResource PlusSolid}"
+                                                    Data="{StaticResource MainWindow.PlusSolid}"
                                                     Fill="{StaticResource Brush.Mint}"
                                                     Stretch="Uniform" />
                                             </Viewbox>
@@ -195,7 +195,7 @@
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
-                                                    Data="{StaticResource Bank}"
+                                                    Data="{StaticResource MainWindow.Bank}"
                                                     Fill="{StaticResource Brush.Mint}"
                                                     Stretch="Uniform" />
                                             </Viewbox>
@@ -227,7 +227,7 @@
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
-                                                    Data="{StaticResource RegularUndo}"
+                                                    Data="{StaticResource MainWindow.RegularUndo}"
                                                     Fill="{StaticResource Brush.Warning}"
                                                     Stretch="Uniform" />
                                             </Viewbox>
@@ -259,7 +259,7 @@
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
-                                                    Data="{StaticResource RegularRedo}"
+                                                    Data="{StaticResource MainWindow.RegularRedo}"
                                                     Fill="{StaticResource Brush.Info}"
                                                     Stretch="Uniform" />
                                             </Viewbox>
@@ -287,7 +287,7 @@
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
-                                                    Data="{StaticResource Cog}"
+                                                    Data="{StaticResource MainWindow.Cog}"
                                                     Fill="{StaticResource Brush.Info}"
                                                     Stretch="Uniform" />
                                             </Viewbox>
@@ -308,7 +308,7 @@
                         </Popup>
 
                         <c:BalloonButton
-                            ButtonIcon="{StaticResource Minus}"
+                            ButtonIcon="{StaticResource MainWindow.Minus}"
                             Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
@@ -316,13 +316,13 @@
 
                         <c:BalloonButton
                             x:Name="ExpandRestoreButton"
-                            ButtonIcon="{StaticResource ExpandAlt}"
+                            ButtonIcon="{StaticResource MainWindow.ExpandAlt}"
                             Click="OnExpandRestoreWindow"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
                             Style="{StaticResource HeaderButtonStyle}" />
 
                         <c:BalloonButton
-                            ButtonIcon="{StaticResource Close}"
+                            ButtonIcon="{StaticResource MainWindow.Close}"
                             Command="{x:Static SystemCommands.CloseWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Danger}"
@@ -435,3 +435,4 @@
         </Grid>
     </Border>
 </Window>
+

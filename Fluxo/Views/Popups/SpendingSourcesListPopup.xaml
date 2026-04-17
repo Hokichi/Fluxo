@@ -118,7 +118,7 @@
                                                 <Rectangle.OpacityMask>
                                                     <DrawingBrush Stretch="Uniform">
                                                         <DrawingBrush.Drawing>
-                                                            <GeometryDrawing Geometry="{StaticResource Bank}">
+                                                            <GeometryDrawing Geometry="{StaticResource SpendingSourcesListPopup.Bank}">
                                                                 <GeometryDrawing.Brush>
                                                                     <SolidColorBrush Color="Black" />
                                                                 </GeometryDrawing.Brush>
@@ -134,7 +134,7 @@
                                                 <Rectangle.OpacityMask>
                                                     <DrawingBrush Stretch="Uniform">
                                                         <DrawingBrush.Drawing>
-                                                            <GeometryDrawing Geometry="{StaticResource CreditCardAlt}">
+                                                            <GeometryDrawing Geometry="{StaticResource SpendingSourcesListPopup.CreditCardAlt}">
                                                                 <GeometryDrawing.Brush>
                                                                     <SolidColorBrush Color="Black" />
                                                                 </GeometryDrawing.Brush>
@@ -150,7 +150,7 @@
                                                 <Rectangle.OpacityMask>
                                                     <DrawingBrush Stretch="Uniform">
                                                         <DrawingBrush.Drawing>
-                                                            <GeometryDrawing Geometry="{StaticResource PiggyBank}">
+                                                            <GeometryDrawing Geometry="{StaticResource SpendingSourcesListPopup.PiggyBank}">
                                                                 <GeometryDrawing.Brush>
                                                                     <SolidColorBrush Color="Black" />
                                                                 </GeometryDrawing.Brush>
@@ -175,7 +175,7 @@
                                                 Margin="8,0,0,0"
                                                 Visibility="{Binding IsDisabled, Converter={StaticResource BoolToVisibilityConverter}}">
                                                 <Viewbox Stretch="Uniform">
-                                                    <Path Data="{StaticResource LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
+                                                    <Path Data="{StaticResource SpendingSourcesListPopup.LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
                                                 </Viewbox>
                                             </Border>
                                             <Border
@@ -184,7 +184,7 @@
                                                 Margin="8,0,0,0"
                                                 Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                                 <Viewbox Stretch="Uniform">
-                                                    <Path Data="{StaticResource EyeOff}" Fill="{StaticResource Brush.Warning}" />
+                                                    <Path Data="{StaticResource SpendingSourcesListPopup.EyeOff}" Fill="{StaticResource Brush.Warning}" />
                                                 </Viewbox>
                                             </Border>
                                         </StackPanel>

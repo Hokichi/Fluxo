@@ -27,7 +27,7 @@
                 BorderThickness="1"
                 CornerRadius="36">
                 <Viewbox Margin="18" Stretch="Uniform">
-                    <Path Data="{StaticResource AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
+                    <Path Data="{StaticResource StartupLoaderPopup.AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
                 </Viewbox>
             </Border>
 
@@ -47,3 +47,4 @@
         </StackPanel>
     </Border>
 </Window>
+

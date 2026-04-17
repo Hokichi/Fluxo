@@ -141,7 +141,7 @@
                                 <Rectangle.OpacityMask>
                                     <DrawingBrush Stretch="Uniform">
                                         <DrawingBrush.Drawing>
-                                            <GeometryDrawing Geometry="{StaticResource Bank}">
+                                            <GeometryDrawing Geometry="{StaticResource IncomeSource.Bank}">
                                                 <GeometryDrawing.Brush>
                                                     <SolidColorBrush Color="Black" />
                                                 </GeometryDrawing.Brush>
@@ -157,7 +157,7 @@
                                 <Rectangle.OpacityMask>
                                     <DrawingBrush Stretch="Uniform">
                                         <DrawingBrush.Drawing>
-                                            <GeometryDrawing Geometry="{StaticResource CreditCardAlt}">
+                                            <GeometryDrawing Geometry="{StaticResource IncomeSource.CreditCardAlt}">
                                                 <GeometryDrawing.Brush>
                                                     <SolidColorBrush Color="Black" />
                                                 </GeometryDrawing.Brush>
@@ -173,7 +173,7 @@
                                 <Rectangle.OpacityMask>
                                     <DrawingBrush Stretch="Uniform">
                                         <DrawingBrush.Drawing>
-                                            <GeometryDrawing Geometry="{StaticResource PiggyBank}">
+                                            <GeometryDrawing Geometry="{StaticResource IncomeSource.PiggyBank}">
                                                 <GeometryDrawing.Brush>
                                                     <SolidColorBrush Color="Black" />
                                                 </GeometryDrawing.Brush>
@@ -257,8 +257,8 @@
                             Foreground="{StaticResource Brush.Text.Secondary}">
                             <TextBlock.ToolTip>
                                 <MultiBinding StringFormat="{}{0}/{1}">
-                                    <Binding Path="SpentAmount" Converter="{StaticResource MoneyFullDisplayConverter}" />
-                                    <Binding Path="AccountLimit" Converter="{StaticResource MoneyFullDisplayConverter}" />
+                                    <Binding Converter="{StaticResource MoneyFullDisplayConverter}" Path="SpentAmount" />
+                                    <Binding Converter="{StaticResource MoneyFullDisplayConverter}" Path="AccountLimit" />
                                 </MultiBinding>
                             </TextBlock.ToolTip>
                             <Run Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
@@ -296,7 +296,7 @@
                             </Grid.ColumnDefinitions>
                             <Viewbox Width="14" Height="14">
                                 <Path
-                                    Data="{StaticResource Eye}"
+                                    Data="{StaticResource IncomeSource.Eye}"
                                     Fill="{StaticResource Brush.Info}"
                                     Stretch="Uniform" />
                             </Viewbox>
@@ -318,7 +318,7 @@
                             </Grid.ColumnDefinitions>
                             <Viewbox Width="14" Height="14">
                                 <Path
-                                    Data="{StaticResource CircleMinusSolid}"
+                                    Data="{StaticResource IncomeSource.CircleMinusSolid}"
                                     Fill="{StaticResource Brush.Danger}"
                                     Stretch="Uniform" />
                             </Viewbox>
@@ -340,7 +340,7 @@
                             </Grid.ColumnDefinitions>
                             <Viewbox Width="14" Height="14">
                                 <Path
-                                    Data="{StaticResource EyeOff}"
+                                    Data="{StaticResource IncomeSource.EyeOff}"
                                     Fill="{StaticResource Brush.Warning}"
                                     Stretch="Uniform" />
                             </Viewbox>
@@ -365,7 +365,7 @@
                             </Grid.ColumnDefinitions>
                             <Viewbox Width="14" Height="14">
                                 <Path
-                                    Data="{StaticResource LightningSlashFill}"
+                                    Data="{StaticResource IncomeSource.LightningSlashFill}"
                                     Fill="{StaticResource Brush.Warning}"
                                     Stretch="Uniform" />
                             </Viewbox>
@@ -390,7 +390,7 @@
                             </Grid.ColumnDefinitions>
                             <Viewbox Width="14" Height="14">
                                 <Path
-                                    Data="{StaticResource Exchange}"
+                                    Data="{StaticResource IncomeSource.Exchange}"
                                     Fill="{StaticResource Brush.Mint}"
                                     Stretch="Uniform" />
                             </Viewbox>
@@ -407,3 +407,4 @@
         </Popup>
     </Grid>
 </UserControl>
+
