@@ -15,13 +15,12 @@ public partial class StartupWizardMiddlePage : UserControl
 
     public Border? GetStripeForStep(int stepIndex) => stepIndex switch
     {
-        1 => Step1Stripe,
-        2 => Step2Stripe,
-        3 => Step3Stripe,
-        4 => Step4Stripe,
-        5 => Step5Stripe,
-        6 => Step6Stripe,
-        7 => Step7Stripe,
+        2 => Step1Stripe,
+        3 => Step2Stripe,
+        4 => Step3Stripe,
+        5 => Step4Stripe,
+        6 => Step5Stripe,
+        7 => Step6Stripe,
         _ => null
     };
 

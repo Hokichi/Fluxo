@@ -42,7 +42,7 @@
             BasedOn="{StaticResource SidebarStepStyle}"
             TargetType="Border">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsStep1Active}" Value="True">
+                <DataTrigger Binding="{Binding IsStep2Active}" Value="True">
                     <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -52,7 +52,7 @@
             BasedOn="{StaticResource SidebarStepStyle}"
             TargetType="Border">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsStep2Active}" Value="True">
+                <DataTrigger Binding="{Binding IsStep3Active}" Value="True">
                     <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -62,7 +62,7 @@
             BasedOn="{StaticResource SidebarStepStyle}"
             TargetType="Border">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsStep3Active}" Value="True">
+                <DataTrigger Binding="{Binding IsStep4Active}" Value="True">
                     <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -72,7 +72,7 @@
             BasedOn="{StaticResource SidebarStepStyle}"
             TargetType="Border">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsStep4Active}" Value="True">
+                <DataTrigger Binding="{Binding IsStep5Active}" Value="True">
                     <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -82,23 +82,13 @@
             BasedOn="{StaticResource SidebarStepStyle}"
             TargetType="Border">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsStep5Active}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style
-            x:Key="Step6SidebarStepStyle"
-            BasedOn="{StaticResource SidebarStepStyle}"
-            TargetType="Border">
-            <Style.Triggers>
                 <DataTrigger Binding="{Binding IsStep6Active}" Value="True">
                     <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style
-            x:Key="Step7SidebarStepStyle"
+            x:Key="Step6SidebarStepStyle"
             BasedOn="{StaticResource SidebarStepStyle}"
             TargetType="Border">
             <Style.Triggers>

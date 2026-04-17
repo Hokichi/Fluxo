@@ -24,7 +24,6 @@ public partial class StartupWizardVM : ObservableObject
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
     [ObservableProperty] private int _investAllocationPercentage = 20;
     [ObservableProperty] private int _needsAllocationPercentage = 50;
-    [ObservableProperty] private string _salaryText = string.Empty;
     [ObservableProperty] private string _selectedCurrencyCode = DefaultCurrencyCode;
     [ObservableProperty] private string _usernameText = "User";
     [ObservableProperty] private int _wantsAllocationPercentage = 30;
@@ -50,17 +49,17 @@ public partial class StartupWizardVM : ObservableObject
 
     public int TotalSteps => 10;
     public bool IsGreetingStep => CurrentStepIndex == 0;
-    public bool IsMiddleStep => CurrentStepIndex >= 1 && CurrentStepIndex <= 7;
+    public bool IsNameStep => CurrentStepIndex == 1;
+    public bool IsMiddleStep => CurrentStepIndex >= 2 && CurrentStepIndex <= 7;
     public bool IsLoadingStep => CurrentStepIndex == 8;
     public bool IsFinalStep => CurrentStepIndex == TotalSteps - 1;
-    public bool IsStep1Active => CurrentStepIndex == 1;
     public bool IsStep2Active => CurrentStepIndex == 2;
     public bool IsStep3Active => CurrentStepIndex == 3;
     public bool IsStep4Active => CurrentStepIndex == 4;
     public bool IsStep5Active => CurrentStepIndex == 5;
     public bool IsStep6Active => CurrentStepIndex == 6;
     public bool IsStep7Active => CurrentStepIndex == 7;
-    public string StepCounterText => $"Step {CurrentStepIndex} of 7";
+    public string StepCounterText => IsMiddleStep ? $"Step {CurrentStepIndex - 1} of 6" : string.Empty;
     public decimal TotalBudgetAmount => CalculateTotalBudgetAmount();
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
@@ -74,7 +73,7 @@ public partial class StartupWizardVM : ObservableObject
     public string CurrentStepTitle => CurrentStepIndex switch
     {
         0 => "Let's get started",
-        1 => "Tell us about you",
+        1 => "What should Fluxo call you?",
         2 => "Add spending sources",
         3 => "Add fixed expenses",
         4 => "Add savings goals",
@@ -88,7 +87,7 @@ public partial class StartupWizardVM : ObservableObject
     public string CurrentStepDescription => CurrentStepIndex switch
     {
         0 => "Fluxo helps you take control of your finances with smart budgeting, spending tracking, and savings goals.",
-        1 => "Set your display name and optionally add a salary baseline.",
+        1 => "Pick the name you'd like Fluxo to use throughout the app.",
         2 => "Add the accounts and sources you spend from most often.",
         3 => "Add recurring fixed expenses so Fluxo can account for them upfront.",
         4 => "Add a few goals to start tracking progress right away.",
@@ -102,10 +101,10 @@ public partial class StartupWizardVM : ObservableObject
     partial void OnCurrentStepIndexChanged(int value)
     {
         OnPropertyChanged(nameof(IsGreetingStep));
+        OnPropertyChanged(nameof(IsNameStep));
         OnPropertyChanged(nameof(IsMiddleStep));
         OnPropertyChanged(nameof(IsLoadingStep));
         OnPropertyChanged(nameof(IsFinalStep));
-        OnPropertyChanged(nameof(IsStep1Active));
         OnPropertyChanged(nameof(IsStep2Active));
         OnPropertyChanged(nameof(IsStep3Active));
         OnPropertyChanged(nameof(IsStep4Active));
@@ -148,13 +147,6 @@ public partial class StartupWizardVM : ObservableObject
     {
         OnPropertyChanged(nameof(InvestAllocationAmountText));
         ValidateBudgetAllocation();
-    }
-
-    partial void OnSalaryTextChanged(string value)
-    {
-        OnPropertyChanged(nameof(NeedsAllocationAmountText));
-        OnPropertyChanged(nameof(WantsAllocationAmountText));
-        OnPropertyChanged(nameof(InvestAllocationAmountText));
     }
 
     partial void OnUsernameTextChanged(string value)
@@ -417,7 +409,6 @@ public partial class StartupWizardVM : ObservableObject
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 
         UsernameText = ParseString(settingsByName, UserSettingNames.PreferredDisplayName, "User");
-        SalaryText = ParseString(settingsByName, UserSettingNames.Salary, string.Empty);
         SelectedCurrencyCode = ParseCurrencyCode(settingsByName, UserSettingNames.PreferredCurrencyCode, DefaultCurrencyCode);
         NeedsAllocationPercentage = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
         WantsAllocationPercentage = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
@@ -487,13 +478,9 @@ public partial class StartupWizardVM : ObservableObject
     private async Task<SettingsOperationResult> SavePersonalizationAsync()
     {
         var username = string.IsNullOrWhiteSpace(UsernameText) ? "User" : UsernameText.Trim();
-        if (!TryParseSalary(out _))
-            return SettingsOperationResult.Failure("Salary must be a valid amount.");
 
         var unitOfWork = _unitOfWork;
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.PreferredDisplayName, username);
-        await UpsertUserSettingAsync(unitOfWork, UserSettingNames.Salary,
-            string.IsNullOrWhiteSpace(SalaryText) ? null : ParseSalaryAmount().ToString(CultureInfo.InvariantCulture));
         await UpsertUserSettingAsync(unitOfWork, UserSettingNames.PreferredCurrencyCode, SelectedCurrencyCode);
         await unitOfWork.SaveChangesAsync();
         WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
@@ -573,29 +560,6 @@ public partial class StartupWizardVM : ObservableObject
         unitOfWork.UserSettings.Update(existingSetting);
     }
 
-    private bool TryParseSalary(out decimal salary)
-    {
-        salary = 0m;
-        if (string.IsNullOrWhiteSpace(SalaryText))
-            return true;
-
-        var normalized = SalaryText
-            .Trim()
-            .Replace(CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol, string.Empty, StringComparison.Ordinal)
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        return decimal.TryParse(normalized, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
-                   CultureInfo.CurrentCulture, out salary) ||
-               decimal.TryParse(normalized, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
-                   CultureInfo.InvariantCulture, out salary);
-    }
-
-    private decimal ParseSalaryAmount()
-    {
-        return TryParseSalary(out var salary) ? salary : 0m;
-    }
-
     private decimal CalculateTotalBudgetAmount()
     {
         return SpendingSources.Sum(source => source.PrimaryAmount);
@@ -622,12 +586,6 @@ public partial class StartupWizardVM : ObservableObject
 
     public string ReportUsernameText => ResolvedUsername;
     public string ReportCurrencyText => SelectedCurrencyCode;
-    public string ReportSalaryText => string.IsNullOrWhiteSpace(SalaryText)
-        ? "Not set"
-        : MoneyFormatUtility.ToCompactText(ParseSalaryAmount(), CultureInfo.CurrentCulture);
-    public string ReportSalaryTooltipText => string.IsNullOrWhiteSpace(SalaryText)
-        ? string.Empty
-        : MoneyFormatUtility.ToFullText(ParseSalaryAmount(), CultureInfo.CurrentCulture);
     public int ReportSpendingSourceCount => SpendingSources.Count;
     public int ReportFixedExpenseCount => FixedExpenses.Count;
     public int ReportSavingGoalCount => SavingGoals.Count;
@@ -647,8 +605,6 @@ public partial class StartupWizardVM : ObservableObject
     {
         OnPropertyChanged(nameof(ReportUsernameText));
         OnPropertyChanged(nameof(ReportCurrencyText));
-        OnPropertyChanged(nameof(ReportSalaryText));
-        OnPropertyChanged(nameof(ReportSalaryTooltipText));
         OnPropertyChanged(nameof(ReportSpendingSourceCount));
         OnPropertyChanged(nameof(ReportFixedExpenseCount));
         OnPropertyChanged(nameof(ReportSavingGoalCount));

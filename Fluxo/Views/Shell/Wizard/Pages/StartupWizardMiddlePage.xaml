@@ -34,33 +34,6 @@
                             HorizontalAlignment="Left"
                             Background="{StaticResource Brush.Mint}"
                             CornerRadius="2"
-                            Opacity="1" />
-                        <StackPanel
-                            Margin="14,0,0,0"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal">
-                            <Viewbox Width="12" Height="12">
-                                <Path Data="{StaticResource AccountCircle}" Fill="{StaticResource Brush.Text.Secondary}" />
-                            </Viewbox>
-                            <TextBlock
-                                Margin="10,0,0,0"
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="12"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="About You" />
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!--  Step 2  -->
-                <Border Style="{StaticResource Step2SidebarStepStyle}">
-                    <Grid>
-                        <Border
-                            x:Name="Step2Stripe"
-                            Width="4"
-                            HorizontalAlignment="Left"
-                            Background="{StaticResource Brush.Mint}"
-                            CornerRadius="2"
                             Opacity="0" />
                         <StackPanel
                             Margin="14,0,0,0"
@@ -82,11 +55,11 @@
                     </Grid>
                 </Border>
 
-                <!--  Step 3  -->
-                <Border Style="{StaticResource Step3SidebarStepStyle}" Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                <!--  Step 2  -->
+                <Border Style="{StaticResource Step2SidebarStepStyle}" Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid>
                         <Border
-                            x:Name="Step3Stripe"
+                            x:Name="Step2Stripe"
                             Width="4"
                             HorizontalAlignment="Left"
                             Background="{StaticResource Brush.Mint}"
@@ -109,11 +82,11 @@
                     </Grid>
                 </Border>
 
-                <!--  Step 4  -->
-                <Border Style="{StaticResource Step4SidebarStepStyle}" Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                <!--  Step 3  -->
+                <Border Style="{StaticResource Step3SidebarStepStyle}" Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid>
                         <Border
-                            x:Name="Step4Stripe"
+                            x:Name="Step3Stripe"
                             Width="4"
                             HorizontalAlignment="Left"
                             Background="{StaticResource Brush.Mint}"
@@ -136,11 +109,11 @@
                     </Grid>
                 </Border>
 
-                <!--  Step 5  -->
-                <Border Style="{StaticResource Step5SidebarStepStyle}">
+                <!--  Step 4  -->
+                <Border Style="{StaticResource Step4SidebarStepStyle}">
                     <Grid>
                         <Border
-                            x:Name="Step5Stripe"
+                            x:Name="Step4Stripe"
                             Width="4"
                             HorizontalAlignment="Left"
                             Background="{StaticResource Brush.Mint}"
@@ -163,11 +136,11 @@
                     </Grid>
                 </Border>
 
-                <!--  Step 6  -->
-                <Border Style="{StaticResource Step6SidebarStepStyle}">
+                <!--  Step 5  -->
+                <Border Style="{StaticResource Step5SidebarStepStyle}">
                     <Grid>
                         <Border
-                            x:Name="Step6Stripe"
+                            x:Name="Step5Stripe"
                             Width="4"
                             HorizontalAlignment="Left"
                             Background="{StaticResource Brush.Mint}"
@@ -190,11 +163,11 @@
                     </Grid>
                 </Border>
 
-                <!--  Step 7  -->
-                <Border Style="{StaticResource Step7SidebarStepStyle}">
+                <!--  Step 6  -->
+                <Border Style="{StaticResource Step6SidebarStepStyle}">
                     <Grid>
                         <Border
-                            x:Name="Step7Stripe"
+                            x:Name="Step6Stripe"
                             Width="4"
                             HorizontalAlignment="Left"
                             Background="{StaticResource Brush.Mint}"
@@ -265,7 +238,6 @@
                     Margin="0,12,0,0"
                     VerticalScrollBarVisibility="Auto">
                     <Grid>
-                        <steps:StartupWizardStep1Page />
                         <steps:StartupWizardStep2Page />
                         <steps:StartupWizardStep3Page />
                         <steps:StartupWizardStep4Page />

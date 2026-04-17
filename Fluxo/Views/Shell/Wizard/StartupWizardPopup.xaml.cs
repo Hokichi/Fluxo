@@ -317,7 +317,7 @@ public partial class StartupWizardPopup : BasePopup
 
     private Border? GetStripeForStep(int stepIndex) => MiddleStepPage?.GetStripeForStep(stepIndex);
 
-    private bool IsMiddleStep(int stepIndex) => stepIndex >= 1 && stepIndex <= 7;
+    private bool IsMiddleStep(int stepIndex) => stepIndex >= 2 && stepIndex <= 7;
 
     private async Task AnimateStepTransitionAsync(Action changeStep)
     {
@@ -413,7 +413,7 @@ public partial class StartupWizardPopup : BasePopup
 
     private void SyncStripeOpacities()
     {
-        for (var i = 1; i <= 7; i++)
+        for (var i = 2; i <= 7; i++)
         {
             var stripe = GetStripeForStep(i);
             if (stripe is null) continue;

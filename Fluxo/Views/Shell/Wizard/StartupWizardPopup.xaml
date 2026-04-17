@@ -29,7 +29,10 @@
             <!--  Greeting Page (Step 0)  -->
             <pages:StartupWizardGreetingPage Visibility="{Binding IsGreetingStep, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-            <!--  Middle Steps (1-6): Sidebar + Content  -->
+            <!--  Preferred Name Page (Step 1)  -->
+            <pages:StartupWizardNamePage Visibility="{Binding IsNameStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+            <!--  Middle Steps (2-7): Sidebar + Content  -->
             <pages:StartupWizardMiddlePage x:Name="MiddleStepPage" Visibility="{Binding IsMiddleStep, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Loading Page (Step 8)  -->

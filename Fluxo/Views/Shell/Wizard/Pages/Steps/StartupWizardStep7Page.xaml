@@ -8,37 +8,18 @@
     <StackPanel Visibility="{Binding IsStep7Active, Converter={StaticResource BoolToVisibilityConverter}}">
         <!--  Profile  -->
         <Border Style="{StaticResource CardStyle}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="Username" />
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding ReportUsernameText}" />
-                </StackPanel>
-                <StackPanel Grid.Column="1">
-                    <TextBlock
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="Salary" />
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding ReportSalaryText}"
-                        ToolTip="{Binding ReportSalaryTooltipText}" />
-                </StackPanel>
-            </Grid>
+            <StackPanel>
+                <TextBlock
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Muted}"
+                    Text="Username" />
+                <TextBlock
+                    Margin="0,4,0,0"
+                    FontFamily="{StaticResource Bold}"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="{Binding ReportUsernameText}" />
+            </StackPanel>
         </Border>
 
         <!--  Spending Sources / Fixed Expenses / Savings Goals  -->
