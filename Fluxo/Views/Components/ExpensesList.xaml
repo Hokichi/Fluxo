@@ -11,7 +11,6 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-
         <DataTemplate x:Key="ExpenseListTemplate">
             <customControls:SwipeRevealContainer>
                 <customControls:SwipeRevealContainer.LeftContent>
@@ -173,7 +172,7 @@
                         </Border.Style>
                         <Grid
                             MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
-                            Margin="4 8"
+                            Margin="4,8"
                             HorizontalAlignment="Stretch"
                             ClipToBounds="True">
                             <Grid.ColumnDefinitions>
@@ -181,41 +180,43 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
-                                <TextBlock
+                            <StackPanel Orientation="Horizontal">
+                                <Border
+                                    x:Name="ExpenseTagBorder"
+                                    Margin="0,0,12,0"
+                                    Padding="5"
                                     VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="13"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="{Binding Expense.Name}"
-                                    TextTrimming="CharacterEllipsis"
-                                    TextWrapping="NoWrap" />
-                                <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                    Background="{Binding Expense.ExpenseTag.HexCode}">
+                                    <Border.CornerRadius>
+                                        <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                                        </MultiBinding>
+                                    </Border.CornerRadius>
+                                    <Viewbox
+                                        Width="10"
+                                        Height="10"
+                                        Stretch="Uniform">
+                                        <Path Data="{Binding Expense.ExpenseTag.IconName, Converter={StaticResource TagIconNameToGeometryConverter}}" Fill="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}" />
+                                    </Viewbox>
+                                </Border>
+                                <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
                                     <TextBlock
-                                        FontFamily="{StaticResource Regular}"
-                                        FontSize="10"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
-
-                                    <Border
-                                        x:Name="ExpenseTagBorder"
-                                        Margin="8,0,0,0"
-                                        Padding="5,2"
                                         VerticalAlignment="Center"
-                                        Background="{Binding Expense.ExpenseTag.HexCode}">
-                                        <Border.CornerRadius>
-                                            <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
-                                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
-                                            </MultiBinding>
-                                        </Border.CornerRadius>
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="13"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding Expense.Name}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+
                                         <TextBlock
-                                            VerticalAlignment="Center"
-                                            FontFamily="{StaticResource Medium}"
+                                            FontFamily="{StaticResource Regular}"
                                             FontSize="10"
-                                            Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                            Text="{Binding Expense.ExpenseTag.Name}" />
-                                    </Border>
+                                            Foreground="{StaticResource Brush.Text.Muted}"
+                                            Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                                    </StackPanel>
                                 </StackPanel>
                             </StackPanel>
 
