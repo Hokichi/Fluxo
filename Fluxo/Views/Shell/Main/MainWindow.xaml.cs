@@ -393,6 +393,13 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (MainWindowShortcutMatcher.IsRunSetupWizardShortcut(e.Key, Keyboard.Modifiers))
+        {
+            RunSetupWizardFromShortcutAsync();
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused() &&
             _logMemoryManager.CanUndo)
         {
@@ -407,6 +414,18 @@ public partial class MainWindow : Window, IPopupHost
             _ = RedoLogMemoryAsync();
             e.Handled = true;
         }
+    }
+
+    private async void RunSetupWizardFromShortcutAsync()
+    {
+        if (FluxoMessageBox.Show(this,
+                "This will close the current window and open the setup wizard. Continue?",
+                "Run Setup Wizard",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        await ((App)Application.Current).RunSetupWizardAsync();
     }
 
     private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)
