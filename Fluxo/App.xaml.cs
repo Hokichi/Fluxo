@@ -1,6 +1,6 @@
-using System.Windows;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces;
+using Fluxo.Data;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
 using Fluxo.Resources.CustomControls;
@@ -10,6 +10,7 @@ using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
 
 namespace Fluxo;
 
@@ -19,6 +20,8 @@ namespace Fluxo;
 public partial class App : Application
 {
     private readonly IServiceProvider? _serviceProvider;
+    private readonly MainVM _mainVM;
+    private readonly IUnitOfWork _unitOfWork;
 
     public App()
     {
@@ -29,6 +32,9 @@ public partial class App : Application
             .AddUIData();
 
         _serviceProvider = services.BuildServiceProvider();
+
+        _mainVM = _serviceProvider!.GetRequiredService<MainVM>();
+        _unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();\
     }
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -38,15 +44,11 @@ public partial class App : Application
 
         try
         {
-            var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
-            var unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
-            var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-
-            var isFirstRun = await EnsureFirstRunSettingAsync(unitOfWork);
+            var isFirstRun = await EnsureFirstRunSettingAsync(_unitOfWork);
 
             if (isFirstRun)
             {
-                var wizard = dialogService.GetPopupOfType<StartupWizardPopup>();
+                var wizard = _serviceProvider!.GetRequiredService<StartupWizardPopup>();
                 wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 wizard.ShowDialog();
             }
@@ -56,7 +58,7 @@ public partial class App : Application
                 try
                 {
                     loaderPopup.Show();
-                    await mainVM.Initialize();
+                    await _mainVM.Initialize();
                 }
                 finally
                 {
@@ -83,18 +85,14 @@ public partial class App : Application
 
     public async Task RunSetupWizardAsync()
     {
-        var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
-        var unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
-        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         MainWindow?.Hide();
 
-        var wizard = dialogService.GetPopupOfType<StartupWizardPopup>();
+        var wizard = _serviceProvider!.GetRequiredService<StartupWizardPopup>();
         wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         wizard.ShowDialog();
 
-        await mainVM.Initialize();
+        await _mainVM.Initialize();
 
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         MainWindow?.Show();
