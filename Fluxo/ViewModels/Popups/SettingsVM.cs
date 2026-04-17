@@ -85,23 +85,11 @@ public partial class SettingsVM : ObservableObject
     public bool ShowSpendingSourceEnableActionButton =>
         IsSpendingSourceChecksEnabled && !ShouldShowDisableAction(SpendingSources);
 
-    public bool ShowFixedExpenseHideActionButton =>
-        IsFixedExpenseChecksEnabled && ShouldShowHideAction(FixedExpenses);
-
-    public bool ShowFixedExpenseUnhideActionButton =>
-        IsFixedExpenseChecksEnabled && !ShouldShowHideAction(FixedExpenses);
-
     public bool ShowFixedExpenseDisableActionButton =>
         IsFixedExpenseChecksEnabled && ShouldShowDisableAction(FixedExpenses);
 
     public bool ShowFixedExpenseEnableActionButton =>
         IsFixedExpenseChecksEnabled && !ShouldShowDisableAction(FixedExpenses);
-
-    public bool ShowGoalHideActionButton =>
-        IsGoalChecksEnabled && ShouldShowHideAction(SavingGoals);
-
-    public bool ShowGoalUnhideActionButton =>
-        IsGoalChecksEnabled && !ShouldShowHideAction(SavingGoals);
 
     public bool ShowGoalDisableActionButton =>
         IsGoalChecksEnabled && ShouldShowDisableAction(SavingGoals);
@@ -187,8 +175,6 @@ public partial class SettingsVM : ObservableObject
         var settings = await unitOfWork.UserSettings.GetAllAsync();
         var settingsByName =
             settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
-        var hiddenFixedExpenseIds = ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds);
-        var hiddenSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds);
         var disabledSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.DisabledSavingGoalIds);
 
         NeedsAllocationPercentage = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
@@ -214,14 +200,13 @@ public partial class SettingsVM : ObservableObject
         ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetAllAsync())
             .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
             .OrderBy(expense => expense.Name)
-            .Select(expense => new SettingsFixedExpenseItemVM(expense, hiddenFixedExpenseIds.Contains(expense.Id))));
+            .Select(expense => new SettingsFixedExpenseItemVM(expense)));
 
         ReplaceCollection(SavingGoals, (await unitOfWork.SavingGoals.GetAllAsync())
             .OrderBy(goal => goal.SavingEndDate)
             .ThenBy(goal => goal.Name)
             .Select(goal => new SettingsSavingGoalItemVM(
                 goal,
-                hiddenSavingGoalIds.Contains(goal.Id),
                 !disabledSavingGoalIds.Contains(goal.Id))));
 
         ReplaceCollection(Tags, (await unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync())
@@ -551,17 +536,8 @@ public partial class SettingsVM : ObservableObject
 
                 case SettingsBatchAction.Hide:
                 case SettingsBatchAction.Unhide:
-                    var hiddenFixedExpenseIds = ParseIdSet(await GetSettingsDictionaryAsync(unitOfWork),
-                        UserSettingNames.HiddenFixedExpenseIds);
-
-                    if (action == SettingsBatchAction.Hide)
-                        hiddenFixedExpenseIds.UnionWith(selectedItems.Select(item => item.Id));
-                    else
-                        hiddenFixedExpenseIds.ExceptWith(selectedItems.Select(item => item.Id));
-
-                    await UpdateIdSetSettingAsync(unitOfWork, UserSettingNames.HiddenFixedExpenseIds,
-                        hiddenFixedExpenseIds, actions);
-                    break;
+                    return SettingsOperationResult.Failure(
+                        "Hide and unhide are no longer supported for fixed expenses.");
             }
 
             if (actions.Count == 0)
@@ -616,17 +592,7 @@ public partial class SettingsVM : ObservableObject
 
                 case SettingsBatchAction.Hide:
                 case SettingsBatchAction.Unhide:
-                    var hiddenGoalIds = ParseIdSet(await GetSettingsDictionaryAsync(unitOfWork),
-                        UserSettingNames.HiddenSavingGoalIds);
-
-                    if (action == SettingsBatchAction.Hide)
-                        hiddenGoalIds.UnionWith(selectedItems.Select(item => item.Id));
-                    else
-                        hiddenGoalIds.ExceptWith(selectedItems.Select(item => item.Id));
-
-                    await UpdateIdSetSettingAsync(unitOfWork, UserSettingNames.HiddenSavingGoalIds, hiddenGoalIds,
-                        actions);
-                    break;
+                    return SettingsOperationResult.Failure("Hide and unhide are no longer supported for goals.");
 
                 case SettingsBatchAction.Disable:
                 case SettingsBatchAction.Enable:
@@ -824,6 +790,17 @@ public partial class SettingsVM : ObservableObject
         return new AddSavingGoalVM(_mainViewModel, _unitOfWork);
     }
 
+    public SpendingSourceDetailVM CreateSpendingSourceDetailViewModel(int spendingSourceId)
+    {
+        return new SpendingSourceDetailVM(_mainViewModel, spendingSourceId, _unitOfWork);
+    }
+
+    public void SelectSingleItem(SettingsBatchTarget target, int itemId)
+    {
+        foreach (var item in GetSelectableItems(target))
+            item.IsSelected = item.Id == itemId;
+    }
+
     public async Task RefreshSpendingSourcesAsync()
     {
         var unitOfWork = _unitOfWork;
@@ -840,13 +817,11 @@ public partial class SettingsVM : ObservableObject
     public async Task RefreshFixedExpensesAsync()
     {
         var unitOfWork = _unitOfWork;
-        var settingsByName = await GetSettingsDictionaryAsync(unitOfWork);
-        var hiddenFixedExpenseIds = ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds);
 
         ReplaceCollection(FixedExpenses, (await unitOfWork.Expenses.GetAllAsync())
             .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
             .OrderBy(expense => expense.Name)
-            .Select(expense => new SettingsFixedExpenseItemVM(expense, hiddenFixedExpenseIds.Contains(expense.Id))));
+            .Select(expense => new SettingsFixedExpenseItemVM(expense)));
 
         AttachSelectableItemHandlers(FixedExpenses);
         OnPropertyChanged(nameof(HasFixedExpenses));
@@ -856,16 +831,14 @@ public partial class SettingsVM : ObservableObject
     public async Task RefreshSavingGoalsAsync()
     {
         var unitOfWork = _unitOfWork;
-        var settingsByName = await GetSettingsDictionaryAsync(unitOfWork);
-        var hiddenSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds);
-        var disabledSavingGoalIds = ParseIdSet(settingsByName, UserSettingNames.DisabledSavingGoalIds);
+        var disabledSavingGoalIds = ParseIdSet(await GetSettingsDictionaryAsync(unitOfWork),
+            UserSettingNames.DisabledSavingGoalIds);
 
         ReplaceCollection(SavingGoals, (await unitOfWork.SavingGoals.GetAllAsync())
             .OrderBy(goal => goal.SavingEndDate)
             .ThenBy(goal => goal.Name)
             .Select(goal => new SettingsSavingGoalItemVM(
                 goal,
-                hiddenSavingGoalIds.Contains(goal.Id),
                 !disabledSavingGoalIds.Contains(goal.Id))));
 
         AttachSelectableItemHandlers(SavingGoals);
@@ -1177,12 +1150,8 @@ public partial class SettingsVM : ObservableObject
         OnPropertyChanged(nameof(ShowSpendingSourceUnhideActionButton));
         OnPropertyChanged(nameof(ShowSpendingSourceDisableActionButton));
         OnPropertyChanged(nameof(ShowSpendingSourceEnableActionButton));
-        OnPropertyChanged(nameof(ShowFixedExpenseHideActionButton));
-        OnPropertyChanged(nameof(ShowFixedExpenseUnhideActionButton));
         OnPropertyChanged(nameof(ShowFixedExpenseDisableActionButton));
         OnPropertyChanged(nameof(ShowFixedExpenseEnableActionButton));
-        OnPropertyChanged(nameof(ShowGoalHideActionButton));
-        OnPropertyChanged(nameof(ShowGoalUnhideActionButton));
         OnPropertyChanged(nameof(ShowGoalDisableActionButton));
         OnPropertyChanged(nameof(ShowGoalEnableActionButton));
         OnPropertyChanged(nameof(ShowSpendingSourceCheckAllButton));
@@ -1249,7 +1218,9 @@ public enum SettingsBatchTarget
 
 public interface ISettingsSelectableItem
 {
+    int Id { get; }
     bool IsChecked { get; set; }
+    bool IsSelected { get; set; }
     bool IsHidden { get; }
     bool IsEnabled { get; }
 }
@@ -1294,6 +1265,7 @@ public sealed record SettingsCurrencyOptionVM(string Code, string Name, string S
 public partial class SettingsSpendingSourceItemVM : ObservableObject, ISettingsSelectableItem
 {
     [ObservableProperty] private bool _isChecked;
+    [ObservableProperty] private bool _isSelected;
 
     public SettingsSpendingSourceItemVM(SpendingSource spendingSource)
     {
@@ -1330,8 +1302,9 @@ public partial class SettingsSpendingSourceItemVM : ObservableObject, ISettingsS
 public partial class SettingsFixedExpenseItemVM : ObservableObject, ISettingsSelectableItem
 {
     [ObservableProperty] private bool _isChecked;
+    [ObservableProperty] private bool _isSelected;
 
-    public SettingsFixedExpenseItemVM(Expense expense, bool isHidden)
+    public SettingsFixedExpenseItemVM(Expense expense)
     {
         Id = expense.Id;
         Name = expense.Name;
@@ -1340,7 +1313,7 @@ public partial class SettingsFixedExpenseItemVM : ObservableObject, ISettingsSel
         SpendingSourceName = expense.SpendingSource?.Name ?? "No source";
         RecurringDate = expense.RecurringDate;
         IsEnabled = expense.IsActive;
-        IsHidden = isHidden;
+        IsHidden = false;
     }
 
     public int Id { get; }
@@ -1356,15 +1329,16 @@ public partial class SettingsFixedExpenseItemVM : ObservableObject, ISettingsSel
 public partial class SettingsSavingGoalItemVM : ObservableObject, ISettingsSelectableItem
 {
     [ObservableProperty] private bool _isChecked;
+    [ObservableProperty] private bool _isSelected;
 
-    public SettingsSavingGoalItemVM(SavingGoal savingGoal, bool isHidden, bool isEnabled)
+    public SettingsSavingGoalItemVM(SavingGoal savingGoal, bool isEnabled)
     {
         Id = savingGoal.Id;
         Name = savingGoal.Name;
         CurrentAmount = savingGoal.CurrentAmount;
         TargetAmount = savingGoal.TargetAmount;
         SavingEndDate = savingGoal.SavingEndDate;
-        IsHidden = isHidden;
+        IsHidden = false;
         IsEnabled = isEnabled;
     }
 

@@ -269,7 +269,7 @@
 
                         <StackPanel Grid.Column="0">
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
-                            <Border Style="{StaticResource PopupFieldBorderStyle}">
+                            <Border Padding="8,4" Style="{StaticResource PopupFieldBorderStyle}">
                                 <ComboBox
                                     x:Name="IncomeSpendingSourceComboBox"
                                     DisplayMemberPath="Name"

@@ -1,6 +1,7 @@
 using System.Windows;
 using Fluxo.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace Fluxo.Tests.Services.Dialogs;
 

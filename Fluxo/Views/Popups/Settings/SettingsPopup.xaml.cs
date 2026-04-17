@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Fluxo.Resources.CustomControls;
 using Fluxo.Services.Dialogs;
@@ -251,6 +254,46 @@ public partial class SettingsPopup : BasePopup
             ShowMessage(result.ErrorMessage, "Settings");
     }
 
+    public async void OnSpendingSourceItemMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var originalSource = e.OriginalSource as DependencyObject;
+
+        if (sender is not FrameworkElement { DataContext: SettingsSpendingSourceItemVM sourceItem } ||
+            ShouldIgnoreRowClick(originalSource))
+            return;
+
+        _viewModel.SelectSingleItem(SettingsBatchTarget.SpendingSources, sourceItem.Id);
+
+        if (e.ClickCount < 2 || IsCheckBoxClick(originalSource))
+            return;
+
+        _dialogService.ShowSpendingSourceDetail(_viewModel.CreateSpendingSourceDetailViewModel(sourceItem.Id), this);
+        await _viewModel.RefreshSpendingSourcesAsync();
+        _viewModel.SelectSingleItem(SettingsBatchTarget.SpendingSources, sourceItem.Id);
+    }
+
+    public void OnFixedExpenseItemMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var originalSource = e.OriginalSource as DependencyObject;
+
+        if (sender is not FrameworkElement { DataContext: SettingsFixedExpenseItemVM fixedExpenseItem } ||
+            ShouldIgnoreRowClick(originalSource))
+            return;
+
+        _viewModel.SelectSingleItem(SettingsBatchTarget.FixedExpenses, fixedExpenseItem.Id);
+    }
+
+    public void OnGoalItemMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var originalSource = e.OriginalSource as DependencyObject;
+
+        if (sender is not FrameworkElement { DataContext: SettingsSavingGoalItemVM goalItem } ||
+            ShouldIgnoreRowClick(originalSource))
+            return;
+
+        _viewModel.SelectSingleItem(SettingsBatchTarget.Goals, goalItem.Id);
+    }
+
     private void OnAddTagClick(object sender, RoutedEventArgs e)
     {
         OpenAddTagPopup();
@@ -413,6 +456,31 @@ public partial class SettingsPopup : BasePopup
         };
 
         return value is "SpendingSources" or "FixedExpenses" or "Goals";
+    }
+
+    private static bool ShouldIgnoreRowClick(DependencyObject? source)
+    {
+        var clickedButton = FindAncestor<ButtonBase>(source);
+        return clickedButton is not null && clickedButton is not CheckBox;
+    }
+
+    private static bool IsCheckBoxClick(DependencyObject? source)
+    {
+        return FindAncestor<CheckBox>(source) is not null;
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? source)
+        where T : DependencyObject
+    {
+        while (source is not null)
+        {
+            if (source is T typedSource)
+                return typedSource;
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return null;
     }
 
     private void ShowMessage(string? message, string title)

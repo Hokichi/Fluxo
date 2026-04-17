@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Fluxo.Views.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
@@ -41,5 +42,11 @@ public partial class SettingsFixedExpensesTab : UserControl
     {
         if (sender is DependencyObject source)
             FindPopup(source)?.OnRowActionClick(sender, e);
+    }
+
+    private void OnItemMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is DependencyObject source)
+            FindPopup(source)?.OnFixedExpenseItemMouseLeftButtonDown(sender, e);
     }
 }
