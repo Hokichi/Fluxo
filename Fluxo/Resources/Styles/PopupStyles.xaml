@@ -5,9 +5,9 @@
 
     <BooleanToVisibilityConverter x:Key="PopupBoolToVisibility" />
 
-    
 
-<Style TargetType="{x:Type c:BasePopup}">
+
+    <Style TargetType="{x:Type c:BasePopup}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type c:BasePopup}">
@@ -139,7 +139,6 @@
                                         x:Name="PART_SaveAndCreateNewButton"
                                         Width="28"
                                         Height="28"
-                                        IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
                                         Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource ContentSaveMove}"
                                         CornerRadius="8"
@@ -147,6 +146,7 @@
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Mint.Muted}"
                                         IconSize="8"
+                                        IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
                                         Visibility="{TemplateBinding ShowSaveAndCreateNewButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
@@ -155,7 +155,6 @@
                                         x:Name="PART_SaveButton"
                                         Width="28"
                                         Height="28"
-                                        IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
                                         Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource ContentSave}"
                                         CornerRadius="8"
@@ -163,6 +162,7 @@
                                         DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
                                         IconSize="8"
+                                        IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
                                         Visibility="{TemplateBinding ShowSaveButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 

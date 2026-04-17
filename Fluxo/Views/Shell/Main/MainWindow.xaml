@@ -47,6 +47,13 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
+                <Border
+                    x:Name="TopBorderHitArea"
+                    Grid.Row="0"
+                    Margin="24,0"
+                    Background="Transparent"
+                    MouseLeftButtonDown="OnTopBorderHitAreaMouseLeftButtonDown" />
+
                 <Grid Grid.Row="0" Margin="24,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

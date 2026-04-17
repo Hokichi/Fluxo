@@ -327,6 +327,22 @@ public partial class MainWindow : Window, IPopupHost
         }
     }
 
+    private void OnTopBorderHitAreaMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2 || !IsActive)
+            return;
+
+        if (HeaderMenuPopup.IsOpen)
+            return;
+
+        if (_isMaximized)
+            AnimateToRestored();
+        else
+            AnimateToMaximized();
+
+        e.Handled = true;
+    }
+
     private static bool IsInteractiveElement(DependencyObject source)
     {
         for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
