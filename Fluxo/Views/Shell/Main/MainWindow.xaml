@@ -131,6 +131,23 @@
                                 CornerRadius="18"
                                 MouseEnter="OnHeaderMenuPopupMouseEnter"
                                 MouseLeave="OnHeaderMenuPopupMouseLeave">
+                                <Border.Resources>
+                                    <Style x:Key="HeaderMenuShortcutTextStyle" TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+                                        <Setter Property="FontSize" Value="11" />
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger
+                                                Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Resources>
                                 <StackPanel>
                                     <Button Click="OnQuickAddButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
@@ -138,6 +155,8 @@
                                                 <ColumnDefinition Width="16" />
                                                 <ColumnDefinition Width="12" />
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
@@ -151,6 +170,10 @@
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="Add" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+N" />
                                         </Grid>
                                     </Button>
 
@@ -160,6 +183,8 @@
                                                 <ColumnDefinition Width="16" />
                                                 <ColumnDefinition Width="12" />
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
@@ -173,6 +198,10 @@
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="Sources" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+L" />
                                         </Grid>
                                     </Button>
 
@@ -186,6 +215,8 @@
                                                 <ColumnDefinition Width="16" />
                                                 <ColumnDefinition Width="12" />
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
@@ -199,6 +230,10 @@
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="Undo" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+Z" />
                                         </Grid>
                                     </Button>
 
@@ -212,6 +247,8 @@
                                                 <ColumnDefinition Width="16" />
                                                 <ColumnDefinition Width="12" />
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
@@ -225,6 +262,10 @@
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="Redo" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+Y" />
                                         </Grid>
                                     </Button>
 
@@ -234,6 +275,8 @@
                                                 <ColumnDefinition Width="16" />
                                                 <ColumnDefinition Width="12" />
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Viewbox Width="14" Height="14">
                                                 <Path
@@ -247,6 +290,10 @@
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
                                                 Text="Settings" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+S" />
                                         </Grid>
                                     </Button>
                                 </StackPanel>
