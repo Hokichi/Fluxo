@@ -2,12 +2,33 @@
     x:Class="Fluxo.Views.Shell.Main.Sections.NotificationPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <Style x:Key="PanelActionTextButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
     <Border Style="{StaticResource DashboardPanelStyle}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="12" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="8" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Grid>
@@ -47,6 +68,14 @@
                 Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
                 <ItemsControl ItemTemplate="{StaticResource DashboardNotificationTemplate}" ItemsSource="{Binding Notifications}" />
             </ScrollViewer>
+
+            <Button
+                Grid.Row="4"
+                HorizontalAlignment="Right"
+                Command="{Binding ClearAllNotificationsCommand}"
+                Content="Clear All Notifications"
+                Style="{StaticResource PanelActionTextButtonStyle}"
+                Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
         </Grid>
     </Border>
 </UserControl>

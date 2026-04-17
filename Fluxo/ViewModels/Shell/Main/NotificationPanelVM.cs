@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
@@ -83,6 +84,12 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private bool _hasNotifications;
 
     public ObservableCollection<NotificationItemVM> Notifications { get; } = [];
+
+    [RelayCommand]
+    private void ClearAllNotifications()
+    {
+        Notifications.Clear();
+    }
 
     public void Receive(DateRangeSelectionChangedMessage message)
     {

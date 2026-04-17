@@ -10,7 +10,10 @@ namespace Fluxo.Views.Shell.Main.Sections;
 
 public partial class SavingGoalsPanel : UserControl
 {
+    private const double SwipeDistanceThreshold = 48;
     private bool _isAnimating;
+    private bool _isSwipeTracking;
+    private Point _swipeStartPoint;
     private SavingGoalVM? _displayedGoal;
     private SavingGoalsPanelVM? _viewModel;
 
@@ -32,6 +35,7 @@ public partial class SavingGoalsPanel : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        CancelSwipeTracking();
         DetachViewModel();
     }
 
@@ -94,6 +98,45 @@ public partial class SavingGoalsPanel : UserControl
             return;
 
         _viewModel.NavigateNext();
+    }
+
+    private void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is Fluxo.Views.Shell.Main.MainWindow mainWindow)
+            mainWindow.OpenAddSavingGoalPopup();
+    }
+
+    private void OnCarouselViewportPreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (_viewModel is null || _isAnimating || !_viewModel.HasMultipleSavingGoals)
+            return;
+
+        _isSwipeTracking = true;
+        _swipeStartPoint = e.GetPosition(CarouselViewport);
+        CarouselViewport.CaptureMouse();
+    }
+
+    private void OnCarouselViewportPreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (!_isSwipeTracking || _viewModel is null || _isAnimating || !_viewModel.HasMultipleSavingGoals)
+            return;
+
+        if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed)
+            CancelSwipeTracking();
+    }
+
+    private void OnCarouselViewportPreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (!_isSwipeTracking)
+            return;
+
+        var endPoint = e.GetPosition(CarouselViewport);
+        CompleteSwipeTracking(endPoint, e);
+    }
+
+    private void OnCarouselViewportLostMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        _isSwipeTracking = false;
     }
 
     private void SyncOrAnimateCurrentGoal()
@@ -202,5 +245,39 @@ public partial class SavingGoalsPanel : UserControl
         var createdTransform = new TranslateTransform();
         element.RenderTransform = createdTransform;
         return createdTransform;
+    }
+
+    private void CompleteSwipeTracking(Point endPoint, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        _isSwipeTracking = false;
+
+        if (CarouselViewport.IsMouseCaptured)
+            CarouselViewport.ReleaseMouseCapture();
+
+        if (_viewModel is null || _isAnimating || !_viewModel.HasMultipleSavingGoals)
+            return;
+
+        var horizontalDistance = endPoint.X - _swipeStartPoint.X;
+        var verticalDistance = endPoint.Y - _swipeStartPoint.Y;
+        var absHorizontalDistance = Math.Abs(horizontalDistance);
+        var absVerticalDistance = Math.Abs(verticalDistance);
+
+        if (absHorizontalDistance < SwipeDistanceThreshold || absHorizontalDistance <= absVerticalDistance)
+            return;
+
+        if (horizontalDistance > 0)
+            _viewModel.NavigatePrevious();
+        else
+            _viewModel.NavigateNext();
+
+        e.Handled = true;
+    }
+
+    private void CancelSwipeTracking()
+    {
+        _isSwipeTracking = false;
+
+        if (CarouselViewport.IsMouseCaptured)
+            CarouselViewport.ReleaseMouseCapture();
     }
 }

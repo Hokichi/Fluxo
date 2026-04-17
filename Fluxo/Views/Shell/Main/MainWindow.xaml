@@ -303,6 +303,13 @@
                             VerticalAlignment="Center"
                             Style="{StaticResource HeaderText}"
                             Text="Accounts &amp; Income" />
+
+                        <Button
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Click="OnSpendingSourcesButtonClick"
+                            Content="View All Spending Sources"
+                            Style="{StaticResource HeaderMenuActionButtonStyle}" />
                     </Grid>
 
                     <c:FadingScrollViewer
