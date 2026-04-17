@@ -30,7 +30,6 @@ public partial class MainWindow : Window, IPopupHost
     private const int StateChangeDuration = 200; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly BudgetAllocationPanelVM _budgetAllocationPanelVM;
-    private readonly DaySpinnerVM _daySpinnerVM;
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
     private readonly NotificationPanelVM _notificationPanelVM;
@@ -40,7 +39,6 @@ public partial class MainWindow : Window, IPopupHost
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _hasInitializedDashboardPanels;
-    private bool _isClosing;
     private bool _isHeaderMenuPinned;
     private bool _isMaximized;
     private bool _wasMinimized;
@@ -63,7 +61,6 @@ public partial class MainWindow : Window, IPopupHost
 
         _mainVM = mainVM;
         _unitOfWork = unitOfWork;
-        _daySpinnerVM = daySpinnerVM;
         _viewModeToggleVM = viewModeToggleVM;
         _budgetAllocationPanelVM = budgetAllocationPanelVM;
         _notificationPanelVM = notificationPanelVM;
@@ -71,7 +68,7 @@ public partial class MainWindow : Window, IPopupHost
         _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWork);
 
         DataContext = _mainVM;
-        DaySpinnerControlHost.DataContext = _daySpinnerVM;
+        DaySpinnerControlHost.DataContext = daySpinnerVM;
         ViewModeToggleControlHost.DataContext = _viewModeToggleVM;
         BudgetAllocationPanelHost.DataContext = _budgetAllocationPanelVM;
         NotificationPanelHost.DataContext = _notificationPanelVM;
@@ -147,7 +144,6 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnCloseWindow(object sender, ExecutedRoutedEventArgs e)
     {
-        if (_isClosing) return;
         FadeOut(() => SystemCommands.CloseWindow(this));
     }
 
