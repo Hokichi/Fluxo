@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Fluxo.Resources.CustomControls;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 
@@ -12,16 +13,18 @@ public partial class SettingsPopup : BasePopup
 {
     private readonly DispatcherTimer _allocationHoldDelayTimer = new() { Interval = TimeSpan.FromSeconds(5) };
     private readonly DispatcherTimer _allocationRepeatTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private readonly IDialogService _dialogService;
     private readonly SettingsVM _viewModel;
     private bool _allowClose;
     private int _heldAllocationDelta;
     private BudgetAllocationSegment _heldAllocationSegment;
     private bool _isHandlingCloseRequest;
 
-    public SettingsPopup(SettingsVM viewModel)
+    public SettingsPopup(SettingsVM viewModel, IDialogService dialogService)
     {
         InitializeComponent();
 
+        _dialogService = dialogService;
         _viewModel = viewModel;
         DataContext = viewModel;
         Loaded += OnLoadedAsync;
@@ -183,26 +186,26 @@ public partial class SettingsPopup : BasePopup
 
         if (string.Equals(title, "Add New Spending Source", StringComparison.Ordinal))
         {
-            new AddSpendingSourcePopup(_viewModel.CreateAddSpendingSourceViewModel()) { Owner = this }.ShowDialog();
+            _dialogService.ShowAddSpendingSource(_viewModel.CreateAddSpendingSourceViewModel(), this);
             await _viewModel.RefreshSpendingSourcesAsync();
             return;
         }
 
         if (string.Equals(title, "Add New Fixed Expense", StringComparison.Ordinal))
         {
-            new AddFixedExpensePopup(_viewModel.CreateAddFixedExpenseViewModel()) { Owner = this }.ShowDialog();
+            _dialogService.ShowAddFixedExpense(_viewModel.CreateAddFixedExpenseViewModel(), this);
             await _viewModel.RefreshFixedExpensesAsync();
             return;
         }
 
         if (string.Equals(title, "Add New Goal", StringComparison.Ordinal))
         {
-            new AddSavingGoalPopup(_viewModel.CreateAddSavingGoalViewModel()) { Owner = this }.ShowDialog();
+            _dialogService.ShowAddSavingGoal(_viewModel.CreateAddSavingGoalViewModel(), this);
             await _viewModel.RefreshSavingGoalsAsync();
             return;
         }
 
-        new FeaturePlaceholderPopup(title, "This creation flow is still being built.") { Owner = this }.ShowDialog();
+        _dialogService.ShowFeaturePlaceholder(title, "This creation flow is still being built.", this);
     }
 
     public async void OnRowActionClick(object sender, RoutedEventArgs e)
@@ -250,7 +253,7 @@ public partial class SettingsPopup : BasePopup
 
     private void OnAddTagClick(object sender, RoutedEventArgs e)
     {
-        new AddTagPopup(_viewModel) { Owner = this }.ShowDialog();
+        OpenAddTagPopup();
     }
 
     private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
@@ -283,11 +286,11 @@ public partial class SettingsPopup : BasePopup
 
     private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)
     {
-        var optionsPopup = new DeleteAllDataPopup { Owner = this };
-        if (optionsPopup.ShowDialog() != true || optionsPopup.Choice == DeleteAllDataChoice.Cancel)
+        var optionsResult = _dialogService.ShowDeleteAllData(this);
+        if (optionsResult.DialogResult != true || optionsResult.Choice == DeleteAllDataChoice.Cancel)
             return;
 
-        var keepSettings = optionsPopup.Choice == DeleteAllDataChoice.KeepSettings;
+        var keepSettings = optionsResult.Choice == DeleteAllDataChoice.KeepSettings;
         var confirmation = FluxoMessageBox.Show(this,
             keepSettings
                 ? "This will permanently delete all data and keep your current settings. Continue?"
@@ -330,6 +333,11 @@ public partial class SettingsPopup : BasePopup
         var result = await _viewModel.DeleteTagAsync(tag);
         if (!result.IsSuccess)
             ShowMessage(result.ErrorMessage, "Tags");
+    }
+
+    public void OpenAddTagPopup()
+    {
+        _dialogService.ShowAddTag(_viewModel, this);
     }
 
     public void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)

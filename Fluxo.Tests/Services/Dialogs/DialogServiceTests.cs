@@ -7,20 +7,6 @@ namespace Fluxo.Tests.Services.Dialogs;
 public sealed class DialogServiceTests
 {
     [Fact]
-    public void GetPopupOfType_ReturnsRegisteredPopup()
-    {
-        var serviceProvider = new ServiceCollection()
-            .AddTransient<TestPopup>()
-            .BuildServiceProvider();
-
-        var sut = new DialogService(serviceProvider);
-
-        var popup = sut.GetPopupOfType<TestPopup>();
-
-        Assert.NotNull(popup);
-    }
-
-    [Fact]
     public void ShowWarning_UsesWarningIcon()
     {
         var (sut, state) = CreateSut();
@@ -78,8 +64,6 @@ public sealed class DialogServiceTests
             });
         return (sut, state);
     }
-
-    private sealed class TestPopup;
 
     private sealed class TestMessageBoxState
     {

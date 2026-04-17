@@ -5,8 +5,8 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Fluxo.Resources.CustomControls;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
-using Fluxo.Views.Popups;
 
 namespace Fluxo.Views.Shell.Wizard;
 
@@ -14,6 +14,7 @@ public partial class StartupWizardPopup : BasePopup
 {
     private static readonly Duration FadeDuration = new(TimeSpan.FromMilliseconds(150));
 
+    private readonly IDialogService _dialogService;
     private readonly StartupWizardVM _viewModel;
     private bool _allowClose;
     private bool _isAnimating;
@@ -23,9 +24,10 @@ public partial class StartupWizardPopup : BasePopup
     private int _heldAllocationDelta;
     private BudgetAllocationSegment _heldAllocationSegment;
 
-    public StartupWizardPopup(StartupWizardVM viewModel)
+    public StartupWizardPopup(StartupWizardVM viewModel, IDialogService dialogService)
     {
         InitializeComponent();
+        _dialogService = dialogService;
         _viewModel = viewModel;
         DataContext = viewModel;
         Loaded += OnLoadedAsync;
@@ -155,19 +157,19 @@ public partial class StartupWizardPopup : BasePopup
 
     public async void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
     {
-        new AddSpendingSourcePopup(_viewModel.CreateAddSpendingSourceViewModel()) { Owner = this }.ShowDialog();
+        _dialogService.ShowAddSpendingSource(_viewModel.CreateAddSpendingSourceViewModel(), this);
         await _viewModel.RefreshSpendingSourcesAsync();
     }
 
     public async void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
     {
-        new AddFixedExpensePopup(_viewModel.CreateAddFixedExpenseViewModel()) { Owner = this }.ShowDialog();
+        _dialogService.ShowAddFixedExpense(_viewModel.CreateAddFixedExpenseViewModel(), this);
         await _viewModel.RefreshFixedExpensesAsync();
     }
 
     public async void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
     {
-        new AddSavingGoalPopup(_viewModel.CreateAddSavingGoalViewModel()) { Owner = this }.ShowDialog();
+        _dialogService.ShowAddSavingGoal(_viewModel.CreateAddSavingGoalViewModel(), this);
         await _viewModel.RefreshSavingGoalsAsync();
     }
 
@@ -177,7 +179,7 @@ public partial class StartupWizardPopup : BasePopup
             return;
 
         var vm = await _viewModel.CreateEditSpendingSourceViewModelAsync(id);
-        new AddSpendingSourcePopup(vm) { Owner = this }.ShowDialog();
+        _dialogService.ShowAddSpendingSource(vm, this);
         await _viewModel.RefreshSpendingSourcesAsync();
     }
 
@@ -200,7 +202,7 @@ public partial class StartupWizardPopup : BasePopup
             return;
 
         var vm = await _viewModel.CreateEditFixedExpenseViewModelAsync(id);
-        new AddFixedExpensePopup(vm) { Owner = this }.ShowDialog();
+        _dialogService.ShowAddFixedExpense(vm, this);
         await _viewModel.RefreshFixedExpensesAsync();
     }
 
@@ -223,7 +225,7 @@ public partial class StartupWizardPopup : BasePopup
             return;
 
         var vm = await _viewModel.CreateEditSavingGoalViewModelAsync(id);
-        new AddSavingGoalPopup(vm) { Owner = this }.ShowDialog();
+        _dialogService.ShowAddSavingGoal(vm, this);
         await _viewModel.RefreshSavingGoalsAsync();
     }
 

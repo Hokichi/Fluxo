@@ -16,9 +16,6 @@ using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
-using Fluxo.Views.Popups;
-using Fluxo.Views.Popups.Settings;
-using Fluxo.Views.Shell.Wizard;
 
 namespace Fluxo.Views.Shell.Main;
 
@@ -361,7 +358,7 @@ public partial class MainWindow : Window, IPopupHost
 
         if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            _dialogService.ShowPopupOfType<QuickSearchPopup>(this);
+            _dialogService.ShowQuickSearch(this);
             e.Handled = true;
             return;
         }
@@ -469,7 +466,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        _dialogService.ShowPopupOfType<QuickAddPopup>(this);
+        _dialogService.ShowQuickAdd(this);
     }
 
     public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
@@ -478,54 +475,51 @@ public partial class MainWindow : Window, IPopupHost
         if (draft is { } popupDraft)
             popupViewModel.InitializeFromDraft(popupDraft);
 
-        var popup = new AddNewTransaction(popupViewModel) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 
     public void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
     {
         var unitOfWork = _unitOfWork;
         var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, unitOfWork);
-        var popup = new ExpenseDetailPopup(popupViewModel) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowExpenseDetail(popupViewModel, this);
     }
 
     public void OpenSpendingSourcesListPopup()
     {
-        _dialogService.ShowPopupOfType<SpendingSourcesListPopup>(this);
+        _dialogService.ShowSpendingSourcesList(this);
     }
 
     public void OpenAddSpendingSourcePopup()
     {
-        _dialogService.ShowPopupOfType<AddSpendingSourcePopup>(this);
+        _dialogService.ShowAddSpendingSource(this);
     }
 
     public void OpenAddFixedExpensePopup()
     {
-        _dialogService.ShowPopupOfType<AddFixedExpensePopup>(this);
+        _dialogService.ShowAddFixedExpense(this);
     }
 
     public void OpenAddSavingGoalPopup()
     {
-        _dialogService.ShowPopupOfType<AddSavingGoalPopup>(this);
+        _dialogService.ShowAddSavingGoal(this);
     }
 
     public void OpenSettingsPopup()
     {
-        _dialogService.ShowPopupOfType<SettingsPopup>(this);
+        _dialogService.ShowSettings(this);
     }
 
     public void OpenStartupWizardPopup()
     {
-        _dialogService.ShowPopupOfType<StartupWizardPopup>(this);
+        _dialogService.ShowStartupWizard(this);
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
     {
         var unitOfWork = _unitOfWork;
         var popupViewModel = new SpendingSourceDetailVM(_mainVM, spendingSource.Id, unitOfWork);
-        var popup = new SpendingSourceDetailPopup(popupViewModel) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowSpendingSourceDetail(popupViewModel, this);
     }
 
     public async Task ExecuteDeleteSpendingSourceActionAsync(SpendingSourceVM spendingSource)
@@ -551,8 +545,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         var transferVm = new TransferFundsVM(_mainVM, spendingSource, _unitOfWork);
-        var popup = new TransferFundsPopup(transferVm) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowTransferFunds(transferVm, this);
     }
 
     // ── Popup overlay & blur ────────────────────────────────────────

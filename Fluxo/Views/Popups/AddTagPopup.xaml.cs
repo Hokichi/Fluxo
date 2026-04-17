@@ -1,18 +1,21 @@
 using System.Windows;
 using Fluxo.Resources.CustomControls;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
 
 namespace Fluxo.Views.Popups;
 
 public partial class AddTagPopup : BasePopup
 {
+    private readonly IDialogService _dialogService;
     private readonly SettingsVM _settingsViewModel;
     private readonly AddTagVM _viewModel;
 
-    public AddTagPopup(SettingsVM settingsViewModel)
+    public AddTagPopup(SettingsVM settingsViewModel, IDialogService dialogService)
     {
         InitializeComponent();
 
+        _dialogService = dialogService;
         _settingsViewModel = settingsViewModel;
         _viewModel = new AddTagVM();
         DataContext = _viewModel;
@@ -42,8 +45,8 @@ public partial class AddTagPopup : BasePopup
 
     private void OnAddCustomColorClick(object sender, RoutedEventArgs e)
     {
-        var pickerPopup = new AddTagColorPickerPopup(_viewModel.SelectedColorHex) { Owner = this };
-        if (pickerPopup.ShowDialog() == true && !string.IsNullOrWhiteSpace(pickerPopup.SelectedHexColor))
-            _viewModel.AddCustomColorToFront(pickerPopup.SelectedHexColor);
+        var pickerResult = _dialogService.ShowAddTagColorPicker(_viewModel.SelectedColorHex, this);
+        if (pickerResult.DialogResult == true && !string.IsNullOrWhiteSpace(pickerResult.SelectedHexColor))
+            _viewModel.AddCustomColorToFront(pickerResult.SelectedHexColor);
     }
 }

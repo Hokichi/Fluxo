@@ -1,5 +1,9 @@
 using System.Windows;
 using Fluxo.Resources.CustomControls;
+using Fluxo.ViewModels.Popups;
+using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Settings;
+using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo.Services.Dialogs;
@@ -21,19 +25,103 @@ public sealed class DialogService : IDialogService
         _showMessageBox = showMessageBox;
     }
 
-    public TPopup GetPopupOfType<TPopup>() where TPopup : class
+    public bool? ShowQuickAdd(Window? owner = null)
     {
-        return _serviceProvider.GetRequiredService<TPopup>();
+        return ShowDialog(_serviceProvider.GetRequiredService<QuickAddPopup>(), owner);
     }
 
-    public bool? ShowPopupOfType<TPopup>(Window? owner = null) where TPopup : Window
+    public bool? ShowQuickSearch(Window? owner = null)
     {
-        var popup = GetPopupOfType<TPopup>();
+        return ShowDialog(_serviceProvider.GetRequiredService<QuickSearchPopup>(), owner);
+    }
 
-        if (popup.Owner is null)
-            popup.Owner = owner;
+    public bool? ShowSpendingSourcesList(Window? owner = null)
+    {
+        return ShowDialog(_serviceProvider.GetRequiredService<SpendingSourcesListPopup>(), owner);
+    }
 
-        return popup.ShowDialog();
+    public bool? ShowSettings(Window? owner = null)
+    {
+        return ShowDialog(_serviceProvider.GetRequiredService<SettingsPopup>(), owner);
+    }
+
+    public bool? ShowStartupWizard(Window? owner = null)
+    {
+        return ShowDialog(_serviceProvider.GetRequiredService<StartupWizardPopup>(), owner);
+    }
+
+    public bool? ShowAddNewTransaction(QuickAddVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new AddNewTransaction(viewModel), owner);
+    }
+
+    public bool? ShowExpenseDetail(ExpenseDetailVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new ExpenseDetailPopup(viewModel), owner);
+    }
+
+    public bool? ShowSpendingSourceDetail(SpendingSourceDetailVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new SpendingSourceDetailPopup(viewModel, this), owner);
+    }
+
+    public bool? ShowTransferFunds(TransferFundsVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new TransferFundsPopup(viewModel), owner);
+    }
+
+    public bool? ShowAddSpendingSource(Window? owner = null)
+    {
+        return ShowDialog(_serviceProvider.GetRequiredService<AddSpendingSourcePopup>(), owner);
+    }
+
+    public bool? ShowAddSpendingSource(AddSpendingSourceVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new AddSpendingSourcePopup(viewModel), owner);
+    }
+
+    public bool? ShowAddFixedExpense(Window? owner = null)
+    {
+        return ShowDialog(_serviceProvider.GetRequiredService<AddFixedExpensePopup>(), owner);
+    }
+
+    public bool? ShowAddFixedExpense(AddFixedExpenseVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new AddFixedExpensePopup(viewModel), owner);
+    }
+
+    public bool? ShowAddSavingGoal(Window? owner = null)
+    {
+        return ShowDialog(_serviceProvider.GetRequiredService<AddSavingGoalPopup>(), owner);
+    }
+
+    public bool? ShowAddSavingGoal(AddSavingGoalVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new AddSavingGoalPopup(viewModel), owner);
+    }
+
+    public bool? ShowAddTag(SettingsVM settingsViewModel, Window? owner = null)
+    {
+        return ShowDialog(new AddTagPopup(settingsViewModel, this), owner);
+    }
+
+    public (bool? DialogResult, string SelectedHexColor) ShowAddTagColorPicker(string initialHexColor, Window? owner = null)
+    {
+        var popup = new AddTagColorPickerPopup(initialHexColor);
+        var dialogResult = ShowDialog(popup, owner);
+        return (dialogResult, popup.SelectedHexColor);
+    }
+
+    public bool? ShowFeaturePlaceholder(string title, string message, Window? owner = null)
+    {
+        return ShowDialog(new FeaturePlaceholderPopup(title, message), owner);
+    }
+
+    public (bool? DialogResult, DeleteAllDataChoice Choice) ShowDeleteAllData(Window? owner = null)
+    {
+        var popup = new DeleteAllDataPopup();
+        var dialogResult = ShowDialog(popup, owner);
+        return (dialogResult, popup.Choice);
     }
 
     public MessageBoxResult ShowWarning(string message, string title, Window? owner = null,
@@ -58,5 +146,13 @@ public sealed class DialogService : IDialogService
         MessageBoxButton buttons = MessageBoxButton.YesNo)
     {
         return _showMessageBox(owner, message, title, buttons, MessageBoxImage.Question);
+    }
+
+    private static bool? ShowDialog(Window popup, Window? owner)
+    {
+        if (popup.Owner is null)
+            popup.Owner = owner;
+
+        return popup.ShowDialog();
     }
 }

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Fluxo.Resources.CustomControls;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -13,14 +14,16 @@ namespace Fluxo.Views.Popups;
 
 public partial class SpendingSourceDetailPopup : BasePopup
 {
+    private readonly IDialogService _dialogService;
     private readonly SpendingSourceDetailVM _viewModel;
     private bool _allowClose;
     private bool _isHandlingCloseRequest;
     private bool _reopenSourcesOnClose;
 
-    public SpendingSourceDetailPopup(SpendingSourceDetailVM viewModel)
+    public SpendingSourceDetailPopup(SpendingSourceDetailVM viewModel, IDialogService dialogService)
     {
         InitializeComponent();
+        _dialogService = dialogService;
         _viewModel = viewModel;
         DataContext = viewModel;
         Closing += OnPopupClosing;
@@ -139,8 +142,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
             ShowOnUI = _viewModel.ShowOnUI
         }, _viewModel.UnitOfWork);
 
-        var popup = new TransferFundsPopup(transferVm) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowTransferFunds(transferVm, this);
         _ = _viewModel.LoadAsync();
     }
 
@@ -151,9 +153,6 @@ public partial class SpendingSourceDetailPopup : BasePopup
 
         _reopenSourcesOnClose = true;
         Close();
-
-        if (IsVisible)
-            _reopenSourcesOnClose = false;
     }
 
     private async void OnDeleteButtonClick(object sender, RoutedEventArgs e)

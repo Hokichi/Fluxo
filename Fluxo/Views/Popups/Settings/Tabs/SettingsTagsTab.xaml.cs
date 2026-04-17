@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
-using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 
@@ -18,10 +18,10 @@ public partial class SettingsTagsTab : UserControl
 
     private void OnAddTagClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel is null)
+        if (Window.GetWindow(this) is not SettingsPopup settingsPopup)
             return;
 
-        new AddTagPopup(ViewModel) { Owner = Window.GetWindow(this) }.ShowDialog();
+        settingsPopup.OpenAddTagPopup();
     }
 
     private async void OnTagDeleteClick(object sender, RoutedEventArgs e)

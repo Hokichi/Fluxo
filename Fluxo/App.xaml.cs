@@ -1,6 +1,5 @@
 using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces;
-using Fluxo.Data;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
 using Fluxo.Resources.CustomControls;
@@ -34,7 +33,7 @@ public partial class App : Application
         _serviceProvider = services.BuildServiceProvider();
 
         _mainVM = _serviceProvider!.GetRequiredService<MainVM>();
-        _unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();\
+        _unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
     }
 
     protected override async void OnStartup(StartupEventArgs e)
