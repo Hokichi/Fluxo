@@ -49,14 +49,6 @@
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Saving Goals" />
 
-                <Border Grid.Column="1" Style="{StaticResource DashboardCountBadgeStyle}">
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="9"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding SavingGoals.Count}" />
-                </Border>
-
                 <c:BalloonButton
                     Grid.Column="2"
                     Margin="8,0,0,0"
@@ -75,9 +67,7 @@
                 TextAlignment="Center"
                 Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
 
-            <Grid
-                Grid.Row="2"
-                Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid Grid.Row="2" Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
@@ -109,19 +99,17 @@
                         Grid.Column="2"
                         Background="Transparent"
                         ClipToBounds="True"
+                        LostMouseCapture="OnCarouselViewportLostMouseCapture"
                         PreviewMouseLeftButtonDown="OnCarouselViewportPreviewMouseLeftButtonDown"
-                        PreviewMouseMove="OnCarouselViewportPreviewMouseMove"
                         PreviewMouseLeftButtonUp="OnCarouselViewportPreviewMouseLeftButtonUp"
-                        LostMouseCapture="OnCarouselViewportLostMouseCapture">
-                        <ContentControl
-                            x:Name="CurrentGoalPresenter"
-                            ContentTemplate="{StaticResource SavingGoalTemplate}" />
+                        PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
+                        <ContentControl x:Name="CurrentGoalPresenter" ContentTemplate="{StaticResource SavingGoalTemplate}" />
 
                         <ContentControl
                             x:Name="IncomingGoalPresenter"
+                            ContentTemplate="{StaticResource SavingGoalTemplate}"
                             IsHitTestVisible="False"
-                            Visibility="Collapsed"
-                            ContentTemplate="{StaticResource SavingGoalTemplate}" />
+                            Visibility="Collapsed" />
                     </Grid>
 
                     <Button

@@ -309,7 +309,7 @@
                             VerticalAlignment="Center"
                             Click="OnSpendingSourcesButtonClick"
                             Content="View All Spending Sources"
-                            Style="{StaticResource HeaderMenuActionButtonStyle}" />
+                            Style="{StaticResource TextOnlyButtonStyle}" />
                     </Grid>
 
                     <c:FadingScrollViewer

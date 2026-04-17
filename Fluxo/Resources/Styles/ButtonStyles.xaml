@@ -1039,6 +1039,31 @@
         </Style.Triggers>
     </Style>
 
+
+    <Style x:Key="TextOnlyButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="SpendingSourceAddButtonStyle" TargetType="Button">
         <Setter Property="Width" Value="80" />
         <Setter Property="Height" Value="100" />
