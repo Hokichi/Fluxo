@@ -11,6 +11,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using Fluxo.Core.Interfaces;
 using Fluxo.Resources.CustomControls;
+using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -36,6 +37,7 @@ public partial class MainWindow : Window, IPopupHost
     private readonly SavingGoalsPanelVM _savingGoalsPanelVM;
     private readonly MainViewModeToggleVM _viewModeToggleVM;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IDialogService _dialogService;
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _hasInitializedDashboardPanels;
@@ -51,6 +53,7 @@ public partial class MainWindow : Window, IPopupHost
     public MainWindow(
         MainVM mainVM,
         IUnitOfWork unitOfWork,
+        IDialogService dialogService,
         DaySpinnerVM daySpinnerVM,
         MainViewModeToggleVM viewModeToggleVM,
         BudgetAllocationPanelVM budgetAllocationPanelVM,
@@ -61,6 +64,7 @@ public partial class MainWindow : Window, IPopupHost
 
         _mainVM = mainVM;
         _unitOfWork = unitOfWork;
+        _dialogService = dialogService;
         _viewModeToggleVM = viewModeToggleVM;
         _budgetAllocationPanelVM = budgetAllocationPanelVM;
         _notificationPanelVM = notificationPanelVM;
@@ -319,12 +323,10 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            FluxoMessageBox.Show(
-                this,
+            _dialogService.ShowError(
                 $"Unable to initialize dashboard panels.\n\n{exception.Message}",
                 "Dashboard",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+                this);
         }
     }
 
@@ -359,8 +361,7 @@ public partial class MainWindow : Window, IPopupHost
 
         if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            var popup = new QuickSearchPopup(_mainVM) { Owner = this };
-            popup.ShowDialog();
+            _dialogService.ShowPopupOfType<QuickSearchPopup>(this);
             e.Handled = true;
             return;
         }
@@ -468,8 +469,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        var popup = new QuickAddPopup { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowPopupOfType<QuickAddPopup>(this);
     }
 
     public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
@@ -492,47 +492,32 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenSpendingSourcesListPopup()
     {
-        var popup = new SpendingSourcesListPopup(_mainVM) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowPopupOfType<SpendingSourcesListPopup>(this);
     }
 
     public void OpenAddSpendingSourcePopup()
     {
-        var popup = new AddSpendingSourcePopup(new AddSpendingSourceVM(_mainVM, _unitOfWork))
-        {
-            Owner = this
-        };
-        popup.ShowDialog();
+        _dialogService.ShowPopupOfType<AddSpendingSourcePopup>(this);
     }
 
     public void OpenAddFixedExpensePopup()
     {
-        var popup = new AddFixedExpensePopup(new AddFixedExpenseVM(_mainVM, _unitOfWork))
-        {
-            Owner = this
-        };
-        popup.ShowDialog();
+        _dialogService.ShowPopupOfType<AddFixedExpensePopup>(this);
     }
 
     public void OpenAddSavingGoalPopup()
     {
-        var popup = new AddSavingGoalPopup(new AddSavingGoalVM(_mainVM, _unitOfWork))
-        {
-            Owner = this
-        };
-        popup.ShowDialog();
+        _dialogService.ShowPopupOfType<AddSavingGoalPopup>(this);
     }
 
     public void OpenSettingsPopup()
     {
-        var popup = new SettingsPopup(new SettingsVM(_mainVM, _unitOfWork)) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowPopupOfType<SettingsPopup>(this);
     }
 
     public void OpenStartupWizardPopup()
     {
-        var popup = new StartupWizardPopup(new StartupWizardVM(_mainVM, _unitOfWork)) { Owner = this };
-        popup.ShowDialog();
+        _dialogService.ShowPopupOfType<StartupWizardPopup>(this);
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
@@ -608,8 +593,8 @@ public partial class MainWindow : Window, IPopupHost
         ArgumentNullException.ThrowIfNull(spendingSource);
 
         if (requireDeleteConfirmation &&
-            FluxoMessageBox.Show(this, $"Delete \"{spendingSource.Name}\"?", "Settings", MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            _dialogService.ShowWarning($"Delete \"{spendingSource.Name}\"?", "Settings", this, MessageBoxButton.YesNo) !=
+            MessageBoxResult.Yes)
             return;
 
         try
@@ -619,13 +604,11 @@ public partial class MainWindow : Window, IPopupHost
 
             var result = await settingsViewModel.ExecuteSpendingSourceItemActionAsync(spendingSource.Id, action);
             if (!result.IsSuccess)
-                FluxoMessageBox.Show(this, result.ErrorMessage, "Settings", MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                _dialogService.ShowInformation(result.ErrorMessage, "Settings", this);
         }
         catch (Exception exception)
         {
-            FluxoMessageBox.Show(this, $"Unable to update this spending source.\n\n{exception.Message}", "Settings",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowError($"Unable to update this spending source.\n\n{exception.Message}", "Settings", this);
         }
     }
 
@@ -691,8 +674,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            FluxoMessageBox.Show(this, $"Unable to undo the last action.\n\n{exception.Message}", "Undo",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowError($"Unable to undo the last action.\n\n{exception.Message}", "Undo", this);
         }
     }
 
@@ -707,8 +689,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            FluxoMessageBox.Show(this, $"Unable to redo the last action.\n\n{exception.Message}", "Redo",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowError($"Unable to redo the last action.\n\n{exception.Message}", "Redo", this);
         }
     }
 

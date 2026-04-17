@@ -4,9 +4,8 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
 using Fluxo.Resources.CustomControls;
-using Fluxo.ViewModels.Popups;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Shell;
-using Fluxo.Views.Popups;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Wizard;
@@ -41,15 +40,14 @@ public partial class App : Application
         {
             var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
             var unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
+            var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
 
             var isFirstRun = await EnsureFirstRunSettingAsync(unitOfWork);
 
             if (isFirstRun)
             {
-                var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWork))
-                {
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
-                };
+                var wizard = dialogService.GetPopupOfType<StartupWizardPopup>();
+                wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 wizard.ShowDialog();
             }
             else
@@ -73,8 +71,11 @@ public partial class App : Application
         }
         catch (Exception exception)
         {
-            FluxoMessageBox.Show(null, $"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            if (_serviceProvider?.GetService<IDialogService>() is { } dialogService)
+                dialogService.ShowError($"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo");
+            else
+                FluxoMessageBox.Show(null, $"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
 
             Shutdown();
         }
@@ -84,14 +85,13 @@ public partial class App : Application
     {
         var mainVM = _serviceProvider!.GetRequiredService<MainVM>();
         var unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
+        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         MainWindow?.Hide();
 
-        var wizard = new StartupWizardPopup(new StartupWizardVM(mainVM, unitOfWork))
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterScreen
-        };
+        var wizard = dialogService.GetPopupOfType<StartupWizardPopup>();
+        wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         wizard.ShowDialog();
 
         await mainVM.Initialize();

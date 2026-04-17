@@ -4,10 +4,15 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Mappings;
 using Fluxo.Services.Mappings;
 using Fluxo.Services.Persistence;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
+using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Settings;
 using Fluxo.Views.Shell.Main;
+using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -36,6 +41,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddUIData(this IServiceCollection services)
     {
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
+        services.AddSingleton<IDialogService, DialogService>();
 
         services.AddSingleton<MainVM>();
         services.AddSingleton<DaySpinnerVM>();
@@ -51,6 +57,21 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SavingGoalVM>();
         services.AddTransient<SpendingSourceVM>();
         services.AddTransient<UserSettingsVM>();
+        services.AddTransient<QuickAddVM>();
+        services.AddTransient<AddSpendingSourceVM>();
+        services.AddTransient<AddFixedExpenseVM>();
+        services.AddTransient<AddSavingGoalVM>();
+        services.AddTransient<SettingsVM>();
+        services.AddTransient<StartupWizardVM>();
+
+        services.AddTransient<QuickAddPopup>();
+        services.AddTransient<QuickSearchPopup>();
+        services.AddTransient<SpendingSourcesListPopup>();
+        services.AddTransient<AddSpendingSourcePopup>();
+        services.AddTransient<AddFixedExpensePopup>();
+        services.AddTransient<AddSavingGoalPopup>();
+        services.AddTransient<SettingsPopup>();
+        services.AddTransient<StartupWizardPopup>();
 
         services.AddSingleton<MainWindow>();
 
