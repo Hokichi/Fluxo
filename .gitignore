@@ -360,6 +360,7 @@ MigrationBackup/
 .ionide/
 .dotnet-home/
 .dotnet_home/
+.dotnet/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd

@@ -1,7 +1,32 @@
 <UserControl
     x:Class="Fluxo.Views.Shell.Main.Sections.SavingGoalsPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks">
+    <UserControl.Resources>
+        <Style x:Key="SavingGoalCarouselDotStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="6" />
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Margin" Value="4,0,4,0" />
+            <Setter Property="Fill" Value="{StaticResource Brush.Text.Muted}" />
+            <Setter Property="Opacity" Value="0.35" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
+                    <Setter Property="Opacity" Value="1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style
+            x:Key="SavingGoalCarouselArrowButtonStyle"
+            BasedOn="{StaticResource SpinnerArrowButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+        </Style>
+    </UserControl.Resources>
+
     <Border Style="{StaticResource DashboardPanelStyle}">
         <Grid>
             <Grid.RowDefinitions>
@@ -41,12 +66,78 @@
                 TextAlignment="Center"
                 Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
 
-            <ScrollViewer
+            <Grid
                 Grid.Row="2"
-                VerticalScrollBarVisibility="Auto"
                 Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                <ItemsControl ItemTemplate="{StaticResource SavingGoalTemplate}" ItemsSource="{Binding SavingGoals}" />
-            </ScrollViewer>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Click="OnNavigatePreviousClick"
+                        Style="{StaticResource SavingGoalCarouselArrowButtonStyle}"
+                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <icons:PackIconUnicons
+                            Height="12"
+                            Kind="AngleLeft"
+                            Style="{StaticResource SpinnerArrowIconStyle}" />
+                    </Button>
+
+                    <Grid Grid.Column="2" ClipToBounds="True">
+                        <ContentControl
+                            x:Name="CurrentGoalPresenter"
+                            ContentTemplate="{StaticResource SavingGoalTemplate}" />
+
+                        <ContentControl
+                            x:Name="IncomingGoalPresenter"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed"
+                            ContentTemplate="{StaticResource SavingGoalTemplate}" />
+                    </Grid>
+
+                    <Button
+                        Grid.Column="4"
+                        VerticalAlignment="Center"
+                        Click="OnNavigateNextClick"
+                        Style="{StaticResource SavingGoalCarouselArrowButtonStyle}"
+                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <icons:PackIconUnicons
+                            Height="12"
+                            Kind="AngleRight"
+                            Style="{StaticResource SpinnerArrowIconStyle}" />
+                    </Button>
+                </Grid>
+
+                <ItemsControl
+                    Grid.Row="1"
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    ItemsSource="{Binding GoalDots}"
+                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Ellipse Style="{StaticResource SavingGoalCarouselDotStyle}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>

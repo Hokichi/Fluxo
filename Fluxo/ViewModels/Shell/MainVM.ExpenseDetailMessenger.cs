@@ -191,22 +191,10 @@ public partial class MainVM
         }
     }
 
-    private bool IsExpenseLogVisibleInCurrentView(DateTime expenseDate)
+    private static bool IsExpenseLogVisibleInCurrentView(DateTime expenseDate)
     {
-        if (SelectedMainContentViewMode == MainContentViewMode.AllTime)
-            return true;
-
-        var selectedDate = SelectedDay?.Date ?? DateTime.Today;
-        var targetDate = expenseDate.Date;
-
-        return SelectedMainContentViewMode switch
-        {
-            MainContentViewMode.Daily => targetDate == selectedDate.Date,
-            MainContentViewMode.Weekly => targetDate >= selectedDate.Date && targetDate < selectedDate.Date.AddDays(7),
-            MainContentViewMode.Monthly => targetDate.Year == selectedDate.Year &&
-                                           targetDate.Month == selectedDate.Month,
-            _ => false
-        };
+        _ = expenseDate;
+        return true;
     }
 
     private ObservableCollection<ExpenseLogVM> GetExpenseCollection(ExpenseCategory category)

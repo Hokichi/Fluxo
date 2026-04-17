@@ -5,14 +5,24 @@ using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell;
 
-public partial class MainViewModeToggleVM : ObservableRecipient
+public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<SpinnerPeriodStateChangedMessage>
 {
     [ObservableProperty]
     private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
 
+    [ObservableProperty]
+    private string _moveToCurrentLabel = "Move to today";
+
+    [ObservableProperty]
+    private bool _isAtCurrentPeriod = true;
+
+    [ObservableProperty]
+    private bool _isSpinnerVisible = true;
+
     public MainViewModeToggleVM(IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
+        IsActive = true;
     }
 
     public bool IsDailyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Daily;
@@ -28,6 +38,19 @@ public partial class MainViewModeToggleVM : ObservableRecipient
     {
         SelectedMainContentViewMode = viewMode;
         Messenger.Send(new ViewModeChangeMessage(viewMode));
+    }
+
+    [RelayCommand]
+    private void MoveToCurrentPeriod()
+    {
+        Messenger.Send(new MoveToCurrentPeriodRequestedMessage());
+    }
+
+    public void Receive(SpinnerPeriodStateChangedMessage message)
+    {
+        IsAtCurrentPeriod = message.Value.IsAtCurrentPeriod;
+        IsSpinnerVisible = message.Value.IsSpinnerVisible;
+        MoveToCurrentLabel = message.Value.MoveToCurrentLabel;
     }
 
     partial void OnSelectedMainContentViewModeChanged(MainContentViewMode oldValue, MainContentViewMode newValue)

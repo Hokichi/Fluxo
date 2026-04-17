@@ -8,7 +8,9 @@ using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell;
 
-public partial class DaySpinnerVM : ObservableRecipient, IRecipient<ViewModeChangeMessage>
+public partial class DaySpinnerVM : ObservableRecipient,
+    IRecipient<ViewModeChangeMessage>,
+    IRecipient<MoveToCurrentPeriodRequestedMessage>
 {
     private bool _suppressSelectionPublishing;
     private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
@@ -33,6 +35,9 @@ public partial class DaySpinnerVM : ObservableRecipient, IRecipient<ViewModeChan
     [ObservableProperty]
     private bool _isSpinnerVisible = true;
 
+    [ObservableProperty]
+    private bool _isAtCurrentPeriod = true;
+
     public string MoveToCurrentLabel => _selectedMainContentViewMode switch
     {
         MainContentViewMode.Daily => "Move to today",
@@ -52,6 +57,7 @@ public partial class DaySpinnerVM : ObservableRecipient, IRecipient<ViewModeChan
             try
             {
                 IsSpinnerVisible = false;
+                IsAtCurrentPeriod = false;
                 CanNavigateForward = false;
                 _spinnerPageOffset = 0;
                 DaysOfWeek.Clear();
@@ -62,12 +68,18 @@ public partial class DaySpinnerVM : ObservableRecipient, IRecipient<ViewModeChan
                 _suppressSelectionPublishing = false;
             }
 
+            PublishSpinnerPeriodState();
             Messenger.Send(new AllTimeViewModeMessage());
             return;
         }
 
         IsSpinnerVisible = true;
         BuildSpinnerForMode(DateTime.Today, publishSelection: true);
+    }
+
+    public void Receive(MoveToCurrentPeriodRequestedMessage message)
+    {
+        MoveToCurrentPeriodCore();
     }
 
     public void PublishCurrentSelection()
@@ -105,10 +117,7 @@ public partial class DaySpinnerVM : ObservableRecipient, IRecipient<ViewModeChan
     [RelayCommand]
     private void MoveToCurrentPeriod()
     {
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
-            return;
-
-        BuildSpinnerForMode(DateTime.Today, publishSelection: true);
+        MoveToCurrentPeriodCore();
     }
 
     partial void OnSelectedDayChanged(DayOfWeekVM value)
@@ -122,7 +131,9 @@ public partial class DaySpinnerVM : ObservableRecipient, IRecipient<ViewModeChan
         foreach (var item in DaysOfWeek)
             item.IsSelected = ReferenceEquals(item, value);
 
+        IsAtCurrentPeriod = EvaluateIsAtCurrentPeriod(value.Date);
         PublishSelectedRange(value.Date);
+        PublishSpinnerPeriodState();
     }
 
     private void BuildSpinnerForMode(DateTime referenceDate, bool publishSelection)
@@ -296,8 +307,42 @@ public partial class DaySpinnerVM : ObservableRecipient, IRecipient<ViewModeChan
         foreach (var item in DaysOfWeek)
             item.IsSelected = ReferenceEquals(item, day);
 
+        IsAtCurrentPeriod = EvaluateIsAtCurrentPeriod(day.Date);
+
         if (publishSelection)
             PublishSelectedRange(day.Date);
+
+        PublishSpinnerPeriodState();
+    }
+
+    private void MoveToCurrentPeriodCore()
+    {
+        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+            return;
+
+        BuildSpinnerForMode(DateTime.Today, publishSelection: true);
+    }
+
+    private bool EvaluateIsAtCurrentPeriod(DateTime selectedDate)
+    {
+        var today = DateTime.Today;
+        var date = selectedDate.Date;
+
+        return _selectedMainContentViewMode switch
+        {
+            MainContentViewMode.Daily => date == today,
+            MainContentViewMode.Weekly => today >= date && today < date.AddDays(7),
+            MainContentViewMode.Monthly => date.Year == today.Year && date.Month == today.Month,
+            _ => false
+        };
+    }
+
+    private void PublishSpinnerPeriodState()
+    {
+        Messenger.Send(new SpinnerPeriodStateChangedMessage(new SpinnerPeriodState(
+            IsAtCurrentPeriod,
+            IsSpinnerVisible,
+            MoveToCurrentLabel)));
     }
 
     private static DateTime GetMonday(DateTime date)

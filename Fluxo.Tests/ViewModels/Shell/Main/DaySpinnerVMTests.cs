@@ -91,6 +91,52 @@ public class DaySpinnerVMTests
         Assert.Equal(-1, result);
     }
 
+    [Fact]
+    public void MoveToCurrentPeriodRequestedMessage_MovesSpinnerToCurrentPeriodAndPublishesRange()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+
+        var vm = new DaySpinnerVM(messenger);
+        messenger.Send(new ViewModeChangeMessage(MainContentViewMode.Daily));
+        recipient.DateRanges.Clear();
+
+        var today = DateTime.Today;
+        var nonCurrentDay = vm.DaysOfWeek.First(day => day.Date.Date != today);
+        vm.SelectedDay = nonCurrentDay;
+        recipient.DateRanges.Clear();
+
+        messenger.Send(new MoveToCurrentPeriodRequestedMessage());
+
+        Assert.Single(recipient.DateRanges);
+        Assert.Equal(today, recipient.DateRanges[0].From);
+        Assert.Equal(today, recipient.DateRanges[0].To);
+    }
+
+    [Fact]
+    public void SelectingNonCurrentDay_PublishesSpinnerStateWithIsAtCurrentPeriodFalse()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, SpinnerPeriodStateChangedMessage>(
+            recipient,
+            static (target, message) => target.SpinnerStates.Add(message.Value));
+
+        var vm = new DaySpinnerVM(messenger);
+        messenger.Send(new ViewModeChangeMessage(MainContentViewMode.Daily));
+
+        recipient.SpinnerStates.Clear();
+        var today = DateTime.Today;
+        var nonCurrentDay = vm.DaysOfWeek.First(day => day.Date.Date != today);
+        vm.SelectedDay = nonCurrentDay;
+
+        Assert.NotEmpty(recipient.SpinnerStates);
+        Assert.False(recipient.SpinnerStates[^1].IsAtCurrentPeriod);
+    }
+
     private static int InvokeWeeklyPageOffset(DateTime today, DateTime referenceDate)
     {
         var method = typeof(DaySpinnerVM).GetMethod(
@@ -107,5 +153,7 @@ public class DaySpinnerVMTests
         public List<(DateTime From, DateTime To)> DateRanges { get; } = [];
 
         public List<AllTimeViewModeMessage> AllTimeMessages { get; } = [];
+
+        public List<SpinnerPeriodState> SpinnerStates { get; } = [];
     }
 }

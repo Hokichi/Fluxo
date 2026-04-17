@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
@@ -43,7 +44,20 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
     [ObservableProperty]
     private bool _hasSavingGoals;
 
+    [ObservableProperty]
+    private bool _hasMultipleSavingGoals;
+
+    [ObservableProperty]
+    private int _currentGoalIndex = -1;
+
+    [ObservableProperty]
+    private SavingGoalVM? _currentGoal;
+
+    [ObservableProperty]
+    private int _navigationDirection;
+
     public ObservableCollection<SavingGoalVM> SavingGoals { get; } = [];
+    public ObservableCollection<SavingGoalCarouselDotVM> GoalDots { get; } = [];
 
     public void Receive(DashboardDataInvalidatedMessage message)
     {
@@ -71,6 +85,8 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
     {
         ArgumentNullException.ThrowIfNull(savingGoals);
 
+        var previousGoalId = CurrentGoal?.Id;
+
         SavingGoals.Clear();
 
         foreach (var goal in savingGoals.Where(goal =>
@@ -80,6 +96,34 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
             SavingGoals.Add(goal);
 
         HasSavingGoals = SavingGoals.Count > 0;
+        HasMultipleSavingGoals = SavingGoals.Count > 1;
+
+        if (!HasSavingGoals)
+        {
+            CurrentGoalIndex = -1;
+            CurrentGoal = null;
+            NavigationDirection = 0;
+            GoalDots.Clear();
+            return;
+        }
+
+        var initialIndex = previousGoalId.HasValue
+            ? SavingGoals.ToList().FindIndex(goal => goal.Id == previousGoalId.Value)
+            : -1;
+
+        SetCurrentGoalByIndex(initialIndex >= 0 ? initialIndex : 0, animateDirection: 0);
+    }
+
+    [RelayCommand]
+    public void NavigatePrevious()
+    {
+        NavigateByOffset(-1, slideDirection: 1);
+    }
+
+    [RelayCommand]
+    public void NavigateNext()
+    {
+        NavigateByOffset(1, slideDirection: -1);
     }
 
     private async Task ReloadSnapshotFromServicesAsync()
@@ -127,5 +171,65 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
             .Where(id => id > 0)
             .Distinct()
             .ToArray();
+    }
+
+    private void NavigateByOffset(int offset, int slideDirection)
+    {
+        if (SavingGoals.Count == 0)
+            return;
+
+        if (SavingGoals.Count == 1)
+        {
+            SetCurrentGoalByIndex(0, animateDirection: 0);
+            return;
+        }
+
+        var normalizedCurrentIndex = CurrentGoalIndex >= 0 ? CurrentGoalIndex : 0;
+        var targetIndex = (normalizedCurrentIndex + offset + SavingGoals.Count) % SavingGoals.Count;
+        SetCurrentGoalByIndex(targetIndex, slideDirection);
+    }
+
+    private void SetCurrentGoalByIndex(int index, int animateDirection)
+    {
+        if (SavingGoals.Count == 0)
+        {
+            CurrentGoalIndex = -1;
+            CurrentGoal = null;
+            NavigationDirection = 0;
+            return;
+        }
+
+        if (index < 0 || index >= SavingGoals.Count)
+            index = 0;
+
+        CurrentGoalIndex = index;
+        NavigationDirection = animateDirection;
+        CurrentGoal = SavingGoals[index];
+        UpdateGoalDots();
+    }
+
+    private void RebuildGoalDots()
+    {
+        GoalDots.Clear();
+
+        for (var index = 0; index < SavingGoals.Count; index++)
+        {
+            GoalDots.Add(new SavingGoalCarouselDotVM
+            {
+                IsActive = index == CurrentGoalIndex
+            });
+        }
+    }
+
+    private void UpdateGoalDots()
+    {
+        if (GoalDots.Count != SavingGoals.Count)
+        {
+            RebuildGoalDots();
+            return;
+        }
+
+        for (var index = 0; index < GoalDots.Count; index++)
+            GoalDots[index].IsActive = index == CurrentGoalIndex;
     }
 }
