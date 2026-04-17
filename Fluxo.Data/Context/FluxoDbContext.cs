@@ -91,6 +91,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(tag => tag.Name).IsRequired();
         entity.Property(tag => tag.HexCode).IsRequired();
         entity.Property(tag => tag.IconName).IsRequired();
+        entity.Property(tag => tag.IsSystemTag).HasDefaultValue(false);
     }
 
     private static void ConfigureSavingGoal(EntityTypeBuilder<SavingGoal> entity)

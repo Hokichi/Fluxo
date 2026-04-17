@@ -3,6 +3,7 @@ namespace Fluxo.Core.DTO;
 public class ExpenseTagDto
 {
     public int Id { get; set; }
+    public bool IsSystemTag { get; set; } = false;
     public string Name { get; set; } = string.Empty;
     public string HexCode { get; set; } = string.Empty;
     public string IconName { get; set; } = string.Empty;
