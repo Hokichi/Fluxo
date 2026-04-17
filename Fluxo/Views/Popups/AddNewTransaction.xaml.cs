@@ -99,6 +99,12 @@ public partial class AddNewTransaction : BasePopup
 
     private void FocusPrimaryInput()
     {
+        if (_viewModel.IsGoal)
+        {
+            GoalAmountTextBox.Focus();
+            return;
+        }
+
         if (_viewModel.IsExpense)
         {
             ExpenseAmountTextBox.Focus();

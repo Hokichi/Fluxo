@@ -110,6 +110,13 @@
                             GroupName="TransactionType"
                             IsChecked="{Binding IsIncome, Mode=TwoWay}"
                             Style="{StaticResource SegmentedToggleOptionStyle}" />
+                        <RadioButton
+                            x:Name="GoalRadioButton"
+                            Margin="4,0,0,0"
+                            Content="Goal"
+                            GroupName="TransactionType"
+                            IsChecked="{Binding IsGoal, Mode=TwoWay}"
+                            Style="{StaticResource SegmentedToggleOptionStyle}" />
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -285,6 +292,79 @@
                         </StackPanel>
                     </Grid>
                 </StackPanel>
+
+                <StackPanel Visibility="{Binding IsGoal, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
+                        <Border Style="{StaticResource PopupFieldBorderStyle}">
+                            <Grid>
+                                <c:MoneyTextBox
+                                    x:Name="GoalAmountTextBox"
+                                    Style="{StaticResource PopupTextBoxStyle}"
+                                    Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Margin="0,1,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{DynamicResource Medium}"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource Brush.Text.Muted}"
+                                    IsHitTestVisible="False"
+                                    Text="0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=GoalAmountTextBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Text, ElementName=GoalAmountTextBox}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <components:DateSelector x:Name="GoalTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
+                            <Border Padding="8,2" Style="{StaticResource PopupFieldBorderStyle}">
+                                <ComboBox
+                                    x:Name="GoalSpendingSourceComboBox"
+                                    DisplayMemberPath="Name"
+                                    ItemsSource="{Binding SpendingSources}"
+                                    SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+                                    Style="{StaticResource PopupComboBoxStyle}" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Margin="0,16,0,0">
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Goal" />
+                        <Border Padding="8,2" Style="{StaticResource PopupFieldBorderStyle}">
+                            <ComboBox
+                                x:Name="GoalComboBox"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding Goals}"
+                                SelectedItem="{Binding SelectedGoal, Mode=TwoWay}"
+                                Style="{StaticResource PopupComboBoxStyle}" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
             </Grid>
 
             <StackPanel
@@ -359,6 +439,16 @@
             </StackPanel>
 
             <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsGoal}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Note" />
                 <Border Style="{StaticResource PopupFieldBorderStyle}">
                     <RichTextBox

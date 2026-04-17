@@ -16,8 +16,10 @@ public partial class QuickAddVM : ObservableObject
 {
     private const int NoSpendingSourceId = -1;
     private const int NoTagId = -1;
+    private const int NoSavingGoalId = -1;
 
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
+    private readonly List<SavingGoalVM> _orderedGoals = [];
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IUnitOfWork _uow;
@@ -26,6 +28,7 @@ public partial class QuickAddVM : ObservableObject
 
     [ObservableProperty] private string _amountText = string.Empty;
     [ObservableProperty] private bool _isExpense = true;
+    [ObservableProperty] private bool _isGoal;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
     private bool _isUpdatingTagCollections;
@@ -33,6 +36,7 @@ public partial class QuickAddVM : ObservableObject
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
+    [ObservableProperty] private SavingGoalVM? _selectedGoal;
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
 
@@ -54,6 +58,7 @@ public partial class QuickAddVM : ObservableObject
     ];
 
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
+    public ObservableCollection<SavingGoalVM> Goals { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
     public bool CanSave => !IsSaving && AreRequiredFieldsFilled();
@@ -68,13 +73,21 @@ public partial class QuickAddVM : ObservableObject
 
     public bool IsIncome
     {
-        get => !IsExpense;
+        get => !IsExpense && !IsGoal;
         set
         {
             if (value == IsIncome)
                 return;
 
-            IsExpense = !value;
+            if (value)
+            {
+                IsGoal = false;
+                IsExpense = false;
+            }
+            else if (IsIncome)
+            {
+                IsExpense = true;
+            }
         }
     }
 
@@ -87,6 +100,7 @@ public partial class QuickAddVM : ObservableObject
     partial void OnNoteTextChanged(string value) => NotifyFormStateChanged();
     partial void OnSelectedDateChanged(DateTime value) => NotifyFormStateChanged();
     partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
+    partial void OnSelectedGoalChanged(SavingGoalVM? value) => NotifyFormStateChanged();
     partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
 
     public void InitializeFromDraft(QuickAddDraft draft)
@@ -94,6 +108,7 @@ public partial class QuickAddVM : ObservableObject
         ReloadChoicesFromMainViewModel();
 
         IsExpense = draft.IsExpense;
+        IsGoal = draft.IsGoal;
         AmountText = draft.AmountText;
         NameText = draft.Name;
         NoteText = draft.Note;
@@ -106,14 +121,34 @@ public partial class QuickAddVM : ObservableObject
         SelectedTag = draft.TagId is null
             ? _orderedTags.FirstOrDefault()
             : _orderedTags.FirstOrDefault(tag => tag.Id == draft.TagId.Value) ?? _orderedTags.FirstOrDefault();
+        SelectedGoal = draft.GoalId is null
+            ? Goals.FirstOrDefault()
+            : Goals.FirstOrDefault(goal => goal.Id == draft.GoalId.Value) ?? Goals.FirstOrDefault();
         IsMoreTagsOpen = false;
     }
 
     partial void OnIsExpenseChanged(bool value)
     {
+        if (value && IsGoal)
+            IsGoal = false;
+
         OnPropertyChanged(nameof(IsIncome));
 
-        if (!value)
+        if (!value || IsGoal)
+            IsMoreTagsOpen = false;
+
+        RefreshSpendingSources();
+        NotifyFormStateChanged();
+    }
+
+    partial void OnIsGoalChanged(bool value)
+    {
+        if (value && IsExpense)
+            IsExpense = false;
+
+        OnPropertyChanged(nameof(IsIncome));
+
+        if (value)
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
@@ -147,7 +182,72 @@ public partial class QuickAddVM : ObservableObject
             if (spendingSource is null)
                 return QuickAddSubmissionResult.Failure("Please select a valid spending source.");
 
-            if (input.IsExpense)
+            var invalidationScope = DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications;
+
+            if (input.IsGoal)
+            {
+                if (input.GoalId is null)
+                    return QuickAddSubmissionResult.Failure("Please choose a goal.");
+
+                if (!GoalUpdateTransactionSupport.IsEligibleGoalSourceType(spendingSource.SpendingSourceType))
+                    return QuickAddSubmissionResult.Failure("Goal updates can only be taken from Cash or Checking.");
+
+                var goal = await _uow.SavingGoals.GetByIdAsync(input.GoalId.Value);
+                if (goal is null)
+                    return QuickAddSubmissionResult.Failure("Please select a valid goal.");
+
+                var goalUpdateTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(_uow);
+                var expense = new Expense
+                {
+                    Name = BuildGoalUpdateName(goal.Name),
+                    Amount = input.Amount,
+                    ExpenseKind = ExpenseKind.Manual,
+                    ExpenseCategory = ExpenseCategory.Savings,
+                    RecurringDate = input.Date.Day,
+                    IsActive = false,
+                    SpendingSourceId = spendingSource.Id,
+                    ExpenseTagId = goalUpdateTag.Id
+                };
+
+                var expenseLog = new ExpenseLog
+                {
+                    Expense = expense,
+                    Amount = input.Amount,
+                    DeductedOn = input.Date,
+                    Notes = $"Goal update for {goal.Name}",
+                    IsForDeletion = false,
+                    SpendingSourceId = spendingSource.Id
+                };
+
+                goal.CurrentAmount += input.Amount;
+
+                await _uow.Expenses.AddAsync(expense);
+                await _uow.ExpenseLogs.AddAsync(expenseLog);
+                _uow.SavingGoals.Update(goal);
+
+                ApplyExpenseToSpendingSource(spendingSource, input.Amount);
+                _uow.SpendingSources.Update(spendingSource);
+
+                await _uow.SaveChangesAsync();
+                WeakReferenceMessenger.Default.Send(
+                    new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
+                        expense.Id,
+                        expenseLog.Id,
+                        expense.Name,
+                        expenseLog.Amount,
+                        expense.ExpenseKind,
+                        expense.ExpenseCategory,
+                        expense.RecurringDate,
+                        expense.IsActive,
+                        spendingSource.Id,
+                        goalUpdateTag.Id,
+                        expenseLog.DeductedOn,
+                        expenseLog.Notes,
+                        expenseLog.IsForDeletion))));
+
+                invalidationScope |= DashboardDataInvalidationScope.SavingGoals;
+            }
+            else if (input.IsExpense)
             {
                 var expenseTag = await _uow.ExpenseTags.GetByIdAsync(input.TagId!.Value);
                 if (expenseTag is null)
@@ -223,8 +323,7 @@ public partial class QuickAddVM : ObservableObject
                         incomeLog.Notes))));
             }
 
-            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
-                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(invalidationScope));
 
             await _mainViewModel.ReloadCurrentDataAsync();
 
@@ -254,7 +353,10 @@ public partial class QuickAddVM : ObservableObject
     public void ResetForm(bool keepCurrentType)
     {
         if (!keepCurrentType)
+        {
             IsExpense = true;
+            IsGoal = false;
+        }
 
         AmountText = string.Empty;
         NameText = string.Empty;
@@ -263,6 +365,7 @@ public partial class QuickAddVM : ObservableObject
         SelectedExpenseCategory = ExpenseCategory.Needs;
         SelectedSpendingSource = SpendingSources.FirstOrDefault();
         SelectedTag = _orderedTags.FirstOrDefault();
+        SelectedGoal = Goals.FirstOrDefault();
         IsMoreTagsOpen = false;
     }
 
@@ -285,8 +388,19 @@ public partial class QuickAddVM : ObservableObject
 
         ExpenseCategory? category = null;
         int? tagId = null;
+        int? goalId = null;
 
-        if (IsExpense)
+        if (IsGoal)
+        {
+            if (SelectedGoal is null)
+            {
+                validationMessage = "Please choose a goal.";
+                return false;
+            }
+
+            goalId = SelectedGoal.Id;
+        }
+        else if (IsExpense)
         {
             if (SelectedTag is null)
             {
@@ -300,13 +414,15 @@ public partial class QuickAddVM : ObservableObject
 
         input = new QuickTransactionInput(
             IsExpense,
+            IsGoal,
             NameText.Trim(),
             amount,
             SelectedSpendingSource.Id,
             SelectedDate.Date,
             NoteText.Trim(),
             category,
-            tagId);
+            tagId,
+            goalId);
 
         return true;
     }
@@ -344,6 +460,13 @@ public partial class QuickAddVM : ObservableObject
             .GroupBy(tag => tag.Id)
             .Select(group => group.First()));
 
+        _orderedGoals.Clear();
+        _orderedGoals.AddRange(_mainViewModel.SavingGoals
+            .GroupBy(goal => goal.Id)
+            .Select(group => group.First())
+            .OrderBy(goal => goal.Name));
+
+        ReplaceCollection(Goals, _orderedGoals);
         RefreshTagCollections();
         RefreshSpendingSources();
     }
@@ -406,6 +529,14 @@ public partial class QuickAddVM : ObservableObject
             : firstMeaningfulLine;
     }
 
+    private static string BuildGoalUpdateName(string goalName)
+    {
+        var trimmedGoalName = goalName.Trim();
+        return string.IsNullOrWhiteSpace(trimmedGoalName)
+            ? GoalUpdateTransactionSupport.GoalUpdateTagName
+            : $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {trimmedGoalName}";
+    }
+
     private static string BuildIncomeNote(string name, string note)
     {
         var trimmedName = name.Trim();
@@ -452,10 +583,16 @@ public partial class QuickAddVM : ObservableObject
 
     private bool AreRequiredFieldsFilled()
     {
-        if (string.IsNullOrWhiteSpace(NameText) || string.IsNullOrWhiteSpace(AmountText))
+        if (string.IsNullOrWhiteSpace(AmountText))
             return false;
 
         if (SelectedSpendingSource is null)
+            return false;
+
+        if (IsGoal)
+            return SelectedGoal is not null;
+
+        if (string.IsNullOrWhiteSpace(NameText))
             return false;
 
         if (IsExpense && SelectedTag is null)
@@ -468,13 +605,15 @@ public partial class QuickAddVM : ObservableObject
     {
         return new FormState(
             IsExpense,
+            IsGoal,
             NameText ?? string.Empty,
             AmountText ?? string.Empty,
             NoteText ?? string.Empty,
             SelectedDate.Date,
             SelectedExpenseCategory,
             SelectedSpendingSource?.Id ?? NoSpendingSourceId,
-            SelectedTag?.Id ?? NoTagId);
+            SelectedTag?.Id ?? NoTagId,
+            SelectedGoal?.Id ?? NoSavingGoalId);
     }
 
     private void NotifyFormStateChanged()
@@ -489,7 +628,9 @@ public partial class QuickAddVM : ObservableObject
 
         var filteredSources = _availableSpendingSources
             .Where(source =>
-                IsExpense || source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+                IsGoal
+                    ? GoalUpdateTransactionSupport.IsEligibleGoalSourceType(source.SpendingSourceType)
+                    : IsExpense || source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
             .OrderBy(source => source.Name)
             .ToList();
 
@@ -524,25 +665,31 @@ public partial class QuickAddVM : ObservableObject
         DateTime Date,
         string Note,
         ExpenseCategory? Category,
-        int? TagId);
+        int? TagId,
+        bool IsGoal = false,
+        int? GoalId = null);
 
     private readonly record struct QuickTransactionInput(
         bool IsExpense,
+        bool IsGoal,
         string Name,
         decimal Amount,
         int SpendingSourceId,
         DateTime Date,
         string Note,
         ExpenseCategory? Category,
-        int? TagId);
+        int? TagId,
+        int? GoalId);
 
     private readonly record struct FormState(
         bool IsExpense,
+        bool IsGoal,
         string NameText,
         string AmountText,
         string NoteText,
         DateTime SelectedDate,
         ExpenseCategory SelectedExpenseCategory,
         int SelectedSpendingSourceId,
-        int SelectedTagId);
+        int SelectedTagId,
+        int SelectedGoalId);
 }
