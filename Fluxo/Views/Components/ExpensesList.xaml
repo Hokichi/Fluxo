@@ -183,8 +183,11 @@
                             <StackPanel Orientation="Horizontal">
                                 <Border
                                     x:Name="ExpenseTagBorder"
+                                    Width="32"
+                                    Height="32"
                                     Margin="0,0,12,0"
-                                    Padding="5"
+                                    Padding="3"
+                                    HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Background="{Binding Expense.ExpenseTag.HexCode}">
                                     <Border.CornerRadius>
@@ -193,24 +196,20 @@
                                             <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
                                         </MultiBinding>
                                     </Border.CornerRadius>
-                                    <Viewbox
-                                        Width="10"
-                                        Height="10"
-                                        Stretch="Uniform">
-                                        <Path Data="{Binding Expense.ExpenseTag.IconName, Converter={StaticResource TagIconNameToGeometryConverter}}" Fill="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}" />
+                                    <Viewbox Stretch="Uniform">
+                                        <Path Data="{Binding Expense.ExpenseTag.IconName, Converter={StaticResource TagIconNameToGeometryConverter}}" Fill="{StaticResource Brush.Background.Surface}" />
                                     </Viewbox>
                                 </Border>
                                 <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
                                     <TextBlock
+                                        HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
                                         FontFamily="{StaticResource Bold}"
-                                        FontSize="13"
                                         Foreground="{StaticResource Brush.Text.Primary}"
                                         Text="{Binding Expense.Name}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap" />
                                     <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-
                                         <TextBlock
                                             FontFamily="{StaticResource Regular}"
                                             FontSize="10"

@@ -57,7 +57,7 @@
 
     <Grid
         Width="400"
-        Height="320"
+        Height="336"
         Margin="24,0,24,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -77,7 +77,7 @@
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="18">
-            <c:FadingScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
+            <c:FadingScrollViewer Margin="0,12,0,-12" VerticalScrollBarVisibility="Auto">
                 <ItemsControl x:Name="SourcesList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
