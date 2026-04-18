@@ -137,7 +137,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public decimal TotalIncomeAmount => _spendingSources.Sum(source => source.Balance);
 
-    public IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs() => _allExpenseLogs;
+    public IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs() => _allExpenseLogs.ToList();
 
     public void Receive(DateRangeSelectionChangedMessage message)
     {
