@@ -125,13 +125,11 @@
 
                     <StackPanel Grid.Column="0">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
-                        <Border Style="{StaticResource PopupFieldBorderStyle}">
-                            <TextBox
-                                x:Name="ExpenseNameTextBox"
-                                IsReadOnly="{Binding AreFieldsReadOnly}"
-                                Style="{StaticResource PopupTextBoxStyle}"
-                                Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                        </Border>
+                        <TextBox
+                            x:Name="ExpenseNameTextBox"
+                            IsReadOnly="{Binding AreFieldsReadOnly}"
+                            Style="{StaticResource RoundedTextInputStyle}"
+                            Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
@@ -152,29 +150,25 @@
 
                     <StackPanel Grid.Column="0">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Category" />
-                        <Border Padding="8,2" Style="{StaticResource PopupFieldBorderStyle}">
-                            <ComboBox
-                                x:Name="ExpenseCategoryComboBox"
-                                DisplayMemberPath="Label"
-                                IsEnabled="{Binding CanEditFields}"
-                                ItemsSource="{Binding ExpenseCategories}"
-                                SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
-                                SelectedValuePath="Value"
-                                Style="{StaticResource FluxoComboBoxStyle}" />
-                        </Border>
+                        <ComboBox
+                            x:Name="ExpenseCategoryComboBox"
+                            DisplayMemberPath="Label"
+                            IsEnabled="{Binding CanEditFields}"
+                            ItemsSource="{Binding ExpenseCategories}"
+                            SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
+                            SelectedValuePath="Value"
+                            Style="{StaticResource FluxoComboBoxStyle}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
-                        <Border Padding="8,2" Style="{StaticResource PopupFieldBorderStyle}">
-                            <ComboBox
-                                x:Name="ExpenseSpendingSourceComboBox"
-                                DisplayMemberPath="Name"
-                                IsEnabled="{Binding CanEditFields}"
-                                ItemsSource="{Binding SpendingSources}"
-                                SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
-                                Style="{StaticResource FluxoComboBoxStyle}" />
-                        </Border>
+                        <ComboBox
+                            x:Name="ExpenseSpendingSourceComboBox"
+                            DisplayMemberPath="Name"
+                            IsEnabled="{Binding CanEditFields}"
+                            ItemsSource="{Binding SpendingSources}"
+                            SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+                            Style="{StaticResource FluxoComboBoxStyle}" />
                     </StackPanel>
                 </Grid>
 

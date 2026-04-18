@@ -58,19 +58,12 @@
                                 Margin="0,14,0,8"
                                 Style="{StaticResource FieldLabelStyle}"
                                 Text="Source Type" />
-                            <Border
-                                Padding="8,4"
-                                Background="{StaticResource Brush.Background.Surface}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="1"
-                                CornerRadius="12">
-                                <ComboBox
-                                    DisplayMemberPath="Label"
-                                    ItemsSource="{Binding SpendingSourceTypes}"
-                                    SelectedValue="{Binding SelectedSpendingSourceType, Mode=TwoWay}"
-                                    SelectedValuePath="Value"
-                                    Style="{StaticResource FluxoComboBoxStyle}" />
-                            </Border>
+                            <ComboBox
+                                DisplayMemberPath="Label"
+                                ItemsSource="{Binding SpendingSourceTypes}"
+                                SelectedValue="{Binding SelectedSpendingSourceType, Mode=TwoWay}"
+                                SelectedValuePath="Value"
+                                Style="{StaticResource FluxoComboBoxStyle}" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">

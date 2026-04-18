@@ -35,20 +35,13 @@
                             FontFamily="{StaticResource Bold}"
                             Foreground="{StaticResource Brush.Text.Primary}"
                             Text="Currency" />
-                        <Border
+                        <ComboBox
                             Margin="0,8,0,0"
-                            Padding="8,4"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="12">
-                            <ComboBox
-                                DisplayMemberPath="DisplayName"
-                                ItemsSource="{Binding CurrencyOptions}"
-                                SelectedValue="{Binding SelectedCurrencyCode, Mode=TwoWay}"
-                                SelectedValuePath="Code"
-                                Style="{StaticResource FluxoComboBoxStyle}" />
-                        </Border>
+                            DisplayMemberPath="DisplayName"
+                            ItemsSource="{Binding CurrencyOptions}"
+                            SelectedValue="{Binding SelectedCurrencyCode, Mode=TwoWay}"
+                            SelectedValuePath="Code"
+                            Style="{StaticResource FluxoComboBoxStyle}" />
                     </StackPanel>
                 </Border>
 

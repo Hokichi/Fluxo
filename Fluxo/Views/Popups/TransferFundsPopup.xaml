@@ -60,18 +60,11 @@
             </Grid.RowDefinitions>
 
             <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Amount" />
-            <Border
+            <c:MoneyTextBox
+                x:Name="AmountTextBox"
                 Grid.Row="2"
-                Padding="12,10"
-                Background="{DynamicResource Brush.Background.Surface}"
-                BorderBrush="{DynamicResource Brush.Border.Subtle}"
-                BorderThickness="1"
-                CornerRadius="12">
-                <c:MoneyTextBox
-                    x:Name="AmountTextBox"
-                    Style="{StaticResource PopupTextBoxStyle}"
-                    Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
-            </Border>
+                Style="{StaticResource RoundedTextInputStyle}"
+                Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 
             <TextBlock
                 Grid.Row="4"

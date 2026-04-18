@@ -10,8 +10,8 @@
     </Style>
 
     <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
-        <Setter Property="Height" Value="48" />
-        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Padding" Value="4,6" />
         <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />

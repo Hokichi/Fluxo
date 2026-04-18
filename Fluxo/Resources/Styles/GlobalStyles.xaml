@@ -335,9 +335,10 @@
 
     <Style x:Key="FluxoComboBoxStyle" TargetType="ComboBox">
         <Setter Property="OverridesDefaultStyle" Value="True" />
-        <Setter Property="Height" Value="48" />
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         <Setter Property="FontFamily" Value="{StaticResource Medium}" />
         <Setter Property="FontSize" Value="13" />
@@ -356,15 +357,21 @@
                             x:Name="ToggleButton"
                             Height="{Binding Height, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                             HorizontalAlignment="Stretch"
-                            Background="Transparent"
-                            BorderThickness="0"
+                            Background="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}"
+                            BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource TemplatedParent}}"
+                            BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource TemplatedParent}}"
                             ClickMode="Press"
                             Focusable="False"
                             Foreground="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"
                             IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border Padding="8,0,12,0" Background="{TemplateBinding Background}">
+                                    <Border
+                                        Padding="10,0,12,0"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="12">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -372,7 +379,6 @@
                                             </Grid.ColumnDefinitions>
 
                                             <ContentPresenter
-                                                Margin="0,0,12,0"
                                                 HorizontalAlignment="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                                                 VerticalAlignment="Center"
                                                 Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
@@ -421,8 +427,8 @@
                             VerticalOffset="20">
                             <Border
                                 x:Name="DropDownBorder"
-                                MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                 MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                 Margin="0,8,0,0"
                                 Background="{StaticResource Brush.Background.Surface}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"

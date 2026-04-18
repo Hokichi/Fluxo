@@ -1,8 +1,8 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-    xmlns:components='clr-namespace:Fluxo.Views.Components'
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks">
     <Style TargetType="{x:Type c:BalloonButton}">
         <Setter Property="Cursor" Value="Hand" />
@@ -338,7 +338,12 @@
                                 StrokeDashArray="6,4"
                                 StrokeThickness="1" />
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <components:Icon Width='24' Height='24' x:Name='AddIcon' Path='{StaticResource ButtonStyles.PlusSolid}' Color='{StaticResource Brush.Text.Muted}' />
+                                <components:Icon
+                                    x:Name="AddIcon"
+                                    Width="24"
+                                    Height="24"
+                                    Path="{StaticResource ButtonStyles.PlusSolid}"
+                                    Color="{StaticResource Brush.Text.Muted}" />
                                 <TextBlock
                                     x:Name="AddLabel"
                                     Margin="0,10,0,0"
@@ -432,7 +437,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Height" Value="48" />
+        <Setter Property="Height" Value="40" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
@@ -442,7 +447,7 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="12">
-                        <Grid Margin="12,10">
+                        <Grid Margin="10,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -658,7 +663,11 @@
                             Stroke="{TemplateBinding BorderBrush}"
                             StrokeDashArray="2,2"
                             StrokeThickness="{TemplateBinding BorderThickness}" />
-                        <components:Icon Margin='9' x:Name='Plus' Path='{StaticResource ButtonStyles.PlusSolid}' Color='{StaticResource Brush.Text.Muted}' />
+                        <components:Icon
+                            x:Name="Plus"
+                            Margin="9"
+                            Path="{StaticResource ButtonStyles.PlusSolid}"
+                            Color="{StaticResource Brush.Text.Muted}" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -711,7 +720,13 @@
                                     Text="{TemplateBinding Content}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
-                            <components:Icon Grid.Column='1' Width='16' Height='16' VerticalAlignment='Center' Path='{StaticResource ButtonStyles.AngleRight}' Color='{StaticResource Brush.Text.Muted}' />
+                            <components:Icon
+                                Grid.Column="1"
+                                Width="16"
+                                Height="16"
+                                VerticalAlignment="Center"
+                                Path="{StaticResource ButtonStyles.AngleRight}"
+                                Color="{StaticResource Brush.Text.Muted}" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
