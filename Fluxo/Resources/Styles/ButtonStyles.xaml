@@ -45,6 +45,17 @@
         </Setter>
     </Style>
 
+    <Style
+        x:Key="MainWindowBalloonButtonChromeStyle"
+        BasedOn="{StaticResource {x:Type c:BalloonButton}}"
+        TargetType="{x:Type c:BalloonButton}">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=Width}" />
+        <Setter Property="Margin" Value="8,0,0,0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="CurveHeight" Value="8" />
+    </Style>
+
     <Style TargetType="{x:Type c:SwipeRevealContainer}">
         <Setter Property="Template">
             <Setter.Value>
@@ -168,28 +179,11 @@
 
     <Style
         x:Key="ToolbarActionBalloonButtonStyle"
-        BasedOn="{StaticResource {x:Type c:BalloonButton}}"
+        BasedOn="{StaticResource MainWindowBalloonButtonChromeStyle}"
         TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="Width" Value="32" />
-        <Setter Property="Height" Value="32" />
-        <Setter Property="Margin" Value="8,0,0,0" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="CurveHeight" Value="8" />
         <Setter Property="IconSize" Value="10" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Surface}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Background.Hovered}" />
-    </Style>
-
-    <Style
-        x:Key="RowActionBalloonButtonStyle"
-        BasedOn="{StaticResource ToolbarActionBalloonButtonStyle}"
-        TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="Width" Value="28" />
-        <Setter Property="Height" Value="28" />
-        <Setter Property="Margin" Value="6,0,0,0" />
-        <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="IconSize" Value="9" />
     </Style>
 
     <Style x:Key="TagDeleteButtonStyle" TargetType="Button">
@@ -252,9 +246,6 @@
         x:Key="TagAddBalloonButtonStyle"
         BasedOn="{StaticResource ToolbarActionBalloonButtonStyle}"
         TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="Width" Value="30" />
-        <Setter Property="Height" Value="30" />
-        <Setter Property="Margin" Value="0" />
         <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.PlusSolid}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Mint}" />
     </Style>
@@ -411,11 +402,8 @@
 
     <Style
         x:Key="CardActionButtonStyle"
-        BasedOn="{StaticResource {x:Type c:BalloonButton}}"
+        BasedOn="{StaticResource MainWindowBalloonButtonChromeStyle}"
         TargetType="c:BalloonButton">
-        <Setter Property="Width" Value="28" />
-        <Setter Property="Height" Value="28" />
-        <Setter Property="CornerRadius" Value="8" />
         <Setter Property="IconSize" Value="8" />
     </Style>
 
@@ -434,7 +422,6 @@
         BasedOn="{StaticResource CardActionButtonStyle}"
         TargetType="c:BalloonButton">
         <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.Close}" />
-        <Setter Property="Margin" Value="4,0,0,0" />
         <Setter Property="Tag" Value="{Binding Id}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Danger}" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Main}" />
@@ -445,7 +432,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Height" Value="40" />
+        <Setter Property="Height" Value="48" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
@@ -812,14 +799,8 @@
 
     <Style
         x:Key="DetailActionBalloonButtonStyle"
-        BasedOn="{StaticResource {x:Type c:BalloonButton}}"
+        BasedOn="{StaticResource MainWindowBalloonButtonChromeStyle}"
         TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="Width" Value="48" />
-        <Setter Property="Height" Value="48" />
-        <Setter Property="Margin" Value="8" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-        <Setter Property="CornerRadius" Value="14" />
-        <Setter Property="CurveHeight" Value="10" />
         <Setter Property="IconSize" Value="14" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Hover}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Background.Elevated}" />
@@ -974,13 +955,8 @@
 
     <Style
         x:Key="HeaderButtonStyle"
-        BasedOn="{StaticResource {x:Type c:BalloonButton}}"
+        BasedOn="{StaticResource MainWindowBalloonButtonChromeStyle}"
         TargetType="c:BalloonButton">
-        <Setter Property="Width" Value="28" />
-        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=Width}" />
-        <Setter Property="Margin" Value="8,0,0,0" />
-        <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="CurveHeight" Value="8" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Surface}" />
         <Setter Property="IconSize" Value="8" />
     </Style>
@@ -1305,18 +1281,4 @@
         </Setter>
     </Style>
 
-    <Style x:Key="BudgetTrackButtonStyle" TargetType="RepeatButton">
-        <Setter Property="Focusable" Value="False" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="RepeatButton">
-                    <Border
-                        Height="4"
-                        Margin="0,0,-8,0"
-                        Background="{TemplateBinding Background}"
-                        CornerRadius="3" />
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
 </ResourceDictionary>

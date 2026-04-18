@@ -10,6 +10,7 @@
     </Style>
 
     <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
+        <Setter Property="Height" Value="48" />
         <Setter Property="Padding" Value="8,6" />
         <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
@@ -49,14 +50,6 @@
         </Setter>
     </Style>
 
-    <Style
-        x:Key="FieldTextBoxStyle"
-        BasedOn="{StaticResource RoundedTextInputStyle}"
-        TargetType="TextBox">
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-    </Style>
-
     <Style x:Key="SearchTextBoxStyle" TargetType="TextBox">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
@@ -80,14 +73,6 @@
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-    </Style>
-
-    <Style
-        x:Key="PopupSurfaceTextBoxStyle"
-        BasedOn="{StaticResource RoundedTextInputStyle}"
-        TargetType="TextBox">
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
     </Style>
 
     <Style BasedOn="{StaticResource RoundedTextInputStyle}" TargetType="TextBox" />

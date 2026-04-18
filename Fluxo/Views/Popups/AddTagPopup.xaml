@@ -91,7 +91,7 @@
                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Tag Name" />
                 <TextBox
                     x:Name="TagNameTextBox"
-                    Style="{StaticResource FieldTextBoxStyle}"
+                    Style="{StaticResource RoundedTextInputStyle}"
                     Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}" />
 
                 <TextBlock

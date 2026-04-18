@@ -152,14 +152,14 @@
                                                         ButtonIcon="{StaticResource SettingsGoalsTab.CircleMinusSolid}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Danger}"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="Goals:Delete"
                                                         ToolTip="Delete" />
                                                     <c:BalloonButton
                                                         ButtonIcon="{StaticResource SettingsGoalsTab.LightningSlashFill}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Warning}"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="Goals:Disable"
                                                         ToolTip="Disable"
                                                         Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -167,7 +167,7 @@
                                                         ButtonIcon="{StaticResource SettingsGoalsTab.LightningFill}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Mint}"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="Goals:Enable"
                                                         ToolTip="Enable"
                                                         Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />

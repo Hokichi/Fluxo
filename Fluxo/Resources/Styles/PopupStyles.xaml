@@ -47,137 +47,83 @@
                                     <!--  Clone  -->
                                     <c:BalloonButton
                                         x:Name="PART_CloneButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.CloneRegular}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
-                                        IconSize="8"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCloneButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Delete  -->
                                     <c:BalloonButton
                                         x:Name="PART_DeleteButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.CircleMinusSolid}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Danger}"
-                                        IconSize="8"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowDeleteButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Edit  -->
                                     <c:BalloonButton
                                         x:Name="PART_EditButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.Edit}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Primary.Hover}"
-                                        IconSize="8"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowEditButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Revert  -->
                                     <c:BalloonButton
                                         x:Name="PART_RevertButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.RegularUndo}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Warning}"
-                                        IconSize="8"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowRevertButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Apply  -->
                                     <c:BalloonButton
                                         x:Name="PART_ApplyButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.Check}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Success}"
-                                        IconSize="8"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowApplyButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Cancel  -->
                                     <c:BalloonButton
                                         x:Name="PART_CancelButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.Ban}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Warning}"
-                                        IconSize="8"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCancelButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Save and Create New  -->
                                     <c:BalloonButton
                                         x:Name="PART_SaveAndCreateNewButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.ContentSaveMove}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Mint.Muted}"
-                                        IconSize="8"
                                         IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSaveAndCreateNewButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Save  -->
                                     <c:BalloonButton
                                         x:Name="PART_SaveButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.ContentSave}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
-                                        IconSize="8"
                                         IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
+                                        Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSaveButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
                                     <!--  Close (always visible)  -->
                                     <c:BalloonButton
                                         x:Name="PART_CloseButton"
-                                        Width="28"
-                                        Height="28"
-                                        Margin="8,0,0,0"
                                         ButtonIcon="{StaticResource PopupStyles.Close}"
-                                        CornerRadius="8"
-                                        CurveHeight="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.Danger}"
-                                        IconSize="8" />
+                                        Style="{StaticResource HeaderButtonStyle}" />
                                 </StackPanel>
                             </Grid>
 

@@ -44,7 +44,7 @@
                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Goal Name" />
                 <TextBox
                     x:Name="NameTextBox"
-                    Style="{StaticResource FieldTextBoxStyle}"
+                    Style="{StaticResource RoundedTextInputStyle}"
                     Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}" />
 
                 <Grid Margin="0,14,0,0">
@@ -57,14 +57,14 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Target Amount" />
                         <c:MoneyTextBox
-                            Style="{StaticResource FieldTextBoxStyle}"
+                            Style="{StaticResource RoundedTextInputStyle}"
                             Text="{Binding TargetAmountText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
                         <c:MoneyTextBox
-                            Style="{StaticResource FieldTextBoxStyle}"
+                            Style="{StaticResource RoundedTextInputStyle}"
                             Text="{Binding CurrentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                 </Grid>

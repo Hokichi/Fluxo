@@ -27,13 +27,6 @@
             <Setter Property="CornerRadius" Value="12" />
         </Style>
 
-        <Style
-            x:Key="PopupComboBoxStyle"
-            BasedOn="{StaticResource FluxoComboBoxStyle}"
-            TargetType="ComboBox">
-            <Setter Property="MinHeight" Value="16" />
-        </Style>
-
         <Style x:Key="PopupTagListBoxStyle" TargetType="ListBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -167,7 +160,7 @@
                                 ItemsSource="{Binding ExpenseCategories}"
                                 SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
                                 SelectedValuePath="Value"
-                                Style="{StaticResource PopupComboBoxStyle}" />
+                                Style="{StaticResource FluxoComboBoxStyle}" />
                         </Border>
                     </StackPanel>
 
@@ -180,7 +173,7 @@
                                 IsEnabled="{Binding CanEditFields}"
                                 ItemsSource="{Binding SpendingSources}"
                                 SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
-                                Style="{StaticResource PopupComboBoxStyle}" />
+                                Style="{StaticResource FluxoComboBoxStyle}" />
                         </Border>
                     </StackPanel>
                 </Grid>

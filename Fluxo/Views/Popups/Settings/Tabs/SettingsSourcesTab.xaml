@@ -160,20 +160,20 @@
                                                         ButtonIcon="{StaticResource SettingsSourcesTab.CircleMinusSolid}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Danger}"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="SpendingSources:Delete"
                                                         ToolTip="Delete" />
                                                     <c:BalloonButton
                                                         ButtonIcon="{StaticResource SettingsSourcesTab.EyeOff}"
                                                         Click="OnRowActionClick"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="SpendingSources:Hide"
                                                         ToolTip="Hide"
                                                         Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                                                     <c:BalloonButton
                                                         ButtonIcon="{StaticResource SettingsSourcesTab.Eye}"
                                                         Click="OnRowActionClick"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="SpendingSources:Unhide"
                                                         ToolTip="Unhide"
                                                         Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -181,7 +181,7 @@
                                                         ButtonIcon="{StaticResource SettingsSourcesTab.LightningSlashFill}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Warning}"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="SpendingSources:Disable"
                                                         ToolTip="Disable"
                                                         Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -189,7 +189,7 @@
                                                         ButtonIcon="{StaticResource SettingsSourcesTab.LightningFill}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Mint}"
-                                                        Style="{StaticResource RowActionBalloonButtonStyle}"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="SpendingSources:Enable"
                                                         ToolTip="Enable"
                                                         Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />

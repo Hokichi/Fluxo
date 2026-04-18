@@ -51,14 +51,14 @@
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Expense Name" />
                         <TextBox
                             x:Name="NameTextBox"
-                            Style="{StaticResource PopupSurfaceTextBoxStyle}"
+                            Style="{StaticResource RoundedTextInputStyle}"
                             Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Amount" />
-                        <c:MoneyTextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
+                        <c:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
                             Margin="0,14,0,8"
@@ -104,7 +104,7 @@
                             MaxLength="2"
                             PreviewKeyDown="OnRecurringDatePreviewKeyDown"
                             PreviewTextInput="OnRecurringDatePreviewTextInput"
-                            Style="{StaticResource PopupSurfaceTextBoxStyle}"
+                            Style="{StaticResource RoundedTextInputStyle}"
                             Text="{Binding RecurringDateText, UpdateSourceTrigger=PropertyChanged}"
                             ToolTip="Enter a day between 1 and 28" />
 
@@ -112,7 +112,7 @@
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Tag" />
-                        <TextBox Style="{StaticResource PopupSurfaceTextBoxStyle}" Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                 </Grid>
             </StackPanel>

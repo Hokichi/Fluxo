@@ -335,6 +335,7 @@
 
     <Style x:Key="FluxoComboBoxStyle" TargetType="ComboBox">
         <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Height" Value="48" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
@@ -353,6 +354,8 @@
                     <Grid SnapsToDevicePixels="True">
                         <ToggleButton
                             x:Name="ToggleButton"
+                            Height="{Binding Height, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                            HorizontalAlignment="Stretch"
                             Background="Transparent"
                             BorderThickness="0"
                             ClickMode="Press"
@@ -361,7 +364,7 @@
                             IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border Padding="8,8,12,8" Background="{TemplateBinding Background}">
+                                    <Border Padding="8,0,12,0" Background="{TemplateBinding Background}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -410,6 +413,7 @@
                             x:Name="PART_Popup"
                             AllowsTransparency="True"
                             Focusable="False"
+                            HorizontalOffset="0"
                             IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                             Placement="Bottom"
                             PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
@@ -418,6 +422,7 @@
                             <Border
                                 x:Name="DropDownBorder"
                                 MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                 Margin="0,8,0,0"
                                 Background="{StaticResource Brush.Background.Surface}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"

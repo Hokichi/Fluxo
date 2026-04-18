@@ -142,7 +142,7 @@
                 <TextBox
                     x:Name="HexCodeTextBox"
                     Margin="0,12,0,0"
-                    Style="{StaticResource FieldTextBoxStyle}"
+                    Style="{StaticResource RoundedTextInputStyle}"
                     TextChanged="OnHexCodeTextChanged" />
 
                 <StackPanel Margin="0,12,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
