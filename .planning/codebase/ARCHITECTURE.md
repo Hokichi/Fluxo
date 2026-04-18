@@ -1,154 +1,154 @@
 # Architecture
 
-**Analysis Date:** 2026-04-14
+**Analysis Date:** 2026-04-18
 
 ## Pattern Overview
 
-**Overall:** MVVM (Model-View-ViewModel) + Clean Architecture with Domain-Driven Design principles
+**Overall:** Layered MVVM (Model-View-ViewModel) WPF desktop application backed by Repository + Unit-of-Work persistence and a Service layer that mediates between persistence and presentation.
 
 **Key Characteristics:**
-- Clear separation of concerns with 4 distinct project layers (Core, Data, Services, UI)
-- Dependency Injection via Microsoft.Extensions.DependencyInjection for loose coupling
-- Repository and Unit of Work patterns for data access abstraction
-- MVVM toolkit for reactive property bindings and commands
-- Generic repository pattern with both read and write specializations
-- ViewModel transformation layer that adapts domain entities for UI consumption
+- Strict layering across four .NET projects: `Fluxo.Core` (domain contracts), `Fluxo.Data` (EF Core persistence), `Fluxo.Services` (application services), `Fluxo` (WPF presentation/composition root)
+- CommunityToolkit.Mvvm-driven ViewModels (`ObservableObject`, `ObservableRecipient`, `[ObservableProperty]`, `[RelayCommand]`)
+- AutoMapper used in two stages: `Entity ⇄ DTO` (in `Fluxo.Services`) and `DTO ⇄ ViewModel` (in `Fluxo`)
+- Composition handled by `Microsoft.Extensions.DependencyInjection` registered in `Fluxo/Extensions/ServiceCollectionExtensions.cs` and `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`
+- Cross-VM communication via `WeakReferenceMessenger` from CommunityToolkit.Mvvm
+- Local SQLite database created in the app base directory (`fluxo.db`); migrations live in the WPF project (`Fluxo/Migrations/`)
+- Single-window WPF shell with custom popup framework (`Fluxo/Resources/CustomControls/BasePopup.cs`, `IPopupHost.cs`, `FluxoMessageBox.cs`)
 
 ## Layers
 
-**Presentation Layer (Fluxo):**
-- Purpose: WPF UI rendering, user interaction, and MVVM view models
-- Location: `Fluxo/`
-- Contains: 
-  - Views (XAML + code-behind) in `Fluxo/Views/`
-  - ViewModels in `Fluxo/ViewModels/`
-  - Converters in `Fluxo/Converters/`
-  - App configuration and bootstrapping
-- Depends on: Core (entities, enums), Data (repositories), Services (business logic)
-- Used by: End users via WPF application
-
-**Application/Services Layer (Fluxo.Services):**
-- Purpose: Cross-cutting business logic, cleanup operations, and persistence services
-- Location: `Fluxo.Services/`
-- Contains:
-  - `Fluxo.Services/Persistence/ExpenseCleanupService.cs` - Handles expense data cleanup
-- Depends on: Core (interfaces, entities), Data (repositories)
-- Used by: Presentation layer ViewModels
-
-**Data Access Layer (Fluxo.Data):**
-- Purpose: Entity Framework Core context, repositories, and database interactions
-- Location: `Fluxo.Data/`
-- Contains:
-  - `DbContext` (FluxoDbContext) - EF Core database context with all DbSets
-  - Repository implementations - Generic base `Repository<T>` and specialized repositories for each entity
-  - UnitOfWork (`UnitOfWork.cs`) - Aggregates all repositories with single SaveChangesAsync
-  - EF Core migrations in `Fluxo.Data/Migrations/`
-- Depends on: Core (entities, interfaces)
-- Used by: Services and Presentation layers
-
-**Domain Layer (Fluxo.Core):**
-- Purpose: Domain entities, enums, interfaces, and business rules
+**Fluxo.Core (Domain / Contracts):**
+- Purpose: Defines entities, DTOs, enums, filter objects, and abstractions (interfaces) for repositories, services, and unit-of-work
 - Location: `Fluxo.Core/`
-- Contains:
-  - Entities: `Expense.cs`, `ExpenseLog.cs`, `IncomeLog.cs`, `SavingGoal.cs`, `SpendingSource.cs`, `UserSettings.cs`, `ExpenseTag.cs`
-  - Enums: `ExpenseKind`, `ExpenseCategory`, `SpendingSourceType`, `NotificationSeverity`
-  - Interfaces: `IUnitOfWork`, `IRepository<T>`, and specialized repository interfaces
-  - Constants: User setting names
-- Depends on: Nothing (no outbound dependencies)
-- Used by: All other layers
+- Contains: POCO entities (`Fluxo.Core/Entities/Expense.cs`), DTOs (`Fluxo.Core/DTO/ExpenseDto.cs`), enums (`Fluxo.Core/Enums/ExpenseCategory.cs`), filter classes (`Fluxo.Core/Filters/ExpenseFilter.cs`), repository contracts (`Fluxo.Core/Interfaces/Repositories/IRepository.cs`), service contracts (`Fluxo.Core/Interfaces/Services/IExpenseService.cs`), and `Fluxo.Core/Interfaces/IUnitOfWork.cs`
+- Depends on: Nothing (no project references)
+- Used by: `Fluxo.Data`, `Fluxo.Services`, `Fluxo`
+
+**Fluxo.Data (Persistence):**
+- Purpose: Implements EF Core 10 (SQLite) persistence — `DbContext`, configurations, repositories, and `UnitOfWork`
+- Location: `Fluxo.Data/`
+- Contains: `Fluxo.Data/Context/FluxoDbContext.cs`, `Fluxo.Data/Context/FluxoDbContextFactory.cs`, generic base `Fluxo.Data/Repositories/Repository.cs`, entity-specific repositories (`Fluxo.Data/Repositories/ExpenseRepository.cs`, etc.), `Fluxo.Data/UnitOfWork.cs`, DI wiring `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`
+- Depends on: `Fluxo.Core`
+- Used by: `Fluxo.Services`, `Fluxo`
+
+**Fluxo.Services (Application Services):**
+- Purpose: Orchestrates domain operations across repositories, applies AutoMapper Entity↔DTO transforms, enforces business rules (e.g., balance adjustments on expense add/remove)
+- Location: `Fluxo.Services/`
+- Contains: `Fluxo.Services/Persistence/ExpenseService.cs`, `ExpenseLogService.cs`, `SpendingSourceService.cs`, `TagService.cs`, AutoMapper profile `Fluxo.Services/Mappings/EntityDtoProfile.cs`
+- Depends on: `Fluxo.Core`, `Fluxo.Data`
+- Used by: `Fluxo`
+
+**Fluxo (Presentation / Composition Root):**
+- Purpose: WPF UI, ViewModels, dialog/history services, AutoMapper DTO→VM profile, app bootstrap, EF Core migrations assembly
+- Location: `Fluxo/`
+- Contains: `Fluxo/App.xaml.cs` (composition + startup), `Fluxo/Extensions/ServiceCollectionExtensions.cs` (DI for presentation), Views (`Fluxo/Views/`), ViewModels (`Fluxo/ViewModels/`), UI services (`Fluxo/Services/Dialogs/`, `Fluxo/Services/History/`), value converters (`Fluxo/Converters/`), DTO↔VM mapping (`Fluxo/Mappings/DtoViewModelProfile.cs`), EF migrations (`Fluxo/Migrations/`)
+- Depends on: `Fluxo.Core`, `Fluxo.Data`, `Fluxo.Services`
+- Used by: `Fluxo.Tests`
+
+**Fluxo.Tests (Tests):**
+- Purpose: xUnit unit tests for ViewModels, view-side helpers, and dialog service
+- Location: `Fluxo.Tests/`
+- Depends on: `Fluxo` (which transitively pulls Core/Data/Services)
 
 ## Data Flow
 
-**User Action → View → ViewModel → Repository → Database:**
+**Read flow (e.g., loading dashboard data in `Fluxo/ViewModels/Shell/MainVM.cs`):**
 
-1. User interacts with WPF View (e.g., clicks a button to add expense)
-2. View triggers ViewModel command or property binding change
-3. ViewModel calls repository method via injected `IUnitOfWork` or `IViewModelReadUnitOfWork`
-4. Repository queries or modifies entity via `DbSet` on `FluxoDbContext`
-5. Changes persisted via `unitOfWork.SaveChangesAsync()` → `dbContext.SaveChangesAsync()`
-6. ViewModel receives mapped ViewModel entities and updates observable properties
-7. View automatically updates via WPF data binding
+1. `MainVM.Initialize()` calls service methods (e.g., `_expenseService.GetAllAsync()`)
+2. Service (`Fluxo.Services/Persistence/ExpenseService.cs`) delegates to `IUnitOfWork.Expenses.GetAllAsync()`
+3. Repository (`Fluxo.Data/Repositories/ExpenseRepository.cs`) issues an EF Core query (with `AsNoTracking` / `AsNoTrackingWithIdentityResolution` and `Include` for navigations)
+4. Service maps `Entity → DTO` via `IMapper` (`EntityDtoProfile`)
+5. ViewModel maps `DTO → ViewModel` via `IMapper` (`DtoViewModelProfile`) and binds to view
+6. WPF View binds to VM observable properties
+
+**Write flow (e.g., adding an expense in `Fluxo.Services/Persistence/ExpenseService.cs`):**
+
+1. ViewModel constructs a `*Dto` and calls the service
+2. Service validates referenced aggregates (e.g., `SpendingSource`), constructs entities, calls `IUnitOfWork.<Repository>.AddAsync(...)`, mutates related aggregates, then `await unitOfWork.SaveChangesAsync()`
+3. ViewModel calls `MainVM.ReloadCurrentDataAsync()` (or sends a message) to refresh the UI
 
 **State Management:**
-- Presentation state: Managed by ViewModel observable properties (CommunityToolkit.Mvvm)
-- Domain state: Persisted in SQLite via Entity Framework Core
-- Cross-ViewModel communication: Weak event messaging via CommunityToolkit.Mvvm.Messaging (e.g., `ExpenseDetailUpdatedMessage`)
-- ViewModel lifecycle: Singletons (`MainVM`, `DayOfWeekVM`, `MainWindow`) for main window; transient for dialogs/popups
+- UI state lives in singleton VMs registered in `Fluxo/Extensions/ServiceCollectionExtensions.cs` (`MainVM`, `DaySpinnerVM`, `BudgetAllocationPanelVM`, `NotificationPanelVM`, `SavingGoalsPanelVM`, `MainViewModeToggleVM`, `DayOfWeekVM`)
+- Per-record / per-popup VMs are registered transient (e.g., `ExpenseVM`, `QuickAddVM`, `AddSpendingSourceVM`, `SettingsVM`, `StartupWizardVM`)
+- Cross-VM events use `WeakReferenceMessenger.Default` with strongly-typed message classes in `Fluxo/ViewModels/Messages/`
+- Undo/redo is local to the shell window via `Fluxo/Services/History/LogMemoryManager.cs`, which records `ILogMemoryAction` instances onto undo/redo stacks and replays them through `IUnitOfWork`
 
 ## Key Abstractions
 
-**IUnitOfWork:**
-- Purpose: Transaction boundary for data changes across multiple repositories
-- Implementation: `Fluxo.Data.UnitOfWork`
-- Properties: All repository interfaces (Expenses, ExpenseLogs, IncomeLogs, ExpenseTags, SavingGoals, SpendingSources, UserSettings)
-- Pattern: Factory pattern via `Func<IUnitOfWork>` injected for creating fresh instances per operation
+**`IUnitOfWork` (`Fluxo.Core/Interfaces/IUnitOfWork.cs`):**
+- Purpose: Aggregates all repository accessors and exposes `SaveChangesAsync` so a single `DbContext` is shared across operations within a logical transaction
+- Implementation: `Fluxo.Data/UnitOfWork.cs` (sealed, primary constructor)
+- Pattern: Composition over inheritance — repositories are injected, no service-locator inside
 
-**IRepository<T> / IReadRepository<T> / IWriteRepository<T>:**
-- Purpose: Abstract data access operations
-- Implementation: Generic base `Repository<T>` + specialized repositories per entity
-- Read operations: `GetAllAsync()`, `GetByIdAsync()`
-- Write operations: `AddAsync()`, `Update()`, `Remove()`, `SaveChangesAsync()`
-- Pattern: Generic repository with DDD-like repositories (ExpenseRepository, SpendingSourceRepository, etc.)
+**`IRepository<T>` and `Repository<T>` (`Fluxo.Core/Interfaces/Repositories/IRepository.cs`, `Fluxo.Data/Repositories/Repository.cs`):**
+- Purpose: Generic CRUD base with safe attach/update semantics for EF Core change tracking (handles already-tracked entities, eagerly loads reference navigations recursively)
+- Pattern: Open-generic base with sealed entity-specific subclasses (e.g., `ExpenseRepository : Repository<Expense>, IExpenseRepository`); also exposes `IReadRepository<T>`, `IWriteRepository<T>` segregations
 
-**ViewModel Repository Wrappers:**
-- Purpose: Transform domain entities to ViewModels with AutoMapper
-- Examples: `ExpenseViewModelReadRepository<ExpenseVM>`, `ViewModelWriteRepository<Expense, ExpenseVM>`
-- Location: `Fluxo/ViewModels/Persistence/`
-- Pattern: Decorator pattern wrapping domain repositories
+**Application Services (`Fluxo.Services/Persistence/*Service.cs`):**
+- Purpose: Coordinate multi-aggregate operations (e.g., adding an expense also creates an `ExpenseLog` and adjusts `SpendingSource.Balance/SpentAmount`)
+- Pattern: Constructor-injected `IUnitOfWork` + `IMapper`; methods accept/return DTOs, never entities
 
-**Entity Mapping:**
-- Purpose: Bidirectional transformation between domain entities and ViewModels
-- Implementation: `AutoMapper` via `EntityViewModelProfile` in `Fluxo/Mappings/EntityViewModelProfile.cs`
-- Maps: Expense ↔ ExpenseVM, SpendingSource ↔ SpendingSourceVM, etc.
+**ViewModels (`Fluxo/ViewModels/`):**
+- Purpose: Bindable surface for views; all extend `ObservableObject`/`ObservableRecipient` from CommunityToolkit.Mvvm
+- Pattern: `partial` classes using source generators (`[ObservableProperty]`, `[RelayCommand]`); large VMs split across partials (e.g., `MainVM.cs` + `MainVM.ExpenseDetailMessenger.cs`, `SavingGoalVM.cs` + `SavingGoalVM.Progress.cs`)
+- Hierarchy: `Entities/` (record-shaped VMs), `Shell/` and `Shell/Main/` (long-lived shell VMs), `Popups/` (per-dialog VMs), `Controls/` (control-scoped VMs), `Notifications/`, `Helpers/`, `Messages/`
+
+**`IDialogService` (`Fluxo/Services/Dialogs/IDialogService.cs`, impl `DialogService.cs`):**
+- Purpose: Centralized factory for opening modal popups so VMs/Views never `new` popup windows directly
+- Pattern: Service-locator-free; resolves popups through the shared `IServiceProvider` for DI-managed popups, constructs simple popups inline
+
+**Mapping Profiles:**
+- `Fluxo.Services/Mappings/EntityDtoProfile.cs` — `Entity ⇄ DTO`, with explicit ignores for computed `SpendingSource.MoneyIn/MoneyOut` and DTO→Entity `Id`
+- `Fluxo/Mappings/DtoViewModelProfile.cs` — `DTO ⇄ ViewModel`
+
+**Messaging (`Fluxo/ViewModels/Messages/`):**
+- `WeakReferenceMessenger.Default` registered as singleton `IMessenger` in `Fluxo/Extensions/ServiceCollectionExtensions.cs`
+- Examples: `DashboardDataInvalidatedMessage`, `ExpenseDetailUpdatedMessage`, `UsernameChangedMessage`, `LogMemoryMessages.cs`, `ViewModeChangeMessage`
 
 ## Entry Points
 
-**App.OnStartup:**
+**Application bootstrap:**
 - Location: `Fluxo/App.xaml.cs`
-- Triggers: Application start (WPF startup event)
-- Responsibilities:
-  1. Configure ServiceCollection with all dependencies (Data, Presentation, UI)
-  2. Check if first run (query UserSettings via UnitOfWork)
-  3. Show StartupWizardPopup if first run, else show StartupLoaderPopup
-  4. Initialize MainVM
-  5. Show MainWindow
+- Triggers: WPF `Application` startup (project `OutputType=WinExe`, `Fluxo/Fluxo.csproj`)
+- Responsibilities: Builds `ServiceCollection` via `AddFluxoData()` (`Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`) + `AddFluxoPresentation()` + `AddUIData()` (`Fluxo/Extensions/ServiceCollectionExtensions.cs`); resolves `MainVM` and `IUnitOfWork`; on `OnStartup`, ensures `IsFirstRun` user setting exists, optionally runs `StartupWizardPopup`, otherwise shows `StartupLoaderPopup` while `MainVM.Initialize()` runs, then shows `MainWindow`
 
-**MainVM.Initialize:**
-- Location: `Fluxo/ViewModels/Shell/MainVM.cs`
-- Triggers: Called after startup wizard or on app startup
-- Responsibilities:
-  1. Load all data from repositories (expenses, logs, tags, spending sources, saving goals)
-  2. Populate observable collections for UI binding
-  3. Calculate derived values (spent amounts, percentages, notifications)
-  4. Wire up event handlers and messaging
+**Main shell:**
+- Location: `Fluxo/Views/Shell/Main/MainWindow.xaml(.cs)`
+- Triggers: Resolved as singleton from DI after startup
+- Responsibilities: Hosts dashboard panels (`BudgetAllocationPanelHost`, `NotificationPanelHost`, `SavingGoalsPanelHost`, `DaySpinnerControlHost`, `ViewModeToggleControlHost`), wires `LogMemoryManager` for undo/redo, implements `IPopupHost`, handles custom window chrome and keyboard shortcuts (see `Fluxo/Views/Shell/Main/MainWindowShortcutMatcher.cs`)
 
-**Popup ViewModels:**
-- Examples: `StartupWizardVM`, `ExpenseDetailVM`, `QuickAddVM`
-- Pattern: Created as transient instances with fresh UnitOfWork factories
-- Responsibilities: Handle form submission, validation, and persistence for dialogs
+**Database/migrations entry points:**
+- Runtime DbContext factory: `Fluxo.Data/Context/FluxoDbContextFactory.cs` (writes `fluxo.db` next to `AppContext.BaseDirectory`, `MigrationsAssembly("Fluxo")`)
+- Design-time factory for `dotnet ef`: `Fluxo/Migrations/FluxoDesignTimeDbContextFactory.cs`
+
+**Wizard / first-run:**
+- Location: `Fluxo/Views/Shell/Wizard/StartupWizardPopup.xaml(.cs)` with pages under `Fluxo/Views/Shell/Wizard/Pages/` and steps under `Fluxo/Views/Shell/Wizard/Pages/Steps/`
+- Triggered when `UserSettings.IsFirstRun` is missing or `true` (see `App.EnsureFirstRunSettingAsync`)
 
 ## Error Handling
 
-**Strategy:** Try-catch at entry points; fail-fast with user-facing message boxes
+**Strategy:** Defensive validation in services with thrown `InvalidOperationException` for missing aggregates; UI-level catches in `App.OnStartup` route to `IDialogService.ShowError` (or `FluxoMessageBox.Show` fallback).
 
 **Patterns:**
-- App.OnStartup wraps initialization in try-catch, shows MessageBox on error
-- Repository pattern includes null-safe checks (e.g., `GetByIdAsync()` returns `T?`)
-- Entity Framework Core constraints (required properties, foreign key restrictions) enforced at DB level
-- Validation via FluentValidation in Services layer
+- Service-layer guards: e.g., `ExpenseService.AddAsync` validates `SpendingSource` exists before staging entities (`Fluxo.Services/Persistence/ExpenseService.cs`)
+- Soft-delete semantics on `ExpenseLog.IsForDeletion` so deletes can be undone via `LogMemoryManager`
+- Repository update/remove logic in `Fluxo.Data/Repositories/Repository.cs` defensively reconciles already-tracked entities to avoid duplicate-tracking exceptions
+- `Fluxo.Core/Exceptions/` folder is reserved (currently empty) for future custom exception types
 
 ## Cross-Cutting Concerns
 
-**Logging:** Serilog configured for file-based logging; not heavily instrumented in codebase
+**Logging:** `Serilog` + `Serilog.Sinks.File` referenced in `Fluxo/Fluxo.csproj`; no central bootstrap configuration found in code (logger is not yet wired into DI as of this snapshot).
 
-**Validation:** FluentValidation package available; applied via Services layer
+**Validation:** `FluentValidation` 12.x referenced in `Fluxo.Services/Fluxo.Services.csproj` (validators not yet present in repo).
 
-**Authentication:** Not applicable (local desktop app with single user)
+**Authentication:** Not applicable — single-user local desktop app; "user" is just a display-name preference stored in `UserSettings` (`Fluxo.Core/Constants/UserSettingNames.cs`).
 
-**Data Persistence:** Entity Framework Core with SQLite; migrations tracked in version control
+**Notifications (toast):** `Microsoft.Toolkit.Uwp.Notifications` is referenced in `Fluxo.Services/Fluxo.Services.csproj`; in-app notifications are surfaced via `Fluxo/ViewModels/Notifications/NotificationItemVM.cs` and assembled in `MainVM.EvaluateSystemNotifications()`.
 
-**UI Refresh:** CommunityToolkit.Mvvm messaging for cross-ViewModel communication (e.g., when expense detail updates, main view notified)
+**Theming/styling:** Centralized resource dictionaries in `Fluxo/App.xaml` (Theme, Icons, Fonts/ContainerStyles, Styles/*).
+
+**Background work:** None — all I/O is async-on-UI-thread via `await`.
 
 ---
 
-*Architecture analysis: 2026-04-14*
+*Architecture analysis: 2026-04-18*

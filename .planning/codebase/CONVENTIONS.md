@@ -1,196 +1,175 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-04-14
-
-## Code Style
-
-**Language & Framework:**
-- C# with .NET 10.0 Windows
-- WPF for desktop UI
-- File-scoped namespaces (`namespace Fluxo.ViewModels;`)
-- Nullable reference types enabled (`<Nullable>enable</Nullable>`)
-- Implicit usings enabled (`<ImplicitUsings>enable</ImplicitUsings>`)
-
-**Formatting:**
-- No explicit linting config (`.editorconfig` or `Directory.Build.props` not present)
-- 4-space indentation (inferred from code)
-- Consistent brace style: opening braces on same line (C# standard)
-- Sealed classes used for security/performance: `public sealed class Expense`
-
-**Code Organization:**
-- Classes are organized with properties first, then methods
-- Auto-properties with backing fields for state management
-- Private fields prefixed with underscore: `private readonly MainVM _mainViewModel;`
+**Analysis Date:** 2026-04-18
 
 ## Naming Patterns
 
 **Files:**
-- PascalCase for all files: `ExpenseDetailVM.cs`, `BoolToVisibilityConverter.cs`
-- Suffixes used consistently:
-  - `VM` for ViewModels: `MainVM.cs`, `ExpenseDetailVM.cs`
-  - `Repository` for data access: `ExpenseLogRepository.cs`
-  - `Converter` for value converters: `BoolToVisibilityConverter.cs`
-  - `Service` for business logic: `ExpenseCleanupService`
-  - No plurals in collection types, naming based on responsibility
+- One public type per file, file name matches the type. Examples: `Fluxo/ViewModels/Shell/Main/BudgetAllocationPanelVM.cs`, `Fluxo.Data/Repositories/ExpenseRepository.cs`.
+- ViewModels use the `VM` suffix (not `ViewModel`). Examples: `Fluxo/ViewModels/Popups/StartupWizardVM.cs`, `Fluxo/ViewModels/Shell/MainVM.cs`.
+- Partial ViewModel slices use a dotted file name: `Fluxo/ViewModels/Shell/MainVM.cs` and `Fluxo/ViewModels/Shell/MainVM.ExpenseDetailMessenger.cs`.
+- Test files mirror the source class with a `Tests` suffix: `Fluxo.Tests/ViewModels/Shell/Main/BudgetAllocationPanelVMTests.cs` covers `Fluxo/ViewModels/Shell/Main/BudgetAllocationPanelVM.cs`.
+- Interface files start with `I` and live in `Fluxo.Core/Interfaces/...`. Example: `Fluxo.Core/Interfaces/Repositories/IExpenseRepository.cs`.
 
-**Classes & Types:**
-- PascalCase for class names: `MainVM`, `ExpenseLog`, `IUnitOfWork`
-- Interface prefix `I`: `IRepository<T>`, `IExpenseRepository`
-- Abstract base classes: `Repository<T>` (non-interface base)
-- Generic type parameters with `T` prefix for templates: `TViewModel`, `TExpenseLogViewModel`
+**Folders:**
+- PascalCase, plural for collections of types (`Repositories`, `Services`, `Entities`, `Enums`, `Filters`, `Messages`, `Popups`).
+- Tests mirror the source folder layout under `Fluxo.Tests/` (e.g. `Fluxo.Tests/ViewModels/Shell/Main/`).
 
-**Properties:**
-- PascalCase: `public int Id { get; set; }`
-- Backing fields with underscore prefix: `private string _nameText = string.Empty;`
-- ObservableProperties marked with `[ObservableProperty]` attribute (MVVM Toolkit)
-- Initialize string properties to `string.Empty`, not `null`
+**Types:**
+- `PascalCase` for classes, records, interfaces, enums, and methods.
+- DTOs end with `Dto` (`Fluxo.Core/DTO/ExpenseDto.cs`).
+- Entities are bare nouns (`Fluxo.Core/Entities/Expense.cs`).
+- Filters end with `Filter` (`Fluxo.Core/Filters/ExpenseFilter.cs`).
+- Messages end with `Message` and live in `Fluxo/ViewModels/Messages/` (`ViewModeChangeMessage`, `DateRangeSelectionChangedMessage`).
+- Snapshot DTO records use the `Snapshot` suffix and are declared as `public sealed record` next to the consuming VM (`BudgetAllocationPanelSnapshot` in `Fluxo/ViewModels/Shell/Main/BudgetAllocationPanelVM.cs`).
 
 **Methods:**
-- PascalCase: `LoadFromSavedState()`, `ReloadChoicesFromMainViewModel()`
-- Private methods with underscore: `_savedState` (field), no prefix on methods themselves
-- Async methods suffixed with `Async`: `GetByIdAsync()`, `SaveChangesAsync()`
-- Query methods prefixed with verbs: `Get*`, `Find*`, `Query*`
+- Async methods end with `Async` and accept an optional `CancellationToken cancellationToken = default`. Example: `Task<IReadOnlyList<ExpenseDto>> GetAllAsync(CancellationToken cancellationToken = default)` in `Fluxo.Services/Persistence/ExpenseService.cs`.
+- Command-bound methods are wired via `CommunityToolkit.Mvvm.Input` source generators; method names are imperative (`NavigatePrevious`, `LoadSnapshot`, `GoNextAsync`).
 
-**Variables & Parameters:**
-- camelCase for local variables: `var expenseLog`, `var unitOfWork`
-- Constants in PascalCase in constants classes: `UserSettingNames.IsFirstRun`
-- Protected/internal fields use underscore: `private bool _isInitialized;`
+**Fields and parameters:**
+- Private instance fields use `_camelCase` (`_unitOfWork`, `_mapper`, `_reloadGate`).
+- `private readonly` fields are preferred for injected dependencies.
+- Static `PropertyInfo` and constants use `PascalCase` (`IdProperty` in `Fluxo.Data/Repositories/Repository.cs`; `DefaultCurrencyCode` in `Fluxo/ViewModels/Popups/StartupWizardVM.cs`).
+- `[ObservableProperty]` private backing fields use `_camelCase` and are exposed by the source generator as `PascalCase` properties.
+- Parameters are `camelCase`.
 
-**Enums:**
-- PascalCase for enum names and values: `ExpenseCategory.Needs`, `MainContentViewMode.Daily`
-- Enums stored in `Fluxo.Core/Enums/` directory
+**Constants:**
+- Strings used as keys go in static `public const string` members of `Fluxo.Core/Constants/UserSettingNames.cs`, defined with `nameof(...)` so the key matches the identifier.
 
-## MVVM & UI Patterns
+## Code Style
 
-**ViewModel Base Class:**
-- Inherit from `ObservableRecipient` (Community Toolkit MVVM) or `ObservableObject`
-- Use `[ObservableProperty]` attributes for binding properties: `[ObservableProperty] private string _username;`
-- Generates backing fields with underscore prefix
-- Partial classes for messenger recipients: `public partial class MainVM : ObservableRecipient`
+**Language and platform:**
+- C# (latest, implied by `net10.0-windows` target in every `.csproj`).
+- All projects enable `<Nullable>enable</Nullable>` and `<ImplicitUsings>enable</ImplicitUsings>`.
+- File-scoped namespaces are used everywhere (`namespace Fluxo.ViewModels.Shell;`).
 
-**Data Binding:**
-- Two-way binding for editable properties
-- ICollectionView for filtered/sorted collections: `ICollectionView _invest = CollectionViewSource.GetDefaultView(...)`
-- ObservableCollection for dynamic lists: `ObservableCollection<ExpenseLogVM>`
+**Formatting:**
+- 4-space indentation.
+- Allman braces for types and methods; `if (...) statement;` style without braces is allowed for one-line guards (`if (popup.Owner is null) popup.Owner = owner;` in `Fluxo/Services/Dialogs/DialogService.cs`).
+- Trailing commas in multi-line collection expressions (`[ ... ]`).
 
-**Commands:**
-- Use `[RelayCommand]` attribute from Community Toolkit: `[RelayCommand] private void ClearSelectedTag()`
-- Async commands with `[RelayCommand] private async Task Method()`
-- Parameters passed directly: `[RelayCommand] private void SetSelectedMainContentView(MainContentViewMode viewMode)`
+**Linting / formatters:**
+- No `.editorconfig`, `.ruleset`, StyleCop, or analyzers config files are present.
+- EF Core analyzers are referenced via `Microsoft.EntityFrameworkCore.Analyzers` in `Fluxo.Data/Fluxo.Data.csproj`.
 
-**Change Notifications:**
-- Partial method `OnPropertyChanged(...)` override on demand
-- Partial methods on property change: `partial void OnIsEditingChanged(bool value)`
-- Manual notification as fallback: `OnPropertyChanged(nameof(IsDailyViewSelected))`
+## Modern C# Idioms
 
-## Repository & Data Access Patterns
+- **Primary constructors** for services and the data layer: `Repository<T>(FluxoDbContext dbContext)` in `Fluxo.Data/Repositories/Repository.cs`, `UnitOfWork(...)` in `Fluxo.Data/UnitOfWork.cs`, `ExpenseService(IUnitOfWork unitOfWork, IMapper mapper)` in `Fluxo.Services/Persistence/ExpenseService.cs`.
+- **Collection expressions** `[]` for empty/initialized collections (`private readonly HashSet<int> _hiddenSavingGoalIds = [];`).
+- **Target-typed `new()`** for property defaults (`public ExpenseTagDto ExpenseTag { get; set; } = new();`).
+- **Records** for immutable value carriers: `public sealed record DateRange(DateTime From, DateTime To);` in `Fluxo/ViewModels/Shell/Main/DateRangeResolver.cs`; snapshot records co-located with VMs.
+- **Pattern matching and switch expressions** for branching logic (`DateRangeResolver.Resolve`, `is { } trackedEntity` in `Fluxo.Data/Repositories/Repository.cs`).
+- **Tuples** with named elements for state pairs (`(DateTime From, DateTime To)? _selectedRange;`).
 
-**Generic Repositories:**
-- Base class `Repository<T>` at `Fluxo.Data.Repositories.Repository.cs`
-- Typed repository implementations: `public sealed class ExpenseLogRepository : Repository<ExpenseLog>`
-- Interfaces in layers: `IRepository<T>`, `IReadRepository<T>`, `IWriteRepository<T>`
-- Specialized repositories: `IExpenseRepository`, `IExpenseLogRepository` extending base interfaces
+## Class Design
 
-**Repository Methods:**
-- Standard CRUD: `GetAllAsync()`, `GetByIdAsync(int id)`, `AddAsync(T entity)`, `DeleteAsync(T entity)`
-- Query variants: `GetByDayAsync()`, `GetByWeekAsync()`, `GetByMonthAsync()`, `GetByCategoryAsync()`
-- Async first, CancellationToken parameter last with default
-- Return types: `Task<IReadOnlyList<T>>` for collections, `Task<T?>` for single items
+- Classes are marked `sealed` whenever inheritance is not required (entities, DTOs, services, DialogService, UnitOfWork, AutoMapper profiles, message types, snapshot records).
+- ViewModels are `public partial class ... : ObservableObject` or `: ObservableRecipient` (CommunityToolkit MVVM source generators).
+- Static helpers are declared `public static class` (`DateRangeResolver`, `MainWindowShortcutMatcher`, `UserSettingNames`).
 
-**Unit of Work Pattern:**
-- Central `IUnitOfWork` interface in `Fluxo.Core/Interfaces/`
-- Implemented at `Fluxo.Data/UnitOfWork.cs`
-- Factory pattern for transient creation: `Func<IUnitOfWork> unitOfWorkFactory`
-- Separate read/write units: `IViewModelReadUnitOfWork`, `IViewModelWriteUnitOfWork`
+## Field Ordering Convention
 
-**EF Core Configuration:**
-- DbContext: `FluxoDbContext.cs` in `Fluxo.Data/Context/`
-- Model configuration in `OnModelCreating()` with helper methods: `ConfigureExpense()`
-- Sealed entities: `public sealed class Expense`
-- SQLite with migrations in main project: `Fluxo/Migrations/`
+`Fluxo/ViewModels/Shell/MainVM.cs` documents the canonical ordering for ViewModel fields with explicit comments:
+1. `private readonly` injected dependencies and shared collections
+2. `private` mutable state fields with default values
+3. `[ObservableProperty]` backing fields, grouped by feature with section comments (`// Budget Summary`, `// Available`, `// Spent`, etc.).
 
-## Error Handling
+Constructor(s) follow, then commands/methods.
 
-**Exception Throwing:**
-- Specific exception types when appropriate: `InvalidOperationException`, `NotImplementedException`
-- Messages included with context: `throw new InvalidOperationException($"Unable to find spending source {spendingSourceId}.");`
-- Converters throw on invalid parameters: `throw new Exception("Invalid Parameters")`
-- Unimplemented methods: `throw new NotImplementedException();`
+## Dual Constructor Pattern (testable VMs)
 
-**Try-Catch Patterns:**
-- Minimal try-catch, mostly at application boundary (App.xaml.cs)
-- Specific exception handling in converters: `catch (FormatException)`, `catch (NotSupportedException)`
-- General exception handling at app startup only
-- No empty catch blocks observed; exceptions either specific or propagated
+Panel ViewModels expose two constructors so they can run with full DI in production and with no services in tests:
 
-**Async/Await:**
-- All repository operations return `Task<T>` or `Task`
-- CancellationToken parameter standard: `CancellationToken cancellationToken = default`
-- Async void only in event handlers: `async void OnStartup()`, `async Task RunSetupWizardAsync()`
+```csharp
+public BudgetAllocationPanelVM(
+    IExpenseLogService expenseLogService,
+    ISpendingSourceService spendingSourceService,
+    ITagService tagService,
+    IMapper mapper,
+    IMessenger? messenger = null)
+    : base(messenger ?? WeakReferenceMessenger.Default) { ... }
+
+public BudgetAllocationPanelVM(IMessenger? messenger = null)
+    : base(messenger ?? WeakReferenceMessenger.Default) { ... }
+```
+
+Service fields are declared as nullable (`IExpenseLogService? _expenseLogService;`) so the parameterless ctor leaves them null. See `Fluxo/ViewModels/Shell/Main/BudgetAllocationPanelVM.cs`, `SavingGoalsPanelVM.cs`, `NotificationPanelVM.cs`.
+
+## Import Organization
+
+**Order observed in source files:**
+1. `System.*` namespaces
+2. Third-party namespaces (`AutoMapper`, `CommunityToolkit.Mvvm.*`, `Microsoft.*`, `Serilog`)
+3. `Fluxo.Core.*`
+4. `Fluxo.Services.*` / `Fluxo.Data.*`
+5. `Fluxo.*` (presentation: ViewModels, Views, Resources, Converters, Mappings, Services)
+
+A blank line is not used between groups; imports are alphabetized within and across groups by `using` statement text.
+
+**Path / namespace aliases:**
+- None. Projects rely on `<ImplicitUsings>` for the BCL globals only.
+
+## Project / Layer Structure
+
+- `Fluxo.Core` — entities, DTOs, enums, filters, constants, repository/service interfaces. No dependencies.
+- `Fluxo.Data` — EF Core implementations of repository/UoW interfaces. References `Fluxo.Core`.
+- `Fluxo.Services` — `Persistence/` services (DTO-facing) and AutoMapper `Mappings/`. References `Fluxo.Core` and `Fluxo.Data`.
+- `Fluxo` — WPF presentation (Views, ViewModels, Converters, Resources, dialog services, App composition). References `Fluxo.Core`, `Fluxo.Data`, `Fluxo.Services`.
+- `Fluxo.Tests` — xUnit tests. References `Fluxo`.
+
+Layer dependency rule: presentation → services → data → core. Services do not reference WPF; entities/DTOs do not depend on EF Core.
 
 ## Dependency Injection
 
-**ServiceCollection Extension Pattern:**
-- Extension methods in `ServiceCollectionExtensions.cs`: `AddFluxoPresentation()`, `AddFluxoData()`
-- File location: `Fluxo/Extensions/ServiceCollectionExtensions.cs`, `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`
-- Services registered by interface: `services.AddTransient<IUnitOfWork>(...)`
-- Lifetime management: Transient for repositories, Singleton for MainVM, Singletons for singleton collections
+- DI is configured via extension methods on `IServiceCollection`: `AddFluxoData()` (in `Fluxo.Data/Extensions/`), `AddFluxoPresentation()` and `AddUIData()` (in `Fluxo/Extensions/ServiceCollectionExtensions.cs`).
+- Services and repositories are registered `AddTransient`. The `IMapper`, `IMessenger`, `IDialogService`, and the main panel/window ViewModels are `AddSingleton`. Popups and per-item VMs are `AddTransient`.
+- Use the `ServiceCollectionExtensions` pattern for new modules; do not register types inline in `App.xaml.cs`.
 
-**Service Resolution:**
-- IServiceProvider for runtime resolution
-- GetRequiredService<T>() with null-safety: `serviceProvider.GetRequiredService<MainVM>()`
+## Error Handling
 
-## Comments & Documentation
+**Patterns observed:**
+- Validate inputs and throw `InvalidOperationException` with a user-meaningful message for unexpected states. Example in `Fluxo.Services/Persistence/ExpenseService.cs`: `throw new InvalidOperationException($"SpendingSource with id {dto.SpendingSourceId} was not found.");`.
+- `DateRangeResolver.Resolve` throws `InvalidOperationException` for `MainContentViewMode.AllTime` and unknown values via the switch-expression default arm.
+- Service/repository methods do not catch exceptions; failures bubble up. Top-level handling lives in `Fluxo/App.xaml.cs` `OnStartup`, which catches `Exception`, surfaces it via `IDialogService.ShowError`, and falls back to `FluxoMessageBox.Show` if DI is unavailable.
+- `Repository<T>.Update`/`Remove` defensively re-attach the tracked instance instead of throwing, to avoid EF duplicate-tracking conflicts (see comments in `Fluxo.Data/Repositories/Repository.cs`).
 
-**XML Documentation:**
-- Used sparingly for public APIs and class summaries
-- Class summary: `/// <summary>\n/// Interaction logic for App.xaml\n/// </summary>`
-- Method summaries for interface implementations: mostly on public members
-- Auto-generated migrations include `/// <inheritdoc />`
+**Result-style returns:**
+- Some VM operations return a result object instead of throwing. `StartupWizardVM.GoNextAsync()` returns a value with `IsSuccess` checked in tests (`StartupWizardVMTests.GoNextAsync_OnStep1_DoesNotOverwriteExistingSalarySetting`).
 
-**Inline Comments:**
-- Minimal inline comments; code is self-documenting via naming
-- Comments for non-obvious behavior: `// MainWindow is Singleton but needs fresh IUnitOfWork (Transient) per popup...`
-- Design decisions documented when implementation differs from standard patterns
+## Logging
 
-**Regions:**
-- No visible use of `#region`/`#endregion` blocks in codebase
-- Organization by class structure: constructors, properties, methods
+- **Framework:** `Serilog` + `Serilog.Sinks.File` are referenced in `Fluxo/Fluxo.csproj`, but no `Log.Information/Warning/Error` call sites exist in the source tree. Logging is wired only via the package references; AutoMapper is constructed with `NullLoggerFactory.Instance` in `Fluxo/Extensions/ServiceCollectionExtensions.cs`.
+- **Guidance:** When logging is added, prefer Serilog's static `Log` sink and inject `Microsoft.Extensions.Logging.ILogger<T>` only if integrating with hosted services.
 
-## Class Structure
+## Comments
 
-**Typical File Layout:**
-1. Using statements (organized by System, namespaces, then project namespaces)
-2. File-scoped namespace declaration
-3. Class declaration with inheritance/interfaces
-4. Private fields (underscored)
-5. Observable properties with [ObservableProperty]
-6. Public properties (calculated/computed)
-7. Constructor(s)
-8. Partial methods (change notifications)
-9. Public methods
-10. Private/helper methods
-11. Event handlers
+**When to comment:**
+- Explain non-obvious EF Core behavior. See `Fluxo.Data/Repositories/Repository.cs` (e.g. "Use Entry().State instead of DbSet.Update() to avoid recursively attaching navigation properties").
+- Explain the order/intent of mutating operations. See `Fluxo.Services/Persistence/ExpenseService.cs` ("Validate source exists before staging any entities.", "Link the log via navigation — EF resolves the FK after insert.").
+- Section dividers inside large VMs use `// 1.`, `// 2.`, `// 3.` and feature labels (`// Budget Summary`, `// Available`).
 
-## Sealing & Access Modifiers
+**Doc comments:**
+- `///` summary blocks are reserved for framework-required types (`App.xaml.cs` has the auto-generated WPF summary). Public APIs in services/VMs are not generally XML-documented.
 
-**Sealed Classes:**
-- Used throughout entity and repository implementations
-- Reason: performance (no virtual dispatch) and design closure
-- Examples: `public sealed class Expense`, `public sealed class ExpenseLogRepository`
+## Function Design
 
-**Access Levels:**
-- `public` for interfaces, service entry points
-- `internal` for cross-project but not public APIs
-- `private` default for all fields and internal methods
-- Rare use of `protected` (most base functionality sealed)
+- **Async-first** for any I/O. Services and repositories are async with `CancellationToken` parameters defaulting to `default`.
+- **Small, single-purpose helpers** are factored out as `private static` methods (`DateRangeResolver.GetStartOfWeek`, `DialogService.ShowDialog`, `App.EnsureFirstRunSettingAsync`).
+- **Return types favor `IReadOnlyList<T>`** for query results (see all repositories and `IExpenseService`).
+- **Method overloads** are used to vary parameter shape rather than optional bag arguments. Example in `Fluxo/Services/Dialogs/DialogService.cs` where `ShowAddSpendingSource` has both a parameterless overload (DI-resolved popup) and one taking a pre-built VM.
 
-## Nullability
+## Module Design
 
-**Null Handling:**
-- Nullable reference types enabled project-wide
-- Null-coalescing default: `string.Empty` for string properties
-- Null-safe operators: `value is bool b && b`, pattern matching
-- `??` operator for fallback: `existingSetting ?? defaultValue`
-- Explicit nullability in return types: `Task<T?>` vs `Task<T>`
+- **Exports:** All cross-project usage is via interfaces in `Fluxo.Core/Interfaces`. Concrete classes are internal-by-namespace but `public` so DI can construct them.
+- **Barrel files:** None. Consumers `using Fluxo.Core.Interfaces.Repositories;` etc. directly.
+- **MVVM messaging:** `CommunityToolkit.Mvvm.Messaging` `WeakReferenceMessenger` is the canonical cross-VM bus. Define a `sealed class` per message in `Fluxo/ViewModels/Messages/`, deriving from `ValueChangedMessage<T>` when carrying a single value (`ViewModeChangeMessage`).
 
+## AutoMapper Conventions
+
+- One profile per layer pair. `Fluxo.Services/Mappings/EntityDtoProfile.cs` maps Entity ↔ DTO; `Fluxo/Mappings/DtoViewModelProfile.cs` maps DTO ↔ VM with `.ReverseMap()`.
+- VMs and DTOs intentionally mirror property names so AutoMapper requires no per-member configuration.
+
+---
+
+*Convention analysis: 2026-04-18*

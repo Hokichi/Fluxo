@@ -1,106 +1,86 @@
 # External Integrations
 
-**Analysis Date:** 2026-04-14
+**Analysis Date:** 2026-04-18
 
 ## APIs & External Services
 
-**Not detected:** No external APIs or cloud services are currently integrated into the application.
+**Third-party HTTP APIs:**
+- None detected. No `HttpClient`, `RestClient`, or `HttpRequestMessage` usage anywhere in the codebase.
 
-The application is a standalone desktop finance management tool with no outbound API integrations (no Stripe, PayPal, banking APIs, etc.).
+**Cloud SDKs:**
+- None detected (no AWS, Azure, GCP, Stripe, Supabase, or similar SDKs referenced in any `.csproj`).
+
+The application is a fully offline Windows desktop product; it does not call out to any remote APIs.
 
 ## Data Storage
 
-**Database:**
-- SQLite (local file-based)
-  - Provider: `Microsoft.EntityFrameworkCore.Sqlite` 10.0.5
-  - Location: `{AppContext.BaseDirectory}/fluxo.db`
-  - Connection Factory: `Fluxo.Data/Context/FluxoDbContextFactory.cs`
-  - Context: `Fluxo.Data/Context/FluxoDbContext.cs`
-  - Tables: Expenses, ExpenseLogs, IncomeLogs, ExpenseTags, SavingGoals, SpendingSources, UserSettings
+**Databases:**
+- SQLite (local file)
+  - Provider: `Microsoft.EntityFrameworkCore.Sqlite` 10.0.5 (`Fluxo.Data/Fluxo.Data.csproj`)
+  - DbContext: `Fluxo.Data/Context/FluxoDbContext.cs`
+  - Connection construction: `Fluxo.Data/Context/FluxoDbContextFactory.cs` -> `Data Source={AppContext.BaseDirectory}\fluxo.db`
+  - Migrations assembly: `Fluxo` (configured in `FluxoDbContextFactory.CreateDbContext`)
+  - Migration files: `Fluxo/Migrations/` (runtime), `Fluxo.Data/Migrations/` (initial set)
+  - DbSets exposed: `Expenses`, `ExpenseLogs`, `IncomeLogs`, `ExpenseTags`, `SavingGoals`, `SpendingSources`, `UserSettings`
+  - Connection string: not externalized; built in code only. No env var.
 
 **File Storage:**
-- Local filesystem only
-  - Database file in application directory
-  - No cloud storage integrations
+- Local filesystem only. SQLite file (`fluxo.db`) lives next to the executable.
 
 **Caching:**
-- None detected
+- None detected.
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Custom/Internal only
-- No external authentication provider integrated
-- User settings stored in local UserSettings table
-- First-run detection via UserSettings.IsFirstRun flag
-
-**Implementation:**
-- User management via `Fluxo.Core/Entities/UserSettings` entity
-- Settings persisted to SQLite UserSettings table
+- None. Single-user local desktop application; no login, no identity provider, no token handling.
+- "First run" flag is stored locally in the `UserSettings` table; key defined in `Fluxo.Core/Constants/UserSettingNames.cs` (`UserSettingNames.IsFirstRun`) and consumed by `Fluxo/App.xaml.cs` `EnsureFirstRunSettingAsync`.
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None detected (no Sentry, Rollbar, Application Insights, etc.)
-- Errors logged to file and console
+- None. Uncaught startup exceptions surface to the user via `IDialogService.ShowError` or `FluxoMessageBox.Show` from `Fluxo/App.xaml.cs`.
 
 **Logs:**
-- Serilog 4.3.1 framework
-- File sink: `Serilog.Sinks.File` 7.0.0
-- Structured logging (Serilog format)
-- Configured in `Fluxo/App.xaml.cs` startup
-
-**Exception Handling:**
-- Standard try-catch in App startup with MessageBox error display
-- Async exception handling in async initialization flows
-
-## Notifications
-
-**Windows Notifications:**
-- `Microsoft.Toolkit.Uwp.Notifications` 7.1.3 (`Fluxo.Services/`)
-- Used for toast notifications in Windows notification center
-- In-app notification system with NotificationSeverity levels
-
-**Notification UI:**
-- In-app notification display in ViewModels (`Fluxo/ViewModels/Notifications/NotificationItemVM.cs`)
-- Converters for notification icons (`Fluxo/Converters/BoolToNotificationIconConverter.cs`)
+- `Serilog` 4.3.1 and `Serilog.Sinks.File` 7.0.0 are referenced in `Fluxo/Fluxo.csproj`, but no `LoggerConfiguration`, `WriteTo`, or `using Serilog` usages were found in source. The packages appear unwired.
+- DI uses `Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance` for AutoMapper (`Fluxo/Extensions/ServiceCollectionExtensions.cs`), explicitly silencing logs.
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Standalone Windows desktop application (WinExe)
-- No cloud deployment required
-- Distributed as compiled executable
+- Distributed as a Windows desktop executable (`<OutputType>WinExe</OutputType>` in `Fluxo/Fluxo.csproj`). No hosted backend.
 
 **CI Pipeline:**
-- Not detected in repository
+- None detected. No `.github/workflows`, Azure Pipelines, or other CI configuration files in the repository.
 
 ## Environment Configuration
 
 **Required env vars:**
-- None detected (no external service configuration)
+- None. The application does not read environment variables for configuration. SQLite path is derived from `AppContext.BaseDirectory` at runtime.
 
 **Secrets location:**
-- Not applicable - no external API keys or secrets needed
-- All configuration internal to application
+- No secrets, tokens, or API keys are loaded by the application. No `.env` files present.
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None - Desktop application, no server component
+- None. The app exposes no HTTP endpoints or listeners.
 
 **Outgoing:**
-- None detected - No external service integrations
+- None. No webhook posts or external callbacks.
 
-## Data Exchange
+## Desktop / OS Integrations
 
-**Import/Export:**
-- Not implemented in current codebase
-- Application operates entirely on local SQLite database
+**Windows Toast Notifications:**
+- Package: `Microsoft.Toolkit.Uwp.Notifications` 7.1.3 (`Fluxo.Services/Fluxo.Services.csproj`).
+- No `ToastContentBuilder` / `ShowToast` usage detected in source files; package is referenced but appears unused at present.
 
-**Synchronization:**
-- Not applicable - Single-machine desktop application
+**Windows Fonts / Resources:**
+- Embedded SFT Schrifted Round TTF font family loaded as WPF resources via `Fluxo/App.xaml` and packaged in `Fluxo/Resources/Fonts/`.
+
+**Icon Pack:**
+- `MahApps.Metro.IconPacks` 6.2.1 - Icon set used in WPF views, declared in `Fluxo/Fluxo.csproj`.
 
 ---
 
-*Integration audit: 2026-04-14*
+*Integration audit: 2026-04-18*

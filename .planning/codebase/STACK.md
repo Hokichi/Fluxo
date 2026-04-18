@@ -1,125 +1,95 @@
 # Technology Stack
 
-**Analysis Date:** 2026-04-14
+**Analysis Date:** 2026-04-18
 
 ## Languages
 
 **Primary:**
-- C# - .NET 10.0, used throughout all projects (Fluxo, Fluxo.Core, Fluxo.Data, Fluxo.Services)
+- C# (latest, implicit via .NET 10 SDK) - All application source across `Fluxo`, `Fluxo.Core`, `Fluxo.Data`, `Fluxo.Services`, `Fluxo.Tests`
+- XAML - WPF UI markup in `Fluxo/Views/`, `Fluxo/Resources/Styles/`, `Fluxo/Resources/Theme.xaml`, `Fluxo/Resources/Icons.xaml`, `Fluxo/App.xaml`
 
 **Secondary:**
-- XAML - Windows Presentation Foundation (WPF) UI markup for `Fluxo/` project
+- None detected
 
 ## Runtime
 
 **Environment:**
-- .NET 10.0 (cross-platform runtime for Windows)
-- Windows-specific: `net10.0-windows` target framework
+- .NET 10 (Windows-specific) - Target framework `net10.0-windows` declared in every `.csproj`:
+  - `Fluxo/Fluxo.csproj`
+  - `Fluxo.Core/Fluxo.Core.csproj`
+  - `Fluxo.Data/Fluxo.Data.csproj`
+  - `Fluxo.Services/Fluxo.Services.csproj`
+  - `Fluxo.Tests/Fluxo.Tests.csproj`
+- WPF (`<UseWPF>true</UseWPF>`) enabled in all projects
+- Output type: `WinExe` (`Fluxo/Fluxo.csproj`)
 
-**Platform:**
-- Windows Desktop application (WinExe)
-- WPF (Windows Presentation Foundation) enabled
+**Package Manager:**
+- NuGet (declared via `<PackageReference>` in `.csproj` files)
+- Lockfile: not detected (no `packages.lock.json` present)
+- Solution descriptor: `Fluxo.slnx` (new XML solution format)
 
 ## Frameworks
 
-**Core Framework:**
-- .NET 10.0 SDK - Runtime and compilation
-
-**UI Framework:**
-- Windows Presentation Foundation (WPF) - Desktop UI in `Fluxo/`
-
-**ORM & Data:**
-- Entity Framework Core 10.0.5 - Database access in `Fluxo.Data/`
-  - `Microsoft.EntityFrameworkCore`
-  - `Microsoft.EntityFrameworkCore.Sqlite` - SQLite provider
+**Core:**
+- WPF (Windows Presentation Foundation) - Desktop UI framework, declared in all `.csproj` files
+- Entity Framework Core 10.0.5 - ORM, declared in `Fluxo.Data/Fluxo.Data.csproj`
+- Microsoft.Extensions.Hosting 10.0.3 - Generic host / DI bootstrap, declared in `Fluxo/Fluxo.csproj`
+- Microsoft.Extensions.DependencyInjection - Used in `Fluxo/App.xaml.cs`, `Fluxo/Extensions/ServiceCollectionExtensions.cs`, `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`
 
 **Testing:**
-- Not detected in project files
+- xUnit 2.9.3 - Test framework, declared in `Fluxo.Tests/Fluxo.Tests.csproj`
+- xunit.runner.visualstudio 2.8.2 - VS test runner integration
+- Microsoft.NET.Test.Sdk 18.3.0 - Test SDK
 
 **Build/Dev:**
-- Microsoft.NET.Sdk - Standard .NET project SDK
-- EntityFramework Core Design tools for migrations
+- Microsoft.NET.Sdk - Project SDK for all `.csproj`
+- Microsoft.EntityFrameworkCore.Design 10.0.5 - EF migrations tooling, present in `Fluxo/Fluxo.csproj` and `Fluxo.Data/Fluxo.Data.csproj`
 
 ## Key Dependencies
 
 **Critical:**
-- `Microsoft.EntityFrameworkCore` 10.0.5 - ORM for data access
-- `Microsoft.EntityFrameworkCore.Sqlite` 10.0.5 - SQLite database provider
-- `AutoMapper` 16.1.1 - Object-to-object mapping (Entity to ViewModel in `Fluxo/` and `Fluxo.Services/`)
-- `CommunityToolkit.Mvvm` 8.4.0 - MVVM framework for WPF ViewModels
-- `FluentValidation` 12.1.1 - Data validation (`Fluxo.Services/`)
+- `CommunityToolkit.Mvvm` 8.4.0 - MVVM source generators and `WeakReferenceMessenger`. Registered in `Fluxo/Extensions/ServiceCollectionExtensions.cs`. Underpins all view models in `Fluxo/ViewModels/`.
+- `AutoMapper` 16.1.1 - Object-to-object mapping. Configured in `Fluxo/Extensions/ServiceCollectionExtensions.cs` with `EntityDtoProfile` and `DtoViewModelProfile` (`Fluxo.Services/Mappings/`, `Fluxo/Mappings/`).
+- `Microsoft.EntityFrameworkCore.Sqlite` 10.0.5 - SQLite provider, configured in `Fluxo.Data/Context/FluxoDbContextFactory.cs`.
+- `FluentValidation` 12.1.1 - Validation library, declared in `Fluxo.Services/Fluxo.Services.csproj`.
+- `MahApps.Metro.IconPacks` 6.2.1 - Icon library used in WPF views.
+- `Serilog` 4.3.1 + `Serilog.Sinks.File` 7.0.0 - Logging dependencies declared in `Fluxo/Fluxo.csproj` (no active configuration code detected; package references only).
+- `Newtonsoft.Json` 13.0.4 - JSON serialization, declared in `Fluxo/Fluxo.csproj`.
+- `Microsoft.Toolkit.Uwp.Notifications` 7.1.3 - Windows toast notification API, declared in `Fluxo.Services/Fluxo.Services.csproj`.
 
 **Infrastructure:**
-- `Microsoft.Extensions.Hosting` 10.0.3 - Dependency injection and service hosting (`Fluxo/`)
-- `Microsoft.Extensions.DependencyInjection` (implicit via Extensions.Hosting)
-- `Microsoft.Extensions.Logging.Abstractions` - Logging abstractions
-- `Serilog` 4.3.1 - Structured logging framework (`Fluxo/`)
-- `Serilog.Sinks.File` 7.0.0 - File logging sink for Serilog (`Fluxo/`)
-
-**Serialization:**
-- `Newtonsoft.Json` 13.0.4 - JSON serialization/deserialization (`Fluxo/`)
-
-**UI/Notifications:**
-- `Microsoft.Toolkit.Uwp.Notifications` 7.1.3 - Windows notification support (`Fluxo.Services/`)
-- `MahApps.Metro.IconPacks` 6.2.1 - Icon packs for WPF UI (`Fluxo/`)
+- `Microsoft.EntityFrameworkCore` 10.0.5
+- `Microsoft.EntityFrameworkCore.Abstractions` 10.0.5
+- `Microsoft.EntityFrameworkCore.Analyzers` 10.0.5
+- `Microsoft.EntityFrameworkCore.Relational` 10.0.5
+- `Microsoft.Extensions.Logging.Abstractions` (transitive, used in `Fluxo/Extensions/ServiceCollectionExtensions.cs` for `NullLoggerFactory.Instance`)
 
 ## Configuration
 
-**Project Structure:**
-- Solution file: `Fluxo.slnx` - Contains 4 projects
+**Environment:**
+- No `appsettings.json`, `.env`, or `ConfigurationBuilder` usage detected.
+- SQLite database path is computed at runtime in `Fluxo.Data/Context/FluxoDbContextFactory.cs` via `Path.Combine(AppContext.BaseDirectory, "fluxo.db")` -> `Data Source=...\fluxo.db`.
+- User-facing settings persist in the database via the `UserSettings` table (`Fluxo.Core/Entities/UserSettings.cs`, `Fluxo.Core/Constants/UserSettingNames.cs`).
 
-**Database Configuration:**
-- SQLite local database file stored at `AppContext.BaseDirectory/fluxo.db`
-- Connection string built in `Fluxo.Data/Context/FluxoDbContextFactory.cs`
-
-**Dependency Injection:**
-- Extension methods: `Fluxo/Extensions/ServiceCollectionExtensions.cs`
-- Services registered in `Program` (implicit via App.xaml.cs startup)
-- Multiple service composition layers for ViewModels and Repositories
-
-**Build Configuration:**
-- Nullable reference types enabled across all projects
-- Implicit usings enabled for modern C# syntax
-- WPF integration enabled in UI project
-
-## Project Organization
-
-**Fluxo** - Main application (WinExe)
-- Location: `Fluxo/`
-- Target: `net10.0-windows`
-- Contains: App shell, XAML UI, ViewModels, Migrations, Converters
-- Key dependencies: All other projects, EF Core, AutoMapper, MVVM Toolkit, Serilog, Newtonsoft.Json
-
-**Fluxo.Core** - Core entities and interfaces (Class Library)
-- Location: `Fluxo.Core/`
-- Target: `net10.0-windows`
-- Contains: Domain entities, interfaces, constants
-
-**Fluxo.Data** - Data access layer (Class Library)
-- Location: `Fluxo.Data/`
-- Target: `net10.0-windows`
-- Contains: DbContext, repositories, UnitOfWork pattern, database configuration
-- Key dependencies: EF Core, Fluxo.Core
-
-**Fluxo.Services** - Business logic services (Class Library)
-- Location: `Fluxo.Services/`
-- Target: `net10.0-windows`
-- Contains: Service implementations, validation, notification services
-- Key dependencies: AutoMapper, FluentValidation, Notifications, Fluxo.Core, Fluxo.Data
+**Build:**
+- Per-project MSBuild settings (`<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, `<UseWPF>true</UseWPF>`).
+- App icon: `Fluxo/Resources/icon.ico` (referenced via `<ApplicationIcon>` in `Fluxo/Fluxo.csproj`).
+- Embedded fonts: ~33 SFT Schrifted Round TTF files declared as `<Resource>` in `Fluxo/Fluxo.csproj` and registered in `Fluxo/App.xaml`.
+- Solution file: `Fluxo.slnx`.
 
 ## Platform Requirements
 
 **Development:**
-- Windows OS
-- .NET 10.0 SDK
-- Visual Studio 2022 or equivalent IDE
-- SQLite support (built into EF Core Sqlite provider)
+- Windows OS (target framework `net10.0-windows` requires Windows for build/test of WPF projects)
+- .NET 10 SDK
+- Visual Studio or compatible IDE supporting `.slnx` solutions
+- EF Core CLI tools for migrations (`dotnet ef`)
 
 **Production:**
-- Windows OS with .NET 10.0 runtime
-- Deployed as standalone WinExe executable
-- Local SQLite database file (`fluxo.db`)
+- Windows desktop (WPF, `WinExe` output)
+- Local SQLite database file (`fluxo.db` placed next to the executable)
+- No server, container, or cloud target detected
 
 ---
 
-*Stack analysis: 2026-04-14*
+*Stack analysis: 2026-04-18*

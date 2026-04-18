@@ -1,254 +1,232 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-04-14
+**Analysis Date:** 2026-04-18
 
 ## Test Framework
 
-**Status:** Not Detected
+**Runner:**
+- xUnit 2.9.3
+- Test SDK: `Microsoft.NET.Test.Sdk` 18.3.0
+- Visual Studio runner: `xunit.runner.visualstudio` 2.8.2
+- Config: `Fluxo.Tests/Fluxo.Tests.csproj`
+- Target framework: `net10.0-windows` (WPF-aware)
 
-No unit test projects (.Test.csproj or xUnit/NUnit/MSTest references) are present in the solution. The codebase is a production WPF application with no apparent automated test infrastructure.
+**Assertion Library:**
+- xUnit built-in `Assert` (no FluentAssertions / Shouldly)
 
-**Project Structure:**
-- Solution file: `Fluxo.slnx`
-- Production projects only:
-  - `Fluxo.csproj` - Main WPF application
-  - `Fluxo.Core.csproj` - Core business logic and interfaces
-  - `Fluxo.Data.csproj` - Data access layer
-  - `Fluxo.Services.csproj` - Services layer
-
-**Build Configuration:**
-- Target Framework: `.NET 10.0` (net10.0-windows)
-- WPF enabled: `<UseWPF>true</UseWPF>`
-- No test-related package references in any .csproj file
-
-## Test Coverage
-
-**Current State:** No tests
-
-**Coverage Target:** Not defined
-
-There is no coverage reporting, test configuration file (xunit.json, or app.config for NUnit), or CI/CD pipeline that would enforce coverage requirements.
-
-## Testing Approach
-
-### Manual Testing Areas
-
-Since no automated tests exist, the following areas would need manual verification:
-
-**ViewModel Behavior:**
-- Observable property changes trigger UI updates correctly
-- Command relay methods execute and update state
-- CollectionView filtering and sorting functions
-- Date navigation and period selection logic
-- Tag management and promotion in UI
-
-**Data Access:**
-- Repository queries return correct filtered results
-- Unit of Work transaction scopes work correctly
-- Database migrations execute without errors
-- Navigation properties load correctly with `.Include()` statements
-
-**Business Logic:**
-- Expense categorization (Needs/Wants/Invest) calculations
-- Daily/weekly/monthly aggregations
-- Saving goal progress calculations
-- Spending source balance tracking
-- Budget threshold warnings
-
-**Integration Points:**
-- Startup wizard flow and first-run logic
-- File system interactions (database location)
-- Settings persistence to database
-- Expense cleanup and deletion workflows
-
-### Observable Property Testing Pattern
-
-If unit tests were to be added, the Community Toolkit MVVM pattern would be verified as:
-
-```csharp
-// Example pattern for ViewModel testing (currently not implemented)
-// Would test [ObservableProperty] auto-generated backing fields
-var vm = new MainVM(...);
-vm.Username = "NewName";
-Assert.Equal("NewName", vm.Username);
-// PropertyChanged event verification via ObservableObject.OnPropertyChanged
+**Run Commands:**
+```bash
+dotnet test Fluxo.Tests/Fluxo.Tests.csproj         # Run all tests
+dotnet test Fluxo.slnx                              # Run solution-wide
+dotnet test --filter "FullyQualifiedName~DateRangeResolver"   # Filter by class
+dotnet test --logger "console;verbosity=detailed"   # Verbose output
 ```
 
-### Repository Testing Pattern
+No watch script or coverage tooling is configured — coverlet/ReportGenerator are not referenced.
 
-If unit tests were to be added, repositories would be tested with mock DbContext:
+## Test File Organization
 
-```csharp
-// Example pattern for Repository testing (currently not implemented)
-public class ExpenseLogRepositoryTests
-{
-    [Fact]
-    public async Task GetByDayAsync_WithValidDate_ReturnsCorrectRecords()
-    {
-        // Arrange
-        var dbContext = CreateMockDbContext();
-        var repository = new ExpenseLogRepository(dbContext);
-        var testDate = new DateTime(2026, 4, 14);
-        
-        // Act
-        var result = await repository.GetByDayAsync(testDate);
-        
-        // Assert
-        Assert.NotEmpty(result);
-        Assert.All(result, log => 
-            Assert.True(log.DeductedOn.Date == testDate));
-    }
-}
+**Location:**
+- All tests live in a single sibling project `Fluxo.Tests/`, mirroring the production folder layout under `Fluxo/`.
+
+**Naming:**
+- Files: `<TypeUnderTest>Tests.cs`
+- Classes: `public [sealed] class <TypeUnderTest>Tests`
+- Methods: `<MethodOrScenario>_<Condition>_<ExpectedResult>` (e.g. `Resolve_Weekly_ReturnsMondayToSunday`, `GoNextAsync_OnStep1_DoesNotOverwriteExistingSalarySetting`)
+
+**Structure:**
+```
+Fluxo.Tests/
+├── Fluxo.Tests.csproj
+├── Services/
+│   └── Dialogs/
+│       └── DialogServiceTests.cs
+├── ViewModels/
+│   ├── Popups/
+│   │   ├── GoalUpdateTransactionSupportTests.cs
+│   │   └── StartupWizardVMTests.cs
+│   └── Shell/Main/
+│       ├── BudgetAllocationPanelVMTests.cs
+│       ├── DateRangeResolverTests.cs
+│       ├── DaySpinnerVMTests.cs
+│       ├── MainViewModeToggleVMTests.cs
+│       ├── NotificationPanelVMTests.cs
+│       └── SavingGoalsPanelVMTests.cs
+└── Views/
+    └── Shell/Main/
+        └── MainWindowShortcutMatcherTests.cs
 ```
 
-## Key Testable Components
+The test namespace mirrors the directory path (e.g. `namespace Fluxo.Tests.ViewModels.Shell.Main;`).
 
-**Interfaces for Dependency Injection:**
-- `IUnitOfWork` - Can be mocked for ViewModel testing
-- `IRepository<T>`, `IReadRepository<T>`, `IWriteRepository<T>` - Can be mocked
-- `IExpenseRepository`, `IExpenseLogRepository` - Specialized repository interfaces
-- `IViewModelReadUnitOfWork<...>`, `IViewModelWriteUnitOfWork<...>` - Complex generic interfaces
+## Test Structure
 
-**Converter Testing:**
-All converters in `Fluxo/Converters/` implement `IValueConverter` or `IMultiValueConverter`:
-- `BoolToVisibilityConverter` - Simple bool-to-Visibility conversion
-- `BoolToNotificationIconConverter` - Bool to geometry resource lookup
-- `DateTimeToRelativeDateConverter` - DateTime formatting
-- `NumberWithCommasConverter` - Decimal to formatted string
-- `ProgressToArcGeometryConverter` - Numeric progress to WPF geometry
-- `BrushToLighterBrushConverter` - Color manipulation with error handling
-- `CornerRadiusConverter` - Multi-value conversion for border clipping
-
-These would be testable with `Convert()` method unit tests.
-
-**Query Methods on Repositories:**
-All repositories follow a consistent async query pattern:
-- `GetAllAsync()` - All records
-- `GetByIdAsync(int id)` - Single record by key
-- `GetByDayAsync(DateTime day)` - ExpenseLog only
-- `GetByWeekAsync(DateTime start, DateTime end)` - Date range filtering
-- `GetByMonthAsync(int month)` - Month-based filtering
-- `GetByCategoryAsync(ExpenseCategory category)` - Enum-based filtering
-- `GetBySpendingSourceIdAsync(int id)` - Foreign key filtering
-- `GetTagsByCountDescendingAsync()` - Tuple return with aggregation
-
-## Error Handling in Components
-
-**Converter Error Patterns:**
-```csharp
-// From BorderCornerClipConverter.cs - validates input parameters
-public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-{
-    if (values[0] is not CornerRadius cornerRadius ||
-        !double.TryParse(values[1].ToString(), out var width) ||
-        !double.TryParse(values[2].ToString(), out var height))
-        throw new Exception("Invalid Parameters");
-    // ... conversion logic
-}
-```
-
-**Repository Error Patterns:**
-```csharp
-// From LogMemoryActions.cs - explicit error checks
-private ExpenseTag GetExpenseTag(int expenseTagId)
-{
-    return expenseTag ?? throw new InvalidOperationException($"Unable to find expense tag {expenseTagId}.");
-}
-```
-
-## Dependency Injection & Mocking
-
-**Service Registration Pattern:**
-All components are registered via ServiceCollection extensions, making them mockable:
+**Suite Organization:**
+Tests use plain xUnit `[Fact]` and `[Theory]` attributes — no shared `IClassFixture` / `ICollectionFixture` are in use. Each test is self-contained and uses Arrange / Act / Assert without explicit comment blocks.
 
 ```csharp
-// From ServiceCollectionExtensions.cs
-services.AddTransient<IRepository<Expense>, ExpenseRepository>();
-services.AddTransient<IUnitOfWork>(_ => new UnitOfWork(dbContext, ...));
-```
-
-This pattern allows tests to substitute implementations:
-```csharp
-// Test pattern (not currently implemented)
-var mockRepository = new Mock<IExpenseRepository>();
-services.AddTransient<IExpenseRepository>(_ => mockRepository.Object);
-```
-
-## Async/Await Testing Patterns
-
-All data access methods are async and require CancellationToken parameter. Testing pattern would be:
-
-```csharp
-// Example pattern for async testing (currently not implemented)
+// Fluxo.Tests/ViewModels/Shell/Main/DateRangeResolverTests.cs
 [Fact]
-public async Task GetByIdAsync_WithValidId_ReturnsEntity()
+public void Resolve_Weekly_ReturnsMondayToSunday()
 {
-    // Arrange
-    var repository = new ExpenseRepository(dbContext);
-    var expenseId = 1;
-    
-    // Act
-    var result = await repository.GetByIdAsync(expenseId, CancellationToken.None);
-    
-    // Assert
-    Assert.NotNull(result);
-    Assert.Equal(expenseId, result.Id);
+    var selected = new DateTime(2026, 4, 19, 14, 30, 0, DateTimeKind.Local);
+    var expectedFrom = new DateTime(2026, 4, 13, 0, 0, 0, DateTimeKind.Local);
+    var expectedTo = new DateTime(2026, 4, 19, 0, 0, 0, DateTimeKind.Local);
+
+    var result = DateRangeResolver.Resolve(selected, MainContentViewMode.Weekly);
+
+    Assert.Equal(expectedFrom, result.From);
+    Assert.Equal(expectedTo, result.To);
 }
 ```
 
-## Integration Testing Points
+**Theory pattern (parameterized):**
+```csharp
+// Fluxo.Tests/Views/Shell/Main/MainWindowShortcutMatcherTests.cs
+[Theory]
+[InlineData(Key.W, ModifierKeys.None)]
+[InlineData(Key.W, ModifierKeys.Control | ModifierKeys.Shift)]
+[InlineData(Key.S, ModifierKeys.Control)]
+public void IsRunSetupWizardShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
+```
 
-**Startup & Initialization:**
-- App.xaml.cs `OnStartup()` method contains error handling for initialization
-- First-run detection via UserSettings
-- Wizard popup display logic
-- Service provider bootstrap
+**Patterns:**
+- Setup: inline within the test, or via private static `CreateSut(...)` / `CreateViewModel(...)` factory methods (see `DialogServiceTests.CreateSut`, `StartupWizardVMTests.CreateViewModel`).
+- Teardown: none — no `IDisposable` / `IAsyncLifetime` usage. Tests rely on per-test instances.
+- Async tests return `Task` and use `async/await` (e.g. `GoNextAsync_OnStep1_DoesNotOverwriteExistingSalarySetting`).
+- Exception assertions use `Assert.Throws<T>` (e.g. `Resolve_AllTime_ThrowsInvalidOperationException` in `DateRangeResolverTests`).
 
-**Service Composition:**
-- Extensions methods chain multiple registrations
-- Generic repository factory patterns for ViewModel<->Entity mapping
-- Multi-interface implementation pattern requiring careful wiring
+## Mocking
 
-**Data Flow End-to-End:**
-- UI command triggers ViewModel method
-- ViewModel uses injected repositories
-- Repository queries EF Core DbContext
-- Results mapped via AutoMapper to ViewModels
-- Changes propagate back through Unit of Work SaveChangesAsync()
+**Framework:** None. No Moq / NSubstitute / FakeItEasy package is referenced in `Fluxo.Tests/Fluxo.Tests.csproj`.
 
-## CI/CD & Automation
+**Approach:** Hand-written test doubles (fakes / stubs) implemented as `private sealed class`es nested inside the test class. Dependencies are abstracted behind interfaces in `Fluxo.Core.Interfaces` (e.g. `IUnitOfWork`, `IUserSettingsRepository`, `IExpenseTagRepository`), which the fakes implement.
 
-**Status:** Not Detected
+**Patterns:**
 
-- No `.github/workflows/` directory
-- No GitHub Actions configuration
-- No AppVeyor, Azure Pipelines, or other CI config files
-- No pre-commit hooks observed
-- No test runner scripts in solution
+Hand-rolled fake repository tracking state:
+```csharp
+// Fluxo.Tests/ViewModels/Popups/StartupWizardVMTests.cs
+private sealed class TestUserSettingsRepository(IReadOnlyList<UserSettings> initialSettings) : IUserSettingsRepository
+{
+    private readonly Dictionary<string, UserSettings> _settings = ...;
+    public HashSet<string> AddedNames { get; } = new(StringComparer.Ordinal);
+    public HashSet<string> UpdatedNames { get; } = new(StringComparer.Ordinal);
+    public HashSet<string> RemovedNames { get; } = new(StringComparer.Ordinal);
+    // ... interface members record interactions for assertions
+}
+```
 
-## Recommendations for Adding Tests
+Unused interface members throw `NotSupportedException` to fail loudly if tests touch them:
+```csharp
+// Fluxo.Tests/ViewModels/Popups/GoalUpdateTransactionSupportTests.cs
+public IExpenseRepository Expenses => throw new NotSupportedException();
+public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
+```
 
-If testing is to be introduced, recommended approach:
+Delegate-based seam for static / framework calls (instead of mocking `MessageBox.Show`):
+```csharp
+// Fluxo.Tests/Services/Dialogs/DialogServiceTests.cs
+var sut = new DialogService(serviceProvider,
+    (_, _, _, buttons, icon) =>
+    {
+        state.LastIcon = icon;
+        state.LastButtons = buttons;
+        return MessageBoxResult.OK;
+    });
+```
 
-1. **Start with Repository Layer:**
-   - xUnit or NUnit for test framework
-   - Entity Framework In-Memory database or SQLite for test contexts
-   - Test each repository's query methods
-   - Validate eager loading with `.Include()` chains
+**What to Mock:**
+- Repositories and `IUnitOfWork` — always behind interfaces from `Fluxo.Core.Interfaces.Repositories`.
+- WPF/system entry points (e.g. `MessageBox.Show`) via injected delegate parameters on the SUT constructor.
 
-2. **ViewModel Unit Tests:**
-   - Mock IUnitOfWork and repositories
-   - Verify ObservableObject property change notifications
-   - Test RelayCommand execution
-   - Verify state transitions
+**What NOT to Mock:**
+- Pure logic types (e.g. `DateRangeResolver`, `MainWindowShortcutMatcher`, `SavingGoalsPanelVM`) — exercised directly with real inputs.
+- DI container itself — `new ServiceCollection().BuildServiceProvider()` is used as a real, empty provider where one is required (`DialogServiceTests`).
+- Domain entities (`UserSettings`, `ExpenseTag`, `SavingGoalVM`) — instantiated directly.
 
-3. **Converter Unit Tests:**
-   - Simple test cases for each conversion
-   - Edge cases and invalid input handling
-   - Resource lookup verification for icon converters
+## Fixtures and Factories
 
-4. **Integration Tests:**
-   - Full service composition with test database
-   - End-to-end startup sequence
-   - Data persistence and retrieval cycles
+**Test Data:**
+Per-test inline construction is preferred. Where data is repeated, a `private static` helper inside the test class produces it:
 
+```csharp
+// Fluxo.Tests/ViewModels/Shell/Main/SavingGoalsPanelVMTests.cs
+private static IReadOnlyList<SavingGoalVM> CreateGoals(int count)
+{
+    return Enumerable.Range(1, count)
+        .Select(id => new SavingGoalVM { Id = id, Name = $"Goal {id}", TargetAmount = 1000m, ... })
+        .ToList();
+}
+```
+
+SUT factories:
+```csharp
+private static (DialogService sut, TestMessageBoxState state) CreateSut() { ... }
+private static StartupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null) { ... }
+```
+
+**Location:**
+- No shared `Fixtures/` or `TestData/` directories — fixtures and fakes live as nested `private sealed class`es within the consuming test file.
+
+## Coverage
+
+**Requirements:** None enforced. No `coverlet.collector`, `coverlet.msbuild`, or `.runsettings` file is present.
+
+**View Coverage:**
+```bash
+# Not configured. To opt in locally:
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+## Test Types
+
+**Unit Tests:**
+- Scope: ViewModels (`Fluxo.Tests/ViewModels/...`), pure helper/service classes (`DateRangeResolver`, `MainWindowShortcutMatcher`, `DialogService`, `GoalUpdateTransactionSupport`).
+- Approach: Construct the SUT directly with hand-rolled fakes for dependencies; assert on observable state and recorded interactions.
+
+**Integration Tests:**
+- Not present. There are no tests that touch the real EF Core context (`Fluxo.Data`) or the WPF render pipeline.
+
+**E2E / UI Tests:**
+- Not used. No FlaUI / WinAppDriver / Appium harness is configured, despite the `net10.0-windows` target.
+
+## Common Patterns
+
+**Async Testing:**
+```csharp
+// Fluxo.Tests/ViewModels/Popups/StartupWizardVMTests.cs
+[Fact]
+public async Task GoNextAsync_OnStep1_DoesNotOverwriteExistingSalarySetting()
+{
+    // ... arrange ...
+    var result = await viewModel.GoNextAsync();
+    Assert.True(result.IsSuccess);
+}
+```
+
+**Exception Testing:**
+```csharp
+// Fluxo.Tests/ViewModels/Shell/Main/DateRangeResolverTests.cs
+Assert.Throws<InvalidOperationException>(() =>
+    DateRangeResolver.Resolve(selected, MainContentViewMode.AllTime));
+```
+
+**Interaction Verification (without mocking framework):**
+Fakes expose `HashSet<string>` / counter properties (e.g. `AddedNames`, `UpdatedNames`, `RemovedNames`, `SaveChangesCalls`) so tests can assert on `Assert.DoesNotContain(...)` / `Assert.Equal(1, fake.SaveChangesCalls)`.
+
+**Single-instance assertion:**
+```csharp
+var remainingGoal = Assert.Single(vm.SavingGoals);
+var activeDot = Assert.Single(vm.GoalDots, dot => dot.IsActive);
+```
+
+## Notable Gaps
+
+- No tests under `Fluxo.Core.Tests`, `Fluxo.Data.Tests`, or `Fluxo.Services.Tests` — only `Fluxo.Tests` exists, focused on ViewModels + a handful of helpers.
+- No code coverage collection configured.
+- No CI test runner config detected at the time of analysis.
+
+---
+
+*Testing analysis: 2026-04-18*

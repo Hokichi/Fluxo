@@ -1,283 +1,286 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-04-14
+**Analysis Date:** 2026-04-18
 
 ## Directory Layout
 
 ```
-Fluxo/ (Solution Root)
-├── Fluxo/                          # Main WPF presentation project
-│   ├── App.xaml                    # Application root; dependency injection setup
-│   ├── App.xaml.cs                 # Startup logic, first-run wizard
-│   ├── Fluxo.csproj                # Project file with WPF config
-│   ├── Converters/                 # XAML value converters
-│   │   ├── BoolToVisibilityConverter.cs
-│   │   ├── DateTimeToRelativeDateConverter.cs
-│   │   ├── GoalProgressToBrushConverter.cs
-│   │   ├── NumberWithCommasConverter.cs
-│   │   └── [8 more converters]
-│   ├── Extensions/
-│   │   └── ServiceCollectionExtensions.cs  # DI configuration for presentation layer
-│   ├── Mappings/
-│   │   └── EntityViewModelProfile.cs       # AutoMapper configuration
-│   ├── Migrations/                         # EF Core migrations (local for testing)
-│   ├── Resources/
-│   │   ├── Fonts/                  # Custom font files (SFTSchriftedRoundTRIAL)
-│   │   ├── CustomControls/         # XAML custom control implementations
-│   │   │   ├── BalloonBorder.xaml
-│   │   │   ├── BalloonButton.cs
-│   │   │   ├── SwipeRevealContainer.cs
-│   │   │   └── FadingScrollViewer.cs
-│   │   ├── Styles/                 # XAML style resources
-│   │   │   └── ButtonStyles.xaml
-│   │   ├── Theme.xaml              # Global theme and color definitions
-│   │   ├── Icons.xaml              # Icon definitions
-│   │   └── icon.ico                # Application icon
-│   ├── Services/                   # Presentation-layer services
-│   │   └── History/                # Undo/redo command history
-│   ├── ViewModels/                 # MVVM ViewModels
-│   │   ├── Controls/               # Non-entity ViewModels (e.g., DayOfWeekVM)
-│   │   ├── Entities/               # Entity ViewModels
-│   │   │   ├── ExpenseVM.cs
-│   │   │   ├── ExpenseLogVM.cs
-│   │   │   ├── IncomeLogVM.cs
-│   │   │   ├── SpendingSourceVM.cs
-│   │   │   ├── SavingGoalVM.cs
-│   │   │   └── [more entity VMs]
-│   │   ├── Messages/               # Messaging payloads for cross-ViewModel events
-│   │   │   ├── ExpenseDetailUpdatedMessage.cs
-│   │   │   ├── LogMemoryMessages.cs
-│   │   │   └── UsernameChangedMessage.cs
-│   │   ├── Notifications/          # Notification display ViewModels
-│   │   │   └── NotificationItemVM.cs
-│   │   ├── Persistence/            # ViewModel-specific repository wrappers
-│   │   │   ├── EntityViewModelReadUnitOfWork.cs
-│   │   │   ├── EntityViewModelWriteUnitOfWork.cs
-│   │   │   ├── ExpenseViewModelReadRepository.cs
-│   │   │   ├── ViewModelReadRepository.cs
-│   │   │   └── ViewModelWriteRepository.cs
-│   │   └── Shell/                  # Main window and app shell ViewModels
-│   │       └── MainVM.cs           # Main application ViewModel
-│   └── Views/                      # XAML UI views and code-behind
-│       ├── Components/             # Reusable UI components
-│       │   ├── DateSelector.xaml
-│       │   ├── ExpensesList.xaml
-│       │   └── IncomeSource.xaml
-│       ├── Popups/                 # Modal dialog windows
-│       │   ├── AddFixedExpensePopup.xaml
-│       │   ├── AddSavingGoalPopup.xaml
-│       │   ├── ExpenseDetailPopup.xaml
-│       │   ├── QuickAddPopup.xaml
-│       │   ├── SettingsPopup.xaml
-│       │   ├── StartupWizardPopup.xaml
-│       │   └── [11 more popups]
-│       └── Shell/                  # Main application windows
-│           ├── MainWindow.xaml
-│           └── MainWindow.xaml.cs
-├── Fluxo.Core/                     # Domain entity and interface layer
-│   ├── Constants/
-│   │   └── UserSettingNames.cs     # Constant strings for user setting keys
-│   ├── Entities/                   # Domain models
-│   │   ├── Expense.cs
-│   │   ├── ExpenseLog.cs           # Log entry for each expense transaction
-│   │   ├── IncomeLog.cs            # Log entry for income
-│   │   ├── SavingGoal.cs
-│   │   ├── SpendingSource.cs       # Account/wallet
-│   │   ├── UserSettings.cs         # Key-value app settings
-│   │   └── ExpenseTag.cs           # Tag/category for expenses
+Fluxo/                                  # Repository root (worktree)
+├── Fluxo.slnx                          # Solution file (XML solution format)
+├── .gitignore
+├── .gitattributes
+├── docs/                               # External docs (currently `superpowers/`)
+├── .planning/                          # GSD planning artifacts (codebase docs, plans)
+├── .claire/, .claude/                  # Tooling/agent state (do not modify by hand)
+│
+├── Fluxo.Core/                         # Domain contracts (no project deps)
+│   ├── Fluxo.Core.csproj
+│   ├── Constants/UserSettingNames.cs
+│   ├── DTO/                            # *Dto POCOs
+│   ├── Entities/                       # EF entity POCOs
 │   ├── Enums/
-│   │   ├── ExpenseKind.cs          # Fixed, Variable, Invest, etc.
-│   │   ├── ExpenseCategory.cs      # Needs, Wants, Invest
-│   │   ├── SpendingSourceType.cs   # Account type
-│   │   └── NotificationSeverity.cs
+│   ├── Filters/                        # Search filter objects
 │   ├── Interfaces/
-│   │   ├── IExpenseCleanupService.cs
-│   │   ├── IUnitOfWork.cs          # Main transaction boundary
-│   │   ├── IViewModelReadUnitOfWork.cs
-│   │   ├── IViewModelWriteUnitOfWork.cs
-│   │   └── Repositories/           # Repository interface contracts
-│   │       ├── IRepository.cs
-│   │       ├── IReadRepository.cs
-│   │       ├── IWriteRepository.cs
-│   │       ├── IExpenseRepository.cs
-│   │       └── [more specific repos]
-│   ├── Exceptions/                 # Placeholder for custom exceptions
-│   └── Fluxo.Core.csproj
-├── Fluxo.Data/                     # Data access and persistence layer
+│   │   ├── IUnitOfWork.cs
+│   │   ├── Repositories/
+│   │   └── Services/
+│   └── Exceptions/                     # (folder reserved, empty)
+│
+├── Fluxo.Data/                         # EF Core 10 (SQLite) persistence
+│   ├── Fluxo.Data.csproj
+│   ├── Configurations/                 # (folder reserved, empty)
 │   ├── Context/
-│   │   ├── FluxoDbContext.cs       # EF Core DbContext
-│   │   └── FluxoDbContextFactory.cs # Factory for creating db context instances
-│   ├── Extensions/
-│   │   └── ServiceCollectionExtensions.cs # DI registration for repositories
-│   ├── Migrations/                 # EF Core database migrations
-│   │   ├── 20260331080056_InitialCreate.cs
-│   │   ├── 20260331083448_AddLimitAndSpentAmountToSpendingSource.cs
-│   │   └── [3 more migrations]
-│   ├── Repositories/               # Repository implementations
-│   │   ├── Repository.cs           # Generic base repository
-│   │   ├── ExpenseRepository.cs
-│   │   ├── ExpenseLogRepository.cs
-│   │   ├── IncomeLogRepository.cs
-│   │   ├── SpendingSourceRepository.cs
-│   │   ├── SavingGoalRepository.cs
-│   │   ├── ExpenseTagRepository.cs
-│   │   └── UserSettingsRepository.cs
-│   ├── UnitOfWork.cs               # Aggregates all repositories
-│   ├── Configurations/             # Placeholder for EF configurations
-│   └── Fluxo.Data.csproj
-├── Fluxo.Services/                 # Business logic and domain services
-│   ├── Persistence/
-│   │   └── ExpenseCleanupService.cs # Service for cleaning marked-for-deletion expenses
-│   ├── Calculations/               # Placeholder for business calculations
-│   ├── Extensions/                 # Placeholder for service extensions
-│   └── Fluxo.Services.csproj
-├── Fluxo.slnx                      # Solution file
-├── docs/                           # Documentation
-└── .git/                           # Git repository
+│   │   ├── FluxoDbContext.cs
+│   │   └── FluxoDbContextFactory.cs
+│   ├── Extensions/ServiceCollectionExtensions.cs   # AddFluxoData()
+│   ├── Migrations/                     # Initial migrations + snapshot
+│   ├── Repositories/
+│   │   ├── Repository.cs               # Generic base
+│   │   └── *Repository.cs              # Per-aggregate repos
+│   └── UnitOfWork.cs
+│
+├── Fluxo.Services/                     # Application services (Entity↔DTO)
+│   ├── Fluxo.Services.csproj
+│   ├── Calculations/                   # (folder reserved, empty)
+│   ├── Extensions/                     # (folder reserved, empty)
+│   ├── Mappings/EntityDtoProfile.cs
+│   └── Persistence/
+│       ├── ExpenseService.cs
+│       ├── ExpenseLogService.cs
+│       ├── SpendingSourceService.cs
+│       └── TagService.cs
+│
+├── Fluxo/                              # WPF presentation + composition root
+│   ├── Fluxo.csproj                    # OutputType=WinExe, TargetFramework=net10.0-windows
+│   ├── App.xaml                        # Resource dictionaries, fonts, converters
+│   ├── App.xaml.cs                     # DI bootstrap + OnStartup
+│   ├── AssemblyInfo.cs
+│   ├── Converters/                     # IValueConverter implementations
+│   ├── Extensions/ServiceCollectionExtensions.cs   # AddFluxoPresentation() + AddUIData()
+│   ├── Mappings/DtoViewModelProfile.cs
+│   ├── Migrations/                     # EF migrations live here (MigrationsAssembly = "Fluxo")
+│   │   └── FluxoDesignTimeDbContextFactory.cs
+│   ├── Resources/
+│   │   ├── icon.ico
+│   │   ├── Theme.xaml
+│   │   ├── Icons.xaml
+│   │   ├── Fonts/                      # SFT Schrifted Round TRIAL family + ContainerStyles.xaml
+│   │   ├── Styles/                     # ButtonStyles, GlobalStyles, MainWindowStyles, PopupStyles, SettingsStyle, StartupWizardStyle, TextBoxStyles
+│   │   └── CustomControls/             # BasePopup, BalloonBorder, FluxoMessageBox, MoneyTextBox, IPopupHost, etc.
+│   ├── Services/
+│   │   ├── Dialogs/                    # IDialogService + DialogService
+│   │   └── History/                    # LogMemoryManager + LogMemoryActions (undo/redo)
+│   ├── ViewModels/
+│   │   ├── Controls/                   # Control-scoped VMs (DayOfWeekVM)
+│   │   ├── Entities/                   # *VM mirroring DTOs (ExpenseVM, etc.)
+│   │   ├── Helpers/                    # Pure helpers (MonthlyDueDateHelper)
+│   │   ├── Messages/                   # CommunityToolkit messenger payloads
+│   │   ├── Notifications/              # NotificationItemVM
+│   │   ├── Popups/                     # Per-popup VMs (QuickAddVM, SettingsVM, ...)
+│   │   └── Shell/
+│   │       ├── MainVM.cs
+│   │       ├── MainVM.ExpenseDetailMessenger.cs
+│   │       ├── MainContentViewMode.cs
+│   │       └── Main/                   # Long-lived shell-region VMs
+│   └── Views/
+│       ├── Components/                 # Reusable user controls (DateSelector, ExpensesList, IncomeSource)
+│       ├── Popups/                     # Modal popup windows + Settings/Tabs/
+│       └── Shell/
+│           ├── StartupLoaderPopup.xaml(.cs)
+│           ├── Main/                   # MainWindow + Controls/ + Sections/
+│           └── Wizard/                 # StartupWizardPopup + Pages/Steps/
+│
+└── Fluxo.Tests/                        # xUnit tests (mirrors Fluxo namespaces)
+    ├── Fluxo.Tests.csproj
+    ├── Services/Dialogs/
+    ├── ViewModels/
+    │   ├── Popups/
+    │   └── Shell/Main/
+    └── Views/Shell/Main/
 ```
 
 ## Directory Purposes
 
-**Fluxo/ (Presentation Layer):**
-- Purpose: WPF application UI, view models, and application orchestration
-- Contains: XAML views, code-behind, ViewModels, converters, resources
-- Key files: `App.xaml.cs` (entry point), `MainVM.cs` (main application state)
+**`Fluxo.Core/`:**
+- Purpose: Pure domain layer — entities, DTOs, enums, filters, and contracts (interfaces). No external runtime deps.
+- Key files: `Fluxo.Core/Interfaces/IUnitOfWork.cs`, `Fluxo.Core/Entities/Expense.cs`, `Fluxo.Core/DTO/ExpenseDto.cs`, `Fluxo.Core/Constants/UserSettingNames.cs`
 
-**Fluxo/ViewModels/:**
-- Purpose: UI state and command logic following MVVM pattern
-- Contains:
-  - Entity ViewModels wrapping domain entities with observable properties
-  - Shell ViewModels for main window coordination
-  - Popup ViewModels for dialog/wizard logic
-  - Persistence adapters transforming domain repos to ViewModel repos
+**`Fluxo.Data/Context/`:**
+- Purpose: `DbContext` and design/runtime factories
+- Key files: `Fluxo.Data/Context/FluxoDbContext.cs` (Fluent API model config + auto-include for reference navigations), `Fluxo.Data/Context/FluxoDbContextFactory.cs`
 
-**Fluxo/Views/:**
-- Purpose: XAML UI definitions with minimal code-behind
-- Contains:
-  - Shell: Main application window
-  - Components: Reusable controls (DateSelector, ExpensesList, IncomeSource)
-  - Popups: Modal dialogs for forms and wizards
+**`Fluxo.Data/Repositories/`:**
+- Purpose: Per-aggregate repository implementations on top of generic `Repository<T>`
+- Key files: `Fluxo.Data/Repositories/Repository.cs`, `Fluxo.Data/Repositories/ExpenseRepository.cs`, `SpendingSourceRepository.cs`, `UserSettingsRepository.cs`
 
-**Fluxo.Core/ (Domain Layer):**
-- Purpose: Domain model definitions, enums, and abstractions
-- Contains:
-  - Entities: Pure data classes (no EF dependencies)
-  - Enums: Business domain enumerations
-  - Interfaces: Contracts for repositories and services
-  - No dependencies on other projects
+**`Fluxo.Data/Migrations/`:**
+- Purpose: EF Core migration history for the `Fluxo.Data` project (legacy/initial schema). Note: live runtime migrations now live under `Fluxo/Migrations/` because `MigrationsAssembly("Fluxo")` is configured in both factories.
 
-**Fluxo.Data/ (Data Access Layer):**
-- Purpose: Entity Framework Core context, repository implementations, database schema
-- Contains:
-  - `FluxoDbContext`: EF Core DbContext with all entity mappings
-  - Repository implementations: Concrete CRUD operations
-  - Migrations: Database schema versioning
-  - Dependency: Fluxo.Core only
+**`Fluxo.Services/Persistence/`:**
+- Purpose: Application services that orchestrate `IUnitOfWork` operations and Entity↔DTO mapping
+- Key files: `Fluxo.Services/Persistence/ExpenseService.cs`, `ExpenseLogService.cs`, `SpendingSourceService.cs`, `TagService.cs`
 
-**Fluxo.Services/ (Application/Business Layer):**
-- Purpose: Cross-cutting business logic, domain services
-- Contains:
-  - `ExpenseCleanupService`: Handles soft-delete logic for expenses
-  - Dependencies: Fluxo.Core, Fluxo.Data
+**`Fluxo/Views/`:**
+- Purpose: All XAML views; separated by role
+  - `Components/` — reusable user controls injected into windows
+  - `Popups/` — modal dialogs (each is a `Window` derivative or `BasePopup`); `Settings/Tabs/` for the multi-tab settings popup
+  - `Shell/Main/` — `MainWindow` plus `Sections/` (panels) and `Controls/` (small region-specific controls)
+  - `Shell/Wizard/` — first-run wizard plus `Pages/Steps/` for ordered step pages
+
+**`Fluxo/ViewModels/`:**
+- Purpose: VM classes mirroring view organization. `Shell/Main/` shell-region VMs are singletons; `Popups/` and `Entities/` VMs are transient (see `Fluxo/Extensions/ServiceCollectionExtensions.cs`)
+
+**`Fluxo/Services/`:**
+- Purpose: UI-only services (`Dialogs/` for popup factory, `History/` for undo/redo). Distinct from `Fluxo.Services` project — these never touch persistence directly except via `IUnitOfWork`.
+
+**`Fluxo/Resources/`:**
+- Purpose: WPF resource dictionaries. `App.xaml` merges `Theme.xaml`, `Icons.xaml`, all of `Styles/*.xaml`, and `Fonts/ContainerStyles.xaml`. `CustomControls/` holds shared popup/control primitives.
+
+**`Fluxo/Migrations/`:**
+- Purpose: Active EF Core migrations + `FluxoDesignTimeDbContextFactory.cs` for `dotnet ef` tooling. Both runtime and design-time factories declare `MigrationsAssembly("Fluxo")`.
+
+**`Fluxo.Tests/`:**
+- Purpose: xUnit test project. Mirrors source namespaces (`ViewModels/Shell/Main/`, `Services/Dialogs/`, `Views/Shell/Main/`).
 
 ## Key File Locations
 
 **Entry Points:**
-- `Fluxo/App.xaml.cs`: Application startup, first-run wizard, DI container setup
-- `Fluxo/Views/Shell/MainWindow.xaml.cs`: Main application window
+- `Fluxo/App.xaml.cs`: WPF application bootstrap, DI composition, first-run logic
+- `Fluxo/Views/Shell/Main/MainWindow.xaml.cs`: Primary shell window
+- `Fluxo/Views/Shell/Wizard/StartupWizardPopup.xaml.cs`: First-run wizard
 
 **Configuration:**
-- `Fluxo/Fluxo.csproj`: WPF project settings, NuGet dependencies
-- `Fluxo/Extensions/ServiceCollectionExtensions.cs`: Presentation layer DI configuration
-- `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`: Data layer DI configuration
-- `Fluxo/Mappings/EntityViewModelProfile.cs`: AutoMapper entity-to-viewmodel mappings
-- `Fluxo.Data/Context/FluxoDbContext.cs`: EF Core configuration and schema
+- `Fluxo.slnx`: Solution
+- `Fluxo/Fluxo.csproj`: WPF executable, packages (`AutoMapper`, `CommunityToolkit.Mvvm`, `MahApps.Metro.IconPacks`, `Microsoft.EntityFrameworkCore.Design`, `Microsoft.Extensions.Hosting`, `Newtonsoft.Json`, `Serilog`, `Serilog.Sinks.File`)
+- `Fluxo.Data/Fluxo.Data.csproj`: EF Core 10 + SQLite packages
+- `Fluxo.Services/Fluxo.Services.csproj`: AutoMapper, FluentValidation, Toolkit.Uwp.Notifications
+- `Fluxo.Tests/Fluxo.Tests.csproj`: xUnit + Microsoft.NET.Test.Sdk
+- `Fluxo/App.xaml`: Application resource dictionary registrations (fonts, converters, themes, styles)
+
+**DI Composition:**
+- `Fluxo/Extensions/ServiceCollectionExtensions.cs`: `AddFluxoPresentation()` (services + AutoMapper) and `AddUIData()` (VMs, popups, dialog/messenger)
+- `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`: `AddFluxoData()` (DbContext, repositories, UoW factory)
 
 **Core Logic:**
-- `Fluxo.Core/Entities/`: Domain model classes
-- `Fluxo.Core/Interfaces/`: Service and repository contracts
-- `Fluxo.Data/Repositories/`: Data access implementations
-- `Fluxo/ViewModels/Shell/MainVM.cs`: Main application state management
+- `Fluxo/ViewModels/Shell/MainVM.cs`: Dashboard state, notifications, undo coordination
+- `Fluxo.Services/Persistence/ExpenseService.cs`: Reference example of write-flow service
+- `Fluxo.Data/Repositories/Repository.cs`: Generic CRUD base with safe tracking semantics
+- `Fluxo.Data/UnitOfWork.cs`: Aggregates repositories around a single `DbContext`
+- `Fluxo.Data/Context/FluxoDbContext.cs`: Fluent model configuration + reference auto-include
+
+**Persistence:**
+- `Fluxo.Data/Context/FluxoDbContextFactory.cs`: Builds runtime DbContext using `fluxo.db` next to `AppContext.BaseDirectory`
+- `Fluxo/Migrations/`: Active migrations and snapshot
+- `Fluxo/Migrations/FluxoDesignTimeDbContextFactory.cs`: Design-time factory for `dotnet ef migrations add ...`
+
+**Mapping:**
+- `Fluxo.Services/Mappings/EntityDtoProfile.cs`: Entity ⇄ DTO
+- `Fluxo/Mappings/DtoViewModelProfile.cs`: DTO ⇄ ViewModel
 
 **Testing:**
-- Tests folder location: Not present (no unit tests in codebase)
+- `Fluxo.Tests/ViewModels/Shell/Main/`: VM tests (e.g., `BudgetAllocationPanelVMTests.cs`, `DateRangeResolverTests.cs`)
+- `Fluxo.Tests/Services/Dialogs/DialogServiceTests.cs`
+- `Fluxo.Tests/Views/Shell/Main/MainWindowShortcutMatcherTests.cs`
 
 ## Naming Conventions
 
 **Files:**
-- ViewModel files: `*VM.cs` or `*ViewModel.cs` (e.g., `ExpenseVM.cs`, `MainVM.cs`)
-- Repository files: `*Repository.cs` (e.g., `ExpenseRepository.cs`)
-- Dialog/View files: `*Popup.xaml` and `*Popup.xaml.cs` for modals; `*.xaml` + `*.xaml.cs` for standard views
-- Converter files: `*Converter.cs` (e.g., `BoolToVisibilityConverter.cs`)
-- Message/Event files: `*Message.cs` (e.g., `ExpenseDetailUpdatedMessage.cs`)
+- C# classes: `PascalCase.cs` matching class name (`ExpenseService.cs`, `MonthlyDueDateHelper.cs`)
+- Interfaces: `I` prefix (`IExpenseService.cs`, `IUnitOfWork.cs`, `IDialogService.cs`)
+- Generic base + concrete pairings: `Repository<T>` ↔ `ExpenseRepository`
+- ViewModels: suffix `VM` (`MainVM.cs`, `ExpenseLogVM.cs`, `AddSpendingSourceVM.cs`)
+- Partial-class extension: `<ClassName>.<Aspect>.cs` (e.g., `MainVM.ExpenseDetailMessenger.cs`, `SavingGoalVM.Progress.cs`)
+- DTOs: suffix `Dto` (`ExpenseDto.cs`)
+- Filters: suffix `Filter` (`ExpenseFilter.cs`)
+- Messages: descriptive name + `Message` suffix (`DashboardDataInvalidatedMessage.cs`, `UsernameChangedMessage.cs`)
+- WPF view + code-behind: `*.xaml` + `*.xaml.cs` pair
+- Popups: suffix `Popup` (`AddSpendingSourcePopup.xaml`, `SettingsPopup.xaml`)
+- Migrations: `<UTC-yyyyMMddHHmmss>_<Description>.cs` (auto-generated by `dotnet ef`)
 
 **Directories:**
-- PascalCase for project names: `Fluxo`, `Fluxo.Core`, `Fluxo.Data`, `Fluxo.Services`
-- PascalCase for folders: `ViewModels`, `Repositories`, `Extensions`, `Migrations`
-- Functional grouping: `Entities/`, `Interfaces/`, `Converters/`, `Resources/`, `Views/`
+- Plural for collections of similar artifacts: `Entities/`, `Repositories/`, `Services/`, `ViewModels/`, `Views/`, `Popups/`, `Pages/`
+- Singular when describing a role/aspect: `Context/`, `Shell/`, `Main/`, `History/`, `Wizard/`
+- One directory per architectural concern (e.g., `Mappings/`, `Migrations/`, `Converters/`)
 
-**Classes:**
-- PascalCase: `MainVM`, `ExpenseVM`, `UserSettings`, `SpendingSource`
-- Entity classes: No suffix (e.g., `Expense`, `ExpenseLog`)
-- ViewModel classes: `VM` suffix (e.g., `ExpenseVM`, `MainVM`)
-- Repository classes: `Repository` suffix (e.g., `ExpenseRepository`)
-- Service classes: `Service` suffix (e.g., `ExpenseCleanupService`)
-
-**Methods/Properties:**
-- PascalCase for public: `GetAllAsync()`, `SaveChangesAsync()`, `Initialize()`
-- camelCase for private: `_serviceProvider`, `_disabledSavingGoalIds`
+**Namespaces:** Follow folder structure exactly (e.g., `Fluxo.Views.Shell.Main`, `Fluxo.Services.Persistence`, `Fluxo.Core.Interfaces.Repositories`).
 
 ## Where to Add New Code
 
-**New Feature (Multi-Entity Operation):**
-- Primary code:
-  - Domain layer: `Fluxo.Core/Entities/` (if new entity), `Fluxo.Core/Enums/` (if new enum)
-  - Data layer: `Fluxo.Data/Repositories/` (repository implementation)
-  - Data layer: `Fluxo.Data/Migrations/` (schema changes)
-  - Services layer: `Fluxo.Services/` (business logic)
-  - Presentation: `Fluxo/ViewModels/Entities/` (ViewModel), `Fluxo/Views/` (View)
-- Register in DI: `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`, `Fluxo/Extensions/ServiceCollectionExtensions.cs`
-- Mapping: `Fluxo/Mappings/EntityViewModelProfile.cs` (add AutoMapper config)
+**New domain entity:**
+- Entity POCO: `Fluxo.Core/Entities/<Name>.cs`
+- DTO: `Fluxo.Core/DTO/<Name>Dto.cs`
+- Repository contract: `Fluxo.Core/Interfaces/Repositories/I<Name>Repository.cs`
+- Repository implementation: `Fluxo.Data/Repositories/<Name>Repository.cs` (extend `Repository<T>`)
+- Register in `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs` (also add to the `IUnitOfWork` factory and to `Fluxo.Data/UnitOfWork.cs`)
+- Add `DbSet` + Fluent config to `Fluxo.Data/Context/FluxoDbContext.cs`
+- Map in both AutoMapper profiles (`Fluxo.Services/Mappings/EntityDtoProfile.cs`, `Fluxo/Mappings/DtoViewModelProfile.cs`)
+- Add migration: run `dotnet ef migrations add <Name>` from the `Fluxo` project (migrations land in `Fluxo/Migrations/`)
 
-**New Component/Module (UI-Only):**
-- Implementation:
-  - ViewModel: `Fluxo/ViewModels/[Category]/YourNameVM.cs`
-  - View: `Fluxo/Views/[Category]/YourName.xaml` + `.xaml.cs`
-  - Register in DI: `Fluxo/Extensions/ServiceCollectionExtensions.cs` if it's a service
-- Naming: Use `VM` suffix for ViewModels, group by functional area (Controls, Entities, Shell, Popups)
+**New application service:**
+- Contract: `Fluxo.Core/Interfaces/Services/I<Name>Service.cs`
+- Implementation: `Fluxo.Services/Persistence/<Name>Service.cs` (constructor-inject `IUnitOfWork` + `IMapper`)
+- Register transient in `Fluxo/Extensions/ServiceCollectionExtensions.cs::AddFluxoPresentation`
 
-**Utilities/Converters:**
-- Shared helpers: `Fluxo/Converters/` (for XAML converters)
-- Extension methods: `[Project]/Extensions/` (e.g., `Fluxo/Extensions/`, `Fluxo.Data/Extensions/`)
+**New popup/dialog:**
+- View: `Fluxo/Views/Popups/<Name>Popup.xaml(.cs)` (inherit `Window` or extend `BasePopup`)
+- VM: `Fluxo/ViewModels/Popups/<Name>VM.cs`
+- Register both in `Fluxo/Extensions/ServiceCollectionExtensions.cs::AddUIData` (transient)
+- Expose via `Fluxo/Services/Dialogs/IDialogService.cs` + implementation
 
-**Data Access for Existing Entity:**
-- Repository customization: `Fluxo.Data/Repositories/[Entity]Repository.cs`
-- Interface: `Fluxo.Core/Interfaces/Repositories/I[Entity]Repository.cs`
-- DI registration: `Fluxo.Data/Extensions/ServiceCollectionExtensions.cs`
+**New shell panel/section:**
+- View: `Fluxo/Views/Shell/Main/Sections/<Name>Panel.xaml(.cs)`
+- VM: `Fluxo/ViewModels/Shell/Main/<Name>PanelVM.cs` (typically singleton)
+- Wire into `MainWindow.xaml` via a host element and assign `DataContext` in `MainWindow.xaml.cs`
+
+**New value converter:**
+- Place in `Fluxo/Converters/`
+- Register as a resource in the converters `ResourceDictionary` inside `Fluxo/App.xaml`
+
+**New custom control / popup primitive:**
+- Place in `Fluxo/Resources/CustomControls/`
+
+**New EF migration:**
+- Generated under `Fluxo/Migrations/` (see `Fluxo/Migrations/FluxoDesignTimeDbContextFactory.cs`)
+
+**New test:**
+- Mirror source path under `Fluxo.Tests/` (e.g., new `Fluxo/ViewModels/Shell/Main/FooVM.cs` → `Fluxo.Tests/ViewModels/Shell/Main/FooVMTests.cs`)
+
+**New cross-VM message:**
+- Add a sealed class in `Fluxo/ViewModels/Messages/<Name>Message.cs`
+- Send via `WeakReferenceMessenger.Default.Send(...)`; subscribe in VM constructor with `WeakReferenceMessenger.Default.Register<TRecipient, TMessage>(...)`
 
 ## Special Directories
 
-**Migrations:**
-- Purpose: EF Core database schema versioning
-- Generated: Yes (auto-generated by `dotnet ef migrations add`)
-- Committed: Yes (tracked in version control)
-- Location: `Fluxo.Data/Migrations/` (primary) and `Fluxo/Migrations/` (local testing copies)
+**`Fluxo/Migrations/`:**
+- Purpose: Active EF Core migration set used at runtime (`MigrationsAssembly("Fluxo")` in `FluxoDbContextFactory`)
+- Generated: Yes (`dotnet ef migrations add ...`); manual edits discouraged
+- Committed: Yes
 
-**Resources:**
-- Purpose: XAML styles, themes, fonts, custom controls, application icon
-- Generated: No (all static assets)
-- Committed: Yes (fonts, styles, icons tracked in git)
-- Location: `Fluxo/Resources/`
-- Subdirectories:
-  - `Fonts/`: Custom TrueType fonts
-  - `Styles/`: XAML style definitions
-  - `CustomControls/`: Reusable control code-behind and XAML
+**`Fluxo.Data/Migrations/`:**
+- Purpose: Earlier migration set living in the persistence project (kept for history)
+- Generated: Yes
+- Committed: Yes
 
-**bin/ and obj/:**
-- Purpose: Compiled binaries and build artifacts
-- Generated: Yes (by .NET build process)
-- Committed: No (in .gitignore)
+**`Fluxo/Resources/Fonts/`:**
+- Purpose: TTF font assets for the SFT Schrifted Round TRIAL family, registered as `<Resource Include="..." />` in `Fluxo/Fluxo.csproj` and exposed as `FontFamily` resources in `Fluxo/App.xaml`
+- Generated: No
+- Committed: Yes
+
+**`Fluxo.Core/Exceptions/`, `Fluxo.Data/Configurations/`, `Fluxo.Services/Calculations/`, `Fluxo.Services/Extensions/`:**
+- Purpose: Reserved (declared via `<Folder Include="..." />` in their respective `.csproj` files); empty in the current snapshot. Use when adding custom exceptions, EF entity-type configurations, calculation utilities, or service-layer extension methods respectively.
+- Generated: No
+- Committed: Yes (kept by `<Folder Include>` declarations)
+
+**`.planning/`:**
+- Purpose: GSD orchestration artifacts including this `codebase/` directory of analysis docs
+- Generated: Yes (by GSD commands)
+- Committed: Yes
+
+**`docs/`:**
+- Purpose: Long-form documentation (`docs/superpowers/`)
+- Generated: No
+- Committed: Yes
 
 ---
 
-*Structure analysis: 2026-04-14*
+*Structure analysis: 2026-04-18*
