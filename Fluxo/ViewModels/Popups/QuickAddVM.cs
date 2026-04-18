@@ -452,16 +452,16 @@ public partial class QuickAddVM : ObservableObject
     private void ReloadChoicesFromMainViewModel()
     {
         _availableSpendingSources.Clear();
-        _availableSpendingSources.AddRange(_mainViewModel.SpendingSources);
+        _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources);
 
         _orderedTags.Clear();
-        _orderedTags.AddRange(_mainViewModel.Tags
-            .Concat(_mainViewModel.OtherTags)
+        _orderedTags.AddRange(_mainViewModel.BudgetPanel.Tags
+            .Concat(_mainViewModel.BudgetPanel.OtherTags)
             .GroupBy(tag => tag.Id)
             .Select(group => group.First()));
 
         _orderedGoals.Clear();
-        _orderedGoals.AddRange(_mainViewModel.SavingGoals
+        _orderedGoals.AddRange(_mainViewModel.SavingGoalsPanel.SavingGoals
             .GroupBy(goal => goal.Id)
             .Select(group => group.First())
             .OrderBy(goal => goal.Name));

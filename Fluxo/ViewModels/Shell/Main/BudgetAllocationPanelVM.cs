@@ -133,6 +133,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
 
+    public IReadOnlyList<SpendingSourceVM> SpendingSources => _spendingSources;
+
+    public decimal TotalIncomeAmount => _spendingSources.Sum(source => source.Balance);
+
+    public IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs() => _allExpenseLogs;
+
     public void Receive(DateRangeSelectionChangedMessage message)
     {
         _selectedRange = message.Value;
