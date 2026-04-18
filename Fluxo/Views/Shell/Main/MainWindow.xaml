@@ -101,7 +101,7 @@
                         </TextBlock>
                     </StackPanel>
 
-                    <controls:DaySpinnerControl x:Name="DaySpinnerControlHost" Grid.Column="1" />
+                    <controls:DaySpinnerControl x:Name="DaySpinnerControlHost" Grid.Column="1" DataContext="{Binding DaySpinner}" />
 
                     <StackPanel
                         Grid.Column="2"
@@ -327,7 +327,8 @@
                     Grid.Row="1"
                     Margin="0,16"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Top" />
+                    VerticalAlignment="Top"
+                    DataContext="{Binding ViewModeToggle}" />
 
                 <Grid
                     x:Name="MainContentGrid"
@@ -401,7 +402,7 @@
                             <ColumnDefinition Width="360" />
                         </Grid.ColumnDefinitions>
 
-                        <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" />
+                        <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
 
                         <Grid Grid.Column="1" Margin="16,16,0,0">
                             <Grid.RowDefinitions>
@@ -411,8 +412,8 @@
                             </Grid.RowDefinitions>
 
 
-                            <sections:NotificationPanel x:Name="NotificationPanelHost" Grid.Row="0" />
-                            <sections:SavingGoalsPanel x:Name="SavingGoalsPanelHost" Grid.Row="2" />
+                            <sections:NotificationPanel x:Name="NotificationPanelHost" Grid.Row="0" DataContext="{Binding NotificationPanel}" />
+                            <sections:SavingGoalsPanel x:Name="SavingGoalsPanelHost" Grid.Row="2" DataContext="{Binding SavingGoalsPanel}" />
                         </Grid>
                     </Grid>
                 </Grid>

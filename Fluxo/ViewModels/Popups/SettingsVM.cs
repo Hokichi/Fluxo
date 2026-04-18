@@ -51,7 +51,7 @@ public partial class SettingsVM : ObservableObject
     public ObservableCollection<SettingsNotificationOptionVM> NotificationSettings { get; } = [];
     public ObservableCollection<SettingsCurrencyOptionVM> CurrencyOptions { get; } = [];
 
-    public decimal TotalBudgetAmount => _mainViewModel.TotalIncomeAmount;
+    public decimal TotalBudgetAmount => _mainViewModel.BudgetPanel.TotalIncomeAmount;
 
     public bool HasBudgetAllocationError => !string.IsNullOrWhiteSpace(BudgetAllocationErrorMessage);
 
@@ -313,7 +313,7 @@ public partial class SettingsVM : ObservableObject
         RecordActions(actions);
         WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
             DashboardDataInvalidationScope.All));
-        await _mainViewModel.ReloadCurrentDataAsync(true);
+        await _mainViewModel.ReloadCurrentDataAsync();
         await LoadAsync();
 
         return SettingsOperationResult.Success();
@@ -452,7 +452,7 @@ public partial class SettingsVM : ObservableObject
             RecordActions(actions);
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            await _mainViewModel.ReloadCurrentDataAsync();
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -671,7 +671,7 @@ public partial class SettingsVM : ObservableObject
             await unitOfWork.SaveChangesAsync();
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            await _mainViewModel.ReloadCurrentDataAsync();
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -708,7 +708,7 @@ public partial class SettingsVM : ObservableObject
 
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            await _mainViewModel.ReloadCurrentDataAsync();
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -763,7 +763,7 @@ public partial class SettingsVM : ObservableObject
             await unitOfWork.SaveChangesAsync();
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            await _mainViewModel.ReloadCurrentDataAsync();
             await LoadAsync();
 
             return SettingsOperationResult.Success();
@@ -871,7 +871,7 @@ public partial class SettingsVM : ObservableObject
                 DashboardDataInvalidationScope.All));
 
             RecordActions([new DeleteExpenseTagMemoryAction(snapshot)]);
-            await _mainViewModel.ReloadCurrentDataAsync(true);
+            await _mainViewModel.ReloadCurrentDataAsync();
             await LoadAsync();
 
             return SettingsOperationResult.Success();

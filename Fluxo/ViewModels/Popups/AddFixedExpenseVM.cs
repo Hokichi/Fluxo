@@ -38,7 +38,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
 
-        foreach (var spendingSource in _mainViewModel.SpendingSources
+        foreach (var spendingSource in _mainViewModel.BudgetPanel.SpendingSources
                      .Where(source => source.IsEnabled)
                      .OrderBy(source => source.Name))
             SpendingSources.Add(spendingSource);

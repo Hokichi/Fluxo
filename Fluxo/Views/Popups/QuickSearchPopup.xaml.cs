@@ -18,7 +18,7 @@ public partial class QuickSearchPopup : BasePopup
     public QuickSearchPopup(MainVM mainVM)
     {
         InitializeComponent();
-        _allExpenseLogs = mainVM.GetAllExpenseLogs();
+        _allExpenseLogs = mainVM.BudgetPanel.GetAllExpenseLogs();
         ResultsList.ItemsSource = _searchResults;
 
         Loaded += (_, _) => SearchBox.Focus();

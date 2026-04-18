@@ -280,11 +280,11 @@ public partial class ExpenseDetailVM : ObservableObject
     private void ReloadChoicesFromMainViewModel()
     {
         _availableSpendingSources.Clear();
-        _availableSpendingSources.AddRange(_mainViewModel.SpendingSources);
+        _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources);
 
         _orderedTags.Clear();
-        _orderedTags.AddRange(_mainViewModel.Tags
-            .Concat(_mainViewModel.OtherTags)
+        _orderedTags.AddRange(_mainViewModel.BudgetPanel.Tags
+            .Concat(_mainViewModel.BudgetPanel.OtherTags)
             .GroupBy(tag => tag.Id)
             .Select(group => group.First()));
 

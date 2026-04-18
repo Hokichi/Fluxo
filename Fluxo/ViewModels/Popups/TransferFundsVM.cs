@@ -31,7 +31,7 @@ public partial class TransferFundsVM : ObservableObject
         _uow = uow;
         SourceName = source.Name;
 
-        var candidateTargets = _mainViewModel.SpendingSources
+        var candidateTargets = _mainViewModel.BudgetPanel.SpendingSources
             .Where(spendingSource => spendingSource.Id != source.Id)
             .OrderByDescending(spendingSource => spendingSource.ShowOnUI)
             .ThenBy(spendingSource => spendingSource.Name)
