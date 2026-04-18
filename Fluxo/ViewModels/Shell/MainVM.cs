@@ -10,8 +10,11 @@ namespace Fluxo.ViewModels.Shell;
 public partial class MainVM : ObservableRecipient
 {
     private readonly IUserSettingsRepository _userSettingsRepository;
+    private bool _isInitialized;
 
     [ObservableProperty] private string _username = "User";
+
+    public bool IsInitialized => _isInitialized;
 
     public MainVM(
         IUserSettingsRepository userSettingsRepository,
@@ -49,6 +52,7 @@ public partial class MainVM : ObservableRecipient
             SavingGoalsPanel.LoadAsync());
         ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
             ViewModeToggle.SelectedMainContentViewMode);
+        _isInitialized = true;
     }
 
     public async Task ReloadCurrentDataAsync()

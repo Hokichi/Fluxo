@@ -218,7 +218,10 @@ public partial class StartupWizardVM : ObservableObject
 
         await SaveIsFirstRunAsync(false);
 
-        await _mainViewModel.ReloadCurrentDataAsync();
+        if (!_mainViewModel.IsInitialized)
+            await _mainViewModel.Initialize();
+        else
+            await _mainViewModel.ReloadCurrentDataAsync();
 
         return SettingsOperationResult.Success();
     }
