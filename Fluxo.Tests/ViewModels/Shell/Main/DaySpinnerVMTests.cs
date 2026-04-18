@@ -83,12 +83,15 @@ public class DaySpinnerVMTests
     [Fact]
     public void ComputeWeeklyPageOffset_AcrossIsoYearBoundary_UsesAbsoluteMondayWindows()
     {
+        // 2021-01-04 (ISO week 1 of 2021) and 2020-12-28 (ISO week 53 of 2020) both
+        // fall within the same 28-day absolute window (2020-12-14 to 2021-01-10), so
+        // the offset is 0 — the ISO year boundary does not cause a page split.
         var today = new DateTime(2021, 1, 4, 0, 0, 0, DateTimeKind.Unspecified);
         var previousIsoWeekMonday = new DateTime(2020, 12, 28, 0, 0, 0, DateTimeKind.Unspecified);
 
         var result = InvokeWeeklyPageOffset(today, previousIsoWeekMonday);
 
-        Assert.Equal(-1, result);
+        Assert.Equal(0, result);
     }
 
     [Fact]
