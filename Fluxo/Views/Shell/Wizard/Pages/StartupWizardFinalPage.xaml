@@ -1,7 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Shell.Wizard.Pages.StartupWizardFinalPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'>
     <Border Style="{StaticResource PanelStyle}">
         <Grid>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -13,9 +14,7 @@
                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                     BorderThickness="1"
                     CornerRadius="42">
-                    <Viewbox Margin="20" Stretch="Uniform">
-                        <Path Data="{StaticResource StartupWizardFinalPage.AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
-                    </Viewbox>
+                    <components:Icon Margin='20' Path='{StaticResource StartupWizardFinalPage.AccountBalanceWallet}' Color='{StaticResource Brush.Mint}' />
                 </Border>
                 <TextBlock
                     Margin="0,18,0,0"

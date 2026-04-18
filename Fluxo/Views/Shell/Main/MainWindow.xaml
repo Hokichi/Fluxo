@@ -165,12 +165,7 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <Viewbox Width="14" Height="14">
-                                                <Path
-                                                    Data="{StaticResource MainWindow.PlusSolid}"
-                                                    Fill="{StaticResource Brush.Mint}"
-                                                    Stretch="Uniform" />
-                                            </Viewbox>
+                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.PlusSolid}' Color='{StaticResource Brush.Mint}' />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -193,12 +188,7 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <Viewbox Width="14" Height="14">
-                                                <Path
-                                                    Data="{StaticResource MainWindow.Bank}"
-                                                    Fill="{StaticResource Brush.Mint}"
-                                                    Stretch="Uniform" />
-                                            </Viewbox>
+                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.Bank}' Color='{StaticResource Brush.Mint}' />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -225,12 +215,7 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <Viewbox Width="14" Height="14">
-                                                <Path
-                                                    Data="{StaticResource MainWindow.RegularUndo}"
-                                                    Fill="{StaticResource Brush.Warning}"
-                                                    Stretch="Uniform" />
-                                            </Viewbox>
+                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.RegularUndo}' Color='{StaticResource Brush.Warning}' />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -257,12 +242,7 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <Viewbox Width="14" Height="14">
-                                                <Path
-                                                    Data="{StaticResource MainWindow.RegularRedo}"
-                                                    Fill="{StaticResource Brush.Info}"
-                                                    Stretch="Uniform" />
-                                            </Viewbox>
+                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.RegularRedo}' Color='{StaticResource Brush.Info}' />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -285,12 +265,7 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <Viewbox Width="14" Height="14">
-                                                <Path
-                                                    Data="{StaticResource MainWindow.Cog}"
-                                                    Fill="{StaticResource Brush.Info}"
-                                                    Stretch="Uniform" />
-                                            </Viewbox>
+                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.Cog}' Color='{StaticResource Brush.Info}' />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"

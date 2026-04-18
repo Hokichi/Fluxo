@@ -2,6 +2,7 @@
     x:Class="Fluxo.Views.Components.ExpensesList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Fluxo.Views.Components"
@@ -183,10 +184,10 @@
                             <StackPanel Orientation="Horizontal">
                                 <Border
                                     x:Name="ExpenseTagBorder"
-                                    Width="32"
-                                    Height="32"
+                                    Width="24"
+                                    Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
                                     Margin="0,0,12,0"
-                                    Padding="3"
+                                    Padding="4"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Background="{Binding Expense.ExpenseTag.HexCode}">
@@ -196,13 +197,10 @@
                                             <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
                                         </MultiBinding>
                                     </Border.CornerRadius>
-                                    <Viewbox Stretch="Uniform">
-                                        <Path Data="{Binding Expense.ExpenseTag.IconName, Converter={StaticResource TagIconNameToGeometryConverter}}" Fill="{StaticResource Brush.Background.Surface}" />
-                                    </Viewbox>
+                                    <components:Icon Path="{Binding Expense.ExpenseTag.IconName, Converter={StaticResource TagIconNameToGeometryConverter}}" Color="{StaticResource Brush.Background.Surface}" />
                                 </Border>
                                 <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
                                     <TextBlock
-                                        HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
                                         FontFamily="{StaticResource Bold}"
                                         Foreground="{StaticResource Brush.Text.Primary}"

@@ -1,7 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsSourcesTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls">
             <Border Style="{StaticResource PanelStyle}">
                 <Grid>
@@ -140,14 +141,10 @@
                                                     VerticalAlignment="Center"
                                                     Orientation="Horizontal">
                                                     <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                        <Viewbox Margin="6" Stretch="Uniform">
-                                                            <Path Data="{StaticResource SettingsSourcesTab.EyeOff}" Fill="{StaticResource Brush.Warning}" />
-                                                        </Viewbox>
+                                                        <components:Icon Margin='6' Path='{StaticResource SettingsSourcesTab.EyeOff}' Color='{StaticResource Brush.Warning}' />
                                                     </Border>
                                                     <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                                        <Viewbox Margin="6" Stretch="Uniform">
-                                                            <Path Data="{StaticResource SettingsSourcesTab.LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
-                                                        </Viewbox>
+                                                        <components:Icon Margin='6' Path='{StaticResource SettingsSourcesTab.LightningSlashFill}' Color='{StaticResource Brush.Danger}' />
                                                     </Border>
                                                 </StackPanel>
                                                 <StackPanel

@@ -1,7 +1,8 @@
 <c:BasePopup
     x:Class="Fluxo.Views.Popups.QuickAddPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -129,9 +130,7 @@
 
                 <Button Grid.Row="0" Grid.Column="0" Click="OnNewSpendingSourceClick" Style="{StaticResource QuickAddTileButtonStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
-                            <Path Data="{StaticResource QuickAddPopup.Bank}" Fill="{DynamicResource Brush.Mint}" Stretch="Uniform" />
-                        </Viewbox>
+                        <components:Icon Width='24' Height='24' HorizontalAlignment='Center' Path='{StaticResource QuickAddPopup.Bank}' Color='{DynamicResource Brush.Mint}' />
                         <TextBlock
                             Margin="0,12,0,0"
                             HorizontalAlignment="Center"
@@ -154,9 +153,7 @@
 
                 <Button Grid.Row="0" Grid.Column="2" Click="OnNewTransactionClick" Style="{StaticResource QuickAddTileButtonStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
-                            <Path Data="{StaticResource QuickAddPopup.InvoiceLight}" Fill="{DynamicResource Brush.Mint}" Stretch="Uniform" />
-                        </Viewbox>
+                        <components:Icon Width='24' Height='24' HorizontalAlignment='Center' Path='{StaticResource QuickAddPopup.InvoiceLight}' Color='{DynamicResource Brush.Mint}' />
                         <TextBlock
                             Margin="0,12,0,0"
                             HorizontalAlignment="Center"
@@ -179,9 +176,7 @@
 
                 <Button Grid.Row="2" Grid.Column="0" Click="OnNewSavingGoalClick" Style="{StaticResource QuickAddTileButtonStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
-                            <Path Data="{StaticResource QuickAddPopup.BullseyeSolid}" Fill="{DynamicResource Brush.Mint}" Stretch="Uniform" />
-                        </Viewbox>
+                        <components:Icon Width='24' Height='24' HorizontalAlignment='Center' Path='{StaticResource QuickAddPopup.BullseyeSolid}' Color='{DynamicResource Brush.Mint}' />
                         <TextBlock
                             Margin="0,12,0,0"
                             HorizontalAlignment="Center"
@@ -204,9 +199,7 @@
 
                 <Button Grid.Row="2" Grid.Column="2" Click="OnNewFixedExpenseClick" Style="{StaticResource QuickAddTileButtonStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <Viewbox Width="24" Height="24" HorizontalAlignment="Center">
-                            <Path Data="{StaticResource QuickAddPopup.Calendar}" Fill="{DynamicResource Brush.Mint}" Stretch="Uniform" />
-                        </Viewbox>
+                        <components:Icon Width='24' Height='24' HorizontalAlignment='Center' Path='{StaticResource QuickAddPopup.Calendar}' Color='{DynamicResource Brush.Mint}' />
                         <TextBlock
                             Margin="0,12,0,0"
                             HorizontalAlignment="Center"
