@@ -27,12 +27,8 @@ public partial class MainWindow : Window, IPopupHost
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 200; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
-    private readonly BudgetAllocationPanelVM _budgetAllocationPanelVM;
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
-    private readonly NotificationPanelVM _notificationPanelVM;
-    private readonly SavingGoalsPanelVM _savingGoalsPanelVM;
-    private readonly MainViewModeToggleVM _viewModeToggleVM;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IDialogService _dialogService;
     private Rect _currentBounds;
@@ -49,30 +45,16 @@ public partial class MainWindow : Window, IPopupHost
     public MainWindow(
         MainVM mainVM,
         IUnitOfWork unitOfWork,
-        IDialogService dialogService,
-        DaySpinnerVM daySpinnerVM,
-        MainViewModeToggleVM viewModeToggleVM,
-        BudgetAllocationPanelVM budgetAllocationPanelVM,
-        NotificationPanelVM notificationPanelVM,
-        SavingGoalsPanelVM savingGoalsPanelVM)
+        IDialogService dialogService)
     {
         InitializeComponent();
 
         _mainVM = mainVM;
         _unitOfWork = unitOfWork;
         _dialogService = dialogService;
-        _viewModeToggleVM = viewModeToggleVM;
-        _budgetAllocationPanelVM = budgetAllocationPanelVM;
-        _notificationPanelVM = notificationPanelVM;
-        _savingGoalsPanelVM = savingGoalsPanelVM;
         _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWork);
 
         DataContext = _mainVM;
-        DaySpinnerControlHost.DataContext = daySpinnerVM;
-        ViewModeToggleControlHost.DataContext = _viewModeToggleVM;
-        BudgetAllocationPanelHost.DataContext = _budgetAllocationPanelVM;
-        NotificationPanelHost.DataContext = _notificationPanelVM;
-        SavingGoalsPanelHost.DataContext = _savingGoalsPanelVM;
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
         UpdateHistoryAvailability();
 
@@ -156,7 +138,6 @@ public partial class MainWindow : Window, IPopupHost
 
         try
         {
-            var markedIds = _mainVM.GetExpenseLogIdsMarkedForDeletion();
             _hasCompletedPendingDeletionCleanup = true;
             _logMemoryManager.StateChanged -= OnHistoryManagerStateChanged;
             _logMemoryManager.Dispose();
@@ -314,10 +295,7 @@ public partial class MainWindow : Window, IPopupHost
     {
         try
         {
-            await _budgetAllocationPanelVM.LoadAsync();
-            await _notificationPanelVM.LoadAsync();
-            await _savingGoalsPanelVM.LoadAsync();
-            _viewModeToggleVM.SetSelectedMainContentViewCommand.Execute(_viewModeToggleVM.SelectedMainContentViewMode);
+            await _mainVM.Initialize();
         }
         catch (Exception exception)
         {
