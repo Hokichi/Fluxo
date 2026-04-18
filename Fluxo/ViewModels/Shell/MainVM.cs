@@ -24,12 +24,9 @@ namespace Fluxo.ViewModels.Shell;
 public partial class MainVM : ObservableRecipient
 {
     // 1. private readonly fields
-    private readonly HashSet<int> _disabledSavingGoalIds = [];
-
     private readonly HashSet<int> _expenseLogIdsMarkedForDeletion = [];
+
     private readonly List<ExpenseVM> _expenses = [];
-    private readonly HashSet<int> _hiddenFixedExpenseIds = [];
-    private readonly HashSet<int> _hiddenSavingGoalIds = [];
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
     private readonly IMapper _mapper;
     private readonly IExpenseService _expenseService;
@@ -389,10 +386,7 @@ public partial class MainVM : ObservableRecipient
     {
         SavingGoals.Clear();
 
-        foreach (var goal in savingGoals.Where(goal =>
-                     goal.ProgressRatio < 1m &&
-                     !_hiddenSavingGoalIds.Contains(goal.Id) &&
-                     !_disabledSavingGoalIds.Contains(goal.Id)))
+        foreach (var goal in savingGoals.Where(goal => goal.ProgressRatio < 1m))
             SavingGoals.Add(goal);
 
         HasSavingGoals = SavingGoals.Count > 0;
@@ -507,7 +501,6 @@ public partial class MainVM : ObservableRecipient
 
         foreach (var expense in _expenses.Where(expense =>
                      expense.IsActive &&
-                     !_hiddenFixedExpenseIds.Contains(expense.Id) &&
                      expense.ExpenseKind == ExpenseKind.Fixed &&
                      expense.RecurringDate.HasValue))
         {
@@ -536,7 +529,6 @@ public partial class MainVM : ObservableRecipient
         var autoExpensesDueToday = _expenses
             .Where(expense =>
                 expense.IsActive &&
-                !_hiddenFixedExpenseIds.Contains(expense.Id) &&
                 expense.ExpenseKind == ExpenseKind.Fixed &&
                 MonthlyDueDateHelper.ResolveUpcomingDate(expense.RecurringDate, DateTime.Today)?.Date == DateTime.Today)
             .Select(expense => expense.Name)
@@ -668,15 +660,6 @@ public partial class MainVM : ObservableRecipient
             ParseBool(settingsByName, UserSettingNames.IsLowAccountBalanceNotifEnabled, _isLowCreditNotifEnabled);
 
         Username = ParseString(settingsByName, UserSettingNames.PreferredDisplayName, "User");
-
-        _hiddenFixedExpenseIds.Clear();
-        _hiddenFixedExpenseIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds));
-
-        _hiddenSavingGoalIds.Clear();
-        _hiddenSavingGoalIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds));
-
-        _disabledSavingGoalIds.Clear();
-        _disabledSavingGoalIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.DisabledSavingGoalIds));
     }
 
     private bool HasCrossedBudgetThreshold(decimal spentAmount, decimal availableAmount)

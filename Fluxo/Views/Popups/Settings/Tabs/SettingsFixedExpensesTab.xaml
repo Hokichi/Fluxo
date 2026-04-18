@@ -1,7 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsFixedExpensesTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls">
             <Border Style="{StaticResource PanelStyle}">
                 <Grid>
@@ -135,9 +136,7 @@
                                                     VerticalAlignment="Center"
                                                     Orientation="Horizontal">
                                                     <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                                        <Viewbox Margin="6" Stretch="Uniform">
-                                                            <Path Data="{StaticResource SettingsFixedExpensesTab.LightningSlashFill}" Fill="{StaticResource Brush.Danger}" />
-                                                        </Viewbox>
+                                                        <components:Icon Margin='6' Path='{StaticResource SettingsFixedExpensesTab.LightningSlashFill}' Color='{StaticResource Brush.Danger}' />
                                                     </Border>
                                                 </StackPanel>
                                                 <StackPanel

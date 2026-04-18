@@ -1,7 +1,8 @@
 <c:BasePopup
     x:Class="Fluxo.Views.Popups.AddSpendingSourcePopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     Width="620"
     IsSaveButtonEnabled="{Binding CanSave}"
@@ -40,13 +41,7 @@
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"
                                 BorderThickness="1"
                                 CornerRadius="9">
-                                <Viewbox Margin="4" Stretch="Uniform">
-                                    <Path
-                                        x:Name="TickPath"
-                                        Data="{StaticResource AddSpendingSourcePopup.Check}"
-                                        Fill="{StaticResource Brush.Background.Surface}"
-                                        Stretch="Uniform" />
-                                </Viewbox>
+                                <components:Icon Margin='4' x:Name='TickPath' Path='{StaticResource AddSpendingSourcePopup.Check}' Color='{StaticResource Brush.Background.Surface}' />
                             </Border>
                             <ContentPresenter VerticalAlignment="Center" />
                         </StackPanel>
@@ -54,7 +49,7 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="TickBox" Property="Background" Value="{StaticResource Brush.Mint}" />
                                 <Setter TargetName="TickBox" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                                <Setter TargetName="TickPath" Property="Fill" Value="{StaticResource Brush.Background.Surface}" />
+                                <Setter TargetName="TickPath" Property="Color" Value="{StaticResource Brush.Background.Surface}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="TickBox" Property="Background" Value="{StaticResource Brush.Background.Hover}" />

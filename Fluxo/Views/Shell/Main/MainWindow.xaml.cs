@@ -45,7 +45,6 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isPointerOverHeaderMenuPopup;
 
     private EventHandler? _renderHandler;
-    private Rect _restoreBounds;
 
     public MainWindow(
         MainVM mainVM,
@@ -210,13 +209,13 @@ public partial class MainWindow : Window, IPopupHost
         if (_isMaximized)
             return;
 
-        _restoreBounds = _currentBounds;
+        var from = new Rect(Left, Top, Width, Height);
         _isMaximized = true;
         UpdateExpandRestoreButtonIcon();
 
         var workArea = GetMonitorWorkArea();
         _currentBounds = workArea;
-        AnimateBounds(_restoreBounds, workArea, true);
+        AnimateBounds(from, workArea, true);
     }
 
     private void AnimateToRestored()
@@ -224,12 +223,14 @@ public partial class MainWindow : Window, IPopupHost
         if (!_isMaximized)
             return;
 
-        var from = _currentBounds;
+        var from = new Rect(Left, Top, Width, Height);
         _isMaximized = false;
         UpdateExpandRestoreButtonIcon();
 
-        _currentBounds = _restoreBounds;
-        AnimateBounds(from, _restoreBounds, false);
+        var workArea = GetMonitorWorkArea();
+        var restoreBounds = WindowRestoreBoundsResolver.ResolveCenteredRestoreBounds(workArea);
+        _currentBounds = restoreBounds;
+        AnimateBounds(from, restoreBounds, false);
     }
 
     private void AnimateBounds(Rect from, Rect to, bool maximizing)

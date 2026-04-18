@@ -1,6 +1,7 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks">
     <Style TargetType="{x:Type c:BalloonButton}">
@@ -346,15 +347,7 @@
                                 StrokeDashArray="6,4"
                                 StrokeThickness="1" />
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Viewbox
-                                    Width="24"
-                                    Height="24"
-                                    Stretch="Uniform">
-                                    <Path
-                                        x:Name="AddIcon"
-                                        Data="{StaticResource ButtonStyles.PlusSolid}"
-                                        Fill="{StaticResource Brush.Text.Muted}" />
-                                </Viewbox>
+                                <components:Icon Width='24' Height='24' x:Name='AddIcon' Path='{StaticResource ButtonStyles.PlusSolid}' Color='{StaticResource Brush.Text.Muted}' />
                                 <TextBlock
                                     x:Name="AddLabel"
                                     Margin="0,10,0,0"
@@ -367,7 +360,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="AddIcon" Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="AddIcon" Property="Color" Value="{StaticResource Brush.Text.Primary}" />
                             <Setter TargetName="AddLabel" Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -678,17 +671,12 @@
                             Stroke="{TemplateBinding BorderBrush}"
                             StrokeDashArray="2,2"
                             StrokeThickness="{TemplateBinding BorderThickness}" />
-                        <Viewbox Margin="9" Stretch="Uniform">
-                            <Path
-                                x:Name="Plus"
-                                Data="{StaticResource ButtonStyles.PlusSolid}"
-                                Fill="{StaticResource Brush.Text.Muted}" />
-                        </Viewbox>
+                        <components:Icon Margin='9' x:Name='Plus' Path='{StaticResource ButtonStyles.PlusSolid}' Color='{StaticResource Brush.Text.Muted}' />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
-                            <Setter TargetName="Plus" Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter TargetName="Plus" Property="Color" Value="{StaticResource Brush.Text.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -736,13 +724,7 @@
                                     Text="{TemplateBinding Content}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
-                            <Viewbox
-                                Grid.Column="1"
-                                Width="16"
-                                Height="16"
-                                VerticalAlignment="Center">
-                                <Path Data="{StaticResource ButtonStyles.AngleRight}" Fill="{StaticResource Brush.Text.Muted}" />
-                            </Viewbox>
+                            <components:Icon Grid.Column='1' Width='16' Height='16' VerticalAlignment='Center' Path='{StaticResource ButtonStyles.AngleRight}' Color='{StaticResource Brush.Text.Muted}' />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>

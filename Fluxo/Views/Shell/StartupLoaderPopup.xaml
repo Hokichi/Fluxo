@@ -1,7 +1,8 @@
 <Window
     x:Class="Fluxo.Views.Shell.StartupLoaderPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     Width="340"
     Height="220"
     AllowsTransparency="True"
@@ -26,9 +27,7 @@
                 BorderBrush="{StaticResource Brush.Border.Subtle}"
                 BorderThickness="1"
                 CornerRadius="36">
-                <Viewbox Margin="18" Stretch="Uniform">
-                    <Path Data="{StaticResource StartupLoaderPopup.AccountBalanceWallet}" Fill="{StaticResource Brush.Mint}" />
-                </Viewbox>
+                <components:Icon Margin='18' Path='{StaticResource StartupLoaderPopup.AccountBalanceWallet}' Color='{StaticResource Brush.Mint}' />
             </Border>
 
             <TextBlock

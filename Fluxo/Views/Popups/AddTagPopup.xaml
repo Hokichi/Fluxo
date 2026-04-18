@@ -1,7 +1,8 @@
 <c:BasePopup
     x:Class="Fluxo.Views.Popups.AddTagPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     Width="520"
     PopupTitle="Add New Tag"
@@ -43,13 +44,7 @@
                                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                                         BorderThickness="1"
                                         CornerRadius="15">
-                                        <Viewbox Margin="8" Stretch="Uniform">
-                                            <Path
-                                                x:Name="TickPath"
-                                                Data="{StaticResource AddTagPopup.Check}"
-                                                Fill="{StaticResource Brush.Background.Surface}"
-                                                Opacity="0" />
-                                        </Viewbox>
+                                        <components:Icon Margin='8' x:Name='TickPath' Path='{StaticResource AddTagPopup.Check}' Color='{StaticResource Brush.Background.Surface}' Opacity='0' />
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">

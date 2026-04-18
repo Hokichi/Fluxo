@@ -1,7 +1,8 @@
 <c:BasePopup
     x:Class="Fluxo.Views.Popups.SpendingSourceDetailPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+    xmlns:components='clr-namespace:Fluxo.Views.Components'
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     x:Name="Root"
     Width="1080"
@@ -92,12 +93,7 @@
                     Height="56"
                     Background="{StaticResource Brush.Background.Hover}"
                     CornerRadius="28">
-                    <Viewbox Margin="14">
-                        <Path
-                            Data="{StaticResource SpendingSourceDetailPopup.Bank}"
-                            Fill="{StaticResource Brush.Mint}"
-                            Stretch="Uniform" />
-                    </Viewbox>
+                    <components:Icon Margin='14' Path='{StaticResource SpendingSourceDetailPopup.Bank}' Color='{StaticResource Brush.Mint}' />
                 </Border>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
