@@ -363,6 +363,7 @@ MigrationBackup/
 .dotnet/
 .claude/
 .idea/
+docs/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
