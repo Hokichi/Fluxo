@@ -361,6 +361,8 @@ MigrationBackup/
 .dotnet-home/
 .dotnet_home/
 .dotnet/
+.claude/
+.idea/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
