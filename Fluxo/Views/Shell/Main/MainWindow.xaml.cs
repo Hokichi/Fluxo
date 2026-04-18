@@ -24,8 +24,8 @@ namespace Fluxo.Views.Shell.Main;
 /// </summary>
 public partial class MainWindow : Window, IPopupHost
 {
-    private const int FadeDuration = 180; // ms
-    private const int StateChangeDuration = 200; // ms
+    private const int FadeDuration = 100; // ms
+    private const int StateChangeDuration = 100; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly BudgetAllocationPanelVM _budgetAllocationPanelVM;
     private readonly LogMemoryManager _logMemoryManager;
@@ -40,6 +40,7 @@ public partial class MainWindow : Window, IPopupHost
     private bool _hasInitializedDashboardPanels;
     private bool _isHeaderMenuPinned;
     private bool _isMaximized;
+    private bool _isStateChangeTransitionActive;
     private bool _wasMinimized;
     private bool _isPointerOverHeaderMenuButton;
     private bool _isPointerOverHeaderMenuPopup;
@@ -140,6 +141,31 @@ public partial class MainWindow : Window, IPopupHost
         BeginAnimation(OpacityProperty, anim);
     }
 
+    private void FadeContentOut(Action onCompleted)
+    {
+        FadeElement(ContentGrid, 0, EasingMode.EaseIn, onCompleted);
+    }
+
+    private void FadeContentIn(Action? onCompleted = null)
+    {
+        FadeElement(ContentGrid, 1, EasingMode.EaseOut, onCompleted);
+    }
+
+    private static void FadeElement(UIElement element, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
+    {
+        element.BeginAnimation(OpacityProperty, null);
+
+        var animation = new DoubleAnimation(element.Opacity, toOpacity, TimeSpan.FromMilliseconds(FadeDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = easingMode }
+        };
+
+        if (onCompleted is not null)
+            animation.Completed += (_, _) => onCompleted();
+
+        element.BeginAnimation(OpacityProperty, animation);
+    }
+
     // ── SystemCommand handlers ───────────────────────────────────────
 
     private void OnCloseWindow(object sender, ExecutedRoutedEventArgs e)
@@ -206,7 +232,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void AnimateToMaximized()
     {
-        if (_isMaximized)
+        if (_isMaximized || _isStateChangeTransitionActive)
             return;
 
         var from = new Rect(Left, Top, Width, Height);
@@ -215,12 +241,12 @@ public partial class MainWindow : Window, IPopupHost
 
         var workArea = GetMonitorWorkArea();
         _currentBounds = workArea;
-        AnimateBounds(from, workArea, true);
+        AnimateStateChange(from, workArea, true);
     }
 
     private void AnimateToRestored()
     {
-        if (!_isMaximized)
+        if (!_isMaximized || _isStateChangeTransitionActive)
             return;
 
         var from = new Rect(Left, Top, Width, Height);
@@ -230,14 +256,27 @@ public partial class MainWindow : Window, IPopupHost
         var workArea = GetMonitorWorkArea();
         var restoreBounds = WindowRestoreBoundsResolver.ResolveCenteredRestoreBounds(workArea);
         _currentBounds = restoreBounds;
-        AnimateBounds(from, restoreBounds, false);
+        AnimateStateChange(from, restoreBounds, false);
     }
 
-    private void AnimateBounds(Rect from, Rect to, bool maximizing)
+    private void AnimateStateChange(Rect from, Rect to, bool maximizing)
     {
-        RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
-        RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
+        _isStateChangeTransitionActive = true;
 
+        FadeContentOut(() =>
+        {
+            RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
+            RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
+
+            AnimateBounds(from, to, maximizing, () =>
+            {
+                FadeContentIn(() => _isStateChangeTransitionActive = false);
+            });
+        });
+    }
+
+    private void AnimateBounds(Rect from, Rect to, bool maximizing, Action onCompleted)
+    {
         // Stop any in-progress animation
         if (_renderHandler is not null)
         {
@@ -267,15 +306,21 @@ public partial class MainWindow : Window, IPopupHost
             var t = Math.Min(1.0, (timestamp - startTime).TotalMilliseconds / durationMs);
             var eased = ease.Ease(t);
 
-            Left = from.Left + (to.Left - from.Left) * eased;
-            Top = from.Top + (to.Top - from.Top) * eased;
-            Width = from.Width + (to.Width - from.Width) * eased;
-            Height = from.Height + (to.Height - from.Height) * eased;
+            var currentBounds = WindowBoundsInterpolator.Interpolate(from, to, eased);
+            Left = currentBounds.Left;
+            Top = currentBounds.Top;
+            Width = currentBounds.Width;
+            Height = currentBounds.Height;
 
             if (t >= 1.0)
             {
+                Left = to.Left;
+                Top = to.Top;
+                Width = to.Width;
+                Height = to.Height;
                 CompositionTarget.Rendering -= _renderHandler;
                 _renderHandler = null;
+                onCompleted();
             }
         };
 
@@ -756,4 +801,3 @@ public partial class MainWindow : Window, IPopupHost
         public int Left, Top, Right, Bottom;
     }
 }
-
