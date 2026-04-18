@@ -48,11 +48,7 @@
                     Tag="Budget Allocation">
                     <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
                         <Rectangle.OpacityMask>
-                            <DrawingBrush Stretch="Uniform">
-                                <DrawingBrush.Drawing>
-                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource SettingsPopup.AccountBalanceWallet}" />
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
+                            <ImageBrush ImageSource="/Fluxo;component/Resources/fluxo.ico" Stretch="Uniform" />
                         </Rectangle.OpacityMask>
                     </Rectangle>
                 </RadioButton>

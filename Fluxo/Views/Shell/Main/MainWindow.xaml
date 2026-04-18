@@ -6,7 +6,6 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:controls="clr-namespace:Fluxo.Views.Shell.Main.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
     Title="Fluxo"
@@ -66,15 +65,15 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
-                        <icons:PackIconMaterialDesign
+                        <Image
                             Width="24"
-                            Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                            Height="24"
                             VerticalAlignment="Center"
-                            Foreground="{StaticResource Brush.Mint}"
-                            Kind="AccountBalanceWallet" />
+                            Source="/Fluxo;component/Resources/fluxo.ico"
+                            Stretch="Uniform" />
 
                         <TextBlock
-                            Margin="12,1,0,0"
+                            Margin="8,1,0,0"
                             VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="18"
@@ -147,9 +146,7 @@
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                         <Setter Property="Visibility" Value="Collapsed" />
                                         <Style.Triggers>
-                                            <DataTrigger
-                                                Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
-                                                Value="True">
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -165,7 +162,11 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.PlusSolid}' Color='{StaticResource Brush.Mint}' />
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource MainWindow.PlusSolid}"
+                                                Color="{StaticResource Brush.Mint}" />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -188,7 +189,11 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.Bank}' Color='{StaticResource Brush.Mint}' />
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource MainWindow.Bank}"
+                                                Color="{StaticResource Brush.Mint}" />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -215,7 +220,11 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.RegularUndo}' Color='{StaticResource Brush.Warning}' />
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource MainWindow.RegularUndo}"
+                                                Color="{StaticResource Brush.Warning}" />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -242,7 +251,11 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.RegularRedo}' Color='{StaticResource Brush.Info}' />
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource MainWindow.RegularRedo}"
+                                                Color="{StaticResource Brush.Info}" />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
@@ -265,7 +278,11 @@
                                                 <ColumnDefinition Width="8" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <components:Icon Width='14' Height='14' Path='{StaticResource MainWindow.Cog}' Color='{StaticResource Brush.Info}' />
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource MainWindow.Cog}"
+                                                Color="{StaticResource Brush.Info}" />
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"

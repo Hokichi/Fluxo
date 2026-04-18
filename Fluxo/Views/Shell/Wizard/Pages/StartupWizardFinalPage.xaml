@@ -14,7 +14,10 @@
                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                     BorderThickness="1"
                     CornerRadius="42">
-                    <components:Icon Margin='20' Path='{StaticResource StartupWizardFinalPage.AccountBalanceWallet}' Color='{StaticResource Brush.Mint}' />
+                    <Image
+                        Margin="20"
+                        Source="/Fluxo;component/Resources/fluxo.ico"
+                        Stretch="Uniform" />
                 </Border>
                 <TextBlock
                     Margin="0,18,0,0"

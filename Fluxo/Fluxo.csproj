@@ -46,7 +46,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\fluxo.ico" />
+    <Page Remove="Resources\Icons.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\fluxo.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -103,6 +107,9 @@
     <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-MediumItalic.ttf" />
     <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Regular.ttf" />
     <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
+    <Resource Include="Resources\Icons.xaml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

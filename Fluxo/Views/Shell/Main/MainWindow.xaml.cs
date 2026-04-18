@@ -24,7 +24,7 @@ namespace Fluxo.Views.Shell.Main;
 /// </summary>
 public partial class MainWindow : Window, IPopupHost
 {
-    private const int FadeDuration = 100; // ms
+    private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 100; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly BudgetAllocationPanelVM _budgetAllocationPanelVM;
