@@ -3,8 +3,11 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Data;
 using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
@@ -62,11 +65,60 @@ public class BudgetAllocationPanelVMTests
         });
     }
 
+    [Fact]
+    public void LoadAsync_UsesBudgetThresholdsFromUserSettings()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(
+                messenger,
+                CreateExpenseLogs(),
+                CreateTags(),
+                CreateSpendingSources(),
+                [
+                    new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "40" },
+                    new UserSettings { Name = UserSettingNames.WantsThreshold, Value = "35" },
+                    new UserSettings { Name = UserSettingNames.InvestThreshold, Value = "25" }
+                ]);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(800m, vm.NeedsAvailable);
+            Assert.Equal(700m, vm.WantsAvailable);
+            Assert.Equal(500m, vm.InvestAvailable);
+        });
+    }
+
+    [Fact]
+    public void LoadAsync_FallsBackToDefaultBudgetThresholdsWhenSettingsInvalid()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(
+                messenger,
+                CreateExpenseLogs(),
+                CreateTags(),
+                CreateSpendingSources(),
+                [
+                    new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "invalid" }
+                ]);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(1000m, vm.NeedsAvailable);
+            Assert.Equal(600m, vm.WantsAvailable);
+            Assert.Equal(400m, vm.InvestAvailable);
+        });
+    }
+
     private static BudgetAllocationPanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
         IReadOnlyList<ExpenseTagVM> tags,
-        IReadOnlyList<SpendingSourceVM> spendingSources)
+        IReadOnlyList<SpendingSourceVM> spendingSources,
+        IReadOnlyList<UserSettings>? settings = null)
     {
         var expenseLogService = Substitute.For<IExpenseLogService>();
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -80,13 +132,22 @@ public class BudgetAllocationPanelVMTests
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseTagDto>>([]));
 
+        var userSettingsRepository = Substitute.For<IUserSettingsRepository>();
+        userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<UserSettings>>(settings ?? []));
+
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
         mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
         mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns(tags);
 
         return new BudgetAllocationPanelVM(
-            expenseLogService, spendingSourceService, tagService, mapper, messenger);
+            expenseLogService,
+            spendingSourceService,
+            tagService,
+            userSettingsRepository,
+            mapper,
+            messenger);
     }
 
     private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogs()

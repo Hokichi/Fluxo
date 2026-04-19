@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Data;
 using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -18,10 +21,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<AllTimeViewModeMessage>,
     IRecipient<DashboardDataInvalidatedMessage>
 {
-    private const decimal InvestThreshold = 0.2m;
-    private const decimal NeedsThreshold = 0.5m;
-    private const decimal WantsThreshold = 0.3m;
-
     private readonly IExpenseLogService _expenseLogService;
     private readonly IMapper _mapper;
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
@@ -29,17 +28,22 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly ISpendingSourceService _spendingSourceService;
     private readonly ITagService _tagService;
+    private readonly IUserSettingsRepository _userSettingsRepository;
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
     private readonly ObservableCollection<SpendingSourceVM> _spendingSources = [];
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private bool _isSynchronizingTagSelections;
+    private decimal _needsThreshold = 0.5m;
+    private decimal _wantsThreshold = 0.3m;
+    private decimal _investThreshold = 0.2m;
     private (DateTime From, DateTime To)? _selectedRange;
 
     public BudgetAllocationPanelVM(
         IExpenseLogService expenseLogService,
         ISpendingSourceService spendingSourceService,
         ITagService tagService,
+        IUserSettingsRepository userSettingsRepository,
         IMapper mapper,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
@@ -47,6 +51,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         _expenseLogService = expenseLogService;
         _spendingSourceService = spendingSourceService;
         _tagService = tagService;
+        _userSettingsRepository = userSettingsRepository;
         _mapper = mapper;
 
         Initialize();
@@ -153,6 +158,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
+        await LoadUserSettingsAsync(cancellationToken);
+
         var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken));
         var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
@@ -284,9 +291,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         var totalIncomeAmount = _spendingSources.Sum(source => source.Balance);
 
-        NeedsAvailable = decimal.Round(totalIncomeAmount * NeedsThreshold, 2);
-        WantsAvailable = decimal.Round(totalIncomeAmount * WantsThreshold, 2);
-        InvestAvailable = decimal.Round(totalIncomeAmount * InvestThreshold, 2);
+        NeedsAvailable = decimal.Round(totalIncomeAmount * _needsThreshold, 2);
+        WantsAvailable = decimal.Round(totalIncomeAmount * _wantsThreshold, 2);
+        InvestAvailable = decimal.Round(totalIncomeAmount * _investThreshold, 2);
 
         NeedsSpent = _allExpenseLogs
             .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs)
@@ -311,7 +318,32 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             1,
             DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month) - DateTime.Today.Day);
 
-        return (int)((totalIncomeAmount * (1 - InvestThreshold) - TotalSpent) / daysLeft);
+        return (int)((totalIncomeAmount * (1 - _investThreshold) - TotalSpent) / daysLeft);
+    }
+
+    private async Task LoadUserSettingsAsync(CancellationToken cancellationToken)
+    {
+        var settings = await _userSettingsRepository.GetAllAsync(cancellationToken);
+        var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
+
+        _needsThreshold = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
+        _wantsThreshold = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
+        _investThreshold = ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
+    }
+
+    private static decimal ParsePercentage(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)
+    {
+        var percentageValue = ParseDecimal(settings, name, defaultValue);
+        return percentageValue / 100m;
+    }
+
+    private static decimal ParseDecimal(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)
+    {
+        if (settings.TryGetValue(name, out var value) &&
+            decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedValue))
+            return parsedValue;
+
+        return defaultValue;
     }
 
     private static int CalculatePercentage(decimal spentAmount, decimal availableAmount)
