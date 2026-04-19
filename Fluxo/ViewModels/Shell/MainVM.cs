@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
@@ -44,7 +45,7 @@ public partial class MainVM : ObservableRecipient
     public DaySpinnerVM DaySpinner { get; }
     public MainViewModeToggleVM ViewModeToggle { get; }
 
-    public IReadOnlyList<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
+    public ObservableCollection<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
 
     public async Task Initialize()
     {
