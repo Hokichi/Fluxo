@@ -208,7 +208,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         var iconKey = _isMaximized ? "MainWindow.CompressAlt" : "MainWindow.ExpandAlt";
-        ExpandRestoreButton.ButtonIcon = (Geometry)FindResource(iconKey);
+        ExpandRestoreButton.ButtonIcon = FindResource(iconKey);
     }
 
     private void AnimateToMaximized()

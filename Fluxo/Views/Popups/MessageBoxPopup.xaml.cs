@@ -79,7 +79,7 @@ public partial class MessageBoxPopup : BasePopup
         };
 
         var accentBrush = TryFindResource(accentBrushKey) as Brush ?? Brushes.White;
-        MessageIcon.Path = TryFindResource(geometryKey) as Geometry;
+        MessageIcon.Path = TryFindResource(geometryKey);
         MessageIcon.Color = accentBrush;
         IconBadge.Background = CreateBadgeBackground(accentBrush);
     }

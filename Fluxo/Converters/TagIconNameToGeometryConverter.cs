@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Media;
 
 namespace Fluxo.Converters;
 
@@ -13,7 +12,7 @@ public class TagIconNameToGeometryConverter : IValueConverter
             return null;
 
         var key = $"Tag.{iconName}";
-        return Application.Current?.TryFindResource(key) as Geometry;
+        return Application.Current?.TryFindResource(key);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -53,7 +53,7 @@
                             <Path
                                 Width="8"
                                 Height="8"
-                                Data="{StaticResource DateSelector.AngleDown}"
+                                Data="{StaticResource AngleDown}"
                                 Fill="{StaticResource Brush.Text.Muted}"
                                 RenderTransformOrigin="0.5,0.5"
                                 Stretch="Uniform">
@@ -101,7 +101,7 @@
                             <Path
                                 Width="8"
                                 Height="8"
-                                Data="{StaticResource DateSelector.AngleDown}"
+                                Data="{StaticResource AngleDown}"
                                 Fill="{StaticResource Brush.Text.Muted}"
                                 RenderTransformOrigin="0.5,0.5"
                                 Stretch="Uniform">
@@ -187,4 +187,3 @@
         </Popup>
     </Grid>
 </UserControl>
-

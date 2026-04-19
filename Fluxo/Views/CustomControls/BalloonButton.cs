@@ -30,7 +30,7 @@ public class BalloonButton : Button
 
     // --- ButtonIcon ---
     public static readonly DependencyProperty ButtonIconProperty =
-        DependencyProperty.Register(nameof(ButtonIcon), typeof(Geometry), typeof(BalloonButton),
+        DependencyProperty.Register(nameof(ButtonIcon), typeof(object), typeof(BalloonButton),
             new PropertyMetadata(null, (d, _) => ((BalloonButton)d).ApplyIcon()));
 
     // --- CurveHeight ---
@@ -71,9 +71,9 @@ public class BalloonButton : Button
         set => SetValue(HoveredBackgroundProperty, value);
     }
 
-    public Geometry ButtonIcon
+    public object? ButtonIcon
     {
-        get => (Geometry)GetValue(ButtonIconProperty);
+        get => GetValue(ButtonIconProperty);
         set => SetValue(ButtonIconProperty, value);
     }
 
@@ -155,7 +155,30 @@ public class BalloonButton : Button
 
     private void ApplyIcon()
     {
-        if (_icon != null) _icon.Data = ButtonIcon;
+        if (_icon is not null)
+            _icon.Data = ResolveGeometry(ButtonIcon);
+    }
+
+    private static Geometry? ResolveGeometry(object? source)
+    {
+        switch (source)
+        {
+            case Geometry geometry:
+                return geometry;
+            case GeometryDrawing geometryDrawing:
+                return geometryDrawing.Geometry;
+            case DrawingGroup drawingGroup:
+                foreach (var drawing in drawingGroup.Children)
+                {
+                    var resolved = ResolveGeometry(drawing);
+                    if (resolved is not null)
+                        return resolved;
+                }
+
+                break;
+        }
+
+        return null;
     }
 
     private void RebuildGeometry()
