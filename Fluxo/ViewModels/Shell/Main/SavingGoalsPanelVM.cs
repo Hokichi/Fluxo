@@ -15,10 +15,10 @@ namespace Fluxo.ViewModels.Shell;
 
 public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<DashboardDataInvalidatedMessage>
 {
-    private readonly IMapper? _mapper;
+    private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
-    private readonly IUnitOfWork? _unitOfWork;
-    private readonly IUserSettingsRepository? _userSettingsRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserSettingsRepository _userSettingsRepository;
     private readonly HashSet<int> _disabledSavingGoalIds = [];
     private readonly HashSet<int> _hiddenSavingGoalIds = [];
 
@@ -32,12 +32,6 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _userSettingsRepository = userSettingsRepository;
-        IsActive = true;
-    }
-
-    public SavingGoalsPanelVM(IMessenger? messenger = null)
-        : base(messenger ?? WeakReferenceMessenger.Default)
-    {
         IsActive = true;
     }
 
@@ -64,26 +58,16 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
         if (!message.Value.HasFlag(DashboardDataInvalidationScope.SavingGoals))
             return;
 
-        _ = ReloadSnapshotFromServicesAsync();
+        _ = ReloadFromServicesAsync();
     }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        if (_unitOfWork is null || _mapper is null || _userSettingsRepository is null)
-            return;
-
         await LoadSavingGoalSettingsAsync(cancellationToken);
 
         var savingGoalDtos = _mapper.Map<IReadOnlyList<SavingGoalDto>>(
             await _unitOfWork.SavingGoals.GetAllAsync(cancellationToken));
         var savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(savingGoalDtos);
-
-        LoadSnapshot(savingGoals);
-    }
-
-    public void LoadSnapshot(IEnumerable<SavingGoalVM> savingGoals)
-    {
-        ArgumentNullException.ThrowIfNull(savingGoals);
 
         var previousGoalId = CurrentGoal?.Id;
 
@@ -126,11 +110,8 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
         NavigateByOffset(1, slideDirection: -1);
     }
 
-    private async Task ReloadSnapshotFromServicesAsync()
+    private async Task ReloadFromServicesAsync()
     {
-        if (_unitOfWork is null || _mapper is null || _userSettingsRepository is null)
-            return;
-
         await _reloadGate.WaitAsync();
 
         try
@@ -145,9 +126,6 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
 
     private async Task LoadSavingGoalSettingsAsync(CancellationToken cancellationToken)
     {
-        if (_userSettingsRepository is null)
-            return;
-
         var settings = await _userSettingsRepository.GetAllAsync(cancellationToken);
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 

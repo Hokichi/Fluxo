@@ -1,11 +1,15 @@
 using System.ComponentModel;
 using System.Runtime.ExceptionServices;
 using System.Windows.Data;
+using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Shell.Main;
@@ -18,12 +22,8 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = new BudgetAllocationPanelVM(messenger);
-
-            vm.LoadSnapshot(new BudgetAllocationPanelSnapshot(
-                CreateExpenseLogs(),
-                CreateTags(),
-                CreateSpendingSources()));
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            vm.LoadAsync().GetAwaiter().GetResult();
 
             messenger.Send(new DateRangeSelectionChangedMessage(
                 new DateTime(2026, 4, 10),
@@ -45,12 +45,8 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = new BudgetAllocationPanelVM(messenger);
-
-            vm.LoadSnapshot(new BudgetAllocationPanelSnapshot(
-                CreateExpenseLogs(),
-                CreateTags(),
-                CreateSpendingSources()));
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            vm.LoadAsync().GetAwaiter().GetResult();
 
             vm.SelectedVisibleTag = vm.Tags.Single(tag => tag.Id == 1);
 
@@ -63,6 +59,33 @@ public class BudgetAllocationPanelVMTests
                 GetItems(vm.Invest),
                 item => Assert.Equal(3, item.Id));
         });
+    }
+
+    private static BudgetAllocationPanelVM CreateVm(
+        IMessenger messenger,
+        IReadOnlyList<ExpenseLogVM> expenseLogs,
+        IReadOnlyList<ExpenseTagVM> tags,
+        IReadOnlyList<SpendingSourceVM> spendingSources)
+    {
+        var expenseLogService = Substitute.For<IExpenseLogService>();
+        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<ExpenseLogDto>>([]));
+
+        var spendingSourceService = Substitute.For<ISpendingSourceService>();
+        spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<SpendingSourceDto>>([]));
+
+        var tagService = Substitute.For<ITagService>();
+        tagService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<ExpenseTagDto>>([]));
+
+        var mapper = Substitute.For<IMapper>();
+        mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
+        mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
+        mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns(tags);
+
+        return new BudgetAllocationPanelVM(
+            expenseLogService, spendingSourceService, tagService, mapper, messenger);
     }
 
     private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogs()
@@ -162,14 +185,8 @@ public class BudgetAllocationPanelVMTests
 
         var thread = new Thread(() =>
         {
-            try
-            {
-                action();
-            }
-            catch (Exception exception)
-            {
-                failure = exception;
-            }
+            try { action(); }
+            catch (Exception exception) { failure = exception; }
         });
 
         thread.SetApartmentState(ApartmentState.STA);

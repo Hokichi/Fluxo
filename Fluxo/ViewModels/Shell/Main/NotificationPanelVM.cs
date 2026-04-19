@@ -16,22 +16,17 @@ using Fluxo.ViewModels.Notifications;
 
 namespace Fluxo.ViewModels.Shell;
 
-public sealed record NotificationPanelSnapshot(
-    IReadOnlyList<ExpenseVM> Expenses,
-    IReadOnlyList<ExpenseLogVM> ExpenseLogs,
-    IReadOnlyList<SpendingSourceVM> SpendingSources);
-
 public partial class NotificationPanelVM : ObservableRecipient,
     IRecipient<DateRangeSelectionChangedMessage>,
     IRecipient<AllTimeViewModeMessage>,
     IRecipient<DashboardDataInvalidatedMessage>
 {
-    private readonly IExpenseLogService? _expenseLogService;
-    private readonly IExpenseService? _expenseService;
-    private readonly IMapper? _mapper;
+    private readonly IExpenseLogService _expenseLogService;
+    private readonly IExpenseService _expenseService;
+    private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
-    private readonly ISpendingSourceService? _spendingSourceService;
-    private readonly IUserSettingsRepository? _userSettingsRepository;
+    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly IUserSettingsRepository _userSettingsRepository;
     private readonly HashSet<int> _hiddenFixedExpenseIds = [];
 
     private decimal _budgetUsageWarningPercentage = 0.90m;
@@ -70,13 +65,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         IsActive = true;
     }
 
-    public NotificationPanelVM(IMessenger? messenger = null)
-        : base(messenger ?? WeakReferenceMessenger.Default)
-    {
-        Notifications.CollectionChanged += OnNotificationsCollectionChanged;
-        IsActive = true;
-    }
-
     [ObservableProperty]
     private int _notificationCount;
 
@@ -108,42 +96,26 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (!message.Value.HasFlag(DashboardDataInvalidationScope.Notifications))
             return;
 
-        _ = ReloadSnapshotFromServicesAsync();
+        _ = ReloadFromServicesAsync();
     }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        if (_expenseService is null || _expenseLogService is null || _spendingSourceService is null ||
-            _userSettingsRepository is null || _mapper is null)
-            return;
-
         await LoadUserSettingsAsync(cancellationToken);
 
-        var expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(await _expenseService.GetAllAsync(cancellationToken));
-        var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(await _expenseLogService.GetAllAsync(cancellationToken));
-        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
+        _expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(
+            await _expenseService.GetAllAsync(cancellationToken));
+        _expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
+            await _expenseLogService.GetAllAsync(cancellationToken))
+            .Where(log => !log.IsForDeletion).ToList();
+        _spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
             await _spendingSourceService.GetAllAsync(cancellationToken));
-
-        LoadSnapshot(new NotificationPanelSnapshot(expenses, expenseLogs, spendingSources));
-    }
-
-    public void LoadSnapshot(NotificationPanelSnapshot snapshot)
-    {
-        ArgumentNullException.ThrowIfNull(snapshot);
-
-        _expenses = snapshot.Expenses.ToList();
-        _expenseLogs = snapshot.ExpenseLogs.Where(log => !log.IsForDeletion).ToList();
-        _spendingSources = snapshot.SpendingSources.ToList();
 
         RefreshNotifications();
     }
 
-    private async Task ReloadSnapshotFromServicesAsync()
+    private async Task ReloadFromServicesAsync()
     {
-        if (_expenseService is null || _expenseLogService is null || _spendingSourceService is null ||
-            _userSettingsRepository is null || _mapper is null)
-            return;
-
         await _reloadGate.WaitAsync();
 
         try
@@ -366,9 +338,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private async Task LoadUserSettingsAsync(CancellationToken cancellationToken)
     {
-        if (_userSettingsRepository is null)
-            return;
-
         var settings = await _userSettingsRepository.GetAllAsync(cancellationToken);
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 

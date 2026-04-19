@@ -13,11 +13,6 @@ using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell;
 
-public sealed record BudgetAllocationPanelSnapshot(
-    IReadOnlyList<ExpenseLogVM> ExpenseLogs,
-    IReadOnlyList<ExpenseTagVM> Tags,
-    IReadOnlyList<SpendingSourceVM> SpendingSources);
-
 public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<DateRangeSelectionChangedMessage>,
     IRecipient<AllTimeViewModeMessage>,
@@ -27,19 +22,19 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private const decimal NeedsThreshold = 0.5m;
     private const decimal WantsThreshold = 0.3m;
 
-    private readonly IExpenseLogService? _expenseLogService;
-    private readonly IMapper? _mapper;
+    private readonly IExpenseLogService _expenseLogService;
+    private readonly IMapper _mapper;
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
-    private readonly ISpendingSourceService? _spendingSourceService;
-    private readonly ITagService? _tagService;
+    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly ITagService _tagService;
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
+    private readonly ObservableCollection<SpendingSourceVM> _spendingSources = [];
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private bool _isSynchronizingTagSelections;
     private (DateTime From, DateTime To)? _selectedRange;
-    private IReadOnlyList<SpendingSourceVM> _spendingSources = [];
 
     public BudgetAllocationPanelVM(
         IExpenseLogService expenseLogService,
@@ -54,12 +49,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         _tagService = tagService;
         _mapper = mapper;
 
-        Initialize();
-    }
-
-    public BudgetAllocationPanelVM(IMessenger? messenger = null)
-        : base(messenger ?? WeakReferenceMessenger.Default)
-    {
         Initialize();
     }
 
@@ -133,7 +122,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
 
-    public IReadOnlyList<SpendingSourceVM> SpendingSources => _spendingSources;
+    public ObservableCollection<SpendingSourceVM> SpendingSources => _spendingSources;
 
     public decimal TotalIncomeAmount => _spendingSources.Sum(source => source.Balance);
 
@@ -156,14 +145,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (!message.Value.HasFlag(DashboardDataInvalidationScope.Budget))
             return;
 
-        _ = ReloadSnapshotFromServicesAsync();
+        _ = ReloadFromServicesAsync();
     }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        if (_expenseLogService is null || _spendingSourceService is null || _tagService is null || _mapper is null)
-            return;
-
         var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken));
         var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
@@ -171,20 +157,16 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         var tags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
             await _tagService.GetAllAsync(cancellationToken));
 
-        LoadSnapshot(new BudgetAllocationPanelSnapshot(expenseLogs, tags, spendingSources));
-    }
-
-    public void LoadSnapshot(BudgetAllocationPanelSnapshot snapshot)
-    {
-        ArgumentNullException.ThrowIfNull(snapshot);
-
-        _allExpenseLogs = snapshot.ExpenseLogs
+        _allExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
-        _spendingSources = snapshot.SpendingSources.ToList();
 
-        LoadTags(snapshot.Tags);
+        _spendingSources.Clear();
+        foreach (var source in spendingSources)
+            _spendingSources.Add(source);
+
+        LoadTags(tags);
         RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs();
     }
@@ -224,8 +206,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (expenseLog is null || expenseLog.IsForDeletion)
             return;
 
-        if (_expenseLogService is not null)
-            await _expenseLogService.DeleteAsync(expenseLog.Id);
+        await _expenseLogService.DeleteAsync(expenseLog.Id);
 
         ApplyDeletedExpenseLogToUi(expenseLog);
 
@@ -239,11 +220,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         IsActive = true;
     }
 
-    private async Task ReloadSnapshotFromServicesAsync()
+    private async Task ReloadFromServicesAsync()
     {
-        if (_expenseLogService is null || _spendingSourceService is null || _tagService is null || _mapper is null)
-            return;
-
         await _reloadGate.WaitAsync();
 
         try
