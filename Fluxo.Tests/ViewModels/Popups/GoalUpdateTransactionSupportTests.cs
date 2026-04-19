@@ -53,6 +53,7 @@ public sealed class GoalUpdateTransactionSupportTests
         public IExpenseTagRepository ExpenseTags => expenseTags;
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public ISpendingSourceRepository SpendingSources => throw new NotSupportedException();
+        public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => throw new NotSupportedException();
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

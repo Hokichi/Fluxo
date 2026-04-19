@@ -95,6 +95,16 @@
                                     ToolTip="Enter a day between 1 and 28" />
                             </StackPanel>
 
+                            <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Deduct Source" />
+                                <ComboBox
+                                    DisplayMemberPath="Name"
+                                    ItemsSource="{Binding DeductSources}"
+                                    SelectedValue="{Binding SelectedDeductSource, Mode=TwoWay}"
+                                    SelectedValuePath="Id"
+                                    Style="{StaticResource FluxoComboBoxStyle}" />
+                            </StackPanel>
+
                             <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
                                 <c:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />

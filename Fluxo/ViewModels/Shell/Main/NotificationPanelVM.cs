@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
@@ -25,8 +26,10 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private readonly IExpenseService _expenseService;
     private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
+    private readonly SemaphoreSlim _notificationSyncGate = new(1, 1);
     private readonly ISpendingSourceService _spendingSourceService;
     private readonly IUserSettingsRepository _userSettingsRepository;
+    private readonly INotificationRepository _notificationRepository;
     private readonly HashSet<int> _hiddenFixedExpenseIds = [];
 
     private decimal _budgetUsageWarningPercentage = 0.90m;
@@ -51,6 +54,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         IExpenseLogService expenseLogService,
         ISpendingSourceService spendingSourceService,
         IUserSettingsRepository userSettingsRepository,
+        INotificationRepository notificationRepository,
         IMapper mapper,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
@@ -59,6 +63,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _expenseLogService = expenseLogService;
         _spendingSourceService = spendingSourceService;
         _userSettingsRepository = userSettingsRepository;
+        _notificationRepository = notificationRepository;
         _mapper = mapper;
 
         Notifications.CollectionChanged += OnNotificationsCollectionChanged;
@@ -71,24 +76,54 @@ public partial class NotificationPanelVM : ObservableRecipient,
     [ObservableProperty]
     private bool _hasNotifications;
 
-    public ObservableCollection<NotificationItemVM> Notifications { get; } = [];
+    public ObservableCollection<NotificationVM> Notifications { get; } = [];
 
     [RelayCommand]
-    private void ClearAllNotifications()
+    private async Task ClearAllNotificationsAsync()
     {
-        Notifications.Clear();
+        await _notificationSyncGate.WaitAsync();
+
+        try
+        {
+            var activeNotifications = await _notificationRepository.GetActiveAsync();
+            var hasChanges = false;
+
+            foreach (var notification in activeNotifications.Where(n => !n.IsCleared))
+            {
+                notification.IsCleared = true;
+
+                var category = GetNotificationCategory(notification.Type);
+                if (category is not (NotificationCategory.UpcomingPayment or NotificationCategory.GoalDeadline or NotificationCategory.LatePayment))
+                    notification.IsForDeletion = true;
+
+                if (ShouldMarkForDeletion(notification, isActiveCondition: false))
+                    notification.IsForDeletion = true;
+
+                _notificationRepository.Update(notification);
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+                await _notificationRepository.SaveChangesAsync();
+
+            Notifications.Clear();
+        }
+        finally
+        {
+            _notificationSyncGate.Release();
+        }
     }
 
     public void Receive(DateRangeSelectionChangedMessage message)
     {
         _selectedRange = message.Value;
-        RefreshNotifications();
+        _ = RefreshNotificationsAsync();
     }
 
     public void Receive(AllTimeViewModeMessage message)
     {
         _selectedRange = null;
-        RefreshNotifications();
+        _ = RefreshNotificationsAsync();
     }
 
     public void Receive(DashboardDataInvalidatedMessage message)
@@ -111,7 +146,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
             await _spendingSourceService.GetAllAsync(cancellationToken));
 
-        RefreshNotifications();
+        await RefreshNotificationsAsync(cancellationToken);
     }
 
     private async Task ReloadFromServicesAsync()
@@ -128,14 +163,16 @@ public partial class NotificationPanelVM : ObservableRecipient,
         }
     }
 
-    private void RefreshNotifications()
+    private async Task RefreshNotificationsAsync(CancellationToken cancellationToken = default)
     {
-        ReplaceSystemNotifications(EvaluateSystemNotifications());
+        var evaluatedNotifications = EvaluateSystemNotifications();
+        var visibleNotifications = await SynchronizeNotificationsAsync(evaluatedNotifications, cancellationToken);
+        ReplaceNotifications(visibleNotifications);
     }
 
-    private IReadOnlyList<NotificationItemVM> EvaluateSystemNotifications()
+    private IReadOnlyList<NotificationCandidate> EvaluateSystemNotifications()
     {
-        var notifications = new List<NotificationItemVM>();
+        var notifications = new List<NotificationCandidate>();
 
         notifications.AddRange(GetUpcomingCreditDeadlineNotifications());
         notifications.AddRange(GetUpcomingRecurringPaymentNotifications());
@@ -147,7 +184,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         return notifications;
     }
 
-    private IEnumerable<NotificationItemVM> GetUpcomingCreditDeadlineNotifications()
+    private IEnumerable<NotificationCandidate> GetUpcomingCreditDeadlineNotifications()
     {
         if (!_isCreditDeadlineNotifEnabled)
             yield break;
@@ -161,18 +198,19 @@ public partial class NotificationPanelVM : ObservableRecipient,
                 continue;
 
             var upcomingDueDate = dueDate.Value.Date;
-            if ((upcomingDueDate - DateTime.Today).Days != _deadlineReminderDays)
+            var daysUntilDueDate = (upcomingDueDate - DateTime.Today).Days;
+            if (daysUntilDueDate < 0 || daysUntilDueDate > _deadlineReminderDays)
                 continue;
 
-            yield return CreateNotification(
-                $"credit-deadline-{source.Id}-{upcomingDueDate:yyyyMMdd}",
-                $"{source.Name} payment is coming up",
-                $"{source.Name} is due on {upcomingDueDate:MMM d}.",
-                NotificationSeverity.Warning);
+            yield return new NotificationCandidate(
+                Type: BuildNotificationType($"UpcomingPayment-{source.Id}"),
+                Header: $"Upcoming Payment - {source.Name}",
+                Message: $"{source.Name} is due on {upcomingDueDate:MMM d}.",
+                Severity: NotificationSeverity.Warning);
         }
     }
 
-    private IEnumerable<NotificationItemVM> GetUpcomingRecurringPaymentNotifications()
+    private IEnumerable<NotificationCandidate> GetUpcomingRecurringPaymentNotifications()
     {
         if (!_isFixedExpensesDeductionNotifEnabled)
             yield break;
@@ -191,15 +229,15 @@ public partial class NotificationPanelVM : ObservableRecipient,
             if ((upcomingRecurringDate - DateTime.Today).Days != _deadlineReminderDays)
                 continue;
 
-            yield return CreateNotification(
-                $"recurring-deadline-{expense.Id}-{upcomingRecurringDate:yyyyMMdd}",
-                $"{expense.Name} deducts in {_deadlineReminderDays} days",
-                $"{expense.Name} is scheduled for {upcomingRecurringDate:MMM d}.",
-                NotificationSeverity.Warning);
+            yield return new NotificationCandidate(
+                Type: BuildNotificationType($"UpcomingDeduction-{expense.Id}"),
+                Header: $"Upcoming Deduction - {expense.Name}",
+                Message: $"{expense.Name} is scheduled for {upcomingRecurringDate:MMM d}.",
+                Severity: NotificationSeverity.Warning);
         }
     }
 
-    private IEnumerable<NotificationItemVM> GetAutoExpenseNotifications()
+    private IEnumerable<NotificationCandidate> GetAutoExpenseNotifications()
     {
         if (!_isFixedExpensesDeductionNotifEnabled)
             yield break;
@@ -221,14 +259,14 @@ public partial class NotificationPanelVM : ObservableRecipient,
             : $"{autoExpensesDueToday.Count} recurring expenses";
         var verb = autoExpensesDueToday.Count == 1 ? "its" : "their";
 
-        yield return CreateNotification(
-            $"auto-expenses-{DateTime.Today:yyyyMMdd}",
-            "Auto-expenses processed today",
-            $"{expenseSummary} reached {verb} scheduled date today.",
-            NotificationSeverity.Success);
+        yield return new NotificationCandidate(
+            Type: BuildNotificationType("AutoExpenseProcessed"),
+            Header: "Auto Expense Processed - Scheduled Expenses",
+            Message: $"{expenseSummary} reached {verb} scheduled date today.",
+            Severity: NotificationSeverity.Success);
     }
 
-    private IEnumerable<NotificationItemVM> GetBudgetThresholdNotifications()
+    private IEnumerable<NotificationCandidate> GetBudgetThresholdNotifications()
     {
         if (!_isBudgetThresholdNotifEnabled)
             yield break;
@@ -254,28 +292,28 @@ public partial class NotificationPanelVM : ObservableRecipient,
         var investPercentage = CalculatePercentage(investSpent, investAvailable);
 
         if (HasCrossedBudgetThreshold(needsSpent, needsAvailable))
-            yield return CreateNotification(
-                "budget-threshold-needs",
-                "Needs budget is almost fully spent",
-                $"Needs has reached {needsPercentage}% of its allocation.",
-                NotificationSeverity.Danger);
+            yield return new NotificationCandidate(
+                Type: BuildNotificationType("BudgetThresholdNeeds"),
+                Header: "Budget Threshold - Needs",
+                Message: $"Needs has reached {needsPercentage}% of its allocation.",
+                Severity: NotificationSeverity.Danger);
 
         if (HasCrossedBudgetThreshold(wantsSpent, wantsAvailable))
-            yield return CreateNotification(
-                "budget-threshold-wants",
-                "Wants budget is almost fully spent",
-                $"Wants has reached {wantsPercentage}% of its allocation.",
-                NotificationSeverity.Warning);
+            yield return new NotificationCandidate(
+                Type: BuildNotificationType("BudgetThresholdWants"),
+                Header: "Budget Threshold - Wants",
+                Message: $"Wants has reached {wantsPercentage}% of its allocation.",
+                Severity: NotificationSeverity.Warning);
 
         if (HasCrossedBudgetThreshold(investSpent, investAvailable))
-            yield return CreateNotification(
-                "budget-threshold-savings",
-                "Savings budget is almost fully spent",
-                $"Savings has reached {investPercentage}% of its allocation.",
-                NotificationSeverity.Warning);
+            yield return new NotificationCandidate(
+                Type: BuildNotificationType("BudgetThresholdSavings"),
+                Header: "Budget Threshold - Savings",
+                Message: $"Savings has reached {investPercentage}% of its allocation.",
+                Severity: NotificationSeverity.Warning);
     }
 
-    private IEnumerable<NotificationItemVM> GetCreditThresholdNotifications()
+    private IEnumerable<NotificationCandidate> GetCreditThresholdNotifications()
     {
         if (!_isLowCreditNotifEnabled)
             yield break;
@@ -290,15 +328,15 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
             var usagePercentage = (int)Math.Round(creditUsage * 100, MidpointRounding.AwayFromZero);
 
-            yield return CreateNotification(
-                $"credit-usage-{source.Id}",
-                $"{source.Name} crossed the credit threshold",
-                $"{source.Name} is using {usagePercentage}% of its limit.",
-                NotificationSeverity.Warning);
+            yield return new NotificationCandidate(
+                Type: BuildNotificationType($"LowCredit-{source.Id}"),
+                Header: $"Low Credit - {source.Name}",
+                Message: $"{source.Name} is using {usagePercentage}% of its limit.",
+                Severity: NotificationSeverity.Warning);
         }
     }
 
-    private IEnumerable<NotificationItemVM> GetLowAccountNotifications()
+    private IEnumerable<NotificationCandidate> GetLowAccountNotifications()
     {
         if (!_isLowAccountBalanceNotifEnabled)
             yield break;
@@ -318,12 +356,161 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
             var balancePercentage = (int)Math.Round(remainingBalancePercentage * 100, MidpointRounding.AwayFromZero);
 
-            yield return CreateNotification(
-                $"low-account-{source.Id}",
-                $"{source.Name} is running low",
-                $"{source.Name} is down to {balancePercentage}% of its pre-spend total.",
-                NotificationSeverity.Danger);
+            yield return new NotificationCandidate(
+                Type: BuildNotificationType($"LowBalance-{source.Id}"),
+                Header: $"Low Balance - {source.Name}",
+                Message: $"{source.Name} is down to {balancePercentage}% of its pre-spend total.",
+                Severity: NotificationSeverity.Danger);
         }
+    }
+
+    private async Task<IReadOnlyList<NotificationVM>> SynchronizeNotificationsAsync(
+        IReadOnlyList<NotificationCandidate> evaluatedNotifications,
+        CancellationToken cancellationToken)
+    {
+        await _notificationSyncGate.WaitAsync(cancellationToken);
+
+        try
+        {
+            var activePersistedNotifications = await _notificationRepository.GetActiveAsync(cancellationToken);
+            var persistedByType = activePersistedNotifications
+                .GroupBy(notification => notification.Type, StringComparer.Ordinal)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.OrderByDescending(notification => notification.CreatedOn).First(),
+                    StringComparer.Ordinal);
+
+            var evaluatedByType = evaluatedNotifications
+                .GroupBy(notification => notification.Type, StringComparer.Ordinal)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.First(),
+                    StringComparer.Ordinal);
+
+            var hasChanges = false;
+            foreach (var persisted in persistedByType.Values)
+            {
+                var isActiveCondition = evaluatedByType.ContainsKey(persisted.Type);
+                var shouldDelete = ShouldMarkForDeletion(persisted, isActiveCondition);
+                if (persisted.IsForDeletion == shouldDelete)
+                    continue;
+
+                persisted.IsForDeletion = shouldDelete;
+                _notificationRepository.Update(persisted);
+                hasChanges = true;
+            }
+
+            foreach (var evaluated in evaluatedByType.Values)
+            {
+                if (persistedByType.TryGetValue(evaluated.Type, out var persisted))
+                {
+                    if (!string.Equals(persisted.Header, evaluated.Header, StringComparison.Ordinal) ||
+                        !string.Equals(persisted.Message, evaluated.Message, StringComparison.Ordinal))
+                    {
+                        persisted.Header = evaluated.Header;
+                        persisted.Message = evaluated.Message;
+                        _notificationRepository.Update(persisted);
+                        hasChanges = true;
+                    }
+
+                    continue;
+                }
+
+                var createdNotification = new Notification
+                {
+                    Type = evaluated.Type,
+                    Header = evaluated.Header,
+                    Message = evaluated.Message,
+                    CreatedOn = DateTime.Now,
+                    IsCleared = false,
+                    IsForDeletion = false
+                };
+
+                await _notificationRepository.AddAsync(createdNotification, cancellationToken);
+                persistedByType[evaluated.Type] = createdNotification;
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+                await _notificationRepository.SaveChangesAsync(cancellationToken);
+
+            return evaluatedByType.Values
+                .Select(evaluated =>
+                {
+                    if (!persistedByType.TryGetValue(evaluated.Type, out var persisted))
+                        return null;
+
+                    if (persisted.IsCleared || persisted.IsForDeletion)
+                        return null;
+
+                    return new NotificationVM
+                    {
+                        Type = persisted.Type,
+                        Header = persisted.Header,
+                        Message = persisted.Message,
+                        CreatedOn = persisted.CreatedOn,
+                        Severity = evaluated.Severity,
+                        IsCleared = persisted.IsCleared
+                    };
+                })
+                .Where(notification => notification is not null)
+                .Select(notification => notification!)
+                .OrderByDescending(notification => notification.CreatedOn)
+                .ToList();
+        }
+        finally
+        {
+            _notificationSyncGate.Release();
+        }
+    }
+
+    private static bool ShouldMarkForDeletion(Notification notification, bool isActiveCondition)
+    {
+        var category = GetNotificationCategory(notification.Type);
+
+        return category switch
+        {
+            NotificationCategory.UpcomingPayment => !isActiveCondition,
+            NotificationCategory.GoalDeadline => !isActiveCondition,
+            NotificationCategory.LatePayment => !isActiveCondition,
+            _ => notification.IsCleared
+        };
+    }
+
+    private static NotificationCategory GetNotificationCategory(string notificationType)
+    {
+        var typeToken = notificationType.Split('_')[0];
+
+        if (typeToken.StartsWith("UpcomingPayment", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.UpcomingPayment;
+
+        if (typeToken.StartsWith("GoalDeadline", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.GoalDeadline;
+
+        if (typeToken.StartsWith("LatePayment", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.LatePayment;
+
+        if (typeToken.StartsWith("UpcomingDeduction", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.UpcomingDeduction;
+
+        if (typeToken.StartsWith("LowBalance", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.LowBalance;
+
+        if (typeToken.StartsWith("LowCredit", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.LowCredit;
+
+        if (typeToken.StartsWith("BudgetThreshold", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.BudgetThreshold;
+
+        if (typeToken.StartsWith("AutoExpenseProcessed", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.AutoExpenseProcessed;
+
+        return NotificationCategory.Other;
+    }
+
+    private static string BuildNotificationType(string typeToken)
+    {
+        return typeToken;
     }
 
     private IReadOnlyList<ExpenseLogVM> GetVisibleExpenseLogs()
@@ -427,70 +614,12 @@ public partial class NotificationPanelVM : ObservableRecipient,
             .ToArray();
     }
 
-    private static NotificationItemVM CreateNotification(
-        string key,
-        string title,
-        string message,
-        NotificationSeverity severity)
+    private void ReplaceNotifications(IEnumerable<NotificationVM> notifications)
     {
-        return new NotificationItemVM
-        {
-            Key = key,
-            Title = title,
-            Message = message,
-            Severity = severity,
-            CreatedOn = DateTime.Now,
-            IsSystemGenerated = true
-        };
-    }
+        Notifications.Clear();
 
-    private void ReplaceSystemNotifications(IEnumerable<NotificationItemVM> notifications)
-    {
-        var incomingNotificationsByKey = notifications.ToDictionary(notification => notification.Key, StringComparer.Ordinal);
-
-        var staleNotifications = Notifications
-            .Where(notification => notification.IsSystemGenerated && !incomingNotificationsByKey.ContainsKey(notification.Key))
-            .ToList();
-
-        foreach (var notification in staleNotifications)
-            Notifications.Remove(notification);
-
-        foreach (var incomingNotification in incomingNotificationsByKey.Values)
-        {
-            var existingNotification = Notifications.FirstOrDefault(notification =>
-                string.Equals(notification.Key, incomingNotification.Key, StringComparison.Ordinal));
-
-            if (existingNotification is null)
-            {
-                Notifications.Insert(0, incomingNotification);
-                continue;
-            }
-
-            UpdateNotification(existingNotification, incomingNotification);
-        }
-
-        SortNotifications();
-    }
-
-    private static void UpdateNotification(NotificationItemVM target, NotificationItemVM source)
-    {
-        target.Title = source.Title;
-        target.Message = source.Message;
-        target.Severity = source.Severity;
-    }
-
-    private void SortNotifications()
-    {
-        var orderedNotifications = Notifications
-            .OrderByDescending(notification => notification.CreatedOn)
-            .ToList();
-
-        for (var index = 0; index < orderedNotifications.Count; index++)
-        {
-            var currentIndex = Notifications.IndexOf(orderedNotifications[index]);
-            if (currentIndex >= 0 && currentIndex != index)
-                Notifications.Move(currentIndex, index);
-        }
+        foreach (var notification in notifications)
+            Notifications.Add(notification);
     }
 
     private void OnNotificationsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -498,4 +627,23 @@ public partial class NotificationPanelVM : ObservableRecipient,
         NotificationCount = Notifications.Count;
         HasNotifications = NotificationCount > 0;
     }
+
+    private enum NotificationCategory
+    {
+        Other = 0,
+        UpcomingPayment = 1,
+        GoalDeadline = 2,
+        LatePayment = 3,
+        UpcomingDeduction = 4,
+        LowBalance = 5,
+        LowCredit = 6,
+        BudgetThreshold = 7,
+        AutoExpenseProcessed = 8
+    }
+
+    private readonly record struct NotificationCandidate(
+        string Type,
+        string Header,
+        string Message,
+        NotificationSeverity Severity);
 }

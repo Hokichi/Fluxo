@@ -21,6 +21,7 @@ public sealed record SpendingSourceMemorySnapshot(
     decimal SpentAmount,
     decimal Balance,
     int? MonthlyDueDate,
+    int? DeductSource,
     decimal? InterestRate,
     bool ShowOnUI,
     bool IsEnabled)
@@ -37,6 +38,7 @@ public sealed record SpendingSourceMemorySnapshot(
             spendingSource.SpentAmount,
             spendingSource.Balance,
             spendingSource.MonthlyDueDate,
+            spendingSource.DeductSource,
             spendingSource.InterestRate,
             spendingSource.ShowOnUI,
             spendingSource.IsEnabled);
@@ -454,6 +456,7 @@ public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot s
             SpentAmount = snapshot.SpentAmount,
             Balance = snapshot.Balance,
             MonthlyDueDate = snapshot.MonthlyDueDate,
+            DeductSource = snapshot.DeductSource,
             InterestRate = snapshot.InterestRate,
             ShowOnUI = snapshot.ShowOnUI,
             IsEnabled = snapshot.IsEnabled
@@ -493,6 +496,7 @@ public sealed class EditSpendingSourceMemoryAction(
         spendingSource.SpentAmount = snapshot.SpentAmount;
         spendingSource.Balance = snapshot.Balance;
         spendingSource.MonthlyDueDate = snapshot.MonthlyDueDate;
+        spendingSource.DeductSource = snapshot.DeductSource;
         spendingSource.InterestRate = snapshot.InterestRate;
         spendingSource.ShowOnUI = snapshot.ShowOnUI;
         spendingSource.IsEnabled = snapshot.IsEnabled;
@@ -520,6 +524,7 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
             SpentAmount = snapshot.SpentAmount,
             Balance = snapshot.Balance,
             MonthlyDueDate = snapshot.MonthlyDueDate,
+            DeductSource = snapshot.DeductSource,
             InterestRate = snapshot.InterestRate,
             ShowOnUI = snapshot.ShowOnUI,
             IsEnabled = snapshot.IsEnabled

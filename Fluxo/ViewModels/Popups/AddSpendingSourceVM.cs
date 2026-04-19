@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -28,6 +29,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     [ObservableProperty] private string _monthlyDueDateText = string.Empty;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _primaryAmountText = string.Empty;
+    [ObservableProperty] private int? _selectedDeductSource;
     [ObservableProperty] private SpendingSourceType _selectedSpendingSourceType = SpendingSourceType.Checking;
     [ObservableProperty] private bool _showOnUI = true;
     [ObservableProperty] private string _spentAmountText = string.Empty;
@@ -49,6 +51,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         new("BNPL", SpendingSourceType.BNPL),
         new("Savings", SpendingSourceType.Saving)
     ];
+    public ObservableCollection<DeductSourceOption> DeductSources { get; } = [];
 
     public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
@@ -80,6 +83,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
 
     partial void OnPrimaryAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnSelectedDeductSourceChanged(int? value) => NotifyFormStateChanged();
 
     partial void OnShowOnUIChanged(bool value) => NotifyFormStateChanged();
 
@@ -99,12 +103,44 @@ public partial class AddSpendingSourceVM : ObservableObject
             AccountLimitText = string.Empty;
             SpentAmountText = string.Empty;
             MonthlyDueDateText = string.Empty;
+            SelectedDeductSource = null;
+        }
+        else if (!SelectedDeductSource.HasValue && DeductSources.Count > 0)
+        {
+            SelectedDeductSource = DeductSources[0].Id;
         }
 
         if (!IsSaving)
             ApyText = string.Empty;
 
         NotifyFormStateChanged();
+    }
+
+    public async Task LoadDeductSourcesAsync(CancellationToken cancellationToken = default)
+    {
+        var existingSources = await _unitOfWork.SpendingSources.GetAllAsync(cancellationToken);
+
+        var options = existingSources
+            .Where(source => source.Id != (EditingId ?? 0))
+            .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+            .OrderBy(source => source.Name)
+            .Select(source => new DeductSourceOption(source.Id, source.Name))
+            .ToList();
+
+        DeductSources.Clear();
+        foreach (var option in options)
+            DeductSources.Add(option);
+
+        if (!IsCreditLike)
+        {
+            SelectedDeductSource = null;
+            return;
+        }
+
+        if (SelectedDeductSource.HasValue && DeductSources.Any(option => option.Id == SelectedDeductSource.Value))
+            return;
+
+        SelectedDeductSource = DeductSources.Count > 0 ? DeductSources[0].Id : null;
     }
 
     public async Task<AddSpendingSourceResult> SaveAsync()
@@ -144,6 +180,7 @@ public partial class AddSpendingSourceVM : ObservableObject
                 spendingSource.SpentAmount = input.SpentAmount;
                 spendingSource.Balance = input.Balance;
                 spendingSource.MonthlyDueDate = input.MonthlyDueDate;
+                spendingSource.DeductSource = input.DeductSource;
                 spendingSource.InterestRate = input.InterestRate;
                 spendingSource.ShowOnUI = input.ShowOnUI;
                 spendingSource.IsEnabled = input.IsEnabled;
@@ -159,6 +196,7 @@ public partial class AddSpendingSourceVM : ObservableObject
                     SpentAmount = input.SpentAmount,
                     Balance = input.Balance,
                     MonthlyDueDate = input.MonthlyDueDate,
+                    DeductSource = input.DeductSource,
                     InterestRate = input.InterestRate,
                     ShowOnUI = input.ShowOnUI,
                     IsEnabled = input.IsEnabled
@@ -371,6 +409,12 @@ public partial class AddSpendingSourceVM : ObservableObject
             }
 
             monthlyDueDate = parsedMonthlyDueDate;
+
+            if (!SelectedDeductSource.HasValue || DeductSources.All(option => option.Id != SelectedDeductSource.Value))
+            {
+                validationMessage = "Credit and BNPL sources require a deduct source.";
+                return false;
+            }
         }
 
         input = new AddSpendingSourceInput(
@@ -380,6 +424,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             IsCreditLike ? spentAmount : 0m,
             IsCredit ? accountLimit : 0m,
             monthlyDueDate,
+            IsCreditLike ? SelectedDeductSource : null,
             IsSaving ? interestRate : null,
             ShowOnUI,
             IsEnabled);
@@ -432,6 +477,9 @@ public partial class AddSpendingSourceVM : ObservableObject
         if (IsCreditLike && !TryParseMonthlyDueDate(MonthlyDueDateText, out _))
             return false;
 
+        if (IsCreditLike && !SelectedDeductSource.HasValue)
+            return false;
+
         return true;
     }
 
@@ -444,6 +492,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             AccountLimitText ?? string.Empty,
             ApyText ?? string.Empty,
             MonthlyDueDateText ?? string.Empty,
+            SelectedDeductSource,
             SelectedSpendingSourceType,
             ShowOnUI,
             IsEnabled);
@@ -477,6 +526,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         decimal SpentAmount,
         decimal AccountLimit,
         int? MonthlyDueDate,
+        int? DeductSource,
         decimal? InterestRate,
         bool ShowOnUI,
         bool IsEnabled);
@@ -488,7 +538,10 @@ public partial class AddSpendingSourceVM : ObservableObject
         string AccountLimitText,
         string ApyText,
         string MonthlyDueDateText,
+        int? SelectedDeductSource,
         SpendingSourceType SpendingSourceType,
         bool ShowOnUI,
         bool IsEnabled);
+
+    public readonly record struct DeductSourceOption(int Id, string Name);
 }

@@ -18,8 +18,9 @@ public partial class AddSpendingSourcePopup : BasePopup
         _viewModel = viewModel;
         DataContext = viewModel;
 
-        Loaded += (_, _) =>
+        Loaded += async (_, _) =>
         {
+            await _viewModel.LoadDeductSourcesAsync();
             _viewModel.BeginChangeTracking();
             NameTextBox.Focus();
         };

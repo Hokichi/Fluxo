@@ -12,6 +12,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<ExpenseTag> ExpenseTags => Set<ExpenseTag>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<SpendingSource> SpendingSources => Set<SpendingSource>();
+    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -22,6 +23,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureExpenseTag(modelBuilder.Entity<ExpenseTag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
         ConfigureSpendingSource(modelBuilder.Entity<SpendingSource>());
+        ConfigureNotification(modelBuilder.Entity<Notification>());
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
         ConfigureReferenceAutoIncludes(modelBuilder);
     }
@@ -116,9 +118,24 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(source => source.SpentAmount).HasColumnType("TEXT");
         entity.Property(source => source.Balance).HasColumnType("TEXT");
         entity.Property(source => source.MonthlyDueDate);
+        entity.Property(source => source.DeductSource);
         entity.Property(source => source.IsEnabled);
         entity.Property(source => source.ShowOnUI);
         entity.Property(source => source.InterestRate).HasColumnType("TEXT");
+    }
+
+    private static void ConfigureNotification(EntityTypeBuilder<Notification> entity)
+    {
+        entity.ToTable("Notifications");
+        entity.Property(notification => notification.Id).ValueGeneratedOnAdd();
+        entity.HasKey(notification => notification.Id);
+
+        entity.Property(notification => notification.Type).IsRequired();
+        entity.Property(notification => notification.Header).IsRequired();
+        entity.Property(notification => notification.Message).IsRequired();
+        entity.Property(notification => notification.CreatedOn);
+        entity.Property(notification => notification.IsCleared);
+        entity.Property(notification => notification.IsForDeletion);
     }
 
     private static void ConfigureUserSettings(EntityTypeBuilder<UserSettings> entity)

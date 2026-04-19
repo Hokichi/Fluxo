@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
                 new ExpenseTagRepository(dbContext),
                 new SavingGoalRepository(dbContext),
                 new SpendingSourceRepository(dbContext),
+                new NotificationRepository(dbContext),
                 new UserSettingsRepository(dbContext));
         });
 
@@ -34,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExpenseTagRepository, ExpenseTagRepository>();
         services.AddTransient<ISavingGoalRepository, SavingGoalRepository>();
         services.AddTransient<ISpendingSourceRepository, SpendingSourceRepository>();
+        services.AddTransient<INotificationRepository, NotificationRepository>();
         services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
 
         services.AddTransient<IRepository<Expense>, ExpenseRepository>();
@@ -42,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IRepository<ExpenseTag>, ExpenseTagRepository>();
         services.AddTransient<IRepository<SavingGoal>, SavingGoalRepository>();
         services.AddTransient<IRepository<SpendingSource>, SpendingSourceRepository>();
+        services.AddTransient<IRepository<Notification>, NotificationRepository>();
 
         return services;
     }

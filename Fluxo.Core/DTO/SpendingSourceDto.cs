@@ -11,6 +11,7 @@ public class SpendingSourceDto
     public decimal SpentAmount { get; set; }
     public decimal Balance { get; set; }
     public int? MonthlyDueDate { get; set; }
+    public int? DeductSource { get; set; }
     public decimal? InterestRate { get; set; }
     public bool ShowOnUI { get; set; }
     public bool IsEnabled { get; set; }

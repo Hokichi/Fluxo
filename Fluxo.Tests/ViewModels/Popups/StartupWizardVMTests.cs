@@ -65,6 +65,7 @@ public sealed class StartupWizardVMTests
         public IExpenseTagRepository ExpenseTags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public ISpendingSourceRepository SpendingSources => throw new NotSupportedException();
+        public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => userSettingsRepository;
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -12,6 +12,7 @@ public sealed class UnitOfWork(
     IExpenseTagRepository expenseTags,
     ISavingGoalRepository savingGoals,
     ISpendingSourceRepository spendingSources,
+    INotificationRepository notifications,
     IUserSettingsRepository userSettings) : IUnitOfWork
 {
     private readonly FluxoDbContext _dbContext = dbContext;
@@ -22,6 +23,7 @@ public sealed class UnitOfWork(
     public IExpenseTagRepository ExpenseTags { get; } = expenseTags;
     public ISavingGoalRepository SavingGoals { get; } = savingGoals;
     public ISpendingSourceRepository SpendingSources { get; } = spendingSources;
+    public INotificationRepository Notifications { get; } = notifications;
     public IUserSettingsRepository UserSettings { get; } = userSettings;
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

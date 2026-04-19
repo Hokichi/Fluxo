@@ -274,6 +274,28 @@
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
                                 DataObject.Pasting="OnMonthlyDueDatePasting" />
                         </Grid>
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource LeftSideLabelStyle}" Text="Deduct Source" />
+                            <TextBlock
+                                Grid.Column="1"
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="{Binding DeductSourceDisplay}"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            <ComboBox
+                                Grid.Column="1"
+                                Width="160"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding DeductSources}"
+                                SelectedValue="{Binding SelectedDeductSource, Mode=TwoWay}"
+                                SelectedValuePath="Id"
+                                Style="{StaticResource FluxoComboBoxStyle}"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -322,6 +344,28 @@
                                 ToolTip="Enter a day between 1 and 28"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
                                 DataObject.Pasting="OnMonthlyDueDatePasting" />
+                        </Grid>
+                        <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource LeftSideLabelStyle}" Text="Deduct Source" />
+                            <TextBlock
+                                Grid.Column="1"
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="{Binding DeductSourceDisplay}"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            <ComboBox
+                                Grid.Column="1"
+                                Width="160"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding DeductSources}"
+                                SelectedValue="{Binding SelectedDeductSource, Mode=TwoWay}"
+                                SelectedValuePath="Id"
+                                Style="{StaticResource FluxoComboBoxStyle}"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>

@@ -158,7 +158,7 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding Title}"
+                        Text="{Binding Header}"
                         TextWrapping="Wrap" />
                     <TextBlock
                         Margin="0,6,0,0"

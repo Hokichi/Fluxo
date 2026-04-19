@@ -24,6 +24,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
     [ObservableProperty] private decimal _moneyOut;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _primaryAmountText = string.Empty;
+    [ObservableProperty] private int? _selectedDeductSource;
     private SpendingSourceDetailState _savedState = SpendingSourceDetailState.Empty;
     [ObservableProperty] private bool _showOnUI = true;
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
@@ -39,6 +40,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public ObservableCollection<SpendingSourceActivityItemVM> RecentActivities { get; } = [];
     public ObservableCollection<SpendingSourceTrendItemVM> Trends { get; } = [];
+    public ObservableCollection<DeductSourceOption> DeductSources { get; } = [];
 
     public MainVM MainViewModel { get; }
 
@@ -53,6 +55,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
     public bool IsCredit => SpendingSourceType == SpendingSourceType.Credit;
 
     public bool IsBnpl => SpendingSourceType == SpendingSourceType.BNPL;
+
+    public bool IsCreditLike => IsCredit || IsBnpl;
 
     public bool IsSaving => SpendingSourceType == SpendingSourceType.Saving;
 
@@ -80,6 +84,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
         ? $"Day {dueDay}"
         : "Not set";
 
+    public string DeductSourceDisplay =>
+        DeductSources.FirstOrDefault(option => option.Id == SelectedDeductSource).Name ?? "Not set";
+
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(CanTransfer));
@@ -104,13 +111,18 @@ public partial class SpendingSourceDetailVM : ObservableObject
         OnPropertyChanged(nameof(IsCashOrChecking));
         OnPropertyChanged(nameof(IsCredit));
         OnPropertyChanged(nameof(IsBnpl));
+        OnPropertyChanged(nameof(IsCreditLike));
         OnPropertyChanged(nameof(IsSaving));
         OnPropertyChanged(nameof(CanTransfer));
         OnPropertyChanged(nameof(DisplayPrimaryAmount));
         OnPropertyChanged(nameof(PrimaryAmountLabel));
+        OnPropertyChanged(nameof(DeductSourceDisplay));
 
         if (value is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+        {
             MonthlyDueDateText = string.Empty;
+            SelectedDeductSource = null;
+        }
     }
 
     partial void OnPrimaryAmountTextChanged(string value)
@@ -126,6 +138,11 @@ public partial class SpendingSourceDetailVM : ObservableObject
     partial void OnMonthlyDueDateTextChanged(string value)
     {
         OnPropertyChanged(nameof(MonthlyDueDateDisplay));
+    }
+
+    partial void OnSelectedDeductSourceChanged(int? value)
+    {
+        OnPropertyChanged(nameof(DeductSourceDisplay));
     }
 
     public async Task<bool> LoadAsync()
@@ -346,6 +363,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
         if (spendingSource is null)
             return false;
 
+        await LoadDeductSourcesAsync();
+
         var allExpenseLogs = await UnitOfWork.ExpenseLogs.GetAllAsync();
         var expenseLogs = allExpenseLogs
             .Where(log => log.SpendingSourceId == SpendingSourceId && !log.IsForDeletion)
@@ -378,6 +397,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         AccountLimitText = FormatDecimal(state.AccountLimit);
         ApyText = state.InterestRate.HasValue ? FormatDecimal(state.InterestRate.Value) : string.Empty;
         MonthlyDueDateText = state.MonthlyDueDate?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        SelectedDeductSource = state.DeductSource;
         IsEnabled = state.IsEnabled;
         ShowOnUI = state.ShowOnUI;
     }
@@ -434,6 +454,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         }
 
         int? monthlyDueDate = null;
+        int? deductSource = null;
         if (SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
         {
             if (string.IsNullOrWhiteSpace(MonthlyDueDateText))
@@ -449,6 +470,14 @@ public partial class SpendingSourceDetailVM : ObservableObject
             }
 
             monthlyDueDate = parsedMonthlyDueDate;
+
+            if (!SelectedDeductSource.HasValue || DeductSources.All(option => option.Id != SelectedDeductSource.Value))
+            {
+                validationMessage = "Credit and BNPL sources require a deduct source.";
+                return false;
+            }
+
+            deductSource = SelectedDeductSource;
         }
 
         input = new SpendingSourceDetailState(
@@ -458,6 +487,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             accountLimit,
             spentAmount,
             monthlyDueDate,
+            deductSource,
             interestRate,
             IsEnabled,
             ShowOnUI);
@@ -471,14 +501,21 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.AccountLimit = input.AccountLimit;
         spendingSource.SpentAmount = input.SpentAmount;
         spendingSource.MonthlyDueDate = input.MonthlyDueDate;
+        spendingSource.DeductSource = input.DeductSource;
         spendingSource.InterestRate = input.InterestRate;
         spendingSource.IsEnabled = input.IsEnabled;
         spendingSource.ShowOnUI = input.ShowOnUI;
 
         if (input.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
             spendingSource.SpentAmount = input.SpentAmount;
-        else
-            spendingSource.Balance = input.PrimaryAmount;
+            return;
+        }
+
+        spendingSource.MonthlyDueDate = null;
+        spendingSource.DeductSource = null;
+        spendingSource.AccountLimit = 0m;
+        spendingSource.Balance = input.PrimaryAmount;
     }
 
     private static SpendingSourceDetailState CreateState(SpendingSource spendingSource)
@@ -492,9 +529,35 @@ public partial class SpendingSourceDetailVM : ObservableObject
             spendingSource.AccountLimit,
             spendingSource.SpentAmount,
             MonthlyDueDateHelper.Normalize(spendingSource.MonthlyDueDate),
+            spendingSource.DeductSource,
             spendingSource.InterestRate,
             spendingSource.IsEnabled,
             spendingSource.ShowOnUI);
+    }
+
+    private async Task LoadDeductSourcesAsync()
+    {
+        var options = (await UnitOfWork.SpendingSources.GetAllAsync())
+            .Where(source => source.Id != SpendingSourceId)
+            .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+            .OrderBy(source => source.Name)
+            .Select(source => new DeductSourceOption(source.Id, source.Name))
+            .ToList();
+
+        DeductSources.Clear();
+        foreach (var option in options)
+            DeductSources.Add(option);
+
+        if (!IsCreditLike)
+        {
+            SelectedDeductSource = null;
+            return;
+        }
+
+        if (SelectedDeductSource.HasValue && DeductSources.Any(option => option.Id == SelectedDeductSource.Value))
+            return;
+
+        SelectedDeductSource = DeductSources.Count > 0 ? DeductSources[0].Id : null;
     }
 
     private static IEnumerable<SpendingSourceActivityItemVM> BuildActivities(
@@ -622,6 +685,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         decimal AccountLimit,
         decimal SpentAmount,
         int? MonthlyDueDate,
+        int? DeductSource,
         decimal? InterestRate,
         bool IsEnabled,
         bool ShowOnUI)
@@ -634,9 +698,12 @@ public partial class SpendingSourceDetailVM : ObservableObject
             0m,
             null,
             null,
+            null,
             true,
             true);
     }
+
+    public readonly record struct DeductSourceOption(int Id, string Name);
 }
 
 public sealed record SpendingSourceActivityItemVM(
