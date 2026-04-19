@@ -16,6 +16,8 @@ public static class UserSettingNames
     public const string IsBudgetThresholdNotifEnabled = nameof(IsBudgetThresholdNotifEnabled);
     public const string IsLowCreditNotifEnabled = nameof(IsLowCreditNotifEnabled);
     public const string IsLowAccountBalanceNotifEnabled = nameof(IsLowAccountBalanceNotifEnabled);
+    public const string IsGoalDeadlineNotifEnabled = nameof(IsGoalDeadlineNotifEnabled);
+    public const string IsLatePaymentNotifEnabled = nameof(IsLatePaymentNotifEnabled);
     public const string HiddenFixedExpenseIds = nameof(HiddenFixedExpenseIds);
     public const string HiddenSavingGoalIds = nameof(HiddenSavingGoalIds);
     public const string DisabledSavingGoalIds = nameof(DisabledSavingGoalIds);

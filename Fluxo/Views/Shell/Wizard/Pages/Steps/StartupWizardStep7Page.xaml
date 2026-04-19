@@ -132,7 +132,7 @@
                     FontFamily="{StaticResource Bold}"
                     Foreground="{StaticResource Brush.Text.Primary}">
                     <Run Text="{Binding ReportNotificationsEnabledCount, Mode=OneWay}" />
-                    <Run Text=" of 5" />
+                    <Run Text=" of 7" />
                 </TextBlock>
             </StackPanel>
         </Border>

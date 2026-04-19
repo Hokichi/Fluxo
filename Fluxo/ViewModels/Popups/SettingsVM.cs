@@ -901,6 +901,16 @@ public partial class SettingsVM : ObservableObject
                 UserSettingNames.IsCreditDeadlineNotifEnabled,
                 ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true)),
             new SettingsNotificationOptionVM(
+                "Goal deadline alerts",
+                "Warn when a savings goal is close to its saving end date.",
+                UserSettingNames.IsGoalDeadlineNotifEnabled,
+                ParseBool(settingsByName, UserSettingNames.IsGoalDeadlineNotifEnabled, true)),
+            new SettingsNotificationOptionVM(
+                "Late payment alerts",
+                "Warn when credit and BNPL payments are past due.",
+                UserSettingNames.IsLatePaymentNotifEnabled,
+                ParseBool(settingsByName, UserSettingNames.IsLatePaymentNotifEnabled, true)),
+            new SettingsNotificationOptionVM(
                 "Budget threshold alerts",
                 "Warn when Needs, Wants, or Invest allocations are nearly spent.",
                 UserSettingNames.IsBudgetThresholdNotifEnabled,

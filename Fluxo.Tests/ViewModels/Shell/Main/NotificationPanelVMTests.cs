@@ -101,6 +101,8 @@ public class NotificationPanelVMTests
 
         persistedNotifications = [];
         var notificationRepository = Substitute.For<INotificationRepository>();
+        notificationRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IReadOnlyList<Notification>>(persistedNotifications.ToList()));
         notificationRepository.GetActiveAsync(Arg.Any<CancellationToken>())
             .Returns(_ => Task.FromResult<IReadOnlyList<Notification>>(
                 persistedNotifications.Where(notification => !notification.IsForDeletion).ToList()));
@@ -136,15 +138,22 @@ public class NotificationPanelVMTests
                 existing.IsForDeletion = updated.IsForDeletion;
             });
 
+        var savingGoalRepository = Substitute.For<ISavingGoalRepository>();
+        savingGoalRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<SavingGoal>>([]));
+
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseVM>>(Arg.Any<object>()).Returns(expenses);
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
         mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
+        mapper.Map<IReadOnlyList<SavingGoalDto>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns([]);
 
         return new NotificationPanelVM(
             expenseService,
             expenseLogService,
             spendingSourceService,
+            savingGoalRepository,
             userSettingsRepository,
             notificationRepository,
             mapper,

@@ -3,8 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Entities;
+using Fluxo.Views.CustomControls;
 using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Components;
