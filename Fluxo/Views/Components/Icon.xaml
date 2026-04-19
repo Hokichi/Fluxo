@@ -5,7 +5,7 @@
     x:Name="Root">
     <Rectangle Fill="{Binding Color, ElementName=Root}">
         <Rectangle.OpacityMask>
-            <DrawingBrush Drawing="{Binding MaskDrawing, ElementName=Root}" Stretch="Uniform" />
+            <Binding ElementName="Root" Path="MaskBrush" />
         </Rectangle.OpacityMask>
     </Rectangle>
 </UserControl>

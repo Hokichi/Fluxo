@@ -31,7 +31,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="BankIconStyle" TargetType="Rectangle">
+        <Style x:Key="BankIconStyle" TargetType="components:Icon">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SpendingSourceType}" Value="Checking">
@@ -43,7 +43,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="CreditCardIconStyle" TargetType="Rectangle">
+        <Style x:Key="CreditCardIconStyle" TargetType="components:Icon">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SpendingSourceType}" Value="Credit">
@@ -55,7 +55,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="PiggyBankIconStyle" TargetType="Rectangle">
+        <Style x:Key="PiggyBankIconStyle" TargetType="components:Icon">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SpendingSourceType}" Value="Saving">
@@ -138,54 +138,21 @@
                         CornerRadius="16"
                         Style="{StaticResource IncomeSourceAccentStyle}">
                         <Grid>
-                            <Rectangle
+                            <components:Icon
                                 Margin="6"
-                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                Style="{StaticResource BankIconStyle}">
-                                <Rectangle.OpacityMask>
-                                    <DrawingBrush Stretch="Uniform">
-                                        <DrawingBrush.Drawing>
-                                            <GeometryDrawing Geometry="{StaticResource IncomeSource.Bank}">
-                                                <GeometryDrawing.Brush>
-                                                    <SolidColorBrush Color="Black" />
-                                                </GeometryDrawing.Brush>
-                                            </GeometryDrawing>
-                                        </DrawingBrush.Drawing>
-                                    </DrawingBrush>
-                                </Rectangle.OpacityMask>
-                            </Rectangle>
-                            <Rectangle
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                Path="{StaticResource IncomeSource.Bank}"
+                                Style="{StaticResource BankIconStyle}" />
+                            <components:Icon
                                 Margin="6"
-                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                Style="{StaticResource CreditCardIconStyle}">
-                                <Rectangle.OpacityMask>
-                                    <DrawingBrush Stretch="Uniform">
-                                        <DrawingBrush.Drawing>
-                                            <GeometryDrawing Geometry="{StaticResource IncomeSource.CreditCardAlt}">
-                                                <GeometryDrawing.Brush>
-                                                    <SolidColorBrush Color="Black" />
-                                                </GeometryDrawing.Brush>
-                                            </GeometryDrawing>
-                                        </DrawingBrush.Drawing>
-                                    </DrawingBrush>
-                                </Rectangle.OpacityMask>
-                            </Rectangle>
-                            <Rectangle
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                Path="{StaticResource IncomeSource.CreditCardAlt}"
+                                Style="{StaticResource CreditCardIconStyle}" />
+                            <components:Icon
                                 Margin="6"
-                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                Style="{StaticResource PiggyBankIconStyle}">
-                                <Rectangle.OpacityMask>
-                                    <DrawingBrush Stretch="Uniform">
-                                        <DrawingBrush.Drawing>
-                                            <GeometryDrawing Geometry="{StaticResource IncomeSource.PiggyBank}">
-                                                <GeometryDrawing.Brush>
-                                                    <SolidColorBrush Color="Black" />
-                                                </GeometryDrawing.Brush>
-                                            </GeometryDrawing>
-                                        </DrawingBrush.Drawing>
-                                    </DrawingBrush>
-                                </Rectangle.OpacityMask>
-                            </Rectangle>
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                Path="{StaticResource IncomeSource.PiggyBank}"
+                                Style="{StaticResource PiggyBankIconStyle}" />
                         </Grid>
                     </Border>
 

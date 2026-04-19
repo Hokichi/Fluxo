@@ -22,7 +22,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="BankIconStyle" TargetType="Rectangle">
+        <Style x:Key="BankIconStyle" TargetType="components:Icon">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SpendingSourceType}" Value="Checking">
@@ -34,7 +34,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="CreditIconStyle" TargetType="Rectangle">
+        <Style x:Key="CreditIconStyle" TargetType="components:Icon">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SpendingSourceType}" Value="Credit">
@@ -46,7 +46,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="SavingIconStyle" TargetType="Rectangle">
+        <Style x:Key="SavingIconStyle" TargetType="components:Icon">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SpendingSourceType}" Value="Saving">
@@ -112,54 +112,21 @@
                                         CornerRadius="18"
                                         Style="{StaticResource AccentStyle}">
                                         <Grid>
-                                            <Rectangle
+                                            <components:Icon
                                                 Margin="10"
-                                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                                Style="{StaticResource BankIconStyle}">
-                                                <Rectangle.OpacityMask>
-                                                    <DrawingBrush Stretch="Uniform">
-                                                        <DrawingBrush.Drawing>
-                                                            <GeometryDrawing Geometry="{StaticResource SpendingSourcesListPopup.Bank}">
-                                                                <GeometryDrawing.Brush>
-                                                                    <SolidColorBrush Color="Black" />
-                                                                </GeometryDrawing.Brush>
-                                                            </GeometryDrawing>
-                                                        </DrawingBrush.Drawing>
-                                                    </DrawingBrush>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle
+                                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                                Path="{StaticResource SpendingSourcesListPopup.Bank}"
+                                                Style="{StaticResource BankIconStyle}" />
+                                            <components:Icon
                                                 Margin="10"
-                                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                                Style="{StaticResource CreditIconStyle}">
-                                                <Rectangle.OpacityMask>
-                                                    <DrawingBrush Stretch="Uniform">
-                                                        <DrawingBrush.Drawing>
-                                                            <GeometryDrawing Geometry="{StaticResource SpendingSourcesListPopup.CreditCardAlt}">
-                                                                <GeometryDrawing.Brush>
-                                                                    <SolidColorBrush Color="Black" />
-                                                                </GeometryDrawing.Brush>
-                                                            </GeometryDrawing>
-                                                        </DrawingBrush.Drawing>
-                                                    </DrawingBrush>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
-                                            <Rectangle
+                                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                                Path="{StaticResource SpendingSourcesListPopup.CreditCardAlt}"
+                                                Style="{StaticResource CreditIconStyle}" />
+                                            <components:Icon
                                                 Margin="10"
-                                                Fill="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                                Style="{StaticResource SavingIconStyle}">
-                                                <Rectangle.OpacityMask>
-                                                    <DrawingBrush Stretch="Uniform">
-                                                        <DrawingBrush.Drawing>
-                                                            <GeometryDrawing Geometry="{StaticResource SpendingSourcesListPopup.PiggyBank}">
-                                                                <GeometryDrawing.Brush>
-                                                                    <SolidColorBrush Color="Black" />
-                                                                </GeometryDrawing.Brush>
-                                                            </GeometryDrawing>
-                                                        </DrawingBrush.Drawing>
-                                                    </DrawingBrush>
-                                                </Rectangle.OpacityMask>
-                                            </Rectangle>
+                                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                                Path="{StaticResource SpendingSourcesListPopup.PiggyBank}"
+                                                Style="{StaticResource SavingIconStyle}" />
                                         </Grid>
                                     </Border>
 

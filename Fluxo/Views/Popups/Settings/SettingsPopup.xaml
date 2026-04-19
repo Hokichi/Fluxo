@@ -2,6 +2,7 @@
     x:Class="Fluxo.Views.Popups.Settings.SettingsPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     PopupTitle="Settings"
@@ -46,11 +47,10 @@
                     IsChecked="True"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Budget Allocation">
-                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
-                        <Rectangle.OpacityMask>
-                            <ImageBrush ImageSource="/Fluxo;component/Resources/fluxo.ico" Stretch="Uniform" />
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <components:Icon
+                        Width="12"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
+                        Path="/Fluxo;component/Resources/fluxo.ico" />
                 </RadioButton>
 
                 <RadioButton
@@ -58,15 +58,10 @@
                     GroupName="SettingsTabs"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Spending Sources">
-                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
-                        <Rectangle.OpacityMask>
-                            <DrawingBrush Stretch="Uniform">
-                                <DrawingBrush.Drawing>
-                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource SettingsPopup.BookDollar}" />
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <components:Icon
+                        Width="12"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
+                        Path="{StaticResource SettingsPopup.BookDollar}" />
                 </RadioButton>
 
                 <RadioButton
@@ -74,15 +69,10 @@
                     GroupName="SettingsTabs"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Fixed Expenses">
-                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
-                        <Rectangle.OpacityMask>
-                            <DrawingBrush Stretch="Uniform">
-                                <DrawingBrush.Drawing>
-                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource SettingsPopup.InvoiceLight}" />
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <components:Icon
+                        Width="12"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
+                        Path="{StaticResource SettingsPopup.InvoiceLight}" />
                 </RadioButton>
 
                 <RadioButton
@@ -90,15 +80,10 @@
                     GroupName="SettingsTabs"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Goals">
-                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
-                        <Rectangle.OpacityMask>
-                            <DrawingBrush Stretch="Uniform">
-                                <DrawingBrush.Drawing>
-                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource SettingsPopup.BullseyeSolid}" />
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <components:Icon
+                        Width="12"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
+                        Path="{StaticResource SettingsPopup.BullseyeSolid}" />
                 </RadioButton>
 
                 <RadioButton
@@ -106,15 +91,10 @@
                     GroupName="SettingsTabs"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Tags">
-                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
-                        <Rectangle.OpacityMask>
-                            <DrawingBrush Stretch="Uniform">
-                                <DrawingBrush.Drawing>
-                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource SettingsPopup.SolidPriceTagAlt}" />
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <components:Icon
+                        Width="12"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
+                        Path="{StaticResource SettingsPopup.SolidPriceTagAlt}" />
                 </RadioButton>
 
                 <RadioButton
@@ -122,15 +102,10 @@
                     GroupName="SettingsTabs"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Personalization">
-                    <Rectangle Width="12" Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}">
-                        <Rectangle.OpacityMask>
-                            <DrawingBrush Stretch="Uniform">
-                                <DrawingBrush.Drawing>
-                                    <GeometryDrawing Brush="Black" Geometry="{StaticResource SettingsPopup.AccountCircle}" />
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <components:Icon
+                        Width="12"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
+                        Path="{StaticResource SettingsPopup.AccountCircle}" />
                 </RadioButton>
             </StackPanel>
         </Border>

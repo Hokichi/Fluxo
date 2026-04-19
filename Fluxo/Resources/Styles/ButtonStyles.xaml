@@ -206,23 +206,12 @@
                         <StackPanel Orientation="Horizontal">
                             <Grid Width="10" Height="10">
                                 <Ellipse Fill="{Binding HexCode}" />
-                                <Rectangle
+                                <components:Icon
                                     x:Name="DotCloseIcon"
                                     Margin="2"
-                                    Fill="{StaticResource Brush.Background.Surface}"
-                                    Opacity="0">
-                                    <Rectangle.OpacityMask>
-                                        <DrawingBrush Stretch="Uniform">
-                                            <DrawingBrush.Drawing>
-                                                <GeometryDrawing Geometry="{StaticResource ButtonStyles.Close}">
-                                                    <GeometryDrawing.Brush>
-                                                        <SolidColorBrush Color="Black" />
-                                                    </GeometryDrawing.Brush>
-                                                </GeometryDrawing>
-                                            </DrawingBrush.Drawing>
-                                        </DrawingBrush>
-                                    </Rectangle.OpacityMask>
-                                </Rectangle>
+                                    Color="{StaticResource Brush.Background.Surface}"
+                                    Opacity="0"
+                                    Path="{StaticResource ButtonStyles.Close}" />
                             </Grid>
                             <TextBlock
                                 Margin="8,0,0,0"
