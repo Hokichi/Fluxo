@@ -35,7 +35,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.HasKey(expense => expense.Id);
 
         entity.Property(expense => expense.Name).IsRequired();
-        entity.Property(expense => expense.Amount).HasColumnType("TEXT");
+        entity.Property(expense => expense.Amount).HasColumnType("NUMERIC");
 
         entity.HasOne(expense => expense.SpendingSource)
             .WithMany()
@@ -54,7 +54,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(log => log.Id).ValueGeneratedOnAdd();
         entity.HasKey(log => log.Id);
 
-        entity.Property(log => log.Amount).HasColumnType("TEXT");
+        entity.Property(log => log.Amount).HasColumnType("NUMERIC");
         entity.Property(log => log.IsForDeletion);
         entity.Property(log => log.Notes).IsRequired();
 
@@ -75,7 +75,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(log => log.Id).ValueGeneratedOnAdd();
         entity.HasKey(log => log.Id);
 
-        entity.Property(log => log.Amount).HasColumnType("TEXT");
+        entity.Property(log => log.Amount).HasColumnType("NUMERIC");
         entity.Property(log => log.Notes).IsRequired();
 
         entity.HasOne(log => log.SpendingSource)
@@ -103,8 +103,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.HasKey(goal => goal.Id);
 
         entity.Property(goal => goal.Name).IsRequired();
-        entity.Property(goal => goal.TargetAmount).HasColumnType("TEXT");
-        entity.Property(goal => goal.CurrentAmount).HasColumnType("TEXT");
+        entity.Property(goal => goal.TargetAmount).HasColumnType("NUMERIC");
+        entity.Property(goal => goal.CurrentAmount).HasColumnType("NUMERIC");
     }
 
     private static void ConfigureSpendingSource(EntityTypeBuilder<SpendingSource> entity)
@@ -114,14 +114,14 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.HasKey(source => source.Id);
 
         entity.Property(source => source.Name).IsRequired();
-        entity.Property(source => source.AccountLimit).HasColumnType("TEXT");
-        entity.Property(source => source.SpentAmount).HasColumnType("TEXT");
-        entity.Property(source => source.Balance).HasColumnType("TEXT");
+        entity.Property(source => source.AccountLimit).HasColumnType("NUMERIC");
+        entity.Property(source => source.SpentAmount).HasColumnType("NUMERIC");
+        entity.Property(source => source.Balance).HasColumnType("NUMERIC");
         entity.Property(source => source.MonthlyDueDate);
         entity.Property(source => source.DeductSource);
         entity.Property(source => source.IsEnabled);
         entity.Property(source => source.ShowOnUI);
-        entity.Property(source => source.InterestRate).HasColumnType("TEXT");
+        entity.Property(source => source.InterestRate).HasColumnType("REAL");
     }
 
     private static void ConfigureNotification(EntityTypeBuilder<Notification> entity)

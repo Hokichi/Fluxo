@@ -170,7 +170,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         finally
         {
-            Environment.Exit(1);
+            Application.Current.Shutdown(0);
         }
     }
 

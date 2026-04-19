@@ -53,27 +53,39 @@ public partial class StartupWizardPopup : BasePopup
 
     private async void OnClosingAsync(object? sender, CancelEventArgs e)
     {
-        if (_allowClose || _isHandlingClose)
+        if (_allowClose)
             return;
 
+        if (_isHandlingClose)
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        e.Cancel = true;
         _isHandlingClose = true;
 
         try
         {
-            FluxoMessageBox.Show(this,
+            var confirmation = FluxoMessageBox.Show(this,
                 "Setup isn't finished yet. Fluxo will continue to the app after this dialog.",
                 "Startup Wizard",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
+
+            if (confirmation != MessageBoxResult.Yes)
+                return;
 
             var result = await _viewModel.DismissAsync();
             if (!result.IsSuccess)
             {
                 FluxoMessageBox.Show(this, result.ErrorMessage ?? "Unable to close the startup wizard.",
                     "Startup Wizard", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
             }
 
             _allowClose = true;
+            _ = Dispatcher.BeginInvoke(new System.Action(Close));
         }
         finally
         {
