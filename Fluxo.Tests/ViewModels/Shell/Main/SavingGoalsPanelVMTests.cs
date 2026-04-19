@@ -1,5 +1,12 @@
+using AutoMapper;
+using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.DTO;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Shell.Main;
@@ -7,28 +14,16 @@ namespace Fluxo.Tests.ViewModels.Shell.Main;
 public class SavingGoalsPanelVMTests
 {
     [Fact]
-    public void LoadSnapshot_FiltersCompletedGoals()
+    public async Task LoadAsync_FiltersCompletedGoals()
     {
-        var vm = new SavingGoalsPanelVM();
         var goals = new List<SavingGoalVM>
         {
-            new()
-            {
-                Id = 1,
-                Name = "Emergency Fund",
-                TargetAmount = 1000m,
-                CurrentAmount = 250m
-            },
-            new()
-            {
-                Id = 2,
-                Name = "Laptop",
-                TargetAmount = 1500m,
-                CurrentAmount = 1500m
-            }
+            new() { Id = 1, Name = "Emergency Fund", TargetAmount = 1000m, CurrentAmount = 250m },
+            new() { Id = 2, Name = "Laptop",         TargetAmount = 1500m, CurrentAmount = 1500m }
         };
 
-        vm.LoadSnapshot(goals);
+        var vm = CreateVm(goals);
+        await vm.LoadAsync();
 
         Assert.True(vm.HasSavingGoals);
         var remainingGoal = Assert.Single(vm.SavingGoals);
@@ -40,10 +35,10 @@ public class SavingGoalsPanelVMTests
     }
 
     [Fact]
-    public void NavigatePrevious_WrapsFromFirstToLastGoal()
+    public async Task NavigatePrevious_WrapsFromFirstToLastGoal()
     {
-        var vm = new SavingGoalsPanelVM();
-        vm.LoadSnapshot(CreateGoals(3));
+        var vm = CreateVm(CreateGoals(3));
+        await vm.LoadAsync();
 
         vm.NavigatePrevious();
 
@@ -55,10 +50,10 @@ public class SavingGoalsPanelVMTests
     }
 
     [Fact]
-    public void NavigateNext_WrapsFromLastToFirstGoal()
+    public async Task NavigateNext_WrapsFromLastToFirstGoal()
     {
-        var vm = new SavingGoalsPanelVM();
-        vm.LoadSnapshot(CreateGoals(2));
+        var vm = CreateVm(CreateGoals(2));
+        await vm.LoadAsync();
 
         vm.NavigatePrevious();
         vm.NavigateNext();
@@ -68,6 +63,30 @@ public class SavingGoalsPanelVMTests
         Assert.Equal(-1, vm.NavigationDirection);
         Assert.True(vm.GoalDots[0].IsActive);
         Assert.False(vm.GoalDots[1].IsActive);
+    }
+
+    private static SavingGoalsPanelVM CreateVm(IReadOnlyList<SavingGoalVM> goals)
+    {
+        var savingGoalRepository = Substitute.For<ISavingGoalRepository>();
+        savingGoalRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<SavingGoal>>([]));
+
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        unitOfWork.SavingGoals.Returns(savingGoalRepository);
+
+        var userSettingsRepository = Substitute.For<IUserSettingsRepository>();
+        userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<UserSettings>>([]));
+
+        var mapper = Substitute.For<IMapper>();
+        mapper.Map<IReadOnlyList<SavingGoalDto>>(Arg.Any<object>()).Returns(new List<SavingGoalDto>());
+        mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns(goals);
+
+        return new SavingGoalsPanelVM(
+            unitOfWork,
+            mapper,
+            userSettingsRepository,
+            new WeakReferenceMessenger());
     }
 
     private static IReadOnlyList<SavingGoalVM> CreateGoals(int count)
