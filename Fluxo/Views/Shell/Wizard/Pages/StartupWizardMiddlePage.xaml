@@ -248,12 +248,12 @@
                     Margin="0,12,0,0"
                     VerticalScrollBarVisibility="Auto">
                     <Grid>
-                        <steps:StartupWizardStep2Page />
-                        <steps:StartupWizardStep3Page />
-                        <steps:StartupWizardStep4Page />
-                        <steps:StartupWizardStep5Page />
-                        <steps:StartupWizardStep6Page />
-                        <steps:StartupWizardStep7Page />
+                        <steps:SpendingSources />
+                        <steps:FixedExpenses />
+                        <steps:SavingGoals />
+                        <steps:BudgetAllocation />
+                        <steps:Notification />
+                        <steps:Summary />
                     </Grid>
                 </ScrollViewer>
             </Grid>

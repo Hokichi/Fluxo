@@ -1,12 +1,12 @@
 <UserControl
-    x:Class="Fluxo.Views.Shell.Wizard.Pages.Steps.StartupWizardStep2Page"
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.Steps.FixedExpenses"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls">
-    <!--  Step 2: Spending Sources  -->
-    <StackPanel Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}">
-        <ItemsControl ItemsSource="{Binding SpendingSources}">
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
+    xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
+    <!--  Step 3: Fixed Expenses  -->
+    <StackPanel Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}">
+        <ItemsControl ItemsSource="{Binding FixedExpenses}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <primitives:UniformGrid Columns="2" />
@@ -25,8 +25,8 @@
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom"
                                 Orientation="Horizontal">
-                                <customControls:BalloonButton Click="OnEditSpendingSourceClick" Style="{StaticResource EditButton}" />
-                                <customControls:BalloonButton Click="OnDeleteSpendingSourceClick" Style="{StaticResource DeleteButton}" />
+                                <customControls:BalloonButton Click="OnEditFixedExpenseClick" Style="{StaticResource EditButton}" />
+                                <customControls:BalloonButton Click="OnDeleteFixedExpenseClick" Style="{StaticResource DeleteButton}" />
                             </StackPanel>
                             <StackPanel Margin="0,4,0,0">
                                 <TextBlock
@@ -37,17 +37,22 @@
                                 <TextBlock
                                     Margin="0,8,0,0"
                                     FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="{Binding TypeLabel}" />
+                                    Foreground="{StaticResource Brush.Text.Secondary}">
+                                    <Run Text="{Binding CategoryLabel}" />
+                                    <Run Text=" · " />
+                                    <Run Text="{Binding SpendingSourceName}" />
+                                </TextBlock>
                                 <TextBlock
                                     Margin="0,12,0,0"
                                     FontFamily="{StaticResource Bold}"
-                                    Foreground="{StaticResource Brush.Mint}"
-                                    ToolTip="{Binding PrimaryAmount, Converter={StaticResource MoneyFullDisplayConverter}}">
-                                    <Run Text="{Binding PrimaryAmountLabel}" />
-                                    <Run Text=": " />
-                                    <Run Text="{Binding PrimaryAmount, Converter={StaticResource NumberWithCommasConverter}}" />
-                                </TextBlock>
+                                    Foreground="{StaticResource Brush.Warning}"
+                                    Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
+                                    ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                                <TextBlock
+                                    Margin="0,8,0,0"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding DueDateDisplay}" />
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -55,5 +60,4 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
     </StackPanel>
-
 </UserControl>

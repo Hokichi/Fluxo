@@ -4,24 +4,24 @@ using Fluxo.Views.Shell.Wizard;
 
 namespace Fluxo.Views.Shell.Wizard.Pages.Steps;
 
-public partial class StartupWizardStep3Page : UserControl
+public partial class SavingGoals : UserControl
 {
-    public StartupWizardStep3Page()
+    public SavingGoals()
     {
         InitializeComponent();
     }
 
     private static StartupWizardPopup? FindPopup(DependencyObject source) => Window.GetWindow(source) as StartupWizardPopup;
 
-    private void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)
+    private void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
     {
         if (sender is DependencyObject source)
-            FindPopup(source)?.OnEditFixedExpenseClick(sender, e);
+            FindPopup(source)?.OnEditSavingGoalClick(sender, e);
     }
 
-    private void OnDeleteFixedExpenseClick(object sender, RoutedEventArgs e)
+    private void OnDeleteSavingGoalClick(object sender, RoutedEventArgs e)
     {
         if (sender is DependencyObject source)
-            FindPopup(source)?.OnDeleteFixedExpenseClick(sender, e);
+            FindPopup(source)?.OnDeleteSavingGoalClick(sender, e);
     }
 }

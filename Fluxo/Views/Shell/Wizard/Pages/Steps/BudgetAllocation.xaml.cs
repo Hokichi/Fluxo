@@ -5,9 +5,9 @@ using Fluxo.Views.Shell.Wizard;
 
 namespace Fluxo.Views.Shell.Wizard.Pages.Steps;
 
-public partial class StartupWizardStep5Page : UserControl
+public partial class BudgetAllocation : UserControl
 {
-    public StartupWizardStep5Page()
+    public BudgetAllocation()
     {
         InitializeComponent();
     }

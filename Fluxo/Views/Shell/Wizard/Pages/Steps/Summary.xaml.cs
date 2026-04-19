@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace Fluxo.Views.Shell.Wizard.Pages.Steps;
 
-public partial class StartupWizardStep7Page : UserControl
+public partial class Summary : UserControl
 {
-    public StartupWizardStep7Page()
+    public Summary()
     {
         InitializeComponent();
     }

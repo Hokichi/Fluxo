@@ -1,0 +1,59 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.Steps.SpendingSources"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls">
+    <!--  Step 2: Spending Sources  -->
+    <StackPanel Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}">
+        <ItemsControl ItemsSource="{Binding SpendingSources}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <primitives:UniformGrid Columns="2" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Margin" Value="0,0,12,12" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <StackPanel
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                                <customControls:BalloonButton Click="OnEditSpendingSourceClick" Style="{StaticResource EditButton}" />
+                                <customControls:BalloonButton Click="OnDeleteSpendingSourceClick" Style="{StaticResource DeleteButton}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,4,0,0">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="15"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding Name}" />
+                                <TextBlock
+                                    Margin="0,8,0,0"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding TypeLabel}" />
+                                <TextBlock
+                                    Margin="0,12,0,0"
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Mint}"
+                                    ToolTip="{Binding PrimaryAmount, Converter={StaticResource MoneyFullDisplayConverter}}">
+                                    <Run Text="{Binding PrimaryAmountLabel}" />
+                                    <Run Text=": " />
+                                    <Run Text="{Binding PrimaryAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+
+</UserControl>
