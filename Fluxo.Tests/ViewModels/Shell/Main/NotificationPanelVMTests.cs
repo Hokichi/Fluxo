@@ -77,6 +77,119 @@ public class NotificationPanelVMTests
         Assert.False(persistedNotifications[0].IsForDeletion);
     }
 
+    [Fact]
+    public async Task LoadAsync_MarksUpcomingPaymentNotificationForDeletion_WhenDueDatePassed()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"UpcomingPayment-1_{DateTime.Today.AddDays(-1):yyyyMMdd}",
+            Header = "Upcoming Payment - Visa",
+            Message = "Visa is due soon.",
+            CreatedOn = DateTime.Today.AddDays(-5),
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.True(persistedNotifications[0].IsForDeletion);
+    }
+
+    [Fact]
+    public async Task LoadAsync_MarksGoalDeadlineNotificationForDeletion_WhenSavingEndDatePassed()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"GoalDeadline-9_{DateTime.Today.AddDays(-1):yyyyMMdd}",
+            Header = "Goal Deadline - Emergency Fund",
+            Message = "Emergency Fund deadline passed.",
+            CreatedOn = DateTime.Today.AddDays(-3),
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.True(persistedNotifications[0].IsForDeletion);
+    }
+
+    [Fact]
+    public async Task LoadAsync_MarksLatePaymentNotificationForDeletion_WhenPaymentProcessed()
+    {
+        var spendingSources = new List<SpendingSourceVM>
+        {
+            new()
+            {
+                Id = 1,
+                Name = "Visa",
+                SpendingSourceType = SpendingSourceType.Credit,
+                MonthlyDueDate = 10,
+                AccountLimit = 1000m,
+                SpentAmount = 0m
+            }
+        };
+
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: spendingSources,
+            out var persistedNotifications);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"LatePayment-1_{DateTime.Today.AddDays(-5):yyyyMMdd}",
+            Header = "Late Payment - Visa",
+            Message = "Visa payment is overdue.",
+            CreatedOn = DateTime.Today.AddDays(-5),
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.True(persistedNotifications[0].IsForDeletion);
+    }
+
+    [Fact]
+    public async Task LoadAsync_MarksClearedNotificationForDeletion_ForNonSpecialTypes()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = "BudgetThresholdNeeds",
+            Header = "Budget Threshold - Needs",
+            Message = "Needs threshold reached.",
+            CreatedOn = DateTime.Today.AddDays(-1),
+            IsCleared = true,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.True(persistedNotifications[0].IsForDeletion);
+    }
+
     private static NotificationPanelVM CreateVm(
         IReadOnlyList<ExpenseVM> expenses,
         IReadOnlyList<ExpenseLogVM> expenseLogs,

@@ -451,10 +451,12 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
             foreach (var evaluated in evaluatedUnique)
             {
+                var now = DateTime.Now;
                 var duplicate = persistedNotifications
                     .Where(notification =>
                         string.Equals(notification.Type, evaluated.Type, StringComparison.Ordinal) &&
-                        string.Equals(notification.Message, evaluated.Message, StringComparison.Ordinal))
+                        string.Equals(notification.Message, evaluated.Message, StringComparison.Ordinal) &&
+                        notification.CreatedOn <= now)
                     .OrderByDescending(notification => notification.CreatedOn)
                     .FirstOrDefault();
                 if (duplicate is not null)
@@ -516,17 +518,33 @@ public partial class NotificationPanelVM : ObservableRecipient,
         }
     }
 
-    private static bool ShouldMarkForDeletion(Notification notification, bool isActiveCondition)
+    private bool ShouldMarkForDeletion(Notification notification, bool isActiveCondition)
     {
         var category = GetNotificationCategory(notification.Type);
 
         return category switch
         {
-            NotificationCategory.UpcomingPayment => IsDeadlinePassed(notification.Type) || !isActiveCondition,
-            NotificationCategory.GoalDeadline => IsDeadlinePassed(notification.Type) || !isActiveCondition,
-            NotificationCategory.LatePayment => !isActiveCondition,
+            NotificationCategory.UpcomingPayment =>
+                IsDeadlinePassed(notification.Type) ||
+                (!TryExtractNotificationDate(notification.Type, out _) && !isActiveCondition),
+            NotificationCategory.GoalDeadline =>
+                IsDeadlinePassed(notification.Type) ||
+                (!TryExtractNotificationDate(notification.Type, out _) && !isActiveCondition),
+            NotificationCategory.LatePayment => IsLatePaymentProcessed(notification.Type),
             _ => notification.IsCleared
         };
+    }
+
+    private bool IsLatePaymentProcessed(string notificationType)
+    {
+        if (!TryExtractNotificationEntityId(notificationType, "LatePayment-", out var sourceId))
+            return false;
+
+        var spendingSource = _spendingSources.FirstOrDefault(source => source.Id == sourceId);
+        if (spendingSource is null)
+            return true;
+
+        return spendingSource.SpentAmount <= 0m;
     }
 
     private static bool IsDeadlinePassed(string notificationType)
@@ -551,6 +569,20 @@ public partial class NotificationPanelVM : ObservableRecipient,
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out deadline);
+    }
+
+    private static bool TryExtractNotificationEntityId(string notificationType, string prefix, out int entityId)
+    {
+        entityId = 0;
+        if (string.IsNullOrWhiteSpace(notificationType) || string.IsNullOrWhiteSpace(prefix))
+            return false;
+
+        var typeToken = notificationType.Split('_')[0];
+        if (!typeToken.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var idToken = typeToken[prefix.Length..];
+        return int.TryParse(idToken, NumberStyles.Integer, CultureInfo.InvariantCulture, out entityId);
     }
 
     private static NotificationCategory GetNotificationCategory(string notificationType)
