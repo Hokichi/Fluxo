@@ -212,20 +212,21 @@ public class NotificationPanelVMTests
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>([]));
 
-        persistedNotifications = [];
+        var notificationStore = new List<Notification>();
+        persistedNotifications = notificationStore;
         var notificationRepository = Substitute.For<INotificationRepository>();
         notificationRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<Notification>>(persistedNotifications.ToList()));
+            .Returns(_ => Task.FromResult<IReadOnlyList<Notification>>(notificationStore.ToList()));
         notificationRepository.GetActiveAsync(Arg.Any<CancellationToken>())
             .Returns(_ => Task.FromResult<IReadOnlyList<Notification>>(
-                persistedNotifications.Where(notification => !notification.IsForDeletion).ToList()));
+                notificationStore.Where(notification => !notification.IsForDeletion).ToList()));
         notificationRepository
             .AddAsync(Arg.Any<Notification>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
                 var notification = call.Arg<Notification>();
-                notification.Id = notification.Id == 0 ? persistedNotifications.Count + 1 : notification.Id;
-                persistedNotifications.Add(notification);
+                notification.Id = notification.Id == 0 ? notificationStore.Count + 1 : notification.Id;
+                notificationStore.Add(notification);
                 return Task.CompletedTask;
             });
         notificationRepository
@@ -236,10 +237,10 @@ public class NotificationPanelVMTests
             .Do(call =>
             {
                 var updated = call.Arg<Notification>();
-                var existing = persistedNotifications.FirstOrDefault(notification => notification.Id == updated.Id);
+                var existing = notificationStore.FirstOrDefault(notification => notification.Id == updated.Id);
                 if (existing is null)
                 {
-                    persistedNotifications.Add(updated);
+                    notificationStore.Add(updated);
                     return;
                 }
 

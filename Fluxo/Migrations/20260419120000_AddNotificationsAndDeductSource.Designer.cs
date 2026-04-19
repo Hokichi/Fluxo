@@ -12,9 +12,10 @@ namespace Fluxo.Migrations
 {
     [DbContext(typeof(FluxoDbContext))]
     [Migration("20260419120000_AddNotificationsAndDeductSource")]
-    partial class AddNotificationsAndDeductSource : ModelSnapshot
+    partial class AddNotificationsAndDeductSource
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
