@@ -10,7 +10,7 @@ using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 using StartupWizardVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardVM;
-using WizardStepDotVM = Fluxo.ViewModels.Shell.StartupWizard.WizardStepDotVM;
+using WizardStepDotVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardStepDotVM;
 
 namespace Fluxo.Views.Shell.Wizard;
 
@@ -173,20 +173,20 @@ public partial class StartupWizardPopup : BasePopup
 
     public async void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddSpendingSource(_viewModel.CreateAddSpendingSourceViewModel(), this);
-        await _viewModel.RefreshSpendingSourcesAsync();
+        _dialogService.ShowAddSpendingSource(_viewModel.MiddlePage.SpendingSources.CreateAddViewModel(), this);
+        await _viewModel.MiddlePage.SpendingSources.RefreshAsync();
     }
 
     public async void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddFixedExpense(_viewModel.CreateAddFixedExpenseViewModel(), this);
-        await _viewModel.RefreshFixedExpensesAsync();
+        _dialogService.ShowAddFixedExpense(_viewModel.MiddlePage.FixedExpenses.CreateAddViewModel(), this);
+        await _viewModel.MiddlePage.FixedExpenses.RefreshAsync();
     }
 
     public async void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddSavingGoal(_viewModel.CreateAddSavingGoalViewModel(), this);
-        await _viewModel.RefreshSavingGoalsAsync();
+        _dialogService.ShowAddSavingGoal(_viewModel.MiddlePage.SavingGoals.CreateAddViewModel(), this);
+        await _viewModel.MiddlePage.SavingGoals.RefreshAsync();
     }
 
     public async void OnEditSpendingSourceClick(object sender, RoutedEventArgs e)
@@ -194,9 +194,9 @@ public partial class StartupWizardPopup : BasePopup
         if (sender is not Button { Tag: int id })
             return;
 
-        var vm = await _viewModel.CreateEditSpendingSourceViewModelAsync(id);
+        var vm = await _viewModel.MiddlePage.SpendingSources.CreateEditViewModelAsync(id);
         _dialogService.ShowAddSpendingSource(vm, this);
-        await _viewModel.RefreshSpendingSourcesAsync();
+        await _viewModel.MiddlePage.SpendingSources.RefreshAsync();
     }
 
     public async void OnDeleteSpendingSourceClick(object sender, RoutedEventArgs e)
@@ -209,7 +209,7 @@ public partial class StartupWizardPopup : BasePopup
             "Delete Spending Source", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)
-            await _viewModel.DeleteSpendingSourceAsync(id);
+            await _viewModel.MiddlePage.SpendingSources.DeleteAsync(id);
     }
 
     public async void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)
@@ -217,9 +217,9 @@ public partial class StartupWizardPopup : BasePopup
         if (sender is not Button { Tag: int id })
             return;
 
-        var vm = await _viewModel.CreateEditFixedExpenseViewModelAsync(id);
+        var vm = await _viewModel.MiddlePage.FixedExpenses.CreateEditViewModelAsync(id);
         _dialogService.ShowAddFixedExpense(vm, this);
-        await _viewModel.RefreshFixedExpensesAsync();
+        await _viewModel.MiddlePage.FixedExpenses.RefreshAsync();
     }
 
     public async void OnDeleteFixedExpenseClick(object sender, RoutedEventArgs e)
@@ -232,7 +232,7 @@ public partial class StartupWizardPopup : BasePopup
             "Delete Fixed Expense", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)
-            await _viewModel.DeleteFixedExpenseAsync(id);
+            await _viewModel.MiddlePage.FixedExpenses.DeleteAsync(id);
     }
 
     public async void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
@@ -240,9 +240,9 @@ public partial class StartupWizardPopup : BasePopup
         if (sender is not Button { Tag: int id })
             return;
 
-        var vm = await _viewModel.CreateEditSavingGoalViewModelAsync(id);
+        var vm = await _viewModel.MiddlePage.SavingGoals.CreateEditViewModelAsync(id);
         _dialogService.ShowAddSavingGoal(vm, this);
-        await _viewModel.RefreshSavingGoalsAsync();
+        await _viewModel.MiddlePage.SavingGoals.RefreshAsync();
     }
 
     public async void OnDeleteSavingGoalClick(object sender, RoutedEventArgs e)
@@ -255,7 +255,7 @@ public partial class StartupWizardPopup : BasePopup
             "Delete Saving Goal", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)
-            await _viewModel.DeleteSavingGoalAsync(id);
+            await _viewModel.MiddlePage.SavingGoals.DeleteAsync(id);
     }
 
     private async void OnDotClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -278,7 +278,7 @@ public partial class StartupWizardPopup : BasePopup
         if (sender is not FrameworkElement { Tag: string tag } ||
             !TryParseAllocationTag(tag, out var segment, out var delta))
             return;
-        _viewModel.IncrementAllocation(segment, delta);
+        _viewModel.MiddlePage.BudgetAllocation.IncrementAllocation(segment, delta);
     }
 
     public void OnAllocationAdjustButtonMouseDown(object sender, MouseButtonEventArgs e)
@@ -311,7 +311,7 @@ public partial class StartupWizardPopup : BasePopup
 
     private void OnAllocationRepeatTick(object? sender, EventArgs e)
     {
-        _viewModel.IncrementAllocation(_heldAllocationSegment, _heldAllocationDelta);
+        _viewModel.MiddlePage.BudgetAllocation.IncrementAllocation(_heldAllocationSegment, _heldAllocationDelta);
     }
 
     private void StopAllocationTimers()

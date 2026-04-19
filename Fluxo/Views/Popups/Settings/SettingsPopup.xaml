@@ -3,8 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
-    xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
+    xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
     PopupTitle="Settings"
     ShowRevertButton="True"
     ShowSaveButton="True">
@@ -49,8 +49,8 @@
                     Tag="Budget Allocation">
                     <components:Icon
                         Width="12"
-                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
-                        Path="/Fluxo;component/Resources/fluxo.ico" />
+                        Path="{StaticResource SettingsPopup.AccountBalanceWalletRound}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
                 <RadioButton
@@ -60,8 +60,8 @@
                     Tag="Spending Sources">
                     <components:Icon
                         Width="12"
-                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
-                        Path="{StaticResource SettingsPopup.BookDollar}" />
+                        Path="{StaticResource SettingsPopup.BookDollar}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
                 <RadioButton
@@ -71,8 +71,8 @@
                     Tag="Fixed Expenses">
                     <components:Icon
                         Width="12"
-                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
-                        Path="{StaticResource SettingsPopup.InvoiceLight}" />
+                        Path="{StaticResource SettingsPopup.InvoiceLight}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
                 <RadioButton
@@ -82,8 +82,8 @@
                     Tag="Goals">
                     <components:Icon
                         Width="12"
-                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
-                        Path="{StaticResource SettingsPopup.BullseyeSolid}" />
+                        Path="{StaticResource SettingsPopup.BullseyeSolid}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
                 <RadioButton
@@ -93,8 +93,8 @@
                     Tag="Tags">
                     <components:Icon
                         Width="12"
-                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
-                        Path="{StaticResource SettingsPopup.SolidPriceTagAlt}" />
+                        Path="{StaticResource SettingsPopup.SolidPriceTagAlt}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
                 <RadioButton
@@ -104,32 +104,20 @@
                     Tag="Personalization">
                     <components:Icon
                         Width="12"
-                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}"
-                        Path="{StaticResource SettingsPopup.AccountCircle}" />
+                        Path="{StaticResource SettingsPopup.AccountCircle}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
             </StackPanel>
         </Border>
 
         <Grid Grid.Column="2">
-            <tabs:SettingsBudgetTab
-                DataContext="{Binding BudgetTab}"
-                Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsSourcesTab
-                DataContext="{Binding SourcesTab}"
-                Visibility="{Binding IsChecked, ElementName=SourcesTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsFixedExpensesTab
-                DataContext="{Binding FixedExpensesTab}"
-                Visibility="{Binding IsChecked, ElementName=FixedExpensesTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsGoalsTab
-                DataContext="{Binding GoalsTab}"
-                Visibility="{Binding IsChecked, ElementName=GoalsTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsTagsTab
-                DataContext="{Binding TagsTab}"
-                Visibility="{Binding IsChecked, ElementName=TagsTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsBudgetTab DataContext="{Binding BudgetTab}" Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsSourcesTab DataContext="{Binding SourcesTab}" Visibility="{Binding IsChecked, ElementName=SourcesTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsFixedExpensesTab DataContext="{Binding FixedExpensesTab}" Visibility="{Binding IsChecked, ElementName=FixedExpensesTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsGoalsTab DataContext="{Binding GoalsTab}" Visibility="{Binding IsChecked, ElementName=GoalsTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsTagsTab DataContext="{Binding TagsTab}" Visibility="{Binding IsChecked, ElementName=TagsTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-            <tabs:SettingsPersonalizationTab
-                DataContext="{Binding PersonalizationTab}"
-                Visibility="{Binding IsChecked, ElementName=PersonalizationTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsPersonalizationTab DataContext="{Binding PersonalizationTab}" Visibility="{Binding IsChecked, ElementName=PersonalizationTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
         </Grid>
     </Grid>
 </customControls:BasePopup>

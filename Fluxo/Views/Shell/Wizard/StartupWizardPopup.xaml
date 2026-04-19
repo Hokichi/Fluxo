@@ -27,19 +27,30 @@
 
         <Grid x:Name="ContentContainer">
             <!--  Greeting Page (Step 0)  -->
-            <pages:StartupWizardGreetingPage Visibility="{Binding IsGreetingStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <pages:StartupWizardGreetingPage
+                DataContext="{Binding GreetingPage}"
+                Visibility="{Binding DataContext.IsGreetingStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Preferred Name Page (Step 1)  -->
-            <pages:StartupWizardNamePage Visibility="{Binding IsNameStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <pages:StartupWizardNamePage
+                DataContext="{Binding NamePage}"
+                Visibility="{Binding DataContext.IsNameStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Middle Steps (2-7): Sidebar + Content  -->
-            <pages:StartupWizardMiddlePage x:Name="MiddleStepPage" Visibility="{Binding IsMiddleStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <pages:StartupWizardMiddlePage
+                x:Name="MiddleStepPage"
+                DataContext="{Binding MiddlePage}"
+                Visibility="{Binding DataContext.IsMiddleStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Loading Page (Step 8)  -->
-            <pages:StartupWizardLoadingPage Visibility="{Binding IsLoadingStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <pages:StartupWizardLoadingPage
+                DataContext="{Binding LoadingPage}"
+                Visibility="{Binding DataContext.IsLoadingStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Welcome Page (Step 9)  -->
-            <pages:StartupWizardFinalPage Visibility="{Binding IsFinalStep, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <pages:StartupWizardFinalPage
+                DataContext="{Binding FinalPage}"
+                Visibility="{Binding DataContext.IsFinalStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
         </Grid>
 
         <!--  Navigation Bar  -->

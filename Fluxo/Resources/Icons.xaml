@@ -47,136 +47,422 @@
     <PathGeometry x:Key="UpdateOutline">M11 8.75v3.68c0 .35.19.68.49.86l3.12 1.85c.36.21.82.09 1.03-.26.21-.36.1-.82-.26-1.03l-2.87-1.71v-3.4c-.01-.4-.35-.74-.76-.74s-.75.34-.75.75zm10 .75V4.21c0-.45-.54-.67-.85-.35l-1.78 1.78a9.01 9.01 0 0 0-7.21-2.6c-4.19.38-7.64 3.75-8.1 7.94a9 9 0 0 0 17.87 2.14c.07-.6-.4-1.12-1-1.12-.5 0-.92.37-.98.86-.43 3.49-3.44 6.19-7.05 6.14-3.71-.05-6.84-3.18-6.9-6.9C4.94 8.2 8.11 5 12 5c1.93 0 3.68.79 4.95 2.05l-2.09 2.09c-.32.32-.1.86.35.86h5.29c.28 0 .5-.22.5-.5z</PathGeometry>
 
     <!--  AddSpendingSourcePopup  -->
-    <GeometryDrawing x:Key="AddSpendingSourcePopup.Check" Brush="Black" Geometry="{StaticResource Check}" />
+    <GeometryDrawing
+        x:Key="AddSpendingSourcePopup.Check"
+        Brush="Black"
+        Geometry="{StaticResource Check}" />
 
     <!--  AddTagPopup  -->
-    <GeometryDrawing x:Key="AddTagPopup.Check" Brush="Black" Geometry="{StaticResource Check}" />
+    <GeometryDrawing
+        x:Key="AddTagPopup.Check"
+        Brush="Black"
+        Geometry="{StaticResource Check}" />
 
     <!--  ButtonStyles  -->
-    <GeometryDrawing x:Key="ButtonStyles.AngleRight" Brush="Black" Geometry="{StaticResource AngleRight}" />
-    <GeometryDrawing x:Key="ButtonStyles.Calendar" Brush="Black" Geometry="{StaticResource Calendar}" />
-    <GeometryDrawing x:Key="ButtonStyles.Close" Brush="Black" Geometry="{StaticResource Close}" />
-    <GeometryDrawing x:Key="ButtonStyles.Eye" Brush="Black" Geometry="{StaticResource Eye}" />
-    <GeometryDrawing x:Key="ButtonStyles.EyeOff" Brush="Black" Geometry="{StaticResource EyeOff}" />
-    <GeometryDrawing x:Key="ButtonStyles.LightningFill" Brush="Black" Geometry="{StaticResource LightningFill}" />
-    <GeometryDrawing x:Key="ButtonStyles.LightningSlashFill" Brush="Black" Geometry="{StaticResource LightningSlashFill}" />
-    <GeometryDrawing x:Key="ButtonStyles.Pen" Brush="Black" Geometry="{StaticResource Pen}" />
-    <GeometryDrawing x:Key="ButtonStyles.PlusSolid" Brush="Black" Geometry="{StaticResource PlusSolid}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.AngleRight"
+        Brush="Black"
+        Geometry="{StaticResource AngleRight}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.Calendar"
+        Brush="Black"
+        Geometry="{StaticResource Calendar}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.Close"
+        Brush="Black"
+        Geometry="{StaticResource Close}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.Eye"
+        Brush="Black"
+        Geometry="{StaticResource Eye}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.EyeOff"
+        Brush="Black"
+        Geometry="{StaticResource EyeOff}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.LightningFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningFill}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.LightningSlashFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningSlashFill}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.Pen"
+        Brush="Black"
+        Geometry="{StaticResource Pen}" />
+    <GeometryDrawing
+        x:Key="ButtonStyles.PlusSolid"
+        Brush="Black"
+        Geometry="{StaticResource PlusSolid}" />
 
     <!--  DateSelector  -->
-    <GeometryDrawing x:Key="DateSelector.AngleDown" Brush="Black" Geometry="{StaticResource AngleDown}" />
+    <GeometryDrawing
+        x:Key="DateSelector.AngleDown"
+        Brush="Black"
+        Geometry="{StaticResource AngleDown}" />
 
     <!--  ExpensesList  -->
-    <GeometryDrawing x:Key="ExpensesList.CircleMinusSolid" Brush="Black" Geometry="{StaticResource CircleMinusSolid}" />
-    <GeometryDrawing x:Key="ExpensesList.Info" Brush="Black" Geometry="{StaticResource Info}" />
+    <GeometryDrawing
+        x:Key="ExpensesList.CircleMinusSolid"
+        Brush="Black"
+        Geometry="{StaticResource CircleMinusSolid}" />
+    <GeometryDrawing
+        x:Key="ExpensesList.Info"
+        Brush="Black"
+        Geometry="{StaticResource Info}" />
 
     <!--  GlobalStyles  -->
-    <GeometryDrawing x:Key="GlobalStyles.AngleDown" Brush="Black" Geometry="{StaticResource AngleDown}" />
-    <GeometryDrawing x:Key="GlobalStyles.Check" Brush="Black" Geometry="{StaticResource Check}" />
+    <GeometryDrawing
+        x:Key="GlobalStyles.AngleDown"
+        Brush="Black"
+        Geometry="{StaticResource AngleDown}" />
+    <GeometryDrawing
+        x:Key="GlobalStyles.Check"
+        Brush="Black"
+        Geometry="{StaticResource Check}" />
 
     <!--  IncomeSource  -->
-    <GeometryDrawing x:Key="IncomeSource.Bank" Brush="Black" Geometry="{StaticResource Bank}" />
-    <GeometryDrawing x:Key="IncomeSource.CircleMinusSolid" Brush="Black" Geometry="{StaticResource CircleMinusSolid}" />
-    <GeometryDrawing x:Key="IncomeSource.CreditCardAlt" Brush="Black" Geometry="{StaticResource CreditCardAlt}" />
-    <GeometryDrawing x:Key="IncomeSource.Exchange" Brush="Black" Geometry="{StaticResource Exchange}" />
-    <GeometryDrawing x:Key="IncomeSource.Eye" Brush="Black" Geometry="{StaticResource Eye}" />
-    <GeometryDrawing x:Key="IncomeSource.EyeOff" Brush="Black" Geometry="{StaticResource EyeOff}" />
-    <GeometryDrawing x:Key="IncomeSource.LightningSlashFill" Brush="Black" Geometry="{StaticResource LightningSlashFill}" />
-    <GeometryDrawing x:Key="IncomeSource.PiggyBank" Brush="Black" Geometry="{StaticResource PiggyBank}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.Bank"
+        Brush="Black"
+        Geometry="{StaticResource Bank}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.CircleMinusSolid"
+        Brush="Black"
+        Geometry="{StaticResource CircleMinusSolid}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.CreditCardAlt"
+        Brush="Black"
+        Geometry="{StaticResource CreditCardAlt}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.Exchange"
+        Brush="Black"
+        Geometry="{StaticResource Exchange}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.Eye"
+        Brush="Black"
+        Geometry="{StaticResource Eye}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.EyeOff"
+        Brush="Black"
+        Geometry="{StaticResource EyeOff}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.LightningSlashFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningSlashFill}" />
+    <GeometryDrawing
+        x:Key="IncomeSource.PiggyBank"
+        Brush="Black"
+        Geometry="{StaticResource PiggyBank}" />
 
     <!--  MainWindow  -->
-    <GeometryDrawing x:Key="MainWindow.Bank" Brush="Black" Geometry="{StaticResource Bank}" />
-    <GeometryDrawing x:Key="MainWindow.BarsSolid" Brush="Black" Geometry="{StaticResource BarsSolid}" />
-    <GeometryDrawing x:Key="MainWindow.Close" Brush="Black" Geometry="{StaticResource Close}" />
-    <GeometryDrawing x:Key="MainWindow.Cog" Brush="Black" Geometry="{StaticResource Cog}" />
-    <GeometryDrawing x:Key="MainWindow.CompressAlt" Brush="Black" Geometry="{StaticResource CompressAlt}" />
-    <GeometryDrawing x:Key="MainWindow.ExpandAlt" Brush="Black" Geometry="{StaticResource ExpandAlt}" />
-    <GeometryDrawing x:Key="MainWindow.Minus" Brush="Black" Geometry="{StaticResource Minus}" />
-    <GeometryDrawing x:Key="MainWindow.PlusSolid" Brush="Black" Geometry="{StaticResource PlusSolid}" />
-    <GeometryDrawing x:Key="MainWindow.RegularRedo" Brush="Black" Geometry="{StaticResource RegularRedo}" />
-    <GeometryDrawing x:Key="MainWindow.RegularUndo" Brush="Black" Geometry="{StaticResource RegularUndo}" />
+    <GeometryDrawing
+        x:Key="MainWindow.Bank"
+        Brush="Black"
+        Geometry="{StaticResource Bank}" />
+    <GeometryDrawing
+        x:Key="MainWindow.BarsSolid"
+        Brush="Black"
+        Geometry="{StaticResource BarsSolid}" />
+    <GeometryDrawing
+        x:Key="MainWindow.Close"
+        Brush="Black"
+        Geometry="{StaticResource Close}" />
+    <GeometryDrawing
+        x:Key="MainWindow.Cog"
+        Brush="Black"
+        Geometry="{StaticResource Cog}" />
+    <GeometryDrawing
+        x:Key="MainWindow.CompressAlt"
+        Brush="Black"
+        Geometry="{StaticResource CompressAlt}" />
+    <GeometryDrawing
+        x:Key="MainWindow.ExpandAlt"
+        Brush="Black"
+        Geometry="{StaticResource ExpandAlt}" />
+    <GeometryDrawing
+        x:Key="MainWindow.Minus"
+        Brush="Black"
+        Geometry="{StaticResource Minus}" />
+    <GeometryDrawing
+        x:Key="MainWindow.PlusSolid"
+        Brush="Black"
+        Geometry="{StaticResource PlusSolid}" />
+    <GeometryDrawing
+        x:Key="MainWindow.RegularRedo"
+        Brush="Black"
+        Geometry="{StaticResource RegularRedo}" />
+    <GeometryDrawing
+        x:Key="MainWindow.RegularUndo"
+        Brush="Black"
+        Geometry="{StaticResource RegularUndo}" />
 
     <!--  MessageBoxPopup  -->
-    <GeometryDrawing x:Key="MessageBoxPopup.Ban" Brush="Black" Geometry="{StaticResource Ban}" />
-    <GeometryDrawing x:Key="MessageBoxPopup.Info" Brush="Black" Geometry="{StaticResource Info}" />
+    <GeometryDrawing
+        x:Key="MessageBoxPopup.Ban"
+        Brush="Black"
+        Geometry="{StaticResource Ban}" />
+    <GeometryDrawing
+        x:Key="MessageBoxPopup.Info"
+        Brush="Black"
+        Geometry="{StaticResource Info}" />
 
     <!--  PopupStyles  -->
-    <GeometryDrawing x:Key="PopupStyles.Ban" Brush="Black" Geometry="{StaticResource Ban}" />
-    <GeometryDrawing x:Key="PopupStyles.Check" Brush="Black" Geometry="{StaticResource Check}" />
-    <GeometryDrawing x:Key="PopupStyles.CircleMinusSolid" Brush="Black" Geometry="{StaticResource CircleMinusSolid}" />
-    <GeometryDrawing x:Key="PopupStyles.CloneRegular" Brush="Black" Geometry="{StaticResource CloneRegular}" />
-    <GeometryDrawing x:Key="PopupStyles.Close" Brush="Black" Geometry="{StaticResource Close}" />
-    <GeometryDrawing x:Key="PopupStyles.ContentSave" Brush="Black" Geometry="{StaticResource ContentSave}" />
-    <GeometryDrawing x:Key="PopupStyles.ContentSaveMove" Brush="Black" Geometry="{StaticResource ContentSaveMove}" />
-    <GeometryDrawing x:Key="PopupStyles.Edit" Brush="Black" Geometry="{StaticResource Pen}" />
-    <GeometryDrawing x:Key="PopupStyles.RegularUndo" Brush="Black" Geometry="{StaticResource RegularUndo}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.Ban"
+        Brush="Black"
+        Geometry="{StaticResource Ban}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.Check"
+        Brush="Black"
+        Geometry="{StaticResource Check}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.CircleMinusSolid"
+        Brush="Black"
+        Geometry="{StaticResource CircleMinusSolid}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.CloneRegular"
+        Brush="Black"
+        Geometry="{StaticResource CloneRegular}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.Close"
+        Brush="Black"
+        Geometry="{StaticResource Close}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.ContentSave"
+        Brush="Black"
+        Geometry="{StaticResource ContentSave}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.ContentSaveMove"
+        Brush="Black"
+        Geometry="{StaticResource ContentSaveMove}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.Edit"
+        Brush="Black"
+        Geometry="{StaticResource Pen}" />
+    <GeometryDrawing
+        x:Key="PopupStyles.RegularUndo"
+        Brush="Black"
+        Geometry="{StaticResource RegularUndo}" />
 
     <!--  QuickAddPopup  -->
-    <GeometryDrawing x:Key="QuickAddPopup.Bank" Brush="Black" Geometry="{StaticResource Bank}" />
-    <GeometryDrawing x:Key="QuickAddPopup.BullseyeSolid" Brush="Black" Geometry="{StaticResource BullseyeSolid}" />
-    <GeometryDrawing x:Key="QuickAddPopup.Calendar" Brush="Black" Geometry="{StaticResource Calendar}" />
-    <GeometryDrawing x:Key="QuickAddPopup.InvoiceLight" Brush="Black" Geometry="{StaticResource InvoiceLight}" />
+    <GeometryDrawing
+        x:Key="QuickAddPopup.Bank"
+        Brush="Black"
+        Geometry="{StaticResource Bank}" />
+    <GeometryDrawing
+        x:Key="QuickAddPopup.BullseyeSolid"
+        Brush="Black"
+        Geometry="{StaticResource BullseyeSolid}" />
+    <GeometryDrawing
+        x:Key="QuickAddPopup.Calendar"
+        Brush="Black"
+        Geometry="{StaticResource Calendar}" />
+    <GeometryDrawing
+        x:Key="QuickAddPopup.InvoiceLight"
+        Brush="Black"
+        Geometry="{StaticResource InvoiceLight}" />
 
     <!--  QuickSearchPopup  -->
-    <GeometryDrawing x:Key="QuickSearchPopup.MagnifyingGlass" Brush="Black" Geometry="{StaticResource MagnifyingGlass}" />
+    <GeometryDrawing
+        x:Key="QuickSearchPopup.MagnifyingGlass"
+        Brush="Black"
+        Geometry="{StaticResource MagnifyingGlass}" />
 
     <!--  SettingsFixedExpensesTab  -->
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.CheckAll" Brush="Black" Geometry="{StaticResource CheckAll}" />
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.CircleMinusSolid" Brush="Black" Geometry="{StaticResource CircleMinusSolid}" />
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.DisableChecks" Brush="Black" Geometry="{StaticResource DisableChecks}" />
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.EnableChecks" Brush="Black" Geometry="{StaticResource EnableChecks}" />
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.LightningFill" Brush="Black" Geometry="{StaticResource LightningFill}" />
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.LightningSlashFill" Brush="Black" Geometry="{StaticResource LightningSlashFill}" />
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.PlusSolid" Brush="Black" Geometry="{StaticResource PlusSolid}" />
-    <GeometryDrawing x:Key="SettingsFixedExpensesTab.UncheckAll" Brush="Black" Geometry="{StaticResource UncheckAll}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.CheckAll"
+        Brush="Black"
+        Geometry="{StaticResource CheckAll}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.CircleMinusSolid"
+        Brush="Black"
+        Geometry="{StaticResource CircleMinusSolid}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.DisableChecks"
+        Brush="Black"
+        Geometry="{StaticResource DisableChecks}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.EnableChecks"
+        Brush="Black"
+        Geometry="{StaticResource EnableChecks}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.LightningFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningFill}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.LightningSlashFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningSlashFill}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.PlusSolid"
+        Brush="Black"
+        Geometry="{StaticResource PlusSolid}" />
+    <GeometryDrawing
+        x:Key="SettingsFixedExpensesTab.UncheckAll"
+        Brush="Black"
+        Geometry="{StaticResource UncheckAll}" />
 
     <!--  SettingsGoalsTab  -->
-    <GeometryDrawing x:Key="SettingsGoalsTab.CheckAll" Brush="Black" Geometry="{StaticResource CheckAll}" />
-    <GeometryDrawing x:Key="SettingsGoalsTab.CircleMinusSolid" Brush="Black" Geometry="{StaticResource CircleMinusSolid}" />
-    <GeometryDrawing x:Key="SettingsGoalsTab.DisableChecks" Brush="Black" Geometry="{StaticResource DisableChecks}" />
-    <GeometryDrawing x:Key="SettingsGoalsTab.EnableChecks" Brush="Black" Geometry="{StaticResource EnableChecks}" />
-    <GeometryDrawing x:Key="SettingsGoalsTab.LightningFill" Brush="Black" Geometry="{StaticResource LightningFill}" />
-    <GeometryDrawing x:Key="SettingsGoalsTab.LightningSlashFill" Brush="Black" Geometry="{StaticResource LightningSlashFill}" />
-    <GeometryDrawing x:Key="SettingsGoalsTab.PlusSolid" Brush="Black" Geometry="{StaticResource PlusSolid}" />
-    <GeometryDrawing x:Key="SettingsGoalsTab.UncheckAll" Brush="Black" Geometry="{StaticResource UncheckAll}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.CheckAll"
+        Brush="Black"
+        Geometry="{StaticResource CheckAll}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.CircleMinusSolid"
+        Brush="Black"
+        Geometry="{StaticResource CircleMinusSolid}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.DisableChecks"
+        Brush="Black"
+        Geometry="{StaticResource DisableChecks}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.EnableChecks"
+        Brush="Black"
+        Geometry="{StaticResource EnableChecks}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.LightningFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningFill}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.LightningSlashFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningSlashFill}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.PlusSolid"
+        Brush="Black"
+        Geometry="{StaticResource PlusSolid}" />
+    <GeometryDrawing
+        x:Key="SettingsGoalsTab.UncheckAll"
+        Brush="Black"
+        Geometry="{StaticResource UncheckAll}" />
 
     <!--  SettingsPopup  -->
-    <GeometryDrawing x:Key="SettingsPopup.AccountCircle" Brush="Black" Geometry="{StaticResource AccountCircle}" />
-    <GeometryDrawing x:Key="SettingsPopup.BookDollar" Brush="Black" Geometry="{StaticResource BookDollar}" />
-    <GeometryDrawing x:Key="SettingsPopup.BullseyeSolid" Brush="Black" Geometry="{StaticResource BullseyeSolid}" />
-    <GeometryDrawing x:Key="SettingsPopup.InvoiceLight" Brush="Black" Geometry="{StaticResource InvoiceLight}" />
-    <GeometryDrawing x:Key="SettingsPopup.SolidPriceTagAlt" Brush="Black" Geometry="{StaticResource SolidPriceTagAlt}" />
+    <GeometryDrawing
+        x:Key="SettingsPopup.AccountCircle"
+        Brush="Black"
+        Geometry="{StaticResource AccountCircle}" />
+    <GeometryDrawing
+        x:Key="SettingsPopup.BookDollar"
+        Brush="Black"
+        Geometry="{StaticResource BookDollar}" />
+    <GeometryDrawing
+        x:Key="SettingsPopup.BullseyeSolid"
+        Brush="Black"
+        Geometry="{StaticResource BullseyeSolid}" />
+    <GeometryDrawing
+        x:Key="SettingsPopup.InvoiceLight"
+        Brush="Black"
+        Geometry="{StaticResource InvoiceLight}" />
+    <GeometryDrawing
+        x:Key="SettingsPopup.SolidPriceTagAlt"
+        Brush="Black"
+        Geometry="{StaticResource SolidPriceTagAlt}" />
+    <GeometryDrawing
+        x:Key="SettingsPopup.AccountBalanceWalletRound"
+        Brush="Black"
+        Geometry="{StaticResource AccountBalanceWalletRound}" />
 
     <!--  SettingsSourcesTab  -->
-    <GeometryDrawing x:Key="SettingsSourcesTab.CheckAll" Brush="Black" Geometry="{StaticResource CheckAll}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.CircleMinusSolid" Brush="Black" Geometry="{StaticResource CircleMinusSolid}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.DisableChecks" Brush="Black" Geometry="{StaticResource DisableChecks}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.EnableChecks" Brush="Black" Geometry="{StaticResource EnableChecks}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.Eye" Brush="Black" Geometry="{StaticResource Eye}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.EyeOff" Brush="Black" Geometry="{StaticResource EyeOff}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.LightningFill" Brush="Black" Geometry="{StaticResource LightningFill}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.LightningSlashFill" Brush="Black" Geometry="{StaticResource LightningSlashFill}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.PlusSolid" Brush="Black" Geometry="{StaticResource PlusSolid}" />
-    <GeometryDrawing x:Key="SettingsSourcesTab.UncheckAll" Brush="Black" Geometry="{StaticResource UncheckAll}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.CheckAll"
+        Brush="Black"
+        Geometry="{StaticResource CheckAll}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.CircleMinusSolid"
+        Brush="Black"
+        Geometry="{StaticResource CircleMinusSolid}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.DisableChecks"
+        Brush="Black"
+        Geometry="{StaticResource DisableChecks}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.EnableChecks"
+        Brush="Black"
+        Geometry="{StaticResource EnableChecks}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.Eye"
+        Brush="Black"
+        Geometry="{StaticResource Eye}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.EyeOff"
+        Brush="Black"
+        Geometry="{StaticResource EyeOff}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.LightningFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningFill}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.LightningSlashFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningSlashFill}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.PlusSolid"
+        Brush="Black"
+        Geometry="{StaticResource PlusSolid}" />
+    <GeometryDrawing
+        x:Key="SettingsSourcesTab.UncheckAll"
+        Brush="Black"
+        Geometry="{StaticResource UncheckAll}" />
 
     <!--  SettingsStyle  -->
-    <GeometryDrawing x:Key="SettingsStyle.CheckboxBlankOutline" Brush="Black" Geometry="{StaticResource CheckboxBlankOutline}" />
-    <GeometryDrawing x:Key="SettingsStyle.CheckboxMarked" Brush="Black" Geometry="{StaticResource EnableChecks}" />
+    <GeometryDrawing
+        x:Key="SettingsStyle.CheckboxBlankOutline"
+        Brush="Black"
+        Geometry="{StaticResource CheckboxBlankOutline}" />
+    <GeometryDrawing
+        x:Key="SettingsStyle.CheckboxMarked"
+        Brush="Black"
+        Geometry="{StaticResource EnableChecks}" />
 
     <!--  SpendingSourceDetailPopup  -->
-    <GeometryDrawing x:Key="SpendingSourceDetailPopup.Bank" Brush="Black" Geometry="{StaticResource Bank}" />
-    <GeometryDrawing x:Key="SpendingSourceDetailPopup.CircleMinusSolid" Brush="Black" Geometry="{StaticResource CircleMinusSolid}" />
-    <GeometryDrawing x:Key="SpendingSourceDetailPopup.ContentSave" Brush="Black" Geometry="{StaticResource ContentSave}" />
-    <GeometryDrawing x:Key="SpendingSourceDetailPopup.Exchange" Brush="Black" Geometry="{StaticResource Exchange}" />
-    <GeometryDrawing x:Key="SpendingSourceDetailPopup.Pen" Brush="Black" Geometry="{StaticResource Pen}" />
-    <GeometryDrawing x:Key="SpendingSourceDetailPopup.SourceSwitch" Brush="Black" Geometry="{StaticResource SourceSwitch}" />
+    <GeometryDrawing
+        x:Key="SpendingSourceDetailPopup.Bank"
+        Brush="Black"
+        Geometry="{StaticResource Bank}" />
+    <GeometryDrawing
+        x:Key="SpendingSourceDetailPopup.CircleMinusSolid"
+        Brush="Black"
+        Geometry="{StaticResource CircleMinusSolid}" />
+    <GeometryDrawing
+        x:Key="SpendingSourceDetailPopup.ContentSave"
+        Brush="Black"
+        Geometry="{StaticResource ContentSave}" />
+    <GeometryDrawing
+        x:Key="SpendingSourceDetailPopup.Exchange"
+        Brush="Black"
+        Geometry="{StaticResource Exchange}" />
+    <GeometryDrawing
+        x:Key="SpendingSourceDetailPopup.Pen"
+        Brush="Black"
+        Geometry="{StaticResource Pen}" />
+    <GeometryDrawing
+        x:Key="SpendingSourceDetailPopup.SourceSwitch"
+        Brush="Black"
+        Geometry="{StaticResource SourceSwitch}" />
 
     <!--  SpendingSourcesListPopup  -->
-    <GeometryDrawing x:Key="SpendingSourcesListPopup.Bank" Brush="Black" Geometry="{StaticResource Bank}" />
-    <GeometryDrawing x:Key="SpendingSourcesListPopup.CreditCardAlt" Brush="Black" Geometry="{StaticResource CreditCardAlt}" />
-    <GeometryDrawing x:Key="SpendingSourcesListPopup.EyeOff" Brush="Black" Geometry="{StaticResource EyeOff}" />
-    <GeometryDrawing x:Key="SpendingSourcesListPopup.LightningSlashFill" Brush="Black" Geometry="{StaticResource LightningSlashFill}" />
-    <GeometryDrawing x:Key="SpendingSourcesListPopup.PiggyBank" Brush="Black" Geometry="{StaticResource PiggyBank}" />
+    <GeometryDrawing
+        x:Key="SpendingSourcesListPopup.Bank"
+        Brush="Black"
+        Geometry="{StaticResource Bank}" />
+    <GeometryDrawing
+        x:Key="SpendingSourcesListPopup.CreditCardAlt"
+        Brush="Black"
+        Geometry="{StaticResource CreditCardAlt}" />
+    <GeometryDrawing
+        x:Key="SpendingSourcesListPopup.EyeOff"
+        Brush="Black"
+        Geometry="{StaticResource EyeOff}" />
+    <GeometryDrawing
+        x:Key="SpendingSourcesListPopup.LightningSlashFill"
+        Brush="Black"
+        Geometry="{StaticResource LightningSlashFill}" />
+    <GeometryDrawing
+        x:Key="SpendingSourcesListPopup.PiggyBank"
+        Brush="Black"
+        Geometry="{StaticResource PiggyBank}" />
 
     <!--  StartupLoaderPopup  -->
 
@@ -187,13 +473,34 @@
     <!--  StartupWizardLoadingPage  -->
 
     <!--  StartupWizardMiddlePage  -->
-    <GeometryDrawing x:Key="StartupWizardMiddlePage.BookDollar" Brush="Black" Geometry="{StaticResource BookDollar}" />
-    <GeometryDrawing x:Key="StartupWizardMiddlePage.BullseyeSolid" Brush="Black" Geometry="{StaticResource BullseyeSolid}" />
-    <GeometryDrawing x:Key="StartupWizardMiddlePage.InvoiceLight" Brush="Black" Geometry="{StaticResource InvoiceLight}" />
-    <GeometryDrawing x:Key="StartupWizardMiddlePage.RegularBell" Brush="Black" Geometry="{StaticResource RegularBell}" />
-    <GeometryDrawing x:Key="StartupWizardMiddlePage.AccountBalanceWalletRound" Brush="Black" Geometry="{StaticResource AccountBalanceWalletRound}" />
+    <GeometryDrawing
+        x:Key="StartupWizardMiddlePage.BookDollar"
+        Brush="Black"
+        Geometry="{StaticResource BookDollar}" />
+    <GeometryDrawing
+        x:Key="StartupWizardMiddlePage.BullseyeSolid"
+        Brush="Black"
+        Geometry="{StaticResource BullseyeSolid}" />
+    <GeometryDrawing
+        x:Key="StartupWizardMiddlePage.InvoiceLight"
+        Brush="Black"
+        Geometry="{StaticResource InvoiceLight}" />
+    <GeometryDrawing
+        x:Key="StartupWizardMiddlePage.RegularBell"
+        Brush="Black"
+        Geometry="{StaticResource RegularBell}" />
+    <GeometryDrawing
+        x:Key="StartupWizardMiddlePage.AccountBalanceWalletRound"
+        Brush="Black"
+        Geometry="{StaticResource AccountBalanceWalletRound}" />
 
     <!--  Tags  -->
-    <GeometryDrawing x:Key="Tag.Goal" Brush="Black" Geometry="{StaticResource Goal}" />
-    <GeometryDrawing x:Key="Tag.UpdateOutline" Brush="Black" Geometry="{StaticResource UpdateOutline}" />
+    <GeometryDrawing
+        x:Key="Tag.Goal"
+        Brush="Black"
+        Geometry="{StaticResource Goal}" />
+    <GeometryDrawing
+        x:Key="Tag.UpdateOutline"
+        Brush="Black"
+        Geometry="{StaticResource UpdateOutline}" />
 </ResourceDictionary>

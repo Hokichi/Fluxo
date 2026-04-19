@@ -2,6 +2,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.StartupWizard;
 using Xunit;
@@ -16,7 +17,7 @@ public sealed class StartupWizardVMTests
         var viewModel = CreateViewModel();
         viewModel.CurrentStepIndex = 1;
 
-        Assert.Equal("What should Fluxo call you?", viewModel.CurrentStepTitle);
+        Assert.Equal("What should Fluxo call you?", viewModel.NamePage.CurrentStepTitle);
     }
 
     [Fact]
@@ -25,7 +26,7 @@ public sealed class StartupWizardVMTests
         var viewModel = CreateViewModel();
         viewModel.CurrentStepIndex = 1;
 
-        Assert.DoesNotContain("salary", viewModel.CurrentStepDescription, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("salary", viewModel.NamePage.CurrentStepDescription, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -40,7 +41,7 @@ public sealed class StartupWizardVMTests
         var unitOfWork = new TestUnitOfWork(userSettingsRepository);
         var viewModel = CreateViewModel(unitOfWork);
         viewModel.CurrentStepIndex = 1;
-        viewModel.UsernameText = "Alex";
+        viewModel.NamePage.UsernameText = "Alex";
 
         var result = await viewModel.GoNextAsync();
 
@@ -55,7 +56,26 @@ public sealed class StartupWizardVMTests
     private static StartupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)
     {
         unitOfWork ??= new TestUnitOfWork(new TestUserSettingsRepository([]));
-        return new StartupWizardVM(null!, unitOfWork);
+        var messenger = new WeakReferenceMessenger();
+        var greeting = new StartupWizardGreetingPageVM();
+        var name = new StartupWizardNamePageVM(unitOfWork, messenger);
+        var spendingSources = new StartupWizardSpendingSourcesVM(null!, unitOfWork, messenger);
+        var fixedExpenses = new StartupWizardFixedExpensesVM(null!, unitOfWork, messenger);
+        var savingGoals = new StartupWizardSavingGoalsVM(null!, unitOfWork, messenger);
+        var budget = new StartupWizardBudgetAllocationVM(unitOfWork, messenger);
+        var notification = new StartupWizardNotificationVM(unitOfWork, messenger);
+        var summary = new StartupWizardSummaryVM(messenger);
+        var middle = new StartupWizardMiddlePageVM(
+            spendingSources,
+            fixedExpenses,
+            savingGoals,
+            budget,
+            notification,
+            summary,
+            messenger);
+        var loading = new StartupWizardLoadingPageVM();
+        var final = new StartupWizardFinalPageVM(messenger);
+        return new StartupWizardVM(null!, unitOfWork, greeting, name, middle, loading, final, messenger);
     }
 
     private sealed class TestUnitOfWork(TestUserSettingsRepository userSettingsRepository) : IUnitOfWork

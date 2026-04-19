@@ -76,6 +76,17 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SettingsTagsTabVM>();
         services.AddTransient<SettingsPersonalizationTabVM>();
         services.AddTransient<SettingsVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardGreetingPageVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardNamePageVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardMiddlePageVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardLoadingPageVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardFinalPageVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardSpendingSourcesVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardFixedExpensesVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardSavingGoalsVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardBudgetAllocationVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardNotificationVM>();
+        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardSummaryVM>();
         services.AddTransient<StartupWizardVM>();
 
         services.AddTransient<QuickAddPopup>();

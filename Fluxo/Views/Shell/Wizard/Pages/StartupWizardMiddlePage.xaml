@@ -248,12 +248,12 @@
                     Margin="0,12,0,0"
                     VerticalScrollBarVisibility="Auto">
                     <Grid>
-                        <steps:SpendingSources />
-                        <steps:FixedExpenses />
-                        <steps:SavingGoals />
-                        <steps:BudgetAllocation />
-                        <steps:Notification />
-                        <steps:Summary />
+                        <steps:SpendingSources DataContext="{Binding SpendingSources}" />
+                        <steps:FixedExpenses DataContext="{Binding FixedExpenses}" />
+                        <steps:SavingGoals DataContext="{Binding SavingGoals}" />
+                        <steps:BudgetAllocation DataContext="{Binding BudgetAllocation}" />
+                        <steps:Notification DataContext="{Binding Notification}" />
+                        <steps:Summary DataContext="{Binding Summary}" />
                     </Grid>
                 </ScrollViewer>
             </Grid>
