@@ -2,7 +2,6 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
-using Fluxo.Resources.CustomControls;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Shell;
@@ -10,6 +9,7 @@ using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using Fluxo.Views.CustomControls;
 
 namespace Fluxo;
 

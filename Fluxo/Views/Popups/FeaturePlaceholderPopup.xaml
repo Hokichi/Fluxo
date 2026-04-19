@@ -1,8 +1,8 @@
-<c:BasePopup
+<customControls:BasePopup
     x:Class="Fluxo.Views.Popups.FeaturePlaceholderPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls">
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls">
 
     <Border Padding="24,8,24,24">
         <StackPanel Width="360">
@@ -22,4 +22,4 @@
                 TextWrapping="Wrap" />
         </StackPanel>
     </Border>
-</c:BasePopup>
+</customControls:BasePopup>

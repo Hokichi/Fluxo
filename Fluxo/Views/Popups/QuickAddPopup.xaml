@@ -1,15 +1,15 @@
-<c:BasePopup
+<customControls:BasePopup
     x:Class="Fluxo.Views.Popups.QuickAddPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
     xmlns:components='clr-namespace:Fluxo.Views.Components'
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     PopupTitle="Quick Add"
     mc:Ignorable="d">
 
-    <c:BasePopup.Resources>
+    <customControls:BasePopup.Resources>
         <Style x:Key="QuickAddTileButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -99,7 +99,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-    </c:BasePopup.Resources>
+    </customControls:BasePopup.Resources>
 
     <Border Padding="20,6,20,20">
         <Grid Width="620">
@@ -222,4 +222,4 @@
             </Grid>
         </Grid>
     </Border>
-</c:BasePopup>
+</customControls:BasePopup>

@@ -10,12 +10,12 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using Fluxo.Core.Interfaces;
-using Fluxo.Resources.CustomControls;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
+using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Shell.Main;
 

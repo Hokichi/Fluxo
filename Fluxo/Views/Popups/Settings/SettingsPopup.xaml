@@ -1,20 +1,20 @@
-<c:BasePopup
+<customControls:BasePopup
     x:Class="Fluxo.Views.Popups.Settings.SettingsPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     PopupTitle="Settings"
     ShowRevertButton="True"
     ShowSaveButton="True">
 
-    <c:BasePopup.Resources>
+    <customControls:BasePopup.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Fluxo;component/Resources/Styles/SettingsStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-    </c:BasePopup.Resources>
+    </customControls:BasePopup.Resources>
 
     <Grid
         Width="800"
@@ -145,5 +145,5 @@
             <tabs:SettingsPersonalizationTab Visibility="{Binding IsChecked, ElementName=PersonalizationTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
         </Grid>
     </Grid>
-</c:BasePopup>
+</customControls:BasePopup>
 

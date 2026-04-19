@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
     xmlns:components='clr-namespace:Fluxo.Views.Components'
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls">
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls">
             <Border Style="{StaticResource PanelStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -11,7 +11,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.CircleMinusSolid}"
                             Click="OnBatchActionClick"
                             HoveredBackground="{StaticResource Brush.Danger}"
@@ -19,7 +19,7 @@
                             Tag="FixedExpenses:Delete"
                             ToolTip="Delete selected"
                             Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.LightningSlashFill}"
                             Click="OnBatchActionClick"
                             HoveredBackground="{StaticResource Brush.Warning}"
@@ -27,7 +27,7 @@
                             Tag="FixedExpenses:Disable"
                             ToolTip="Disable selected"
                             Visibility="{Binding ShowFixedExpenseDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.LightningFill}"
                             Click="OnBatchActionClick"
                             HoveredBackground="{StaticResource Brush.Mint}"
@@ -35,35 +35,35 @@
                             Tag="FixedExpenses:Enable"
                             ToolTip="Enable selected"
                             Visibility="{Binding ShowFixedExpenseEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.CheckAll}"
                             Click="OnSelectionActionClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:CheckAll"
                             ToolTip="Check all"
                             Visibility="{Binding ShowFixedExpenseCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.UncheckAll}"
                             Click="OnSelectionActionClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:UncheckAll"
                             ToolTip="Uncheck all"
                             Visibility="{Binding ShowFixedExpenseUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.EnableChecks}"
                             Click="OnChecksToggleClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:EnableChecks"
                             ToolTip="Enable selection"
                             Visibility="{Binding ShowFixedExpenseEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.DisableChecks}"
                             Click="OnChecksToggleClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="FixedExpenses:DisableChecks"
                             ToolTip="Disable selection"
                             Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource SettingsFixedExpensesTab.PlusSolid}"
                             Click="OnAddPlaceholderClick"
                             HoveredBackground="{StaticResource Brush.Mint}"
@@ -100,7 +100,7 @@
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsChecked, Mode=TwoWay}"
                                                     Style="{StaticResource ItemCheckBoxStyle}"
-                                                    Visibility="{Binding DataContext.IsFixedExpenseChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type c:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                    Visibility="{Binding DataContext.IsFixedExpenseChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
                                                 <StackPanel Grid.Column="1">
                                                     <TextBlock
                                                         FontFamily="{StaticResource Bold}"
@@ -148,14 +148,14 @@
                                                     Opacity="0"
                                                     Orientation="Horizontal"
                                                     Visibility="Collapsed">
-                                                    <c:BalloonButton
+                                                    <customControls:BalloonButton
                                                         ButtonIcon="{StaticResource SettingsFixedExpensesTab.CircleMinusSolid}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Danger}"
                                                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                                         Tag="FixedExpenses:Delete"
                                                         ToolTip="Delete" />
-                                                    <c:BalloonButton
+                                                    <customControls:BalloonButton
                                                         ButtonIcon="{StaticResource SettingsFixedExpensesTab.LightningSlashFill}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Warning}"
@@ -163,7 +163,7 @@
                                                         Tag="FixedExpenses:Disable"
                                                         ToolTip="Disable"
                                                         Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                                    <c:BalloonButton
+                                                    <customControls:BalloonButton
                                                         ButtonIcon="{StaticResource SettingsFixedExpensesTab.LightningFill}"
                                                         Click="OnRowActionClick"
                                                         HoveredBackground="{StaticResource Brush.Mint}"

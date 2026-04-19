@@ -5,7 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 
-namespace Fluxo.Resources.CustomControls;
+namespace Fluxo.Views.CustomControls;
 
 [TemplatePart(Name = "PART_ContentRoot",  Type = typeof(FrameworkElement))]
 [TemplatePart(Name = "PART_PopupOverlay", Type = typeof(UIElement))]

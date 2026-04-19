@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.CustomControls;
+namespace Fluxo.Views.CustomControls;
 
 public interface IPopupHost
 {

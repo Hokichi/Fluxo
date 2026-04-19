@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 
-namespace Fluxo.Resources.CustomControls;
+namespace Fluxo.Views.CustomControls;
 
 public class FadingScrollViewer : ScrollViewer
 {

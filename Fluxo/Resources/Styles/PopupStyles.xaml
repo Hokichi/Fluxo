@@ -1,7 +1,7 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls">
+    xmlns:c="clr-namespace:Fluxo.Views.CustomControls">
 
     <BooleanToVisibilityConverter x:Key="PopupBoolToVisibility" />
 

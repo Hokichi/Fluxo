@@ -4,9 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using Fluxo.Resources.CustomControls;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Shell.Wizard;
 

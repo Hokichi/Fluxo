@@ -2,12 +2,12 @@
     x:Class="Fluxo.Views.Shell.Main.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:controls="clr-namespace:Fluxo.Views.Shell.Main.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Title="Fluxo"
     Width="1600"
     Height="900"
@@ -107,7 +107,7 @@
                         Grid.Column="2"
                         HorizontalAlignment="Right"
                         Orientation="Horizontal">
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             x:Name="HeaderMenuButton"
                             ButtonIcon="{StaticResource MainWindow.BarsSolid}"
                             Click="OnHeaderMenuButtonClick"
@@ -299,21 +299,21 @@
                             </Border>
                         </Popup>
 
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource MainWindow.Minus}"
                             Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
                             Style="{StaticResource HeaderButtonStyle}" />
 
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             x:Name="ExpandRestoreButton"
                             ButtonIcon="{StaticResource MainWindow.ExpandAlt}"
                             Click="OnExpandRestoreWindow"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
                             Style="{StaticResource HeaderButtonStyle}" />
 
-                        <c:BalloonButton
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource MainWindow.Close}"
                             Command="{x:Static SystemCommands.CloseWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
@@ -359,7 +359,7 @@
                             Style="{StaticResource TextOnlyButtonStyle}" />
                     </Grid>
 
-                    <c:FadingScrollViewer
+                    <customControls:FadingScrollViewer
                         Grid.Row="1"
                         Margin="0,20,0,0"
                         HorizontalAlignment="Stretch"
@@ -394,7 +394,7 @@
                                 </ListView.ItemTemplate>
                             </ListView>
                         </StackPanel>
-                    </c:FadingScrollViewer>
+                    </customControls:FadingScrollViewer>
 
                     <Grid Grid.Row="2" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>

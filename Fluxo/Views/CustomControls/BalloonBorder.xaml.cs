@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Fluxo.Resources.CustomControls;
+namespace Fluxo.Views.CustomControls;
 
 /// <summary>
 ///     Interaction logic for BalloonBorder.xaml

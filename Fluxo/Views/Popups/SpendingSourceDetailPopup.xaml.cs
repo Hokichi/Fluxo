@@ -2,11 +2,11 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Fluxo.Resources.CustomControls;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Views.CustomControls;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
 

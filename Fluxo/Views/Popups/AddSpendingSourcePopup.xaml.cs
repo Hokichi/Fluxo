@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups;
 

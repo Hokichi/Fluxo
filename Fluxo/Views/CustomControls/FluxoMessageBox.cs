@@ -1,7 +1,7 @@
 using System.Windows;
 using Fluxo.Views.Popups;
 
-namespace Fluxo.Resources.CustomControls;
+namespace Fluxo.Views.CustomControls;
 
 public static class FluxoMessageBox
 {

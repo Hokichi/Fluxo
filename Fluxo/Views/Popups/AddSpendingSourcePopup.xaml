@@ -1,14 +1,14 @@
-<c:BasePopup
+<customControls:BasePopup
     x:Class="Fluxo.Views.Popups.AddSpendingSourcePopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="620"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add New Income Source"
     ShowSaveButton="True">
 
-    <c:BasePopup.Resources>
+    <customControls:BasePopup.Resources>
         <Style x:Key="PanelStyle" TargetType="Border">
             <Setter Property="Padding" Value="18" />
             <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
@@ -22,7 +22,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-    </c:BasePopup.Resources>
+    </customControls:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
         <Border Style="{StaticResource PanelStyle}">
@@ -69,17 +69,17 @@
                         <StackPanel Grid.Column="2">
                             <StackPanel Visibility="{Binding IsCashLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
-                                <c:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
-                                <c:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Account Limit" />
-                                <c:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -107,7 +107,7 @@
 
                             <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
-                                <c:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -127,7 +127,7 @@
             </ScrollViewer>
         </Border>
     </Grid>
-</c:BasePopup>
+</customControls:BasePopup>
 
 
 

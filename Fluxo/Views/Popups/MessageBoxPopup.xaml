@@ -1,9 +1,9 @@
-<c:BasePopup
+<customControls:BasePopup
     x:Class="Fluxo.Views.Popups.MessageBoxPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
     xmlns:components='clr-namespace:Fluxo.Views.Components'
-    xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="420"
     MinWidth="420"
     MaxWidth="420"
@@ -36,7 +36,7 @@
                     FontFamily="{DynamicResource Bold}"
                     FontSize="14"
                     Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="{Binding PopupTitle, RelativeSource={RelativeSource AncestorType=c:BasePopup}}"
+                    Text="{Binding PopupTitle, RelativeSource={RelativeSource AncestorType=customControls:BasePopup}}"
                     TextWrapping="Wrap" />
                 <TextBlock
                     x:Name="MessageTextBlock"
@@ -71,5 +71,5 @@
                 Style="{StaticResource PrimaryDialogActionButtonStyle}" />
         </StackPanel>
     </Grid>
-</c:BasePopup>
+</customControls:BasePopup>
 

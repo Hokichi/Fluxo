@@ -5,7 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace Fluxo.Resources.CustomControls;
+namespace Fluxo.Views.CustomControls;
 
 [TemplatePart(Name = PartShape, Type = typeof(Path))]
 [TemplatePart(Name = PartOverlay, Type = typeof(Path))]
