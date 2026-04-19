@@ -816,7 +816,9 @@
         x:Key="DetailActionBalloonButtonStyle"
         BasedOn="{StaticResource MainWindowBalloonButtonChromeStyle}"
         TargetType="{x:Type c:BalloonButton}">
+        <Setter Property="Margin" Value="8" />
         <Setter Property="IconSize" Value="14" />
+        <Setter Property="Width" Value="40" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Hover}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Background.Elevated}" />
         <Style.Triggers>
@@ -956,7 +958,7 @@
                 <Setter Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
             </Trigger>
             <Trigger Property="IsChecked" Value="True">
-                <Setter Property="Background" Value="{DynamicResource Brush.Mint}" />
+                <Setter Property="Background" Value="{Binding HexCode}" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="Foreground" Value="{DynamicResource Brush.Background.Surface}" />
             </Trigger>

@@ -20,6 +20,12 @@ public partial class IncomeSource : UserControl
 
     private void OnRootMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (e.ClickCount == 1)
+        {
+            ToggleSpendingSourceFilter();
+            return;
+        }
+
         if (e.ClickCount != 2)
             return;
 
@@ -90,6 +96,15 @@ public partial class IncomeSource : UserControl
 
         if (Window.GetWindow(this) is MainWindow mainWindow)
             mainWindow.OpenSpendingSourceDetailPopup(spendingSource);
+    }
+
+    private void ToggleSpendingSourceFilter()
+    {
+        if (DataContext is not SpendingSourceVM spendingSource)
+            return;
+
+        if (Window.GetWindow(this) is MainWindow mainWindow)
+            mainWindow.ToggleSpendingSourceFilter(spendingSource);
     }
 
     private void CloseActionsPopup()

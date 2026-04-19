@@ -118,6 +118,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     [ObservableProperty]
     private ExpenseTagVM? _selectedOtherTag;
 
+    [ObservableProperty]
+    private int? _selectedSpendingSourceId;
+
     public bool HasOtherTags => OtherTags.Count > 0;
 
     public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
@@ -166,6 +169,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         foreach (var source in spendingSources)
             _spendingSources.Add(source);
 
+        if (SelectedSpendingSourceId is int selectedId &&
+            _spendingSources.All(source => source.Id != selectedId))
+            SelectedSpendingSourceId = null;
+        else
+            SynchronizeSpendingSourceSelections(SelectedSpendingSourceId);
+
         LoadTags(tags);
         RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs();
@@ -175,6 +184,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         SynchronizeTagSelections(value);
         OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
+        RefreshExpenseViews();
+    }
+
+    partial void OnSelectedSpendingSourceIdChanged(int? value)
+    {
+        SynchronizeSpendingSourceSelections(value);
         RefreshExpenseViews();
     }
 
@@ -198,6 +213,17 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private void ClearSelectedTag()
     {
         SelectedTag = null;
+    }
+
+    public void ToggleSelectedSpendingSource(SpendingSourceVM? source)
+    {
+        var selectedId = source?.Id;
+        if (selectedId is null)
+            return;
+
+        SelectedSpendingSourceId = SelectedSpendingSourceId == selectedId
+            ? null
+            : selectedId;
     }
 
     [RelayCommand]
@@ -249,9 +275,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         Wants = CollectionViewSource.GetDefaultView(_wantsSource);
         Invest = CollectionViewSource.GetDefaultView(_investSource);
 
-        Needs.Filter = FilterBySelectedTag;
-        Wants.Filter = FilterBySelectedTag;
-        Invest.Filter = FilterBySelectedTag;
+        Needs.Filter = FilterExpenseLog;
+        Wants.Filter = FilterExpenseLog;
+        Invest.Filter = FilterExpenseLog;
     }
 
     private void RefreshBudgetMetrics()
@@ -315,15 +341,17 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         RefreshExpenseViews();
     }
 
-    private bool FilterBySelectedTag(object item)
+    private bool FilterExpenseLog(object item)
     {
         if (item is not ExpenseLogVM expenseLog)
             return false;
 
-        if (SelectedTag is null)
-            return true;
+        if (SelectedTag is not null &&
+            expenseLog.Expense?.ExpenseTag?.Id != SelectedTag.Id)
+            return false;
 
-        return expenseLog.Expense?.ExpenseTag?.Id == SelectedTag.Id;
+        return SelectedSpendingSourceId is null ||
+               expenseLog.SpendingSource?.Id == SelectedSpendingSourceId;
     }
 
     private void SynchronizeTagSelections(ExpenseTagVM? selectedTag)
@@ -354,6 +382,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         IsNeedsEmpty = Needs.IsEmpty;
         IsWantsEmpty = Wants.IsEmpty;
         IsInvestEmpty = Invest.IsEmpty;
+    }
+
+    private void SynchronizeSpendingSourceSelections(int? selectedSpendingSourceId)
+    {
+        foreach (var source in _spendingSources)
+            source.IsSelected = selectedSpendingSourceId is int id && source.Id == id;
     }
 
     private void ApplyDeletedExpenseLogToUi(ExpenseLogVM expenseLog)

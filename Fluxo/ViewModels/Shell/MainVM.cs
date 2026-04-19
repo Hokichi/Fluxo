@@ -47,6 +47,11 @@ public partial class MainVM : ObservableRecipient
 
     public ObservableCollection<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
 
+    public void ToggleSpendingSourceFilter(SpendingSourceVM? spendingSource)
+    {
+        BudgetPanel.ToggleSelectedSpendingSource(spendingSource);
+    }
+
     public async Task Initialize()
     {
         await LoadUserSettingsAsync();

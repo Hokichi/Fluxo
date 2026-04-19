@@ -89,7 +89,6 @@
     <Grid>
         <Border
             x:Name="SourceCard"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="16"
             MouseLeftButtonDown="OnRootMouseLeftButtonDown"
@@ -99,7 +98,11 @@
             </Border.Background>
             <Border.Style>
                 <Style TargetType="Border">
+                    <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
                     <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                        </DataTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Trigger.EnterActions>
                                 <BeginStoryboard>

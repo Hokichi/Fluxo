@@ -581,6 +581,11 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowSpendingSourceDetail(popupViewModel, this);
     }
 
+    public void ToggleSpendingSourceFilter(SpendingSourceVM? spendingSource)
+    {
+        _mainVM.ToggleSpendingSourceFilter(spendingSource);
+    }
+
     public async Task ExecuteDeleteSpendingSourceActionAsync(SpendingSourceVM spendingSource)
     {
         await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Delete, true);
