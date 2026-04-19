@@ -208,16 +208,15 @@ public partial class AddFixedExpenseVM : ObservableObject
         value = 0m;
         var normalizedText = (text ?? string.Empty)
             .Trim()
-            .Replace(CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol, string.Empty, StringComparison.Ordinal)
             .Replace(",", string.Empty, StringComparison.Ordinal)
             .Trim();
 
         if (string.IsNullOrWhiteSpace(normalizedText))
             return false;
 
-        return decimal.TryParse(normalizedText, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+        return decimal.TryParse(normalizedText, NumberStyles.Number,
                    CultureInfo.CurrentCulture, out value) ||
-               decimal.TryParse(normalizedText, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+               decimal.TryParse(normalizedText, NumberStyles.Number,
                    CultureInfo.InvariantCulture, out value);
     }
 

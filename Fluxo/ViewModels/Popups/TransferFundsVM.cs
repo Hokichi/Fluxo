@@ -198,16 +198,15 @@ public partial class TransferFundsVM : ObservableObject
         amount = 0m;
         var normalizedAmount = AmountText
             .Trim()
-            .Replace(CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol, string.Empty, StringComparison.Ordinal)
             .Replace(",", string.Empty, StringComparison.Ordinal)
             .Trim();
 
         if (string.IsNullOrWhiteSpace(normalizedAmount))
             return false;
 
-        if (!decimal.TryParse(normalizedAmount, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+        if (!decimal.TryParse(normalizedAmount, NumberStyles.Number,
                 CultureInfo.CurrentCulture, out amount) &&
-            !decimal.TryParse(normalizedAmount, NumberStyles.Number | NumberStyles.AllowCurrencySymbol,
+            !decimal.TryParse(normalizedAmount, NumberStyles.Number,
                 CultureInfo.InvariantCulture, out amount))
             return false;
 

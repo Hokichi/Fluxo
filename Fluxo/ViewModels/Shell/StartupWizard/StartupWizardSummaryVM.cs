@@ -16,7 +16,6 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
 {
     private int _investPercentage = 20;
     private int _needsPercentage = 50;
-    private string _reportCurrencyText = StartupWizardShared.DefaultCurrencyCode;
     private int _reportFixedExpenseCount;
     private int _reportNotificationsEnabledCount;
     private int _reportSavingGoalCount;
@@ -35,8 +34,6 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
     }
 
     public string ReportUsernameText => _reportUsernameText;
-
-    public string ReportCurrencyText => _reportCurrencyText;
 
     public int ReportSpendingSourceCount => _reportSpendingSourceCount;
 
@@ -64,9 +61,7 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
     public void Receive(StartupWizardIdentityChangedMessage message)
     {
         _reportUsernameText = message.Value.ResolvedUsername;
-        _reportCurrencyText = message.Value.SelectedCurrencyCode;
         OnPropertyChanged(nameof(ReportUsernameText));
-        OnPropertyChanged(nameof(ReportCurrencyText));
     }
 
     public void Receive(StartupWizardSpendingSourcesChangedMessage message)
@@ -107,4 +102,3 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
         OnPropertyChanged(nameof(ReportNotificationsEnabledCount));
     }
 }
-

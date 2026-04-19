@@ -22,5 +22,4 @@ public static class UserSettingNames
     public const string HiddenSavingGoalIds = nameof(HiddenSavingGoalIds);
     public const string DisabledSavingGoalIds = nameof(DisabledSavingGoalIds);
     public const string PreferredDisplayName = nameof(PreferredDisplayName);
-    public const string PreferredCurrencyCode = nameof(PreferredCurrencyCode);
 }

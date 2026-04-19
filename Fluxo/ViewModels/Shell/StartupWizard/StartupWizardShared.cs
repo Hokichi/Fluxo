@@ -2,47 +2,16 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
-using Fluxo.ViewModels.Popups.Settings;
 
 namespace Fluxo.ViewModels.Shell.StartupWizard;
 
 internal static class StartupWizardShared
 {
-    public const string DefaultCurrencyCode = "USD";
     public const int TotalSteps = 10;
 
     public static string ResolveUsername(string? username)
     {
         return string.IsNullOrWhiteSpace(username) ? "User" : username.Trim();
-    }
-
-    public static IReadOnlyList<SettingsCurrencyOptionVM> BuildCurrencyOptions()
-    {
-        return
-        [
-            new SettingsCurrencyOptionVM("USD", "US Dollar", "$"),
-            new SettingsCurrencyOptionVM("EUR", "Euro", "EUR"),
-            new SettingsCurrencyOptionVM("GBP", "British Pound", "GBP"),
-            new SettingsCurrencyOptionVM("JPY", "Japanese Yen", "JPY"),
-            new SettingsCurrencyOptionVM("THB", "Thai Baht", "THB"),
-            new SettingsCurrencyOptionVM("AUD", "Australian Dollar", "A$"),
-            new SettingsCurrencyOptionVM("CAD", "Canadian Dollar", "C$"),
-            new SettingsCurrencyOptionVM("SGD", "Singapore Dollar", "S$"),
-            new SettingsCurrencyOptionVM("VND", "Vietnamese Dong", "VND"),
-            new SettingsCurrencyOptionVM("INR", "Indian Rupee", "INR")
-        ];
-    }
-
-    public static string ParseCurrencyCode(
-        IReadOnlyDictionary<string, string> settings,
-        IEnumerable<SettingsCurrencyOptionVM> options,
-        string name,
-        string defaultValue)
-    {
-        var code = ParseString(settings, name, defaultValue).ToUpperInvariant();
-        return options.Any(option => string.Equals(option.Code, code, StringComparison.OrdinalIgnoreCase))
-            ? code
-            : defaultValue;
     }
 
     public static string ParseString(IReadOnlyDictionary<string, string> settings, string name, string defaultValue)
