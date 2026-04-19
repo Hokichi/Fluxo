@@ -3,8 +3,8 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Controls;
-using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell.Main;
 

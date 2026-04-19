@@ -11,9 +11,9 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
-using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell.Main;
 

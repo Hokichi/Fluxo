@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
@@ -16,6 +17,7 @@ using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.CustomControls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo.Views.Shell.Main;
 
@@ -31,6 +33,7 @@ public partial class MainWindow : Window, IPopupHost
     private readonly MainVM _mainVM;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IDialogService _dialogService;
+    private readonly IServiceProvider _serviceProvider;
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _hasInitializedDashboardPanels;
@@ -46,13 +49,15 @@ public partial class MainWindow : Window, IPopupHost
     public MainWindow(
         MainVM mainVM,
         IUnitOfWork unitOfWork,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IServiceProvider serviceProvider)
     {
         InitializeComponent();
 
         _mainVM = mainVM;
         _unitOfWork = unitOfWork;
         _dialogService = dialogService;
+        _serviceProvider = serviceProvider;
         _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWork);
 
         DataContext = _mainVM;
@@ -656,7 +661,7 @@ public partial class MainWindow : Window, IPopupHost
 
         try
         {
-            var settingsViewModel = new SettingsVM(_mainVM, _unitOfWork);
+            var settingsViewModel = _serviceProvider.GetRequiredService<SettingsVM>();
             await settingsViewModel.LoadAsync();
 
             var result = await settingsViewModel.ExecuteSpendingSourceItemActionAsync(spendingSource.Id, action);

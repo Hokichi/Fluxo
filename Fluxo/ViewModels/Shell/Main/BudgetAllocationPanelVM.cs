@@ -10,9 +10,9 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell.Main;
 

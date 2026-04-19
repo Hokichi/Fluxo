@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using System.Reflection;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Controls;
-using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
 using Xunit;

@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
 
-namespace Fluxo.ViewModels.Messages;
+namespace Fluxo.Resources.Messages;
 
 [Flags]
 public enum DashboardDataInvalidationScope

@@ -8,8 +8,8 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell.Main;
 

@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups;
 using Fluxo.Views.Popups.Settings;
@@ -14,7 +14,7 @@ public partial class SettingsPersonalizationTab : UserControl
         InitializeComponent();
     }
 
-    private SettingsVM? ViewModel => DataContext as SettingsVM;
+    private SettingsPersonalizationTabVM? ViewModel => DataContext as SettingsPersonalizationTabVM;
 
     private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
     {
@@ -46,7 +46,10 @@ public partial class SettingsPersonalizationTab : UserControl
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
-        var result = await ViewModel.ResetAllSettingsAsync();
+        if (Window.GetWindow(this) is not SettingsPopup popup)
+            return;
+
+        var result = await popup.ViewModel.ResetAllSettingsAsync();
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
             FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Reset Settings", MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -73,7 +76,10 @@ public partial class SettingsPersonalizationTab : UserControl
         if (confirmation != MessageBoxResult.Yes)
             return;
 
-        var result = await ViewModel.DeleteAllDataAsync(keepSettings);
+        if (Window.GetWindow(this) is not SettingsPopup settingsPopup)
+            return;
+
+        var result = await settingsPopup.ViewModel.DeleteAllDataAsync(keepSettings);
         if (!result.IsSuccess)
         {
             FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Delete All Data", MessageBoxButton.OK,

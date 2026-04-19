@@ -7,8 +7,9 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Helpers;
-using Fluxo.ViewModels.Messages;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups;

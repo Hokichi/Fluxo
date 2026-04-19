@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.ViewModels.Messages;
+using Fluxo.Resources.Messages;
 
 namespace Fluxo.ViewModels.Shell.Main;
 

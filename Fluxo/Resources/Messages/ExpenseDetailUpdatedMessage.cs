@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Fluxo.Core.Enums;
 
-namespace Fluxo.ViewModels.Messages;
+namespace Fluxo.Resources.Messages;
 
 [Flags]
 public enum ExpenseDetailChangedFields

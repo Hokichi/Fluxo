@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
-using Fluxo.ViewModels.Messages;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups;

@@ -4,8 +4,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Messages;
 
 namespace Fluxo.ViewModels.Shell;
 

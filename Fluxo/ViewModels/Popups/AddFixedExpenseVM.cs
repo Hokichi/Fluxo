@@ -5,9 +5,9 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups;

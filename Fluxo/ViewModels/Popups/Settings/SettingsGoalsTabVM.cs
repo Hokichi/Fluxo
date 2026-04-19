@@ -1,0 +1,220 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
+using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces;
+using Fluxo.Resources.Messages;
+using Fluxo.Services.History;
+using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Shell;
+
+namespace Fluxo.ViewModels.Popups.Settings;
+
+public partial class SettingsGoalsTabVM : ObservableObject
+{
+    private readonly MainVM _mainViewModel;
+    private readonly IMessenger _messenger;
+    private readonly IUnitOfWork _unitOfWork;
+
+    [ObservableProperty] private bool _isGoalChecksEnabled;
+
+    public SettingsGoalsTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    {
+        _mainViewModel = mainViewModel;
+        _unitOfWork = unitOfWork;
+        _messenger = messenger ?? WeakReferenceMessenger.Default;
+    }
+
+    public ObservableCollection<SettingsSavingGoalItemVM> SavingGoals { get; } = [];
+    public bool AreAllGoalsChecked => SavingGoals.Count > 0 && SavingGoals.All(item => item.IsChecked);
+    public bool HasSavingGoals => SavingGoals.Count > 0;
+
+    public bool ShowGoalDisableActionButton =>
+        IsGoalChecksEnabled && ShouldShowDisableAction(SavingGoals);
+
+    public bool ShowGoalEnableActionButton =>
+        IsGoalChecksEnabled && !ShouldShowDisableAction(SavingGoals);
+
+    public bool ShowGoalCheckAllButton => IsGoalChecksEnabled && !AreAllGoalsChecked;
+    public bool ShowGoalUncheckAllButton => IsGoalChecksEnabled && AreAllGoalsChecked;
+    public bool ShowGoalEnableChecksButton => !IsGoalChecksEnabled && HasSavingGoals;
+
+    public async Task LoadAsync()
+    {
+        await RefreshSavingGoalsAsync();
+        IsGoalChecksEnabled = false;
+    }
+
+    public AddSavingGoalVM CreateAddSavingGoalViewModel()
+    {
+        return new AddSavingGoalVM(_mainViewModel, _unitOfWork);
+    }
+
+    public void ClearSelections()
+    {
+        SetSelections(false);
+    }
+
+    public void SetSelections(bool isChecked)
+    {
+        foreach (var item in SavingGoals)
+            item.IsChecked = isChecked;
+    }
+
+    public bool ShouldWarnBeforeApplyingToAll(SettingsBatchAction action)
+    {
+        if (action != SettingsBatchAction.Disable || SavingGoals.Count == 0)
+            return false;
+
+        var selectedCount = SavingGoals.Count(item => item.IsChecked);
+        return selectedCount == SavingGoals.Count;
+    }
+
+    public async Task<SettingsOperationResult> ExecuteActionAsync(
+        SettingsBatchAction action,
+        IReadOnlyCollection<int>? selectedIdsOverride = null)
+    {
+        var selectedIds = SettingsShared.NormalizeSelectionIds(selectedIdsOverride, SavingGoals.Select(item => item.Id),
+            SavingGoals.Where(item => item.IsChecked).Select(item => item.Id));
+        var selectedItemIds = selectedIds.ToHashSet();
+        var selectedItems = SavingGoals.Where(item => selectedItemIds.Contains(item.Id)).ToArray();
+        if (selectedItems.Length == 0)
+            return SettingsOperationResult.Failure("Select at least one goal first.");
+
+        var actions = new List<ILogMemoryAction>();
+
+        try
+        {
+            switch (action)
+            {
+                case SettingsBatchAction.Delete:
+                    foreach (var selectedItem in selectedItems)
+                    {
+                        var savingGoal = await _unitOfWork.SavingGoals.GetByIdAsync(selectedItem.Id);
+                        if (savingGoal is null)
+                            continue;
+
+                        var snapshot = SavingGoalMemorySnapshot.Create(savingGoal);
+                        _unitOfWork.SavingGoals.Remove(savingGoal);
+                        actions.Add(new DeleteSavingGoalMemoryAction(snapshot));
+                    }
+
+                    break;
+
+                case SettingsBatchAction.Hide:
+                case SettingsBatchAction.Unhide:
+                    return SettingsOperationResult.Failure("Hide and unhide are no longer supported for goals.");
+
+                case SettingsBatchAction.Disable:
+                case SettingsBatchAction.Enable:
+                    var disabledGoalIds = SettingsShared.ParseIdSet(
+                        await SettingsShared.GetSettingsDictionaryAsync(_unitOfWork),
+                        UserSettingNames.DisabledSavingGoalIds);
+
+                    if (action == SettingsBatchAction.Disable)
+                        disabledGoalIds.UnionWith(selectedItems.Select(item => item.Id));
+                    else
+                        disabledGoalIds.ExceptWith(selectedItems.Select(item => item.Id));
+
+                    await SettingsShared.UpdateIdSetSettingAsync(_unitOfWork, UserSettingNames.DisabledSavingGoalIds,
+                        disabledGoalIds, actions);
+                    break;
+            }
+
+            if (actions.Count == 0)
+                return SettingsOperationResult.Failure("Nothing changed for the selected goals.");
+
+            await _unitOfWork.SaveChangesAsync();
+            SettingsShared.RecordActions(actions, _messenger);
+            _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SavingGoals));
+            _messenger.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.SavingGoals));
+            await _mainViewModel.ReloadCurrentDataAsync();
+            await RefreshSavingGoalsAsync();
+
+            return SettingsOperationResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return SettingsOperationResult.Failure(
+                $"Unable to update the selected goals.\n\n{exception.Message}");
+        }
+    }
+
+    public Task<SettingsOperationResult> ExecuteItemActionAsync(int itemId, SettingsBatchAction action)
+    {
+        return ExecuteActionAsync(action, [itemId]);
+    }
+
+    public void SelectSingleItem(int itemId)
+    {
+        foreach (var item in SavingGoals)
+            item.IsSelected = item.Id == itemId;
+    }
+
+    public async Task RefreshSavingGoalsAsync()
+    {
+        var disabledSavingGoalIds = SettingsShared.ParseIdSet(
+            await SettingsShared.GetSettingsDictionaryAsync(_unitOfWork),
+            UserSettingNames.DisabledSavingGoalIds);
+
+        SettingsShared.ReplaceCollection(SavingGoals, (await _unitOfWork.SavingGoals.GetAllAsync())
+            .OrderBy(goal => goal.SavingEndDate)
+            .ThenBy(goal => goal.Name)
+            .Select(goal => new SettingsSavingGoalItemVM(
+                goal,
+                !disabledSavingGoalIds.Contains(goal.Id))));
+
+        AttachSelectableItemHandlers(SavingGoals);
+        OnPropertyChanged(nameof(HasSavingGoals));
+        OnSelectionStateChanged();
+    }
+
+    partial void OnIsGoalChecksEnabledChanged(bool value)
+    {
+        OnSelectionStateChanged();
+    }
+
+    private void AttachSelectableItemHandlers(IEnumerable<SettingsSavingGoalItemVM> items)
+    {
+        foreach (var item in items)
+        {
+            item.PropertyChanged -= OnSelectableItemPropertyChanged;
+            item.PropertyChanged += OnSelectableItemPropertyChanged;
+        }
+    }
+
+    private void OnSelectableItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SettingsSavingGoalItemVM.IsChecked))
+            OnSelectionStateChanged();
+    }
+
+    private void OnSelectionStateChanged()
+    {
+        OnPropertyChanged(nameof(AreAllGoalsChecked));
+        OnPropertyChanged(nameof(ShowGoalDisableActionButton));
+        OnPropertyChanged(nameof(ShowGoalEnableActionButton));
+        OnPropertyChanged(nameof(ShowGoalCheckAllButton));
+        OnPropertyChanged(nameof(ShowGoalUncheckAllButton));
+        OnPropertyChanged(nameof(ShowGoalEnableChecksButton));
+    }
+
+    private static bool ShouldShowDisableAction(IReadOnlyCollection<SettingsSavingGoalItemVM> items)
+    {
+        if (items.Count == 0)
+            return true;
+
+        var scopedItems = GetScopedItems(items);
+        return scopedItems.Any(item => item.IsEnabled);
+    }
+
+    private static IReadOnlyList<SettingsSavingGoalItemVM> GetScopedItems(
+        IReadOnlyCollection<SettingsSavingGoalItemVM> items)
+    {
+        var selectedItems = items.Where(item => item.IsChecked).ToArray();
+        return selectedItems.Length > 0 ? selectedItems : items.ToArray();
+    }
+}

@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups.Settings;
 
@@ -14,7 +14,7 @@ public partial class SettingsTagsTab : UserControl
         InitializeComponent();
     }
 
-    private SettingsVM? ViewModel => DataContext as SettingsVM;
+    private SettingsTagsTabVM? ViewModel => DataContext as SettingsTagsTabVM;
 
     private void OnAddTagClick(object sender, RoutedEventArgs e)
     {

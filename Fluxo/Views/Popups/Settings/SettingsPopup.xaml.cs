@@ -5,9 +5,10 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
-using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups.Settings;
@@ -35,6 +36,8 @@ public partial class SettingsPopup : BasePopup
         _allocationHoldDelayTimer.Tick += OnAllocationHoldDelayTick;
         _allocationRepeatTimer.Tick += OnAllocationRepeatTick;
     }
+
+    public SettingsVM ViewModel => _viewModel;
 
     protected override async void OnSaveButtonClick()
     {
@@ -292,90 +295,6 @@ public partial class SettingsPopup : BasePopup
             return;
 
         _viewModel.SelectSingleItem(SettingsBatchTarget.Goals, goalItem.Id);
-    }
-
-    private void OnAddTagClick(object sender, RoutedEventArgs e)
-    {
-        OpenAddTagPopup();
-    }
-
-    private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
-    {
-        if (FluxoMessageBox.Show(this,
-                "This will close the current window and open the setup wizard. Continue?",
-                "Run Setup Wizard",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question) != MessageBoxResult.Yes)
-            return;
-
-        _allowClose = true;
-        Close();
-        await ((App)Application.Current).RunSetupWizardAsync();
-    }
-
-    private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)
-    {
-        if (FluxoMessageBox.Show(this,
-                "Reset all settings to defaults? This keeps your existing data.",
-                "Reset Settings",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
-            return;
-
-        var result = await _viewModel.ResetAllSettingsAsync();
-        if (!result.IsSuccess)
-            ShowMessage(result.ErrorMessage, "Reset Settings");
-    }
-
-    private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)
-    {
-        var optionsResult = _dialogService.ShowDeleteAllData(this);
-        if (optionsResult.DialogResult != true || optionsResult.Choice == DeleteAllDataChoice.Cancel)
-            return;
-
-        var keepSettings = optionsResult.Choice == DeleteAllDataChoice.KeepSettings;
-        var confirmation = FluxoMessageBox.Show(this,
-            keepSettings
-                ? "This will permanently delete all data and keep your current settings. Continue?"
-                : "This will permanently delete all data and settings. Continue?",
-            "Delete All Data",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (confirmation != MessageBoxResult.Yes)
-            return;
-
-        var result = await _viewModel.DeleteAllDataAsync(keepSettings);
-        if (!result.IsSuccess)
-        {
-            ShowMessage(result.ErrorMessage, "Delete All Data");
-            return;
-        }
-
-        if (FluxoMessageBox.Show(this,
-                "All data has been deleted. Would you like to run the setup wizard?",
-                "Setup Wizard",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question) == MessageBoxResult.Yes)
-        {
-            _allowClose = true;
-            Close();
-            await ((App)Application.Current).RunSetupWizardAsync();
-        }
-    }
-
-    private async void OnTagDeleteClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: ExpenseTagVM tag })
-            return;
-
-        if (FluxoMessageBox.Show(this, $"Delete the tag \"{tag.Name}\"?", "Tags", MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
-            return;
-
-        var result = await _viewModel.DeleteTagAsync(tag);
-        if (!result.IsSuccess)
-            ShowMessage(result.ErrorMessage, "Tags");
     }
 
     public void OpenAddTagPopup()

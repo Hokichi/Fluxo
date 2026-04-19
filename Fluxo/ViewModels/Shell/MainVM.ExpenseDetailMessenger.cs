@@ -1,4 +1,4 @@
-using Fluxo.ViewModels.Messages;
+using Fluxo.Resources.Messages;
 
 namespace Fluxo.ViewModels.Shell;
 

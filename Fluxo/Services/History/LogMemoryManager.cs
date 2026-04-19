@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Interfaces;
-using Fluxo.ViewModels.Messages;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.Services.History;

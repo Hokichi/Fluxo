@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.ViewModels.Messages;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
 using Xunit;
