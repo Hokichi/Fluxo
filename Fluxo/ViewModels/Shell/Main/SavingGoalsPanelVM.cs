@@ -11,7 +11,7 @@ using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<DashboardDataInvalidatedMessage>
 {

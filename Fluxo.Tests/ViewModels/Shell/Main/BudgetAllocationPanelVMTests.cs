@@ -9,6 +9,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell.Main;
 using NSubstitute;
 using Xunit;
 

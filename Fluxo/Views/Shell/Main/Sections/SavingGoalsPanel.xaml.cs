@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
+using SavingGoalsPanelVM = Fluxo.ViewModels.Shell.Main.SavingGoalsPanelVM;
 
 namespace Fluxo.Views.Shell.Main.Sections;
 

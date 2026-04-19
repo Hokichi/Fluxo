@@ -20,11 +20,11 @@ public partial class MainVM : ObservableRecipient
 
     public MainVM(
         IUserSettingsRepository userSettingsRepository,
-        NotificationPanelVM notificationPanel,
-        BudgetAllocationPanelVM budgetPanel,
-        SavingGoalsPanelVM savingGoalsPanel,
-        DaySpinnerVM daySpinner,
-        MainViewModeToggleVM viewModeToggle)
+        Main.NotificationPanelVM notificationPanel,
+        Main.BudgetAllocationPanelVM budgetPanel,
+        Main.SavingGoalsPanelVM savingGoalsPanel,
+        Main.DaySpinnerVM daySpinner,
+        Main.MainViewModeToggleVM viewModeToggle)
     {
         _userSettingsRepository = userSettingsRepository;
         NotificationPanel = notificationPanel;
@@ -39,11 +39,11 @@ public partial class MainVM : ObservableRecipient
             static (recipient, message) => recipient.HandleExpenseDetailUpdatedMessage(message));
     }
 
-    public NotificationPanelVM NotificationPanel { get; }
-    public BudgetAllocationPanelVM BudgetPanel { get; }
-    public SavingGoalsPanelVM SavingGoalsPanel { get; }
-    public DaySpinnerVM DaySpinner { get; }
-    public MainViewModeToggleVM ViewModeToggle { get; }
+    public Main.NotificationPanelVM NotificationPanel { get; }
+    public Main.BudgetAllocationPanelVM BudgetPanel { get; }
+    public Main.SavingGoalsPanelVM SavingGoalsPanel { get; }
+    public Main.DaySpinnerVM DaySpinner { get; }
+    public Main.MainViewModeToggleVM ViewModeToggle { get; }
 
     public ObservableCollection<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
 

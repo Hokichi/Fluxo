@@ -3,6 +3,7 @@ using System.Reflection;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Messages;
 using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell.Main;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Shell.Main;

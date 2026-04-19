@@ -15,6 +15,11 @@ using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using BudgetAllocationPanelVM = Fluxo.ViewModels.Shell.Main.BudgetAllocationPanelVM;
+using DaySpinnerVM = Fluxo.ViewModels.Shell.Main.DaySpinnerVM;
+using MainViewModeToggleVM = Fluxo.ViewModels.Shell.Main.MainViewModeToggleVM;
+using NotificationPanelVM = Fluxo.ViewModels.Shell.Main.NotificationPanelVM;
+using SavingGoalsPanelVM = Fluxo.ViewModels.Shell.Main.SavingGoalsPanelVM;
 
 namespace Fluxo.Extensions;
 

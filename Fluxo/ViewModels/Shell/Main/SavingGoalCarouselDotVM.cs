@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class SavingGoalCarouselDotVM : ObservableObject
 {

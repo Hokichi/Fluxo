@@ -13,9 +13,8 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Messages;
-using Fluxo.ViewModels.Notifications;
 
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class NotificationPanelVM : ObservableRecipient,
     IRecipient<DateRangeSelectionChangedMessage>,

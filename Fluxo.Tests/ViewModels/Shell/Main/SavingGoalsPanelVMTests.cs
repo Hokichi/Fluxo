@@ -6,6 +6,7 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell.Main;
 using NSubstitute;
 using Xunit;
 

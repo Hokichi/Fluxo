@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Fluxo.Core.Enums;
 
-namespace Fluxo.ViewModels.Notifications;
+namespace Fluxo.ViewModels.Entities;
 
 public partial class NotificationVM : ObservableObject
 {

@@ -1,4 +1,4 @@
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public sealed record DateRange(DateTime From, DateTime To);
 

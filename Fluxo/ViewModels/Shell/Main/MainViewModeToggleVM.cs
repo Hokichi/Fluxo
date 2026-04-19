@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.ViewModels.Messages;
 
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<SpinnerPeriodStateChangedMessage>
 {

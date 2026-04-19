@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Messages;
 
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class DaySpinnerVM : ObservableRecipient,
     IRecipient<ViewModeChangeMessage>,
@@ -271,25 +271,25 @@ public partial class DaySpinnerVM : ObservableRecipient,
         var match = _selectedMainContentViewMode switch
         {
             MainContentViewMode.Daily =>
-                DaysOfWeek.FirstOrDefault(day => day.Date.Date == referenceDate.Date),
+                Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek, day => day.Date.Date == referenceDate.Date),
 
             MainContentViewMode.Weekly =>
-                DaysOfWeek.FirstOrDefault(day =>
+                Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek, day =>
                     referenceDate.Date >= day.Date.Date && referenceDate.Date < day.Date.AddDays(7).Date),
 
             MainContentViewMode.Monthly =>
-                DaysOfWeek.FirstOrDefault(day =>
+                Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek, day =>
                     day.Date.Year == referenceDate.Year && day.Date.Month == referenceDate.Month),
 
             _ => null
         };
 
-        SelectDay(match ?? DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM(), publishSelection: true);
+        SelectDay(match ?? Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek) ?? new DayOfWeekVM(), publishSelection: true);
     }
 
     private void SelectFirstSpinnerItem(bool publishSelection = true)
     {
-        SelectDay(DaysOfWeek.FirstOrDefault() ?? new DayOfWeekVM(), publishSelection);
+        SelectDay(Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek) ?? new DayOfWeekVM(), publishSelection);
     }
 
     private void SelectDay(DayOfWeekVM day, bool publishSelection)

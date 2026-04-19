@@ -11,7 +11,7 @@ using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Messages;
 
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<DateRangeSelectionChangedMessage>,
@@ -362,10 +362,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             SelectedVisibleTag = selectedTag is null
                 ? null
-                : Tags.FirstOrDefault(tag => tag.Id == selectedTag.Id);
+                : Enumerable.FirstOrDefault<ExpenseTagVM>(Tags, tag => tag.Id == selectedTag.Id);
             SelectedOtherTag = selectedTag is null
                 ? null
-                : OtherTags.FirstOrDefault(tag => tag.Id == selectedTag.Id);
+                : Enumerable.FirstOrDefault<ExpenseTagVM>(OtherTags, tag => tag.Id == selectedTag.Id);
         }
         finally
         {
