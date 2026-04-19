@@ -3,6 +3,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Shell.StartupWizard;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;

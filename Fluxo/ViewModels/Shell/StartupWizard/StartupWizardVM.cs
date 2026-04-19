@@ -9,16 +9,16 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Helpers;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.ViewModels.Shell;
 
-namespace Fluxo.ViewModels.Popups;
+namespace Fluxo.ViewModels.Shell.StartupWizard;
 
 public partial class StartupWizardVM : ObservableObject
 {
     private const string DefaultCurrencyCode = "USD";
 
-    private readonly MainVM _mainViewModel;
+    private readonly Main.MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
 
     [ObservableProperty] private int _currentStepIndex;
@@ -29,7 +29,7 @@ public partial class StartupWizardVM : ObservableObject
     [ObservableProperty] private string _usernameText = "User";
     [ObservableProperty] private int _wantsAllocationPercentage = 30;
 
-    public StartupWizardVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
+    public StartupWizardVM(Main.MainVM mainViewModel, IUnitOfWork unitOfWork)
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
@@ -62,9 +62,11 @@ public partial class StartupWizardVM : ObservableObject
     public bool IsStep7Active => CurrentStepIndex == 7;
     public string StepCounterText => IsMiddleStep ? $"Step {CurrentStepIndex - 1} of 6" : string.Empty;
     public decimal TotalBudgetAmount => CalculateTotalBudgetAmount();
+
     public string SelectedCurrencySymbol =>
         CurrencyOptions.FirstOrDefault(option =>
             string.Equals(option.Code, SelectedCurrencyCode, StringComparison.OrdinalIgnoreCase))?.Symbol ?? "$";
+
     public bool HasBudgetAllocationError => !string.IsNullOrWhiteSpace(BudgetAllocationErrorMessage);
     public string NeedsAllocationAmountText => BuildAllocationAmountText(NeedsAllocationPercentage);
     public string WantsAllocationAmountText => BuildAllocationAmountText(WantsAllocationPercentage);
@@ -584,9 +586,11 @@ public partial class StartupWizardVM : ObservableObject
             case BudgetAllocationSegment.Needs:
                 NeedsAllocationPercentage = Math.Clamp(NeedsAllocationPercentage + delta, 0, 100);
                 break;
+
             case BudgetAllocationSegment.Wants:
                 WantsAllocationPercentage = Math.Clamp(WantsAllocationPercentage + delta, 0, 100);
                 break;
+
             case BudgetAllocationSegment.Invest:
                 InvestAllocationPercentage = Math.Clamp(InvestAllocationPercentage + delta, 0, 100);
                 break;
@@ -601,16 +605,22 @@ public partial class StartupWizardVM : ObservableObject
     public int ReportSpendingSourceCount => SpendingSources.Count;
     public int ReportFixedExpenseCount => FixedExpenses.Count;
     public int ReportSavingGoalCount => SavingGoals.Count;
+
     public string ReportTotalBalanceText =>
         MoneyFormatUtility.ToCompactText(SpendingSources.Sum(s => s.PrimaryAmount), CultureInfo.CurrentCulture);
+
     public string ReportTotalBalanceTooltipText =>
         MoneyFormatUtility.ToFullText(SpendingSources.Sum(s => s.PrimaryAmount), CultureInfo.CurrentCulture);
+
     public string ReportTotalFixedExpenseText =>
         MoneyFormatUtility.ToCompactText(FixedExpenses.Sum(e => e.Amount), CultureInfo.CurrentCulture);
+
     public string ReportTotalFixedExpenseTooltipText =>
         MoneyFormatUtility.ToFullText(FixedExpenses.Sum(e => e.Amount), CultureInfo.CurrentCulture);
+
     public string ReportBudgetAllocationText =>
         $"Needs {NeedsAllocationPercentage}% / Wants {WantsAllocationPercentage}% / Invest {InvestAllocationPercentage}%";
+
     public int ReportNotificationsEnabledCount => NotificationSettings.Count(n => n.IsEnabled);
 
     public void RefreshReportProperties()
@@ -777,5 +787,3 @@ public sealed partial class WizardStepDotVM : ObservableObject
         _isActive = isActive;
     }
 }
-
-

@@ -4,6 +4,7 @@ using Fluxo.ViewModels.Shell;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
+using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.Views.Popups;
 

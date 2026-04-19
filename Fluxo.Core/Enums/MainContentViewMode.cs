@@ -1,4 +1,4 @@
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.Core.Enums;
 
 public enum MainContentViewMode
 {

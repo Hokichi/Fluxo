@@ -10,6 +10,7 @@ using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using Fluxo.Views.CustomControls;
+using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo;
 

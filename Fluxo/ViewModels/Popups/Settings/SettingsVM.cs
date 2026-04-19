@@ -5,10 +5,9 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell.Main;
 
-namespace Fluxo.ViewModels.Popups;
+namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>
 {

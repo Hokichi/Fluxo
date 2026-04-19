@@ -8,6 +8,7 @@ using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
+using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups.Settings;
 

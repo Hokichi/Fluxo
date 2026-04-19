@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using System.Reflection;
+using Fluxo.Core.Enums;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Shell;

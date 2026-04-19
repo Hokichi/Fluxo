@@ -5,6 +5,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Shell;
+using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups;
 

@@ -1,3 +1,5 @@
+using Fluxo.Core.Enums;
+
 namespace Fluxo.ViewModels.Shell.Main;
 
 public sealed record DateRange(DateTime From, DateTime To);

@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Enums;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Controls;
 

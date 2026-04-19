@@ -9,6 +9,8 @@ using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
+using StartupWizardVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardVM;
+using WizardStepDotVM = Fluxo.ViewModels.Shell.StartupWizard.WizardStepDotVM;
 
 namespace Fluxo.Views.Shell.Wizard;
 

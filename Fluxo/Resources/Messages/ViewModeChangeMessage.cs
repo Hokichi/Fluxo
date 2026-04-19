@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.Resources.Messages;

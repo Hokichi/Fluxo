@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
@@ -7,7 +6,7 @@ using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 
-namespace Fluxo.ViewModels.Shell;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class MainVM : ObservableRecipient
 {
@@ -83,5 +82,13 @@ public partial class MainVM : ObservableRecipient
             var trimmed = (name ?? string.Empty).Trim();
             Username = trimmed.Length > 0 ? trimmed : "User";
         }
+    }
+
+    private void HandleExpenseDetailUpdatedMessage(ExpenseDetailUpdatedMessage message)
+    {
+        if (!message.Value.HasChanges)
+            return;
+
+        _ = ReloadCurrentDataAsync();
     }
 }

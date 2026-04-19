@@ -1,3 +1,4 @@
+using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
 using Xunit;

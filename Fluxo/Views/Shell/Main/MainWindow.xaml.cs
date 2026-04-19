@@ -15,9 +15,11 @@ using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.CustomControls;
 using Microsoft.Extensions.DependencyInjection;
+using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.Views.Shell.Main;
 
