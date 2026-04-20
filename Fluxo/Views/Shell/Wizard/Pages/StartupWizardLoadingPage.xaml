@@ -5,7 +5,10 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components">
     <Border Style="{StaticResource PanelStyle}">
         <Grid>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel
+                x:Name="PageContent"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
                 <Border
                     Width="84"
                     Height="84"

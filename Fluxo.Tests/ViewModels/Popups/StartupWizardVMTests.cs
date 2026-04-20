@@ -17,7 +17,7 @@ public sealed class StartupWizardVMTests
         var viewModel = CreateViewModel();
         viewModel.CurrentStepIndex = 1;
 
-        Assert.Equal("What should Fluxo call you?", viewModel.NamePage.CurrentStepTitle);
+        Assert.Equal("What should fluxo call you?", viewModel.NamePage.CurrentStepTitle);
     }
 
     [Fact]

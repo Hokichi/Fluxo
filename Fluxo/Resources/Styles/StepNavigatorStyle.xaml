@@ -19,9 +19,10 @@
 
                                     <!--  Left connector — hidden for the first dot  -->
                                     <Border
-                                        Width="8"
+                                        Width="12"
                                         Height="1"
                                         Margin="3,0"
+                                        SnapsToDevicePixels="True"
                                         Visibility="{Binding IsFirst, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                         <Border.Style>
                                             <Style TargetType="Border">
@@ -67,7 +68,7 @@
                                                                 <Storyboard>
                                                                     <DoubleAnimation
                                                                         Storyboard.TargetProperty="Width"
-                                                                        To="24"
+                                                                        To="28"
                                                                         Duration="0:0:0.2">
                                                                         <DoubleAnimation.EasingFunction>
                                                                             <CubicEase EasingMode="EaseOut" />

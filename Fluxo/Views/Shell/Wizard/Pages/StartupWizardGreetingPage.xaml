@@ -2,6 +2,7 @@
     x:Class="Fluxo.Views.Shell.Wizard.Pages.StartupWizardGreetingPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:components="clr-namespace:Fluxo.Views.Components">
     <Border Style="{StaticResource PanelStyle}">
         <Grid>
@@ -43,6 +44,16 @@
                     FontSize="11"
                     Foreground="{StaticResource Brush.Text.Muted}"
                     Text="We'll walk you through a few quick steps to set things up." />
+                <Button
+                    Margin="0,28,0,0"
+                    HorizontalAlignment="Center"
+                    Click="OnContinueClick"
+                    Style="{StaticResource WizardCircleActionButtonStyle}">
+                    <icons:PackIconUnicons
+                        Width="16"
+                        Height="16"
+                        Kind="AngleRight" />
+                </Button>
             </StackPanel>
         </Grid>
     </Border>

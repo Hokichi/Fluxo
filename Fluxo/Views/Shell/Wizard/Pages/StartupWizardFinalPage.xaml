@@ -5,7 +5,10 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components">
     <Border Style="{StaticResource PanelStyle}">
         <Grid>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel
+                x:Name="PageContent"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
                 <Border
                     Width="84"
                     Height="84"
@@ -19,15 +22,31 @@
                         Source="/Fluxo;component/Resources/fluxo.ico"
                         Stretch="Uniform" />
                 </Border>
-                <TextBlock
-                    Margin="0,18,0,0"
+                <StackPanel
                     HorizontalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="28"
-                    Foreground="{StaticResource Brush.Text.Primary}">
-                    <Run Text="Welcome to Fluxo, " />
-                    <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
-                </TextBlock>
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Text="Welcome to" />
+                        <Run Text="flux" />
+                    </TextBlock>
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Foreground="{StaticResource Brush.Mint}" Text="o" />
+                    </TextBlock>
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Text=", " />
+                        <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
                 <TextBlock
                     Margin="0,12,0,0"
                     HorizontalAlignment="Center"
@@ -36,6 +55,17 @@
                     Foreground="{StaticResource Brush.Text.Secondary}"
                     Text="Your dashboard, goals, and reminders are ready to go."
                     TextAlignment="Center" />
+                <Button
+                    Margin="0,28,0,0"
+                    HorizontalAlignment="Center"
+                    Click="OnFinishClick"
+                    Style="{StaticResource WizardCircleActionButtonStyle}">
+                    <components:Icon
+                        Width="16"
+                        Height="16"
+                        Path="{StaticResource StartupWizardFinalPage.RocketSolid}"
+                        Color="{StaticResource Brush.Background.Surface}" />
+                </Button>
             </StackPanel>
         </Grid>
     </Border>
