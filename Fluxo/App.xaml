@@ -69,6 +69,7 @@
                 <ResourceDictionary Source="Resources/Styles/PopupStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/MainWindowStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/SettingsStyle.xaml" />
+                <ResourceDictionary Source="Resources/Styles/StepNavigatorStyle.xaml" />
                 <ResourceDictionary Source="Resources/Styles/StartupWizardStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
