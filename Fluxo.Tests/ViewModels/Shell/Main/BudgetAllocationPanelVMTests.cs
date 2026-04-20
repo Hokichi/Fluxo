@@ -114,6 +114,23 @@ public class BudgetAllocationPanelVMTests
         });
     }
 
+    [Fact]
+    public void DeleteExpenseLogCommand_RestoresSpendingSourceTotalsInUi()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var targetLog = vm.GetAllExpenseLogs().Single(log => log.Id == 1);
+
+            vm.DeleteExpenseLogCommand.ExecuteAsync(targetLog).GetAwaiter().GetResult();
+
+            Assert.Equal(2045m, vm.TotalIncomeAmount);
+            Assert.DoesNotContain(vm.GetAllExpenseLogs(), log => log.Id == targetLog.Id);
+        });
+    }
+
     private static BudgetAllocationPanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
@@ -124,6 +141,8 @@ public class BudgetAllocationPanelVMTests
         var expenseLogService = Substitute.For<IExpenseLogService>();
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseLogDto>>([]));
+        expenseLogService.DeleteAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
 
         var spendingSourceService = Substitute.For<ISpendingSourceService>();
         spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())

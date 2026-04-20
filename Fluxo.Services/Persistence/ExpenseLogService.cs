@@ -1,5 +1,7 @@
 using AutoMapper;
 using Fluxo.Core.DTO;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 
@@ -34,6 +36,13 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
             if (log is null || log.IsForDeletion)
                 return;
 
+            var source = await unitOfWork.SpendingSources.GetByIdAsync(log.SpendingSourceId, ct);
+            if (source is not null)
+            {
+                RestoreExpenseOnSpendingSource(source, log.Amount);
+                unitOfWork.SpendingSources.Update(source);
+            }
+
             log.IsForDeletion = true;
             unitOfWork.ExpenseLogs.Update(log);
             await unitOfWork.SaveChangesAsync(ct);
@@ -59,8 +68,7 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
                     continue;
 
                 var total = grp.Sum(l => l.Amount);
-                source.Balance += total;
-                source.SpentAmount -= total;
+                RestoreExpenseOnSpendingSource(source, total);
                 unitOfWork.SpendingSources.Update(source);
             }
 
@@ -83,5 +91,16 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
 
             await unitOfWork.SaveChangesAsync(ct);
         }, cancellationToken);
+    }
+
+    private static void RestoreExpenseOnSpendingSource(SpendingSource source, decimal amount)
+    {
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount = Math.Max(0m, source.SpentAmount - amount);
+            return;
+        }
+
+        source.Balance += amount;
     }
 }

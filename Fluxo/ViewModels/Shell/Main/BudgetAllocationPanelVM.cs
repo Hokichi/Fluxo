@@ -430,12 +430,30 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         var trackedExpenseLog = _allExpenseLogs.FirstOrDefault(log => log.Id == expenseLog.Id) ?? expenseLog;
         trackedExpenseLog.IsForDeletion = true;
 
+        if (trackedExpenseLog.SpendingSource?.Id is int sourceId)
+        {
+            var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == sourceId);
+            if (source is not null)
+                RestoreExpenseOnSpendingSource(source, trackedExpenseLog.Amount);
+        }
+
         _allExpenseLogs = _allExpenseLogs
             .Where(log => log.Id != trackedExpenseLog.Id)
             .ToList();
 
         RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs();
+    }
+
+    private static void RestoreExpenseOnSpendingSource(SpendingSourceVM source, decimal amount)
+    {
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount = Math.Max(0m, source.SpentAmount - amount);
+            return;
+        }
+
+        source.Balance += amount;
     }
 
     private static void ReplaceExpenseLogs(ObservableCollection<ExpenseLogVM> target, IEnumerable<ExpenseLogVM> items)
