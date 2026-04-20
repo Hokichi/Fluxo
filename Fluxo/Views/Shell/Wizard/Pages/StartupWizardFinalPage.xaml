@@ -22,18 +22,31 @@
                         Source="/Fluxo;component/Resources/fluxo.ico"
                         Stretch="Uniform" />
                 </Border>
-                <TextBlock
-                    Margin="0,18,0,0"
+                <StackPanel
                     HorizontalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="28"
-                    Foreground="{StaticResource Brush.Text.Primary}">
-                    <Run Text="Welcome to " />
-                    <Run Text="flux" />
-                    <Run Foreground="{StaticResource Brush.Mint}" Text="o" />
-                    <Run Text=", " />
-                    <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
-                </TextBlock>
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Text="Welcome to" />
+                        <Run Text="flux" />
+                    </TextBlock>
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Foreground="{StaticResource Brush.Mint}" Text="o" />
+                    </TextBlock>
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Text=", " />
+                        <Run Text="{Binding ResolvedUsername, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
                 <TextBlock
                     Margin="0,12,0,0"
                     HorizontalAlignment="Center"
@@ -50,8 +63,8 @@
                     <components:Icon
                         Width="16"
                         Height="16"
-                        Color="{StaticResource Brush.Background.Surface}"
-                        Path="{StaticResource StartupWizardFinalPage.RocketSolid}" />
+                        Path="{StaticResource StartupWizardFinalPage.RocketSolid}"
+                        Color="{StaticResource Brush.Background.Surface}" />
                 </Button>
             </StackPanel>
         </Grid>
