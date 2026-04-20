@@ -28,27 +28,27 @@ public sealed class DialogService : IDialogService
 
     public bool? ShowQuickAdd(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<QuickAddPopup>(), owner);
+        return ShowScopedDialog<QuickAddPopup>(owner);
     }
 
     public bool? ShowQuickSearch(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<QuickSearchPopup>(), owner);
+        return ShowScopedDialog<QuickSearchPopup>(owner);
     }
 
     public bool? ShowSpendingSourcesList(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<SpendingSourcesListPopup>(), owner);
+        return ShowScopedDialog<SpendingSourcesListPopup>(owner);
     }
 
     public bool? ShowSettings(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<SettingsPopup>(), owner);
+        return ShowScopedDialog<SettingsPopup>(owner);
     }
 
     public bool? ShowStartupWizard(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<StartupWizardPopup>(), owner);
+        return ShowScopedDialog<StartupWizardPopup>(owner);
     }
 
     public bool? ShowAddNewTransaction(QuickAddVM viewModel, Window? owner = null)
@@ -73,7 +73,7 @@ public sealed class DialogService : IDialogService
 
     public bool? ShowAddSpendingSource(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<AddSpendingSourcePopup>(), owner);
+        return ShowScopedDialog<AddSpendingSourcePopup>(owner);
     }
 
     public bool? ShowAddSpendingSource(AddSpendingSourceVM viewModel, Window? owner = null)
@@ -83,7 +83,7 @@ public sealed class DialogService : IDialogService
 
     public bool? ShowAddFixedExpense(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<AddFixedExpensePopup>(), owner);
+        return ShowScopedDialog<AddFixedExpensePopup>(owner);
     }
 
     public bool? ShowAddFixedExpense(AddFixedExpenseVM viewModel, Window? owner = null)
@@ -93,7 +93,7 @@ public sealed class DialogService : IDialogService
 
     public bool? ShowAddSavingGoal(Window? owner = null)
     {
-        return ShowDialog(_serviceProvider.GetRequiredService<AddSavingGoalPopup>(), owner);
+        return ShowScopedDialog<AddSavingGoalPopup>(owner);
     }
 
     public bool? ShowAddSavingGoal(AddSavingGoalVM viewModel, Window? owner = null)
@@ -155,5 +155,12 @@ public sealed class DialogService : IDialogService
             popup.Owner = owner;
 
         return popup.ShowDialog();
+    }
+
+    private bool? ShowScopedDialog<TWindow>(Window? owner = null) where TWindow : Window
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var popup = scope.ServiceProvider.GetRequiredService<TWindow>();
+        return ShowDialog(popup, owner);
     }
 }

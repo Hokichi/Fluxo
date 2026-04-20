@@ -3,8 +3,10 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
@@ -255,6 +257,11 @@ public class NotificationPanelVMTests
         var savingGoalRepository = Substitute.For<ISavingGoalRepository>();
         savingGoalRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<SavingGoal>>([]));
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        unitOfWork.UserSettings.Returns(userSettingsRepository);
+        unitOfWork.Notifications.Returns(notificationRepository);
+        unitOfWork.SavingGoals.Returns(savingGoalRepository);
+        var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseVM>>(Arg.Any<object>()).Returns(expenses);
@@ -267,9 +274,7 @@ public class NotificationPanelVMTests
             expenseService,
             expenseLogService,
             spendingSourceService,
-            savingGoalRepository,
-            userSettingsRepository,
-            notificationRepository,
+            dataOperationRunner,
             mapper,
             new WeakReferenceMessenger());
     }

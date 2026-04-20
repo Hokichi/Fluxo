@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
@@ -21,6 +21,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<AllTimeViewModeMessage>,
     IRecipient<DashboardDataInvalidatedMessage>
 {
+    private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
     private readonly IMapper _mapper;
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
@@ -28,7 +29,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly ISpendingSourceService _spendingSourceService;
     private readonly ITagService _tagService;
-    private readonly IUserSettingsRepository _userSettingsRepository;
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
     private readonly ObservableCollection<SpendingSourceVM> _spendingSources = [];
 
@@ -43,7 +43,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         IExpenseLogService expenseLogService,
         ISpendingSourceService spendingSourceService,
         ITagService tagService,
-        IUserSettingsRepository userSettingsRepository,
+        IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
@@ -51,7 +51,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         _expenseLogService = expenseLogService;
         _spendingSourceService = spendingSourceService;
         _tagService = tagService;
-        _userSettingsRepository = userSettingsRepository;
+        _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
 
         Initialize();
@@ -323,8 +323,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private async Task LoadUserSettingsAsync(CancellationToken cancellationToken)
     {
-        var settings = await _userSettingsRepository.GetAllAsync(cancellationToken);
-        var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
+        var settingsByName = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var settings = await scope.UnitOfWork.UserSettings.GetAllAsync(ct);
+            return settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
+        }, cancellationToken);
 
         _needsThreshold = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
         _wantsThreshold = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);

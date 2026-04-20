@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
-using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 
@@ -10,7 +10,7 @@ namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class MainVM : ObservableRecipient
 {
-    private readonly IUserSettingsRepository _userSettingsRepository;
+    private readonly IDataOperationRunner _dataOperationRunner;
     private bool _isInitialized;
 
     [ObservableProperty] private string _username = "User";
@@ -18,14 +18,14 @@ public partial class MainVM : ObservableRecipient
     public bool IsInitialized => _isInitialized;
 
     public MainVM(
-        IUserSettingsRepository userSettingsRepository,
+        IDataOperationRunner dataOperationRunner,
         Main.NotificationPanelVM notificationPanel,
         Main.BudgetAllocationPanelVM budgetPanel,
         Main.SavingGoalsPanelVM savingGoalsPanel,
         Main.DaySpinnerVM daySpinner,
         Main.MainViewModeToggleVM viewModeToggle)
     {
-        _userSettingsRepository = userSettingsRepository;
+        _dataOperationRunner = dataOperationRunner;
         NotificationPanel = notificationPanel;
         BudgetPanel = budgetPanel;
         SavingGoalsPanel = savingGoalsPanel;
@@ -73,9 +73,11 @@ public partial class MainVM : ObservableRecipient
 
     private async Task LoadUserSettingsAsync()
     {
-        var settings = await _userSettingsRepository.GetAllAsync();
-        var settingsByName = settings.ToDictionary(
-            s => s.Name, s => s.Value, StringComparer.Ordinal);
+        var settingsByName = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var settings = await scope.UnitOfWork.UserSettings.GetAllAsync(ct);
+            return settings.ToDictionary(s => s.Name, s => s.Value, StringComparer.Ordinal);
+        });
 
         if (settingsByName.TryGetValue(UserSettingNames.PreferredDisplayName, out var name))
         {

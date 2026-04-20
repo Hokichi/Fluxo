@@ -1,69 +1,87 @@
 using AutoMapper;
 using Fluxo.Core.DTO;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 
 namespace Fluxo.Services.Persistence;
 
-public sealed class ExpenseLogService(IUnitOfWork unitOfWork, IMapper mapper) : IExpenseLogService
+public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, IMapper mapper) : IExpenseLogService
 {
     public async Task<IReadOnlyList<ExpenseLogDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var logs = await unitOfWork.ExpenseLogs.GetAllAsync(cancellationToken);
-        return mapper.Map<IReadOnlyList<ExpenseLogDto>>(logs);
+        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var logs = await scope.UnitOfWork.ExpenseLogs.GetAllAsync(ct);
+            return mapper.Map<IReadOnlyList<ExpenseLogDto>>(logs);
+        }, cancellationToken);
     }
 
     public async Task<ExpenseLogDto?> GetByLogIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var log = await unitOfWork.ExpenseLogs.GetByLogIdAsync(id, cancellationToken);
-        return log is null ? null : mapper.Map<ExpenseLogDto>(log);
+        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var log = await scope.UnitOfWork.ExpenseLogs.GetByLogIdAsync(id, ct);
+            return log is null ? null : mapper.Map<ExpenseLogDto>(log);
+        }, cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var log = await unitOfWork.ExpenseLogs.GetByLogIdAsync(id, cancellationToken);
-        if (log is null || log.IsForDeletion) return;
+        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var unitOfWork = scope.UnitOfWork;
+            var log = await unitOfWork.ExpenseLogs.GetByLogIdAsync(id, ct);
+            if (log is null || log.IsForDeletion)
+                return;
 
-        log.IsForDeletion = true;
-        unitOfWork.ExpenseLogs.Update(log);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+            log.IsForDeletion = true;
+            unitOfWork.ExpenseLogs.Update(log);
+            await unitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
     }
 
     public async Task PostTerminationCleanupAsync(CancellationToken cancellationToken = default)
     {
-        var markedLogs = await unitOfWork.ExpenseLogs.GetMarkedForDeletionAsync(cancellationToken);
-        if (markedLogs.Count == 0) return;
-
-        var expenseIds = markedLogs.Select(l => l.ExpenseId).Distinct().ToList();
-
-        // Restore balance on spending sources for logs being permanently deleted.
-        foreach (var grp in markedLogs.GroupBy(l => l.SpendingSourceId))
+        await dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            var source = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, cancellationToken);
-            if (source is null) continue;
-            var total = grp.Sum(l => l.Amount);
-            source.Balance += total;
-            source.SpentAmount -= total;
-            unitOfWork.SpendingSources.Update(source);
-        }
+            var unitOfWork = scope.UnitOfWork;
+            var markedLogs = await unitOfWork.ExpenseLogs.GetMarkedForDeletionAsync(ct);
+            if (markedLogs.Count == 0)
+                return;
 
-        foreach (var log in markedLogs)
-            unitOfWork.ExpenseLogs.Remove(log);
+            var expenseIds = markedLogs.Select(l => l.ExpenseId).Distinct().ToList();
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+            // Restore balance on spending sources for logs being permanently deleted.
+            foreach (var grp in markedLogs.GroupBy(l => l.SpendingSourceId))
+            {
+                var source = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, ct);
+                if (source is null)
+                    continue;
 
-        // After committing log deletions, check which expenses are now orphaned.
-        // Load all remaining logs once to avoid an N+1 query per expense ID.
-        var remainingLogs = await unitOfWork.ExpenseLogs.GetAllAsync(cancellationToken);
-        var expensesWithLogs = remainingLogs.Select(l => l.ExpenseId).ToHashSet();
+                var total = grp.Sum(l => l.Amount);
+                source.Balance += total;
+                source.SpentAmount -= total;
+                unitOfWork.SpendingSources.Update(source);
+            }
 
-        foreach (var expenseId in expenseIds.Where(id => !expensesWithLogs.Contains(id)))
-        {
-            var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(expenseId, cancellationToken);
-            if (expense is not null)
-                unitOfWork.Expenses.Remove(expense);
-        }
+            foreach (var log in markedLogs)
+                unitOfWork.ExpenseLogs.Remove(log);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(ct);
+
+            // After committing log deletions, check which expenses are now orphaned.
+            // Load all remaining logs once to avoid an N+1 query per expense ID.
+            var remainingLogs = await unitOfWork.ExpenseLogs.GetAllAsync(ct);
+            var expensesWithLogs = remainingLogs.Select(l => l.ExpenseId).ToHashSet();
+
+            foreach (var expenseId in expenseIds.Where(candidateId => !expensesWithLogs.Contains(candidateId)))
+            {
+                var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(expenseId, ct);
+                if (expense is not null)
+                    unitOfWork.Expenses.Remove(expense);
+            }
+
+            await unitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
     }
 }

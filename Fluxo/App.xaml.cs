@@ -1,15 +1,16 @@
 using Fluxo.Core.Constants;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Shell;
+using Fluxo.Views.CustomControls;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
-using Fluxo.Views.CustomControls;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo;
@@ -19,9 +20,9 @@ namespace Fluxo;
 /// </summary>
 public partial class App : Application
 {
-    private readonly IServiceProvider? _serviceProvider;
+    private readonly IDataOperationRunner _dataOperationRunner;
     private readonly MainVM _mainVM;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IServiceProvider? _serviceProvider;
 
     public App()
     {
@@ -33,8 +34,8 @@ public partial class App : Application
 
         _serviceProvider = services.BuildServiceProvider();
 
-        _mainVM = _serviceProvider!.GetRequiredService<MainVM>();
-        _unitOfWork = _serviceProvider!.GetRequiredService<IUnitOfWork>();
+        _mainVM = _serviceProvider.GetRequiredService<MainVM>();
+        _dataOperationRunner = _serviceProvider.GetRequiredService<IDataOperationRunner>();
     }
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -44,11 +45,12 @@ public partial class App : Application
 
         try
         {
-            var isFirstRun = await EnsureFirstRunSettingAsync(_unitOfWork);
+            var isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
 
             if (isFirstRun)
             {
-                var wizard = _serviceProvider!.GetRequiredService<StartupWizardPopup>();
+                using var wizardScope = _serviceProvider!.CreateScope();
+                var wizard = wizardScope.ServiceProvider.GetRequiredService<StartupWizardPopup>();
                 wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 wizard.ShowDialog();
             }
@@ -66,7 +68,7 @@ public partial class App : Application
                 }
             }
 
-            var mainWindow = _serviceProvider!.GetRequiredService<MainWindow>();
+            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             mainWindow.Show();
@@ -88,9 +90,12 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         MainWindow?.Hide();
 
-        var wizard = _serviceProvider!.GetRequiredService<StartupWizardPopup>();
-        wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        wizard.ShowDialog();
+        using (var wizardScope = _serviceProvider!.CreateScope())
+        {
+            var wizard = wizardScope.ServiceProvider.GetRequiredService<StartupWizardPopup>();
+            wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            wizard.ShowDialog();
+        }
 
         await _mainVM.Initialize();
 
@@ -98,21 +103,24 @@ public partial class App : Application
         MainWindow?.Show();
     }
 
-    private static async Task<bool> EnsureFirstRunSettingAsync(IUnitOfWork unitOfWork)
+    private static async Task<bool> EnsureFirstRunSettingAsync(IDataOperationRunner dataOperationRunner)
     {
-        var existingSetting = await unitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun);
-
-        if (existingSetting is null)
+        return await dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            await unitOfWork.UserSettings.AddAsync(new Core.Entities.UserSettings
-            {
-                Name = UserSettingNames.IsFirstRun,
-                Value = bool.TrueString
-            });
-            await unitOfWork.SaveChangesAsync();
-            return true;
-        }
+            var existingSetting = await scope.UnitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun, ct);
 
-        return !bool.TryParse(existingSetting.Value, out var isFirstRun) || isFirstRun;
+            if (existingSetting is null)
+            {
+                await scope.UnitOfWork.UserSettings.AddAsync(new UserSettings
+                {
+                    Name = UserSettingNames.IsFirstRun,
+                    Value = bool.TrueString
+                }, ct);
+                await scope.UnitOfWork.SaveChangesAsync(ct);
+                return true;
+            }
+
+            return !bool.TryParse(existingSetting.Value, out var isFirstRun) || isFirstRun;
+        });
     }
 }

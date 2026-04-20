@@ -2,100 +2,123 @@ using AutoMapper;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Filters;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 
 namespace Fluxo.Services.Persistence;
 
-public sealed class ExpenseService(IUnitOfWork unitOfWork, IMapper mapper) : IExpenseService
+public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMapper mapper) : IExpenseService
 {
     public async Task<IReadOnlyList<ExpenseDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var expenses = await unitOfWork.Expenses.GetAllAsync(cancellationToken);
-        return mapper.Map<IReadOnlyList<ExpenseDto>>(expenses);
+        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var expenses = await scope.UnitOfWork.Expenses.GetAllAsync(ct);
+            return mapper.Map<IReadOnlyList<ExpenseDto>>(expenses);
+        }, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ExpenseDto>> SearchAsync(ExpenseFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var expenses = await unitOfWork.Expenses.SearchAsync(filter, cancellationToken);
-        return mapper.Map<IReadOnlyList<ExpenseDto>>(expenses);
+        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var expenses = await scope.UnitOfWork.Expenses.SearchAsync(filter, ct);
+            return mapper.Map<IReadOnlyList<ExpenseDto>>(expenses);
+        }, cancellationToken);
     }
 
     public async Task AddAsync(ExpenseDto dto, CancellationToken cancellationToken = default)
     {
-        // Validate source exists before staging any entities.
-        var source = await unitOfWork.SpendingSources.GetByIdAsync(dto.SpendingSourceId, cancellationToken);
-        if (source is null)
-            throw new InvalidOperationException($"SpendingSource with id {dto.SpendingSourceId} was not found.");
-
-        // Build the entity manually so EF can track it and resolve the ExpenseLog FK.
-        var expense = new Expense
+        await dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            SpendingSourceId = dto.SpendingSourceId,
-            ExpenseTagId = dto.ExpenseTagId,
-            Name = dto.Name,
-            Amount = dto.Amount,
-            ExpenseKind = dto.ExpenseKind,
-            ExpenseCategory = dto.ExpenseCategory,
-            RecurringDate = dto.RecurringDate,
-            IsActive = dto.IsActive
-        };
-        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
+            var unitOfWork = scope.UnitOfWork;
 
-        // Link the log via navigation — EF resolves the FK after insert.
-        var log = new ExpenseLog
-        {
-            Expense = expense,
-            SpendingSourceId = dto.SpendingSourceId,
-            Amount = dto.Amount,
-            DeductedOn = DateTime.Now,
-            Notes = string.Empty,
-            IsForDeletion = false
-        };
-        await unitOfWork.ExpenseLogs.AddAsync(log, cancellationToken);
+            // Validate source exists before staging any entities.
+            var source = await unitOfWork.SpendingSources.GetByIdAsync(dto.SpendingSourceId, ct);
+            if (source is null)
+                throw new InvalidOperationException($"SpendingSource with id {dto.SpendingSourceId} was not found.");
 
-        // Deduct from spending source.
-        source.Balance -= dto.Amount;
-        source.SpentAmount += dto.Amount;
-        unitOfWork.SpendingSources.Update(source);
+            // Build the entity manually so EF can track it and resolve the ExpenseLog FK.
+            var expense = new Expense
+            {
+                SpendingSourceId = dto.SpendingSourceId,
+                ExpenseTagId = dto.ExpenseTagId,
+                Name = dto.Name,
+                Amount = dto.Amount,
+                ExpenseKind = dto.ExpenseKind,
+                ExpenseCategory = dto.ExpenseCategory,
+                RecurringDate = dto.RecurringDate,
+                IsActive = dto.IsActive
+            };
+            await unitOfWork.Expenses.AddAsync(expense, ct);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+            // Link the log via navigation; EF resolves the FK after insert.
+            var log = new ExpenseLog
+            {
+                Expense = expense,
+                SpendingSourceId = dto.SpendingSourceId,
+                Amount = dto.Amount,
+                DeductedOn = DateTime.Now,
+                Notes = string.Empty,
+                IsForDeletion = false
+            };
+            await unitOfWork.ExpenseLogs.AddAsync(log, ct);
+
+            // Deduct from spending source.
+            source.Balance -= dto.Amount;
+            source.SpentAmount += dto.Amount;
+            unitOfWork.SpendingSources.Update(source);
+
+            await unitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
     }
 
     public async Task UpdateAsync(ExpenseDto dto, CancellationToken cancellationToken = default)
     {
-        var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(dto.Id, cancellationToken);
-        if (expense is null) return;
+        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var unitOfWork = scope.UnitOfWork;
+            var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(dto.Id, ct);
+            if (expense is null)
+                return;
 
-        mapper.Map(dto, expense);
-        unitOfWork.Expenses.Update(expense);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+            mapper.Map(dto, expense);
+            unitOfWork.Expenses.Update(expense);
+            await unitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
     }
 
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
-        // FK deletes are Restrict — remove logs before removing the expense.
-        var logs = await unitOfWork.ExpenseLogs.GetByExpenseIdAsync(id, cancellationToken);
-
-        // Restore balance on each affected spending source before deleting logs.
-        foreach (var grp in logs.GroupBy(l => l.SpendingSourceId))
+        await dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            var source = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, cancellationToken);
-            if (source is null) continue;
-            var total = grp.Sum(l => l.Amount);
-            source.Balance += total;
-            source.SpentAmount -= total;
-            unitOfWork.SpendingSources.Update(source);
-        }
+            var unitOfWork = scope.UnitOfWork;
 
-        foreach (var log in logs)
-            unitOfWork.ExpenseLogs.Remove(log);
+            // FK deletes are Restrict; remove logs before removing the expense.
+            var logs = await unitOfWork.ExpenseLogs.GetByExpenseIdAsync(id, ct);
 
-        var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(id, cancellationToken);
-        if (expense is not null)
-            unitOfWork.Expenses.Remove(expense);
+            // Restore balance on each affected spending source before deleting logs.
+            foreach (var grp in logs.GroupBy(l => l.SpendingSourceId))
+            {
+                var source = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, ct);
+                if (source is null)
+                    continue;
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+                var total = grp.Sum(l => l.Amount);
+                source.Balance += total;
+                source.SpentAmount -= total;
+                unitOfWork.SpendingSources.Update(source);
+            }
+
+            foreach (var log in logs)
+                unitOfWork.ExpenseLogs.Remove(log);
+
+            var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(id, ct);
+            if (expense is not null)
+                unitOfWork.Expenses.Remove(expense);
+
+            await unitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
     }
 }

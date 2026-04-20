@@ -322,30 +322,30 @@
             </Grid.ColumnDefinitions>
 
             <components:ExpensesList
+                Title="NEEDS"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Needs}"
                 IsListEmpty="{Binding IsNeedsEmpty}"
                 ItemsSource="{Binding Needs}"
-                SpentAmount="{Binding NeedsSpent}"
-                Title="NEEDS" />
+                SpentAmount="{Binding NeedsSpent}" />
 
             <components:ExpensesList
+                Title="WANTS"
                 Grid.Column="2"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Wants}"
                 IsListEmpty="{Binding IsWantsEmpty}"
                 ItemsSource="{Binding Wants}"
-                SpentAmount="{Binding WantsSpent}"
-                Title="WANTS" />
+                SpentAmount="{Binding WantsSpent}" />
 
             <components:ExpensesList
+                Title="INVEST &amp; SAVINGS"
                 Grid.Column="4"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Investments}"
                 IsListEmpty="{Binding IsInvestEmpty}"
                 ItemsSource="{Binding Invest}"
-                SpentAmount="{Binding InvestSpent}"
-                Title="INVEST &amp; SAVINGS" />
+                SpentAmount="{Binding InvestSpent}" />
         </Grid>
     </Grid>
 </UserControl>

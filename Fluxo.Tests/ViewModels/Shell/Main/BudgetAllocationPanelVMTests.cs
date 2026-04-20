@@ -7,9 +7,10 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
+using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
@@ -132,9 +133,12 @@ public class BudgetAllocationPanelVMTests
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseTagDto>>([]));
 
-        var userSettingsRepository = Substitute.For<IUserSettingsRepository>();
+        var userSettingsRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IUserSettingsRepository>();
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>(settings ?? []));
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        unitOfWork.UserSettings.Returns(userSettingsRepository);
+        var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
@@ -145,7 +149,7 @@ public class BudgetAllocationPanelVMTests
             expenseLogService,
             spendingSourceService,
             tagService,
-            userSettingsRepository,
+            dataOperationRunner,
             mapper,
             messenger);
     }

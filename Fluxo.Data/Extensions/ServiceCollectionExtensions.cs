@@ -1,8 +1,11 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Data.Context;
+using Fluxo.Data.Operations;
 using Fluxo.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo.Data.Extensions;
@@ -11,40 +14,34 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFluxoData(this IServiceCollection services)
     {
-        services.AddTransient<FluxoDbContext>(_ => new FluxoDbContextFactory().CreateDbContext([]));
-
-        // UnitOfWork factory: all repositories share the same DbContext instance
-        services.AddTransient<IUnitOfWork>(_ =>
+        services.AddDbContext<FluxoDbContext>((_, optionsBuilder) =>
         {
-            var dbContext = new FluxoDbContextFactory().CreateDbContext([]);
-            return new UnitOfWork(
-                dbContext,
-                new ExpenseRepository(dbContext),
-                new ExpenseLogRepository(dbContext),
-                new IncomeLogRepository(dbContext),
-                new ExpenseTagRepository(dbContext),
-                new SavingGoalRepository(dbContext),
-                new SpendingSourceRepository(dbContext),
-                new NotificationRepository(dbContext),
-                new UserSettingsRepository(dbContext));
-        });
+            optionsBuilder.UseSqlite(
+                FluxoDbContextFactory.BuildConnectionString(),
+                sqliteOptions => sqliteOptions.MigrationsAssembly("Fluxo"));
+        }, ServiceLifetime.Scoped);
 
-        services.AddTransient<IExpenseRepository, ExpenseRepository>();
-        services.AddTransient<IExpenseLogRepository, ExpenseLogRepository>();
-        services.AddTransient<IIncomeLogRepository, IncomeLogRepository>();
-        services.AddTransient<IExpenseTagRepository, ExpenseTagRepository>();
-        services.AddTransient<ISavingGoalRepository, SavingGoalRepository>();
-        services.AddTransient<ISpendingSourceRepository, SpendingSourceRepository>();
-        services.AddTransient<INotificationRepository, NotificationRepository>();
-        services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        services.AddTransient<IRepository<Expense>, ExpenseRepository>();
-        services.AddTransient<IRepository<ExpenseLog>, ExpenseLogRepository>();
-        services.AddTransient<IRepository<IncomeLog>, IncomeLogRepository>();
-        services.AddTransient<IRepository<ExpenseTag>, ExpenseTagRepository>();
-        services.AddTransient<IRepository<SavingGoal>, SavingGoalRepository>();
-        services.AddTransient<IRepository<SpendingSource>, SpendingSourceRepository>();
-        services.AddTransient<IRepository<Notification>, NotificationRepository>();
+        services.AddScoped<IExpenseRepository, ExpenseRepository>();
+        services.AddScoped<IExpenseLogRepository, ExpenseLogRepository>();
+        services.AddScoped<IIncomeLogRepository, IncomeLogRepository>();
+        services.AddScoped<IExpenseTagRepository, ExpenseTagRepository>();
+        services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
+        services.AddScoped<ISpendingSourceRepository, SpendingSourceRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+
+        services.AddScoped<IRepository<Expense>, ExpenseRepository>();
+        services.AddScoped<IRepository<ExpenseLog>, ExpenseLogRepository>();
+        services.AddScoped<IRepository<IncomeLog>, IncomeLogRepository>();
+        services.AddScoped<IRepository<ExpenseTag>, ExpenseTagRepository>();
+        services.AddScoped<IRepository<SavingGoal>, SavingGoalRepository>();
+        services.AddScoped<IRepository<SpendingSource>, SpendingSourceRepository>();
+        services.AddScoped<IRepository<Notification>, NotificationRepository>();
+
+        services.AddSingleton<IDataOperationScopeFactory, DataOperationScopeFactory>();
+        services.AddSingleton<IDataOperationRunner, DataOperationRunner>();
 
         return services;
     }

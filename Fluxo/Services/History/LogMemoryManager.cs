@@ -1,25 +1,24 @@
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Resources.Messages;
-using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.Services.History;
 
 public sealed class LogMemoryManager : IDisposable
 {
+    private readonly IDataOperationRunner _dataOperationRunner;
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
     private readonly Stack<ILogMemoryAction> _redoStack = [];
     private readonly Stack<ILogMemoryAction> _undoStack = [];
-    private readonly IUnitOfWork _unitOfWork;
     private bool _isDisposed;
     private bool _isExecuting;
 
-    public LogMemoryManager(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public LogMemoryManager(MainVM mainViewModel, IDataOperationRunner dataOperationRunner, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _dataOperationRunner = dataOperationRunner;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
 
         _messenger.Register<LogMemoryManager, RecordLogMemoryMessage>(this, static (recipient, message) =>
@@ -51,8 +50,10 @@ public sealed class LogMemoryManager : IDisposable
         {
             _isExecuting = true;
 
-            var unitOfWork = _unitOfWork;
-            await action.UndoAsync(unitOfWork, cancellationToken);
+            await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            {
+                await action.UndoAsync(scope.UnitOfWork, ct);
+            }, cancellationToken);
             await _mainViewModel.ReloadCurrentDataAsync();
 
             _redoStack.Push(action);
@@ -80,8 +81,10 @@ public sealed class LogMemoryManager : IDisposable
         {
             _isExecuting = true;
 
-            var unitOfWork = _unitOfWork;
-            await action.RedoAsync(unitOfWork, cancellationToken);
+            await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            {
+                await action.RedoAsync(scope.UnitOfWork, ct);
+            }, cancellationToken);
             await _mainViewModel.ReloadCurrentDataAsync();
 
             _undoStack.Push(action);

@@ -9,7 +9,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.DTO;
-using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
@@ -24,13 +24,11 @@ public partial class NotificationPanelVM : ObservableRecipient,
 {
     private readonly IExpenseLogService _expenseLogService;
     private readonly IExpenseService _expenseService;
+    private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly SemaphoreSlim _notificationSyncGate = new(1, 1);
     private readonly ISpendingSourceService _spendingSourceService;
-    private readonly ISavingGoalRepository _savingGoalRepository;
-    private readonly IUserSettingsRepository _userSettingsRepository;
-    private readonly INotificationRepository _notificationRepository;
     private readonly HashSet<int> _hiddenFixedExpenseIds = [];
     private readonly HashSet<int> _hiddenSavingGoalIds = [];
     private readonly HashSet<int> _disabledSavingGoalIds = [];
@@ -59,9 +57,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         IExpenseService expenseService,
         IExpenseLogService expenseLogService,
         ISpendingSourceService spendingSourceService,
-        ISavingGoalRepository savingGoalRepository,
-        IUserSettingsRepository userSettingsRepository,
-        INotificationRepository notificationRepository,
+        IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
@@ -69,9 +65,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _expenseService = expenseService;
         _expenseLogService = expenseLogService;
         _spendingSourceService = spendingSourceService;
-        _savingGoalRepository = savingGoalRepository;
-        _userSettingsRepository = userSettingsRepository;
-        _notificationRepository = notificationRepository;
+        _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
 
         Notifications.CollectionChanged += OnNotificationsCollectionChanged;
@@ -93,20 +87,24 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         try
         {
-            var activeNotifications = await _notificationRepository.GetActiveAsync();
-            var hasChanges = false;
-
-            foreach (var notification in activeNotifications.Where(n => !n.IsCleared))
+            await _dataOperationRunner.RunAsync(async (scope, ct) =>
             {
-                notification.IsCleared = true;
-                notification.IsForDeletion = ShouldMarkForDeletion(notification, isActiveCondition: true);
+                var unitOfWork = scope.UnitOfWork;
+                var activeNotifications = await unitOfWork.Notifications.GetActiveAsync(ct);
+                var hasChanges = false;
 
-                _notificationRepository.Update(notification);
-                hasChanges = true;
-            }
+                foreach (var notification in activeNotifications.Where(n => !n.IsCleared))
+                {
+                    notification.IsCleared = true;
+                    notification.IsForDeletion = ShouldMarkForDeletion(notification, isActiveCondition: true);
 
-            if (hasChanges)
-                await _notificationRepository.SaveChangesAsync();
+                    unitOfWork.Notifications.Update(notification);
+                    hasChanges = true;
+                }
+
+                if (hasChanges)
+                    await unitOfWork.Notifications.SaveChangesAsync(ct);
+            });
 
             Notifications.Clear();
         }
@@ -149,7 +147,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
             await _spendingSourceService.GetAllAsync(cancellationToken));
         _savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(
             _mapper.Map<IReadOnlyList<SavingGoalDto>>(
-                await _savingGoalRepository.GetAllAsync(cancellationToken)));
+                await _dataOperationRunner.RunAsync(async (scope, ct) =>
+                    await scope.UnitOfWork.SavingGoals.GetAllAsync(ct), cancellationToken)));
 
         await RefreshNotificationsAsync(cancellationToken);
     }
@@ -425,92 +424,96 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         try
         {
-            var persistedNotifications = (await _notificationRepository.GetAllAsync(cancellationToken))
-                .OrderByDescending(notification => notification.CreatedOn)
-                .ToList();
-            var activeTypes = evaluatedNotifications
-                .Select(notification => notification.Type)
-                .ToHashSet(StringComparer.Ordinal);
-            var evaluatedUnique = evaluatedNotifications
-                .GroupBy(notification => $"{notification.Type}\n{notification.Message}", StringComparer.Ordinal)
-                .Select(group => group.First())
-                .ToList();
-
-            var hasChanges = false;
-            foreach (var persisted in persistedNotifications)
+            return await _dataOperationRunner.RunAsync(async (scope, ct) =>
             {
-                var isActiveCondition = activeTypes.Contains(persisted.Type);
-                var shouldDelete = ShouldMarkForDeletion(persisted, isActiveCondition);
-                if (persisted.IsForDeletion == shouldDelete)
-                    continue;
-
-                persisted.IsForDeletion = shouldDelete;
-                _notificationRepository.Update(persisted);
-                hasChanges = true;
-            }
-
-            foreach (var evaluated in evaluatedUnique)
-            {
-                var now = DateTime.Now;
-                var duplicate = persistedNotifications
-                    .Where(notification =>
-                        string.Equals(notification.Type, evaluated.Type, StringComparison.Ordinal) &&
-                        string.Equals(notification.Message, evaluated.Message, StringComparison.Ordinal) &&
-                        notification.CreatedOn <= now)
+                var unitOfWork = scope.UnitOfWork;
+                var persistedNotifications = (await unitOfWork.Notifications.GetAllAsync(ct))
                     .OrderByDescending(notification => notification.CreatedOn)
-                    .FirstOrDefault();
-                if (duplicate is not null)
-                {
-                    if (!string.Equals(duplicate.Header, evaluated.Header, StringComparison.Ordinal))
-                    {
-                        duplicate.Header = evaluated.Header;
-                        _notificationRepository.Update(duplicate);
-                        hasChanges = true;
-                    }
+                    .ToList();
+                var activeTypes = evaluatedNotifications
+                    .Select(notification => notification.Type)
+                    .ToHashSet(StringComparer.Ordinal);
+                var evaluatedUnique = evaluatedNotifications
+                    .GroupBy(notification => $"{notification.Type}\n{notification.Message}", StringComparer.Ordinal)
+                    .Select(group => group.First())
+                    .ToList();
 
-                    continue;
+                var hasChanges = false;
+                foreach (var persisted in persistedNotifications)
+                {
+                    var isActiveCondition = activeTypes.Contains(persisted.Type);
+                    var shouldDelete = ShouldMarkForDeletion(persisted, isActiveCondition);
+                    if (persisted.IsForDeletion == shouldDelete)
+                        continue;
+
+                    persisted.IsForDeletion = shouldDelete;
+                    unitOfWork.Notifications.Update(persisted);
+                    hasChanges = true;
                 }
 
-                var createdNotification = new Notification
+                foreach (var evaluated in evaluatedUnique)
                 {
-                    Type = evaluated.Type,
-                    Header = evaluated.Header,
-                    Message = evaluated.Message,
-                    CreatedOn = DateTime.Now,
-                    IsCleared = false,
-                    IsForDeletion = false
-                };
+                    var now = DateTime.Now;
+                    var duplicate = persistedNotifications
+                        .Where(notification =>
+                            string.Equals(notification.Type, evaluated.Type, StringComparison.Ordinal) &&
+                            string.Equals(notification.Message, evaluated.Message, StringComparison.Ordinal) &&
+                            notification.CreatedOn <= now)
+                        .OrderByDescending(notification => notification.CreatedOn)
+                        .FirstOrDefault();
+                    if (duplicate is not null)
+                    {
+                        if (!string.Equals(duplicate.Header, evaluated.Header, StringComparison.Ordinal))
+                        {
+                            duplicate.Header = evaluated.Header;
+                            unitOfWork.Notifications.Update(duplicate);
+                            hasChanges = true;
+                        }
 
-                await _notificationRepository.AddAsync(createdNotification, cancellationToken);
-                persistedNotifications.Add(createdNotification);
-                hasChanges = true;
-            }
+                        continue;
+                    }
 
-            if (hasChanges)
-                await _notificationRepository.SaveChangesAsync(cancellationToken);
+                    var createdNotification = new Notification
+                    {
+                        Type = evaluated.Type,
+                        Header = evaluated.Header,
+                        Message = evaluated.Message,
+                        CreatedOn = DateTime.Now,
+                        IsCleared = false,
+                        IsForDeletion = false
+                    };
 
-            var severityByType = evaluatedUnique
-                .GroupBy(notification => notification.Type, StringComparer.Ordinal)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Last().Severity,
-                    StringComparer.Ordinal);
+                    await unitOfWork.Notifications.AddAsync(createdNotification, ct);
+                    persistedNotifications.Add(createdNotification);
+                    hasChanges = true;
+                }
 
-            return persistedNotifications
-                .Where(notification => !notification.IsCleared && !notification.IsForDeletion)
-                .Select(notification => new NotificationVM
-                {
-                    Type = notification.Type,
-                    Header = notification.Header,
-                    Message = notification.Message,
-                    CreatedOn = notification.CreatedOn,
-                    Severity = severityByType.TryGetValue(notification.Type, out var severity)
-                        ? severity
-                        : InferSeverityFromType(notification.Type),
-                    IsCleared = notification.IsCleared
-                })
-                .OrderByDescending(notification => notification.CreatedOn)
-                .ToList();
+                if (hasChanges)
+                    await unitOfWork.Notifications.SaveChangesAsync(ct);
+
+                var severityByType = evaluatedUnique
+                    .GroupBy(notification => notification.Type, StringComparer.Ordinal)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group.Last().Severity,
+                        StringComparer.Ordinal);
+
+                return persistedNotifications
+                    .Where(notification => !notification.IsCleared && !notification.IsForDeletion)
+                    .Select(notification => new NotificationVM
+                    {
+                        Type = notification.Type,
+                        Header = notification.Header,
+                        Message = notification.Message,
+                        CreatedOn = notification.CreatedOn,
+                        Severity = severityByType.TryGetValue(notification.Type, out var severity)
+                            ? severity
+                            : InferSeverityFromType(notification.Type),
+                        IsCleared = notification.IsCleared
+                    })
+                    .OrderByDescending(notification => notification.CreatedOn)
+                    .ToList();
+            }, cancellationToken);
         }
         finally
         {
@@ -656,8 +659,11 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private async Task LoadUserSettingsAsync(CancellationToken cancellationToken)
     {
-        var settings = await _userSettingsRepository.GetAllAsync(cancellationToken);
-        var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
+        var settingsByName = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var settings = await scope.UnitOfWork.UserSettings.GetAllAsync(ct);
+            return settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
+        }, cancellationToken);
 
         _needsThreshold = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
         _wantsThreshold = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);

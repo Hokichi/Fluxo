@@ -4,10 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:controls="clr-namespace:Fluxo.Views.Shell.Main.Controls"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Title="Fluxo"
     Width="1600"
     Height="900"
@@ -101,7 +101,10 @@
                         </TextBlock>
                     </StackPanel>
 
-                    <controls:DaySpinnerControl x:Name="DaySpinnerControlHost" Grid.Column="1" DataContext="{Binding DaySpinner}" />
+                    <controls:DaySpinnerControl
+                        x:Name="DaySpinnerControlHost"
+                        Grid.Column="1"
+                        DataContext="{Binding DaySpinner}" />
 
                     <StackPanel
                         Grid.Column="2"
@@ -412,8 +415,14 @@
                             </Grid.RowDefinitions>
 
 
-                            <sections:NotificationPanel x:Name="NotificationPanelHost" Grid.Row="0" DataContext="{Binding NotificationPanel}" />
-                            <sections:SavingGoalsPanel x:Name="SavingGoalsPanelHost" Grid.Row="2" DataContext="{Binding SavingGoalsPanel}" />
+                            <sections:NotificationPanel
+                                x:Name="NotificationPanelHost"
+                                Grid.Row="0"
+                                DataContext="{Binding NotificationPanel}" />
+                            <sections:SavingGoalsPanel
+                                x:Name="SavingGoalsPanelHost"
+                                Grid.Row="2"
+                                DataContext="{Binding SavingGoalsPanel}" />
                         </Grid>
                     </Grid>
                 </Grid>

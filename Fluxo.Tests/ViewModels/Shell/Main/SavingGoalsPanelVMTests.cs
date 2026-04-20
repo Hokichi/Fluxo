@@ -4,6 +4,7 @@ using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
@@ -78,15 +79,16 @@ public class SavingGoalsPanelVMTests
         var userSettingsRepository = Substitute.For<IUserSettingsRepository>();
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>([]));
+        unitOfWork.UserSettings.Returns(userSettingsRepository);
+        var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<SavingGoalDto>>(Arg.Any<object>()).Returns(new List<SavingGoalDto>());
         mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns(goals);
 
         return new SavingGoalsPanelVM(
-            unitOfWork,
+            dataOperationRunner,
             mapper,
-            userSettingsRepository,
             new WeakReferenceMessenger());
     }
 

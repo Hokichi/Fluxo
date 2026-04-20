@@ -11,6 +11,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -31,9 +32,9 @@ public partial class MainWindow : Window, IPopupHost
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 100; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private readonly IDataOperationRunner _dataOperationRunner;
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IDialogService _dialogService;
     private readonly IServiceProvider _serviceProvider;
     private Rect _currentBounds;
@@ -50,17 +51,17 @@ public partial class MainWindow : Window, IPopupHost
 
     public MainWindow(
         MainVM mainVM,
-        IUnitOfWork unitOfWork,
+        IDataOperationRunner dataOperationRunner,
         IDialogService dialogService,
         IServiceProvider serviceProvider)
     {
         InitializeComponent();
 
         _mainVM = mainVM;
-        _unitOfWork = unitOfWork;
+        _dataOperationRunner = dataOperationRunner;
         _dialogService = dialogService;
         _serviceProvider = serviceProvider;
-        _logMemoryManager = new LogMemoryManager(_mainVM, _unitOfWork);
+        _logMemoryManager = new LogMemoryManager(_mainVM, _dataOperationRunner);
 
         DataContext = _mainVM;
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
@@ -537,7 +538,9 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
-        var popupViewModel = new QuickAddVM(_mainVM, _unitOfWork);
+        using var scope = _serviceProvider.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var popupViewModel = new QuickAddVM(_mainVM, unitOfWork);
         if (draft is { } popupDraft)
             popupViewModel.InitializeFromDraft(popupDraft);
 
@@ -546,7 +549,8 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
     {
-        var unitOfWork = _unitOfWork;
+        using var scope = _serviceProvider.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, unitOfWork);
         _dialogService.ShowExpenseDetail(popupViewModel, this);
     }
@@ -583,7 +587,8 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
     {
-        var unitOfWork = _unitOfWork;
+        using var scope = _serviceProvider.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var popupViewModel = new SpendingSourceDetailVM(_mainVM, spendingSource.Id, unitOfWork);
         _dialogService.ShowSpendingSourceDetail(popupViewModel, this);
     }
@@ -615,7 +620,9 @@ public partial class MainWindow : Window, IPopupHost
         if (!spendingSource.CanTransfer)
             return;
 
-        var transferVm = new TransferFundsVM(_mainVM, spendingSource, _unitOfWork);
+        using var scope = _serviceProvider.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var transferVm = new TransferFundsVM(_mainVM, spendingSource, unitOfWork);
         _dialogService.ShowTransferFunds(transferVm, this);
     }
 
@@ -663,7 +670,8 @@ public partial class MainWindow : Window, IPopupHost
 
         try
         {
-            var settingsViewModel = _serviceProvider.GetRequiredService<SettingsVM>();
+            using var scope = _serviceProvider.CreateScope();
+            var settingsViewModel = scope.ServiceProvider.GetRequiredService<SettingsVM>();
             await settingsViewModel.LoadAsync();
 
             var result = await settingsViewModel.ExecuteSpendingSourceItemActionAsync(spendingSource.Id, action);
