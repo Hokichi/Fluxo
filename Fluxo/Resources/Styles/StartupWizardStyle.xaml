@@ -31,7 +31,6 @@
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -44,9 +43,7 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="22">
-                        <ContentPresenter
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center" />
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
