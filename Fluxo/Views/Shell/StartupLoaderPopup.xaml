@@ -33,13 +33,21 @@
                     Stretch="Uniform" />
             </Border>
 
-            <TextBlock
+            <StackPanel
                 Margin="0,18,0,0"
                 HorizontalAlignment="Center"
-                FontFamily="{StaticResource Bold}"
-                FontSize="24"
-                Foreground="{StaticResource Brush.Text.Primary}"
-                Text="Fluxo" />
+                Orientation="Horizontal">
+                <TextBlock
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="24"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="flux" />
+                <TextBlock
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="24"
+                    Foreground="{StaticResource Brush.Mint}"
+                    Text="o" />
+            </StackPanel>
 
             <ProgressBar
                 Height="8"

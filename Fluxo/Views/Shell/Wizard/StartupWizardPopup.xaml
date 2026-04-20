@@ -4,8 +4,27 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:pages="clr-namespace:Fluxo.Views.Shell.Wizard.Pages"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
-    PopupTitle="Welcome to fluxo"
     ShowInTaskbar="True">
+
+    <customControls:BasePopup.PopupTitleContent>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock
+                FontFamily="{StaticResource Bold}"
+                FontSize="18"
+                Foreground="{StaticResource Brush.Text.Primary}"
+                Text="Welcome to " />
+            <TextBlock
+                FontFamily="{StaticResource Bold}"
+                FontSize="18"
+                Foreground="{StaticResource Brush.Text.Primary}"
+                Text="flux" />
+            <TextBlock
+                FontFamily="{StaticResource Bold}"
+                FontSize="18"
+                Foreground="{StaticResource Brush.Mint}"
+                Text="o" />
+        </StackPanel>
+    </customControls:BasePopup.PopupTitleContent>
 
     <customControls:BasePopup.Resources>
         <ResourceDictionary>

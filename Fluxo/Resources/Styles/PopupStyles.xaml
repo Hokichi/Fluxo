@@ -30,13 +30,20 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!--  Popup Title  -->
-                                <TextBlock
-                                    Grid.Column="0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="18"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="{TemplateBinding PopupTitle}" />
+                                <Grid Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock
+                                        x:Name="PopupTitleText"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="18"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{TemplateBinding PopupTitle}"
+                                        Visibility="Collapsed" />
+                                    <ContentPresenter
+                                        x:Name="PopupTitleContentPresenter"
+                                        VerticalAlignment="Center"
+                                        Content="{TemplateBinding PopupTitleContent}" />
+                                </Grid>
 
                                 <!--  Action Buttons  -->
                                 <StackPanel
@@ -138,6 +145,12 @@
                                 Opacity="0"
                                 Visibility="Collapsed" />
                         </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="PopupTitleContent" Value="{x:Null}">
+                                <Setter TargetName="PopupTitleText" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="PopupTitleContentPresenter" Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

@@ -19,6 +19,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(PopupTitle), typeof(string), typeof(BasePopup),
             new PropertyMetadata(string.Empty));
 
+    public static readonly DependencyProperty PopupTitleContentProperty =
+        DependencyProperty.Register(nameof(PopupTitleContent), typeof(object), typeof(BasePopup),
+            new PropertyMetadata(null));
+
     // --- Button visibility ---
     public static readonly DependencyProperty ShowSaveButtonProperty =
         DependencyProperty.Register(nameof(ShowSaveButton), typeof(bool), typeof(BasePopup),
@@ -94,6 +98,12 @@ public class BasePopup : Window, IPopupHost
     {
         get => (string)GetValue(PopupTitleProperty);
         set => SetValue(PopupTitleProperty, value);
+    }
+
+    public object? PopupTitleContent
+    {
+        get => GetValue(PopupTitleContentProperty);
+        set => SetValue(PopupTitleContentProperty, value);
     }
 
     public bool ShowSaveButton

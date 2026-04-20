@@ -34,12 +34,32 @@
                     FontSize="16"
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Add Goal" />
-                <TextBlock
+                <StackPanel
                     Margin="0,8,0,18"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="11"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="Add a savings goal so Fluxo can track progress from day one." />
+                    Orientation="Horizontal">
+                    <TextBlock
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="Add a savings goal so " />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="flux" />
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Mint}"
+                            Text="o" />
+                    </StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text=" can track progress from day one." />
+                </StackPanel>
 
                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Goal Name" />
                 <TextBox
