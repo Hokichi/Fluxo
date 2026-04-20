@@ -83,27 +83,11 @@
             </Button>
 
             <!--  Dot Navigator  -->
-            <ItemsControl
+            <customControls:StepNavigatorControl
                 Grid.Column="1"
                 VerticalAlignment="Center"
-                ItemsSource="{Binding StepDots}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Ellipse
-                            Width="8"
-                            Height="8"
-                            Margin="3,0"
-                            Cursor="Hand"
-                            MouseLeftButtonDown="OnDotClick"
-                            Style="{StaticResource WizardStepDotStyle}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                CurrentStep="{Binding CurrentStep}"
+                StepCount="{Binding TotalSteps}" />
 
             <!--  Next / Open Fluxo  -->
             <StackPanel

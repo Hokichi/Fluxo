@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
@@ -39,9 +38,6 @@ public partial class StartupWizardVM : ObservableRecipient,
         LoadingPage = loadingPage;
         FinalPage = finalPage;
 
-        for (var i = 0; i < TotalSteps; i++)
-            StepDots.Add(new StartupWizardStepDotVM(i, i == 0));
-
         IsActive = true;
     }
 
@@ -55,9 +51,9 @@ public partial class StartupWizardVM : ObservableRecipient,
 
     public StartupWizardFinalPageVM FinalPage { get; }
 
-    public ObservableCollection<StartupWizardStepDotVM> StepDots { get; } = [];
-
     public int TotalSteps => StartupWizardShared.TotalSteps;
+
+    public int CurrentStep => CurrentStepIndex + 1;
 
     public bool IsGreetingStep => CurrentStepIndex == 0;
 
@@ -82,9 +78,7 @@ public partial class StartupWizardVM : ObservableRecipient,
         OnPropertyChanged(nameof(IsFinalStep));
         OnPropertyChanged(nameof(IsStep2Active));
         OnPropertyChanged(nameof(IsNextEnabled));
-
-        foreach (var dot in StepDots)
-            dot.IsActive = dot.StepIndex == value;
+        OnPropertyChanged(nameof(CurrentStep));
 
         if (value is >= 2 and <= 7)
             MiddlePage.SetCurrentStepIndex(value);

@@ -94,15 +94,6 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
-    <Style x:Key="WizardStepDotStyle" TargetType="Ellipse">
-        <Setter Property="Fill" Value="{StaticResource Brush.Text.Muted}" />
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsActive}" Value="True">
-                <Setter Property="Fill" Value="{StaticResource Brush.Mint}" />
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
-
 
 
 

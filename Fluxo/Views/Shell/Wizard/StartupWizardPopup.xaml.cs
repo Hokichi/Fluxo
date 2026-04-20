@@ -10,7 +10,6 @@ using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 using StartupWizardVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardVM;
-using WizardStepDotVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardStepDotVM;
 
 namespace Fluxo.Views.Shell.Wizard;
 
@@ -256,21 +255,6 @@ public partial class StartupWizardPopup : BasePopup
 
         if (result == MessageBoxResult.Yes)
             await _viewModel.MiddlePage.SavingGoals.DeleteAsync(id);
-    }
-
-    private async void OnDotClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: WizardStepDotVM dot })
-            return;
-
-        var targetStep = dot.StepIndex;
-        if (targetStep == _viewModel.CurrentStepIndex)
-            return;
-
-        if ((targetStep == 3 || targetStep == 4) && !_viewModel.HasSpendingSources)
-            return;
-
-        await AnimateStepTransitionAsync(() => _viewModel.NavigateToStep(targetStep));
     }
 
     public void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
