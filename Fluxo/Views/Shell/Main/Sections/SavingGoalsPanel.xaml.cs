@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
@@ -12,6 +11,7 @@ namespace Fluxo.Views.Shell.Main.Sections;
 public partial class SavingGoalsPanel : UserControl
 {
     private const double SwipeDistanceThreshold = 48;
+    private static readonly TimeSpan GoalTransitionDuration = TimeSpan.FromMilliseconds(100);
     private bool _isAnimating;
     private bool _isSwipeTracking;
     private Point _swipeStartPoint;
@@ -161,63 +161,49 @@ public partial class SavingGoalsPanel : UserControl
             return;
         }
 
-        RunSlideAnimation(_displayedGoal, incomingGoal, _viewModel.NavigationDirection);
+        RunFadeAnimation(_displayedGoal, incomingGoal);
     }
 
     private void SyncCurrentGoalWithoutAnimation()
     {
         _isAnimating = false;
+        CurrentGoalPresenter.BeginAnimation(OpacityProperty, null);
+        IncomingGoalPresenter.BeginAnimation(OpacityProperty, null);
+
+        CurrentGoalPresenter.Opacity = 1;
+        IncomingGoalPresenter.Opacity = 0;
+
         _displayedGoal = _viewModel?.CurrentGoal;
         CurrentGoalPresenter.Content = _displayedGoal;
-
-        var currentTransform = EnsureTranslateTransform(CurrentGoalPresenter);
-        currentTransform.X = 0;
-
-        var incomingTransform = EnsureTranslateTransform(IncomingGoalPresenter);
-        incomingTransform.X = 0;
 
         IncomingGoalPresenter.Content = null;
         IncomingGoalPresenter.Visibility = Visibility.Collapsed;
     }
 
-    private void RunSlideAnimation(SavingGoalVM outgoingGoal, SavingGoalVM incomingGoal, int direction)
+    private void RunFadeAnimation(SavingGoalVM outgoingGoal, SavingGoalVM incomingGoal)
     {
-        var animationWidth = CurrentGoalPresenter.ActualWidth;
-        if (animationWidth <= 0)
-            animationWidth = ActualWidth > 0 ? ActualWidth : 280;
-
-        var outgoingTransform = EnsureTranslateTransform(CurrentGoalPresenter);
-        var incomingTransform = EnsureTranslateTransform(IncomingGoalPresenter);
-
-        var distance = animationWidth;
-        var outgoingTarget = distance * direction;
-        var incomingStart = -distance * direction;
-
         _isAnimating = true;
 
         CurrentGoalPresenter.Content = outgoingGoal;
-        outgoingTransform.X = 0;
+        CurrentGoalPresenter.Opacity = 1;
 
         IncomingGoalPresenter.Content = incomingGoal;
         IncomingGoalPresenter.Visibility = Visibility.Visible;
-        incomingTransform.X = incomingStart;
-
-        var duration = TimeSpan.FromMilliseconds(220);
-        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+        IncomingGoalPresenter.Opacity = 0;
 
         var outgoingAnimation = new DoubleAnimation
         {
-            To = outgoingTarget,
-            Duration = duration,
-            EasingFunction = easing,
+            From = 1,
+            To = 0,
+            Duration = GoalTransitionDuration,
             FillBehavior = FillBehavior.Stop
         };
 
         var incomingAnimation = new DoubleAnimation
         {
-            To = 0,
-            Duration = duration,
-            EasingFunction = easing,
+            From = 0,
+            To = 1,
+            Duration = GoalTransitionDuration,
             FillBehavior = FillBehavior.Stop
         };
 
@@ -226,26 +212,19 @@ public partial class SavingGoalsPanel : UserControl
             _isAnimating = false;
             _displayedGoal = incomingGoal;
 
-            outgoingTransform.X = 0;
-            incomingTransform.X = 0;
+            CurrentGoalPresenter.BeginAnimation(OpacityProperty, null);
+            IncomingGoalPresenter.BeginAnimation(OpacityProperty, null);
+
+            CurrentGoalPresenter.Opacity = 1;
+            IncomingGoalPresenter.Opacity = 0;
 
             CurrentGoalPresenter.Content = incomingGoal;
             IncomingGoalPresenter.Content = null;
             IncomingGoalPresenter.Visibility = Visibility.Collapsed;
         };
 
-        outgoingTransform.BeginAnimation(TranslateTransform.XProperty, outgoingAnimation);
-        incomingTransform.BeginAnimation(TranslateTransform.XProperty, incomingAnimation);
-    }
-
-    private static TranslateTransform EnsureTranslateTransform(UIElement element)
-    {
-        if (element.RenderTransform is TranslateTransform transform)
-            return transform;
-
-        var createdTransform = new TranslateTransform();
-        element.RenderTransform = createdTransform;
-        return createdTransform;
+        CurrentGoalPresenter.BeginAnimation(OpacityProperty, outgoingAnimation);
+        IncomingGoalPresenter.BeginAnimation(OpacityProperty, incomingAnimation);
     }
 
     private void CompleteSwipeTracking(Point endPoint, System.Windows.Input.MouseButtonEventArgs e)
