@@ -22,6 +22,29 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
+        <DataTemplate x:Key="TagOptionTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse
+                    x:Name="TagDot"
+                    Width="6"
+                    Height="6"
+                    VerticalAlignment="Center"
+                    Fill="{Binding Tag.HexCode, FallbackValue=Transparent, TargetNullValue=Transparent}" />
+                <TextBlock
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="{Binding Label}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsAddTagAction}" Value="True">
+                    <Setter TargetName="TagDot" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="TagDot" Property="Width" Value="0" />
+                    <Setter TargetName="TagDot" Property="Height" Value="0" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
 
     </customControls:BasePopup.Resources>
 
@@ -98,7 +121,13 @@
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Tag" />
-                        <TextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding TagNameText, UpdateSourceTrigger=PropertyChanged}" />
+                        <ComboBox
+                            x:Name="TagComboBox"
+                            ItemsSource="{Binding TagOptions}"
+                            ItemTemplate="{StaticResource TagOptionTemplate}"
+                            SelectedItem="{Binding SelectedTagOption, Mode=TwoWay}"
+                            SelectionChanged="OnTagSelectionChanged"
+                            Style="{StaticResource FluxoComboBoxStyle}" />
                     </StackPanel>
                 </Grid>
             </StackPanel>

@@ -62,7 +62,7 @@
             <ToggleButton
                 Content="{Binding Name}"
                 IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"
-                Style="{StaticResource PopupTagToggleStyle}" />
+                Style="{StaticResource PopupTagItemToggleStyle}" />
         </DataTemplate>
     </customControls:BasePopup.Resources>
 

@@ -1,23 +1,37 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups;
 
 public partial class AddFixedExpensePopup : BasePopup
 {
+    private readonly IDialogService _dialogService;
+    private readonly SettingsTagsTabVM _settingsTagsTabViewModel;
     private readonly AddFixedExpenseVM _viewModel;
+    private bool _isHandlingAddTagSelection;
 
-    public AddFixedExpensePopup(AddFixedExpenseVM viewModel)
+    public AddFixedExpensePopup(
+        AddFixedExpenseVM viewModel,
+        IDialogService dialogService,
+        SettingsTagsTabVM settingsTagsTabViewModel)
     {
         InitializeComponent();
+        _dialogService = dialogService;
+        _settingsTagsTabViewModel = settingsTagsTabViewModel;
         _viewModel = viewModel;
         DataContext = viewModel;
-        Loaded += (_, _) =>
+        Loaded += async (_, _) =>
         {
+            await _viewModel.LoadTagsAsync();
             _viewModel.BeginChangeTracking();
             NameTextBox.Focus();
         };
@@ -57,6 +71,43 @@ public partial class AddFixedExpensePopup : BasePopup
     {
         if (!string.IsNullOrWhiteSpace(message))
             FluxoMessageBox.Show(this, message, "Add Fixed Expense", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private async void OnTagSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isHandlingAddTagSelection || _viewModel.SelectedTagOption?.IsAddTagAction != true)
+            return;
+
+        _isHandlingAddTagSelection = true;
+        try
+        {
+            if (sender is ComboBox comboBox)
+                comboBox.IsDropDownOpen = false;
+
+            await OpenAddTagDialogAndRefreshAsync();
+        }
+        finally
+        {
+            _isHandlingAddTagSelection = false;
+        }
+    }
+
+    private async Task OpenAddTagDialogAndRefreshAsync()
+    {
+        var previousTagNames = _viewModel.Tags
+            .Select(tag => tag.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _dialogService.ShowAddTag(_settingsTagsTabViewModel, this);
+        await _viewModel.LoadTagsAsync();
+
+        var newTag = _viewModel.Tags.FirstOrDefault(tag =>
+            !string.IsNullOrWhiteSpace(tag.Name) &&
+            !previousTagNames.Contains(tag.Name));
+
+        if (newTag is not null)
+            _viewModel.SelectedTag = newTag;
     }
 
     private void OnRecurringDatePreviewKeyDown(object sender, KeyEventArgs e)

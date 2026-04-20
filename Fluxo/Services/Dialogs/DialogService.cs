@@ -103,7 +103,9 @@ public sealed class DialogService : IDialogService
 
     public bool? ShowAddFixedExpense(AddFixedExpenseVM viewModel, Window? owner = null)
     {
-        return ShowDialog(new AddFixedExpensePopup(viewModel), owner);
+        using var scope = _serviceProvider.CreateScope();
+        var popup = ActivatorUtilities.CreateInstance<AddFixedExpensePopup>(scope.ServiceProvider, viewModel);
+        return ShowDialog(popup, owner);
     }
 
     public bool? ShowAddSavingGoal(Window? owner = null)

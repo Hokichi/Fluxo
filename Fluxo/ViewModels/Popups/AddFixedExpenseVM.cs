@@ -17,11 +17,13 @@ public partial class AddFixedExpenseVM : ObservableObject
 {
     private const string DefaultTagColor = "#75B798";
     private const int NoSpendingSourceId = -1;
+    private const int NoTagId = -1;
 
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
+    private bool _isSyncingTagSelection;
 
     [ObservableProperty] private string _amountText = string.Empty;
     [ObservableProperty] private bool _isActive = true;
@@ -30,6 +32,8 @@ public partial class AddFixedExpenseVM : ObservableObject
     [ObservableProperty] private string _recurringDateText = string.Empty;
     [ObservableProperty] private ExpenseCategory _selectedCategory = ExpenseCategory.Needs;
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty] private ExpenseTagVM? _selectedTag;
+    [ObservableProperty] private TagOption? _selectedTagOption;
     [ObservableProperty] private string _tagNameText = "General";
 
     public int? EditingId { get; init; }
@@ -51,6 +55,8 @@ public partial class AddFixedExpenseVM : ObservableObject
     }
 
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
+    public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
+    public ObservableCollection<TagOption> TagOptions { get; } = [];
 
     public IReadOnlyList<ExpenseCategoryOption> Categories { get; } =
     [
@@ -76,7 +82,82 @@ public partial class AddFixedExpenseVM : ObservableObject
     partial void OnRecurringDateTextChanged(string value) => NotifyFormStateChanged();
     partial void OnSelectedCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
     partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
-    partial void OnTagNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnSelectedTagChanged(ExpenseTagVM? value)
+    {
+        if (!_isSyncingTagSelection)
+        {
+            _isSyncingTagSelection = true;
+            SelectedTagOption = value is null
+                ? null
+                : TagOptions.FirstOrDefault(option => !option.IsAddTagAction && option.Tag?.Id == value.Id);
+            TagNameText = value?.Name ?? string.Empty;
+            _isSyncingTagSelection = false;
+        }
+
+        NotifyFormStateChanged();
+    }
+
+    partial void OnSelectedTagOptionChanged(TagOption? value)
+    {
+        if (_isSyncingTagSelection || value?.IsAddTagAction != false || value.Tag is null)
+            return;
+
+        _isSyncingTagSelection = true;
+        SelectedTag = value.Tag;
+        _isSyncingTagSelection = false;
+    }
+
+    partial void OnTagNameTextChanged(string value)
+    {
+        if (!_isSyncingTagSelection)
+        {
+            _isSyncingTagSelection = true;
+            SelectedTag = Tags.FirstOrDefault(tag =>
+                string.Equals(tag.Name, value, StringComparison.OrdinalIgnoreCase));
+            _isSyncingTagSelection = false;
+        }
+
+        NotifyFormStateChanged();
+    }
+
+    public async Task LoadTagsAsync(CancellationToken cancellationToken = default)
+    {
+        var availableTags = (await _unitOfWork.ExpenseTags.GetAllAsync(cancellationToken))
+            .Where(tag => !tag.IsSystemTag)
+            .OrderBy(tag => tag.Name)
+            .Select(tag => new ExpenseTagVM
+            {
+                Id = tag.Id,
+                Name = tag.Name,
+                HexCode = tag.HexCode,
+                IconName = tag.IconName,
+                IsSystemTag = tag.IsSystemTag
+            })
+            .ToList();
+
+        Tags.Clear();
+        foreach (var tag in availableTags)
+            Tags.Add(tag);
+
+        TagOptions.Clear();
+        foreach (var tag in Tags)
+            TagOptions.Add(new TagOption(tag, tag.Name, false));
+        TagOptions.Add(new TagOption(null, "Add Tag", true));
+
+        var preferredTagName = string.IsNullOrWhiteSpace(TagNameText) ? "General" : TagNameText.Trim();
+        var matchedTag = Tags.FirstOrDefault(tag =>
+            string.Equals(tag.Name, preferredTagName, StringComparison.OrdinalIgnoreCase));
+
+        _isSyncingTagSelection = true;
+        SelectedTag = matchedTag ?? Tags.FirstOrDefault();
+        SelectedTagOption = SelectedTag is null
+            ? null
+            : TagOptions.FirstOrDefault(option => !option.IsAddTagAction && option.Tag?.Id == SelectedTag.Id);
+        TagNameText = SelectedTag?.Name ?? string.Empty;
+        _isSyncingTagSelection = false;
+
+        NotifyFormStateChanged();
+    }
 
     public async Task<AddFixedExpenseResult> SaveAsync()
     {
@@ -97,8 +178,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                 return AddFixedExpenseResult.Failure("Please choose a valid spending source.");
 
             var existingTags = await unitOfWork.ExpenseTags.GetAllAsync();
-            var tag = existingTags.FirstOrDefault(existing =>
-                string.Equals(existing.Name, input.TagName, StringComparison.OrdinalIgnoreCase));
+            var tag = existingTags.FirstOrDefault(existing => existing.Id == input.TagId && !existing.IsSystemTag);
 
             if (tag is null)
             {
@@ -184,7 +264,19 @@ public partial class AddFixedExpenseVM : ObservableObject
             return false;
         }
 
-        var tagName = string.IsNullOrWhiteSpace(TagNameText) ? "General" : TagNameText.Trim();
+        if (SelectedTag is null)
+        {
+            validationMessage = "Please select a tag.";
+            return false;
+        }
+
+        var tagName = (SelectedTag.Name ?? string.Empty).Trim();
+        if (tagName.Length == 0)
+        {
+            validationMessage = "Please select a tag.";
+            return false;
+        }
+
         if (!TryParseRecurringDate(RecurringDateText, out var recurringDate))
         {
             validationMessage = "Recurring date must be a number between 1 and 28.";
@@ -197,6 +289,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             SelectedCategory,
             SelectedSpendingSource.Id,
             recurringDate,
+            SelectedTag.Id,
             tagName,
             IsActive);
 
@@ -232,7 +325,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         return !string.IsNullOrWhiteSpace(NameText) &&
                !string.IsNullOrWhiteSpace(AmountText) &&
                TryParseRecurringDate(RecurringDateText, out _) &&
-               !string.IsNullOrWhiteSpace(TagNameText) &&
+               SelectedTag is not null &&
                SelectedSpendingSource is not null;
     }
 
@@ -244,7 +337,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             SelectedCategory,
             SelectedSpendingSource?.Id ?? NoSpendingSourceId,
             RecurringDateText ?? string.Empty,
-            TagNameText ?? string.Empty,
+            SelectedTag?.Id ?? NoTagId,
             IsActive);
     }
 
@@ -255,6 +348,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     }
 
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
+    public sealed record TagOption(ExpenseTagVM? Tag, string Label, bool IsAddTagAction);
 
     public readonly record struct AddFixedExpenseResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
     {
@@ -275,6 +369,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         ExpenseCategory Category,
         int SpendingSourceId,
         int RecurringDate,
+        int TagId,
         string TagName,
         bool IsActive);
 
@@ -284,7 +379,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         ExpenseCategory SelectedCategory,
         int SelectedSpendingSourceId,
         string RecurringDateText,
-        string TagNameText,
+        int SelectedTagId,
         bool IsActive);
 }
 

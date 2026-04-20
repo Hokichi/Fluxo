@@ -498,8 +498,8 @@
                 Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <Ellipse
-                        Width="8"
-                        Height="8"
+                        Width="6"
+                        Height="6"
                         Fill="{Binding HexCode}" />
 
                     <TextBlock
@@ -520,9 +520,9 @@
                 Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <Ellipse
-                        Width="8"
-                        Height="8"
-                        Fill="{StaticResource Brush.Background.Surface}" />
+                        Width="6"
+                        Height="6"
+                        Fill="{Binding HexCode}" />
 
                     <TextBlock
                         Margin="8,0,0,0"
