@@ -15,10 +15,6 @@
         <Setter Property="CornerRadius" Value="16" />
     </Style>
 
-
-
-
-
     <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
         <Setter Property="Margin" Value="0,0,0,8" />
         <Setter Property="FontFamily" Value="{StaticResource Bold}" />
@@ -30,25 +26,20 @@
         <Setter Property="Height" Value="44" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border
                         x:Name="ButtonBackground"
                         Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="22">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="ButtonBackground" Property="Background" Value="{StaticResource Brush.Mint.Muted}" />
-                            <Setter TargetName="ButtonBackground" Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="ButtonBackground" Property="Opacity" Value="0.85" />
@@ -61,9 +52,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-
-
 
     <Style x:Key="SidebarStepStyle" TargetType="Border">
         <Setter Property="Height" Value="38" />
@@ -131,11 +119,4 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
-
-
-
-
-
 </ResourceDictionary>
-
-
