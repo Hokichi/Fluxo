@@ -48,6 +48,8 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
 
     public ObservableCollection<SavingGoalVM> SavingGoals { get; } = [];
     public ObservableCollection<SavingGoalCarouselDotVM> GoalDots { get; } = [];
+    public int GoalStepCount => SavingGoals.Count;
+    public int CurrentStepNumber => HasSavingGoals && CurrentGoalIndex >= 0 ? CurrentGoalIndex + 1 : 0;
 
     public void Receive(DashboardDataInvalidatedMessage message)
     {
@@ -79,6 +81,7 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
                      !_disabledSavingGoalIds.Contains(goal.Id)))
             SavingGoals.Add(goal);
 
+        OnPropertyChanged(nameof(GoalStepCount));
         HasSavingGoals = SavingGoals.Count > 0;
         HasMultipleSavingGoals = SavingGoals.Count > 1;
 
@@ -96,6 +99,16 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
             : -1;
 
         SetCurrentGoalByIndex(initialIndex >= 0 ? initialIndex : 0, animateDirection: 0);
+    }
+
+    partial void OnHasSavingGoalsChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CurrentStepNumber));
+    }
+
+    partial void OnCurrentGoalIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(CurrentStepNumber));
     }
 
     [RelayCommand]

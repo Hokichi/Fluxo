@@ -4,6 +4,7 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
 
 
@@ -180,11 +181,7 @@
     <DataTemplate x:Key="SavingGoalTemplate">
         <Border
             Margin="0,0,0,12"
-            Padding="12,0"
-            Background="{StaticResource Brush.Background.Hover}"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
-            BorderThickness="1"
-            CornerRadius="8">
+            Padding="12,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -208,8 +205,8 @@
                         <Path
                             Canvas.Left="8"
                             Canvas.Top="8"
-                            Data="{Binding ProgressRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=40}"
-                            Stroke="{Binding ProgressRatio, Converter={StaticResource GoalProgressToBrushConverter}}"
+                            Data="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=40}"
+                            Stroke="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource GoalProgressToBrushConverter}}"
                             StrokeEndLineCap="Round"
                             StrokeLineJoin="Round"
                             StrokeStartLineCap="Round"
@@ -221,8 +218,8 @@
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
-                        Foreground="{Binding ProgressRatio, Converter={StaticResource GoalProgressToBrushConverter}}"
-                        Text="{Binding ProgressPercentage, StringFormat={}{0}%}" />
+                        Foreground="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                        Text="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, StringFormat={}{0:0%}}" />
                 </Grid>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">

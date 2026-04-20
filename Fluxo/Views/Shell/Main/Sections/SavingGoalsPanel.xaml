@@ -5,20 +5,6 @@
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls">
     <UserControl.Resources>
-        <Style x:Key="SavingGoalCarouselDotStyle" TargetType="Ellipse">
-            <Setter Property="Width" Value="6" />
-            <Setter Property="Height" Value="6" />
-            <Setter Property="Margin" Value="4,0,4,0" />
-            <Setter Property="Fill" Value="{StaticResource Brush.Text.Muted}" />
-            <Setter Property="Opacity" Value="0.35" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsActive}" Value="True">
-                    <Setter Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
-                    <Setter Property="Opacity" Value="1" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
         <Style
             x:Key="SavingGoalCarouselArrowButtonStyle"
             BasedOn="{StaticResource SpinnerArrowButtonStyle}"
@@ -125,23 +111,14 @@
                     </Button>
                 </Grid>
 
-                <ItemsControl
+                <customControls:StepNavigatorControl
                     Grid.Row="1"
                     Margin="0,8,0,0"
                     HorizontalAlignment="Center"
-                    ItemsSource="{Binding GoalDots}"
-                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Ellipse Style="{StaticResource SavingGoalCarouselDotStyle}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    VerticalAlignment="Center"
+                    CurrentStep="{Binding CurrentStepNumber}"
+                    StepCount="{Binding GoalStepCount}"
+                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
         </Grid>
     </Border>

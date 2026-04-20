@@ -12,11 +12,25 @@ public partial class SavingGoalsPanel : UserControl
 {
     private const double SwipeDistanceThreshold = 48;
     private static readonly TimeSpan GoalTransitionDuration = TimeSpan.FromMilliseconds(100);
+    private static readonly IEasingFunction GoalTransitionEasing = new CubicEase { EasingMode = EasingMode.EaseOut };
     private bool _isAnimating;
     private bool _isSwipeTracking;
     private Point _swipeStartPoint;
     private SavingGoalVM? _displayedGoal;
+    private SavingGoalVM? _trackedGoalForProgress;
     private SavingGoalsPanelVM? _viewModel;
+
+    public static readonly DependencyProperty AnimatedProgressRatioProperty = DependencyProperty.Register(
+        nameof(AnimatedProgressRatio),
+        typeof(double),
+        typeof(SavingGoalsPanel),
+        new PropertyMetadata(0d));
+
+    public double AnimatedProgressRatio
+    {
+        get => (double)GetValue(AnimatedProgressRatioProperty);
+        set => SetValue(AnimatedProgressRatioProperty, value);
+    }
 
     public SavingGoalsPanel()
     {
@@ -38,6 +52,7 @@ public partial class SavingGoalsPanel : UserControl
     {
         CancelSwipeTracking();
         DetachViewModel();
+        AttachDisplayedGoalProgressTracking(null);
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -167,6 +182,7 @@ public partial class SavingGoalsPanel : UserControl
     private void SyncCurrentGoalWithoutAnimation()
     {
         _isAnimating = false;
+        BeginAnimation(AnimatedProgressRatioProperty, null);
         CurrentGoalPresenter.BeginAnimation(OpacityProperty, null);
         IncomingGoalPresenter.BeginAnimation(OpacityProperty, null);
 
@@ -174,6 +190,8 @@ public partial class SavingGoalsPanel : UserControl
         IncomingGoalPresenter.Opacity = 0;
 
         _displayedGoal = _viewModel?.CurrentGoal;
+        AttachDisplayedGoalProgressTracking(_displayedGoal);
+        AnimatedProgressRatio = _displayedGoal is null ? 0d : (double)_displayedGoal.ProgressRatio;
         CurrentGoalPresenter.Content = _displayedGoal;
 
         IncomingGoalPresenter.Content = null;
@@ -184,6 +202,9 @@ public partial class SavingGoalsPanel : UserControl
     {
         _isAnimating = true;
 
+        var outgoingProgressRatio = (double)outgoingGoal.ProgressRatio;
+        var incomingProgressRatio = (double)incomingGoal.ProgressRatio;
+
         CurrentGoalPresenter.Content = outgoingGoal;
         CurrentGoalPresenter.Opacity = 1;
 
@@ -191,11 +212,24 @@ public partial class SavingGoalsPanel : UserControl
         IncomingGoalPresenter.Visibility = Visibility.Visible;
         IncomingGoalPresenter.Opacity = 0;
 
+        BeginAnimation(AnimatedProgressRatioProperty, null);
+        AnimatedProgressRatio = incomingProgressRatio;
+
+        var progressAnimation = new DoubleAnimation
+        {
+            From = outgoingProgressRatio,
+            To = incomingProgressRatio,
+            Duration = GoalTransitionDuration * 3,
+            EasingFunction = GoalTransitionEasing,
+            FillBehavior = FillBehavior.Stop
+        };
+
         var outgoingAnimation = new DoubleAnimation
         {
             From = 1,
             To = 0,
             Duration = GoalTransitionDuration,
+            EasingFunction = GoalTransitionEasing,
             FillBehavior = FillBehavior.Stop
         };
 
@@ -204,6 +238,7 @@ public partial class SavingGoalsPanel : UserControl
             From = 0,
             To = 1,
             Duration = GoalTransitionDuration,
+            EasingFunction = GoalTransitionEasing,
             FillBehavior = FillBehavior.Stop
         };
 
@@ -211,7 +246,10 @@ public partial class SavingGoalsPanel : UserControl
         {
             _isAnimating = false;
             _displayedGoal = incomingGoal;
+            AttachDisplayedGoalProgressTracking(_displayedGoal);
 
+            BeginAnimation(AnimatedProgressRatioProperty, null);
+            AnimatedProgressRatio = incomingProgressRatio;
             CurrentGoalPresenter.BeginAnimation(OpacityProperty, null);
             IncomingGoalPresenter.BeginAnimation(OpacityProperty, null);
 
@@ -223,8 +261,43 @@ public partial class SavingGoalsPanel : UserControl
             IncomingGoalPresenter.Visibility = Visibility.Collapsed;
         };
 
+        BeginAnimation(AnimatedProgressRatioProperty, progressAnimation);
         CurrentGoalPresenter.BeginAnimation(OpacityProperty, outgoingAnimation);
         IncomingGoalPresenter.BeginAnimation(OpacityProperty, incomingAnimation);
+    }
+
+    private void AttachDisplayedGoalProgressTracking(SavingGoalVM? goal)
+    {
+        if (ReferenceEquals(_trackedGoalForProgress, goal))
+            return;
+
+        if (_trackedGoalForProgress is not null)
+            _trackedGoalForProgress.PropertyChanged -= OnTrackedGoalPropertyChanged;
+
+        _trackedGoalForProgress = goal;
+
+        if (_trackedGoalForProgress is not null)
+            _trackedGoalForProgress.PropertyChanged += OnTrackedGoalPropertyChanged;
+    }
+
+    private void OnTrackedGoalPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(SavingGoalVM.ProgressRatio) || _isAnimating)
+            return;
+
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(UpdateAnimatedProgressFromDisplayedGoal);
+            return;
+        }
+
+        UpdateAnimatedProgressFromDisplayedGoal();
+    }
+
+    private void UpdateAnimatedProgressFromDisplayedGoal()
+    {
+        BeginAnimation(AnimatedProgressRatioProperty, null);
+        AnimatedProgressRatio = _displayedGoal is null ? 0d : (double)_displayedGoal.ProgressRatio;
     }
 
     private void CompleteSwipeTracking(Point endPoint, System.Windows.Input.MouseButtonEventArgs e)
