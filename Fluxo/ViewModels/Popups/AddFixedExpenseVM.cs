@@ -136,7 +136,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             .ToList();
 
         Tags.Clear();
-        foreach (var tag in availableTags)
+        foreach (var tag in availableTags.Where(c => !c.IsSystemTag))
             Tags.Add(tag);
 
         TagOptions.Clear();
