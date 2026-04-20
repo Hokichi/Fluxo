@@ -33,6 +33,7 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
     {
         SpendingSources = spendingSources;
         FixedExpenses = fixedExpenses;
+        FixedExpenses.SetSpendingSources(spendingSources);
         SavingGoals = savingGoals;
         BudgetAllocation = budgetAllocation;
         Notification = notification;

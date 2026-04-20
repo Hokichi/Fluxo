@@ -36,12 +36,20 @@ public partial class StartupWizardNamePageVM : ObservableObject
 
     public async Task<SettingsOperationResult> SaveAsync()
     {
-        await StartupWizardShared.UpsertUserSettingAsync(_unitOfWork, UserSettingNames.PreferredDisplayName, ResolvedUsername);
+        await ApplyAsync(_unitOfWork);
         await _unitOfWork.SaveChangesAsync();
 
         _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
         PublishIdentitySnapshot();
         return SettingsOperationResult.Success();
+    }
+
+    public Task ApplyAsync(IUnitOfWork unitOfWork)
+    {
+        return StartupWizardShared.UpsertUserSettingAsync(
+            unitOfWork,
+            UserSettingNames.PreferredDisplayName,
+            ResolvedUsername);
     }
 
     partial void OnUsernameTextChanged(string value)

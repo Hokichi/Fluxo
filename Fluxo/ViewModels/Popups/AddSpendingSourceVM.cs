@@ -20,6 +20,8 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly Func<AddSpendingSourceInput, Task<AddSpendingSourceResult>>? _saveDraftAsync;
+    private readonly Func<int?, Task<IReadOnlyList<DeductSourceOption>>>? _loadDraftDeductSourcesAsync;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
 
@@ -37,10 +39,16 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     public int? EditingId { get; init; }
 
-    public AddSpendingSourceVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
+    public AddSpendingSourceVM(
+        MainVM mainViewModel,
+        IUnitOfWork unitOfWork,
+        Func<AddSpendingSourceInput, Task<AddSpendingSourceResult>>? saveDraftAsync = null,
+        Func<int?, Task<IReadOnlyList<DeductSourceOption>>>? loadDraftDeductSourcesAsync = null)
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
+        _saveDraftAsync = saveDraftAsync;
+        _loadDraftDeductSourcesAsync = loadDraftDeductSourcesAsync;
         _initialState = CaptureState();
     }
 
@@ -119,14 +127,21 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     public async Task LoadDeductSourcesAsync(CancellationToken cancellationToken = default)
     {
-        var existingSources = await _unitOfWork.SpendingSources.GetAllAsync(cancellationToken);
-
-        var options = existingSources
-            .Where(source => source.Id != (EditingId ?? 0))
-            .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
-            .OrderBy(source => source.Name)
-            .Select(source => new DeductSourceOption(source.Id, source.Name))
-            .ToList();
+        IReadOnlyList<DeductSourceOption> options;
+        if (_loadDraftDeductSourcesAsync is not null)
+        {
+            options = await _loadDraftDeductSourcesAsync(EditingId);
+        }
+        else
+        {
+            var existingSources = await _unitOfWork.SpendingSources.GetAllAsync(cancellationToken);
+            options = existingSources
+                .Where(source => source.Id != (EditingId ?? 0))
+                .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+                .OrderBy(source => source.Name)
+                .Select(source => new DeductSourceOption(source.Id, source.Name))
+                .ToList();
+        }
 
         DeductSources.Clear();
         foreach (var option in options)
@@ -151,6 +166,9 @@ public partial class AddSpendingSourceVM : ObservableObject
 
         if (!TryBuildInput(out var input, out var validationMessage))
             return AddSpendingSourceResult.Failure(validationMessage);
+
+        if (_saveDraftAsync is not null)
+            return await _saveDraftAsync(input);
 
         IsBusy = true;
 
@@ -519,7 +537,7 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     public readonly record struct SpendingSourceTypeOption(string Label, SpendingSourceType Value);
 
-    private readonly record struct AddSpendingSourceInput(
+    public readonly record struct AddSpendingSourceInput(
         string Name,
         SpendingSourceType SpendingSourceType,
         decimal Balance,

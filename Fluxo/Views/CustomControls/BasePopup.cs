@@ -64,6 +64,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(ShowCancelButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty ShowCloseButtonProperty =
+        DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
     private IPopupHost? _popupHost;
     private FrameworkElement? _contentRoot;
     private UIElement? _popupOverlay;
@@ -168,7 +172,11 @@ public class BasePopup : Window, IPopupHost
         set => SetValue(ShowCancelButtonProperty, value);
     }
 
-    // ── Template wiring ─────────────────────────────────────────────
+    public bool ShowCloseButton
+    {
+        get => (bool)GetValue(ShowCloseButtonProperty);
+        set => SetValue(ShowCloseButtonProperty, value);
+    }
 
     public override void OnApplyTemplate()
     {
@@ -194,7 +202,7 @@ public class BasePopup : Window, IPopupHost
             btn.Click += (_, e) => handler(e);
     }
 
-    // ── Virtual button handlers (override in child popups) ──────────
+    // Virtual button handlers (override in child popups)
 
     protected virtual void OnCloseButtonClick()
     {
@@ -233,7 +241,7 @@ public class BasePopup : Window, IPopupHost
     {
     }
 
-    // ── Keyboard shortcuts ──────────────────────────────────────────
+    // Keyboard shortcuts
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
@@ -278,7 +286,7 @@ public class BasePopup : Window, IPopupHost
         }
     }
 
-    // ── Overlay & blur on owner ─────────────────────────────────────
+    // Overlay & blur on owner
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
@@ -361,3 +369,4 @@ public class BasePopup : Window, IPopupHost
         _popupOverlay.BeginAnimation(OpacityProperty, fadeOut);
     }
 }
+

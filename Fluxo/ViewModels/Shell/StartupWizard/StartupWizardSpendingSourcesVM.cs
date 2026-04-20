@@ -6,6 +6,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
+using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Popups;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -17,6 +18,11 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessenger _messenger;
+    private readonly Dictionary<int, StartupWizardDraftSpendingSource> _draftSources = [];
+    private readonly HashSet<int> _removedPersistedIds = [];
+    private IReadOnlyDictionary<int, int> _lastPersistedIdMap = new Dictionary<int, int>();
+    private int _nextTemporaryId = -1;
+    private bool _isLoaded;
 
     [ObservableProperty] private bool _isStep2Active;
 
@@ -36,21 +42,74 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
 
     public decimal TotalBudgetAmount => SpendingSources.Sum(source => source.PrimaryAmount);
 
+    public IReadOnlyDictionary<int, int> LastPersistedIdMap => _lastPersistedIdMap;
+
+    internal int GetNextTemporaryId()
+    {
+        return _nextTemporaryId--;
+    }
+
+    public string ResolveSourceName(int sourceId)
+    {
+        return _draftSources.TryGetValue(sourceId, out var source)
+            ? source.Name
+            : "No source";
+    }
+
+    public IReadOnlyList<SpendingSourceVM> BuildSpendingSourceOptions()
+    {
+        return _draftSources.Values
+            .Where(source => source.IsEnabled)
+            .OrderBy(source => source.Name)
+            .Select(source => new SpendingSourceVM
+            {
+                Id = source.Id,
+                Name = source.Name,
+                SpendingSourceType = source.SpendingSourceType,
+                Balance = source.Balance,
+                SpentAmount = source.SpentAmount,
+                AccountLimit = source.AccountLimit,
+                MonthlyDueDate = source.MonthlyDueDate,
+                DeductSource = source.DeductSource,
+                InterestRate = source.InterestRate,
+                ShowOnUI = source.ShowOnUi,
+                IsEnabled = source.IsEnabled
+            })
+            .ToList();
+    }
+
     public AddSpendingSourceVM CreateAddViewModel()
     {
-        return new AddSpendingSourceVM(_mainViewModel, _unitOfWork);
+        return new AddSpendingSourceVM(
+            _mainViewModel,
+            _unitOfWork,
+            saveDraftAsync: input => SaveDraftSourceAsync(input, null),
+            loadDraftDeductSourcesAsync: editingId =>
+                Task.FromResult<IReadOnlyList<AddSpendingSourceVM.DeductSourceOption>>(
+                    BuildDraftDeductSourceOptions(editingId)));
     }
 
     public async Task<AddSpendingSourceVM> CreateEditViewModelAsync(int id)
     {
-        var source = await _unitOfWork.SpendingSources.GetByIdAsync(id);
-        if (source is null)
+        if (!_isLoaded)
+            await LoadDraftSourcesAsync();
+
+        if (!_draftSources.TryGetValue(id, out var source))
             return CreateAddViewModel();
 
-        var vm = new AddSpendingSourceVM(_mainViewModel, _unitOfWork) { EditingId = source.Id };
+        var vm = new AddSpendingSourceVM(
+            _mainViewModel,
+            _unitOfWork,
+            saveDraftAsync: input => SaveDraftSourceAsync(input, source.Id),
+            loadDraftDeductSourcesAsync: editingId =>
+                Task.FromResult<IReadOnlyList<AddSpendingSourceVM.DeductSourceOption>>(
+                    BuildDraftDeductSourceOptions(editingId)))
+        {
+            EditingId = source.Id
+        };
         vm.NameText = source.Name;
         vm.SelectedSpendingSourceType = source.SpendingSourceType;
-        vm.ShowOnUI = source.ShowOnUI;
+        vm.ShowOnUI = source.ShowOnUi;
         vm.IsEnabled = source.IsEnabled;
 
         if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
@@ -73,29 +132,98 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
         return vm;
     }
 
-    public async Task DeleteAsync(int id)
+    public Task DeleteAsync(int id)
     {
-        var source = await _unitOfWork.SpendingSources.GetByIdAsync(id);
-        if (source is not null)
+        if (id > 0)
+            _removedPersistedIds.Add(id);
+
+        _draftSources.Remove(id);
+
+        foreach (var draft in _draftSources.Values.Where(source => source.DeductSource == id).ToList())
         {
-            _unitOfWork.SpendingSources.Remove(source);
-            await _unitOfWork.SaveChangesAsync();
-            _messenger.Send(new DashboardDataInvalidatedMessage(
-                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
+            _draftSources[draft.Id] = draft with { DeductSource = null };
         }
 
-        await RefreshAsync();
+        RefreshProjectionAndPublish();
+        return Task.CompletedTask;
     }
 
     public async Task RefreshAsync()
     {
-        StartupWizardShared.ReplaceCollection(SpendingSources, (await _unitOfWork.SpendingSources.GetAllAsync())
-            .OrderBy(source => source.Name)
-            .Select(source => new StartupWizardSpendingSourceItemVM(source)));
+        if (!_isLoaded)
+            await LoadDraftSourcesAsync();
 
-        OnPropertyChanged(nameof(HasSpendingSources));
-        OnPropertyChanged(nameof(TotalBudgetAmount));
-        PublishSnapshot();
+        RefreshProjectionAndPublish();
+    }
+
+    public async Task ApplyAsync(IUnitOfWork unitOfWork)
+    {
+        var existingSources = (await unitOfWork.SpendingSources.GetAllAsync())
+            .ToDictionary(source => source.Id);
+        var idMap = new Dictionary<int, int>();
+
+        foreach (var draft in _draftSources.Values.OrderBy(source => source.Id))
+        {
+            if (draft.Id > 0 && existingSources.TryGetValue(draft.Id, out var persisted))
+            {
+                persisted.Name = draft.Name;
+                persisted.SpendingSourceType = draft.SpendingSourceType;
+                persisted.Balance = draft.Balance;
+                persisted.SpentAmount = draft.SpentAmount;
+                persisted.AccountLimit = draft.AccountLimit;
+                persisted.MonthlyDueDate = draft.MonthlyDueDate;
+                persisted.DeductSource = null;
+                persisted.InterestRate = draft.InterestRate;
+                persisted.ShowOnUI = draft.ShowOnUi;
+                persisted.IsEnabled = draft.IsEnabled;
+                unitOfWork.SpendingSources.Update(persisted);
+                idMap[draft.Id] = persisted.Id;
+            }
+            else
+            {
+                var created = new SpendingSource
+                {
+                    Name = draft.Name,
+                    SpendingSourceType = draft.SpendingSourceType,
+                    Balance = draft.Balance,
+                    SpentAmount = draft.SpentAmount,
+                    AccountLimit = draft.AccountLimit,
+                    MonthlyDueDate = draft.MonthlyDueDate,
+                    DeductSource = null,
+                    InterestRate = draft.InterestRate,
+                    ShowOnUI = draft.ShowOnUi,
+                    IsEnabled = draft.IsEnabled
+                };
+                await unitOfWork.SpendingSources.AddAsync(created);
+                await unitOfWork.SaveChangesAsync();
+                idMap[draft.Id] = created.Id;
+            }
+        }
+
+        foreach (var draft in _draftSources.Values)
+        {
+            if (!idMap.TryGetValue(draft.Id, out var persistedId))
+                continue;
+
+            var persisted = await unitOfWork.SpendingSources.GetByIdAsync(persistedId);
+            if (persisted is null)
+                continue;
+
+            int? mappedDeductSource = null;
+            if (draft.DeductSource.HasValue && idMap.TryGetValue(draft.DeductSource.Value, out var mapped))
+                mappedDeductSource = mapped;
+
+            persisted.DeductSource = mappedDeductSource;
+            unitOfWork.SpendingSources.Update(persisted);
+        }
+
+        foreach (var removedId in _removedPersistedIds)
+        {
+            if (existingSources.TryGetValue(removedId, out var existing))
+                unitOfWork.SpendingSources.Remove(existing);
+        }
+
+        _lastPersistedIdMap = new Dictionary<int, int>(idMap);
     }
 
     private void PublishSnapshot()
@@ -105,5 +233,88 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
                 SpendingSources.Count,
                 HasSpendingSources,
                 TotalBudgetAmount)));
+    }
+
+    private async Task LoadDraftSourcesAsync()
+    {
+        var persistedSources = await _unitOfWork.SpendingSources.GetAllAsync();
+        _draftSources.Clear();
+
+        foreach (var source in persistedSources)
+        {
+            _draftSources[source.Id] = new StartupWizardDraftSpendingSource(
+                source.Id,
+                source.Name,
+                source.SpendingSourceType,
+                source.Balance,
+                source.SpentAmount,
+                source.AccountLimit,
+                source.MonthlyDueDate,
+                source.DeductSource,
+                source.InterestRate,
+                source.ShowOnUI,
+                source.IsEnabled);
+        }
+
+        _removedPersistedIds.Clear();
+        _lastPersistedIdMap = new Dictionary<int, int>();
+        _nextTemporaryId = -1;
+        _isLoaded = true;
+    }
+
+    private Task<AddSpendingSourceVM.AddSpendingSourceResult> SaveDraftSourceAsync(
+        AddSpendingSourceVM.AddSpendingSourceInput input,
+        int? editingId)
+    {
+        if (_draftSources.Values.Any(source =>
+                source.Id != (editingId ?? int.MinValue) &&
+                string.Equals(source.Name, input.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            return Task.FromResult(AddSpendingSourceVM.AddSpendingSourceResult.Failure(
+                $"A spending source named \"{input.Name}\" already exists."));
+        }
+
+        var id = editingId ?? GetNextTemporaryId();
+        _draftSources[id] = new StartupWizardDraftSpendingSource(
+            id,
+            input.Name,
+            input.SpendingSourceType,
+            input.Balance,
+            input.SpentAmount,
+            input.AccountLimit,
+            input.MonthlyDueDate,
+            input.DeductSource,
+            input.InterestRate,
+            input.ShowOnUI,
+            input.IsEnabled);
+
+        if (id > 0)
+            _removedPersistedIds.Remove(id);
+
+        RefreshProjectionAndPublish();
+        return Task.FromResult(AddSpendingSourceVM.AddSpendingSourceResult.Success(true));
+    }
+
+    private IReadOnlyList<AddSpendingSourceVM.DeductSourceOption> BuildDraftDeductSourceOptions(int? editingId)
+    {
+        return _draftSources.Values
+            .Where(source => source.Id != (editingId ?? 0))
+            .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+            .OrderBy(source => source.Name)
+            .Select(source => new AddSpendingSourceVM.DeductSourceOption(source.Id, source.Name))
+            .ToList();
+    }
+
+    private void RefreshProjectionAndPublish()
+    {
+        StartupWizardShared.ReplaceCollection(
+            SpendingSources,
+            _draftSources.Values
+                .OrderBy(source => source.Name)
+                .Select(source => new StartupWizardSpendingSourceItemVM(source)));
+
+        OnPropertyChanged(nameof(HasSpendingSources));
+        OnPropertyChanged(nameof(TotalBudgetAmount));
+        PublishSnapshot();
     }
 }

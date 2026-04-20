@@ -2,8 +2,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Data.Context;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.ExceptionServices;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Shell.StartupWizard;
@@ -14,6 +20,10 @@ public partial class StartupWizardVM : ObservableRecipient,
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IDataOperationScopeFactory _dataOperationScopeFactory;
+    private IDataOperationScope? _stagedScope;
+    private Func<Task>? _stagedCommitAsync;
+    private Func<Task>? _stagedRollbackAsync;
 
     [ObservableProperty] private int _currentStepIndex;
     [ObservableProperty] private bool _hasSpendingSources;
@@ -21,6 +31,7 @@ public partial class StartupWizardVM : ObservableRecipient,
     public StartupWizardVM(
         MainVM mainViewModel,
         IUnitOfWork unitOfWork,
+        IDataOperationScopeFactory dataOperationScopeFactory,
         StartupWizardGreetingPageVM greetingPage,
         StartupWizardNamePageVM namePage,
         StartupWizardMiddlePageVM middlePage,
@@ -31,6 +42,7 @@ public partial class StartupWizardVM : ObservableRecipient,
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
+        _dataOperationScopeFactory = dataOperationScopeFactory;
 
         GreetingPage = greetingPage;
         NamePage = namePage;
@@ -143,37 +155,219 @@ public partial class StartupWizardVM : ObservableRecipient,
         await _mainViewModel.Initialize();
     }
 
+    public Task<StartupWizardLoadingOutcome> ExecuteLoadingFlowAsync(
+        Func<Task<bool>>? tryStageAsyncOverride,
+        Func<Task<bool>> confirmRetryCycleAsync,
+        Func<TimeSpan, Task>? delayAsync = null)
+    {
+        return StartupWizardLoadingCoordinator.RunAsync(
+            tryStageAsyncOverride ?? TryStageDraftAsync,
+            confirmRetryCycleAsync,
+            delayAsync ?? (duration => Task.Delay(duration)));
+    }
+
     public async Task<SettingsOperationResult> CompleteAsync()
     {
-        await SaveIsFirstRunAsync(false);
-        return SettingsOperationResult.Success();
+        Exception? capturedException = null;
+
+        try
+        {
+            if (_stagedCommitAsync is not null)
+                await _stagedCommitAsync();
+
+            await SaveIsFirstRunAsync(false);
+
+            if (!_mainViewModel.IsInitialized)
+                await _mainViewModel.Initialize();
+            else
+                await _mainViewModel.ReloadCurrentDataAsync();
+        }
+        catch (Exception exception)
+        {
+            capturedException = exception;
+        }
+
+        try
+        {
+            await ClearStagedAsync(rollbackStagedChanges: false);
+        }
+        catch (Exception exception)
+        {
+            capturedException ??= exception;
+        }
+
+        return capturedException is null
+            ? SettingsOperationResult.Success()
+            : SettingsOperationResult.Failure(CreateStartupWizardErrorMessage("finish setup", capturedException));
     }
 
     public async Task<SettingsOperationResult> DismissAsync()
     {
-        var result = await PersistCurrentStepAsync();
-        if (!result.IsSuccess)
-            return result;
+        try
+        {
+            await ClearStagedAsync();
+            await SaveIsFirstRunAsync(false);
 
-        await SaveIsFirstRunAsync(false);
-
-        if (!_mainViewModel.IsInitialized)
-            await _mainViewModel.Initialize();
-        else
-            await _mainViewModel.ReloadCurrentDataAsync();
+            if (!_mainViewModel.IsInitialized)
+                await _mainViewModel.Initialize();
+            else
+                await _mainViewModel.ReloadCurrentDataAsync();
+        }
+        catch (Exception exception)
+        {
+            return SettingsOperationResult.Failure(
+                CreateStartupWizardErrorMessage("close the startup wizard", exception));
+        }
 
         return SettingsOperationResult.Success();
     }
 
     private async Task<SettingsOperationResult> PersistCurrentStepAsync()
     {
-        return CurrentStepIndex switch
+        return await Task.FromResult(SettingsOperationResult.Success());
+    }
+
+    private async Task<bool> TryStageDraftAsync()
+    {
+        IDataOperationScope? scope = null;
+        IDbContextTransaction? transaction = null;
+
+        try
         {
-            1 => await NamePage.SaveAsync(),
-            5 => await MiddlePage.BudgetAllocation.SaveAsync(),
-            6 => await MiddlePage.Notification.SaveAsync(),
-            _ => SettingsOperationResult.Success()
-        };
+            await ClearStagedAsync();
+
+            scope = await _dataOperationScopeFactory.CreateAsync();
+            var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+            transaction = await dbContext.Database.BeginTransactionAsync();
+            var stagedTransaction = transaction ??
+                throw new InvalidOperationException("Unable to begin startup wizard staging transaction.");
+
+            var stagedUnitOfWork = scope.UnitOfWork;
+            await NamePage.ApplyAsync(stagedUnitOfWork);
+            await MiddlePage.BudgetAllocation.ApplyAsync(stagedUnitOfWork);
+            await MiddlePage.Notification.ApplyAsync(stagedUnitOfWork);
+            await MiddlePage.SpendingSources.ApplyAsync(stagedUnitOfWork);
+            await MiddlePage.FixedExpenses.ApplyAsync(
+                stagedUnitOfWork,
+                MiddlePage.SpendingSources.LastPersistedIdMap);
+            await MiddlePage.SavingGoals.ApplyAsync(stagedUnitOfWork);
+            await stagedUnitOfWork.SaveChangesAsync();
+
+            _stagedScope = scope;
+            _stagedCommitAsync = async () =>
+            {
+                await ExecuteTransactionActionAndDisposeAsync(stagedTransaction, tx => tx.CommitAsync());
+            };
+            _stagedRollbackAsync = async () =>
+            {
+                await ExecuteTransactionActionAndDisposeAsync(stagedTransaction, tx => tx.RollbackAsync());
+            };
+
+            scope = null;
+            transaction = null;
+            return true;
+        }
+        catch
+        {
+            await DisposeQuietlyAsync(transaction);
+            await DisposeQuietlyAsync(scope);
+            await ClearStagedQuietlyAsync();
+            return false;
+        }
+    }
+
+    private static async Task DisposeQuietlyAsync(IAsyncDisposable? disposable)
+    {
+        if (disposable is null)
+            return;
+
+        try
+        {
+            await disposable.DisposeAsync();
+        }
+        catch
+        {
+            // Staging failures should surface as a retryable loading attempt.
+        }
+    }
+
+    private async Task ClearStagedQuietlyAsync()
+    {
+        try
+        {
+            await ClearStagedAsync();
+        }
+        catch
+        {
+            _stagedScope = null;
+            _stagedCommitAsync = null;
+            _stagedRollbackAsync = null;
+        }
+    }
+
+    private static async Task ExecuteTransactionActionAndDisposeAsync(
+        IDbContextTransaction transaction,
+        Func<IDbContextTransaction, Task> actionAsync)
+    {
+        ExceptionDispatchInfo? capturedException = null;
+
+        try
+        {
+            await actionAsync(transaction);
+        }
+        catch (Exception exception)
+        {
+            capturedException = ExceptionDispatchInfo.Capture(exception);
+        }
+
+        try
+        {
+            await transaction.DisposeAsync();
+        }
+        catch (Exception exception)
+        {
+            capturedException ??= ExceptionDispatchInfo.Capture(exception);
+        }
+
+        capturedException?.Throw();
+    }
+
+    private async Task ClearStagedAsync(bool rollbackStagedChanges = true)
+    {
+        var stagedScope = _stagedScope;
+        var stagedRollbackAsync = _stagedRollbackAsync;
+        ExceptionDispatchInfo? capturedException = null;
+
+        _stagedScope = null;
+        _stagedCommitAsync = null;
+        _stagedRollbackAsync = null;
+
+        try
+        {
+            if (rollbackStagedChanges && stagedRollbackAsync is not null)
+                await stagedRollbackAsync();
+        }
+        catch (Exception exception)
+        {
+            capturedException = ExceptionDispatchInfo.Capture(exception);
+        }
+
+        try
+        {
+            if (stagedScope is not null)
+                await stagedScope.DisposeAsync();
+        }
+        catch (Exception exception)
+        {
+            capturedException ??= ExceptionDispatchInfo.Capture(exception);
+        }
+
+        capturedException?.Throw();
+    }
+
+    private static string CreateStartupWizardErrorMessage(string action, Exception exception)
+    {
+        return $"Unable to {action}.\n\n{exception.Message}";
     }
 
     private async Task SaveIsFirstRunAsync(bool isFirstRun)

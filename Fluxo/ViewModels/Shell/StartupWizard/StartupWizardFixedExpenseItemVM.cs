@@ -27,5 +27,19 @@ public sealed record StartupWizardFixedExpenseItemVM(
         expense.RecurringDate)
     {
     }
-}
 
+    public StartupWizardFixedExpenseItemVM(StartupWizardDraftFixedExpense expense, string spendingSourceName) : this(
+        expense.Id,
+        expense.Name,
+        expense.Amount,
+        expense.Category switch
+        {
+            ExpenseCategory.Needs => "Needs",
+            ExpenseCategory.Wants => "Wants",
+            _ => "Invest"
+        },
+        spendingSourceName,
+        expense.RecurringDate)
+    {
+    }
+}

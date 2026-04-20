@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Planning;
@@ -43,6 +45,7 @@ public interface IDialogService
     bool? ShowAddSavingGoal(AddSavingGoalVM viewModel, Window? owner = null);
 
     bool? ShowAddTag(SettingsTagsTabVM settingsViewModel, Window? owner = null);
+    bool? ShowAddTag(Func<string, string, Task<SettingsOperationResult>> createTagAsync, Window? owner = null);
 
     (bool? DialogResult, string SelectedHexColor) ShowAddTagColorPicker(string initialHexColor, Window? owner = null);
 

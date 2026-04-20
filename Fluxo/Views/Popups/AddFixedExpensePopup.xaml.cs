@@ -99,7 +99,11 @@ public partial class AddFixedExpensePopup : BasePopup
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        _dialogService.ShowAddTag(_settingsTagsTabViewModel, this);
+        if (_viewModel.IsDraftMode)
+            _dialogService.ShowAddTag(_viewModel.CreateDraftTagAsync, this);
+        else
+            _dialogService.ShowAddTag(_settingsTagsTabViewModel, this);
+
         await _viewModel.LoadTagsAsync();
 
         var newTag = _viewModel.Tags.FirstOrDefault(tag =>

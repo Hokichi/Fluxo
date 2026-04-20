@@ -64,17 +64,28 @@ public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
             return SettingsOperationResult.Failure(
                 $"Needs, Wants, and Invest must add up to 100%. Current total: {total}%");
 
-        await StartupWizardShared.UpsertUserSettingAsync(_unitOfWork, UserSettingNames.NeedsThreshold,
-            NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
-        await StartupWizardShared.UpsertUserSettingAsync(_unitOfWork, UserSettingNames.WantsThreshold,
-            WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
-        await StartupWizardShared.UpsertUserSettingAsync(_unitOfWork, UserSettingNames.InvestThreshold,
-            InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture));
+        await ApplyAsync(_unitOfWork);
         await _unitOfWork.SaveChangesAsync();
 
         Messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.Budget));
         PublishSnapshot();
         return SettingsOperationResult.Success();
+    }
+
+    public async Task ApplyAsync(IUnitOfWork unitOfWork)
+    {
+        await StartupWizardShared.UpsertUserSettingAsync(
+            unitOfWork,
+            UserSettingNames.NeedsThreshold,
+            NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
+        await StartupWizardShared.UpsertUserSettingAsync(
+            unitOfWork,
+            UserSettingNames.WantsThreshold,
+            WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
+        await StartupWizardShared.UpsertUserSettingAsync(
+            unitOfWork,
+            UserSettingNames.InvestThreshold,
+            InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture));
     }
 
     public void IncrementAllocation(BudgetAllocationSegment segment, int delta)
@@ -148,4 +159,3 @@ public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
                 HasBudgetAllocationError)));
     }
 }
-

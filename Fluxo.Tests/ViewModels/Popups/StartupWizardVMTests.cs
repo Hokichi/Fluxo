@@ -1,6 +1,7 @@
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.ViewModels.Popups;
@@ -53,6 +54,31 @@ public sealed class StartupWizardVMTests
         Assert.DoesNotContain(UserSettingNames.Salary, userSettingsRepository.RemovedNames);
     }
 
+    [Fact]
+    public async Task ExecuteLoadingFlowAsync_UserDeclinesAfterFiveFailures_ReturnsAbandoned()
+    {
+        var viewModel = CreateViewModel();
+        var attempts = 0;
+        var prompts = 0;
+
+        var outcome = await viewModel.ExecuteLoadingFlowAsync(
+            tryStageAsyncOverride: () =>
+            {
+                attempts++;
+                return Task.FromResult(false);
+            },
+            confirmRetryCycleAsync: () =>
+            {
+                prompts++;
+                return Task.FromResult(false);
+            },
+            delayAsync: _ => Task.CompletedTask);
+
+        Assert.Equal(StartupWizardLoadingOutcome.Abandoned, outcome);
+        Assert.Equal(5, attempts);
+        Assert.Equal(1, prompts);
+    }
+
     private static StartupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)
     {
         unitOfWork ??= new TestUnitOfWork(new TestUserSettingsRepository([]));
@@ -75,7 +101,24 @@ public sealed class StartupWizardVMTests
             messenger);
         var loading = new StartupWizardLoadingPageVM();
         var final = new StartupWizardFinalPageVM(messenger);
-        return new StartupWizardVM(null!, unitOfWork, greeting, name, middle, loading, final, messenger);
+        return new StartupWizardVM(
+            null!,
+            unitOfWork,
+            new TestDataOperationScopeFactory(),
+            greeting,
+            name,
+            middle,
+            loading,
+            final,
+            messenger);
+    }
+
+    private sealed class TestDataOperationScopeFactory : IDataOperationScopeFactory
+    {
+        public ValueTask<IDataOperationScope> CreateAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class TestUnitOfWork(TestUserSettingsRepository userSettingsRepository) : IUnitOfWork

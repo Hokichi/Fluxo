@@ -30,5 +30,25 @@ public sealed record StartupWizardSpendingSourceItemVM(
             : "Balance")
     {
     }
-}
 
+    public StartupWizardSpendingSourceItemVM(StartupWizardDraftSpendingSource spendingSource) : this(
+        spendingSource.Id,
+        spendingSource.Name,
+        spendingSource.SpendingSourceType switch
+        {
+            SpendingSourceType.Credit => "Credit",
+            SpendingSourceType.BNPL => "BNPL",
+            SpendingSourceType.Checking => "Checking",
+            SpendingSourceType.Cash => "Cash",
+            SpendingSourceType.Saving => "Savings",
+            _ => "Source"
+        },
+        spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
+            ? spendingSource.SpentAmount
+            : spendingSource.Balance,
+        spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
+            ? "Spent"
+            : "Balance")
+    {
+    }
+}
