@@ -75,10 +75,18 @@
                         <TextBlock
                             Margin="8,1,0,0"
                             VerticalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
+                            FontFamily="{StaticResource Black}"
                             FontSize="18"
                             Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Fluxo" />
+                            Text="flux" />
+
+                        <TextBlock
+                            Margin="0,1,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Black}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Mint}"
+                            Text="o" />
 
                         <Border
                             Width="1"
@@ -414,7 +422,6 @@
                                 <RowDefinition Height="180" />
                             </Grid.RowDefinitions>
 
-
                             <sections:NotificationPanel
                                 x:Name="NotificationPanelHost"
                                 Grid.Row="0"
@@ -437,4 +444,3 @@
         </Grid>
     </Border>
 </Window>
-
