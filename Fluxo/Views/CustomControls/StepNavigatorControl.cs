@@ -28,6 +28,13 @@ public sealed class StepNavigatorControl : Control
             typeof(StepNavigatorControl),
             new PropertyMetadata(0, OnCurrentStepChanged));
 
+    public static readonly DependencyProperty ShouldIndicateProgressProperty =
+        DependencyProperty.Register(
+            nameof(ShouldIndicateProgress),
+            typeof(bool),
+            typeof(StepNavigatorControl),
+            new PropertyMetadata(true));
+
     private static readonly DependencyPropertyKey DotsPropertyKey =
         DependencyProperty.RegisterReadOnly(
             nameof(Dots),
@@ -52,6 +59,12 @@ public sealed class StepNavigatorControl : Control
     {
         get => (int)GetValue(CurrentStepProperty);
         set => SetValue(CurrentStepProperty, value);
+    }
+
+    public bool ShouldIndicateProgress
+    {
+        get => (bool)GetValue(ShouldIndicateProgressProperty);
+        set => SetValue(ShouldIndicateProgressProperty, value);
     }
 
     public ObservableCollection<StepNavigatorDotVM> Dots =>
