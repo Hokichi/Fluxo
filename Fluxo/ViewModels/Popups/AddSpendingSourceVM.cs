@@ -299,7 +299,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         var balanceUpdateTag = await ResolveBalanceUpdateTagAsync(unitOfWork);
         var expense = new Expense
         {
-            Name = $"Balance Update For {spendingSource.Name}",
+            Name = $"Balance Update",
             Amount = triggerAmount,
             ExpenseKind = ExpenseKind.Manual,
             ExpenseCategory = ExpenseCategory.Needs,

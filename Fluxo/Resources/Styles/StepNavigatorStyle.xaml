@@ -10,18 +10,18 @@
                     <ItemsControl IsHitTestVisible="False" ItemsSource="{TemplateBinding Dots}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" />
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
 
                                     <!--  Left connector — hidden for the first dot  -->
                                     <Border
                                         Width="8"
                                         Height="1"
-                                        Margin="2,0"
+                                        Margin="3,0"
                                         Visibility="{Binding IsFirst, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                         <Border.Style>
                                             <Style TargetType="Border">
