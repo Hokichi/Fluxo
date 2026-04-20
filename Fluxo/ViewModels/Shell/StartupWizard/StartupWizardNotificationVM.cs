@@ -73,16 +73,20 @@ public partial class StartupWizardNotificationVM : ObservableObject
 
     public async Task<SettingsOperationResult> SaveAsync()
     {
-        foreach (var setting in NotificationSettings)
-            await StartupWizardShared.UpsertUserSettingAsync(
-                _unitOfWork,
-                setting.SettingName,
-                setting.IsEnabled.ToString());
-
+        await ApplyAsync(_unitOfWork);
         await _unitOfWork.SaveChangesAsync();
         _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.Notifications));
         PublishSnapshot();
         return SettingsOperationResult.Success();
+    }
+
+    public async Task ApplyAsync(IUnitOfWork unitOfWork)
+    {
+        foreach (var setting in NotificationSettings)
+            await StartupWizardShared.UpsertUserSettingAsync(
+                unitOfWork,
+                setting.SettingName,
+                setting.IsEnabled.ToString());
     }
 
     private void ReplaceNotificationSettings(IEnumerable<SettingsNotificationOptionVM> options)

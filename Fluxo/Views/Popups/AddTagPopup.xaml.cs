@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
@@ -9,15 +11,22 @@ namespace Fluxo.Views.Popups;
 public partial class AddTagPopup : BasePopup
 {
     private readonly IDialogService _dialogService;
-    private readonly SettingsTagsTabVM _settingsViewModel;
+    private readonly Func<string, string, Task<SettingsOperationResult>> _createTagAsync;
     private readonly AddTagVM _viewModel;
 
     public AddTagPopup(SettingsTagsTabVM settingsViewModel, IDialogService dialogService)
+        : this(dialogService, settingsViewModel.CreateTagAsync)
+    {
+    }
+
+    public AddTagPopup(
+        IDialogService dialogService,
+        Func<string, string, Task<SettingsOperationResult>> createTagAsync)
     {
         InitializeComponent();
 
         _dialogService = dialogService;
-        _settingsViewModel = settingsViewModel;
+        _createTagAsync = createTagAsync ?? throw new ArgumentNullException(nameof(createTagAsync));
         _viewModel = new AddTagVM();
         DataContext = _viewModel;
 
@@ -26,7 +35,7 @@ public partial class AddTagPopup : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
-        var result = await _settingsViewModel.CreateTagAsync(_viewModel.NameText, _viewModel.SelectedColorHex);
+        var result = await _createTagAsync(_viewModel.NameText, _viewModel.SelectedColorHex);
         if (!result.IsSuccess)
         {
             ShowValidationMessage(result.ErrorMessage);

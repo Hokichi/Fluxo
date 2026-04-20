@@ -8,6 +8,7 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -21,6 +22,9 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? _saveDraftAsync;
+    private readonly Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? _loadDraftTagsAsync;
+    private readonly Func<string, string, Task<SettingsOperationResult>>? _createDraftTagAsync;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
     private bool _isSyncingTagSelection;
@@ -38,14 +42,27 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     public int? EditingId { get; init; }
 
-    public AddFixedExpenseVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
+    public AddFixedExpenseVM(
+        MainVM mainViewModel,
+        IUnitOfWork unitOfWork,
+        IReadOnlyList<SpendingSourceVM>? spendingSourcesOverride = null,
+        Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? saveDraftAsync = null,
+        Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? loadDraftTagsAsync = null,
+        Func<string, string, Task<SettingsOperationResult>>? createDraftTagAsync = null)
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
+        _saveDraftAsync = saveDraftAsync;
+        _loadDraftTagsAsync = loadDraftTagsAsync;
+        _createDraftTagAsync = createDraftTagAsync;
 
-        foreach (var spendingSource in _mainViewModel.BudgetPanel.SpendingSources
-                     .Where(source => source.IsEnabled)
-                     .OrderBy(source => source.Name))
+        var sourceList = spendingSourcesOverride ??
+                         _mainViewModel.BudgetPanel.SpendingSources
+                             .Where(source => source.IsEnabled)
+                             .OrderBy(source => source.Name)
+                             .ToList();
+
+        foreach (var spendingSource in sourceList)
             SpendingSources.Add(spendingSource);
 
         RecurringDateText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
@@ -67,6 +84,8 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+    public bool IsDraftMode => _saveDraftAsync is not null;
+    public bool AllowAddTagAction => true;
 
     public void BeginChangeTracking()
     {
@@ -122,18 +141,26 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     public async Task LoadTagsAsync(CancellationToken cancellationToken = default)
     {
-        var availableTags = (await _unitOfWork.ExpenseTags.GetAllAsync(cancellationToken))
-            .Where(tag => !tag.IsSystemTag)
-            .OrderBy(tag => tag.Name)
-            .Select(tag => new ExpenseTagVM
-            {
-                Id = tag.Id,
-                Name = tag.Name,
-                HexCode = tag.HexCode,
-                IconName = tag.IconName,
-                IsSystemTag = tag.IsSystemTag
-            })
-            .ToList();
+        IReadOnlyList<ExpenseTagVM> availableTags;
+        if (_loadDraftTagsAsync is not null)
+        {
+            availableTags = await _loadDraftTagsAsync(cancellationToken);
+        }
+        else
+        {
+            availableTags = (await _unitOfWork.ExpenseTags.GetAllAsync(cancellationToken))
+                .Where(tag => !tag.IsSystemTag)
+                .OrderBy(tag => tag.Name)
+                .Select(tag => new ExpenseTagVM
+                {
+                    Id = tag.Id,
+                    Name = tag.Name,
+                    HexCode = tag.HexCode,
+                    IconName = tag.IconName,
+                    IsSystemTag = tag.IsSystemTag
+                })
+                .ToList();
+        }
 
         Tags.Clear();
         foreach (var tag in availableTags.Where(c => !c.IsSystemTag))
@@ -159,6 +186,29 @@ public partial class AddFixedExpenseVM : ObservableObject
         NotifyFormStateChanged();
     }
 
+    public async Task<SettingsOperationResult> CreateDraftTagAsync(string name, string hexCode)
+    {
+        if (_createDraftTagAsync is null)
+            return SettingsOperationResult.Failure("Unable to add a tag right now.");
+
+        var result = await _createDraftTagAsync(name, hexCode);
+        if (!result.IsSuccess)
+            return result;
+
+        var addedTagName = (name ?? string.Empty).Trim();
+        await LoadTagsAsync();
+
+        if (addedTagName.Length > 0)
+        {
+            var matchingTag = Tags.FirstOrDefault(tag =>
+                string.Equals(tag.Name, addedTagName, StringComparison.OrdinalIgnoreCase));
+            if (matchingTag is not null)
+                SelectedTag = matchingTag;
+        }
+
+        return result;
+    }
+
     public async Task<AddFixedExpenseResult> SaveAsync()
     {
         if (IsBusy)
@@ -166,6 +216,9 @@ public partial class AddFixedExpenseVM : ObservableObject
 
         if (!TryBuildInput(out var input, out var validationMessage))
             return AddFixedExpenseResult.Failure(validationMessage);
+
+        if (_saveDraftAsync is not null)
+            return await _saveDraftAsync(input);
 
         IsBusy = true;
 
@@ -363,7 +416,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         }
     }
 
-    private readonly record struct AddFixedExpenseInput(
+    public readonly record struct AddFixedExpenseInput(
         string Name,
         decimal Amount,
         ExpenseCategory Category,

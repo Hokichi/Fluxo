@@ -128,7 +128,9 @@
                                         x:Name="PART_CloseButton"
                                         ButtonIcon="{StaticResource PopupStyles.Close}"
                                         HoveredBackground="{StaticResource Brush.Danger}"
-                                        Style="{StaticResource HeaderButtonStyle}" />
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        Visibility="{TemplateBinding ShowCloseButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
                                 </StackPanel>
                             </Grid>
 

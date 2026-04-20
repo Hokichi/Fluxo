@@ -17,5 +17,13 @@ public sealed record StartupWizardSavingGoalItemVM(
         goal.SavingEndDate)
     {
     }
-}
 
+    public StartupWizardSavingGoalItemVM(StartupWizardDraftSavingGoal goal) : this(
+        goal.Id,
+        goal.Name,
+        goal.CurrentAmount,
+        goal.TargetAmount,
+        goal.SavingEndDate)
+    {
+    }
+}

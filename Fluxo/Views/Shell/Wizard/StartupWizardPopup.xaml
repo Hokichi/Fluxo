@@ -26,6 +26,19 @@
         </StackPanel>
     </customControls:BasePopup.PopupTitleContent>
 
+    <customControls:BasePopup.Style>
+        <Style
+            BasedOn="{StaticResource {x:Type customControls:BasePopup}}"
+            TargetType="{x:Type customControls:BasePopup}">
+            <Setter Property="ShowCloseButton" Value="True" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsFinalStep, RelativeSource={RelativeSource Self}}" Value="True">
+                    <Setter Property="ShowCloseButton" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </customControls:BasePopup.Style>
+
     <customControls:BasePopup.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

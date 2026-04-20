@@ -11,6 +11,7 @@ using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
+using StartupWizardLoadingOutcome = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardLoadingOutcome;
 using StartupWizardVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardVM;
 
 namespace Fluxo.Views.Shell.Wizard;
@@ -145,7 +146,11 @@ public partial class StartupWizardPopup : BasePopup
     {
         try
         {
-            await _viewModel.InitializeMainViewModelAsync();
+            var outcome = await _viewModel.ExecuteLoadingFlowAsync(
+                tryStageAsyncOverride: null,
+                confirmRetryCycleAsync: ConfirmRetryLoadingCycleAsync);
+            if (outcome is StartupWizardLoadingOutcome.Success or StartupWizardLoadingOutcome.Abandoned)
+                await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
         }
         catch (Exception exception)
         {
@@ -155,8 +160,17 @@ public partial class StartupWizardPopup : BasePopup
             Close();
             return;
         }
+    }
 
-        await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
+    private Task<bool> ConfirmRetryLoadingCycleAsync()
+    {
+        var result = FluxoMessageBox.Show(this,
+            "Unable to load data after several attempts. Do you want to try again?",
+            "Startup Wizard",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        return Task.FromResult(result == MessageBoxResult.Yes);
     }
 
     public async void OnFinishClick(object sender, RoutedEventArgs e)

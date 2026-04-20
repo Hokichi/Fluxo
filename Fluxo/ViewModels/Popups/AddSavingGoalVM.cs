@@ -13,6 +13,7 @@ public partial class AddSavingGoalVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly Func<AddSavingGoalInput, Task<AddSavingGoalResult>>? _saveDraftAsync;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
 
@@ -24,10 +25,14 @@ public partial class AddSavingGoalVM : ObservableObject
 
     public int? EditingId { get; init; }
 
-    public AddSavingGoalVM(MainVM mainViewModel, IUnitOfWork unitOfWork)
+    public AddSavingGoalVM(
+        MainVM mainViewModel,
+        IUnitOfWork unitOfWork,
+        Func<AddSavingGoalInput, Task<AddSavingGoalResult>>? saveDraftAsync = null)
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
+        _saveDraftAsync = saveDraftAsync;
         _initialState = CaptureState();
     }
 
@@ -54,6 +59,9 @@ public partial class AddSavingGoalVM : ObservableObject
 
         if (!TryBuildInput(out var input, out var validationMessage))
             return AddSavingGoalResult.Failure(validationMessage);
+
+        if (_saveDraftAsync is not null)
+            return await _saveDraftAsync(input);
 
         IsBusy = true;
 
@@ -187,7 +195,7 @@ public partial class AddSavingGoalVM : ObservableObject
         }
     }
 
-    private readonly record struct AddSavingGoalInput(
+    public readonly record struct AddSavingGoalInput(
         string Name,
         decimal TargetAmount,
         decimal CurrentAmount,
