@@ -5,8 +5,6 @@
 
     <BooleanToVisibilityConverter x:Key="PopupBoolToVisibility" />
 
-
-
     <Style TargetType="{x:Type c:BasePopup}">
         <Setter Property="Template">
             <Setter.Value>
@@ -145,19 +143,15 @@
                                 Opacity="0"
                                 Visibility="Collapsed" />
                         </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="PopupTitleContent" Value="{x:Null}">
-                                <Setter TargetName="PopupTitleText" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="PopupTitleContentPresenter" Property="Visibility" Value="Collapsed" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="PopupTitleContent" Value="{x:Null}">
+                            <Setter TargetName="PopupTitleText" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="PopupTitleContentPresenter" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 </ResourceDictionary>
-
-
-
-
