@@ -22,6 +22,7 @@ public partial class StartupWizardNamePageVM : ObservableObject
     }
 
     public string ResolvedUsername => StartupWizardShared.ResolveUsername(UsernameText);
+    public bool HasUsernameInput => !string.IsNullOrWhiteSpace(UsernameText);
 
     public async Task LoadAsync()
     {
@@ -46,12 +47,13 @@ public partial class StartupWizardNamePageVM : ObservableObject
     partial void OnUsernameTextChanged(string value)
     {
         OnPropertyChanged(nameof(ResolvedUsername));
+        OnPropertyChanged(nameof(HasUsernameInput));
         PublishIdentitySnapshot();
     }
 
-    public string CurrentStepTitle => "What should Fluxo call you?";
+    public string CurrentStepTitle => "What should fluxo call you?";
 
-    public string CurrentStepDescription => "Pick the name you'd like Fluxo to use throughout the app.";
+    public string CurrentStepDescription => "Pick the name you'd like fluxo to use throughout the app.";
 
     private void PublishIdentitySnapshot()
     {

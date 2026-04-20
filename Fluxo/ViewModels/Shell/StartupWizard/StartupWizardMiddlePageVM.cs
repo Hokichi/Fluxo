@@ -5,8 +5,12 @@ using Fluxo.Resources.Messages;
 namespace Fluxo.ViewModels.Shell.StartupWizard;
 
 public partial class StartupWizardMiddlePageVM : ObservableRecipient,
-    IRecipient<StartupWizardSpendingSourcesChangedMessage>
+    IRecipient<StartupWizardSpendingSourcesChangedMessage>,
+    IRecipient<StartupWizardBudgetAllocationChangedMessage>
 {
+    private const int FirstMiddleStepIndex = 2;
+    private const int LastMiddleStepIndex = 7;
+    private const int MiddleStepsCount = LastMiddleStepIndex - FirstMiddleStepIndex + 1;
     private int _currentStepIndex = 2;
 
     [ObservableProperty] private bool _hasSpendingSources;
@@ -48,7 +52,13 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
 
     public StartupWizardSummaryVM Summary { get; }
 
-    public string StepCounterText => IsMiddleStep ? $"Step {_currentStepIndex - 1} of 6" : string.Empty;
+    public int MiddleStepCount => MiddleStepsCount;
+
+    public int MiddleCurrentStep => IsMiddleStep ? _currentStepIndex - 1 : 1;
+
+    public bool IsNextEnabled => !(_currentStepIndex == 5 && BudgetAllocation.HasBudgetAllocationError);
+
+    public string StepCounterText => IsMiddleStep ? $"Step {MiddleCurrentStep} of {MiddleStepCount}" : string.Empty;
 
     public string CurrentStepTitle => _currentStepIndex switch
     {
@@ -63,14 +73,14 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
     public string CurrentStepDescription => _currentStepIndex switch
     {
         2 => "Add the accounts and sources you spend from most often.",
-        3 => "Add recurring fixed expenses so Fluxo can account for them upfront.",
+        3 => "Add recurring fixed expenses so fluxo can account for them upfront.",
         4 => "Add a few goals to start tracking progress right away.",
         5 => "Split your budget into Needs, Wants, and Invest.",
-        6 => "Choose which reminders and alerts Fluxo should show.",
+        6 => "Choose which reminders and alerts fluxo should show.",
         _ => "Here's a summary of everything you've set up."
     };
 
-    private bool IsMiddleStep => _currentStepIndex is >= 2 and <= 7;
+    private bool IsMiddleStep => _currentStepIndex is >= FirstMiddleStepIndex and <= LastMiddleStepIndex;
 
     public async Task LoadAsync()
     {
@@ -99,6 +109,8 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
         Notification.IsStep6Active = IsStep6Active;
         Summary.IsStep7Active = IsStep7Active;
 
+        OnPropertyChanged(nameof(MiddleCurrentStep));
+        OnPropertyChanged(nameof(IsNextEnabled));
         OnPropertyChanged(nameof(StepCounterText));
         OnPropertyChanged(nameof(CurrentStepTitle));
         OnPropertyChanged(nameof(CurrentStepDescription));
@@ -107,6 +119,11 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
     public void Receive(StartupWizardSpendingSourcesChangedMessage message)
     {
         HasSpendingSources = message.Value.HasAny;
+    }
+
+    public void Receive(StartupWizardBudgetAllocationChangedMessage message)
+    {
+        OnPropertyChanged(nameof(IsNextEnabled));
     }
 }
 

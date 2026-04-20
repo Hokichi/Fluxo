@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
@@ -35,6 +37,7 @@ public partial class StartupWizardPopup : BasePopup
         DataContext = viewModel;
         Loaded += OnLoadedAsync;
         Closing += OnClosingAsync;
+        PreviewMouseLeftButtonDown += OnPreviewMouseLeftButtonDown;
         _allocationHoldDelayTimer.Tick += OnAllocationHoldDelayTick;
         _allocationRepeatTimer.Tick += OnAllocationRepeatTick;
     }
@@ -71,7 +74,7 @@ public partial class StartupWizardPopup : BasePopup
         try
         {
             var confirmation = FluxoMessageBox.Show(this,
-                "Setup isn't finished yet. Fluxo will continue to the app after this dialog.",
+                "Setup isn't finished yet. fluxo will continue to the app after this dialog.",
                 "Startup Wizard",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -96,12 +99,12 @@ public partial class StartupWizardPopup : BasePopup
         }
     }
 
-    private async void OnBackClick(object sender, RoutedEventArgs e)
+    public async void OnBackClick(object sender, RoutedEventArgs e)
     {
         await AnimateStepTransitionAsync(_viewModel.GoBack);
     }
 
-    private async void OnNextClick(object sender, RoutedEventArgs e)
+    public async void OnNextClick(object sender, RoutedEventArgs e)
     {
         if (_viewModel.IsStep2Active && !_viewModel.HasSpendingSources)
         {
@@ -156,7 +159,7 @@ public partial class StartupWizardPopup : BasePopup
         await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
     }
 
-    private async void OnFinishClick(object sender, RoutedEventArgs e)
+    public async void OnFinishClick(object sender, RoutedEventArgs e)
     {
         var result = await _viewModel.CompleteAsync();
         if (!result.IsSuccess)
@@ -319,6 +322,52 @@ public partial class StartupWizardPopup : BasePopup
 
     private bool IsMiddleStep(int stepIndex) => stepIndex >= 2 && stepIndex <= 7;
 
+    private static bool IsLoadingFinalTransition(int fromStep, int toStep) =>
+        (fromStep == 8 && toStep == 9) || (fromStep == 9 && toStep == 8);
+
+    private UIElement? GetContentElementForStep(int stepIndex) => stepIndex switch
+    {
+        8 => LoadingStepPage?.ContentElement,
+        9 => FinalStepPage?.ContentElement,
+        _ => null
+    };
+
+    private static bool ShouldSkipHeaderDrag(DependencyObject? originalSource)
+    {
+        var current = originalSource;
+        while (current is not null)
+        {
+            if (current is ButtonBase or Thumb or TextBoxBase)
+                return true;
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return false;
+    }
+
+    private void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left || e.ClickCount != 1)
+            return;
+
+        if (e.GetPosition(this).Y > 60)
+            return;
+
+        if (ShouldSkipHeaderDrag(e.OriginalSource as DependencyObject))
+            return;
+
+        try
+        {
+            DragMove();
+            e.Handled = true;
+        }
+        catch
+        {
+            // Ignore drag failures caused by transient mouse capture changes.
+        }
+    }
+
     private async Task AnimateStepTransitionAsync(Action changeStep)
     {
         if (_isAnimating)
@@ -329,6 +378,26 @@ public partial class StartupWizardPopup : BasePopup
         try
         {
             var fromStep = _viewModel.CurrentStepIndex;
+            var toStep = fromStep - 1;
+
+            if (IsLoadingFinalTransition(fromStep, toStep))
+            {
+                var fromContent = GetContentElementForStep(fromStep);
+                if (fromContent is not null)
+                    await FadeElementAsync(fromContent, 1, 0);
+
+                changeStep();
+                SyncStripeOpacities();
+
+                var toContent = GetContentElementForStep(_viewModel.CurrentStepIndex);
+                if (toContent is not null)
+                {
+                    toContent.Opacity = 0;
+                    await FadeElementAsync(toContent, 0, 1);
+                }
+
+                return;
+            }
 
             if (IsCrossSectionTransition(fromStep, isForward: false))
             {
@@ -371,6 +440,26 @@ public partial class StartupWizardPopup : BasePopup
         try
         {
             var fromStep = _viewModel.CurrentStepIndex;
+            var toStep = fromStep + 1;
+
+            if (IsLoadingFinalTransition(fromStep, toStep))
+            {
+                var fromContent = GetContentElementForStep(fromStep);
+                if (fromContent is not null)
+                    await FadeElementAsync(fromContent, 1, 0);
+
+                var result = await changeStepAsync();
+                SyncStripeOpacities();
+
+                var toContent = GetContentElementForStep(_viewModel.CurrentStepIndex);
+                if (toContent is not null)
+                {
+                    toContent.Opacity = 0;
+                    await FadeElementAsync(toContent, 0, 1);
+                }
+
+                return result;
+            }
 
             if (IsCrossSectionTransition(fromStep, isForward: true))
             {

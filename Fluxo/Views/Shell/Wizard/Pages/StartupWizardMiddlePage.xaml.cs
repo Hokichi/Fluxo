@@ -44,4 +44,15 @@ public partial class StartupWizardMiddlePage : UserControl
             FindPopup(source)?.OnAddSavingGoalClick(sender, e);
     }
 
+    private void OnBackClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is DependencyObject source)
+            FindPopup(source)?.OnBackClick(sender, e);
+    }
+
+    private void OnNextClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is DependencyObject source)
+            FindPopup(source)?.OnNextClick(sender, e);
+    }
 }
