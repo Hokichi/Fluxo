@@ -96,6 +96,15 @@ public partial class MainWindow : Window, IPopupHost
         if (e.OriginalSource is DependencyObject source && IsInteractiveElement(source))
             return;
 
+        if (_isStateChangeTransitionActive)
+            return;
+
+        if (_isMaximized)
+        {
+            OnExpandRestoreWindow(ExpandRestoreButton, new RoutedEventArgs(ButtonBase.ClickEvent, ExpandRestoreButton));
+            return;
+        }
+
         try
         {
             DragMove();
