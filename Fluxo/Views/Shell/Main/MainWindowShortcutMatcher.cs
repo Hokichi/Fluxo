@@ -8,4 +8,9 @@ public static class MainWindowShortcutMatcher
     {
         return key == Key.W && modifiers == ModifierKeys.Control;
     }
+
+    public static bool IsOpenPlanningShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.P && modifiers == ModifierKeys.Control;
+    }
 }

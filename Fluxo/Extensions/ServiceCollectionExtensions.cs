@@ -8,9 +8,11 @@ using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Planning;
 using Fluxo.Views.Popups.Settings;
 using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Wizard;
@@ -69,6 +71,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddSpendingSourceVM>();
         services.AddTransient<AddFixedExpenseVM>();
         services.AddTransient<AddSavingGoalVM>();
+        services.AddTransient<PlanningPopupVM>();
+        services.AddTransient<PlanningReportVM>();
         services.AddTransient<SettingsBudgetTabVM>();
         services.AddTransient<SettingsSourcesTabVM>();
         services.AddTransient<SettingsFixedExpensesTabVM>();
@@ -97,6 +101,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddSavingGoalPopup>();
         services.AddTransient<SettingsPopup>();
         services.AddTransient<StartupWizardPopup>();
+        services.AddTransient<PlanningPopup>();
+        services.AddTransient<PlanningReportPopup>();
 
         services.AddSingleton<MainWindow>();
 
