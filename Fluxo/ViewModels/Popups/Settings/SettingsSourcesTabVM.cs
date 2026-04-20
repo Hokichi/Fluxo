@@ -59,6 +59,25 @@ public partial class SettingsSourcesTabVM : ObservableObject
         return new SpendingSourceDetailVM(_mainViewModel, spendingSourceId, _unitOfWork);
     }
 
+    public async Task OpenAddSpendingSourceAsync()
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AddSpendingSource,
+                CreateAddSpendingSourceViewModel())));
+        await RefreshSpendingSourcesAsync();
+    }
+
+    public async Task OpenSpendingSourceDetailAsync(int spendingSourceId)
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.SpendingSourceDetail,
+                CreateSpendingSourceDetailViewModel(spendingSourceId))));
+        await RefreshSpendingSourcesAsync();
+        SelectSingleItem(spendingSourceId);
+    }
+
     public void ClearSelections()
     {
         SetSelections(false);

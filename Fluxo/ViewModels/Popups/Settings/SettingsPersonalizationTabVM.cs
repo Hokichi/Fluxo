@@ -43,6 +43,21 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         PublishPendingState();
     }
 
+    public Task<SettingsMaintenanceResult> ResetAllSettingsAsync()
+    {
+        return SendMaintenanceRequestAsync(SettingsMaintenanceRequestType.ResetAllSettings, keepSettings: true);
+    }
+
+    public Task<SettingsMaintenanceResult> DeleteAllDataAsync(bool keepSettings)
+    {
+        return SendMaintenanceRequestAsync(SettingsMaintenanceRequestType.DeleteAllData, keepSettings);
+    }
+
+    public void RequestClosePopup()
+    {
+        _messenger.Send(new SettingsPopupCloseRequestedMessage(new SettingsPopupCloseRequest()));
+    }
+
     public async Task<(SettingsOperationResult Result, List<ILogMemoryAction> Actions, string? OldUsername, string? NewUsername)>
         BuildApplyChangesAsync()
     {
@@ -146,5 +161,19 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         _messenger.Send(new SettingsPendingChangesChangedMessage(
             new SettingsPendingChangesChanged(SettingsTabKey.Personalization, HasPendingChanges)));
+    }
+
+    private async Task<SettingsMaintenanceResult> SendMaintenanceRequestAsync(SettingsMaintenanceRequestType requestType,
+        bool keepSettings)
+    {
+        var completionSource = new TaskCompletionSource<SettingsMaintenanceResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        _messenger.Send(new SettingsMaintenanceRequestedMessage(
+            new SettingsMaintenanceRequest(requestType, keepSettings, completionSource)));
+
+        var completedTask = await Task.WhenAny(completionSource.Task, Task.Delay(TimeSpan.FromSeconds(30)));
+        return completedTask == completionSource.Task
+            ? await completionSource.Task
+            : SettingsMaintenanceResult.Failure("Unable to run this settings action.");
     }
 }

@@ -1,8 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Components.IncomeSource"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-    xmlns:components='clr-namespace:Fluxo.Views.Components'
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Width="240"
@@ -140,19 +140,19 @@
                         <Grid>
                             <components:Icon
                                 Margin="6"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
                                 Path="{StaticResource IncomeSource.Bank}"
-                                Style="{StaticResource BankIconStyle}" />
+                                Style="{StaticResource BankIconStyle}"
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
                             <components:Icon
                                 Margin="6"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
                                 Path="{StaticResource IncomeSource.CreditCardAlt}"
-                                Style="{StaticResource CreditCardIconStyle}" />
+                                Style="{StaticResource CreditCardIconStyle}"
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
                             <components:Icon
                                 Margin="6"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
                                 Path="{StaticResource IncomeSource.PiggyBank}"
-                                Style="{StaticResource PiggyBankIconStyle}" />
+                                Style="{StaticResource PiggyBankIconStyle}"
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
                         </Grid>
                     </Border>
 
@@ -265,7 +265,11 @@
                                 <ColumnDefinition Width="12" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <components:Icon Width='14' Height='14' Path='{StaticResource IncomeSource.Eye}' Color='{StaticResource Brush.Info}' />
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource IncomeSource.Eye}"
+                                Color="{StaticResource Brush.Info}" />
                             <TextBlock
                                 Grid.Column="2"
                                 VerticalAlignment="Center"
@@ -282,7 +286,11 @@
                                 <ColumnDefinition Width="12" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <components:Icon Width='14' Height='14' Path='{StaticResource IncomeSource.CircleMinusSolid}' Color='{StaticResource Brush.Danger}' />
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource IncomeSource.CircleMinusSolid}"
+                                Color="{StaticResource Brush.Danger}" />
                             <TextBlock
                                 Grid.Column="2"
                                 VerticalAlignment="Center"
@@ -299,7 +307,11 @@
                                 <ColumnDefinition Width="12" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <components:Icon Width='14' Height='14' Path='{StaticResource IncomeSource.EyeOff}' Color='{StaticResource Brush.Warning}' />
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource IncomeSource.EyeOff}"
+                                Color="{StaticResource Brush.Warning}" />
                             <TextBlock
                                 Grid.Column="2"
                                 VerticalAlignment="Center"
@@ -319,7 +331,11 @@
                                 <ColumnDefinition Width="12" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <components:Icon Width='14' Height='14' Path='{StaticResource IncomeSource.LightningSlashFill}' Color='{StaticResource Brush.Warning}' />
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource IncomeSource.LightningSlashFill}"
+                                Color="{StaticResource Brush.Warning}" />
                             <TextBlock
                                 Grid.Column="2"
                                 VerticalAlignment="Center"
@@ -339,7 +355,11 @@
                                 <ColumnDefinition Width="12" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <components:Icon Width='14' Height='14' Path='{StaticResource IncomeSource.Exchange}' Color='{StaticResource Brush.Mint}' />
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource IncomeSource.Exchange}"
+                                Color="{StaticResource Brush.Mint}" />
                             <TextBlock
                                 Grid.Column="2"
                                 VerticalAlignment="Center"
@@ -353,4 +373,3 @@
         </Popup>
     </Grid>
 </UserControl>
-

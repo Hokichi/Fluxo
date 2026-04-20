@@ -1,8 +1,8 @@
 <customControls:BasePopup
     x:Class="Fluxo.Views.Popups.MessageBoxPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-    xmlns:components='clr-namespace:Fluxo.Views.Components'
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="420"
     MinWidth="420"
@@ -28,7 +28,7 @@
                 Height="48"
                 VerticalAlignment="Top"
                 CornerRadius="24">
-                <components:Icon Margin='12' x:Name='MessageIcon' />
+                <components:Icon Margin="12" x:Name="MessageIcon" />
             </Border>
 
             <StackPanel Grid.Column="2">

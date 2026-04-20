@@ -101,7 +101,7 @@ public sealed class DialogService : IDialogService
         return ShowDialog(new AddSavingGoalPopup(viewModel), owner);
     }
 
-    public bool? ShowAddTag(SettingsVM settingsViewModel, Window? owner = null)
+    public bool? ShowAddTag(SettingsTagsTabVM settingsViewModel, Window? owner = null)
     {
         return ShowDialog(new AddTagPopup(settingsViewModel, this), owner);
     }

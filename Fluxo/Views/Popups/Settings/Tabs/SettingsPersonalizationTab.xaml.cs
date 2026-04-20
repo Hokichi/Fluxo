@@ -3,7 +3,6 @@ using System.Windows.Controls;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups;
-using Fluxo.Views.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 
@@ -14,11 +13,11 @@ public partial class SettingsPersonalizationTab : UserControl
         InitializeComponent();
     }
 
-    private SettingsPersonalizationTabVM? ViewModel => DataContext as SettingsPersonalizationTabVM;
+    private SettingsPersonalizationTabVM? _viewModel => DataContext as SettingsPersonalizationTabVM;
 
     private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel is null)
+        if (_viewModel is null)
             return;
 
         if (FluxoMessageBox.Show(Window.GetWindow(this),
@@ -28,15 +27,13 @@ public partial class SettingsPersonalizationTab : UserControl
                 MessageBoxImage.Question) != MessageBoxResult.Yes)
             return;
 
-        if (Window.GetWindow(this) is SettingsPopup popup)
-            popup.AllowCloseAndClose();
-
+        _viewModel.RequestClosePopup();
         await ((App)Application.Current).RunSetupWizardAsync();
     }
 
     private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel is null)
+        if (_viewModel is null)
             return;
 
         if (FluxoMessageBox.Show(Window.GetWindow(this),
@@ -46,10 +43,7 @@ public partial class SettingsPersonalizationTab : UserControl
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
-        if (Window.GetWindow(this) is not SettingsPopup popup)
-            return;
-
-        var result = await popup.ViewModel.ResetAllSettingsAsync();
+        var result = await _viewModel.ResetAllSettingsAsync();
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
             FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Reset Settings", MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -57,7 +51,7 @@ public partial class SettingsPersonalizationTab : UserControl
 
     private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel is null)
+        if (_viewModel is null)
             return;
 
         var optionsPopup = new DeleteAllDataPopup { Owner = Window.GetWindow(this) };
@@ -76,13 +70,11 @@ public partial class SettingsPersonalizationTab : UserControl
         if (confirmation != MessageBoxResult.Yes)
             return;
 
-        if (Window.GetWindow(this) is not SettingsPopup settingsPopup)
-            return;
-
-        var result = await settingsPopup.ViewModel.DeleteAllDataAsync(keepSettings);
+        var result = await _viewModel.DeleteAllDataAsync(keepSettings);
         if (!result.IsSuccess)
         {
-            FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Delete All Data", MessageBoxButton.OK,
+            FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage ?? "Unable to delete all data.",
+                "Delete All Data", MessageBoxButton.OK,
                 MessageBoxImage.Information);
             return;
         }
@@ -93,9 +85,7 @@ public partial class SettingsPersonalizationTab : UserControl
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question) == MessageBoxResult.Yes)
         {
-            if (Window.GetWindow(this) is SettingsPopup popup)
-                popup.AllowCloseAndClose();
-
+            _viewModel.RequestClosePopup();
             await ((App)Application.Current).RunSetupWizardAsync();
         }
     }

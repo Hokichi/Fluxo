@@ -31,6 +31,14 @@ public partial class SettingsTagsTabVM : ObservableObject
         await RefreshTagsAsync();
     }
 
+    public void RequestAddTagDialog()
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AddTag,
+                this)));
+    }
+
     public async Task RefreshTagsAsync()
     {
         SettingsShared.ReplaceCollection(Tags, (await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync())

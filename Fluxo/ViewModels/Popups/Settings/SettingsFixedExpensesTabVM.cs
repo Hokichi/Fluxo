@@ -50,6 +50,15 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         return new AddFixedExpenseVM(_mainViewModel, _unitOfWork);
     }
 
+    public async Task OpenAddFixedExpenseAsync()
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AddFixedExpense,
+                CreateAddFixedExpenseViewModel())));
+        await RefreshFixedExpensesAsync();
+    }
+
     public void ClearSelections()
     {
         SetSelections(false);

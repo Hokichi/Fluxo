@@ -37,7 +37,7 @@ public interface IDialogService
 
     bool? ShowAddSavingGoal(AddSavingGoalVM viewModel, Window? owner = null);
 
-    bool? ShowAddTag(SettingsVM settingsViewModel, Window? owner = null);
+    bool? ShowAddTag(SettingsTagsTabVM settingsViewModel, Window? owner = null);
 
     (bool? DialogResult, string SelectedHexColor) ShowAddTagColorPicker(string initialHexColor, Window? owner = null);
 

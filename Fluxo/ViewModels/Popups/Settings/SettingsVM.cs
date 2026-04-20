@@ -9,7 +9,8 @@ using Fluxo.ViewModels.Shell.Main;
 
 namespace Fluxo.ViewModels.Popups.Settings;
 
-public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>
+public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>,
+    IRecipient<SettingsMaintenanceRequestedMessage>
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
@@ -65,6 +66,11 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
 
         OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+    }
+
+    public void Receive(SettingsMaintenanceRequestedMessage message)
+    {
+        _ = HandleMaintenanceRequestAsync(message.Value);
     }
 
     public async Task LoadAsync()
@@ -390,6 +396,28 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         {
             GoalsTab.IsGoalChecksEnabled = value;
             OnPropertyChanged();
+        }
+    }
+
+    private async Task HandleMaintenanceRequestAsync(SettingsMaintenanceRequest request)
+    {
+        try
+        {
+            var result = request.RequestType switch
+            {
+                SettingsMaintenanceRequestType.ResetAllSettings => await ResetAllSettingsAsync(),
+                SettingsMaintenanceRequestType.DeleteAllData => await DeleteAllDataAsync(request.KeepSettings),
+                _ => SettingsOperationResult.Failure("Unsupported settings action.")
+            };
+
+            request.CompletionSource.TrySetResult(result.IsSuccess
+                ? SettingsMaintenanceResult.Success()
+                : SettingsMaintenanceResult.Failure(result.ErrorMessage));
+        }
+        catch (Exception exception)
+        {
+            request.CompletionSource.TrySetResult(SettingsMaintenanceResult.Failure(
+                $"Unable to complete this settings action.\n\n{exception.Message}"));
         }
     }
 }

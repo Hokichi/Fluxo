@@ -53,6 +53,15 @@ public partial class SettingsGoalsTabVM : ObservableObject
         return new AddSavingGoalVM(_mainViewModel, _unitOfWork);
     }
 
+    public async Task OpenAddSavingGoalAsync()
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AddSavingGoal,
+                CreateAddSavingGoalViewModel())));
+        await RefreshSavingGoalsAsync();
+    }
+
     public void ClearSelections()
     {
         SetSelections(false);

@@ -9,10 +9,10 @@ namespace Fluxo.Views.Popups;
 public partial class AddTagPopup : BasePopup
 {
     private readonly IDialogService _dialogService;
-    private readonly SettingsVM _settingsViewModel;
+    private readonly SettingsTagsTabVM _settingsViewModel;
     private readonly AddTagVM _viewModel;
 
-    public AddTagPopup(SettingsVM settingsViewModel, IDialogService dialogService)
+    public AddTagPopup(SettingsTagsTabVM settingsViewModel, IDialogService dialogService)
     {
         InitializeComponent();
 

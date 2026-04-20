@@ -1,8 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsFixedExpensesTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-    xmlns:components='clr-namespace:Fluxo.Views.Components'
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls">
             <Border Style="{StaticResource PanelStyle}">
                 <Grid>
@@ -100,7 +100,7 @@
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsChecked, Mode=TwoWay}"
                                                     Style="{StaticResource ItemCheckBoxStyle}"
-                                                    Visibility="{Binding DataContext.IsFixedExpenseChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                    Visibility="{Binding DataContext.IsFixedExpenseChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityConverter}}" />
                                                 <StackPanel Grid.Column="1">
                                                     <TextBlock
                                                         FontFamily="{StaticResource Bold}"
@@ -136,7 +136,7 @@
                                                     VerticalAlignment="Center"
                                                     Orientation="Horizontal">
                                                     <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                                        <components:Icon Margin='6' Path='{StaticResource SettingsFixedExpensesTab.LightningSlashFill}' Color='{StaticResource Brush.Danger}' />
+                                                        <components:Icon Margin="6" Path="{StaticResource SettingsFixedExpensesTab.LightningSlashFill}" Color="{StaticResource Brush.Danger}" />
                                                     </Border>
                                                 </StackPanel>
                                                 <StackPanel
