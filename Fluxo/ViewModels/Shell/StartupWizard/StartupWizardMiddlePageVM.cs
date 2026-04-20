@@ -66,7 +66,7 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
         3 => "Add fixed expenses",
         4 => "Add savings goals",
         5 => "Budget allocation",
-        6 => "Notification preferences",
+        6 => "Preferences",
         _ => "Setup summary"
     };
 

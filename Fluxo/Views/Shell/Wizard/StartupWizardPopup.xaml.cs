@@ -408,19 +408,15 @@ public partial class StartupWizardPopup : BasePopup
             }
             else
             {
-                var oldStripe = GetStripeForStep(fromStep);
-                var contentColumn = MiddleStepPage?.ContentColumnElement;
-                await Task.WhenAll(
-                    contentColumn is not null ? FadeElementAsync(contentColumn, 1, 0) : Task.CompletedTask,
-                    oldStripe is not null ? FadeElementAsync(oldStripe, 1, 0) : Task.CompletedTask);
+                var middleContent = MiddleStepPage?.StepContentElement;
+                if (middleContent is not null)
+                    await FadeElementAsync(middleContent, 1, 0);
 
                 changeStep();
-                var newStripe = GetStripeForStep(_viewModel.CurrentStepIndex);
                 SyncStripeOpacities();
 
-                await Task.WhenAll(
-                    contentColumn is not null ? FadeElementAsync(contentColumn, 0, 1) : Task.CompletedTask,
-                    newStripe is not null ? FadeElementAsync(newStripe, 0, 1) : Task.CompletedTask);
+                if (middleContent is not null)
+                    await FadeElementAsync(middleContent, 0, 1);
             }
         }
         finally
@@ -471,19 +467,15 @@ public partial class StartupWizardPopup : BasePopup
             }
             else
             {
-                var oldStripe = GetStripeForStep(fromStep);
-                var contentColumn = MiddleStepPage?.ContentColumnElement;
-                await Task.WhenAll(
-                    contentColumn is not null ? FadeElementAsync(contentColumn, 1, 0) : Task.CompletedTask,
-                    oldStripe is not null ? FadeElementAsync(oldStripe, 1, 0) : Task.CompletedTask);
+                var middleContent = MiddleStepPage?.StepContentElement;
+                if (middleContent is not null)
+                    await FadeElementAsync(middleContent, 1, 0);
 
                 var result = await changeStepAsync();
-                var newStripe = GetStripeForStep(_viewModel.CurrentStepIndex);
                 SyncStripeOpacities();
 
-                await Task.WhenAll(
-                    contentColumn is not null ? FadeElementAsync(contentColumn, 0, 1) : Task.CompletedTask,
-                    newStripe is not null ? FadeElementAsync(newStripe, 0, 1) : Task.CompletedTask);
+                if (middleContent is not null)
+                    await FadeElementAsync(middleContent, 0, 1);
 
                 return result;
             }

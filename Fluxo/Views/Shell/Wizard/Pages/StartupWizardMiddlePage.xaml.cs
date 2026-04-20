@@ -12,6 +12,7 @@ public partial class StartupWizardMiddlePage : UserControl
     }
 
     public UIElement ContentColumnElement => ContentColumn;
+    public UIElement StepContentElement => StepContent;
 
     public Border? GetStripeForStep(int stepIndex) => stepIndex switch
     {
