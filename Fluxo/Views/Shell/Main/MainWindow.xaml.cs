@@ -432,6 +432,13 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (MainWindowShortcutMatcher.IsOpenPlanningShortcut(e.Key, Keyboard.Modifiers))
+        {
+            OpenPlanningPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused() &&
             _logMemoryManager.CanUndo)
         {
@@ -520,6 +527,12 @@ public partial class MainWindow : Window, IPopupHost
         OpenSettingsPopup();
     }
 
+    private void OnPlanningButtonClick(object sender, RoutedEventArgs e)
+    {
+        CloseHeaderMenu();
+        OpenPlanningPopup();
+    }
+
     private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
     {
         OpenAddSpendingSourcePopup();
@@ -583,6 +596,11 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenStartupWizardPopup()
     {
         _dialogService.ShowStartupWizard(this);
+    }
+
+    public void OpenPlanningPopup()
+    {
+        _dialogService.ShowPlanningPopup(this);
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)

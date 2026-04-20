@@ -24,4 +24,23 @@ public class MainWindowShortcutMatcherTests
 
         Assert.False(isShortcut);
     }
+
+    [Fact]
+    public void IsOpenPlanningShortcut_ReturnsTrue_ForCtrlP()
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenPlanningShortcut(Key.P, ModifierKeys.Control);
+
+        Assert.True(isShortcut);
+    }
+
+    [Theory]
+    [InlineData(Key.P, ModifierKeys.None)]
+    [InlineData(Key.P, ModifierKeys.Control | ModifierKeys.Shift)]
+    [InlineData(Key.O, ModifierKeys.Control)]
+    public void IsOpenPlanningShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenPlanningShortcut(key, modifiers);
+
+        Assert.False(isShortcut);
+    }
 }

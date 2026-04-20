@@ -1,5 +1,6 @@
 using System.Windows;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.Popups;
 
@@ -16,6 +17,10 @@ public interface IDialogService
     bool? ShowSettings(Window? owner = null);
 
     bool? ShowStartupWizard(Window? owner = null);
+
+    bool? ShowPlanningPopup(Window? owner = null);
+
+    bool? ShowPlanningReport(PlanningSnapshot snapshot, Window? owner = null);
 
     bool? ShowAddNewTransaction(QuickAddVM viewModel, Window? owner = null);
 

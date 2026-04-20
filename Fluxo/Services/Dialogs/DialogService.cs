@@ -1,8 +1,10 @@
 using System.Windows;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Planning;
 using Fluxo.Views.Popups.Settings;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,6 +51,19 @@ public sealed class DialogService : IDialogService
     public bool? ShowStartupWizard(Window? owner = null)
     {
         return ShowScopedDialog<StartupWizardPopup>(owner);
+    }
+
+    public bool? ShowPlanningPopup(Window? owner = null)
+    {
+        return ShowScopedDialog<PlanningPopup>(owner);
+    }
+
+    public bool? ShowPlanningReport(PlanningSnapshot snapshot, Window? owner = null)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var viewModel = ActivatorUtilities.CreateInstance<PlanningReportVM>(scope.ServiceProvider, snapshot);
+        var popup = ActivatorUtilities.CreateInstance<PlanningReportPopup>(scope.ServiceProvider, viewModel);
+        return ShowDialog(popup, owner);
     }
 
     public bool? ShowAddNewTransaction(QuickAddVM viewModel, Window? owner = null)
