@@ -52,6 +52,9 @@ public class PlanningReportVMTests
         Assert.Equal(45, report.NeedsPercent);
         Assert.Equal(35, report.WantsPercent);
         Assert.Equal(20, report.InvestPercent);
+        Assert.Equal(125m, report.TotalIncome);
+        Assert.Equal(200m, report.TotalExpenses);
+        Assert.Equal(-75m, report.Balance);
     }
 
     [Fact]
@@ -88,6 +91,9 @@ public class PlanningReportVMTests
         Assert.Equal(20, report.InvestPercent);
         Assert.NotSame(addedIncome, report.Incomes[1]);
         Assert.NotSame(addedExpense, report.Expenses[1]);
+        Assert.Equal(450m, report.TotalIncome);
+        Assert.Equal(550m, report.TotalExpenses);
+        Assert.Equal(-100m, report.Balance);
 
         Assert.True(report.RemoveIncome(addedIncome));
         Assert.True(report.RemoveExpense(addedExpense));
@@ -96,6 +102,9 @@ public class PlanningReportVMTests
         Assert.Single(report.Expenses);
         Assert.Equal(150m, report.Incomes[0].Amount);
         Assert.Equal("Edited rent", report.Expenses[0].Name);
+        Assert.Equal(150m, report.TotalIncome);
+        Assert.Equal(200m, report.TotalExpenses);
+        Assert.Equal(-50m, report.Balance);
     }
 
     private static PlanningPopupVM CreatePopupVm()

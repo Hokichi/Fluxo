@@ -18,6 +18,7 @@ public partial class PlanningReportPopup : BasePopup
 
         _viewModel = viewModel;
         DataContext = viewModel;
+        Closed += OnClosed;
     }
 
     public IReadOnlyList<AllocationCategoryOption> AllocationCategories { get; }
@@ -57,6 +58,12 @@ public partial class PlanningReportPopup : BasePopup
     {
         if (sender is Button { DataContext: ExpenseVM expense })
             _viewModel.RemoveExpense(expense);
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        Closed -= OnClosed;
+        _viewModel.Dispose();
     }
 
     public sealed class AllocationCategoryOption(ExpenseCategory value, string label)

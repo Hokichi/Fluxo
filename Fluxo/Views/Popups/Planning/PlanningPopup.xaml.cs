@@ -1,9 +1,9 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using Fluxo.Services.Dialogs;
+using System.Windows.Media.Animation;
 using Fluxo.Core.Enums;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.Views.CustomControls;
@@ -16,12 +16,14 @@ public partial class PlanningPopup : BasePopup
     private const int AllocationStep = 1;
     private const int ExpensesStep = 2;
     private const int StepCount = 3;
+    private static readonly Duration StepFadeDuration = new(TimeSpan.FromMilliseconds(150));
 
     private readonly IDialogService _dialogService;
     private readonly PlanningPopupVM _viewModel;
     private PlanningSnapshot? _completionSnapshot;
     private int _currentStep;
     private bool _skipDiscardPrompt;
+    private bool _isStepTransitioning;
 
     public PlanningPopup(PlanningPopupVM viewModel, IDialogService dialogService)
     {
@@ -38,6 +40,7 @@ public partial class PlanningPopup : BasePopup
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += OnClosed;
 
+        ApplyStepPanelState();
         UpdateStep();
         UpdateAllocationSummary();
     }
@@ -103,17 +106,19 @@ public partial class PlanningPopup : BasePopup
         }
     }
 
-    private void OnBackClick(object sender, RoutedEventArgs e)
+    private async void OnBackClick(object sender, RoutedEventArgs e)
     {
-        if (_currentStep == IncomesStep)
+        if (_currentStep == IncomesStep || _isStepTransitioning)
             return;
 
-        _currentStep--;
-        UpdateStep();
+        await TransitionToStepAsync(_currentStep - 1);
     }
 
-    private void OnNextOrFinishClick(object sender, RoutedEventArgs e)
+    private async void OnNextOrFinishClick(object sender, RoutedEventArgs e)
     {
+        if (_isStepTransitioning)
+            return;
+
         if (_currentStep == IncomesStep && _viewModel.ShouldPromptCloseOnMissingIncome())
         {
             var confirmation = FluxoMessageBox.Show(this,
@@ -144,8 +149,7 @@ public partial class PlanningPopup : BasePopup
             return;
         }
 
-        _currentStep++;
-        UpdateStep();
+        await TransitionToStepAsync(_currentStep + 1);
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -160,20 +164,87 @@ public partial class PlanningPopup : BasePopup
         }
     }
 
-    private void UpdateStep()
+    private async Task TransitionToStepAsync(int targetStep)
+    {
+        if (targetStep < IncomesStep || targetStep > ExpensesStep || targetStep == _currentStep)
+            return;
+
+        var currentPanel = GetPanelForStep(_currentStep);
+        var nextPanel = GetPanelForStep(targetStep);
+
+        if (currentPanel is null || nextPanel is null)
+        {
+            _currentStep = targetStep;
+            ApplyStepPanelState();
+            UpdateStep();
+            return;
+        }
+
+        _isStepTransitioning = true;
+        UpdateStep();
+
+        nextPanel.Visibility = Visibility.Visible;
+        nextPanel.Opacity = 0;
+
+        _currentStep = targetStep;
+        UpdateStep();
+
+        await Task.WhenAll(
+            FadeElementAsync(currentPanel, 1, 0),
+            FadeElementAsync(nextPanel, 0, 1));
+
+        currentPanel.Visibility = Visibility.Collapsed;
+        currentPanel.Opacity = 0;
+
+        _isStepTransitioning = false;
+        UpdateStep();
+    }
+
+    private static Task FadeElementAsync(UIElement element, double from, double to)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        var animation = new DoubleAnimation(from, to, StepFadeDuration)
+        {
+            EasingFunction = new CubicEase { EasingMode = to < from ? EasingMode.EaseIn : EasingMode.EaseOut }
+        };
+
+        animation.Completed += (_, _) => tcs.TrySetResult(true);
+        element.BeginAnimation(OpacityProperty, animation);
+
+        return tcs.Task;
+    }
+
+    private void ApplyStepPanelState()
     {
         IncomesStepPanel.Visibility = _currentStep == IncomesStep ? Visibility.Visible : Visibility.Collapsed;
         AllocationStepPanel.Visibility = _currentStep == AllocationStep ? Visibility.Visible : Visibility.Collapsed;
         ExpensesStepPanel.Visibility = _currentStep == ExpensesStep ? Visibility.Visible : Visibility.Collapsed;
 
-        BackButton.IsEnabled = _currentStep > IncomesStep;
-        NextButton.Content = _currentStep == ExpensesStep ? "Finish" : "Next";
-        NextButton.IsEnabled = _currentStep != AllocationStep || _viewModel.IsAllocationValid;
-        StepCounterText.Text = $"Step {_currentStep + 1} of {StepCount}";
+        IncomesStepPanel.Opacity = _currentStep == IncomesStep ? 1 : 0;
+        AllocationStepPanel.Opacity = _currentStep == AllocationStep ? 1 : 0;
+        ExpensesStepPanel.Opacity = _currentStep == ExpensesStep ? 1 : 0;
+    }
 
-        SetStepBadge(IncomesStepBadge, IncomesStepText, _currentStep == IncomesStep);
-        SetStepBadge(AllocationStepBadge, AllocationStepText, _currentStep == AllocationStep);
-        SetStepBadge(ExpensesStepBadge, ExpensesStepText, _currentStep == ExpensesStep);
+    private FrameworkElement? GetPanelForStep(int step) => step switch
+    {
+        IncomesStep => IncomesStepPanel,
+        AllocationStep => AllocationStepPanel,
+        ExpensesStep => ExpensesStepPanel,
+        _ => null
+    };
+
+    private void UpdateStep()
+    {
+        BackButton.IsEnabled = !_isStepTransitioning && _currentStep > IncomesStep;
+        NextButton.IsEnabled = !_isStepTransitioning && (_currentStep != AllocationStep || _viewModel.IsAllocationValid);
+        NextButton.ButtonIcon = FindResource(_currentStep == ExpensesStep
+            ? "PlanningPopup.CheckIcon"
+            : "PlanningPopup.AngleRightIcon");
+        NextButton.ToolTip = _currentStep == ExpensesStep ? "Finish" : "Next";
+
+        StepNavigator.StepCount = StepCount;
+        StepNavigator.CurrentStep = _currentStep + 1;
     }
 
     private void UpdateAllocationSummary()
@@ -190,19 +261,6 @@ public partial class PlanningPopup : BasePopup
 
         AllocationValidationHint.Visibility = Visibility.Visible;
         AllocationValidationHint.Text = $"Current total is {total}%. Adjust the sliders until the allocation equals 100%.";
-    }
-
-    private void SetStepBadge(Border badge, TextBlock label, bool isActive)
-    {
-        badge.Background = GetBrush(isActive ? "Brush.Primary" : "Brush.Background.Surface");
-        badge.BorderBrush = GetBrush(isActive ? "Brush.Primary.Hover" : "Brush.Border.Subtle");
-        badge.BorderThickness = new Thickness(1);
-        label.Foreground = isActive ? Brushes.White : GetBrush("Brush.Text.Secondary");
-    }
-
-    private Brush GetBrush(string resourceKey)
-    {
-        return TryFindResource(resourceKey) as Brush ?? Brushes.Transparent;
     }
 
     private void OnClosed(object? sender, EventArgs e)
