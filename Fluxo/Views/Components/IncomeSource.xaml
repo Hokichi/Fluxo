@@ -5,7 +5,8 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Width="240"
+    Width="160"
+    Height="80"
     Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -169,8 +170,8 @@
                     VerticalAlignment="Center"
                     FontFamily="{StaticResource Bold}"
                     FontSize="20"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}"
+                    Foreground="{Binding Difference, Converter={StaticResource DifferenceToBrushConverter}}"
+                    Text="{Binding Difference, Converter={StaticResource NumberWithCommasConverter}}"
                     ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
             </StackPanel>
         </Border>

@@ -50,6 +50,7 @@
                     <cons:BrushToLighterBrushConverter x:Key="BrushToLighterBrushConverter" />
                     <cons:CornerRadiusConverter x:Key="CornerRadiusConverter" />
                     <cons:DateTimeToRelativeDateConverter x:Key="DateTimeToRelativeDateConverter" />
+                    <cons:DifferenceToBrushConverter x:Key="DifferenceToBrushConverter" />
                     <cons:GoalProgressToBrushConverter x:Key="GoalProgressToBrushConverter" />
                     <cons:MoneyAmountToCanonicalConverter x:Key="MoneyAmountToCanonicalConverter" />
                     <cons:MoneyDisplayConverter x:Key="MoneyDisplayConverter" />

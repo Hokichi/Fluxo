@@ -197,6 +197,9 @@ public sealed class AddExpenseLogMemoryAction(
     ExpenseLogMemorySnapshot snapshot,
     bool shouldAdjustSpendingSourceTotals = true) : ILogMemoryAction
 {
+    public ExpenseLogMemorySnapshot Snapshot => snapshot;
+    public bool ShouldAdjustSpendingSourceTotals => shouldAdjustSpendingSourceTotals;
+
     public string Description => "Add expense";
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
@@ -281,6 +284,8 @@ public sealed class AddExpenseLogMemoryAction(
 
 public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) : ILogMemoryAction
 {
+    public IncomeLogMemorySnapshot Snapshot => snapshot;
+
     public string Description => "Add income";
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
@@ -327,6 +332,7 @@ public sealed class CompositeLogMemoryAction(string description, IReadOnlyList<I
     : ILogMemoryAction
 {
     public string Description { get; } = description;
+    public IReadOnlyList<ILogMemoryAction> Actions { get; } = actions;
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -345,6 +351,9 @@ public sealed class EditExpenseLogMemoryAction(
     ExpenseLogMemorySnapshot before,
     ExpenseLogMemorySnapshot after) : ILogMemoryAction
 {
+    public ExpenseLogMemorySnapshot Before => before;
+    public ExpenseLogMemorySnapshot After => after;
+
     public string Description => "Edit expense";
 
     public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
@@ -400,8 +409,24 @@ public sealed class EditExpenseLogMemoryAction(
     }
 }
 
-public sealed class DeleteExpenseLogMemoryAction(int expenseLogId) : ILogMemoryAction
+public sealed class DeleteExpenseLogMemoryAction : ILogMemoryAction
 {
+    private readonly int _expenseLogId;
+
+    public DeleteExpenseLogMemoryAction(int expenseLogId)
+    {
+        _expenseLogId = expenseLogId;
+    }
+
+    public DeleteExpenseLogMemoryAction(ExpenseLogMemorySnapshot snapshot)
+    {
+        _expenseLogId = snapshot.ExpenseLogId;
+        Snapshot = snapshot;
+    }
+
+    public int ExpenseLogId => _expenseLogId;
+    public ExpenseLogMemorySnapshot? Snapshot { get; }
+
     public string Description => "Delete expense";
 
     public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
@@ -417,7 +442,7 @@ public sealed class DeleteExpenseLogMemoryAction(int expenseLogId) : ILogMemoryA
     private async Task SetDeletionStateAsync(IUnitOfWork unitOfWork, bool isForDeletion,
         CancellationToken cancellationToken)
     {
-        var expenseLog = await unitOfWork.ExpenseLogs.GetByIdAsync(expenseLogId, cancellationToken);
+        var expenseLog = await unitOfWork.ExpenseLogs.GetByIdAsync(_expenseLogId, cancellationToken);
         if (expenseLog is null || expenseLog.IsForDeletion == isForDeletion)
             return;
 

@@ -16,7 +16,6 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
@@ -179,9 +178,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="SavingGoalTemplate">
-        <Border
-            Margin="0,0,0,12"
-            Padding="12,0">
+        <Border Margin="0,0,0,12" Padding="12,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />

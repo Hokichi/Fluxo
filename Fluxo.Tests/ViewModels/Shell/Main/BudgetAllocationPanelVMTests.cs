@@ -10,6 +10,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.History;
 using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
@@ -77,6 +78,7 @@ public class BudgetAllocationPanelVMTests
                 CreateExpenseLogs(),
                 CreateTags(),
                 CreateSpendingSources(),
+                settings:
                 [
                     new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "40" },
                     new UserSettings { Name = UserSettingNames.WantsThreshold, Value = "35" },
@@ -102,6 +104,7 @@ public class BudgetAllocationPanelVMTests
                 CreateExpenseLogs(),
                 CreateTags(),
                 CreateSpendingSources(),
+                settings:
                 [
                     new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "invalid" }
                 ]);
@@ -131,11 +134,40 @@ public class BudgetAllocationPanelVMTests
         });
     }
 
+    [Fact]
+    public void RecordLogMemoryMessage_AdjustsDifferenceForAffectedSourceWithoutReload()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources(), CreateIncomeLogs());
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 10),
+                new DateTime(2026, 4, 12)));
+
+            var source = vm.SpendingSources.Single();
+            Assert.Equal(55m, source.Difference);
+
+            messenger.Send(new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(
+                new IncomeLogMemorySnapshot(
+                    999,
+                    source.Id,
+                    15m,
+                    new DateTime(2026, 4, 12),
+                    "bonus"))));
+
+            Assert.Equal(40m, source.Difference);
+        });
+    }
+
     private static BudgetAllocationPanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
         IReadOnlyList<ExpenseTagVM> tags,
         IReadOnlyList<SpendingSourceVM> spendingSources,
+        IReadOnlyList<IncomeLogVM>? incomeLogs = null,
         IReadOnlyList<UserSettings>? settings = null)
     {
         var expenseLogService = Substitute.For<IExpenseLogService>();
@@ -157,6 +189,24 @@ public class BudgetAllocationPanelVMTests
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>(settings ?? []));
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.UserSettings.Returns(userSettingsRepository);
+        var incomeLogRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IIncomeLogRepository>();
+        incomeLogRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>(
+                (incomeLogs ?? []).Select(log => new IncomeLog
+                {
+                    Id = log.Id,
+                    Amount = log.Amount,
+                    AddedOn = log.AddedOn,
+                    Notes = log.Notes,
+                    SpendingSourceId = log.SpendingSource.Id,
+                    SpendingSource = new SpendingSource
+                    {
+                        Id = log.SpendingSource.Id,
+                        Name = log.SpendingSource.Name,
+                        SpendingSourceType = log.SpendingSource.SpendingSourceType
+                    }
+                }).ToList()));
+        unitOfWork.IncomeLogs.Returns(incomeLogRepository);
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
@@ -255,6 +305,26 @@ public class BudgetAllocationPanelVMTests
                 Balance = 2000m,
                 IsEnabled = true,
                 ShowOnUI = true
+            }
+        ];
+    }
+
+    private static IReadOnlyList<IncomeLogVM> CreateIncomeLogs()
+    {
+        return
+        [
+            new IncomeLogVM
+            {
+                Id = 10,
+                Amount = 20m,
+                AddedOn = new DateTime(2026, 4, 12),
+                Notes = "refund",
+                SpendingSource = new SpendingSourceVM
+                {
+                    Id = 1,
+                    Name = "Checking",
+                    SpendingSourceType = SpendingSourceType.Checking
+                }
             }
         ];
     }

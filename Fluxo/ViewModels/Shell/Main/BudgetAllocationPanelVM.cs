@@ -19,7 +19,9 @@ namespace Fluxo.ViewModels.Shell.Main;
 public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<DateRangeSelectionChangedMessage>,
     IRecipient<AllTimeViewModeMessage>,
-    IRecipient<DashboardDataInvalidatedMessage>
+    IRecipient<DashboardDataInvalidatedMessage>,
+    IRecipient<RecordLogMemoryMessage>,
+    IRecipient<LogMemoryActionAppliedMessage>
 {
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
@@ -33,11 +35,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly ObservableCollection<SpendingSourceVM> _spendingSources = [];
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
+    private List<IncomeLogVM> _allIncomeLogs = [];
     private bool _isSynchronizingTagSelections;
     private decimal _needsThreshold = 0.5m;
     private decimal _wantsThreshold = 0.3m;
     private decimal _investThreshold = 0.2m;
-    private (DateTime From, DateTime To)? _selectedRange;
+    private (DateTime From, DateTime To)? _selectedRange = (DateTime.Today, DateTime.Today);
 
     public BudgetAllocationPanelVM(
         IExpenseLogService expenseLogService,
@@ -140,12 +143,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         _selectedRange = message.Value;
         ApplyVisibleExpenseLogs();
+        RefreshSourceDifferences();
     }
 
     public void Receive(AllTimeViewModeMessage message)
     {
         _selectedRange = null;
         ApplyVisibleExpenseLogs();
+        RefreshSourceDifferences();
     }
 
     public void Receive(DashboardDataInvalidatedMessage message)
@@ -156,12 +161,24 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         _ = ReloadFromServicesAsync();
     }
 
+    public void Receive(RecordLogMemoryMessage message)
+    {
+        ApplyBalanceImpactsFromAction(message.Value, LogMemoryApplyDirection.Redo);
+    }
+
+    public void Receive(LogMemoryActionAppliedMessage message)
+    {
+        var (action, direction) = message.Value;
+        ApplyBalanceImpactsFromAction(action, direction);
+    }
+
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         await LoadUserSettingsAsync(cancellationToken);
 
         var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken));
+        var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
         var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
             await _spendingSourceService.GetAllAsync(cancellationToken));
         var tags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
@@ -170,6 +187,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         _allExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
             .OrderByDescending(log => log.DeductedOn)
+            .ToList();
+        _allIncomeLogs = incomeLogs
+            .OrderByDescending(log => log.AddedOn)
             .ToList();
 
         _spendingSources.Clear();
@@ -185,6 +205,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         LoadTags(tags);
         RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs();
+        RefreshSourceDifferences();
     }
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
@@ -242,9 +263,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         await _expenseLogService.DeleteAsync(expenseLog.Id);
 
         ApplyDeletedExpenseLogToUi(expenseLog);
-
-        if (expenseLog.Id > 0)
-            Messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(expenseLog.Id)));
     }
 
     private void Initialize()
@@ -265,6 +283,29 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             _reloadGate.Release();
         }
+    }
+
+    private async Task<IReadOnlyList<IncomeLogVM>> LoadIncomeLogsAsync(CancellationToken cancellationToken)
+    {
+        return await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var incomeLogs = await scope.UnitOfWork.IncomeLogs.GetAllAsync(ct);
+            return incomeLogs
+                .Select(log => new IncomeLogVM
+                {
+                    Id = log.Id,
+                    Amount = log.Amount,
+                    AddedOn = log.AddedOn,
+                    Notes = log.Notes,
+                    SpendingSource = new SpendingSourceVM
+                    {
+                        Id = log.SpendingSourceId,
+                        Name = log.SpendingSource?.Name ?? string.Empty,
+                        SpendingSourceType = log.SpendingSource?.SpendingSourceType ?? SpendingSourceType.Checking
+                    }
+                })
+                .ToList();
+        }, cancellationToken);
     }
 
     private void LoadTags(IEnumerable<ExpenseTagVM> allTags)
@@ -428,32 +469,258 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private void ApplyDeletedExpenseLogToUi(ExpenseLogVM expenseLog)
     {
         var trackedExpenseLog = _allExpenseLogs.FirstOrDefault(log => log.Id == expenseLog.Id) ?? expenseLog;
-        trackedExpenseLog.IsForDeletion = true;
+        var snapshot = CreateExpenseLogSnapshot(trackedExpenseLog);
+        Messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(snapshot)));
+    }
 
-        if (trackedExpenseLog.SpendingSource?.Id is int sourceId)
+    private void RefreshSourceDifferences()
+    {
+        var visibleExpenses = EnumerateVisibleExpenseLogs();
+        var visibleIncomes = EnumerateVisibleIncomeLogs();
+
+        var expenseBySource = visibleExpenses
+            .GroupBy(log => log.SpendingSource?.Id ?? 0)
+            .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
+        var incomeBySource = visibleIncomes
+            .GroupBy(log => log.SpendingSource?.Id ?? 0)
+            .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
+
+        foreach (var source in _spendingSources)
         {
-            var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == sourceId);
-            if (source is not null)
-                RestoreExpenseOnSpendingSource(source, trackedExpenseLog.Amount);
+            var expense = expenseBySource.GetValueOrDefault(source.Id);
+            var income = incomeBySource.GetValueOrDefault(source.Id);
+            source.Difference = income - expense;
+        }
+    }
+
+    private IEnumerable<ExpenseLogVM> EnumerateVisibleExpenseLogs()
+    {
+        var source = _allExpenseLogs.Where(log => !log.IsForDeletion);
+        if (_selectedRange is not { } range)
+            return source;
+
+        return source.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date);
+    }
+
+    private IEnumerable<IncomeLogVM> EnumerateVisibleIncomeLogs()
+    {
+        if (_selectedRange is not { } range)
+            return _allIncomeLogs;
+
+        return _allIncomeLogs.Where(log => log.AddedOn.Date >= range.From.Date && log.AddedOn.Date <= range.To.Date);
+    }
+
+    private void ApplyBalanceImpactsFromAction(ILogMemoryAction action, LogMemoryApplyDirection direction)
+    {
+        switch (action)
+        {
+            case CompositeLogMemoryAction compositeAction:
+                foreach (var childAction in compositeAction.Actions)
+                    ApplyBalanceImpactsFromAction(childAction, direction);
+                return;
+
+            case AddExpenseLogMemoryAction addExpenseAction:
+                ApplyExpenseAction(addExpenseAction.Snapshot, direction);
+                return;
+
+            case AddIncomeLogMemoryAction addIncomeAction:
+                ApplyIncomeAction(addIncomeAction.Snapshot, direction);
+                return;
+
+            case EditExpenseLogMemoryAction editExpenseAction:
+                ApplyEditedExpenseAction(editExpenseAction, direction);
+                return;
+
+            case DeleteExpenseLogMemoryAction deleteExpenseAction:
+                ApplyDeletedExpenseAction(deleteExpenseAction, direction);
+                return;
+        }
+    }
+
+    private void ApplyExpenseAction(ExpenseLogMemorySnapshot snapshot, LogMemoryApplyDirection direction)
+    {
+        if (direction == LogMemoryApplyDirection.Redo)
+        {
+            UpsertExpenseLog(snapshot);
+            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
+            RefreshExpenseBucketsFromTrackedLogs();
+            return;
         }
 
+        RemoveExpenseLog(snapshot.ExpenseLogId);
+        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
+        RefreshExpenseBucketsFromTrackedLogs();
+    }
+
+    private void ApplyIncomeAction(IncomeLogMemorySnapshot snapshot, LogMemoryApplyDirection direction)
+    {
+        if (direction == LogMemoryApplyDirection.Redo)
+        {
+            UpsertIncomeLog(snapshot);
+            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, -snapshot.Amount);
+            return;
+        }
+
+        RemoveIncomeLog(snapshot.IncomeLogId);
+        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, snapshot.Amount);
+    }
+
+    private void ApplyEditedExpenseAction(EditExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
+    {
+        var previous = direction == LogMemoryApplyDirection.Redo ? action.Before : action.After;
+        var target = direction == LogMemoryApplyDirection.Redo ? action.After : action.Before;
+
+        UpsertExpenseLog(target);
+        AdjustSourceDifference(previous.SpendingSourceId, previous.DeductedOn, -previous.Amount);
+        AdjustSourceDifference(target.SpendingSourceId, target.DeductedOn, target.Amount);
+        RefreshExpenseBucketsFromTrackedLogs();
+    }
+
+    private void ApplyDeletedExpenseAction(DeleteExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
+    {
+        if (action.Snapshot is not { } snapshot)
+            return;
+
+        if (direction == LogMemoryApplyDirection.Redo)
+        {
+            RemoveExpenseLog(snapshot.ExpenseLogId);
+            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
+            RefreshExpenseBucketsFromTrackedLogs();
+            return;
+        }
+
+        UpsertExpenseLog(snapshot);
+        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
+        RefreshExpenseBucketsFromTrackedLogs();
+    }
+
+    private void AdjustSourceDifference(int sourceId, DateTime occurredOn, decimal deltaDifference)
+    {
+        if (!IsDateVisible(occurredOn))
+            return;
+
+        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == sourceId);
+        if (source is null)
+            return;
+
+        source.Difference += deltaDifference;
+    }
+
+    private bool IsDateVisible(DateTime date)
+    {
+        if (_selectedRange is not { } range)
+            return true;
+
+        var entryDate = date.Date;
+        return entryDate >= range.From.Date && entryDate <= range.To.Date;
+    }
+
+    private void UpsertExpenseLog(ExpenseLogMemorySnapshot snapshot)
+    {
+        var existingIndex = _allExpenseLogs.FindIndex(log => log.Id == snapshot.ExpenseLogId);
+        var vm = ToExpenseLogVm(snapshot);
+        if (existingIndex >= 0)
+            _allExpenseLogs[existingIndex] = vm;
+        else
+            _allExpenseLogs.Add(vm);
+    }
+
+    private void RemoveExpenseLog(int expenseLogId)
+    {
         _allExpenseLogs = _allExpenseLogs
-            .Where(log => log.Id != trackedExpenseLog.Id)
+            .Where(log => log.Id != expenseLogId)
+            .ToList();
+    }
+
+    private void UpsertIncomeLog(IncomeLogMemorySnapshot snapshot)
+    {
+        var existingIndex = _allIncomeLogs.FindIndex(log => log.Id == snapshot.IncomeLogId);
+        var vm = ToIncomeLogVm(snapshot);
+        if (existingIndex >= 0)
+            _allIncomeLogs[existingIndex] = vm;
+        else
+            _allIncomeLogs.Add(vm);
+    }
+
+    private void RemoveIncomeLog(int incomeLogId)
+    {
+        _allIncomeLogs = _allIncomeLogs
+            .Where(log => log.Id != incomeLogId)
+            .ToList();
+    }
+
+    private void RefreshExpenseBucketsFromTrackedLogs()
+    {
+        _allExpenseLogs = _allExpenseLogs
+            .Where(log => !log.IsForDeletion)
+            .OrderByDescending(log => log.DeductedOn)
             .ToList();
 
         RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs();
     }
 
-    private static void RestoreExpenseOnSpendingSource(SpendingSourceVM source, decimal amount)
+    private static ExpenseLogMemorySnapshot CreateExpenseLogSnapshot(ExpenseLogVM expenseLog)
     {
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
-        {
-            source.SpentAmount = Math.Max(0m, source.SpentAmount - amount);
-            return;
-        }
+        return new ExpenseLogMemorySnapshot(
+            expenseLog.Expense?.Id ?? 0,
+            expenseLog.Id,
+            expenseLog.Expense?.Name ?? "Expense",
+            expenseLog.Amount,
+            expenseLog.Expense?.ExpenseKind ?? ExpenseKind.Manual,
+            expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
+            expenseLog.Expense?.RecurringDate,
+            expenseLog.Expense?.IsActive ?? false,
+            expenseLog.SpendingSource?.Id ?? 0,
+            expenseLog.Expense?.ExpenseTag?.Id ?? 0,
+            expenseLog.DeductedOn,
+            expenseLog.Notes,
+            expenseLog.IsForDeletion);
+    }
 
-        source.Balance += amount;
+    private static ExpenseLogVM ToExpenseLogVm(ExpenseLogMemorySnapshot snapshot)
+    {
+        return new ExpenseLogVM
+        {
+            Id = snapshot.ExpenseLogId,
+            Amount = snapshot.Amount,
+            DeductedOn = snapshot.DeductedOn,
+            Notes = snapshot.Notes,
+            IsForDeletion = snapshot.IsForDeletion,
+            SpendingSource = new SpendingSourceVM
+            {
+                Id = snapshot.SpendingSourceId
+            },
+            Expense = new ExpenseVM
+            {
+                Id = snapshot.ExpenseId,
+                Name = snapshot.ExpenseName,
+                Amount = snapshot.Amount,
+                ExpenseKind = snapshot.ExpenseKind,
+                ExpenseCategory = snapshot.ExpenseCategory,
+                RecurringDate = snapshot.RecurringDate,
+                IsActive = snapshot.IsActive,
+                ExpenseTag = new ExpenseTagVM
+                {
+                    Id = snapshot.TagId
+                }
+            }
+        };
+    }
+
+    private static IncomeLogVM ToIncomeLogVm(IncomeLogMemorySnapshot snapshot)
+    {
+        return new IncomeLogVM
+        {
+            Id = snapshot.IncomeLogId,
+            Amount = snapshot.Amount,
+            AddedOn = snapshot.AddedOn,
+            Notes = snapshot.Notes,
+            SpendingSource = new SpendingSourceVM
+            {
+                Id = snapshot.SpendingSourceId
+            }
+        };
     }
 
     private static void ReplaceExpenseLogs(ObservableCollection<ExpenseLogVM> target, IEnumerable<ExpenseLogVM> items)
