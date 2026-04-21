@@ -199,8 +199,11 @@
 
                                                 <customControls:MoneyTextBox
                                                     Grid.Column="2"
+                                                    AllowDecimal="False"
+                                                    Language="en-US"
                                                     Style="{StaticResource RoundedTextInputStyle}"
-                                                    Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                    Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    UseCommaAsGroupSeparator="True" />
 
                                                 <customControls:BalloonButton
                                                     Grid.Column="4"
@@ -429,8 +432,11 @@
 
                                                 <customControls:MoneyTextBox
                                                     Grid.Column="2"
+                                                    AllowDecimal="False"
+                                                    Language="en-US"
                                                     Style="{StaticResource RoundedTextInputStyle}"
-                                                    Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                    Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    UseCommaAsGroupSeparator="True" />
 
                                                 <ComboBox
                                                     Grid.Column="4"

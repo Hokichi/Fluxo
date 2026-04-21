@@ -7,6 +7,18 @@ namespace Fluxo.Views.CustomControls;
 
 public class MoneyTextBox : TextBox
 {
+    public static readonly DependencyProperty AllowDecimalProperty = DependencyProperty.Register(
+        nameof(AllowDecimal),
+        typeof(bool),
+        typeof(MoneyTextBox),
+        new PropertyMetadata(true, OnFormattingPropertyChanged));
+
+    public static readonly DependencyProperty UseCommaAsGroupSeparatorProperty = DependencyProperty.Register(
+        nameof(UseCommaAsGroupSeparator),
+        typeof(bool),
+        typeof(MoneyTextBox),
+        new PropertyMetadata(false, OnFormattingPropertyChanged));
+
     private bool _isInternalUpdate;
 
     public MoneyTextBox()
@@ -15,9 +27,27 @@ public class MoneyTextBox : TextBox
         DataObject.AddPastingHandler(this, OnPasting);
     }
 
+    public bool AllowDecimal
+    {
+        get => (bool)GetValue(AllowDecimalProperty);
+        set => SetValue(AllowDecimalProperty, value);
+    }
+
+    public bool UseCommaAsGroupSeparator
+    {
+        get => (bool)GetValue(UseCommaAsGroupSeparatorProperty);
+        set => SetValue(UseCommaAsGroupSeparatorProperty, value);
+    }
+
+    private static void OnFormattingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is MoneyTextBox moneyTextBox)
+            moneyTextBox.ReformatCurrentText();
+    }
+
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
-        e.Handled = !IsValidProposedInput(Text ?? string.Empty, SelectionStart, SelectionLength, e.Text);
+        e.Handled = !IsValidProposedInput(Text ?? string.Empty, SelectionStart, SelectionLength, e.Text, AllowDecimal);
     }
 
     private void OnPasting(object sender, DataObjectPastingEventArgs e)
@@ -29,7 +59,7 @@ public class MoneyTextBox : TextBox
         }
 
         var pastedText = e.SourceDataObject.GetData(DataFormats.Text) as string ?? string.Empty;
-        if (!IsValidProposedInput(Text ?? string.Empty, SelectionStart, SelectionLength, pastedText))
+        if (!IsValidProposedInput(Text ?? string.Empty, SelectionStart, SelectionLength, pastedText, AllowDecimal))
             e.CancelCommand();
     }
 
@@ -44,14 +74,14 @@ public class MoneyTextBox : TextBox
         if (originalText.Length == 0)
             return;
 
-        var canonical = BuildCanonicalNumber(originalText);
-        var formatted = FormatCanonical(canonical);
+        var canonical = BuildCanonicalNumber(originalText, AllowDecimal);
+        var formatted = FormatCanonical(canonical, AllowDecimal, GetGroupSeparator());
 
         if (string.Equals(originalText, formatted, StringComparison.Ordinal))
             return;
 
-        var canonicalCaretIndex = GetCanonicalCaretIndex(originalText, SelectionStart);
-        var newCaretIndex = MapCanonicalIndexToFormatted(formatted, canonicalCaretIndex);
+        var canonicalCaretIndex = GetCanonicalCaretIndex(originalText, SelectionStart, AllowDecimal);
+        var newCaretIndex = MapCanonicalIndexToFormatted(formatted, canonicalCaretIndex, AllowDecimal);
 
         _isInternalUpdate = true;
         try
@@ -66,7 +96,47 @@ public class MoneyTextBox : TextBox
         }
     }
 
-    private static bool IsValidProposedInput(string existingText, int selectionStart, int selectionLength, string newText)
+    private void ReformatCurrentText()
+    {
+        if (_isInternalUpdate)
+            return;
+
+        var originalText = Text ?? string.Empty;
+        if (originalText.Length == 0)
+            return;
+
+        var canonical = BuildCanonicalNumber(originalText, AllowDecimal);
+        var formatted = FormatCanonical(canonical, AllowDecimal, GetGroupSeparator());
+        if (string.Equals(originalText, formatted, StringComparison.Ordinal))
+            return;
+
+        _isInternalUpdate = true;
+        try
+        {
+            var originalCaretIndex = SelectionStart;
+            Text = formatted;
+            CaretIndex = Math.Min(formatted.Length, originalCaretIndex);
+            SelectionLength = 0;
+        }
+        finally
+        {
+            _isInternalUpdate = false;
+        }
+    }
+
+    private string GetGroupSeparator()
+    {
+        return UseCommaAsGroupSeparator
+            ? ","
+            : CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
+    }
+
+    private static bool IsValidProposedInput(
+        string existingText,
+        int selectionStart,
+        int selectionLength,
+        string newText,
+        bool allowDecimal)
     {
         if (string.IsNullOrEmpty(newText))
             return true;
@@ -87,7 +157,7 @@ public class MoneyTextBox : TextBox
             if (IsGroupSeparator(character))
                 continue;
 
-            if (!IsDecimalSeparator(character))
+            if (!allowDecimal || !IsDecimalSeparator(character))
                 return false;
 
             if (hasDecimal)
@@ -108,10 +178,10 @@ public class MoneyTextBox : TextBox
     private static bool IsGroupSeparator(char character)
     {
         var groupSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
-        return groupSeparator.Contains(character);
+        return character == ',' || groupSeparator.Contains(character);
     }
 
-    private static string BuildCanonicalNumber(string text)
+    private static string BuildCanonicalNumber(string text, bool allowDecimal)
     {
         var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
         var hasDecimal = false;
@@ -125,6 +195,9 @@ public class MoneyTextBox : TextBox
                 continue;
             }
 
+            if (!allowDecimal)
+                continue;
+
             if (!hasDecimal && (character == '.' || decimalSeparator.Contains(character)))
             {
                 characters.Add('.');
@@ -135,13 +208,13 @@ public class MoneyTextBox : TextBox
         return new string(characters.ToArray());
     }
 
-    private static string FormatCanonical(string canonical)
+    private static string FormatCanonical(string canonical, bool allowDecimal, string groupSeparator)
     {
         if (canonical.Length == 0)
             return string.Empty;
 
         var decimalIndex = canonical.IndexOf('.');
-        var hasDecimal = decimalIndex >= 0;
+        var hasDecimal = allowDecimal && decimalIndex >= 0;
 
         var integerDigits = hasDecimal ? canonical[..decimalIndex] : canonical;
         var fractionalDigits = hasDecimal ? canonical[(decimalIndex + 1)..] : string.Empty;
@@ -150,7 +223,7 @@ public class MoneyTextBox : TextBox
             integerDigits = "0";
 
         integerDigits = TrimLeadingZeros(integerDigits);
-        var groupedInteger = GroupIntegerDigits(integerDigits);
+        var groupedInteger = GroupIntegerDigits(integerDigits, groupSeparator);
 
         if (!hasDecimal)
             return groupedInteger;
@@ -170,12 +243,11 @@ public class MoneyTextBox : TextBox
         return digits[index..];
     }
 
-    private static string GroupIntegerDigits(string digits)
+    private static string GroupIntegerDigits(string digits, string groupSeparator)
     {
         if (digits.Length <= 3)
             return digits;
 
-        var groupSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
         var builder = new System.Text.StringBuilder(digits.Length + (digits.Length / 3));
 
         var headLength = digits.Length % 3;
@@ -193,7 +265,7 @@ public class MoneyTextBox : TextBox
         return builder.ToString();
     }
 
-    private static int GetCanonicalCaretIndex(string text, int caretIndex)
+    private static int GetCanonicalCaretIndex(string text, int caretIndex, bool allowDecimal)
     {
         var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
         var canonicalIndex = 0;
@@ -208,6 +280,9 @@ public class MoneyTextBox : TextBox
                 continue;
             }
 
+            if (!allowDecimal)
+                continue;
+
             if (!hasDecimal && (character == '.' || decimalSeparator.Contains(character)))
             {
                 canonicalIndex++;
@@ -218,7 +293,7 @@ public class MoneyTextBox : TextBox
         return canonicalIndex;
     }
 
-    private static int MapCanonicalIndexToFormatted(string formattedText, int canonicalIndex)
+    private static int MapCanonicalIndexToFormatted(string formattedText, int canonicalIndex, bool allowDecimal)
     {
         if (canonicalIndex <= 0)
             return 0;
@@ -229,7 +304,7 @@ public class MoneyTextBox : TextBox
         for (var i = 0; i < formattedText.Length; i++)
         {
             var character = formattedText[i];
-            if (!char.IsDigit(character) && !decimalSeparator.Contains(character))
+            if (!char.IsDigit(character) && !(allowDecimal && decimalSeparator.Contains(character)))
                 continue;
 
             seen++;
