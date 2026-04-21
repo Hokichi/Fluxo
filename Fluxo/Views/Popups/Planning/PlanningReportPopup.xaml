@@ -4,20 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:local="clr-namespace:Fluxo.Views.Popups.Planning"
-    Width="1120"
     Height="760"
     MaxHeight="760"
     PopupTitle="Planning Report">
 
     <customControls:BasePopup.Resources>
-        <Style x:Key="PanelStyle" TargetType="Border">
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-        </Style>
-
         <Style x:Key="SectionCardStyle" TargetType="Border">
             <Setter Property="Padding" Value="14" />
             <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
@@ -58,7 +49,10 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
 
-        <Style x:Key="ReportIconBalloonButtonStyle" TargetType="{x:Type customControls:BalloonButton}">
+        <Style
+            x:Key="ReportIconBalloonButtonStyle"
+            BasedOn="{StaticResource {x:Type customControls:BalloonButton}}"
+            TargetType="{x:Type customControls:BalloonButton}">
             <Setter Property="Width" Value="28" />
             <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=Width}" />
             <Setter Property="CurveHeight" Value="8" />
@@ -105,8 +99,13 @@
         </Style>
     </customControls:BasePopup.Resources>
 
-    <Grid Margin="24,0,24,24">
-        <Border Style="{StaticResource PanelStyle}">
+    <Grid Width="1280" Margin="24,0,24,24">
+        <Border
+            Padding="18"
+            Background="{StaticResource Brush.Background.Elevated}"
+            BorderBrush="{StaticResource Brush.Border.Subtle}"
+            BorderThickness="1"
+            CornerRadius="18">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -115,8 +114,17 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel>
-                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="18" Foreground="{StaticResource Brush.Text.Primary}" Text="Planning Report" />
-                    <TextBlock Margin="0,8,0,0" FontFamily="{StaticResource Medium}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" Text="Review and adjust this planning snapshot. Changes are only in-memory for this report session." />
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="18"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Planning Report" />
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="Review and adjust this planning snapshot. Changes are only in-memory for this report session." />
                 </StackPanel>
 
                 <Grid Grid.Row="2">
@@ -149,21 +157,25 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <Grid Width="180" Height="180" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Grid
+                                        Width="180"
+                                        Height="180"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
                                         <Ellipse Stroke="{StaticResource Brush.Background.Hover}" StrokeThickness="18" />
 
                                         <Path
                                             Data="{Binding NeedsRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=180}"
                                             Stroke="{StaticResource Brush.Category.Needs}"
-                                            StrokeStartLineCap="Round"
                                             StrokeEndLineCap="Round"
+                                            StrokeStartLineCap="Round"
                                             StrokeThickness="18" />
 
                                         <Path
                                             Data="{Binding WantsRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=180}"
                                             Stroke="{StaticResource Brush.Category.Wants}"
-                                            StrokeStartLineCap="Round"
                                             StrokeEndLineCap="Round"
+                                            StrokeStartLineCap="Round"
                                             StrokeThickness="18">
                                             <Path.RenderTransform>
                                                 <RotateTransform Angle="{Binding WantsArcRotationDegrees}" CenterX="90" CenterY="90" />
@@ -173,8 +185,8 @@
                                         <Path
                                             Data="{Binding InvestRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=180}"
                                             Stroke="{StaticResource Brush.Category.Investments}"
-                                            StrokeStartLineCap="Round"
                                             StrokeEndLineCap="Round"
+                                            StrokeStartLineCap="Round"
                                             StrokeThickness="18">
                                             <Path.RenderTransform>
                                                 <RotateTransform Angle="{Binding InvestArcRotationDegrees}" CenterX="90" CenterY="90" />
@@ -182,28 +194,86 @@
                                         </Path>
 
                                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <TextBlock HorizontalAlignment="Center" FontFamily="{StaticResource Bold}" FontSize="12" Foreground="{StaticResource Brush.Text.Primary}" Text="ALLOCATION" />
-                                            <TextBlock HorizontalAlignment="Center" FontFamily="{StaticResource Medium}" FontSize="10" Foreground="{StaticResource Brush.Text.Muted}" Text="100%" />
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="ALLOCATION" />
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="10"
+                                                Foreground="{StaticResource Brush.Text.Muted}"
+                                                Text="100%" />
                                         </StackPanel>
                                     </Grid>
 
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                         <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="{StaticResource Brush.Category.Needs}" />
-                                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Bold}" FontSize="12" Foreground="{StaticResource Brush.Text.Primary}" Text="Needs" />
-                                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Medium}" FontSize="12" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding NeedsPercent, StringFormat={}{0}%}" />
+                                            <Ellipse
+                                                Width="8"
+                                                Height="8"
+                                                VerticalAlignment="Center"
+                                                Fill="{StaticResource Brush.Category.Needs}" />
+                                            <TextBlock
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Needs" />
+                                            <TextBlock
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding NeedsPercent, StringFormat={}{0}%}" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="{StaticResource Brush.Category.Wants}" />
-                                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Bold}" FontSize="12" Foreground="{StaticResource Brush.Text.Primary}" Text="Wants" />
-                                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Medium}" FontSize="12" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding WantsPercent, StringFormat={}{0}%}" />
+                                            <Ellipse
+                                                Width="8"
+                                                Height="8"
+                                                VerticalAlignment="Center"
+                                                Fill="{StaticResource Brush.Category.Wants}" />
+                                            <TextBlock
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Wants" />
+                                            <TextBlock
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding WantsPercent, StringFormat={}{0}%}" />
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal">
-                                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="{StaticResource Brush.Category.Investments}" />
-                                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Bold}" FontSize="12" Foreground="{StaticResource Brush.Text.Primary}" Text="Invest" />
-                                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Medium}" FontSize="12" Foreground="{StaticResource Brush.Text.Secondary}" Text="{Binding InvestPercent, StringFormat={}{0}%}" />
+                                            <Ellipse
+                                                Width="8"
+                                                Height="8"
+                                                VerticalAlignment="Center"
+                                                Fill="{StaticResource Brush.Category.Investments}" />
+                                            <TextBlock
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Invest" />
+                                            <TextBlock
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="12"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding InvestPercent, StringFormat={}{0}%}" />
                                         </StackPanel>
                                     </StackPanel>
                                 </Grid>
@@ -214,21 +284,36 @@
                             <Border Style="{StaticResource SectionCardStyle}">
                                 <Grid>
                                     <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="INCOME" />
-                                    <TextBlock HorizontalAlignment="Right" FontFamily="{StaticResource Bold}" FontSize="18" Foreground="{StaticResource Brush.Success}" Text="{Binding TotalIncome, StringFormat={}{0:C}}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Right"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="18"
+                                        Foreground="{StaticResource Brush.Success}"
+                                        Text="{Binding TotalIncome, StringFormat={}{0:C}}" />
                                 </Grid>
                             </Border>
 
                             <Border Margin="0,10,0,0" Style="{StaticResource SectionCardStyle}">
                                 <Grid>
                                     <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="EXPENSES" />
-                                    <TextBlock HorizontalAlignment="Right" FontFamily="{StaticResource Bold}" FontSize="18" Foreground="{StaticResource Brush.Danger}" Text="{Binding TotalExpenses, StringFormat={}{0:C}}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Right"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="18"
+                                        Foreground="{StaticResource Brush.Danger}"
+                                        Text="{Binding TotalExpenses, StringFormat={}{0:C}}" />
                                 </Grid>
                             </Border>
 
                             <Border Margin="0,10,0,0" Style="{StaticResource SectionCardStyle}">
                                 <Grid>
                                     <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="BALANCE" />
-                                    <TextBlock HorizontalAlignment="Right" FontFamily="{StaticResource Bold}" FontSize="18" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding Balance, StringFormat={}{0:C}}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Right"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="18"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding Balance, StringFormat={}{0:C}}" />
                                 </Grid>
                             </Border>
                         </StackPanel>
@@ -242,35 +327,40 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel>
-                            <TextBlock FontFamily="{StaticResource Bold}" FontSize="15" Foreground="{StaticResource Brush.Text.Primary}" Text="INCOME" />
-                            <TextBlock Margin="0,4,0,12" FontFamily="{StaticResource Medium}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" Text="Edit your income rows directly." />
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="15"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="INCOME" />
+                            <TextBlock
+                                Margin="0,4,0,12"
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="11"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="Edit your income rows directly." />
 
                             <Border Style="{StaticResource TableContainerStyle}">
                                 <ScrollViewer Height="190" VerticalScrollBarVisibility="Auto">
                                     <ItemsControl ItemsSource="{Binding Incomes}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Style="{StaticResource TableRowCardStyle}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="8" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
 
-                                                        <customControls:MoneyTextBox
-                                                            Style="{StaticResource RoundedTextInputStyle}"
-                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                    <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                                        <customControls:BalloonButton
-                                                            Grid.Column="2"
-                                                            Margin="0,6,0,6"
-                                                            VerticalAlignment="Center"
-                                                            ButtonIcon="{StaticResource PopupStyles.Close}"
-                                                            Click="OnRemoveIncomeClick"
-                                                            Style="{StaticResource ReportIconBalloonButtonStyle}" />
-                                                    </Grid>
-                                                </Border>
+                                                    <customControls:BalloonButton
+                                                        Grid.Column="2"
+                                                        Margin="0,6,0,6"
+                                                        VerticalAlignment="Center"
+                                                        ButtonIcon="{StaticResource PopupStyles.Close}"
+                                                        Click="OnRemoveIncomeClick"
+                                                        Style="{StaticResource ReportIconBalloonButtonStyle}" />
+                                                </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -285,8 +375,17 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock FontFamily="{StaticResource Bold}" FontSize="15" Foreground="{StaticResource Brush.Text.Primary}" Text="EXPENSES" />
-                            <TextBlock Margin="0,4,0,12" FontFamily="{StaticResource Medium}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" Text="Update labels, amounts, and categories." />
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="15"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="EXPENSES" />
+                            <TextBlock
+                                Margin="0,4,0,12"
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="11"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="Update labels, amounts, and categories." />
 
                             <Border Style="{StaticResource TableContainerStyle}">
                                 <Grid>
@@ -307,8 +406,14 @@
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Style="{StaticResource TableHeaderTextStyle}" Text="NAME" />
-                                        <TextBlock Grid.Column="2" Style="{StaticResource TableHeaderTextStyle}" Text="AMOUNT" />
-                                        <TextBlock Grid.Column="4" Style="{StaticResource TableHeaderTextStyle}" Text="ALLOCATION" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Style="{StaticResource TableHeaderTextStyle}"
+                                            Text="AMOUNT" />
+                                        <TextBlock
+                                            Grid.Column="4"
+                                            Style="{StaticResource TableHeaderTextStyle}"
+                                            Text="ALLOCATION" />
                                     </Grid>
 
                                     <Border
@@ -318,46 +423,47 @@
                                         Background="{StaticResource Brush.Text.Muted}"
                                         Opacity="0.25" />
 
-                                    <ScrollViewer Grid.Row="2" Height="152" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer
+                                        Grid.Row="2"
+                                        Height="152"
+                                        VerticalScrollBarVisibility="Auto">
                                         <ItemsControl ItemsSource="{Binding Expenses}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Style="{StaticResource TableRowCardStyle}">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="1.7*" />
-                                                                <ColumnDefinition Width="8" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="8" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="8" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                            </Grid.ColumnDefinitions>
+                                                    <Grid Margin="0,0,0,12">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="1.7*" />
+                                                            <ColumnDefinition Width="8" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="8" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="8" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
 
-                                                            <TextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                        <TextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                                            <customControls:MoneyTextBox
-                                                                Grid.Column="2"
-                                                                Style="{StaticResource RoundedTextInputStyle}"
-                                                                Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                        <customControls:MoneyTextBox
+                                                            Grid.Column="2"
+                                                            Style="{StaticResource RoundedTextInputStyle}"
+                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                                            <ComboBox
-                                                                Grid.Column="4"
-                                                                DisplayMemberPath="Label"
-                                                                ItemsSource="{Binding AllocationCategories, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}}"
-                                                                SelectedValue="{Binding ExpenseCategory, Mode=TwoWay}"
-                                                                SelectedValuePath="Value"
-                                                                Style="{StaticResource FluxoComboBoxStyle}" />
+                                                        <ComboBox
+                                                            Grid.Column="4"
+                                                            DisplayMemberPath="Label"
+                                                            ItemsSource="{Binding AllocationCategories, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}}"
+                                                            SelectedValue="{Binding ExpenseCategory, Mode=TwoWay}"
+                                                            SelectedValuePath="Value"
+                                                            Style="{StaticResource FluxoComboBoxStyle}" />
 
-                                                            <customControls:BalloonButton
-                                                                Grid.Column="6"
-                                                                Margin="0,6,0,6"
-                                                                VerticalAlignment="Center"
-                                                                ButtonIcon="{StaticResource PopupStyles.Close}"
-                                                                Click="OnRemoveExpenseClick"
-                                                                Style="{StaticResource ReportIconBalloonButtonStyle}" />
-                                                        </Grid>
-                                                    </Border>
+                                                        <customControls:BalloonButton
+                                                            Grid.Column="6"
+                                                            Margin="0,6,0,6"
+                                                            VerticalAlignment="Center"
+                                                            ButtonIcon="{StaticResource PopupStyles.Close}"
+                                                            Click="OnRemoveExpenseClick"
+                                                            Style="{StaticResource ReportIconBalloonButtonStyle}" />
+                                                    </Grid>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
