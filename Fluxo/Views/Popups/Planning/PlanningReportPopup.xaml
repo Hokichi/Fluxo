@@ -352,7 +352,7 @@
                                 Foreground="{StaticResource Brush.Text.Secondary}"
                                 Text="Edit your income rows directly." />
 
-                            <Border Style="{StaticResource TableContainerStyle}">
+                            <Border>
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
@@ -386,9 +386,7 @@
                                         Grid.Row="2"
                                         Height="152"
                                         VerticalScrollBarVisibility="Auto">
-                                        <ItemsControl
-                                            AlternationCount="1000"
-                                            ItemsSource="{Binding Incomes}">
+                                        <ItemsControl AlternationCount="1000" ItemsSource="{Binding Incomes}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Grid Margin="0,0,0,12">
@@ -409,11 +407,8 @@
 
                                                         <customControls:MoneyTextBox
                                                             Grid.Column="2"
-                                                            AllowDecimal="False"
-                                                            Language="en-US"
-                                                            Style="{StaticResource RoundedTextInputStyle}"
-                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                            UseCommaAsGroupSeparator="True" />
+                                                            Style="{StaticResource PopupTextBoxStyle}"
+                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                                                         <customControls:BalloonButton
                                                             Grid.Column="4"
