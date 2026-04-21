@@ -1,12 +1,9 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
-using SkiaSharp;
 
 namespace Fluxo.ViewModels.Popups;
 
@@ -19,11 +16,14 @@ public enum AnalyticsTrendMode
 
 public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : ObservableObject, IDisposable
 {
+    private const int MaxRangeDays = 31;
+    private const int VerticalTrendLabelThresholdDays = 14;
+
     private readonly IAnalyticsService _analyticsService = analyticsService;
     private CancellationTokenSource? _refreshDebounceCts;
     private bool _isApplyingDateBounds;
-    private ISeries[] _expenseTrendSeries = [];
-    private ISeries[] _incomeTrendSeries = [];
+    private IReadOnlyList<AnalyticsTrendPoint> _expenseTrendPoints = [];
+    private IReadOnlyList<AnalyticsTrendPoint> _incomeTrendPoints = [];
 
     [ObservableProperty] private DateTime _startDate = DateTime.Today;
     [ObservableProperty] private DateTime _endDate = DateTime.Today;
@@ -33,17 +33,27 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
     [ObservableProperty] private string _totalExpenseText = "0";
     [ObservableProperty] private string _netValueText = "0";
 
-    [ObservableProperty] private IEnumerable<ISeries> _trendSeries = [];
-    [ObservableProperty] private Axis[] _trendXAxes = [];
-    [ObservableProperty] private Axis[] _trendYAxes = [];
+    [ObservableProperty] private IReadOnlyList<AnalyticsTrendBarItem> _trendBarItems = [];
+    [ObservableProperty] private bool _hasTrendData;
 
-    [ObservableProperty] private IEnumerable<ISeries> _ratioSeries = [];
-    [ObservableProperty] private IEnumerable<ISeries> _tagSeries = [];
-    [ObservableProperty] private Axis[] _tagXAxes = [];
-    [ObservableProperty] private Axis[] _tagYAxes = [];
+    [ObservableProperty] private double _needsRatio;
+    [ObservableProperty] private double _wantsRatio;
+    [ObservableProperty] private double _investRatio;
+    [ObservableProperty] private double _wantsArcRotationDegrees;
+    [ObservableProperty] private double _investArcRotationDegrees;
+    [ObservableProperty] private int _needsPercent;
+    [ObservableProperty] private int _wantsPercent;
+    [ObservableProperty] private int _investPercent;
+    [ObservableProperty] private bool _hasRatioData;
+    [ObservableProperty] private IReadOnlyList<AnalyticsTopTagCardItem> _topSpendingTagItems = [];
+    [ObservableProperty] private bool _hasTagData;
 
     [ObservableProperty] private IReadOnlyList<AnalyticsGoalCardItem> _goalsCreatedInPeriod = [];
+    [ObservableProperty] private bool _hasGoalsData;
     [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isTrendLabelVertical;
+    [ObservableProperty] private bool _hideTrendValueLabels;
+    [ObservableProperty] private string _dateRangeWarningMessage = string.Empty;
 
     public IReadOnlyList<AnalyticsTrendMode> TrendModes { get; } =
         Enum.GetValues<AnalyticsTrendMode>();
@@ -58,14 +68,7 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
         if (_isApplyingDateBounds)
             return;
 
-        if (value.Date > EndDate.Date)
-        {
-            _isApplyingDateBounds = true;
-            EndDate = value.Date;
-            _isApplyingDateBounds = false;
-        }
-
-        QueueRefresh();
+        ApplyDateRangeRulesAndRefresh();
     }
 
     partial void OnEndDateChanged(DateTime value)
@@ -73,19 +76,34 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
         if (_isApplyingDateBounds)
             return;
 
-        if (value.Date < StartDate.Date)
-        {
-            _isApplyingDateBounds = true;
-            StartDate = value.Date;
-            _isApplyingDateBounds = false;
-        }
-
-        QueueRefresh();
+        ApplyDateRangeRulesAndRefresh();
     }
 
     partial void OnSelectedTrendModeChanged(AnalyticsTrendMode value)
     {
+        OnPropertyChanged(nameof(IsExpenseTrendModeSelected));
+        OnPropertyChanged(nameof(IsIncomeTrendModeSelected));
+        OnPropertyChanged(nameof(IsBothTrendModeSelected));
         ApplyTrendMode();
+    }
+
+    public bool IsExpenseTrendModeSelected => SelectedTrendMode == AnalyticsTrendMode.Expenses;
+
+    public bool IsIncomeTrendModeSelected => SelectedTrendMode == AnalyticsTrendMode.Incomes;
+
+    public bool IsBothTrendModeSelected => SelectedTrendMode == AnalyticsTrendMode.Both;
+
+    public bool HasDateRangeWarning => !string.IsNullOrWhiteSpace(DateRangeWarningMessage);
+
+    partial void OnDateRangeWarningMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasDateRangeWarning));
+    }
+
+    [RelayCommand]
+    private void SetTrendMode(AnalyticsTrendMode trendMode)
+    {
+        SelectedTrendMode = trendMode;
     }
 
     private void QueueRefresh()
@@ -137,46 +155,17 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
         TotalExpenseText = FormatMoney(dto.TotalExpense);
         NetValueText = FormatMoney(dto.TotalIncome - dto.TotalExpense);
 
-        var labels = dto.TimeSeries
-            .Select(point => point.Period.ToString("dd MMM", CultureInfo.InvariantCulture))
+        var labelFormat = dto.TimeSeries.Count <= 7 ? "ddd" : "dd MMM";
+        _expenseTrendPoints = dto.TimeSeries
+            .Select(point => new AnalyticsTrendPoint(
+                point.Period.ToString(labelFormat, CultureInfo.InvariantCulture),
+                point.Expense))
             .ToArray();
-
-        _expenseTrendSeries =
-        [
-            new ColumnSeries<decimal>
-            {
-                Name = "Expenses",
-                Values = dto.TimeSeries.Select(point => point.Expense).ToArray(),
-                Fill = new SolidColorPaint(SKColor.Parse("#FF5C5C"))
-            }
-        ];
-
-        _incomeTrendSeries =
-        [
-            new ColumnSeries<decimal>
-            {
-                Name = "Incomes",
-                Values = dto.TimeSeries.Select(point => point.Income).ToArray(),
-                Fill = new SolidColorPaint(SKColor.Parse("#3FE0A1"))
-            }
-        ];
-
-        TrendXAxes =
-        [
-            new Axis
-            {
-                Labels = labels,
-                LabelsRotation = -25
-            }
-        ];
-
-        TrendYAxes =
-        [
-            new Axis
-            {
-                Labeler = value => value.ToString("N0", CultureInfo.InvariantCulture)
-            }
-        ];
+        _incomeTrendPoints = dto.TimeSeries
+            .Select(point => new AnalyticsTrendPoint(
+                point.Period.ToString(labelFormat, CultureInfo.InvariantCulture),
+                point.Income))
+            .ToArray();
 
         ApplyTrendMode();
 
@@ -184,58 +173,42 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
         var needs = categoryMap.GetValueOrDefault(ExpenseCategory.Needs, 0m);
         var wants = categoryMap.GetValueOrDefault(ExpenseCategory.Wants, 0m);
         var invest = categoryMap.GetValueOrDefault(ExpenseCategory.Savings, 0m);
+        var ratioTotal = needs + wants + invest;
+        HasRatioData = ratioTotal > 0m;
 
-        RatioSeries =
-        [
-            new PieSeries<decimal>
-            {
-                Name = "Needs",
-                Values = [needs],
-                InnerRadius = 60,
-                Fill = new SolidColorPaint(SKColor.Parse("#E6EAF0"))
-            },
-            new PieSeries<decimal>
-            {
-                Name = "Wants",
-                Values = [wants],
-                InnerRadius = 60,
-                Fill = new SolidColorPaint(SKColor.Parse("#FFB86C"))
-            },
-            new PieSeries<decimal>
-            {
-                Name = "Invest",
-                Values = [invest],
-                InnerRadius = 60,
-                Fill = new SolidColorPaint(SKColor.Parse("#3FE0A1"))
-            }
-        ];
+        if (ratioTotal > 0m)
+        {
+            NeedsRatio = (double)(needs / ratioTotal);
+            WantsRatio = (double)(wants / ratioTotal);
+            InvestRatio = (double)(invest / ratioTotal);
+        }
+        else
+        {
+            NeedsRatio = 0d;
+            WantsRatio = 0d;
+            InvestRatio = 0d;
+        }
 
-        var topTags = dto.TopSpendingTags.Take(8).ToArray();
-        TagSeries =
-        [
-            new RowSeries<decimal>
-            {
-                Name = "Spending",
-                Values = topTags.Select(item => item.Total).ToArray(),
-                Fill = new SolidColorPaint(SKColor.Parse("#4DA3FF"))
-            }
-        ];
+        NeedsPercent = (int)Math.Round(NeedsRatio * 100d, MidpointRounding.AwayFromZero);
+        WantsPercent = (int)Math.Round(WantsRatio * 100d, MidpointRounding.AwayFromZero);
+        InvestPercent = Math.Max(0, 100 - NeedsPercent - WantsPercent);
+        WantsArcRotationDegrees = NeedsRatio * 360d;
+        InvestArcRotationDegrees = (NeedsRatio + WantsRatio) * 360d;
 
-        TagXAxes =
-        [
-            new Axis
-            {
-                Labeler = value => value.ToString("N0", CultureInfo.InvariantCulture)
-            }
-        ];
+        var topTags = dto.TopSpendingTags
+            .OrderByDescending(item => item.Total)
+            .Take(8)
+            .ToArray();
+        var maxTopTagTotal = topTags.Length == 0 ? 0m : topTags.Max(item => item.Total);
 
-        TagYAxes =
-        [
-            new Axis
-            {
-                Labels = topTags.Select(item => item.TagName).ToArray()
-            }
-        ];
+        TopSpendingTagItems = topTags
+            .Select(item => new AnalyticsTopTagCardItem(
+                item.TagName,
+                item.HexCode,
+                item.Total,
+                maxTopTagTotal <= 0m ? 0d : Math.Clamp((double)(item.Total / maxTopTagTotal * 100m), 0d, 100d)))
+            .ToArray();
+        HasTagData = TopSpendingTagItems.Any(item => item.Total > 0m);
 
         GoalsCreatedInPeriod = dto.GoalsCreatedInPeriod
             .Select(goal => new AnalyticsGoalCardItem(
@@ -245,16 +218,103 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
                 goal.CreatedOn,
                 goal.SavingEndDate))
             .ToArray();
+        HasGoalsData = GoalsCreatedInPeriod.Count > 0;
     }
 
     private void ApplyTrendMode()
     {
-        TrendSeries = SelectedTrendMode switch
+        IReadOnlyList<AnalyticsTrendPoint> trendPoints = SelectedTrendMode switch
         {
-            AnalyticsTrendMode.Expenses => _expenseTrendSeries,
-            AnalyticsTrendMode.Incomes => _incomeTrendSeries,
-            _ => [.. _expenseTrendSeries, .. _incomeTrendSeries]
+            AnalyticsTrendMode.Expenses => _expenseTrendPoints,
+            AnalyticsTrendMode.Incomes => _incomeTrendPoints,
+            _ => BuildCombinedTrendPoints()
         };
+
+        HasTrendData = trendPoints.Any(point => point.Value > 0m);
+
+        var isExpenseMode = SelectedTrendMode == AnalyticsTrendMode.Expenses;
+        var isIncomeMode = SelectedTrendMode == AnalyticsTrendMode.Incomes;
+        var maxValue = trendPoints.DefaultIfEmpty(default).Max(point => point.Value);
+        TrendBarItems = trendPoints
+            .Select((point, index) => new AnalyticsTrendBarItem(
+                point.Label,
+                point.Value,
+                CalculateBarHeight(point.Value, maxValue),
+                IsHighlighted: index == trendPoints.Count - 1 && point.Value > 0m,
+                HideValueText: HideTrendValueLabels,
+                RotateLabelVertical: IsTrendLabelVertical,
+                IsExpenseMode: isExpenseMode,
+                IsIncomeMode: isIncomeMode))
+            .ToArray();
+    }
+
+    private void ApplyDateRangeRulesAndRefresh()
+    {
+        _isApplyingDateBounds = true;
+        try
+        {
+            var start = StartDate.Date;
+            var end = EndDate.Date;
+
+            if (end < start)
+                end = start;
+
+            if ((end - start).TotalDays > MaxRangeDays)
+            {
+                end = start.AddDays(MaxRangeDays);
+                DateRangeWarningMessage =
+                    "The selected range cannot exceed 31 days. End date was adjusted to 31 days after start date.";
+            }
+            else
+            {
+                DateRangeWarningMessage = string.Empty;
+            }
+
+            if (StartDate.Date != start)
+                StartDate = start;
+            if (EndDate.Date != end)
+                EndDate = end;
+        }
+        finally
+        {
+            _isApplyingDateBounds = false;
+        }
+
+        UpdateTrendPresentation();
+        ApplyTrendMode();
+        QueueRefresh();
+    }
+
+    private void UpdateTrendPresentation()
+    {
+        var isWideRange = (EndDate.Date - StartDate.Date).TotalDays > VerticalTrendLabelThresholdDays;
+        IsTrendLabelVertical = isWideRange;
+        HideTrendValueLabels = isWideRange;
+    }
+
+    private IReadOnlyList<AnalyticsTrendPoint> BuildCombinedTrendPoints()
+    {
+        if (_expenseTrendPoints.Count == 0 || _incomeTrendPoints.Count == 0)
+            return [];
+
+        var count = Math.Min(_expenseTrendPoints.Count, _incomeTrendPoints.Count);
+        return _expenseTrendPoints
+            .Take(count)
+            .Select((expensePoint, index) => new AnalyticsTrendPoint(
+                expensePoint.Label,
+                expensePoint.Value + _incomeTrendPoints[index].Value))
+            .ToArray();
+    }
+
+    private static double CalculateBarHeight(decimal value, decimal maxValue)
+    {
+        if (value <= 0m || maxValue <= 0m)
+            return 0d;
+
+        const double maxHeight = 110d;
+        const double minHeight = 14d;
+        var normalized = (double)(value / maxValue);
+        return Math.Max(minHeight, normalized * maxHeight);
     }
 
     private static string FormatMoney(decimal value)
@@ -279,4 +339,28 @@ public sealed record AnalyticsGoalCardItem(
 {
     public double ProgressPercent =>
         TargetAmount <= 0m ? 0d : Math.Clamp((double)(CurrentAmount / TargetAmount * 100m), 0d, 100d);
+}
+
+public readonly record struct AnalyticsTrendPoint(string Label, decimal Value);
+
+public sealed record AnalyticsTrendBarItem(
+    string Label,
+    decimal Value,
+    double BarHeight,
+    bool IsHighlighted,
+    bool HideValueText,
+    bool RotateLabelVertical,
+    bool IsExpenseMode,
+    bool IsIncomeMode)
+{
+    public string ValueText => $"${Value:N0}";
+}
+
+public sealed record AnalyticsTopTagCardItem(
+    string TagName,
+    string HexCode,
+    decimal Total,
+    double ProgressPercent)
+{
+    public string TotalText => $"${Total:N0}";
 }

@@ -573,14 +573,14 @@
                                                     Height="5"
                                                     Maximum="{Binding ElementName=Root, Path=DataContext.TrendMaximum}"
                                                     Style="{StaticResource RoundedProgressBarStyle}"
-                                                    Value="{Binding IncomeAmount}" />
+                                                    Value="{Binding IncomeAmount, Mode=OneWay}" />
                                                 <ProgressBar
                                                     Height="5"
                                                     Margin="0,8,0,0"
                                                     Foreground="{StaticResource Brush.Danger}"
                                                     Maximum="{Binding ElementName=Root, Path=DataContext.TrendMaximum}"
                                                     Style="{StaticResource RoundedProgressBarStyle}"
-                                                    Value="{Binding ExpenseAmount}" />
+                                                    Value="{Binding ExpenseAmount, Mode=OneWay}" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="3">
                                                 <TextBlock

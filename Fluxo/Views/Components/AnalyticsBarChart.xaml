@@ -1,0 +1,113 @@
+<UserControl
+    x:Class="Fluxo.Views.Components.AnalyticsBarChart"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Popups"
+    Width="620">
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type viewModels:AnalyticsTrendBarItem}">
+            <Grid Margin="4,0,4,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="116" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock
+                    Grid.Row="0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="12"
+                    Foreground="{StaticResource Brush.Text.Muted}"
+                    Text="{Binding ValueText}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HideValueText}" Value="True">
+                                    <Setter Property="Visibility" Value="Hidden" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <Border
+                    Grid.Row="2"
+                    Height="{Binding BarHeight}"
+                    Margin="2,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Bottom"
+                    Background="{StaticResource Brush.Info}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource Brush.Info}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsExpenseMode}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Danger}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsIncomeMode}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
+
+                <TextBlock
+                    Grid.Row="4"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="13"
+                    Foreground="{StaticResource Brush.Text.Muted}"
+                    Text="{Binding Label}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                            <Setter Property="LayoutTransform">
+                                <Setter.Value>
+                                    <RotateTransform Angle="0" />
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding RotateLabelVertical}" Value="True">
+                                    <Setter Property="LayoutTransform">
+                                        <Setter.Value>
+                                            <RotateTransform Angle="90" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid ClipToBounds="True">
+        <ItemsControl x:Name="LayerA">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+
+        <ItemsControl x:Name="LayerB" Opacity="0">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </Grid>
+</UserControl>

@@ -5,30 +5,76 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:Fluxo.ViewModels.Popups"
     Width="1360"
     Height="900"
     MinWidth="1200"
     MinHeight="760"
-    PopupTitle="Analytics"
     d:DataContext="{d:DesignInstance Type=vm:AnalyticsVM}"
+    PopupTitle="Analytics"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>
         <Style x:Key="AnalyticsCardStyle" TargetType="Border">
             <Setter Property="Padding" Value="16" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Main}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="14" />
+        </Style>
+
+        <Style x:Key="AnalyticsSectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
 
         <Style x:Key="AnalyticsCardLabelStyle" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        </Style>
+
+        <Style x:Key="AnalyticsHintTextStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="AnalyticsNoDataTextStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+            <Setter Property="Text" Value="No Data Found" />
+        </Style>
+
+        <Style x:Key="AnalyticsCardProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border
+                            x:Name="ProgressTrack"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="3">
+                            <Grid x:Name="PART_Track">
+                                <Border
+                                    x:Name="PART_Indicator"
+                                    HorizontalAlignment="Left"
+                                    Background="{TemplateBinding Foreground}"
+                                    CornerRadius="3" />
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </customControls:BasePopup.Resources>
 
@@ -44,33 +90,64 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="360" />
-                        <RowDefinition Height="300" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- First row: date selectors -->
-                    <StackPanel
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center">
-                        <TextBlock
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="From" />
-                        <components:DateSelector SelectedDate="{Binding StartDate, Mode=TwoWay}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                        <TextBlock
-                            Margin="16,0,8,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="To" />
-                        <components:DateSelector SelectedDate="{Binding EndDate, Mode=TwoWay}" />
-                    </StackPanel>
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="18"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Period Overview" />
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                Style="{StaticResource AnalyticsHintTextStyle}"
+                                Text="Track totals, trends, and goals within your selected date range." />
+                            <TextBlock
+                                Margin="0,6,0,0"
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="11"
+                                Foreground="{StaticResource Brush.Warning}"
+                                Text="{Binding DateRangeWarningMessage}"
+                                Visibility="{Binding HasDateRangeWarning, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
 
-                    <!-- Second row: summary cards -->
-                    <Grid Grid.Row="1" Margin="0,14,0,14">
+                        <Border
+                            Grid.Column="1"
+                            Padding="12"
+                            Background="{StaticResource Brush.Background.Main}"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="From" />
+                                <components:DateSelector SelectedDate="{Binding StartDate, Mode=TwoWay}" />
+
+                                <TextBlock
+                                    Margin="14,0,8,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="To" />
+                                <components:DateSelector SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!--  Second row: summary cards  -->
+                    <Grid Grid.Row="1" Margin="0,16,0,14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="10" />
@@ -116,7 +193,7 @@
                         </Border>
                     </Grid>
 
-                    <!-- Third row: trend chart + donut -->
+                    <!--  Third row: trend chart + donut  -->
                     <Grid Grid.Row="2" Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2.2*" />
@@ -124,7 +201,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Style="{StaticResource AnalyticsCardStyle}">
+                        <Border MinHeight="340" Style="{StaticResource AnalyticsCardStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -134,56 +211,209 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="180" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Period Trend" />
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource AnalyticsSectionTitleStyle}" Text="Period Trend" />
+                                        <TextBlock
+                                            Margin="0,4,0,0"
+                                            Style="{StaticResource AnalyticsHintTextStyle}"
+                                            Text="Switch between expenses, incomes, or both." />
+                                    </StackPanel>
 
-                                    <ComboBox
+                                    <Border
                                         Grid.Column="1"
-                                        DisplayMemberPath="."
-                                        ItemsSource="{Binding TrendModes}"
-                                        SelectedItem="{Binding SelectedTrendMode, Mode=TwoWay}"
-                                        Style="{StaticResource FluxoComboBoxStyle}" />
+                                        Height="32"
+                                        Padding="4"
+                                        VerticalAlignment="Center"
+                                        Background="{StaticResource Brush.Background.Surface}"
+                                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                        BorderThickness="1"
+                                        CornerRadius="14">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button
+                                                Width="88"
+                                                Command="{Binding SetTrendModeCommand}"
+                                                CommandParameter="{x:Static vm:AnalyticsTrendMode.Expenses}"
+                                                Content="Expenses"
+                                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                                Tag="{Binding IsExpenseTrendModeSelected}" />
+                                            <Button
+                                                Width="84"
+                                                Margin="4,0,0,0"
+                                                Command="{Binding SetTrendModeCommand}"
+                                                CommandParameter="{x:Static vm:AnalyticsTrendMode.Incomes}"
+                                                Content="Incomes"
+                                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                                Tag="{Binding IsIncomeTrendModeSelected}" />
+                                            <Button
+                                                Width="68"
+                                                Margin="4,0,0,0"
+                                                Command="{Binding SetTrendModeCommand}"
+                                                CommandParameter="{x:Static vm:AnalyticsTrendMode.Both}"
+                                                Content="Both"
+                                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                                Tag="{Binding IsBothTrendModeSelected}" />
+                                        </StackPanel>
+                                    </Border>
                                 </Grid>
 
-                                <lvc:CartesianChart
-                                    Grid.Row="1"
-                                    Margin="0,12,0,0"
-                                    Series="{Binding TrendSeries}"
-                                    XAxes="{Binding TrendXAxes}"
-                                    YAxes="{Binding TrendYAxes}" />
+                                <Grid Grid.Row="1" Margin="0,14,0,0">
+                                    <components:AnalyticsBarChart HorizontalAlignment="Center" ItemsSource="{Binding TrendBarItems}" Visibility="{Binding HasTrendData, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    <TextBlock Style="{StaticResource AnalyticsNoDataTextStyle}" Visibility="{Binding HasTrendData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                </Grid>
                             </Grid>
                         </Border>
 
-                        <Border Grid.Column="2" Style="{StaticResource AnalyticsCardStyle}">
+                        <Border
+                            Grid.Column="2"
+                            MinHeight="340"
+                            Style="{StaticResource AnalyticsCardStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Needs / Wants / Invest Ratio" />
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource AnalyticsSectionTitleStyle}" Text="Needs / Wants / Invest Ratio" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        Style="{StaticResource AnalyticsHintTextStyle}"
+                                        Text="Based on expenses inside the selected period." />
+                                </StackPanel>
 
-                                <lvc:PieChart
-                                    Grid.Row="1"
-                                    Margin="0,12,0,0"
-                                    InitialRotation="-90"
-                                    Series="{Binding RatioSeries}" />
+                                <Grid Grid.Row="1" Margin="0,14,0,0">
+                                    <Grid Visibility="{Binding HasRatioData, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Grid
+                                            Width="180"
+                                            Height="180"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                            <Canvas
+                                                Width="164"
+                                                Height="164"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                                <Ellipse
+                                                    Width="164"
+                                                    Height="164"
+                                                    Stroke="{StaticResource Brush.Background.Hover}"
+                                                    StrokeThickness="18" />
+
+                                                <Path
+                                                    Data="{Binding NeedsRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=164}"
+                                                    Stroke="{StaticResource Brush.Category.Needs}"
+                                                    StrokeEndLineCap="Flat"
+                                                    StrokeStartLineCap="Flat"
+                                                    StrokeThickness="18" />
+
+                                                <Path
+                                                    Data="{Binding WantsRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=164}"
+                                                    Stroke="{StaticResource Brush.Category.Wants}"
+                                                    StrokeEndLineCap="Flat"
+                                                    StrokeStartLineCap="Flat"
+                                                    StrokeThickness="18">
+                                                    <Path.RenderTransform>
+                                                        <RotateTransform Angle="{Binding WantsArcRotationDegrees}" CenterX="82" CenterY="82" />
+                                                    </Path.RenderTransform>
+                                                </Path>
+
+                                                <Path
+                                                    Data="{Binding InvestRatio, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=164}"
+                                                    Stroke="{StaticResource Brush.Category.Investments}"
+                                                    StrokeEndLineCap="Flat"
+                                                    StrokeStartLineCap="Flat"
+                                                    StrokeThickness="18">
+                                                    <Path.RenderTransform>
+                                                        <RotateTransform Angle="{Binding InvestArcRotationDegrees}" CenterX="82" CenterY="82" />
+                                                    </Path.RenderTransform>
+                                                </Path>
+                                            </Canvas>
+                                        </Grid>
+
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                            <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                                                <Ellipse
+                                                    Width="8"
+                                                    Height="8"
+                                                    VerticalAlignment="Center"
+                                                    Fill="{StaticResource Brush.Category.Needs}" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Needs" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                                    Text="{Binding NeedsPercent, StringFormat={}{0}%}" />
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                                                <Ellipse
+                                                    Width="8"
+                                                    Height="8"
+                                                    VerticalAlignment="Center"
+                                                    Fill="{StaticResource Brush.Category.Wants}" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Wants" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                                    Text="{Binding WantsPercent, StringFormat={}{0}%}" />
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse
+                                                    Width="8"
+                                                    Height="8"
+                                                    VerticalAlignment="Center"
+                                                    Fill="{StaticResource Brush.Category.Investments}" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Invest" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Medium}"
+                                                    FontSize="12"
+                                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                                    Text="{Binding InvestPercent, StringFormat={}{0}%}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource AnalyticsNoDataTextStyle}" Visibility="{Binding HasRatioData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                </Grid>
                             </Grid>
                         </Border>
                     </Grid>
 
-                    <!-- Fourth row: top tags + goals -->
+                    <!--  Fourth row: top tags + goals  -->
                     <Grid Grid.Row="3">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -191,86 +421,138 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Style="{StaticResource AnalyticsCardStyle}">
+                        <Border MinHeight="300" Style="{StaticResource AnalyticsCardStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Top Spending Tags" />
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource AnalyticsCardLabelStyle}" Text="TOP SPENDING TAGS" />
+                                </StackPanel>
 
-                                <lvc:CartesianChart
-                                    Grid.Row="1"
-                                    Margin="0,12,0,0"
-                                    Series="{Binding TagSeries}"
-                                    XAxes="{Binding TagXAxes}"
-                                    YAxes="{Binding TagYAxes}" />
-                            </Grid>
-                        </Border>
-
-                        <Border Grid.Column="2" Style="{StaticResource AnalyticsCardStyle}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Goals Created In Period" />
-
-                                <ScrollViewer Grid.Row="1" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding GoalsCreatedInPeriod}">
+                                <Grid Grid.Row="1" Margin="0,14,0,0">
+                                    <ItemsControl ItemsSource="{Binding TopSpendingTagItems}" Visibility="{Binding HasTagData, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border
-                                                    Margin="0,0,0,10"
-                                                    Padding="10"
-                                                    Background="{StaticResource Brush.Background.Hover}"
-                                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="10">
-                                                    <StackPanel>
-                                                        <Grid>
-                                                            <TextBlock
-                                                                FontFamily="{StaticResource Bold}"
-                                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                                Text="{Binding Name}" />
-                                                            <TextBlock
-                                                                HorizontalAlignment="Right"
-                                                                FontFamily="{StaticResource Medium}"
-                                                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                                                Text="{Binding ProgressPercent, StringFormat={}{0:F0}%}" />
-                                                        </Grid>
+                                                <Grid Margin="0,0,0,12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="140" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="70" />
+                                                    </Grid.ColumnDefinitions>
 
-                                                        <ProgressBar
-                                                            Height="8"
-                                                            Margin="0,6,0,6"
-                                                            Maximum="100"
-                                                            Value="{Binding ProgressPercent}" />
-
+                                                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                                        <Ellipse
+                                                            Width="6"
+                                                            Height="6"
+                                                            Fill="{Binding HexCode}" />
                                                         <TextBlock
+                                                            Margin="8,0,0,0"
+                                                            VerticalAlignment="Center"
                                                             FontFamily="{StaticResource Medium}"
-                                                            FontSize="11"
-                                                            Foreground="{StaticResource Brush.Text.Secondary}">
-                                                            <Run Text="{Binding CurrentAmount, StringFormat={}{0:N0}}" />
-                                                            <Run Text=" / " />
-                                                            <Run Text="{Binding TargetAmount, StringFormat={}{0:N0}}" />
-                                                            <Run Text=" - Created " />
-                                                            <Run Text="{Binding CreatedOn, StringFormat={}{0:dd MMM yyyy}}" />
-                                                        </TextBlock>
+                                                            FontSize="14"
+                                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                                            Text="{Binding TagName}" />
                                                     </StackPanel>
-                                                </Border>
+
+                                                    <ProgressBar
+                                                        Grid.Column="1"
+                                                        Margin="14,0,14,0"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{Binding HexCode}"
+                                                        Maximum="100"
+                                                        Style="{StaticResource AnalyticsCardProgressBarStyle}"
+                                                        Value="{Binding ProgressPercent, Mode=OneWay}" />
+
+                                                    <TextBlock
+                                                        Grid.Column="2"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        FontFamily="{StaticResource Light}"
+                                                        FontSize="12"
+                                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                                        Text="{Binding TotalText}" />
+                                                </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
+                                    <TextBlock Style="{StaticResource AnalyticsNoDataTextStyle}" Visibility="{Binding HasTagData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <Border
+                            Grid.Column="2"
+                            MinHeight="300"
+                            Style="{StaticResource AnalyticsCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource AnalyticsSectionTitleStyle}" Text="Goals Created In Period" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        Style="{StaticResource AnalyticsHintTextStyle}"
+                                        Text="Only goals created between the selected start and end dates." />
+                                </StackPanel>
+
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    Margin="0,14,0,0"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <Grid>
+                                        <ItemsControl ItemsSource="{Binding GoalsCreatedInPeriod}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border
+                                                        Margin="0,0,0,10"
+                                                        Padding="10"
+                                                        Background="{StaticResource Brush.Background.Surface}"
+                                                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10">
+                                                        <StackPanel>
+                                                            <Grid>
+                                                                <TextBlock
+                                                                    FontFamily="{StaticResource Bold}"
+                                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                                    Text="{Binding Name}" />
+                                                                <TextBlock
+                                                                    HorizontalAlignment="Right"
+                                                                    FontFamily="{StaticResource Medium}"
+                                                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                                                    Text="{Binding ProgressPercent, StringFormat={}{0:F0}%}" />
+                                                            </Grid>
+
+                                                            <ProgressBar
+                                                                Margin="0,6,0,6"
+                                                                Maximum="100"
+                                                                Style="{StaticResource AnalyticsCardProgressBarStyle}"
+                                                                Value="{Binding ProgressPercent, Mode=OneWay}" />
+
+                                                            <TextBlock
+                                                                FontFamily="{StaticResource Medium}"
+                                                                FontSize="11"
+                                                                Foreground="{StaticResource Brush.Text.Secondary}">
+                                                                <Run Text="{Binding CurrentAmount, StringFormat={}{0:N0}}" />
+                                                                <Run Text=" / " />
+                                                                <Run Text="{Binding TargetAmount, StringFormat={}{0:N0}}" />
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBlock
+                                            Style="{StaticResource AnalyticsNoDataTextStyle}"
+                                            Text="No Goals Found"
+                                            Visibility="{Binding HasGoalsData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                    </Grid>
                                 </ScrollViewer>
                             </Grid>
                         </Border>
