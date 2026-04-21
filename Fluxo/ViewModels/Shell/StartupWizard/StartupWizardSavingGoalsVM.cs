@@ -102,7 +102,8 @@ public partial class StartupWizardSavingGoalsVM : ObservableObject
                     Name = draft.Name,
                     TargetAmount = draft.TargetAmount,
                     CurrentAmount = draft.CurrentAmount,
-                    SavingEndDate = draft.SavingEndDate
+                    SavingEndDate = draft.SavingEndDate,
+                    CreatedOn = DateTime.UtcNow
                 });
             }
         }

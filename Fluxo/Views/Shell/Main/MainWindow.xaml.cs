@@ -19,6 +19,7 @@ using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.CustomControls;
+using Fluxo.Views.Popups;
 using Microsoft.Extensions.DependencyInjection;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -448,6 +449,13 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))
+        {
+            OpenAnalyticsPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused() &&
             _logMemoryManager.CanUndo)
         {
@@ -542,6 +550,12 @@ public partial class MainWindow : Window, IPopupHost
         OpenPlanningPopup();
     }
 
+    private void OnAnalyticsButtonClick(object sender, RoutedEventArgs e)
+    {
+        CloseHeaderMenu();
+        OpenAnalyticsPopup();
+    }
+
     private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
     {
         OpenAddSpendingSourcePopup();
@@ -610,6 +624,14 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenPlanningPopup()
     {
         _dialogService.ShowPlanningPopup(this);
+    }
+
+    public void OpenAnalyticsPopup()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var popup = scope.ServiceProvider.GetRequiredService<AnalyticsPopup>();
+        popup.Owner = this;
+        popup.ShowDialog();
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)

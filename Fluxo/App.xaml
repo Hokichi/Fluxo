@@ -58,7 +58,6 @@
                     <cons:NumberWithCommasConverter x:Key="NumberWithCommasConverter" />
                     <cons:ObjectToNullConverter x:Key="ObjectToNullConverter" />
                     <cons:ProgressToArcGeometryConverter x:Key="ProgressToArcGeometryConverter" />
-                    <cons:TagIconNameToGeometryConverter x:Key="TagIconNameToGeometryConverter" />
                 </ResourceDictionary>
 
                 <ResourceDictionary Source="Resources/Theme.xaml" />
@@ -77,4 +76,3 @@
         </ResourceDictionary>
     </Application.Resources>
 </Application>
-

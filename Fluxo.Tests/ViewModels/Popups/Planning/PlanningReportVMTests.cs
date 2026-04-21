@@ -149,7 +149,6 @@ public class PlanningReportVMTests
                 Id = id,
                 Name = $"Tag {id}",
                 HexCode = "#000000",
-                IconName = "tag",
                 IsSystemTag = false
             },
             SpendingSource = new SpendingSourceVM

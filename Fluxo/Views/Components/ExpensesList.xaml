@@ -191,22 +191,12 @@
                                 <Border
                                     x:Name="ExpenseTagBorder"
                                     Grid.Column="0"
-                                    Width="24"
-                                    Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                                    Width="1"
                                     Margin="0,0,12,0"
                                     Padding="4"
                                     HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Background="{Binding Expense.ExpenseTag.HexCode}">
-                                    <Border.CornerRadius>
-                                        <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
-                                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
-                                        </MultiBinding>
-                                    </Border.CornerRadius>
-
-                                    <components:Icon Path="{Binding Expense.ExpenseTag.IconName, Converter={StaticResource TagIconNameToGeometryConverter}}" Color="{StaticResource Brush.Background.Surface}" />
-                                </Border>
+                                    VerticalAlignment="Stretch"
+                                    Background="{Binding Expense.ExpenseTag.HexCode}" />
 
                                 <StackPanel
                                     Grid.Column="1"
@@ -223,11 +213,9 @@
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap" />
                                     <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
-                                        <TextBlock
-                                            FontFamily="{StaticResource Regular}"
-                                            FontSize="12"
-                                            Foreground="{StaticResource Brush.Text.Muted}"
-                                            Text="{Binding SpendingSource.Name}" />
+                                        <TextBlock FontFamily="{StaticResource Regular}" FontSize="12">
+                                            <Run Foreground="{StaticResource Brush.Text.Muted}" Text="{Binding SpendingSource.Name}" />
+                                        </TextBlock>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
@@ -513,4 +501,3 @@
         </Grid>
     </Grid>
 </UserControl>
-

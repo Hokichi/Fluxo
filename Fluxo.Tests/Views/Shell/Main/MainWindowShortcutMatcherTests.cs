@@ -43,4 +43,23 @@ public class MainWindowShortcutMatcherTests
 
         Assert.False(isShortcut);
     }
+
+    [Fact]
+    public void IsOpenAnalyticsShortcut_ReturnsTrue_ForCtrlA()
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(Key.A, ModifierKeys.Control);
+
+        Assert.True(isShortcut);
+    }
+
+    [Theory]
+    [InlineData(Key.A, ModifierKeys.None)]
+    [InlineData(Key.A, ModifierKeys.Control | ModifierKeys.Shift)]
+    [InlineData(Key.D, ModifierKeys.Control)]
+    public void IsOpenAnalyticsShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(key, modifiers);
+
+        Assert.False(isShortcut);
+    }
 }

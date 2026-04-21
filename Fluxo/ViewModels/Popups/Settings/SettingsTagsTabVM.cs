@@ -46,8 +46,7 @@ public partial class SettingsTagsTabVM : ObservableObject
             {
                 Id = item.Tag.Id,
                 Name = item.Tag.Name,
-                HexCode = item.Tag.HexCode,
-                IconName = item.Tag.IconName
+                HexCode = item.Tag.HexCode
             }));
     }
 
@@ -71,8 +70,7 @@ public partial class SettingsTagsTabVM : ObservableObject
             await _unitOfWork.ExpenseTags.AddAsync(new ExpenseTag
             {
                 Name = trimmedName,
-                HexCode = normalizedHexCode,
-                IconName = string.Empty
+                HexCode = normalizedHexCode
             });
 
             await _unitOfWork.SaveChangesAsync();

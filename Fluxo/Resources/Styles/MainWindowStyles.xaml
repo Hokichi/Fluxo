@@ -155,7 +155,7 @@
                 <StackPanel Grid.Column="1">
                     <TextBlock
                         FontFamily="{StaticResource Bold}"
-                        FontSize="11"
+                        FontSize="12"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="{Binding Header}"
                         TextWrapping="Wrap" />
@@ -171,7 +171,7 @@
                         FontFamily="{StaticResource Medium}"
                         FontSize="9"
                         Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="{Binding CreatedOn, StringFormat={}{0:MMM d, h:mm tt}}" />
+                        Text="{Binding CreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
                 </StackPanel>
             </Grid>
         </Border>

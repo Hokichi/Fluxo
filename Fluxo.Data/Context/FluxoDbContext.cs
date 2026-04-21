@@ -92,7 +92,6 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.Property(tag => tag.Name).IsRequired();
         entity.Property(tag => tag.HexCode).IsRequired();
-        entity.Property(tag => tag.IconName).IsRequired();
         entity.Property(tag => tag.IsSystemTag).HasDefaultValue(false);
     }
 
@@ -105,6 +104,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(goal => goal.Name).IsRequired();
         entity.Property(goal => goal.TargetAmount).HasColumnType("NUMERIC");
         entity.Property(goal => goal.CurrentAmount).HasColumnType("NUMERIC");
+        entity.Property(goal => goal.CreatedOn);
     }
 
     private static void ConfigureSpendingSource(EntityTypeBuilder<SpendingSource> entity)

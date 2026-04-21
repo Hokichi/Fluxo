@@ -76,8 +76,7 @@ public sealed record ExpenseMemorySnapshot(
 public sealed record ExpenseTagMemorySnapshot(
     int ExpenseTagId,
     string Name,
-    string HexCode,
-    string IconName)
+    string HexCode)
 {
     public static ExpenseTagMemorySnapshot Create(ExpenseTag expenseTag)
     {
@@ -86,8 +85,7 @@ public sealed record ExpenseTagMemorySnapshot(
         return new ExpenseTagMemorySnapshot(
             expenseTag.Id,
             expenseTag.Name,
-            expenseTag.HexCode,
-            expenseTag.IconName);
+            expenseTag.HexCode);
     }
 }
 
@@ -96,7 +94,8 @@ public sealed record SavingGoalMemorySnapshot(
     string Name,
     decimal TargetAmount,
     decimal CurrentAmount,
-    DateTime SavingEndDate)
+    DateTime SavingEndDate,
+    DateTime CreatedOn)
 {
     public static SavingGoalMemorySnapshot Create(SavingGoal savingGoal)
     {
@@ -107,7 +106,8 @@ public sealed record SavingGoalMemorySnapshot(
             savingGoal.Name,
             savingGoal.TargetAmount,
             savingGoal.CurrentAmount,
-            savingGoal.SavingEndDate);
+            savingGoal.SavingEndDate,
+            savingGoal.CreatedOn);
     }
 }
 
@@ -666,8 +666,7 @@ public sealed class DeleteExpenseTagMemoryAction(ExpenseTagMemorySnapshot snapsh
         {
             Id = snapshot.ExpenseTagId,
             Name = snapshot.Name,
-            HexCode = snapshot.HexCode,
-            IconName = snapshot.IconName
+            HexCode = snapshot.HexCode
         };
 
         await unitOfWork.ExpenseTags.AddAsync(expenseTag, cancellationToken);
@@ -700,7 +699,8 @@ public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapsh
             Name = snapshot.Name,
             TargetAmount = snapshot.TargetAmount,
             CurrentAmount = snapshot.CurrentAmount,
-            SavingEndDate = snapshot.SavingEndDate
+            SavingEndDate = snapshot.SavingEndDate,
+            CreatedOn = snapshot.CreatedOn
         };
 
         await unitOfWork.SavingGoals.AddAsync(savingGoal, cancellationToken);

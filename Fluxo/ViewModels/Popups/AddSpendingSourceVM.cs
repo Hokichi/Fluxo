@@ -290,8 +290,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         var balanceUpdateTag = new ExpenseTag
         {
             Name = BalanceUpdateTagName,
-            HexCode = BalanceUpdateTagColor,
-            IconName = string.Empty
+            HexCode = BalanceUpdateTagColor
         };
 
         await unitOfWork.ExpenseTags.AddAsync(balanceUpdateTag);

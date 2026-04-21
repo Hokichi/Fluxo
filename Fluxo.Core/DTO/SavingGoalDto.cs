@@ -7,4 +7,5 @@ public class SavingGoalDto
     public decimal TargetAmount { get; set; }
     public decimal CurrentAmount { get; set; }
     public DateTime SavingEndDate { get; set; }
+    public DateTime CreatedOn { get; set; }
 }

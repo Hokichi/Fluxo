@@ -187,7 +187,6 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
                 Id = tag.Id,
                 Name = tag.Name,
                 HexCode = tag.HexCode,
-                IconName = tag.IconName,
                 IsSystemTag = tag.IsSystemTag
             };
         }
@@ -267,8 +266,7 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
         var createdTag = new ExpenseTag
         {
             Name = desiredTagName,
-            HexCode = DefaultTagColor,
-            IconName = string.Empty
+            HexCode = DefaultTagColor
         };
         await unitOfWork.ExpenseTags.AddAsync(createdTag);
         await unitOfWork.SaveChangesAsync();
@@ -294,7 +292,6 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
             Id = _nextDraftTagId,
             Name = trimmedName,
             HexCode = normalizedHexCode,
-            IconName = string.Empty,
             IsSystemTag = false
         };
         _nextDraftTagId--;
@@ -312,7 +309,6 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
                 Id = tag.Id,
                 Name = tag.Name,
                 HexCode = tag.HexCode,
-                IconName = tag.IconName,
                 IsSystemTag = tag.IsSystemTag
             })
             .ToList();

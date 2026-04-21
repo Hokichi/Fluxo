@@ -245,6 +245,33 @@
                                         </Grid>
                                     </Button>
 
+                                    <Button Click="OnAnalyticsButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource MainWindow.Bank}"
+                                                Color="{StaticResource Brush.Info}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Analytics" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+A" />
+                                        </Grid>
+                                    </Button>
+
                                     <Button
                                         x:Name="UndoMenuButton"
                                         Click="OnUndoButtonClick"
@@ -399,17 +426,11 @@
 
                     <Grid Grid.Row="1" Margin="0,20,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <sections:SpentAllowancePanel
-                            x:Name="SpentAllowancePanelHost"
-                            Height="80"
-                            DataContext="{Binding SpentAllowancePanel}" />
-
                         <customControls:FadingScrollViewer
-                            Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             CanContentScroll="False"
                             HorizontalScrollBarVisibility="Auto"
@@ -443,6 +464,12 @@
                                 </ListView>
                             </StackPanel>
                         </customControls:FadingScrollViewer>
+
+                        <sections:SpentAllowancePanel
+                            x:Name="SpentAllowancePanelHost"
+                            Grid.Column="1"
+                            Height="80"
+                            DataContext="{Binding SpentAllowancePanel}" />
                     </Grid>
 
                     <Grid Grid.Row="2" Margin="0,8,0,0">

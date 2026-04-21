@@ -15,8 +15,7 @@ public sealed class GoalUpdateTransactionSupportTests
         {
             Id = 42,
             Name = "Goal Update",
-            HexCode = "#ffffff",
-            IconName = "tag"
+            HexCode = "#ffffff"
         };
 
         var expenseTagRepository = new TestExpenseTagRepository([existingTag]);

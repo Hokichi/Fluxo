@@ -155,7 +155,6 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
             Id = tag.Id,
             Name = tag.Name,
             HexCode = tag.HexCode,
-            IconName = tag.IconName,
             IsSystemTag = tag.IsSystemTag
         };
     }

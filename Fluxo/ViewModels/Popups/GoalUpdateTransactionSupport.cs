@@ -25,8 +25,7 @@ public static class GoalUpdateTransactionSupport
         var goalUpdateTag = new ExpenseTag
         {
             Name = GoalUpdateTagName,
-            HexCode = GoalUpdateTagColor,
-            IconName = string.Empty
+            HexCode = GoalUpdateTagColor
         };
 
         await unitOfWork.ExpenseTags.AddAsync(goalUpdateTag);
@@ -34,4 +33,3 @@ public static class GoalUpdateTransactionSupport
         return goalUpdateTag;
     }
 }
-

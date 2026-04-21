@@ -96,7 +96,6 @@ public sealed class PlanningSnapshot
             Id = source.Id,
             Name = source.Name,
             HexCode = source.HexCode,
-            IconName = source.IconName,
             IsSystemTag = source.IsSystemTag
         };
     }

@@ -87,7 +87,8 @@ public partial class AddSavingGoalVM : ObservableObject
                     Name = input.Name,
                     TargetAmount = input.TargetAmount,
                     CurrentAmount = input.CurrentAmount,
-                    SavingEndDate = input.EndDate
+                    SavingEndDate = input.EndDate,
+                    CreatedOn = DateTime.UtcNow
                 };
                 await unitOfWork.SavingGoals.AddAsync(savingGoal);
             }

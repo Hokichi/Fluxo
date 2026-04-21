@@ -45,6 +45,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExpenseLogService, ExpenseLogService>();
         services.AddTransient<ISpendingSourceService, SpendingSourceService>();
         services.AddTransient<ITagService, TagService>();
+        services.AddTransient<IAnalyticsService, AnalyticsService>();
 
         return services;
     }
@@ -75,6 +76,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddSavingGoalVM>();
         services.AddTransient<PlanningPopupVM>();
         services.AddTransient<PlanningReportVM>();
+        services.AddTransient<AnalyticsVM>();
         services.AddTransient<SettingsBudgetTabVM>();
         services.AddTransient<SettingsSourcesTabVM>();
         services.AddTransient<SettingsFixedExpensesTabVM>();
@@ -105,6 +107,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<StartupWizardPopup>();
         services.AddTransient<PlanningPopup>();
         services.AddTransient<PlanningReportPopup>();
+        services.AddTransient<AnalyticsPopup>();
 
         services.AddSingleton<MainWindow>();
 

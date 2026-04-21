@@ -258,7 +258,6 @@ public class PlanningPopupVMTests
                 Id = id,
                 Name = $"Tag {id}",
                 HexCode = "#000000",
-                IconName = "tag",
                 IsSystemTag = false
             },
             SpendingSource = new SpendingSource
@@ -289,7 +288,6 @@ public class PlanningPopupVMTests
                 Id = id,
                 Name = $"Tag {id}",
                 HexCode = "#000000",
-                IconName = "tag",
                 IsSystemTag = false
             },
             SpendingSource = new SpendingSourceVM

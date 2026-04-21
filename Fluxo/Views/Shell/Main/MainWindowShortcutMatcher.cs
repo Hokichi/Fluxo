@@ -13,4 +13,9 @@ public static class MainWindowShortcutMatcher
     {
         return key == Key.P && modifiers == ModifierKeys.Control;
     }
+
+    public static bool IsOpenAnalyticsShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.A && modifiers == ModifierKeys.Control;
+    }
 }
