@@ -155,7 +155,8 @@
                 IsListEmpty="{Binding IsNeedsEmpty}"
                 ItemsSource="{Binding Needs}"
                 Percentage="{Binding NeedsPercentage}"
-                SpentAmount="{Binding NeedsSpent}" />
+                SpentAmount="{Binding NeedsSpent}"
+                TotalAmount="{Binding NeedsAvailable}" />
 
             <components:ExpensesList
                 Title="WANTS"
@@ -165,17 +166,19 @@
                 IsListEmpty="{Binding IsWantsEmpty}"
                 ItemsSource="{Binding Wants}"
                 Percentage="{Binding WantsPercentage}"
-                SpentAmount="{Binding WantsSpent}" />
+                SpentAmount="{Binding WantsSpent}"
+                TotalAmount="{Binding WantsAvailable}" />
 
             <components:ExpensesList
-                Title="INVEST &amp; SAVINGS"
+                Title="INVEST"
                 Grid.Column="4"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Investments}"
                 IsListEmpty="{Binding IsInvestEmpty}"
                 ItemsSource="{Binding Invest}"
                 Percentage="{Binding InvestPercentage}"
-                SpentAmount="{Binding InvestSpent}" />
+                SpentAmount="{Binding InvestSpent}"
+                TotalAmount="{Binding InvestAvailable}" />
         </Grid>
     </Grid>
 </UserControl>

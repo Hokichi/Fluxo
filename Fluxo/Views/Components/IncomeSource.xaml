@@ -133,35 +133,17 @@
                 <StackPanel Orientation="Horizontal">
                     <Border
                         x:Name="AccentBorder"
-                        Width="20"
-                        Height="20"
+                        Width="12"
+                        Height="12"
                         CornerRadius="16"
-                        Style="{StaticResource IncomeSourceAccentStyle}">
-                        <Grid>
-                            <components:Icon
-                                Margin="6"
-                                Path="{StaticResource IncomeSource.Bank}"
-                                Style="{StaticResource BankIconStyle}"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
-                            <components:Icon
-                                Margin="6"
-                                Path="{StaticResource IncomeSource.CreditCardAlt}"
-                                Style="{StaticResource CreditCardIconStyle}"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
-                            <components:Icon
-                                Margin="6"
-                                Path="{StaticResource IncomeSource.PiggyBank}"
-                                Style="{StaticResource PiggyBankIconStyle}"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
-                        </Grid>
-                    </Border>
+                        Style="{StaticResource IncomeSourceAccentStyle}" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Medium}"
                         FontSize="13"
-                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
                         Text="{Binding Name}" />
                 </StackPanel>
 

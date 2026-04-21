@@ -4,13 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Border
-        MinWidth="280"
-        Margin="0,12,12,16"
-        Padding="24,16"
+        Width="280"
+        Margin="0,0,12,0"
+        Padding="24,0"
         BorderBrush="{StaticResource Brush.Border.Subtle}"
         BorderThickness="1"
         CornerRadius="16">
-        <Grid Margin="24,0">
+        <Grid Margin="24,0" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="16" />
@@ -39,7 +39,7 @@
                 VerticalAlignment="Bottom"
                 FontFamily="{StaticResource Light}"
                 Foreground="{StaticResource Brush.Text.Muted}"
-                Text="DAILY&#10;ALLOWANCE" />
+                Text="ALLOWANCE" />
             <TextBlock
                 Grid.Row="1"
                 Grid.Column="2"

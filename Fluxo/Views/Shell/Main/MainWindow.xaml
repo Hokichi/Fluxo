@@ -371,7 +371,7 @@
                 <Grid
                     x:Name="MainContentGrid"
                     Grid.Row="1"
-                    Margin="160,48">
+                    Margin="80,48">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -405,6 +405,7 @@
 
                         <sections:SpentAllowancePanel
                             x:Name="SpentAllowancePanelHost"
+                            Height="80"
                             DataContext="{Binding SpentAllowancePanel}" />
 
                         <customControls:FadingScrollViewer
@@ -447,7 +448,7 @@
                     <Grid Grid.Row="2" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="360" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
 
                         <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />

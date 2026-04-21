@@ -30,6 +30,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock
+                    VerticalAlignment="Center"
                     FontFamily="{StaticResource Bold}"
                     FontSize="13"
                     Foreground="{StaticResource Brush.Text.Primary}"
@@ -51,6 +52,7 @@
                 Foreground="{StaticResource Brush.Text.Muted}"
                 Text="Add a saving goal to track progress here."
                 TextAlignment="Center"
+                TextWrapping="Wrap"
                 Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
 
             <Grid Grid.Row="2" Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">

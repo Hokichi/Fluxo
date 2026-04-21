@@ -508,4 +508,8 @@
         x:Key="Tag.UpdateOutline"
         Brush="Black"
         Geometry="{StaticResource UpdateOutline}" />
+    <GeometryDrawing
+        x:Key="Tag.UpdateOutline"
+        Brush="Black"
+        Geometry="{StaticResource UpdateOutline}" />
 </ResourceDictionary>
