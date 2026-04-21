@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -27,7 +26,7 @@ public partial class QuickAddVM : ObservableObject
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
 
-    [ObservableProperty] private string _amountText = string.Empty;
+    [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isExpense = true;
     [ObservableProperty] private bool _isGoal;
     [ObservableProperty] private bool _isMoreTagsOpen;
@@ -94,7 +93,7 @@ public partial class QuickAddVM : ObservableObject
 
     public bool HasMoreTags => OverflowTags.Count > 0;
 
-    partial void OnAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnAmountTextChanged(decimal value) => NotifyFormStateChanged();
     partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
@@ -359,7 +358,7 @@ public partial class QuickAddVM : ObservableObject
             IsGoal = false;
         }
 
-        AmountText = string.Empty;
+        AmountText = 0m;
         NameText = string.Empty;
         NoteText = string.Empty;
         SelectedDate = DateTime.Today;
@@ -375,7 +374,7 @@ public partial class QuickAddVM : ObservableObject
         input = default;
         validationMessage = string.Empty;
 
-        if (!TryParseAmount(out var amount))
+        if (AmountText <= 0m)
         {
             validationMessage = "Please enter a valid amount greater than zero.";
             return false;
@@ -417,7 +416,7 @@ public partial class QuickAddVM : ObservableObject
             IsExpense,
             IsGoal,
             NameText.Trim(),
-            amount,
+            AmountText,
             SelectedSpendingSource.Id,
             SelectedDate.Date,
             NoteText.Trim(),
@@ -426,27 +425,6 @@ public partial class QuickAddVM : ObservableObject
             goalId);
 
         return true;
-    }
-
-    private bool TryParseAmount(out decimal amount)
-    {
-        amount = 0m;
-
-        var normalizedAmount = AmountText
-            .Trim()
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedAmount))
-            return false;
-
-        if (!decimal.TryParse(normalizedAmount, NumberStyles.Number,
-                CultureInfo.CurrentCulture, out amount) &&
-            !decimal.TryParse(normalizedAmount, NumberStyles.Number,
-                CultureInfo.InvariantCulture, out amount))
-            return false;
-
-        return amount > 0m;
     }
 
     private void ReloadChoicesFromMainViewModel()
@@ -583,7 +561,7 @@ public partial class QuickAddVM : ObservableObject
 
     private bool AreRequiredFieldsFilled()
     {
-        if (string.IsNullOrWhiteSpace(AmountText))
+        if (AmountText <= 0m)
             return false;
 
         if (SelectedSpendingSource is null)
@@ -607,7 +585,7 @@ public partial class QuickAddVM : ObservableObject
             IsExpense,
             IsGoal,
             NameText ?? string.Empty,
-            AmountText ?? string.Empty,
+            AmountText,
             NoteText ?? string.Empty,
             SelectedDate.Date,
             SelectedExpenseCategory,
@@ -660,7 +638,7 @@ public partial class QuickAddVM : ObservableObject
     public readonly record struct QuickAddDraft(
         bool IsExpense,
         string Name,
-        string AmountText,
+        decimal AmountText,
         int? SpendingSourceId,
         DateTime Date,
         string Note,
@@ -685,7 +663,7 @@ public partial class QuickAddVM : ObservableObject
         bool IsExpense,
         bool IsGoal,
         string NameText,
-        string AmountText,
+        decimal AmountText,
         string NoteText,
         DateTime SelectedDate,
         ExpenseCategory SelectedExpenseCategory,

@@ -81,7 +81,7 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
             EditingId = expense.Id
         };
         vm.NameText = expense.Name;
-        vm.AmountText = expense.Amount.ToString("N2", CultureInfo.InvariantCulture);
+        vm.AmountText = expense.Amount;
         vm.SelectedCategory = expense.Category;
         vm.RecurringDateText = MonthlyDueDateHelper.Normalize(expense.RecurringDate)?.ToString(CultureInfo.InvariantCulture) ??
                                MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??

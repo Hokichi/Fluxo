@@ -121,7 +121,7 @@
                         <customControls:MoneyTextBox
                             x:Name="ExpenseAmountTextBox"
                             Style="{StaticResource RoundedMoneyTextInputStyle}"
-                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </StackPanel>
 
                     <Grid Margin="0,16,0,0">
@@ -196,7 +196,7 @@
                             <customControls:MoneyTextBox
                                 x:Name="IncomeAmountTextBox"
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                         </StackPanel>
                     </Grid>
 
@@ -230,7 +230,7 @@
                         <customControls:MoneyTextBox
                             x:Name="GoalAmountTextBox"
                             Style="{StaticResource RoundedMoneyTextInputStyle}"
-                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </StackPanel>
 
                     <Grid Margin="0,16,0,0">

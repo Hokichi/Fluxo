@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -19,7 +18,7 @@ public partial class TransferFundsVM : ObservableObject
     private readonly int _sourceSpendingSourceId;
     private readonly IUnitOfWork _uow;
 
-    [ObservableProperty] private string _amountText = string.Empty;
+    [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isSaving;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
@@ -177,7 +176,7 @@ public partial class TransferFundsVM : ObservableObject
         input = default;
         validationMessage = string.Empty;
 
-        if (!TryParseAmount(out var amount))
+        if (AmountText <= 0m)
         {
             validationMessage = "Please enter a valid transfer amount greater than zero.";
             return false;
@@ -189,28 +188,8 @@ public partial class TransferFundsVM : ObservableObject
             return false;
         }
 
-        input = new TransferFundsInput(amount, SelectedTarget.Id, SelectedDate.Date, NoteText.Trim());
+        input = new TransferFundsInput(AmountText, SelectedTarget.Id, SelectedDate.Date, NoteText.Trim());
         return true;
-    }
-
-    private bool TryParseAmount(out decimal amount)
-    {
-        amount = 0m;
-        var normalizedAmount = AmountText
-            .Trim()
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedAmount))
-            return false;
-
-        if (!decimal.TryParse(normalizedAmount, NumberStyles.Number,
-                CultureInfo.CurrentCulture, out amount) &&
-            !decimal.TryParse(normalizedAmount, NumberStyles.Number,
-                CultureInfo.InvariantCulture, out amount))
-            return false;
-
-        return amount > 0m;
     }
 
     private static string BuildExpenseNote(string targetName, string note)

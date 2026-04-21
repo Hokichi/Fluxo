@@ -51,6 +51,7 @@
                     <cons:CornerRadiusConverter x:Key="CornerRadiusConverter" />
                     <cons:DateTimeToRelativeDateConverter x:Key="DateTimeToRelativeDateConverter" />
                     <cons:GoalProgressToBrushConverter x:Key="GoalProgressToBrushConverter" />
+                    <cons:MoneyAmountToCanonicalConverter x:Key="MoneyAmountToCanonicalConverter" />
                     <cons:MoneyDisplayConverter x:Key="MoneyDisplayConverter" />
                     <cons:MoneyFullDisplayConverter x:Key="MoneyFullDisplayConverter" />
                     <cons:NumberWithCommasConverter x:Key="NumberWithCommasConverter" />

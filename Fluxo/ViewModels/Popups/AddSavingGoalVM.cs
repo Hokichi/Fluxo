@@ -1,4 +1,3 @@
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -17,11 +16,11 @@ public partial class AddSavingGoalVM : ObservableObject
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
 
-    [ObservableProperty] private string _currentAmountText = string.Empty;
+    [ObservableProperty] private decimal _currentAmountText;
     [ObservableProperty] private DateTime _endDate = DateTime.Today.AddMonths(3);
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _nameText = string.Empty;
-    [ObservableProperty] private string _targetAmountText = string.Empty;
+    [ObservableProperty] private decimal _targetAmountText;
 
     public int? EditingId { get; init; }
 
@@ -46,11 +45,11 @@ public partial class AddSavingGoalVM : ObservableObject
         NotifyFormStateChanged();
     }
 
-    partial void OnCurrentAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnCurrentAmountTextChanged(decimal value) => NotifyFormStateChanged();
     partial void OnEndDateChanged(DateTime value) => NotifyFormStateChanged();
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
-    partial void OnTargetAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnTargetAmountTextChanged(decimal value) => NotifyFormStateChanged();
 
     public async Task<AddSavingGoalResult> SaveAsync()
     {
@@ -121,58 +120,34 @@ public partial class AddSavingGoalVM : ObservableObject
             return false;
         }
 
-        if (!TryParseDecimal(TargetAmountText, out var targetAmount) || targetAmount <= 0m)
+        if (TargetAmountText <= 0m)
         {
             validationMessage = "Please enter a target amount greater than zero.";
             return false;
         }
 
-        if (!TryParseDecimal(CurrentAmountText, out var currentAmount))
-        {
-            validationMessage = "Current amount must be a valid amount.";
-            return false;
-        }
-
-        if (currentAmount < 0m)
+        if (CurrentAmountText < 0m)
         {
             validationMessage = "Current amount must be zero or greater.";
             return false;
         }
 
-        input = new AddSavingGoalInput(name, targetAmount, currentAmount, EndDate.Date);
+        input = new AddSavingGoalInput(name, TargetAmountText, CurrentAmountText, EndDate.Date);
         return true;
-    }
-
-    private static bool TryParseDecimal(string text, out decimal value)
-    {
-        value = 0m;
-        var normalizedText = (text ?? string.Empty)
-            .Trim()
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedText))
-            return true;
-
-        return decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.CurrentCulture, out value) ||
-               decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.InvariantCulture, out value);
     }
 
     private bool AreRequiredFieldsFilled()
     {
         return !string.IsNullOrWhiteSpace(NameText) &&
-               !string.IsNullOrWhiteSpace(TargetAmountText) &&
-               !string.IsNullOrWhiteSpace(CurrentAmountText);
+               TargetAmountText > 0m;
     }
 
     private FormState CaptureState()
     {
         return new FormState(
             NameText ?? string.Empty,
-            TargetAmountText ?? string.Empty,
-            CurrentAmountText ?? string.Empty,
+            TargetAmountText,
+            CurrentAmountText,
             EndDate.Date);
     }
 
@@ -203,8 +178,8 @@ public partial class AddSavingGoalVM : ObservableObject
 
     private readonly record struct FormState(
         string NameText,
-        string TargetAmountText,
-        string CurrentAmountText,
+        decimal TargetAmountText,
+        decimal CurrentAmountText,
         DateTime EndDate);
 }
 

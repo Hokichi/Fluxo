@@ -80,7 +80,7 @@
                     x:Name="ExpenseAmountTextBox"
                     IsReadOnly="{Binding AreFieldsReadOnly}"
                     Style="{StaticResource RoundedMoneyTextInputStyle}"
-                    Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
             </StackPanel>
 
             <Grid Grid.Row="1" Margin="0,16,0,0">

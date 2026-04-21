@@ -15,8 +15,8 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class SpendingSourceDetailVM : ObservableObject
 {
-    [ObservableProperty] private string _accountLimitText = string.Empty;
-    [ObservableProperty] private string _apyText = string.Empty;
+    [ObservableProperty] private decimal _accountLimitText;
+    [ObservableProperty] private decimal _apyText;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isEnabled = true;
@@ -24,12 +24,12 @@ public partial class SpendingSourceDetailVM : ObservableObject
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;
     [ObservableProperty] private string _nameText = string.Empty;
-    [ObservableProperty] private string _primaryAmountText = string.Empty;
+    [ObservableProperty] private decimal _primaryAmountText;
     [ObservableProperty] private int? _selectedDeductSource;
     private SpendingSourceDetailState _savedState = SpendingSourceDetailState.Empty;
     [ObservableProperty] private bool _showOnUI = true;
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
-    [ObservableProperty] private string _spentAmountText = string.Empty;
+    [ObservableProperty] private decimal _spentAmountText;
     [ObservableProperty] private decimal _trendMaximum = 1m;
 
     public SpendingSourceDetailVM(MainVM mainViewModel, int spendingSourceId, IUnitOfWork uow)
@@ -74,8 +74,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
     public bool IsHidden => !ShowOnUI;
 
     public decimal DisplayPrimaryAmount => SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
-        ? ParseDecimalOrDefault(SpentAmountText)
-        : ParseDecimalOrDefault(PrimaryAmountText);
+        ? SpentAmountText
+        : PrimaryAmountText;
 
     public string PrimaryAmountLabel => SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
         ? "Spent"
@@ -126,12 +126,12 @@ public partial class SpendingSourceDetailVM : ObservableObject
         }
     }
 
-    partial void OnPrimaryAmountTextChanged(string value)
+    partial void OnPrimaryAmountTextChanged(decimal value)
     {
         OnPropertyChanged(nameof(DisplayPrimaryAmount));
     }
 
-    partial void OnSpentAmountTextChanged(string value)
+    partial void OnSpentAmountTextChanged(decimal value)
     {
         OnPropertyChanged(nameof(DisplayPrimaryAmount));
     }
@@ -393,10 +393,10 @@ public partial class SpendingSourceDetailVM : ObservableObject
     {
         SpendingSourceType = state.SpendingSourceType;
         NameText = state.Name;
-        PrimaryAmountText = FormatDecimal(state.PrimaryAmount);
-        SpentAmountText = FormatDecimal(state.SpentAmount);
-        AccountLimitText = FormatDecimal(state.AccountLimit);
-        ApyText = state.InterestRate.HasValue ? FormatDecimal(state.InterestRate.Value) : string.Empty;
+        PrimaryAmountText = state.PrimaryAmount;
+        SpentAmountText = state.SpentAmount;
+        AccountLimitText = state.AccountLimit;
+        ApyText = state.InterestRate ?? 0m;
         MonthlyDueDateText = state.MonthlyDueDate?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         SelectedDeductSource = state.DeductSource;
         IsEnabled = state.IsEnabled;
@@ -415,40 +415,13 @@ public partial class SpendingSourceDetailVM : ObservableObject
             return false;
         }
 
-        var primaryAmount = 0m;
-        if (!TryParseDecimal(PrimaryAmountText, out primaryAmount))
-        {
-            validationMessage = $"{PrimaryAmountLabel} must be a valid amount.";
-            return false;
-        }
+        var primaryAmount = PrimaryAmountText;
+        var spentAmount = SpentAmountText;
+        var accountLimit = AccountLimitText;
+        decimal? interestRate = IsSaving ? ApyText : null;
 
-        var spentAmount = 0m;
-        if (!TryParseDecimal(SpentAmountText, out spentAmount))
-        {
-            validationMessage = "Spent must be a valid amount.";
-            return false;
-        }
-
-        var accountLimit = 0m;
-        if (!TryParseDecimal(AccountLimitText, out accountLimit))
-        {
-            validationMessage = "Limit must be a valid amount.";
-            return false;
-        }
-
-        decimal? interestRate = null;
-        if (!string.IsNullOrWhiteSpace(ApyText))
-        {
-            if (!TryParseDecimal(ApyText, out var parsedInterestRate))
-            {
-                validationMessage = "APY must be a valid amount.";
-                return false;
-            }
-
-            interestRate = parsedInterestRate;
-        }
-
-        if (primaryAmount < 0m || spentAmount < 0m || accountLimit < 0m || interestRate < 0m)
+        if (primaryAmount < 0m || spentAmount < 0m || accountLimit < 0m ||
+            (interestRate.HasValue && interestRate.Value < 0m))
         {
             validationMessage = "Values must be zero or greater.";
             return false;
@@ -623,38 +596,11 @@ public partial class SpendingSourceDetailVM : ObservableObject
         return string.IsNullOrWhiteSpace(firstMeaningfulLine) ? "Income" : firstMeaningfulLine;
     }
 
-    private static string FormatDecimal(decimal value)
-    {
-        return value.ToString("0.##", CultureInfo.CurrentCulture);
-    }
-
-    private static bool TryParseDecimal(string text, out decimal value)
-    {
-        value = 0m;
-        var normalizedText = (text ?? string.Empty)
-            .Trim()
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedText))
-            return true;
-
-        return decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.CurrentCulture, out value) ||
-               decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.InvariantCulture, out value);
-    }
-
     private static bool TryParseMonthlyDueDate(string text, out int monthlyDueDate)
     {
         monthlyDueDate = 0;
         return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out monthlyDueDate) &&
                monthlyDueDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
-    }
-
-    private static decimal ParseDecimalOrDefault(string text)
-    {
-        return TryParseDecimal(text, out var value) ? value : 0m;
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> items)

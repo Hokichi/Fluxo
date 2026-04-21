@@ -94,7 +94,7 @@
                         <Grid>
                             <TextBlock
                                 x:Name="PlaceholderText"
-                                Margin="{TemplateBinding Padding}"
+                                Margin="12,0,0,0"
                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                 Foreground="{DynamicResource Brush.Text.Muted}"
                                 IsHitTestVisible="False"
@@ -109,6 +109,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="Text" Value="">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Hidden" />
                         </Trigger>
                         <Trigger Property="Text" Value="{x:Null}">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />

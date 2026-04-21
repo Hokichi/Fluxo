@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -57,8 +56,8 @@ public partial class StartupWizardSavingGoalsVM : ObservableObject
         {
             EditingId = goal.Id,
             NameText = goal.Name,
-            TargetAmountText = goal.TargetAmount.ToString("N2", CultureInfo.InvariantCulture),
-            CurrentAmountText = goal.CurrentAmount.ToString("N2", CultureInfo.InvariantCulture),
+            TargetAmountText = goal.TargetAmount,
+            CurrentAmountText = goal.CurrentAmount,
             EndDate = goal.SavingEndDate
         };
     }

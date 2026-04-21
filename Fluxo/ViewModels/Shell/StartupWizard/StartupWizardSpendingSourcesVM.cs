@@ -114,20 +114,20 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
 
         if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
         {
-            vm.PrimaryAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
-            vm.SpentAmountText = source.SpentAmount.ToString("N2", CultureInfo.InvariantCulture);
-            vm.AccountLimitText = source.AccountLimit.ToString("N2", CultureInfo.InvariantCulture);
+            vm.PrimaryAmountText = source.SpentAmount;
+            vm.SpentAmountText = source.SpentAmount;
+            vm.AccountLimitText = source.AccountLimit;
             vm.MonthlyDueDateText = MonthlyDueDateHelper.Normalize(source.MonthlyDueDate)?.ToString(CultureInfo.InvariantCulture) ??
                                     string.Empty;
             vm.SelectedDeductSource = source.DeductSource;
         }
         else
         {
-            vm.PrimaryAmountText = source.Balance.ToString("N2", CultureInfo.InvariantCulture);
+            vm.PrimaryAmountText = source.Balance;
         }
 
         if (source.SpendingSourceType == SpendingSourceType.Saving && source.InterestRate.HasValue)
-            vm.ApyText = source.InterestRate.Value.ToString("N2", CultureInfo.InvariantCulture);
+            vm.ApyText = source.InterestRate.Value;
 
         return vm;
     }

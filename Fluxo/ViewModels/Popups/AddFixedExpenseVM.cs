@@ -29,7 +29,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     private bool _isChangeTrackingInitialized;
     private bool _isSyncingTagSelection;
 
-    [ObservableProperty] private string _amountText = string.Empty;
+    [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isActive = true;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _nameText = string.Empty;
@@ -94,7 +94,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         NotifyFormStateChanged();
     }
 
-    partial void OnAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnAmountTextChanged(decimal value) => NotifyFormStateChanged();
     partial void OnIsActiveChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
@@ -305,7 +305,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             return false;
         }
 
-        if (!TryParseDecimal(AmountText, out var amount) || amount <= 0m)
+        if (AmountText <= 0m)
         {
             validationMessage = "Please enter a valid amount greater than zero.";
             return false;
@@ -338,7 +338,7 @@ public partial class AddFixedExpenseVM : ObservableObject
 
         input = new AddFixedExpenseInput(
             name,
-            amount,
+            AmountText,
             SelectedCategory,
             SelectedSpendingSource.Id,
             recurringDate,
@@ -347,23 +347,6 @@ public partial class AddFixedExpenseVM : ObservableObject
             IsActive);
 
         return true;
-    }
-
-    private static bool TryParseDecimal(string text, out decimal value)
-    {
-        value = 0m;
-        var normalizedText = (text ?? string.Empty)
-            .Trim()
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedText))
-            return false;
-
-        return decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.CurrentCulture, out value) ||
-               decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.InvariantCulture, out value);
     }
 
     private static bool TryParseRecurringDate(string text, out int recurringDate)
@@ -376,7 +359,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     private bool AreRequiredFieldsFilled()
     {
         return !string.IsNullOrWhiteSpace(NameText) &&
-               !string.IsNullOrWhiteSpace(AmountText) &&
+               AmountText > 0m &&
                TryParseRecurringDate(RecurringDateText, out _) &&
                SelectedTag is not null &&
                SelectedSpendingSource is not null;
@@ -386,7 +369,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     {
         return new FormState(
             NameText ?? string.Empty,
-            AmountText ?? string.Empty,
+            AmountText,
             SelectedCategory,
             SelectedSpendingSource?.Id ?? NoSpendingSourceId,
             RecurringDateText ?? string.Empty,
@@ -428,7 +411,7 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     private readonly record struct FormState(
         string NameText,
-        string AmountText,
+        decimal AmountText,
         ExpenseCategory SelectedCategory,
         int SelectedSpendingSourceId,
         string RecurringDateText,

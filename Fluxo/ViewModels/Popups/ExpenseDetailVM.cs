@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -21,7 +20,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IUnitOfWork _uow;
 
-    [ObservableProperty] private string _amountText = string.Empty;
+    [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
@@ -208,7 +207,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
     private void LoadFromSavedState()
     {
-        AmountText = _savedState.Amount.ToString(CultureInfo.CurrentCulture);
+        AmountText = _savedState.Amount;
         NameText = _savedState.Name;
         NoteText = _savedState.Note;
         SelectedDate = _savedState.Date == default ? DateTime.Today : _savedState.Date.Date;
@@ -226,7 +225,7 @@ public partial class ExpenseDetailVM : ObservableObject
         input = default;
         validationMessage = string.Empty;
 
-        if (!TryParseAmount(out var amount))
+        if (AmountText <= 0m)
         {
             validationMessage = "Please enter a valid amount greater than zero.";
             return false;
@@ -246,7 +245,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
         input = new ExpenseDetailInput(
             NameText.Trim(),
-            amount,
+            AmountText,
             SelectedSpendingSource.Id,
             SelectedDate.Date,
             NoteText.Trim(),
@@ -254,27 +253,6 @@ public partial class ExpenseDetailVM : ObservableObject
             SelectedTag.Id);
 
         return true;
-    }
-
-    private bool TryParseAmount(out decimal amount)
-    {
-        amount = 0m;
-
-        var normalizedAmount = AmountText
-            .Trim()
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedAmount))
-            return false;
-
-        if (!decimal.TryParse(normalizedAmount, NumberStyles.Number,
-                CultureInfo.CurrentCulture, out amount) &&
-            !decimal.TryParse(normalizedAmount, NumberStyles.Number,
-                CultureInfo.InvariantCulture, out amount))
-            return false;
-
-        return amount > 0m;
     }
 
     private void ReloadChoicesFromMainViewModel()

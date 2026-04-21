@@ -25,17 +25,17 @@ public partial class AddSpendingSourceVM : ObservableObject
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
 
-    [ObservableProperty] private string _accountLimitText = string.Empty;
-    [ObservableProperty] private string _apyText = string.Empty;
+    [ObservableProperty] private decimal _accountLimitText;
+    [ObservableProperty] private decimal _apyText;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private string _monthlyDueDateText = string.Empty;
     [ObservableProperty] private string _nameText = string.Empty;
-    [ObservableProperty] private string _primaryAmountText = string.Empty;
+    [ObservableProperty] private decimal _primaryAmountText;
     [ObservableProperty] private int? _selectedDeductSource;
     [ObservableProperty] private SpendingSourceType _selectedSpendingSourceType = SpendingSourceType.Checking;
     [ObservableProperty] private bool _showOnUI = true;
-    [ObservableProperty] private string _spentAmountText = string.Empty;
+    [ObservableProperty] private decimal _spentAmountText;
 
     public int? EditingId { get; init; }
 
@@ -79,9 +79,9 @@ public partial class AddSpendingSourceVM : ObservableObject
     public bool IsCashLike => SelectedSpendingSourceType is SpendingSourceType.Checking or SpendingSourceType.Cash;
     public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
 
-    partial void OnAccountLimitTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnAccountLimitTextChanged(decimal value) => NotifyFormStateChanged();
 
-    partial void OnApyTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnApyTextChanged(decimal value) => NotifyFormStateChanged();
 
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
 
@@ -91,12 +91,12 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
 
-    partial void OnPrimaryAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnPrimaryAmountTextChanged(decimal value) => NotifyFormStateChanged();
     partial void OnSelectedDeductSourceChanged(int? value) => NotifyFormStateChanged();
 
     partial void OnShowOnUIChanged(bool value) => NotifyFormStateChanged();
 
-    partial void OnSpentAmountTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnSpentAmountTextChanged(decimal value) => NotifyFormStateChanged();
 
     partial void OnSelectedSpendingSourceTypeChanged(SpendingSourceType value)
     {
@@ -109,8 +109,8 @@ public partial class AddSpendingSourceVM : ObservableObject
 
         if (!IsCreditLike)
         {
-            AccountLimitText = string.Empty;
-            SpentAmountText = string.Empty;
+            AccountLimitText = 0m;
+            SpentAmountText = 0m;
             MonthlyDueDateText = string.Empty;
             SelectedDeductSource = null;
         }
@@ -120,7 +120,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         }
 
         if (!IsSaving)
-            ApyText = string.Empty;
+            ApyText = 0m;
 
         NotifyFormStateChanged();
     }
@@ -370,37 +370,13 @@ public partial class AddSpendingSourceVM : ObservableObject
             return false;
         }
 
-        if (!TryParseDecimal(PrimaryAmountText, out var primaryAmount))
-        {
-            validationMessage = $"{PrimaryAmountLabel} must be a valid amount.";
-            return false;
-        }
+        var primaryAmount = PrimaryAmountText;
+        var spentAmount = SpentAmountText;
+        var accountLimit = AccountLimitText;
+        decimal? interestRate = IsSaving ? ApyText : null;
 
-        if (!TryParseDecimal(SpentAmountText, out var spentAmount))
-        {
-            validationMessage = "Current spent must be a valid amount.";
-            return false;
-        }
-
-        if (!TryParseDecimal(AccountLimitText, out var accountLimit))
-        {
-            validationMessage = "Account limit must be a valid amount.";
-            return false;
-        }
-
-        decimal? interestRate = null;
-        if (!string.IsNullOrWhiteSpace(ApyText))
-        {
-            if (!TryParseDecimal(ApyText, out var parsedApy))
-            {
-                validationMessage = "APY must be a valid amount.";
-                return false;
-            }
-
-            interestRate = parsedApy;
-        }
-
-        if (primaryAmount < 0m || spentAmount < 0m || accountLimit < 0m || interestRate < 0m)
+        if (primaryAmount < 0m || spentAmount < 0m || accountLimit < 0m ||
+            (interestRate.HasValue && interestRate.Value < 0m))
         {
             validationMessage = "Values must be zero or greater.";
             return false;
@@ -444,28 +420,11 @@ public partial class AddSpendingSourceVM : ObservableObject
             IsCredit ? accountLimit : 0m,
             monthlyDueDate,
             IsCreditLike ? SelectedDeductSource : null,
-            IsSaving ? interestRate : null,
+            interestRate,
             ShowOnUI,
             IsEnabled);
 
         return true;
-    }
-
-    private static bool TryParseDecimal(string text, out decimal value)
-    {
-        value = 0m;
-        var normalizedText = (text ?? string.Empty)
-            .Trim()
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-
-        if (string.IsNullOrWhiteSpace(normalizedText))
-            return true;
-
-        return decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.CurrentCulture, out value) ||
-               decimal.TryParse(normalizedText, NumberStyles.Number,
-                   CultureInfo.InvariantCulture, out value);
     }
 
     private static bool TryParseMonthlyDueDate(string text, out int monthlyDueDate)
@@ -480,16 +439,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         if (string.IsNullOrWhiteSpace(NameText))
             return false;
 
-        if (IsCashLike && string.IsNullOrWhiteSpace(PrimaryAmountText))
-            return false;
-
-        if (IsCreditLike && string.IsNullOrWhiteSpace(SpentAmountText))
-            return false;
-
-        if (IsCredit && string.IsNullOrWhiteSpace(AccountLimitText))
-            return false;
-
-        if (IsSaving && string.IsNullOrWhiteSpace(ApyText))
+        if (IsCredit && AccountLimitText <= 0m)
             return false;
 
         if (IsCreditLike && !TryParseMonthlyDueDate(MonthlyDueDateText, out _))
@@ -505,10 +455,10 @@ public partial class AddSpendingSourceVM : ObservableObject
     {
         return new FormState(
             NameText ?? string.Empty,
-            PrimaryAmountText ?? string.Empty,
-            SpentAmountText ?? string.Empty,
-            AccountLimitText ?? string.Empty,
-            ApyText ?? string.Empty,
+            PrimaryAmountText,
+            SpentAmountText,
+            AccountLimitText,
+            ApyText,
             MonthlyDueDateText ?? string.Empty,
             SelectedDeductSource,
             SelectedSpendingSourceType,
@@ -551,10 +501,10 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     private readonly record struct FormState(
         string NameText,
-        string PrimaryAmountText,
-        string SpentAmountText,
-        string AccountLimitText,
-        string ApyText,
+        decimal PrimaryAmountText,
+        decimal SpentAmountText,
+        decimal AccountLimitText,
+        decimal ApyText,
         string MonthlyDueDateText,
         int? SelectedDeductSource,
         SpendingSourceType SpendingSourceType,

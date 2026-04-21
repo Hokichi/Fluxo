@@ -144,7 +144,7 @@
                         <customControls:MoneyTextBox
                             x:Name="PrimaryAmountTextBox"
                             Style="{StaticResource InlineHeaderAmountTextBoxStyle}"
-                            Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                            Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </StackPanel>
                 </StackPanel>
             </Grid>
@@ -222,7 +222,7 @@
                                 x:Name="CreditSpentAmountTextBox"
                                 Grid.Column="1"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
-                                Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
+                                Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -245,7 +245,7 @@
                                 x:Name="CreditLimitTextBox"
                                 Grid.Column="1"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
-                                Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}"
+                                Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -316,7 +316,7 @@
                                 x:Name="BnplSpentAmountTextBox"
                                 Grid.Column="1"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
-                                Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}"
+                                Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsBnpl, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -399,7 +399,7 @@
                                 x:Name="SavingApyTextBox"
                                 Grid.Column="1"
                                 Style="{StaticResource InlineDetailValueTextBoxStyle}"
-                                Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}"
+                                Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                     </StackPanel>

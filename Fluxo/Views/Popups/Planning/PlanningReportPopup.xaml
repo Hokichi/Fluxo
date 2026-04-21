@@ -408,7 +408,7 @@
                                                         <customControls:MoneyTextBox
                                                             Grid.Column="2"
                                                             Style="{StaticResource PopupTextBoxStyle}"
-                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
 
                                                         <customControls:BalloonButton
                                                             Grid.Column="4"
@@ -506,7 +506,7 @@
                                                             AllowDecimal="False"
                                                             Language="en-US"
                                                             Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter='NoDecimal;Comma'}"
                                                             UseCommaAsGroupSeparator="True" />
 
                                                         <ComboBox
