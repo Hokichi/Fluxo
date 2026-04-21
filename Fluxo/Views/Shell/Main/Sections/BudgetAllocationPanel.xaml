@@ -11,179 +11,6 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid VerticalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
-                <ColumnDefinition Width="24" />
-                <ColumnDefinition Width="2*" />
-            </Grid.ColumnDefinitions>
-
-            <Border
-                Grid.ColumnSpan="2"
-                Margin="0,16,24,16"
-                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                BorderThickness="1"
-                CornerRadius="16">
-
-                <Grid Margin="40,24,20,24">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock
-                            FontFamily="{StaticResource Light}"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Text="SPENT" />
-                        <TextBlock
-                            Margin="0,12,0,0"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="20"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding TotalSpent, Converter={StaticResource NumberWithCommasConverter}}"
-                            ToolTip="{Binding TotalSpent, Converter={StaticResource MoneyFullDisplayConverter}}" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock
-                            FontFamily="{StaticResource Light}"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Text="ALLOWANCE" />
-                        <TextBlock
-                            Margin="0,12,0,0"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="20"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding DailyAllowance, Converter={StaticResource NumberWithCommasConverter}}"
-                            ToolTip="{Binding DailyAllowance, Converter={StaticResource MoneyFullDisplayConverter}}" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border
-                Grid.Column="2"
-                Margin="0,16,8,16"
-                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                BorderThickness="1"
-                CornerRadius="16">
-                <Grid Margin="32,24">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock
-                            HorizontalAlignment="Right"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding NeedsAvailable, Converter={StaticResource NumberWithCommasConverter}}"
-                            ToolTip="{Binding NeedsAvailable, Converter={StaticResource MoneyFullDisplayConverter}}" />
-
-                        <ProgressBar
-                            Height="3"
-                            Margin="0,8,0,0"
-                            Foreground="{StaticResource Brush.Category.Needs}"
-                            Maximum="100"
-                            Style="{StaticResource RoundedProgressBarStyle}"
-                            Value="{Binding NeedsPercentage}" />
-
-                        <Grid>
-                            <TextBlock
-                                Margin="0,8,0,0"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Muted}">
-                                <Run Text="NEEDS" />
-                            </TextBlock>
-                            <TextBlock
-                                Margin="0,8,0,0"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Muted}">
-                                <Run Text="{Binding NeedsPercentage, StringFormat={}{0}%}" />
-                                <Run Text="SPENT" />
-                            </TextBlock>
-                        </Grid>
-                    </StackPanel>
-                    <StackPanel
-                        Grid.Column="1"
-                        Margin="24,0,0,0"
-                        VerticalAlignment="Center">
-                        <TextBlock
-                            HorizontalAlignment="Right"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding WantsAvailable, Converter={StaticResource NumberWithCommasConverter}}"
-                            ToolTip="{Binding WantsAvailable, Converter={StaticResource MoneyFullDisplayConverter}}" />
-
-                        <ProgressBar
-                            Height="3"
-                            Margin="0,8,0,0"
-                            Foreground="{StaticResource Brush.Category.Wants}"
-                            Maximum="100"
-                            Style="{StaticResource RoundedProgressBarStyle}"
-                            Value="{Binding WantsPercentage}" />
-
-                        <Grid>
-                            <TextBlock
-                                Margin="0,8,0,0"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Muted}">
-                                <Run Text="WANTS" />
-                            </TextBlock>
-                            <TextBlock
-                                Margin="0,8,0,0"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Muted}">
-                                <Run Text="{Binding WantsPercentage, StringFormat={}{0}%}" />
-                                <Run Text="SPENT" />
-                            </TextBlock>
-                        </Grid>
-                    </StackPanel>
-                    <StackPanel
-                        Grid.Column="2"
-                        Margin="24,0,0,0"
-                        VerticalAlignment="Center">
-                        <TextBlock
-                            HorizontalAlignment="Right"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding InvestAvailable, Converter={StaticResource NumberWithCommasConverter}}"
-                            ToolTip="{Binding InvestAvailable, Converter={StaticResource MoneyFullDisplayConverter}}" />
-
-                        <ProgressBar
-                            Height="3"
-                            Margin="0,8,0,0"
-                            Foreground="{StaticResource Brush.Category.Investments}"
-                            Maximum="100"
-                            Style="{StaticResource RoundedProgressBarStyle}"
-                            Value="{Binding InvestPercentage}" />
-
-                        <Grid>
-                            <TextBlock
-                                Margin="0,8,0,0"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Muted}">
-                                <Run Text="INVEST" />
-                            </TextBlock>
-                            <TextBlock
-                                Margin="0,8,0,0"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Muted}">
-                                <Run Text="{Binding InvestPercentage, StringFormat={}{0}%}" />
-                                <Run Text="SPENT" />
-                            </TextBlock>
-                        </Grid>
-                    </StackPanel>
-                </Grid>
-            </Border>
-        </Grid>
-
         <StackPanel
             Grid.Row="1"
             Margin="0,0,0,16"
@@ -327,6 +154,7 @@
                 DotColor="{StaticResource Brush.Category.Needs}"
                 IsListEmpty="{Binding IsNeedsEmpty}"
                 ItemsSource="{Binding Needs}"
+                Percentage="{Binding NeedsPercentage}"
                 SpentAmount="{Binding NeedsSpent}" />
 
             <components:ExpensesList
@@ -336,6 +164,7 @@
                 DotColor="{StaticResource Brush.Category.Wants}"
                 IsListEmpty="{Binding IsWantsEmpty}"
                 ItemsSource="{Binding Wants}"
+                Percentage="{Binding WantsPercentage}"
                 SpentAmount="{Binding WantsSpent}" />
 
             <components:ExpensesList
@@ -345,6 +174,7 @@
                 DotColor="{StaticResource Brush.Category.Investments}"
                 IsListEmpty="{Binding IsInvestEmpty}"
                 ItemsSource="{Binding Invest}"
+                Percentage="{Binding InvestPercentage}"
                 SpentAmount="{Binding InvestSpent}" />
         </Grid>
     </Grid>

@@ -6,7 +6,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Width="240"
-    Height="100"
     Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -173,71 +172,6 @@
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}"
                     ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
-
-                <Grid Margin="0,8,0,0">
-                    <StackPanel Orientation="Horizontal" Style="{StaticResource CheckingCashDetailsStyle}">
-                        <TextBlock
-                            FontFamily="{StaticResource Bold}"
-                            Foreground="{StaticResource Brush.Success}"
-                            Text="↓" />
-                        <TextBlock
-                            Margin="4,0,0,0"
-                            FontFamily="{StaticResource Medium}"
-                            Foreground="{StaticResource Brush.Success}"
-                            Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}{0} In}"
-                            ToolTip="{Binding MoneyIn, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat={}{0} In}" />
-                        <Border
-                            Width="1"
-                            Height="12"
-                            Margin="6,0,4,0"
-                            Background="{StaticResource Brush.Text.Muted}" />
-                        <TextBlock
-                            FontFamily="{StaticResource Bold}"
-                            Foreground="{StaticResource Brush.Danger}"
-                            Text="↑" />
-                        <TextBlock
-                            Margin="4,0,0,0"
-                            FontFamily="{StaticResource Medium}"
-                            Foreground="{StaticResource Brush.Danger}"
-                            Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}, StringFormat={}{0} Out}"
-                            ToolTip="{Binding MoneyOut, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat={}{0} Out}" />
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Style="{StaticResource CreditDetailsStyle}">
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="10"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="Spent:" />
-
-                        <ProgressBar
-                            Width="80"
-                            Height="3"
-                            Margin="5,3,0,0"
-                            VerticalAlignment="Center"
-                            Maximum="{Binding AccountLimit}"
-                            Style="{StaticResource RoundedProgressBarStyle}"
-                            Value="{Binding SpentAmount}" />
-
-                        <TextBlock
-                            Margin="5,1,0,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="10"
-                            Foreground="{StaticResource Brush.Text.Secondary}">
-                            <TextBlock.ToolTip>
-                                <MultiBinding StringFormat="{}{0}/{1}">
-                                    <Binding Converter="{StaticResource MoneyFullDisplayConverter}" Path="SpentAmount" />
-                                    <Binding Converter="{StaticResource MoneyFullDisplayConverter}" Path="AccountLimit" />
-                                </MultiBinding>
-                            </TextBlock.ToolTip>
-                            <Run Text="{Binding SpentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
-                            <Run Text="/" />
-                            <Run Text="{Binding AccountLimit, Converter={StaticResource NumberWithCommasConverter}}" />
-                        </TextBlock>
-                    </StackPanel>
-                </Grid>
             </StackPanel>
         </Border>
 

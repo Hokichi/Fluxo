@@ -24,6 +24,7 @@ using MainViewModeToggleVM = Fluxo.ViewModels.Shell.Main.MainViewModeToggleVM;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 using NotificationPanelVM = Fluxo.ViewModels.Shell.Main.NotificationPanelVM;
 using SavingGoalsPanelVM = Fluxo.ViewModels.Shell.Main.SavingGoalsPanelVM;
+using SpentAllowancePanelVM = Fluxo.ViewModels.Shell.Main.SpentAllowancePanelVM;
 using StartupWizardVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardVM;
 
 namespace Fluxo.Extensions;
@@ -57,6 +58,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DaySpinnerVM>();
         services.AddSingleton<MainViewModeToggleVM>();
         services.AddSingleton<BudgetAllocationPanelVM>();
+        services.AddSingleton<SpentAllowancePanelVM>();
         services.AddSingleton<NotificationPanelVM>();
         services.AddSingleton<SavingGoalsPanelVM>();
         services.AddSingleton<DayOfWeekVM>();

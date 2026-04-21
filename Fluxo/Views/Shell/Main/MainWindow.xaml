@@ -397,42 +397,52 @@
                             Style="{StaticResource TextOnlyButtonStyle}" />
                     </Grid>
 
-                    <customControls:FadingScrollViewer
-                        Grid.Row="1"
-                        Margin="0,20,0,0"
-                        HorizontalAlignment="Stretch"
-                        CanContentScroll="False"
-                        HorizontalScrollBarVisibility="Auto"
-                        VerticalScrollBarVisibility="Disabled">
-                        <StackPanel Orientation="Horizontal">
-                            <Button
-                                x:Name="AddSpendingSourceButton"
-                                Margin="0,0,8,0"
-                                Click="OnAddSpendingSourceButtonClick"
-                                Style="{StaticResource SpendingSourceAddButtonStyle}" />
+                    <Grid Grid.Row="1" Margin="0,20,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-                            <ListView
-                                HorizontalAlignment="Left"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                BorderThickness="0"
-                                ItemContainerStyle="{StaticResource IncomeSources}"
-                                ItemsSource="{Binding SpendingSources}"
-                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                                <ListView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" />
-                                    </ItemsPanelTemplate>
-                                </ListView.ItemsPanel>
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <components:IncomeSource />
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </StackPanel>
-                    </customControls:FadingScrollViewer>
+                        <sections:SpentAllowancePanel
+                            x:Name="SpentAllowancePanelHost"
+                            DataContext="{Binding SpentAllowancePanel}" />
+
+                        <customControls:FadingScrollViewer
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            CanContentScroll="False"
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Disabled">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="AddSpendingSourceButton"
+                                    Margin="0,0,8,0"
+                                    Click="OnAddSpendingSourceButtonClick"
+                                    Style="{StaticResource SpendingSourceAddButtonStyle}" />
+
+                                <ListView
+                                    HorizontalAlignment="Left"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="0"
+                                    ItemContainerStyle="{StaticResource IncomeSources}"
+                                    ItemsSource="{Binding SpendingSources}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                    ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    <ListView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListView.ItemsPanel>
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate>
+                                            <components:IncomeSource />
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </StackPanel>
+                        </customControls:FadingScrollViewer>
+                    </Grid>
 
                     <Grid Grid.Row="2" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>

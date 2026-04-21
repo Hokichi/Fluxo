@@ -20,6 +20,9 @@ public partial class ExpensesList : UserControl
     public static readonly DependencyProperty SpentAmountProperty = DependencyProperty.Register(
         nameof(SpentAmount), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
 
+    public static readonly DependencyProperty PercentageProperty = DependencyProperty.Register(
+        nameof(Percentage), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
+
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(ICollectionView), typeof(ExpensesList),
         new PropertyMetadata(default(ICollectionView)));
@@ -48,6 +51,12 @@ public partial class ExpensesList : UserControl
     {
         get => (int)GetValue(SpentAmountProperty);
         set => SetValue(SpentAmountProperty, value);
+    }
+
+    public int Percentage
+    {
+        get => (int)GetValue(PercentageProperty);
+        set => SetValue(PercentageProperty, value);
     }
 
     public ICollectionView ItemsSource

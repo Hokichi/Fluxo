@@ -21,6 +21,7 @@ public partial class MainVM : ObservableRecipient
         IDataOperationRunner dataOperationRunner,
         Main.NotificationPanelVM notificationPanel,
         Main.BudgetAllocationPanelVM budgetPanel,
+        Main.SpentAllowancePanelVM spentAllowancePanel,
         Main.SavingGoalsPanelVM savingGoalsPanel,
         Main.DaySpinnerVM daySpinner,
         Main.MainViewModeToggleVM viewModeToggle)
@@ -28,6 +29,7 @@ public partial class MainVM : ObservableRecipient
         _dataOperationRunner = dataOperationRunner;
         NotificationPanel = notificationPanel;
         BudgetPanel = budgetPanel;
+        SpentAllowancePanel = spentAllowancePanel;
         SavingGoalsPanel = savingGoalsPanel;
         DaySpinner = daySpinner;
         ViewModeToggle = viewModeToggle;
@@ -40,6 +42,7 @@ public partial class MainVM : ObservableRecipient
 
     public Main.NotificationPanelVM NotificationPanel { get; }
     public Main.BudgetAllocationPanelVM BudgetPanel { get; }
+    public Main.SpentAllowancePanelVM SpentAllowancePanel { get; }
     public Main.SavingGoalsPanelVM SavingGoalsPanel { get; }
     public Main.DaySpinnerVM DaySpinner { get; }
     public Main.MainViewModeToggleVM ViewModeToggle { get; }
@@ -56,6 +59,7 @@ public partial class MainVM : ObservableRecipient
         await LoadUserSettingsAsync();
         await Task.WhenAll(
             BudgetPanel.LoadAsync(),
+            SpentAllowancePanel.LoadAsync(),
             NotificationPanel.LoadAsync(),
             SavingGoalsPanel.LoadAsync());
         ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
@@ -67,6 +71,7 @@ public partial class MainVM : ObservableRecipient
     {
         await Task.WhenAll(
             BudgetPanel.LoadAsync(),
+            SpentAllowancePanel.LoadAsync(),
             NotificationPanel.LoadAsync(),
             SavingGoalsPanel.LoadAsync());
     }

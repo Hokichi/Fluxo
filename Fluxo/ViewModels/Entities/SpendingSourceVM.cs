@@ -19,6 +19,7 @@ public partial class SpendingSourceVM : ObservableObject
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
     [ObservableProperty] private decimal _spentAmount;
     [ObservableProperty] private bool _isSelected;
+    [ObservableProperty] private decimal _difference;
 
     public bool IsCashOrChecking =>
         SpendingSourceType is SpendingSourceType.Cash or SpendingSourceType.Checking;
@@ -60,10 +61,6 @@ public partial class SpendingSourceVM : ObservableObject
     partial void OnSpentAmountChanged(decimal value)
     {
         OnPropertyChanged(nameof(PrimaryAmount));
-    }
-
-    partial void OnShowOnUIChanged(bool value)
-    {
     }
 
     partial void OnIsEnabledChanged(bool value)
