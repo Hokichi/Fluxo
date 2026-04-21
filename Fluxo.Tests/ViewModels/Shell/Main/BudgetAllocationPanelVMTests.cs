@@ -94,6 +94,32 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
+    public void LoadAsync_ExposesAllocationPercentagesForUiFromUserSettings()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(
+                messenger,
+                CreateExpenseLogs(),
+                CreateTags(),
+                CreateSpendingSources(),
+                settings:
+                [
+                    new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "40" },
+                    new UserSettings { Name = UserSettingNames.WantsThreshold, Value = "35" },
+                    new UserSettings { Name = UserSettingNames.InvestThreshold, Value = "25" }
+                ]);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(40, vm.NeedsAllocationPercentage);
+            Assert.Equal(35, vm.WantsAllocationPercentage);
+            Assert.Equal(25, vm.InvestAllocationPercentage);
+        });
+    }
+
+    [Fact]
     public void LoadAsync_FallsBackToDefaultBudgetThresholdsWhenSettingsInvalid()
     {
         RunInSta(() =>

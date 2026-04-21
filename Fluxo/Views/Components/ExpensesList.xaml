@@ -438,7 +438,7 @@
                                 VerticalAlignment="Center"
                                 FontFamily="{StaticResource Light}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="50%" />
+                                Text="{Binding Allocation, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, StringFormat={}{0}%}" />
                         </Border>
                     </StackPanel>
 

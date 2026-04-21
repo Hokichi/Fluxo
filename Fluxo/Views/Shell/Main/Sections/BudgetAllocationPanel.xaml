@@ -150,6 +150,7 @@
 
             <components:ExpensesList
                 Title="NEEDS"
+                Allocation="{Binding NeedsAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Needs}"
                 IsListEmpty="{Binding IsNeedsEmpty}"
@@ -161,6 +162,7 @@
             <components:ExpensesList
                 Title="WANTS"
                 Grid.Column="2"
+                Allocation="{Binding WantsAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Wants}"
                 IsListEmpty="{Binding IsWantsEmpty}"
@@ -172,6 +174,7 @@
             <components:ExpensesList
                 Title="INVEST"
                 Grid.Column="4"
+                Allocation="{Binding InvestAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Investments}"
                 IsListEmpty="{Binding IsInvestEmpty}"

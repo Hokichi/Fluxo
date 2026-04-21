@@ -37,9 +37,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLogVM> _allIncomeLogs = [];
     private bool _isSynchronizingTagSelections;
-    private decimal _needsThreshold = 0.5m;
-    private decimal _wantsThreshold = 0.3m;
-    private decimal _investThreshold = 0.2m;
     private (DateTime From, DateTime To)? _selectedRange = (DateTime.Today, DateTime.Today);
 
     public BudgetAllocationPanelVM(
@@ -128,6 +125,21 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     [ObservableProperty]
     private int? _selectedSpendingSourceId;
+
+    [ObservableProperty]
+    private decimal _needsThreshold = 0.5m;
+
+    [ObservableProperty]
+    private decimal _wantsThreshold = 0.3m;
+
+    [ObservableProperty]
+    private decimal _investThreshold = 0.2m;
+
+    public int NeedsAllocationPercentage => ConvertThresholdToPercentage(NeedsThreshold);
+
+    public int WantsAllocationPercentage => ConvertThresholdToPercentage(WantsThreshold);
+
+    public int InvestAllocationPercentage => ConvertThresholdToPercentage(InvestThreshold);
 
     public bool HasOtherTags => OtherTags.Count > 0;
 
@@ -219,6 +231,21 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         SynchronizeSpendingSourceSelections(value);
         RefreshExpenseViews();
+    }
+
+    partial void OnNeedsThresholdChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(NeedsAllocationPercentage));
+    }
+
+    partial void OnWantsThresholdChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(WantsAllocationPercentage));
+    }
+
+    partial void OnInvestThresholdChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(InvestAllocationPercentage));
     }
 
     partial void OnSelectedVisibleTagChanged(ExpenseTagVM? value)
@@ -332,9 +359,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         var totalIncomeAmount = _spendingSources.Sum(source => source.Balance);
 
-        NeedsAvailable = decimal.Round(totalIncomeAmount * _needsThreshold, 2);
-        WantsAvailable = decimal.Round(totalIncomeAmount * _wantsThreshold, 2);
-        InvestAvailable = decimal.Round(totalIncomeAmount * _investThreshold, 2);
+        NeedsAvailable = decimal.Round(totalIncomeAmount * NeedsThreshold, 2);
+        WantsAvailable = decimal.Round(totalIncomeAmount * WantsThreshold, 2);
+        InvestAvailable = decimal.Round(totalIncomeAmount * InvestThreshold, 2);
 
         NeedsSpent = _allExpenseLogs
             .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs)
@@ -370,9 +397,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             return settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
         }, cancellationToken);
 
-        _needsThreshold = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
-        _wantsThreshold = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
-        _investThreshold = ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
+        NeedsThreshold = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
+        WantsThreshold = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
+        InvestThreshold = ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
     }
 
     private static decimal ParsePercentage(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)
@@ -396,6 +423,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             return 0;
 
         return (int)Math.Round(spentAmount / availableAmount * 100, MidpointRounding.AwayFromZero);
+    }
+
+    private static int ConvertThresholdToPercentage(decimal threshold)
+    {
+        return (int)Math.Round(threshold * 100m, MidpointRounding.AwayFromZero);
     }
 
     private void ApplyVisibleExpenseLogs()

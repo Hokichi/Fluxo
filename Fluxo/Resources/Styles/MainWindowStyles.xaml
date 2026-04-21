@@ -225,7 +225,7 @@
                         FontSize="13"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="{Binding Name}"
-                        TextWrapping="Wrap" />
+                        TextTrimming="CharacterEllipsis" />
                     <TextBlock
                         Margin="0,8,0,0"
                         FontFamily="{StaticResource Medium}"

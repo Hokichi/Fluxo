@@ -23,6 +23,9 @@ public partial class ExpensesList : UserControl
     public static readonly DependencyProperty TotalAmountProperty = DependencyProperty.Register(
         nameof(TotalAmount), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
 
+    public static readonly DependencyProperty AllocationProperty = DependencyProperty.Register(
+        nameof(Allocation), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
+
     public static readonly DependencyProperty PercentageProperty = DependencyProperty.Register(
         nameof(Percentage), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
 
@@ -58,8 +61,14 @@ public partial class ExpensesList : UserControl
 
     public int TotalAmount
     {
-        get => (int)GetValue(SpentAmountProperty);
-        set => SetValue(SpentAmountProperty, value);
+        get => (int)GetValue(TotalAmountProperty);
+        set => SetValue(TotalAmountProperty, value);
+    }
+
+    public int Allocation
+    {
+        get => (int)GetValue(AllocationProperty);
+        set => SetValue(AllocationProperty, value);
     }
 
     public int Percentage
