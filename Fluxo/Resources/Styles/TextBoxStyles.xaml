@@ -78,7 +78,10 @@
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
     </Style>
 
-    <Style x:Key="RoundedMoneyTextInputStyle" BasedOn="{StaticResource RoundedTextInputStyle}" TargetType="{x:Type customControls:MoneyTextBox}">
+    <Style
+        x:Key="RoundedMoneyTextInputStyle"
+        BasedOn="{StaticResource RoundedTextInputStyle}"
+        TargetType="{x:Type customControls:MoneyTextBox}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type customControls:MoneyTextBox}">
@@ -119,13 +122,6 @@
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
                         </Trigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="ShouldHighlightWhenInvalid" Value="True" />
-                                <Condition Property="Validation.HasError" Value="True" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="InputRoot" Property="BorderBrush" Value="{StaticResource Brush.Danger}" />
-                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

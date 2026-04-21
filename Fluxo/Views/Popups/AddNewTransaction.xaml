@@ -118,36 +118,10 @@
                 <StackPanel Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
-                        <Border Style="{StaticResource PopupFieldBorderStyle}">
-                            <Grid>
-                                <customControls:MoneyTextBox
-                                    x:Name="ExpenseAmountTextBox"
-                                    Style="{StaticResource PopupTextBoxStyle}"
-                                    Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock
-                                    Margin="0,1,0,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="{DynamicResource Medium}"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource Brush.Text.Muted}"
-                                    IsHitTestVisible="False"
-                                    Text="0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Grid>
-                        </Border>
+                        <customControls:MoneyTextBox
+                            x:Name="ExpenseAmountTextBox"
+                            Style="{StaticResource RoundedMoneyTextInputStyle}"
+                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <Grid Margin="0,16,0,0">
@@ -219,36 +193,10 @@
 
                         <StackPanel Grid.Column="2">
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
-                            <Border Style="{StaticResource PopupFieldBorderStyle}">
-                                <Grid>
-                                    <customControls:MoneyTextBox
-                                        x:Name="IncomeAmountTextBox"
-                                        Style="{StaticResource PopupTextBoxStyle}"
-                                        Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock
-                                        Margin="0,1,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{DynamicResource Medium}"
-                                        FontSize="12"
-                                        Foreground="{DynamicResource Brush.Text.Muted}"
-                                        IsHitTestVisible="False"
-                                        Text="0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Text, ElementName=IncomeAmountTextBox}" Value="">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Text, ElementName=IncomeAmountTextBox}" Value="{x:Null}">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
+                            <customControls:MoneyTextBox
+                                x:Name="IncomeAmountTextBox"
+                                Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </Grid>
 
@@ -279,36 +227,10 @@
                 <StackPanel Visibility="{Binding IsGoal, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
-                        <Border Style="{StaticResource PopupFieldBorderStyle}">
-                            <Grid>
-                                <customControls:MoneyTextBox
-                                    x:Name="GoalAmountTextBox"
-                                    Style="{StaticResource PopupTextBoxStyle}"
-                                    Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock
-                                    Margin="0,1,0,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="{DynamicResource Medium}"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource Brush.Text.Muted}"
-                                    IsHitTestVisible="False"
-                                    Text="0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Text, ElementName=GoalAmountTextBox}" Value="">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Text, ElementName=GoalAmountTextBox}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Grid>
-                        </Border>
+                        <customControls:MoneyTextBox
+                            x:Name="GoalAmountTextBox"
+                            Style="{StaticResource RoundedMoneyTextInputStyle}"
+                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <Grid Margin="0,16,0,0">

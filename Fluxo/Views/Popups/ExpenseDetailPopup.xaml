@@ -76,37 +76,11 @@
 
             <StackPanel Grid.Row="0">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
-                <Border Style="{StaticResource PopupFieldBorderStyle}">
-                    <Grid>
-                        <customControls:MoneyTextBox
-                            x:Name="ExpenseAmountTextBox"
-                            IsReadOnly="{Binding AreFieldsReadOnly}"
-                            Style="{StaticResource PopupTextBoxStyle}"
-                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock
-                            Margin="0,1,0,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{DynamicResource Medium}"
-                            FontSize="12"
-                            Foreground="{DynamicResource Brush.Text.Muted}"
-                            IsHitTestVisible="False"
-                            Text="0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Text, ElementName=ExpenseAmountTextBox}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                </Border>
+                <customControls:MoneyTextBox
+                    x:Name="ExpenseAmountTextBox"
+                    IsReadOnly="{Binding AreFieldsReadOnly}"
+                    Style="{StaticResource RoundedMoneyTextInputStyle}"
+                    Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
 
             <Grid Grid.Row="1" Margin="0,16,0,0">
