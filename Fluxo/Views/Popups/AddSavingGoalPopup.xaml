@@ -77,14 +77,14 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Target Amount" />
                         <customControls:MoneyTextBox
-                            Style="{StaticResource RoundedTextInputStyle}"
+                            Style="{StaticResource RoundedMoneyTextInputStyle}"
                             Text="{Binding TargetAmountText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
                         <customControls:MoneyTextBox
-                            Style="{StaticResource RoundedTextInputStyle}"
+                            Style="{StaticResource RoundedMoneyTextInputStyle}"
                             Text="{Binding CurrentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                 </Grid>

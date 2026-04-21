@@ -201,7 +201,7 @@
                                                     Grid.Column="2"
                                                     AllowDecimal="False"
                                                     Language="en-US"
-                                                    Style="{StaticResource RoundedTextInputStyle}"
+                                                    Style="{StaticResource RoundedMoneyTextInputStyle}"
                                                     Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                     UseCommaAsGroupSeparator="True" />
 
@@ -434,7 +434,7 @@
                                                     Grid.Column="2"
                                                     AllowDecimal="False"
                                                     Language="en-US"
-                                                    Style="{StaticResource RoundedTextInputStyle}"
+                                                    Style="{StaticResource RoundedMoneyTextInputStyle}"
                                                     Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                     UseCommaAsGroupSeparator="True" />
 

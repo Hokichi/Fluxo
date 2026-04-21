@@ -7,6 +7,12 @@ namespace Fluxo.Views.CustomControls;
 
 public class MoneyTextBox : TextBox
 {
+    public static readonly DependencyProperty CornerRadiusProperty = DependencyProperty.Register(
+        nameof(CornerRadius),
+        typeof(CornerRadius),
+        typeof(MoneyTextBox),
+        new PropertyMetadata(new CornerRadius(12)));
+
     public static readonly DependencyProperty AllowDecimalProperty = DependencyProperty.Register(
         nameof(AllowDecimal),
         typeof(bool),
@@ -18,6 +24,12 @@ public class MoneyTextBox : TextBox
         typeof(bool),
         typeof(MoneyTextBox),
         new PropertyMetadata(false, OnFormattingPropertyChanged));
+
+    public static readonly DependencyProperty ShouldHighlightWhenInvalidProperty = DependencyProperty.Register(
+        nameof(ShouldHighlightWhenInvalid),
+        typeof(bool),
+        typeof(MoneyTextBox),
+        new PropertyMetadata(false));
 
     private bool _isInternalUpdate;
 
@@ -33,10 +45,22 @@ public class MoneyTextBox : TextBox
         set => SetValue(AllowDecimalProperty, value);
     }
 
+    public CornerRadius CornerRadius
+    {
+        get => (CornerRadius)GetValue(CornerRadiusProperty);
+        set => SetValue(CornerRadiusProperty, value);
+    }
+
     public bool UseCommaAsGroupSeparator
     {
         get => (bool)GetValue(UseCommaAsGroupSeparatorProperty);
         set => SetValue(UseCommaAsGroupSeparatorProperty, value);
+    }
+
+    public bool ShouldHighlightWhenInvalid
+    {
+        get => (bool)GetValue(ShouldHighlightWhenInvalidProperty);
+        set => SetValue(ShouldHighlightWhenInvalidProperty, value);
     }
 
     private static void OnFormattingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

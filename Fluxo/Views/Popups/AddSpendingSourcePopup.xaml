@@ -69,17 +69,17 @@
                         <StackPanel Grid.Column="2">
                             <StackPanel Visibility="{Binding IsCashLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
-                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
-                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Account Limit" />
-                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -107,7 +107,7 @@
 
                             <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
-                                <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>

@@ -63,7 +63,7 @@
             <customControls:MoneyTextBox
                 x:Name="AmountTextBox"
                 Grid.Row="2"
-                Style="{StaticResource RoundedTextInputStyle}"
+                Style="{StaticResource RoundedMoneyTextInputStyle}"
                 Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 
             <TextBlock

@@ -81,7 +81,7 @@
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Amount" />
-                        <customControls:MoneyTextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
+                        <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
                             Margin="0,14,0,8"
