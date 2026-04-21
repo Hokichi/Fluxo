@@ -48,6 +48,19 @@ public sealed class PlanningSnapshot
             ImportedFixedExpenseIds);
     }
 
+    public PlanningSnapshot WithoutZeroAmountEntries()
+    {
+        return new PlanningSnapshot(
+            Incomes.Where(income => income.Amount != 0m),
+            Expenses.Where(expense => expense.Amount != 0m),
+            NeedsPercent,
+            WantsPercent,
+            InvestPercent,
+            FixedExpensesLoaded,
+            CachedFixedExpenses,
+            ImportedFixedExpenseIds);
+    }
+
     internal static IncomeLogVM CopyIncome(IncomeLogVM source)
     {
         return new IncomeLogVM

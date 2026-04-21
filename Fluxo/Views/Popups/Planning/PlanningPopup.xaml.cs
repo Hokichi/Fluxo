@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
@@ -13,8 +14,8 @@ namespace Fluxo.Views.Popups.Planning;
 public partial class PlanningPopup : BasePopup
 {
     private const int IncomesStep = 0;
-    private const int AllocationStep = 1;
-    private const int ExpensesStep = 2;
+    private const int ExpensesStep = 1;
+    private const int AllocationStep = 2;
     private const int StepCount = 3;
     private static readonly Duration StepFadeDuration = new(TimeSpan.FromMilliseconds(150));
 
@@ -97,7 +98,7 @@ public partial class PlanningPopup : BasePopup
         }
         catch (Exception ex)
         {
-            FluxoMessageBox.Show(this, $"Unable to import fixed expenses. {ex.Message}", "Planning",
+            FluxoMessageBox.Show(this, "Unable to import fixed expenses. " + ex.Message, "Planning",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         finally
@@ -140,7 +141,7 @@ public partial class PlanningPopup : BasePopup
         if (_currentStep == AllocationStep && !_viewModel.IsAllocationValid)
             return;
 
-        if (_currentStep == ExpensesStep)
+        if (_currentStep == AllocationStep)
         {
             _completionSnapshot = _viewModel.BuildSnapshot();
             _skipDiscardPrompt = true;
@@ -154,6 +155,9 @@ public partial class PlanningPopup : BasePopup
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(PlanningPopupVM.TotalIncome))
+            UpdateAddIncomeButtonState();
+
         if (e.PropertyName is nameof(PlanningPopupVM.NeedsPercent)
             or nameof(PlanningPopupVM.WantsPercent)
             or nameof(PlanningPopupVM.InvestPercent)
@@ -166,7 +170,7 @@ public partial class PlanningPopup : BasePopup
 
     private async Task TransitionToStepAsync(int targetStep)
     {
-        if (targetStep < IncomesStep || targetStep > ExpensesStep || targetStep == _currentStep)
+        if (targetStep < IncomesStep || targetStep > AllocationStep || targetStep == _currentStep)
             return;
 
         var currentPanel = GetPanelForStep(_currentStep);
@@ -237,20 +241,29 @@ public partial class PlanningPopup : BasePopup
     private void UpdateStep()
     {
         BackButton.IsEnabled = !_isStepTransitioning && _currentStep > IncomesStep;
+        BackButton.Visibility = _currentStep == IncomesStep ? Visibility.Collapsed : Visibility.Visible;
         NextButton.IsEnabled = !_isStepTransitioning && (_currentStep != AllocationStep || _viewModel.IsAllocationValid);
-        NextButton.ButtonIcon = FindResource(_currentStep == ExpensesStep
+        NextButton.ButtonIcon = FindResource(_currentStep == AllocationStep
             ? "PlanningPopup.CheckIcon"
             : "PlanningPopup.AngleRightIcon");
-        NextButton.ToolTip = _currentStep == ExpensesStep ? "Finish" : "Next";
+        NextButton.ToolTip = _currentStep == AllocationStep ? "Finish" : "Next";
+
+        UpdateAddIncomeButtonState();
 
         StepNavigator.StepCount = StepCount;
         StepNavigator.CurrentStep = _currentStep + 1;
     }
 
+    private void UpdateAddIncomeButtonState()
+    {
+        var lastIncome = _viewModel.Incomes.LastOrDefault();
+        AddIncomeButton.IsEnabled = !_isStepTransitioning && (lastIncome is null || lastIncome.Amount != 0m);
+    }
+
     private void UpdateAllocationSummary()
     {
         var total = _viewModel.NeedsPercent + _viewModel.WantsPercent + _viewModel.InvestPercent;
-        AllocationTotalText.Text = $"{total}%";
+        AllocationTotalText.Text = total + "%";
 
         if (_viewModel.IsAllocationValid)
         {
@@ -260,7 +273,7 @@ public partial class PlanningPopup : BasePopup
         }
 
         AllocationValidationHint.Visibility = Visibility.Visible;
-        AllocationValidationHint.Text = $"Current total is {total}%. Adjust the sliders until the allocation equals 100%.";
+        AllocationValidationHint.Text = "Current total is " + total + "%. Adjust the sliders until the allocation equals 100%.";
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -270,7 +283,16 @@ public partial class PlanningPopup : BasePopup
         _viewModel.Dispose();
 
         if (DialogResult == true && _completionSnapshot is { } snapshot)
-            Dispatcher.BeginInvoke(() => _dialogService.ShowPlanningReport(snapshot, Owner));
+            Dispatcher.BeginInvoke(() => _dialogService.ShowPlanningReport(snapshot.WithoutZeroAmountEntries(), Owner));
+    }
+
+    private void OnPopupPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || Keyboard.Modifiers != ModifierKeys.None || _isStepTransitioning)
+            return;
+
+        e.Handled = true;
+        OnNextOrFinishClick(NextButton, new RoutedEventArgs(Button.ClickEvent, NextButton));
     }
 
     protected override void OnCloseButtonClick()

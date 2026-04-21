@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Fluxo.Converters;
 
 namespace Fluxo.Views.CustomControls;
 
@@ -31,10 +32,17 @@ public class MoneyTextBox : TextBox
         typeof(MoneyTextBox),
         new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsZeroAmountProperty = DependencyProperty.Register(
+        nameof(IsZeroAmount),
+        typeof(bool),
+        typeof(MoneyTextBox),
+        new PropertyMetadata(false));
+
     public MoneyTextBox()
     {
         PreviewTextInput += OnPreviewTextInput;
         DataObject.AddPastingHandler(this, OnPasting);
+        UpdateIsZeroAmountState();
     }
 
     public bool AllowDecimal
@@ -59,6 +67,18 @@ public class MoneyTextBox : TextBox
     {
         get => (bool)GetValue(ShouldHighlightWhenInvalidProperty);
         set => SetValue(ShouldHighlightWhenInvalidProperty, value);
+    }
+
+    public bool IsZeroAmount
+    {
+        get => (bool)GetValue(IsZeroAmountProperty);
+        private set => SetValue(IsZeroAmountProperty, value);
+    }
+
+    protected override void OnTextChanged(TextChangedEventArgs e)
+    {
+        base.OnTextChanged(e);
+        UpdateIsZeroAmountState();
     }
 
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
@@ -127,5 +147,22 @@ public class MoneyTextBox : TextBox
     {
         var groupSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
         return character == ',' || groupSeparator.Contains(character);
+    }
+
+    private void UpdateIsZeroAmountState()
+    {
+        var canonical = MoneyFormatUtility.BuildCanonicalNumber(Text ?? string.Empty, CultureInfo.CurrentCulture);
+        if (canonical.Length == 0 ||
+            !decimal.TryParse(
+                canonical,
+                NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+                CultureInfo.InvariantCulture,
+                out var value))
+        {
+            IsZeroAmount = false;
+            return;
+        }
+
+        IsZeroAmount = value == 0m;
     }
 }

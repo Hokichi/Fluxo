@@ -13,6 +13,7 @@ public class BasePopup : Window, IPopupHost
 {
     private const int OverlayAnimDuration = 200; // ms
     private const int PopupAnimDuration   = 180; // ms
+    private const double RecenterDeltaTolerance = 0.1;
 
     // --- PopupTitle ---
     public static readonly DependencyProperty PopupTitleProperty =
@@ -96,6 +97,7 @@ public class BasePopup : Window, IPopupHost
 
         Loaded += OnLoaded;
         Closed += OnClosed;
+        SizeChanged += OnSizeChanged;
     }
 
     public string PopupTitle
@@ -298,6 +300,86 @@ public class BasePopup : Window, IPopupHost
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         BeginAnimation(OpacityProperty, fadeIn);
+    }
+
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (!IsLoaded || _isAnimatingClose)
+            return;
+
+        if (!e.WidthChanged && !e.HeightChanged)
+            return;
+
+        if (e.PreviousSize.Width <= 0 || e.PreviousSize.Height <= 0)
+            return;
+
+        RecenterAnimated(e.PreviousSize, e.NewSize);
+    }
+
+    private void RecenterAnimated(Size previousSize, Size newSize)
+    {
+        var (targetLeft, targetTop) = TryGetOwnerCenteredPosition() ??
+                                      GetCenterPreservingPosition(previousSize, newSize);
+
+        if (double.IsNaN(targetLeft) || double.IsInfinity(targetLeft) ||
+            double.IsNaN(targetTop) || double.IsInfinity(targetTop))
+            return;
+
+        var leftDelta = Math.Abs(targetLeft - Left);
+        var topDelta  = Math.Abs(targetTop - Top);
+
+        if (leftDelta < RecenterDeltaTolerance && topDelta < RecenterDeltaTolerance)
+            return;
+
+        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var duration = TimeSpan.FromMilliseconds(PopupAnimDuration);
+
+        if (leftDelta >= RecenterDeltaTolerance)
+        {
+            BeginAnimation(LeftProperty, new DoubleAnimation
+            {
+                To = targetLeft,
+                Duration = duration,
+                EasingFunction = easing
+            });
+        }
+
+        if (topDelta >= RecenterDeltaTolerance)
+        {
+            BeginAnimation(TopProperty, new DoubleAnimation
+            {
+                To = targetTop,
+                Duration = duration,
+                EasingFunction = easing
+            });
+        }
+    }
+
+    private (double Left, double Top)? TryGetOwnerCenteredPosition()
+    {
+        if (Owner is null || !Owner.IsVisible)
+            return null;
+
+        var ownerWidth = Owner.ActualWidth > 0 ? Owner.ActualWidth : Owner.Width;
+        var ownerHeight = Owner.ActualHeight > 0 ? Owner.ActualHeight : Owner.Height;
+
+        if (double.IsNaN(ownerWidth) || double.IsNaN(ownerHeight) ||
+            double.IsInfinity(ownerWidth) || double.IsInfinity(ownerHeight))
+            return null;
+
+        var centeredLeft = Owner.Left + ((ownerWidth - ActualWidth) / 2d);
+        var centeredTop = Owner.Top + ((ownerHeight - ActualHeight) / 2d);
+        return (centeredLeft, centeredTop);
+    }
+
+    private (double Left, double Top) GetCenterPreservingPosition(Size previousSize, Size newSize)
+    {
+        var deltaWidth = newSize.Width - previousSize.Width;
+        var deltaHeight = newSize.Height - previousSize.Height;
+
+        var centeredLeft = Left - (deltaWidth / 2d);
+        var centeredTop = Top - (deltaHeight / 2d);
+        return (centeredLeft, centeredTop);
     }
 
     protected override void OnClosing(CancelEventArgs e)

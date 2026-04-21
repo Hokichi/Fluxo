@@ -302,7 +302,7 @@
                                         FontFamily="{StaticResource Bold}"
                                         FontSize="18"
                                         Foreground="{StaticResource Brush.Success}"
-                                        Text="{Binding TotalIncome, StringFormat={}{0:C}}" />
+                                        Text="{Binding TotalIncome, StringFormat={}{0:N0}}" />
                                 </Grid>
                             </Border>
 
@@ -314,7 +314,7 @@
                                         FontFamily="{StaticResource Bold}"
                                         FontSize="18"
                                         Foreground="{StaticResource Brush.Danger}"
-                                        Text="{Binding TotalExpenses, StringFormat={}{0:C}}" />
+                                        Text="{Binding TotalExpenses, StringFormat={}{0:N0}}" />
                                 </Grid>
                             </Border>
 
@@ -326,7 +326,7 @@
                                         FontFamily="{StaticResource Bold}"
                                         FontSize="18"
                                         Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding Balance, StringFormat={}{0:C}}" />
+                                        Text="{Binding Balance, StringFormat={}{0:N0}}" />
                                 </Grid>
                             </Border>
                         </StackPanel>
