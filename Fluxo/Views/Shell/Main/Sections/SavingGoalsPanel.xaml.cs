@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Shell;
 using SavingGoalsPanelVM = Fluxo.ViewModels.Shell.Main.SavingGoalsPanelVM;
 
 namespace Fluxo.Views.Shell.Main.Sections;
@@ -114,12 +113,6 @@ public partial class SavingGoalsPanel : UserControl
             return;
 
         _viewModel.NavigateNext();
-    }
-
-    private void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
-    {
-        if (Window.GetWindow(this) is Fluxo.Views.Shell.Main.MainWindow mainWindow)
-            mainWindow.OpenAddSavingGoalPopup();
     }
 
     private void OnCarouselViewportPreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

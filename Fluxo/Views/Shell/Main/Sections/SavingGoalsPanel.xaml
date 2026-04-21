@@ -2,15 +2,15 @@
     x:Class="Fluxo.Views.Shell.Main.Sections.SavingGoalsPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
-    xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks">
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls">
     <UserControl.Resources>
         <Style
-            x:Key="SavingGoalCarouselArrowButtonStyle"
-            BasedOn="{StaticResource SpinnerArrowButtonStyle}"
-            TargetType="Button">
+            x:Key="SavingGoalHeaderNavBalloonButtonStyle"
+            BasedOn="{StaticResource ToolbarActionBalloonButtonStyle}"
+            TargetType="{x:Type customControls:BalloonButton}">
             <Setter Property="Width" Value="24" />
             <Setter Property="Height" Value="24" />
+            <Setter Property="IconSize" Value="11" />
         </Style>
     </UserControl.Resources>
 
@@ -26,7 +26,6 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <TextBlock
@@ -36,12 +35,28 @@
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Saving Goals" />
 
-                <customControls:BalloonButton
-                    Grid.Column="2"
-                    Margin="8,0,0,0"
-                    Click="OnAddSavingGoalClick"
-                    Style="{StaticResource TagAddBalloonButtonStyle}"
-                    ToolTip="Add New Goal" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <customControls:BalloonButton
+                        Margin="8,0,0,0"
+                        ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                        Click="OnNavigatePreviousClick"
+                        RenderTransformOrigin="0.5,0.5"
+                        Style="{StaticResource SavingGoalHeaderNavBalloonButtonStyle}"
+                        ToolTip="Previous Goal"
+                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <customControls:BalloonButton.RenderTransform>
+                            <ScaleTransform ScaleX="-1" />
+                        </customControls:BalloonButton.RenderTransform>
+                    </customControls:BalloonButton>
+
+                    <customControls:BalloonButton
+                        Margin="8,0,0,0"
+                        ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                        Click="OnNavigateNextClick"
+                        Style="{StaticResource SavingGoalHeaderNavBalloonButtonStyle}"
+                        ToolTip="Next Goal"
+                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </StackPanel>
             </Grid>
 
             <TextBlock
@@ -63,28 +78,12 @@
 
                 <Grid Grid.Row="0" VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="8" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="8" />
-                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-
-                    <Button
-                        Grid.Column="0"
-                        VerticalAlignment="Center"
-                        Click="OnNavigatePreviousClick"
-                        Style="{StaticResource SavingGoalCarouselArrowButtonStyle}"
-                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <icons:PackIconUnicons
-                            Height="12"
-                            Kind="AngleLeft"
-                            Style="{StaticResource SpinnerArrowIconStyle}" />
-                    </Button>
 
                     <Grid
                         x:Name="CarouselViewport"
-                        Grid.Column="2"
+                        Grid.Column="0"
                         Background="Transparent"
                         ClipToBounds="True"
                         LostMouseCapture="OnCarouselViewportLostMouseCapture"
@@ -99,18 +98,6 @@
                             IsHitTestVisible="False"
                             Visibility="Collapsed" />
                     </Grid>
-
-                    <Button
-                        Grid.Column="4"
-                        VerticalAlignment="Center"
-                        Click="OnNavigateNextClick"
-                        Style="{StaticResource SavingGoalCarouselArrowButtonStyle}"
-                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <icons:PackIconUnicons
-                            Height="12"
-                            Kind="AngleRight"
-                            Style="{StaticResource SpinnerArrowIconStyle}" />
-                    </Button>
                 </Grid>
 
                 <customControls:StepNavigatorControl
