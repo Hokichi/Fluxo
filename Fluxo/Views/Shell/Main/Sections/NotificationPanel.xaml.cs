@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Shell.Main;
 using NotificationPanelVM = Fluxo.ViewModels.Shell.Main.NotificationPanelVM;
 
 namespace Fluxo.Views.Shell.Main.Sections;
@@ -18,7 +18,7 @@ public partial class NotificationPanel : UserControl
     private bool _isAnimating;
     private bool _isSwipeTracking;
     private Point _swipeStartPoint;
-    private NotificationVM? _displayedNotification;
+    private NotificationItemVM? _displayedNotification;
     private NotificationPanelVM? _viewModel;
 
     public NotificationPanel()
@@ -78,7 +78,7 @@ public partial class NotificationPanel : UserControl
         if (_viewModel is null)
             return;
 
-        if (e.PropertyName is nameof(NotificationPanelVM.CurrentNotification) or nameof(NotificationPanelVM.HasNotifications))
+        if (e.PropertyName is nameof(NotificationPanelVM.CurrentNotificationItem) or nameof(NotificationPanelVM.HasNotifications))
         {
             if (!Dispatcher.CheckAccess())
             {
@@ -147,7 +147,7 @@ public partial class NotificationPanel : UserControl
             return;
         }
 
-        var incomingNotification = _viewModel.CurrentNotification;
+        var incomingNotification = _viewModel.CurrentNotificationItem;
         if (_isAnimating)
             return;
 
@@ -189,7 +189,7 @@ public partial class NotificationPanel : UserControl
         IncomingNotificationPresenter.Content = null;
         IncomingNotificationPresenter.Visibility = Visibility.Collapsed;
 
-        _displayedNotification = _viewModel?.CurrentNotification;
+        _displayedNotification = _viewModel?.CurrentNotificationItem;
         CurrentNotificationPresenter.Content = _displayedNotification;
 
         if (_displayedNotification is null)
@@ -204,7 +204,7 @@ public partial class NotificationPanel : UserControl
         EmptyStateText.Visibility = Visibility.Collapsed;
     }
 
-    private void RunSwipeAnimation(NotificationVM outgoingNotification, NotificationVM incomingNotification, int navigationDirection)
+    private void RunSwipeAnimation(NotificationItemVM outgoingNotification, NotificationItemVM incomingNotification, int navigationDirection)
     {
         _isAnimating = true;
         EnsureTransforms();
@@ -268,7 +268,7 @@ public partial class NotificationPanel : UserControl
         incomingTransform.BeginAnimation(TranslateTransform.XProperty, incomingSlide);
     }
 
-    private void RunFadeToEmptyAnimation(NotificationVM outgoingNotification)
+    private void RunFadeToEmptyAnimation(NotificationItemVM outgoingNotification)
     {
         _isAnimating = true;
         EnsureTransforms();

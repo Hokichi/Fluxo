@@ -5,6 +5,7 @@ using Fluxo.Mappings;
 using Fluxo.Services.Mappings;
 using Fluxo.Services.Persistence;
 using Fluxo.Services.Dialogs;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -74,6 +75,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddSpendingSourceVM>();
         services.AddTransient<AddFixedExpenseVM>();
         services.AddTransient<AddSavingGoalVM>();
+        services.AddTransient<NotificationChecklistActionVM>();
+        services.AddTransient<GoalDeadlineActionVM>();
         services.AddTransient<PlanningPopupVM>();
         services.AddTransient<PlanningReportVM>();
         services.AddTransient<AnalyticsVM>();
@@ -103,11 +106,15 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddSpendingSourcePopup>();
         services.AddTransient<AddFixedExpensePopup>();
         services.AddTransient<AddSavingGoalPopup>();
+        services.AddTransient<NotificationChecklistActionPopup>();
+        services.AddTransient<GoalDeadlineActionPopup>();
         services.AddTransient<SettingsPopup>();
         services.AddTransient<StartupWizardPopup>();
         services.AddTransient<PlanningPopup>();
         services.AddTransient<PlanningReportPopup>();
         services.AddTransient<AnalyticsPopup>();
+        services.AddTransient<INotificationGroupingService, NotificationGroupingService>();
+        services.AddTransient<INotificationActionService, NotificationActionService>();
 
         services.AddSingleton<MainWindow>();
 

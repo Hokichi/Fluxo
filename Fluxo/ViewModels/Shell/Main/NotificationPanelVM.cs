@@ -12,6 +12,9 @@ using Fluxo.Core.DTO;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Dialogs;
+using Fluxo.Services.Notifications;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
 
@@ -25,6 +28,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private readonly IExpenseLogService _expenseLogService;
     private readonly IExpenseService _expenseService;
     private readonly IDataOperationRunner _dataOperationRunner;
+    private readonly INotificationGroupingService _notificationGroupingService;
+    private readonly INotificationActionService _notificationActionService;
+    private readonly IDialogService? _dialogService;
     private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly SemaphoreSlim _notificationSyncGate = new(1, 1);
@@ -59,6 +65,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
         ISpendingSourceService spendingSourceService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
+        INotificationGroupingService? notificationGroupingService = null,
+        INotificationActionService? notificationActionService = null,
+        IDialogService? dialogService = null,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
@@ -67,6 +76,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _spendingSourceService = spendingSourceService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
+        _notificationActionService = notificationActionService ?? new NotificationActionService(dataOperationRunner);
+        _dialogService = dialogService;
+        _notificationGroupingService = notificationGroupingService ?? new NotificationGroupingService();
 
         Notifications.CollectionChanged += OnNotificationsCollectionChanged;
         IsActive = true;
@@ -88,10 +100,14 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private NotificationVM? _currentNotification;
 
     [ObservableProperty]
+    private NotificationItemVM? _currentNotificationItem;
+
+    [ObservableProperty]
     private int _navigationDirection;
 
     public ObservableCollection<NotificationVM> Notifications { get; } = [];
-    public int NotificationStepCount => Notifications.Count;
+    public ObservableCollection<NotificationItemVM> NotificationItems { get; } = [];
+    public int NotificationStepCount => NotificationItems.Count;
     public int CurrentStepNumber => HasNotifications && CurrentNotificationIndex >= 0 ? CurrentNotificationIndex + 1 : 0;
 
     [RelayCommand]
@@ -125,6 +141,65 @@ public partial class NotificationPanelVM : ObservableRecipient,
         finally
         {
             _notificationSyncGate.Release();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ClearNotificationGroupAsync(NotificationItemVM? card)
+    {
+        if (card is null || card.Notifications.Count == 0)
+            return;
+
+        await _notificationSyncGate.WaitAsync();
+
+        try
+        {
+            var selectedKeys = card.Notifications
+                .Select(notification => (notification.Type, notification.Message))
+                .ToHashSet();
+
+            await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            {
+                var unitOfWork = scope.UnitOfWork;
+                var persistedNotifications = await unitOfWork.Notifications.GetAllAsync(ct);
+                var hasChanges = false;
+
+                foreach (var persisted in persistedNotifications.Where(persisted =>
+                             !persisted.IsCleared && selectedKeys.Contains((persisted.Type, persisted.Message))))
+                {
+                    persisted.IsCleared = true;
+                    unitOfWork.Notifications.Update(persisted);
+                    hasChanges = true;
+                }
+
+                if (hasChanges)
+                    await unitOfWork.Notifications.SaveChangesAsync(ct);
+            });
+        }
+        finally
+        {
+            _notificationSyncGate.Release();
+        }
+
+        await RefreshNotificationsAsync();
+    }
+
+    [RelayCommand]
+    private async Task OpenNotificationActionAsync(NotificationItemVM? card)
+    {
+        if (card is null || !card.HasActionCta)
+            return;
+
+        switch (card.Category)
+        {
+            case NotificationGroupCategory.FixedExpenseDue:
+            case NotificationGroupCategory.UpcomingPayment:
+            case NotificationGroupCategory.LatePayment:
+                await OpenChecklistNotificationActionAsync(card);
+                break;
+            case NotificationGroupCategory.GoalDeadline:
+                await OpenGoalDeadlineActionAsync(card);
+                break;
         }
     }
 
@@ -614,6 +689,11 @@ public partial class NotificationPanelVM : ObservableRecipient,
         return int.TryParse(idToken, NumberStyles.Integer, CultureInfo.InvariantCulture, out entityId);
     }
 
+    private static int ExtractNotificationEntityId(string notificationType, string prefix)
+    {
+        return TryExtractNotificationEntityId(notificationType, prefix, out var entityId) ? entityId : 0;
+    }
+
     private static NotificationCategory GetNotificationCategory(string notificationType)
     {
         var typeToken = notificationType.Split('_')[0];
@@ -785,12 +865,115 @@ public partial class NotificationPanelVM : ObservableRecipient,
             .ToArray();
     }
 
+    private async Task OpenChecklistNotificationActionAsync(NotificationItemVM card)
+    {
+        if (_dialogService is null)
+            return;
+
+        var prefix = card.Category switch
+        {
+            NotificationGroupCategory.FixedExpenseDue => "UpcomingDeduction-",
+            NotificationGroupCategory.UpcomingPayment => "UpcomingPayment-",
+            NotificationGroupCategory.LatePayment => "LatePayment-",
+            _ => string.Empty
+        };
+
+        if (prefix.Length == 0)
+            return;
+
+        var items = card.Notifications
+            .Select(notification => new
+            {
+                Notification = notification,
+                EntityId = ExtractNotificationEntityId(notification.Type, prefix)
+            })
+            .Where(item => item.EntityId > 0)
+            .GroupBy(item => item.EntityId)
+            .Select(group => group.OrderByDescending(item => item.Notification.CreatedOn).First())
+            .Select(item => new NotificationChecklistActionItemVM
+            {
+                EntityId = item.EntityId,
+                Label = item.Notification.Header
+            })
+            .OrderBy(item => item.Label, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (items.Count == 0)
+            return;
+
+        var viewModel = new NotificationChecklistActionVM(items);
+        var dialogResult = _dialogService.ShowNotificationChecklistAction(viewModel);
+        if (dialogResult != true && !viewModel.DidProceed)
+            return;
+
+        var selectedIds = viewModel.SelectedItems
+            .Select(item => item.EntityId)
+            .Distinct()
+            .ToArray();
+
+        if (selectedIds.Length == 0)
+            return;
+
+        if (await _notificationActionService.ExecuteChecklistActionAsync(card, selectedIds))
+            await RefreshNotificationsAsync();
+    }
+
+    private async Task OpenGoalDeadlineActionAsync(NotificationItemVM card)
+    {
+        if (_dialogService is null)
+            return;
+
+        var goalIds = card.Notifications
+            .Select(notification => ExtractNotificationEntityId(notification.Type, "GoalDeadline-"))
+            .Where(entityId => entityId > 0)
+            .Distinct()
+            .ToArray();
+
+        if (goalIds.Length == 0)
+            return;
+
+        var remainingAmount = goalIds
+            .Select(goalId => _savingGoals.FirstOrDefault(goal => goal.Id == goalId))
+            .Where(goal => goal is not null)
+            .Select(goal => Math.Max(goal!.TargetAmount - goal.CurrentAmount, 0m))
+            .DefaultIfEmpty(0m)
+            .Max();
+
+        var eligibleSources = _spendingSources
+            .Where(source => source.SpendingSourceType is SpendingSourceType.Cash or SpendingSourceType.Checking)
+            .ToList();
+
+        var viewModel = new GoalDeadlineActionVM(eligibleSources)
+        {
+            RemainingAmount = remainingAmount,
+            EnteredAmount = remainingAmount
+        };
+
+        var dialogResult = _dialogService.ShowGoalDeadlineAction(viewModel);
+        if (dialogResult != true && viewModel.SelectedAction == GoalDeadlineActionType.None)
+            return;
+
+        if (viewModel.SelectedAction == GoalDeadlineActionType.None)
+            return;
+
+        if (await _notificationActionService.ExecuteGoalActionAsync(card, viewModel.SelectedAction))
+            await RefreshNotificationsAsync();
+    }
+
     private void ReplaceNotifications(IEnumerable<NotificationVM> notifications)
     {
         Notifications.Clear();
 
         foreach (var notification in notifications)
             Notifications.Add(notification);
+
+        var groupedNotifications = _notificationGroupingService.Group(Notifications.ToList());
+        NotificationItems.Clear();
+
+        foreach (var groupedNotification in groupedNotifications)
+            NotificationItems.Add(groupedNotification);
+
+        SyncCurrentNotificationSelection();
     }
 
     private void OnNotificationsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -812,34 +995,35 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private void NavigateByOffset(int offset, int slideDirection)
     {
-        if (Notifications.Count == 0)
+        if (NotificationItems.Count == 0)
             return;
 
-        if (Notifications.Count == 1)
+        if (NotificationItems.Count == 1)
         {
             SetCurrentNotificationByIndex(0, animateDirection: 0);
             return;
         }
 
         var normalizedCurrentIndex = CurrentNotificationIndex >= 0 ? CurrentNotificationIndex : 0;
-        var targetIndex = (normalizedCurrentIndex + offset + Notifications.Count) % Notifications.Count;
+        var targetIndex = (normalizedCurrentIndex + offset + NotificationItems.Count) % NotificationItems.Count;
         SetCurrentNotificationByIndex(targetIndex, slideDirection);
     }
 
     private void SyncCurrentNotificationSelection()
     {
         OnPropertyChanged(nameof(NotificationStepCount));
-        HasMultipleNotifications = Notifications.Count > 1;
+        HasMultipleNotifications = NotificationItems.Count > 1;
 
-        if (Notifications.Count == 0)
+        if (NotificationItems.Count == 0)
         {
             CurrentNotificationIndex = -1;
+            CurrentNotificationItem = null;
             CurrentNotification = null;
             NavigationDirection = 0;
             return;
         }
 
-        var existingIndex = CurrentNotification is null ? -1 : Notifications.IndexOf(CurrentNotification);
+        var existingIndex = CurrentNotificationItem is null ? -1 : NotificationItems.IndexOf(CurrentNotificationItem);
         if (existingIndex >= 0)
         {
             CurrentNotificationIndex = existingIndex;
@@ -847,7 +1031,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             return;
         }
 
-        var clampedIndex = CurrentNotificationIndex >= 0 && CurrentNotificationIndex < Notifications.Count
+        var clampedIndex = CurrentNotificationIndex >= 0 && CurrentNotificationIndex < NotificationItems.Count
             ? CurrentNotificationIndex
             : 0;
 
@@ -856,20 +1040,22 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private void SetCurrentNotificationByIndex(int index, int animateDirection)
     {
-        if (Notifications.Count == 0)
+        if (NotificationItems.Count == 0)
         {
             CurrentNotificationIndex = -1;
+            CurrentNotificationItem = null;
             CurrentNotification = null;
             NavigationDirection = 0;
             return;
         }
 
-        if (index < 0 || index >= Notifications.Count)
+        if (index < 0 || index >= NotificationItems.Count)
             index = 0;
 
         CurrentNotificationIndex = index;
         NavigationDirection = animateDirection;
-        CurrentNotification = Notifications[index];
+        CurrentNotificationItem = NotificationItems[index];
+        CurrentNotification = CurrentNotificationItem.Notifications.FirstOrDefault();
     }
 
     private enum NotificationCategory
