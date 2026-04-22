@@ -5,18 +5,19 @@ namespace Fluxo.Tests.Views.Popups;
 
 public sealed class AnalyticsPopupLayoutTests
 {
-    private static readonly string AnalyticsPopupXamlPath = Path.GetFullPath(Path.Combine(
+    private static readonly string AnalyticsXamlPath = Path.GetFullPath(Path.Combine(
         AppContext.BaseDirectory,
         "..", "..", "..", "..", "..",
         "Fluxo",
         "Views",
-        "Popups",
-        "AnalyticsPopup.xaml"));
+        "Shell",
+        "Main",
+        "Analytics.xaml"));
 
     [Fact]
     public void TrendModeUsesSegmentedToggleButtons_InsteadOfComboBox()
     {
-        var xaml = File.ReadAllText(AnalyticsPopupXamlPath);
+        var xaml = File.ReadAllText(AnalyticsXamlPath);
 
         Assert.Contains("Command=\"{Binding SetTrendModeCommand}\"", xaml);
         Assert.Contains("Style=\"{StaticResource MainContentViewToggleButtonStyle}\"", xaml);
@@ -26,7 +27,7 @@ public sealed class AnalyticsPopupLayoutTests
     [Fact]
     public void ChartsShowNoDataFound_WhenTheirDataIsUnavailable()
     {
-        var xaml = File.ReadAllText(AnalyticsPopupXamlPath);
+        var xaml = File.ReadAllText(AnalyticsXamlPath);
 
         Assert.Contains("Visibility=\"{Binding HasTrendData, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
         Assert.Contains("Visibility=\"{Binding HasRatioData, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
@@ -35,18 +36,9 @@ public sealed class AnalyticsPopupLayoutTests
     }
 
     [Fact]
-    public void DateRangeWarningMessage_IsBoundInHeader()
-    {
-        var xaml = File.ReadAllText(AnalyticsPopupXamlPath);
-
-        Assert.Contains("Text=\"{Binding DateRangeWarningMessage}\"", xaml);
-        Assert.Contains("Visibility=\"{Binding HasDateRangeWarning, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
-    }
-
-    [Fact]
     public void AnalyticsUsesNativeWpfChartsAndSharedProgressBars()
     {
-        var xaml = File.ReadAllText(AnalyticsPopupXamlPath);
+        var xaml = File.ReadAllText(AnalyticsXamlPath);
 
         Assert.Contains("<components:AnalyticsBarChart", xaml);
         Assert.Contains("ItemsSource=\"{Binding TrendBarItems}\"", xaml);

@@ -37,6 +37,51 @@
             <DataTemplate x:Key="MainWindowSpendingSourceItemTemplate">
                 <components:IncomeSource />
             </DataTemplate>
+
+            <Style x:Key="AnalyticsDrawerTabButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border
+                                x:Name="ButtonSurface"
+                                Margin="0,0,0,-2"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12,12,0,0">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                    <Setter TargetName="ButtonSurface" Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.9" />
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint.Muted}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint.Muted}" />
+                                    <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                    <Setter TargetName="ButtonSurface" Property="BorderThickness" Value="1" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.55" />
+                                    <Setter Property="Cursor" Value="Arrow" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -509,6 +554,117 @@
                         </Grid>
                     </Grid>
                 </Grid>
+            </Grid>
+
+            <Border
+                x:Name="AnalyticsDrawerTabHost"
+                Width="170"
+                Height="28"
+                Margin="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Background="{StaticResource Brush.Background.Elevated}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1,1,1,0"
+                CornerRadius="14,14,0,0">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsMouseOver, ElementName=AnalyticsDrawerTabButton}" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=AnalyticsDrawerTabButton}" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Button
+                    x:Name="AnalyticsDrawerTabButton"
+                    AutomationProperties.Name="Open Analytics Drawer"
+                    Click="OnAnalyticsDrawerTabClick"
+                    Style="{StaticResource AnalyticsDrawerTabButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                            Text="Analytics" />
+                    </StackPanel>
+                </Button>
+            </Border>
+
+            <Grid x:Name="AnalyticsDrawerLayer" Panel.ZIndex="20">
+                <Border
+                    x:Name="AnalyticsDrawerPanel"
+                    Margin="24,72,24,0"
+                    Background="{StaticResource Brush.Background.Elevated}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="18 18 0 0"
+                    Visibility="Collapsed">
+                    <Border.Effect>
+                        <DropShadowEffect
+                            BlurRadius="20"
+                            Opacity="0.2"
+                            ShadowDepth="4" />
+                    </Border.Effect>
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="AnalyticsDrawerTransform" Y="1200" />
+                    </Border.RenderTransform>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="60" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="20,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="18"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Analytics" />
+
+                            <Border
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                    <components:DateSelector SelectedDate="{Binding ElementName=AnalyticsDrawerContentHost, Path=Content.DataContext.StartDate, Mode=TwoWay}" />
+
+                                    <TextBlock
+                                        Margin="12,0,8,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        Foreground="{StaticResource Brush.Text.Secondary}"
+                                        Text="To" />
+
+                                    <components:DateSelector SelectedDate="{Binding ElementName=AnalyticsDrawerContentHost, Path=Content.DataContext.EndDate, Mode=TwoWay}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Click="OnCloseAnalyticsDrawerButtonClick"
+                                Content="Return To Dashboard"
+                                Style="{StaticResource TextOnlyButtonStyle}" />
+                        </Grid>
+
+                        <ContentControl x:Name="AnalyticsDrawerContentHost" Grid.Row="1" />
+                    </Grid>
+                </Border>
             </Grid>
             <Border
                 x:Name="PopupOverlay"
