@@ -9,9 +9,9 @@
     xmlns:vm="clr-namespace:Fluxo.ViewModels.Popups"
     Width="1440"
     Height="810"
-    SizeToContent="Manual"
     d:DataContext="{d:DesignInstance Type=vm:AnalyticsVM}"
     PopupTitle="Analytics"
+    SizeToContent="Manual"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>
@@ -496,7 +496,7 @@
                                 </Grid.RowDefinitions>
 
                                 <StackPanel>
-                                    <TextBlock Style="{StaticResource AnalyticsSectionTitleStyle}" Text="Goals Created In Period" />
+                                    <TextBlock Style="{StaticResource AnalyticsSectionTitleStyle}" Text="Goals Contribution" />
                                     <TextBlock
                                         Margin="0,4,0,0"
                                         Style="{StaticResource AnalyticsHintTextStyle}"

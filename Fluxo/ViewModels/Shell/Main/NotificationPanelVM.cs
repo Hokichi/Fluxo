@@ -78,7 +78,21 @@ public partial class NotificationPanelVM : ObservableRecipient,
     [ObservableProperty]
     private bool _hasNotifications;
 
+    [ObservableProperty]
+    private bool _hasMultipleNotifications;
+
+    [ObservableProperty]
+    private int _currentNotificationIndex = -1;
+
+    [ObservableProperty]
+    private NotificationVM? _currentNotification;
+
+    [ObservableProperty]
+    private int _navigationDirection;
+
     public ObservableCollection<NotificationVM> Notifications { get; } = [];
+    public int NotificationStepCount => Notifications.Count;
+    public int CurrentStepNumber => HasNotifications && CurrentNotificationIndex >= 0 ? CurrentNotificationIndex + 1 : 0;
 
     [RelayCommand]
     private async Task ClearAllNotificationsAsync()
@@ -112,6 +126,18 @@ public partial class NotificationPanelVM : ObservableRecipient,
         {
             _notificationSyncGate.Release();
         }
+    }
+
+    [RelayCommand]
+    private void NavigatePrevious()
+    {
+        NavigateByOffset(-1, slideDirection: 1);
+    }
+
+    [RelayCommand]
+    private void NavigateNext()
+    {
+        NavigateByOffset(1, slideDirection: -1);
     }
 
     public void Receive(DateRangeSelectionChangedMessage message)
@@ -771,6 +797,79 @@ public partial class NotificationPanelVM : ObservableRecipient,
     {
         NotificationCount = Notifications.Count;
         HasNotifications = NotificationCount > 0;
+        SyncCurrentNotificationSelection();
+    }
+
+    partial void OnHasNotificationsChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CurrentStepNumber));
+    }
+
+    partial void OnCurrentNotificationIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(CurrentStepNumber));
+    }
+
+    private void NavigateByOffset(int offset, int slideDirection)
+    {
+        if (Notifications.Count == 0)
+            return;
+
+        if (Notifications.Count == 1)
+        {
+            SetCurrentNotificationByIndex(0, animateDirection: 0);
+            return;
+        }
+
+        var normalizedCurrentIndex = CurrentNotificationIndex >= 0 ? CurrentNotificationIndex : 0;
+        var targetIndex = (normalizedCurrentIndex + offset + Notifications.Count) % Notifications.Count;
+        SetCurrentNotificationByIndex(targetIndex, slideDirection);
+    }
+
+    private void SyncCurrentNotificationSelection()
+    {
+        OnPropertyChanged(nameof(NotificationStepCount));
+        HasMultipleNotifications = Notifications.Count > 1;
+
+        if (Notifications.Count == 0)
+        {
+            CurrentNotificationIndex = -1;
+            CurrentNotification = null;
+            NavigationDirection = 0;
+            return;
+        }
+
+        var existingIndex = CurrentNotification is null ? -1 : Notifications.IndexOf(CurrentNotification);
+        if (existingIndex >= 0)
+        {
+            CurrentNotificationIndex = existingIndex;
+            NavigationDirection = 0;
+            return;
+        }
+
+        var clampedIndex = CurrentNotificationIndex >= 0 && CurrentNotificationIndex < Notifications.Count
+            ? CurrentNotificationIndex
+            : 0;
+
+        SetCurrentNotificationByIndex(clampedIndex, animateDirection: 0);
+    }
+
+    private void SetCurrentNotificationByIndex(int index, int animateDirection)
+    {
+        if (Notifications.Count == 0)
+        {
+            CurrentNotificationIndex = -1;
+            CurrentNotification = null;
+            NavigationDirection = 0;
+            return;
+        }
+
+        if (index < 0 || index >= Notifications.Count)
+            index = 0;
+
+        CurrentNotificationIndex = index;
+        NavigationDirection = animateDirection;
+        CurrentNotification = Notifications[index];
     }
 
     private enum NotificationCategory

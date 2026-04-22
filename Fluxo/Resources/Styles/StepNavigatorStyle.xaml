@@ -19,14 +19,13 @@
 
                                     <!--  Left connector — hidden for the first dot  -->
                                     <Border
-                                        Width="12"
                                         Height="1"
                                         Margin="3,0"
-                                        SnapsToDevicePixels="True"
-                                        Visibility="{Binding IsFirst, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                        SnapsToDevicePixels="True">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{StaticResource Brush.Text.Muted}" />
+                                                <Setter Property="Width" Value="12" />
                                                 <Style.Triggers>
                                                     <MultiDataTrigger>
                                                         <MultiDataTrigger.Conditions>
@@ -42,6 +41,14 @@
                                                         </MultiDataTrigger.Conditions>
                                                         <Setter Property="Background" Value="{StaticResource Brush.Mint.Muted}" />
                                                     </MultiDataTrigger>
+
+                                                    <DataTrigger Binding="{Binding IsFirst}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+
+                                                    <DataTrigger Binding="{Binding ShouldIndicateProgress, RelativeSource={RelativeSource AncestorType={x:Type customControls:StepNavigatorControl}}}" Value="False">
+                                                        <Setter Property="Width" Value="0" />
+                                                    </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>

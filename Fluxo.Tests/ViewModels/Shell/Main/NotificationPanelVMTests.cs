@@ -80,6 +80,169 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task LoadAsync_WithMultipleNotifications_InitializesCarouselState()
+    {
+        var dueDate = DateTime.Today.AddDays(7);
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources:
+            [
+                new SpendingSourceVM
+                {
+                    Id = 1,
+                    Name = "Visa",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1000m,
+                    SpentAmount = 250m
+                },
+                new SpendingSourceVM
+                {
+                    Id = 2,
+                    Name = "MasterCard",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1200m,
+                    SpentAmount = 300m
+                }
+            ],
+            out _);
+
+        await vm.LoadAsync();
+
+        Assert.True(vm.HasNotifications);
+        Assert.True(vm.HasMultipleNotifications);
+        Assert.Equal(2, vm.NotificationStepCount);
+        Assert.Equal(1, vm.CurrentStepNumber);
+        Assert.NotNull(vm.CurrentNotification);
+        Assert.Equal(0, vm.CurrentNotificationIndex);
+    }
+
+    [Fact]
+    public async Task NavigateNextCommand_WrapsAndUpdatesCurrentNotification()
+    {
+        var dueDate = DateTime.Today.AddDays(7);
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources:
+            [
+                new SpendingSourceVM
+                {
+                    Id = 1,
+                    Name = "Visa",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1000m,
+                    SpentAmount = 250m
+                },
+                new SpendingSourceVM
+                {
+                    Id = 2,
+                    Name = "MasterCard",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1200m,
+                    SpentAmount = 300m
+                }
+            ],
+            out _);
+
+        await vm.LoadAsync();
+
+        vm.NavigateNextCommand.Execute(null);
+        Assert.Equal(1, vm.CurrentNotificationIndex);
+        Assert.Equal(2, vm.CurrentStepNumber);
+        Assert.Equal(-1, vm.NavigationDirection);
+
+        vm.NavigateNextCommand.Execute(null);
+        Assert.Equal(0, vm.CurrentNotificationIndex);
+        Assert.Equal(1, vm.CurrentStepNumber);
+        Assert.Equal(-1, vm.NavigationDirection);
+    }
+
+    [Fact]
+    public async Task NavigatePreviousCommand_WrapsToLastNotification()
+    {
+        var dueDate = DateTime.Today.AddDays(7);
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources:
+            [
+                new SpendingSourceVM
+                {
+                    Id = 1,
+                    Name = "Visa",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1000m,
+                    SpentAmount = 250m
+                },
+                new SpendingSourceVM
+                {
+                    Id = 2,
+                    Name = "MasterCard",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1200m,
+                    SpentAmount = 300m
+                }
+            ],
+            out _);
+
+        await vm.LoadAsync();
+
+        vm.NavigatePreviousCommand.Execute(null);
+
+        Assert.Equal(1, vm.CurrentNotificationIndex);
+        Assert.Equal(2, vm.CurrentStepNumber);
+        Assert.Equal(1, vm.NavigationDirection);
+    }
+
+    [Fact]
+    public async Task ClearAllNotificationsAsync_ResetsCarouselState()
+    {
+        var dueDate = DateTime.Today.AddDays(7);
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources:
+            [
+                new SpendingSourceVM
+                {
+                    Id = 1,
+                    Name = "Visa",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1000m,
+                    SpentAmount = 250m
+                },
+                new SpendingSourceVM
+                {
+                    Id = 2,
+                    Name = "MasterCard",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1200m,
+                    SpentAmount = 300m
+                }
+            ],
+            out _);
+
+        await vm.LoadAsync();
+        await vm.ClearAllNotificationsCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasNotifications);
+        Assert.False(vm.HasMultipleNotifications);
+        Assert.Equal(0, vm.NotificationStepCount);
+        Assert.Equal(0, vm.CurrentStepNumber);
+        Assert.Equal(-1, vm.CurrentNotificationIndex);
+        Assert.Null(vm.CurrentNotification);
+    }
+
+    [Fact]
     public async Task LoadAsync_MarksUpcomingPaymentNotificationForDeletion_WhenDueDatePassed()
     {
         var vm = CreateVm(
