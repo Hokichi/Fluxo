@@ -16,12 +16,12 @@ public sealed class SavingGoalsPanelLayoutTests
         "SavingGoalsPanel.xaml"));
 
     [Fact]
-    public void HeaderUsesBalloonNavigationAndDoesNotExposeAddAction()
+    public void BottomActionBarExposesNavigationAndAddAction()
     {
         var xaml = File.ReadAllText(SavingGoalsPanelXamlPath);
 
-        Assert.DoesNotContain("OnAddSavingGoalClick", xaml);
-        Assert.Contains("SavingGoalHeaderNavBalloonButtonStyle", xaml);
+        Assert.Contains("OnAddSavingGoalClick", xaml);
+        Assert.Contains("SavingGoalActionBalloonButtonStyle", xaml);
         Assert.Contains("OnNavigatePreviousClick", xaml);
         Assert.Contains("OnNavigateNextClick", xaml);
         Assert.Contains("HasMultipleSavingGoals", xaml);

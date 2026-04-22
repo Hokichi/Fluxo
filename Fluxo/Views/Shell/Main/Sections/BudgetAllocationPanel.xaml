@@ -173,6 +173,7 @@
                 IsListEmpty="{Binding IsNeedsEmpty}"
                 ItemsSource="{Binding Needs}"
                 Percentage="{Binding NeedsPercentage}"
+                RemainingAmount="{Binding NeedsRemaining}"
                 SpentAmount="{Binding NeedsSpent}"
                 TotalAmount="{Binding NeedsAvailable}" />
 
@@ -185,6 +186,7 @@
                 IsListEmpty="{Binding IsWantsEmpty}"
                 ItemsSource="{Binding Wants}"
                 Percentage="{Binding WantsPercentage}"
+                RemainingAmount="{Binding WantsRemaining}"
                 SpentAmount="{Binding WantsSpent}"
                 TotalAmount="{Binding WantsAvailable}" />
 
@@ -197,6 +199,7 @@
                 IsListEmpty="{Binding IsInvestEmpty}"
                 ItemsSource="{Binding Invest}"
                 Percentage="{Binding InvestPercentage}"
+                RemainingAmount="{Binding InvestRemaining}"
                 SpentAmount="{Binding InvestSpent}"
                 TotalAmount="{Binding InvestAvailable}" />
         </Grid>

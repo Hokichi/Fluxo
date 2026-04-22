@@ -115,6 +115,12 @@ public partial class SavingGoalsPanel : UserControl
         _viewModel.NavigateNext();
     }
 
+    private void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is global::Fluxo.Views.Shell.Main.MainWindow mainWindow)
+            mainWindow.OpenAddSavingGoalPopup();
+    }
+
     private void OnCarouselViewportPreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (_viewModel is null || _isAnimating || !_viewModel.HasMultipleSavingGoals)

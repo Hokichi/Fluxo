@@ -82,6 +82,15 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private decimal _investSpent;
 
     [ObservableProperty]
+    private decimal _needsRemaining;
+
+    [ObservableProperty]
+    private decimal _wantsRemaining;
+
+    [ObservableProperty]
+    private decimal _investRemaining;
+
+    [ObservableProperty]
     private int _needsPercentage;
 
     [ObservableProperty]
@@ -372,7 +381,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         InvestSpent = _allExpenseLogs
             .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings)
             .Sum(log => log.Amount);
+
         TotalSpent = NeedsSpent + WantsSpent + InvestSpent;
+
+        NeedsRemaining = NeedsAvailable - NeedsSpent;
+        WantsRemaining = WantsAvailable - WantsSpent;
+        InvestRemaining = InvestAvailable - InvestSpent;
 
         NeedsPercentage = CalculatePercentage(NeedsSpent, NeedsAvailable);
         WantsPercentage = CalculatePercentage(WantsSpent, WantsAvailable);
