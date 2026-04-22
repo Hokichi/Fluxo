@@ -542,7 +542,6 @@ public class NotificationPanelVMTests
             spendingSourceService,
             dataOperationRunner,
             mapper,
-            new NotificationGroupingService(),
-            new WeakReferenceMessenger());
+            new NotificationGroupingService());
     }
 }

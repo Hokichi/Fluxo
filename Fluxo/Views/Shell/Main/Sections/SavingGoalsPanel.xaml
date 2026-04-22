@@ -76,28 +76,23 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" VerticalAlignment="Center">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <Grid
+                    x:Name="CarouselViewport"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    LostMouseCapture="OnCarouselViewportLostMouseCapture"
+                    PreviewMouseLeftButtonDown="OnCarouselViewportPreviewMouseLeftButtonDown"
+                    PreviewMouseLeftButtonUp="OnCarouselViewportPreviewMouseLeftButtonUp"
+                    PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
+                    <ContentControl x:Name="CurrentGoalPresenter" ContentTemplate="{StaticResource SavingGoalTemplate}" />
 
-                    <Grid
-                        x:Name="CarouselViewport"
-                        Grid.Column="0"
-                        Background="Transparent"
-                        ClipToBounds="True"
-                        LostMouseCapture="OnCarouselViewportLostMouseCapture"
-                        PreviewMouseLeftButtonDown="OnCarouselViewportPreviewMouseLeftButtonDown"
-                        PreviewMouseLeftButtonUp="OnCarouselViewportPreviewMouseLeftButtonUp"
-                        PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
-                        <ContentControl x:Name="CurrentGoalPresenter" ContentTemplate="{StaticResource SavingGoalTemplate}" />
-
-                        <ContentControl
-                            x:Name="IncomingGoalPresenter"
-                            ContentTemplate="{StaticResource SavingGoalTemplate}"
-                            IsHitTestVisible="False"
-                            Visibility="Collapsed" />
-                    </Grid>
+                    <ContentControl
+                        x:Name="IncomingGoalPresenter"
+                        ContentTemplate="{StaticResource SavingGoalTemplate}"
+                        IsHitTestVisible="False"
+                        Visibility="Collapsed" />
                 </Grid>
 
                 <customControls:StepNavigatorControl

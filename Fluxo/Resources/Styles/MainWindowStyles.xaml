@@ -129,103 +129,6 @@
     </Style>
 
 
-
-
-
-
-
-    <DataTemplate x:Key="DashboardNotificationGroupTemplate">
-        <Border
-            Margin="0,0,0,10"
-            Padding="10"
-            Background="{StaticResource Brush.Background.Hover}"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
-            BorderThickness="1"
-            CornerRadius="16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="4" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <Border
-                    Margin="0,0,10,0"
-                    CornerRadius="999"
-                    Style="{StaticResource NotificationAccentStyle}" />
-
-                <StackPanel Grid.Column="1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding Header}"
-                            TextWrapping="Wrap" />
-
-                        <Border
-                            Grid.Column="1"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Top"
-                            Style="{StaticResource DashboardCountBadgeStyle}">
-                            <TextBlock
-                                FontFamily="{StaticResource Medium}"
-                                FontSize="9"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding Count, StringFormat={}x{0}}" />
-                        </Border>
-                    </Grid>
-
-                    <TextBlock
-                        Margin="0,6,0,0"
-                        FontFamily="{StaticResource Regular}"
-                        FontSize="10"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding Message}"
-                        TextWrapping="Wrap" />
-
-                    <Grid Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="9"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Text="{Binding LatestCreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
-
-                        <Button
-                            Grid.Column="2"
-                            Command="{Binding DataContext.ClearNotificationGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            CommandParameter="{Binding}"
-                            Content="Clear"
-                            Style="{StaticResource TextOnlyButtonStyle}" />
-
-                        <customControls:BalloonButton
-                            Grid.Column="4"
-                            Width="24"
-                            Height="24"
-                            ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
-                            Command="{Binding DataContext.OpenNotificationActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            CommandParameter="{Binding}"
-                            IconSize="11"
-                            Visibility="{Binding HasActionCta, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    </Grid>
-                </StackPanel>
-            </Grid>
-        </Border>
-    </DataTemplate>
-
     <DataTemplate x:Key="SavingGoalTemplate">
         <Border Margin="0,0,0,12" Padding="12,0">
             <Grid>
@@ -237,21 +140,21 @@
 
                 <Grid Width="64" Height="64">
                     <Canvas
-                        Width="56"
-                        Height="56"
+                        Width="80"
+                        Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">
                         <Ellipse
                             Canvas.Left="4"
                             Canvas.Top="4"
-                            Width="48"
-                            Height="48"
+                            Width="72"
+                            Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
                             Stroke="{StaticResource Brush.Background.Surface}"
                             StrokeThickness="8" />
                         <Path
                             Canvas.Left="8"
                             Canvas.Top="8"
-                            Data="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=40}"
+                            Data="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
                             Stroke="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource GoalProgressToBrushConverter}}"
                             StrokeEndLineCap="Round"
                             StrokeLineJoin="Round"
@@ -270,11 +173,12 @@
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="13"
+                        FontFamily="{StaticResource Black}"
+                        FontSize="18"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="{Binding Name}"
                         TextTrimming="CharacterEllipsis" />
+
                     <TextBlock
                         Margin="0,8,0,0"
                         FontFamily="{StaticResource Medium}"
