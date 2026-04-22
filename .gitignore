@@ -362,6 +362,7 @@ MigrationBackup/
 .dotnet_home/
 .dotnet/
 .claude/
+.codex/
 .idea/
 docs/
 
@@ -372,3 +373,4 @@ FodyWeavers.xsd
 
 # Worktrees
 .worktree/
+/package-lock.json
