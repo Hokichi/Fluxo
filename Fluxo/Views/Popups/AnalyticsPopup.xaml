@@ -9,6 +9,7 @@
     xmlns:vm="clr-namespace:Fluxo.ViewModels.Popups"
     Width="1440"
     Height="810"
+    SizeToContent="Manual"
     d:DataContext="{d:DesignInstance Type=vm:AnalyticsVM}"
     PopupTitle="Analytics"
     mc:Ignorable="d">
