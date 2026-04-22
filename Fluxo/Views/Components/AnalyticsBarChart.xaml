@@ -37,6 +37,7 @@
                 <Border
                     Grid.Row="2"
                     Height="{Binding BarHeight}"
+                    MinHeight="5"
                     Margin="2,0"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Bottom"

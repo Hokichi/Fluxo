@@ -91,23 +91,22 @@ public partial class MainWindow : Window, IPopupHost
 
     private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
     {
-        if (Mouse.LeftButton != MouseButtonState.Pressed || e.GetPosition(this).Y >= 60)
-            return;
+        var isEligibleHeaderDrag = Mouse.LeftButton == MouseButtonState.Pressed &&
+                                   e.GetPosition(this).Y < 60 &&
+                                   (e.OriginalSource is not DependencyObject source || !IsInteractiveElement(source));
+        var restoreMode = MainWindowDragStateDecider.DecideRestoreMode(
+            _isMaximized,
+            _isStateChangeTransitionActive,
+            isEligibleHeaderDrag);
 
-        if (e.OriginalSource is DependencyObject source && IsInteractiveElement(source))
+        if (restoreMode == MainWindowRestoreMode.Noop)
             return;
-
-        if (_isStateChangeTransitionActive)
-            return;
-
-        if (_isMaximized)
-        {
-            OnExpandRestoreWindow(ExpandRestoreButton, new RoutedEventArgs(ButtonBase.ClickEvent, ExpandRestoreButton));
-            return;
-        }
 
         try
         {
+            if (restoreMode == MainWindowRestoreMode.InstantRestoreAndDrag)
+                RestoreInstantlyForDrag();
+
             DragMove();
         }
         catch (Exception exception)
@@ -258,6 +257,70 @@ public partial class MainWindow : Window, IPopupHost
         AnimateStateChange(from, restoreBounds, false);
     }
 
+    private void RestoreInstantlyForDrag()
+    {
+        ClearWindowBoundsAnimations();
+
+        var preRestorePointer = Mouse.GetPosition(this);
+        var preRestoreWidth = Width;
+        var preRestoreHeight = Height;
+
+        var workArea = GetMonitorWorkArea();
+        var restoreBounds = WindowRestoreBoundsResolver.ResolveCenteredRestoreBounds(workArea);
+        var anchoredRestoreBounds = ResolvePointerAnchoredRestoreBounds(
+            restoreBounds,
+            workArea,
+            preRestorePointer,
+            preRestoreWidth,
+            preRestoreHeight);
+
+        RootBorder.CornerRadius = new CornerRadius(16);
+        RootBorder.BorderThickness = new Thickness(1);
+
+        Left = anchoredRestoreBounds.Left;
+        Top = anchoredRestoreBounds.Top;
+        Width = anchoredRestoreBounds.Width;
+        Height = anchoredRestoreBounds.Height;
+
+        _isMaximized = false;
+        _isStateChangeTransitionActive = false;
+        _currentBounds = anchoredRestoreBounds;
+        UpdateExpandRestoreButtonIcon();
+    }
+
+    private Rect ResolvePointerAnchoredRestoreBounds(
+        Rect restoreBounds,
+        Rect workArea,
+        Point preRestorePointer,
+        double preRestoreWidth,
+        double preRestoreHeight)
+    {
+        var cursorScreenDevice = PointToScreen(preRestorePointer);
+        var source = PresentationSource.FromVisual(this);
+        var fromDevice = source?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
+        var cursorScreenDip = fromDevice.Transform(cursorScreenDevice);
+
+        var relativeX = preRestoreWidth <= 0 ? 0 : Math.Clamp(preRestorePointer.X / preRestoreWidth, 0, 1);
+        var relativeY = preRestoreHeight <= 0 ? 0 : Math.Clamp(preRestorePointer.Y / preRestoreHeight, 0, 1);
+
+        var targetLeft = cursorScreenDip.X - (restoreBounds.Width * relativeX);
+        var targetTop = cursorScreenDip.Y - (restoreBounds.Height * relativeY);
+
+        return new Rect(
+            ClampWindowOrigin(targetLeft, workArea.Left, workArea.Right - restoreBounds.Width),
+            ClampWindowOrigin(targetTop, workArea.Top, workArea.Bottom - restoreBounds.Height),
+            restoreBounds.Width,
+            restoreBounds.Height);
+    }
+
+    private static double ClampWindowOrigin(double value, double min, double max)
+    {
+        if (max < min)
+            return min;
+
+        return Math.Clamp(value, min, max);
+    }
+
     private void AnimateStateChange(Rect from, Rect to, bool maximizing)
     {
         _isStateChangeTransitionActive = true;
@@ -276,18 +339,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void AnimateBounds(Rect from, Rect to, bool maximizing, Action onCompleted)
     {
-        // Stop any in-progress animation
-        if (_renderHandler is not null)
-        {
-            CompositionTarget.Rendering -= _renderHandler;
-            _renderHandler = null;
-        }
-
-        // Clear any leftover WPF animations so direct property sets work
-        BeginAnimation(LeftProperty, null);
-        BeginAnimation(TopProperty, null);
-        BeginAnimation(WidthProperty, null);
-        BeginAnimation(HeightProperty, null);
+        ClearWindowBoundsAnimations();
 
         var ease = new CubicEase
         {
@@ -324,6 +376,20 @@ public partial class MainWindow : Window, IPopupHost
         };
 
         CompositionTarget.Rendering += _renderHandler;
+    }
+
+    private void ClearWindowBoundsAnimations()
+    {
+        if (_renderHandler is not null)
+        {
+            CompositionTarget.Rendering -= _renderHandler;
+            _renderHandler = null;
+        }
+
+        BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
+        BeginAnimation(WidthProperty, null);
+        BeginAnimation(HeightProperty, null);
     }
 
     // ── Monitor work area ───────────────────────────────────────────
