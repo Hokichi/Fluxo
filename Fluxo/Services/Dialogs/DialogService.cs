@@ -120,6 +120,16 @@ public sealed class DialogService : IDialogService
         return ShowDialog(new AddSavingGoalPopup(viewModel), owner);
     }
 
+    public bool? ShowNotificationChecklistAction(NotificationChecklistActionVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new NotificationChecklistActionPopup(viewModel), owner);
+    }
+
+    public bool? ShowGoalDeadlineAction(GoalDeadlineActionVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new GoalDeadlineActionPopup(viewModel), owner);
+    }
+
     public bool? ShowAddTag(SettingsTagsTabVM settingsViewModel, Window? owner = null)
     {
         return ShowDialog(new AddTagPopup(settingsViewModel, this), owner);

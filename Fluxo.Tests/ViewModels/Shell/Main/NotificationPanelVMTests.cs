@@ -6,6 +6,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Services.Notifications;
 using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
@@ -17,6 +18,21 @@ namespace Fluxo.Tests.ViewModels.Shell.Main;
 
 public class NotificationPanelVMTests
 {
+    [Fact]
+    public void GroupedCardShape_ExposesRequiredMembers()
+    {
+        var card = new NotificationItemVM
+        {
+            Category = NotificationGroupCategory.FixedExpenseDue,
+            Notifications = [],
+            Header = "Header",
+            Message = "Message",
+            Count = 0
+        };
+
+        AssertGroupedCardShape(card);
+    }
+
     [Fact]
     public async Task LoadAsync_WhenCalledTwice_DoesNotDuplicateSystemNotifications()
     {
@@ -82,6 +98,28 @@ public class NotificationPanelVMTests
     [Fact]
     public async Task LoadAsync_WithMultipleNotifications_InitializesCarouselState()
     {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        SeedDistinctCategoryNotifications(persistedNotifications);
+
+        await vm.LoadAsync();
+
+        Assert.True(vm.HasNotifications);
+        Assert.True(vm.HasMultipleNotifications);
+        Assert.Equal(2, vm.NotificationStepCount);
+        Assert.Equal(1, vm.CurrentStepNumber);
+        Assert.NotNull(vm.CurrentNotificationItem);
+        Assert.NotNull(vm.CurrentNotification);
+        Assert.Equal(0, vm.CurrentNotificationIndex);
+    }
+
+    [Fact]
+    public async Task LoadAsync_GroupsNotificationsIntoCards()
+    {
         var dueDate = DateTime.Today.AddDays(7);
         var vm = CreateVm(
             expenses: [],
@@ -112,42 +150,20 @@ public class NotificationPanelVMTests
         await vm.LoadAsync();
 
         Assert.True(vm.HasNotifications);
-        Assert.True(vm.HasMultipleNotifications);
-        Assert.Equal(2, vm.NotificationStepCount);
-        Assert.Equal(1, vm.CurrentStepNumber);
-        Assert.NotNull(vm.CurrentNotification);
-        Assert.Equal(0, vm.CurrentNotificationIndex);
+        Assert.NotNull(vm.CurrentNotificationItem);
+        Assert.True(vm.NotificationItems.Count >= 1);
     }
 
     [Fact]
     public async Task NavigateNextCommand_WrapsAndUpdatesCurrentNotification()
     {
-        var dueDate = DateTime.Today.AddDays(7);
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources:
-            [
-                new SpendingSourceVM
-                {
-                    Id = 1,
-                    Name = "Visa",
-                    SpendingSourceType = SpendingSourceType.Credit,
-                    MonthlyDueDate = dueDate.Day,
-                    AccountLimit = 1000m,
-                    SpentAmount = 250m
-                },
-                new SpendingSourceVM
-                {
-                    Id = 2,
-                    Name = "MasterCard",
-                    SpendingSourceType = SpendingSourceType.Credit,
-                    MonthlyDueDate = dueDate.Day,
-                    AccountLimit = 1200m,
-                    SpentAmount = 300m
-                }
-            ],
-            out _);
+            spendingSources: [],
+            out var persistedNotifications);
+
+        SeedDistinctCategoryNotifications(persistedNotifications);
 
         await vm.LoadAsync();
 
@@ -155,6 +171,7 @@ public class NotificationPanelVMTests
         Assert.Equal(1, vm.CurrentNotificationIndex);
         Assert.Equal(2, vm.CurrentStepNumber);
         Assert.Equal(-1, vm.NavigationDirection);
+        Assert.NotNull(vm.CurrentNotificationItem);
 
         vm.NavigateNextCommand.Execute(null);
         Assert.Equal(0, vm.CurrentNotificationIndex);
@@ -165,32 +182,13 @@ public class NotificationPanelVMTests
     [Fact]
     public async Task NavigatePreviousCommand_WrapsToLastNotification()
     {
-        var dueDate = DateTime.Today.AddDays(7);
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources:
-            [
-                new SpendingSourceVM
-                {
-                    Id = 1,
-                    Name = "Visa",
-                    SpendingSourceType = SpendingSourceType.Credit,
-                    MonthlyDueDate = dueDate.Day,
-                    AccountLimit = 1000m,
-                    SpentAmount = 250m
-                },
-                new SpendingSourceVM
-                {
-                    Id = 2,
-                    Name = "MasterCard",
-                    SpendingSourceType = SpendingSourceType.Credit,
-                    MonthlyDueDate = dueDate.Day,
-                    AccountLimit = 1200m,
-                    SpentAmount = 300m
-                }
-            ],
-            out _);
+            spendingSources: [],
+            out var persistedNotifications);
+
+        SeedDistinctCategoryNotifications(persistedNotifications);
 
         await vm.LoadAsync();
 
@@ -239,7 +237,76 @@ public class NotificationPanelVMTests
         Assert.Equal(0, vm.NotificationStepCount);
         Assert.Equal(0, vm.CurrentStepNumber);
         Assert.Equal(-1, vm.CurrentNotificationIndex);
+        Assert.Null(vm.CurrentNotificationItem);
         Assert.Null(vm.CurrentNotification);
+    }
+
+    [Fact]
+    public async Task ClearNotificationGroupAsync_SetsIsCleared_ForSelectedGroupOnly()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        SeedDistinctCategoryNotifications(persistedNotifications);
+
+        await vm.LoadAsync();
+
+        var cardToClear = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.UpcomingPayment));
+
+        await vm.ClearNotificationGroupCommand.ExecuteAsync(cardToClear);
+
+        Assert.Single(persistedNotifications.Where(notification => notification.IsCleared));
+        Assert.Single(persistedNotifications.Where(notification =>
+            !notification.IsCleared && notification.Type.StartsWith("LowBalance", StringComparison.Ordinal)));
+        Assert.Single(vm.NotificationItems);
+        Assert.Equal(NotificationGroupCategory.LowBalance, vm.NotificationItems[0].Category);
+    }
+
+    [Fact]
+    public async Task OpenNotificationActionAsync_NonActionableCategory_DoesNotMutateNotifications()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        SeedDistinctCategoryNotifications(persistedNotifications);
+
+        await vm.LoadAsync();
+
+        var lowBalanceCard = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.LowBalance));
+
+        await vm.OpenNotificationActionCommand.ExecuteAsync(lowBalanceCard);
+
+        Assert.Equal(2, persistedNotifications.Count);
+        Assert.DoesNotContain(persistedNotifications, notification => notification.IsCleared);
+        Assert.Equal(2, vm.NotificationItems.Count);
+    }
+
+    [Fact]
+    public async Task ClearAllNotificationsAsync_WithGroupedItems_ClearsAllPersistedActiveRows()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        SeedDistinctCategoryNotifications(persistedNotifications);
+
+        await vm.LoadAsync();
+        await vm.ClearAllNotificationsCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, persistedNotifications.Count);
+        Assert.All(persistedNotifications, notification => Assert.True(notification.IsCleared));
+        Assert.Empty(vm.NotificationItems);
+        Assert.False(vm.HasNotifications);
     }
 
     [Fact]
@@ -355,6 +422,42 @@ public class NotificationPanelVMTests
         Assert.True(persistedNotifications[0].IsForDeletion);
     }
 
+    private static void AssertGroupedCardShape(NotificationItemVM card)
+    {
+        Assert.NotEqual(NotificationGroupCategory.Other, card.Category);
+        Assert.True(card.Count >= 0);
+        Assert.NotNull(card.Notifications);
+        Assert.NotNull(card.Header);
+        Assert.NotNull(card.Message);
+    }
+
+    private static void SeedDistinctCategoryNotifications(List<Notification> persistedNotifications)
+    {
+        persistedNotifications.AddRange(
+        [
+            new Notification
+            {
+                Id = 1,
+                Type = $"UpcomingPayment-1_{DateTime.Today.AddDays(7):yyyyMMdd}",
+                Header = "Upcoming Payment - Visa",
+                Message = "Visa is due soon.",
+                CreatedOn = DateTime.Today.AddMinutes(-1),
+                IsCleared = false,
+                IsForDeletion = false
+            },
+            new Notification
+            {
+                Id = 2,
+                Type = "LowBalance-9",
+                Header = "Low Balance - Wallet",
+                Message = "Wallet is down to 20%.",
+                CreatedOn = DateTime.Today.AddMinutes(-2),
+                IsCleared = false,
+                IsForDeletion = false
+            }
+        ]);
+    }
+
     private static NotificationPanelVM CreateVm(
         IReadOnlyList<ExpenseVM> expenses,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
@@ -439,6 +542,7 @@ public class NotificationPanelVMTests
             spendingSourceService,
             dataOperationRunner,
             mapper,
+            new NotificationGroupingService(),
             new WeakReferenceMessenger());
     }
 }

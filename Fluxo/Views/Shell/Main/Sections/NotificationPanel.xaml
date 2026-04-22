@@ -82,11 +82,11 @@
                     PreviewMouseLeftButtonDown="OnCarouselViewportPreviewMouseLeftButtonDown"
                     PreviewMouseLeftButtonUp="OnCarouselViewportPreviewMouseLeftButtonUp"
                     PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
-                    <ContentControl x:Name="CurrentNotificationPresenter" ContentTemplate="{StaticResource DashboardNotificationTemplate}" />
+                    <ContentControl x:Name="CurrentNotificationPresenter" ContentTemplate="{StaticResource DashboardNotificationGroupTemplate}" />
 
                     <ContentControl
                         x:Name="IncomingNotificationPresenter"
-                        ContentTemplate="{StaticResource DashboardNotificationTemplate}"
+                        ContentTemplate="{StaticResource DashboardNotificationGroupTemplate}"
                         IsHitTestVisible="False"
                         Visibility="Collapsed" />
 
