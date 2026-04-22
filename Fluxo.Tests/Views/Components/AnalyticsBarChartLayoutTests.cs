@@ -14,11 +14,14 @@ public sealed class AnalyticsBarChartLayoutTests
         "AnalyticsBarChart.xaml"));
 
     [Fact]
-    public void ChartWidthIsFixed_AndBarsAreNotHardcoded()
+    public void ChartBarsAreResponsive_AndNotHardcoded()
     {
         var xaml = File.ReadAllText(AnalyticsBarChartXamlPath);
 
-        Assert.Contains("Width=\"620\"", xaml);
+        Assert.DoesNotContain("Width=\"620\"", xaml);
+        Assert.Contains("RowDefinition Height=\"*\"", xaml);
+        Assert.Contains("ScaleTransform ScaleY=\"{Binding BarHeightRatio}\"", xaml);
+        Assert.Contains("RenderTransformOrigin=\"0.5,1\"", xaml);
         Assert.Contains("HorizontalAlignment=\"Stretch\"", xaml);
         Assert.DoesNotContain("Width=\"56\"", xaml);
         Assert.Contains("Binding=\"{Binding HideValueText}\"", xaml);

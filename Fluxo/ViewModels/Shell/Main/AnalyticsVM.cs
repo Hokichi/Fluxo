@@ -5,7 +5,7 @@ using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 
-namespace Fluxo.ViewModels.Popups;
+namespace Fluxo.ViewModels.Shell.Main;
 
 public enum AnalyticsTrendMode
 {
@@ -208,7 +208,7 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
                 item.Total,
                 maxTopTagTotal <= 0m ? 0d : Math.Clamp((double)(item.Total / maxTopTagTotal * 100m), 0d, 100d)))
             .ToArray();
-        HasTagData = TopSpendingTagItems.Any(item => item.Total > 0m);
+        HasTagData = Enumerable.Any<AnalyticsTopTagCardItem>(TopSpendingTagItems, item => item.Total > 0m);
 
         GoalsCreatedInPeriod = dto.GoalsCreatedInPeriod
             .Select(goal => new AnalyticsGoalCardItem(
@@ -239,7 +239,7 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
             .Select((point, index) => new AnalyticsTrendBarItem(
                 point.Label,
                 point.Value,
-                CalculateBarHeight(point.Value, maxValue),
+                CalculateBarHeightRatio(point.Value, maxValue),
                 IsHighlighted: index == trendPoints.Count - 1 && point.Value > 0m,
                 HideValueText: HideTrendValueLabels,
                 RotateLabelVertical: IsTrendLabelVertical,
@@ -306,15 +306,14 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
             .ToArray();
     }
 
-    private static double CalculateBarHeight(decimal value, decimal maxValue)
+    private static double CalculateBarHeightRatio(decimal value, decimal maxValue)
     {
         if (value <= 0m || maxValue <= 0m)
-            return 0d;
+            return 0.02d;
 
-        const double maxHeight = 110d;
-        const double minHeight = 14d;
+        const double minRatio = 0.12d;
         var normalized = (double)(value / maxValue);
-        return Math.Max(minHeight, normalized * maxHeight);
+        return Math.Clamp(Math.Max(minRatio, normalized), 0d, 1d);
     }
 
     private static string FormatMoney(decimal value)
@@ -346,7 +345,7 @@ public readonly record struct AnalyticsTrendPoint(string Label, decimal Value);
 public sealed record AnalyticsTrendBarItem(
     string Label,
     decimal Value,
-    double BarHeight,
+    double BarHeightRatio,
     bool IsHighlighted,
     bool HideValueText,
     bool RotateLabelVertical,

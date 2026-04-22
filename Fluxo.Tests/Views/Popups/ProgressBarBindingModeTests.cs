@@ -5,13 +5,13 @@ namespace Fluxo.Tests.Views.Popups;
 
 public sealed class ProgressBarBindingModeTests
 {
-    private static readonly string AnalyticsPopupXamlPath = ResolveViewPath("Popups", "AnalyticsPopup.xaml");
+    private static readonly string AnalyticsXamlPath = ResolveViewPath("Shell", "Main", "Analytics.xaml");
     private static readonly string SpendingSourceDetailPopupXamlPath = ResolveViewPath("Popups", "SpendingSourceDetailPopup.xaml");
 
     [Fact]
     public void AnalyticsProgressBindings_AreOneWay()
     {
-        var xaml = File.ReadAllText(AnalyticsPopupXamlPath);
+        var xaml = File.ReadAllText(AnalyticsXamlPath);
 
         var oneWayMarker = "Value=\"{Binding ProgressPercent, Mode=OneWay}\"";
         var oneWayUsageCount = xaml.Split(oneWayMarker).Length - 1;

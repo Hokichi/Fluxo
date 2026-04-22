@@ -5,8 +5,10 @@ using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Shell.Main;
 using NSubstitute;
 using Xunit;
+using AnalyticsVM = Fluxo.ViewModels.Shell.Main.AnalyticsVM;
 
 namespace Fluxo.Tests.ViewModels.Popups;
 

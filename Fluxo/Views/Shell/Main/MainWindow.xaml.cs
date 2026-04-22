@@ -32,6 +32,8 @@ public partial class MainWindow : Window, IPopupHost
 {
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 100; // ms
+    private const int AnalyticsDrawerTransitionDuration = 220; // ms
+    private const int AnalyticsDrawerTabFadeDuration = 180; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly LogMemoryManager _logMemoryManager;
@@ -47,6 +49,11 @@ public partial class MainWindow : Window, IPopupHost
     private bool _wasMinimized;
     private bool _isPointerOverHeaderMenuButton;
     private bool _isPointerOverHeaderMenuPopup;
+    private bool _isAnalyticsDrawerOpen;
+    private bool _isAnalyticsDrawerTransitionActive;
+    private int _analyticsDrawerTabVisibilityToken;
+    private IServiceScope? _analyticsDrawerScope;
+    private Analytics? _analyticsDrawerView;
 
     private EventHandler? _renderHandler;
 
@@ -187,6 +194,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         finally
         {
+            DisposeAnalyticsDrawer();
             Application.Current.Shutdown(0);
         }
     }
@@ -473,6 +481,13 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_isAnalyticsDrawerOpen && e.Key == Key.Escape)
+        {
+            CloseAnalyticsDrawer();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.N && Keyboard.Modifiers == ModifierKeys.Control)
         {
             OpenQuickAddPopup();
@@ -622,6 +637,24 @@ public partial class MainWindow : Window, IPopupHost
         OpenAnalyticsPopup();
     }
 
+    private void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)
+    {
+        CloseHeaderMenu();
+
+        if (_isAnalyticsDrawerOpen)
+        {
+            CloseAnalyticsDrawer();
+            return;
+        }
+
+        OpenAnalyticsPopup();
+    }
+
+    private void OnCloseAnalyticsDrawerButtonClick(object sender, RoutedEventArgs e)
+    {
+        CloseAnalyticsDrawer();
+    }
+
     private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
     {
         OpenAddSpendingSourcePopup();
@@ -694,10 +727,8 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAnalyticsPopup()
     {
-        using var scope = _serviceProvider.CreateScope();
-        var popup = scope.ServiceProvider.GetRequiredService<AnalyticsPopup>();
-        popup.Owner = this;
-        popup.ShowDialog();
+        EnsureAnalyticsDrawerLoaded();
+        OpenAnalyticsDrawer();
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
@@ -739,6 +770,181 @@ public partial class MainWindow : Window, IPopupHost
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var transferVm = new TransferFundsVM(_mainVM, spendingSource, unitOfWork);
         _dialogService.ShowTransferFunds(transferVm, this);
+    }
+
+    private void EnsureAnalyticsDrawerLoaded()
+    {
+        if (_analyticsDrawerView is not null)
+            return;
+
+        _analyticsDrawerScope = _serviceProvider.CreateScope();
+        _analyticsDrawerView = _analyticsDrawerScope.ServiceProvider.GetRequiredService<Analytics>();
+        AnalyticsDrawerContentHost.Content = _analyticsDrawerView;
+    }
+
+    private void OpenAnalyticsDrawer()
+    {
+        if (_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive)
+            return;
+
+        AnalyticsDrawerPanel.Visibility = Visibility.Visible;
+        AnalyticsDrawerPanel.IsHitTestVisible = true;
+        AnalyticsDrawerPanel.UpdateLayout();
+        SetAnalyticsDrawerTabVisibility(visible: false, animate: true);
+        AnimateAnalyticsDrawer(opening: true);
+    }
+
+    private void CloseAnalyticsDrawer()
+    {
+        if (!_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive)
+            return;
+
+        AnimateAnalyticsDrawer(opening: false);
+    }
+
+    private void AnimateAnalyticsDrawer(bool opening)
+    {
+        _isAnalyticsDrawerTransitionActive = true;
+        AnalyticsDrawerTabButton.IsEnabled = false;
+
+        AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, null);
+
+        var panelHeight = Math.Max(AnalyticsDrawerPanel.ActualHeight, 1);
+        var from = opening ? panelHeight : 0;
+        var to = opening ? 0 : panelHeight;
+        var shouldReduceMotion = ShouldReduceMotion();
+
+        if (shouldReduceMotion)
+        {
+            _isAnalyticsDrawerOpen = opening;
+            _isAnalyticsDrawerTransitionActive = false;
+
+            if (opening)
+            {
+                AnalyticsDrawerTransform.Y = 0;
+                AnalyticsDrawerPanel.Visibility = Visibility.Visible;
+                AnalyticsDrawerPanel.IsHitTestVisible = true;
+                AnalyticsDrawerTabButton.IsEnabled = false;
+            }
+            else
+            {
+                AnalyticsDrawerPanel.Visibility = Visibility.Collapsed;
+                AnalyticsDrawerPanel.IsHitTestVisible = false;
+                AnalyticsDrawerTransform.Y = panelHeight;
+                SetAnalyticsDrawerTabVisibility(visible: true, animate: false, onCompleted: () =>
+                {
+                    AnalyticsDrawerTabButton.IsEnabled = true;
+                });
+            }
+
+            return;
+        }
+
+        var animation = new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(AnalyticsDrawerTransitionDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = opening ? EasingMode.EaseOut : EasingMode.EaseIn }
+        };
+
+        animation.Completed += (_, _) =>
+        {
+            _isAnalyticsDrawerOpen = opening;
+            _isAnalyticsDrawerTransitionActive = false;
+
+            if (!opening)
+            {
+                AnalyticsDrawerPanel.Visibility = Visibility.Collapsed;
+                AnalyticsDrawerPanel.IsHitTestVisible = false;
+                AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, null);
+                AnalyticsDrawerTransform.Y = panelHeight;
+                SetAnalyticsDrawerTabVisibility(visible: true, animate: true, onCompleted: () =>
+                {
+                    AnalyticsDrawerTabButton.IsEnabled = true;
+                });
+            }
+            else
+            {
+                AnalyticsDrawerTabButton.IsEnabled = false;
+            }
+        };
+
+        AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, animation);
+    }
+
+    private void SetAnalyticsDrawerTabVisibility(bool visible, bool animate, Action? onCompleted = null)
+    {
+        if (ShouldReduceMotion())
+            animate = false;
+
+        _analyticsDrawerTabVisibilityToken++;
+        var visibilityToken = _analyticsDrawerTabVisibilityToken;
+
+        AnalyticsDrawerTabHost.BeginAnimation(OpacityProperty, null);
+
+        if (!animate)
+        {
+            AnalyticsDrawerTabHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            AnalyticsDrawerTabHost.IsHitTestVisible = visible;
+            AnalyticsDrawerTabHost.Opacity = visible ? 1d : 0d;
+            onCompleted?.Invoke();
+            return;
+        }
+
+        if (visible)
+        {
+            AnalyticsDrawerTabHost.Visibility = Visibility.Visible;
+            AnalyticsDrawerTabHost.IsHitTestVisible = true;
+        }
+        else
+        {
+            AnalyticsDrawerTabHost.IsHitTestVisible = false;
+        }
+
+        var fromOpacity = visible ? AnalyticsDrawerTabHost.Opacity : 1d;
+        var toOpacity = visible ? 1d : 0d;
+
+        if (Math.Abs(fromOpacity - toOpacity) < 0.001d)
+        {
+            if (!visible)
+                AnalyticsDrawerTabHost.Visibility = Visibility.Collapsed;
+
+            onCompleted?.Invoke();
+            return;
+        }
+
+        var tabAnimation = new DoubleAnimation(fromOpacity, toOpacity, TimeSpan.FromMilliseconds(AnalyticsDrawerTabFadeDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = visible ? EasingMode.EaseOut : EasingMode.EaseIn }
+        };
+
+        tabAnimation.Completed += (_, _) =>
+        {
+            if (visibilityToken != _analyticsDrawerTabVisibilityToken)
+                return;
+
+            if (!visible)
+                AnalyticsDrawerTabHost.Visibility = Visibility.Collapsed;
+
+            onCompleted?.Invoke();
+        };
+
+        AnalyticsDrawerTabHost.BeginAnimation(OpacityProperty, tabAnimation);
+    }
+
+    private static bool ShouldReduceMotion()
+    {
+        return !SystemParameters.ClientAreaAnimation;
+    }
+
+    private void DisposeAnalyticsDrawer()
+    {
+        AnalyticsDrawerContentHost.Content = null;
+        _analyticsDrawerView = null;
+        _analyticsDrawerScope?.Dispose();
+        _analyticsDrawerScope = null;
+        _isAnalyticsDrawerOpen = false;
+        _isAnalyticsDrawerTransitionActive = false;
+        SetAnalyticsDrawerTabVisibility(visible: true, animate: false);
+        AnalyticsDrawerTabButton.IsEnabled = true;
     }
 
     // ── Popup overlay & blur ────────────────────────────────────────
