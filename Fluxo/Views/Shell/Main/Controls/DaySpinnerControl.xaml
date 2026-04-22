@@ -4,7 +4,22 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
-    <Grid Style="{StaticResource SpinnerNavigationContainerStyle}" Visibility="{Binding IsSpinnerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+    <UserControl.Resources>
+        <ItemsPanelTemplate x:Key="DaySpinnerItemsPanelTemplate">
+            <StackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+    </UserControl.Resources>
+
+    <Grid Visibility="{Binding IsSpinnerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="40" />
             <ColumnDefinition Width="*" />
@@ -31,14 +46,9 @@
             BorderBrush="Transparent"
             BorderThickness="0"
             ItemContainerStyle="{StaticResource DaysOfWeekStyle}"
+            ItemsPanel="{StaticResource DaySpinnerItemsPanelTemplate}"
             ItemsSource="{Binding DaysOfWeek}"
-            SelectedItem="{Binding SelectedDay, Mode=TwoWay}">
-            <ListView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-            </ListView.ItemsPanel>
-        </ListView>
+            SelectedItem="{Binding SelectedDay, Mode=TwoWay}" />
 
         <Button
             Grid.Column="2"

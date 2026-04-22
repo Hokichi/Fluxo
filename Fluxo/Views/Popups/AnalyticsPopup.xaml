@@ -75,6 +75,87 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <DataTemplate x:Key="AnalyticsTopSpendingTagItemTemplate">
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="70" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                    <Ellipse
+                        Width="6"
+                        Height="6"
+                        Fill="{Binding HexCode}" />
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="14"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding TagName}" />
+                </StackPanel>
+
+                <ProgressBar
+                    Grid.Column="1"
+                    Margin="14,0,14,0"
+                    VerticalAlignment="Center"
+                    Foreground="{Binding HexCode}"
+                    Maximum="100"
+                    Style="{StaticResource AnalyticsCardProgressBarStyle}"
+                    Value="{Binding ProgressPercent, Mode=OneWay}" />
+
+                <TextBlock
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Light}"
+                    FontSize="12"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="{Binding TotalText}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="AnalyticsGoalContributionItemTemplate">
+            <Border
+                Margin="0,0,0,10"
+                Padding="10"
+                Background="{StaticResource Brush.Background.Surface}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="10">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Name}" />
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding ProgressPercent, StringFormat={}{0:F0}%}" />
+                    </Grid>
+
+                    <ProgressBar
+                        Margin="0,6,0,6"
+                        Maximum="100"
+                        Style="{StaticResource AnalyticsCardProgressBarStyle}"
+                        Value="{Binding ProgressPercent, Mode=OneWay}" />
+
+                    <TextBlock
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}">
+                        <Run Text="{Binding CurrentAmount, StringFormat={}{0:N0}}" />
+                        <Run Text=" / " />
+                        <Run Text="{Binding TargetAmount, StringFormat={}{0:N0}}" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
     </customControls:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
@@ -435,51 +516,10 @@
                                 </StackPanel>
 
                                 <Grid Grid.Row="1" Margin="0,14,0,0">
-                                    <ItemsControl ItemsSource="{Binding TopSpendingTagItems}" Visibility="{Binding HasTagData, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,0,0,12">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="140" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="70" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                                                        <Ellipse
-                                                            Width="6"
-                                                            Height="6"
-                                                            Fill="{Binding HexCode}" />
-                                                        <TextBlock
-                                                            Margin="8,0,0,0"
-                                                            VerticalAlignment="Center"
-                                                            FontFamily="{StaticResource Medium}"
-                                                            FontSize="14"
-                                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                                            Text="{Binding TagName}" />
-                                                    </StackPanel>
-
-                                                    <ProgressBar
-                                                        Grid.Column="1"
-                                                        Margin="14,0,14,0"
-                                                        VerticalAlignment="Center"
-                                                        Foreground="{Binding HexCode}"
-                                                        Maximum="100"
-                                                        Style="{StaticResource AnalyticsCardProgressBarStyle}"
-                                                        Value="{Binding ProgressPercent, Mode=OneWay}" />
-
-                                                    <TextBlock
-                                                        Grid.Column="2"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Center"
-                                                        FontFamily="{StaticResource Light}"
-                                                        FontSize="12"
-                                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                                        Text="{Binding TotalText}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                    <ItemsControl
+                                        ItemTemplate="{StaticResource AnalyticsTopSpendingTagItemTemplate}"
+                                        ItemsSource="{Binding TopSpendingTagItems}"
+                                        Visibility="{Binding HasTagData, Converter={StaticResource BoolToVisibilityConverter}}" />
                                     <TextBlock Style="{StaticResource AnalyticsNoDataTextStyle}" Visibility="{Binding HasTagData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                                 </Grid>
                             </Grid>
@@ -508,48 +548,9 @@
                                     Margin="0,14,0,0"
                                     VerticalScrollBarVisibility="Auto">
                                     <Grid>
-                                        <ItemsControl ItemsSource="{Binding GoalsCreatedInPeriod}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border
-                                                        Margin="0,0,0,10"
-                                                        Padding="10"
-                                                        Background="{StaticResource Brush.Background.Surface}"
-                                                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                                        BorderThickness="1"
-                                                        CornerRadius="10">
-                                                        <StackPanel>
-                                                            <Grid>
-                                                                <TextBlock
-                                                                    FontFamily="{StaticResource Bold}"
-                                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                                    Text="{Binding Name}" />
-                                                                <TextBlock
-                                                                    HorizontalAlignment="Right"
-                                                                    FontFamily="{StaticResource Medium}"
-                                                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                                                    Text="{Binding ProgressPercent, StringFormat={}{0:F0}%}" />
-                                                            </Grid>
-
-                                                            <ProgressBar
-                                                                Margin="0,6,0,6"
-                                                                Maximum="100"
-                                                                Style="{StaticResource AnalyticsCardProgressBarStyle}"
-                                                                Value="{Binding ProgressPercent, Mode=OneWay}" />
-
-                                                            <TextBlock
-                                                                FontFamily="{StaticResource Medium}"
-                                                                FontSize="11"
-                                                                Foreground="{StaticResource Brush.Text.Secondary}">
-                                                                <Run Text="{Binding CurrentAmount, StringFormat={}{0:N0}}" />
-                                                                <Run Text=" / " />
-                                                                <Run Text="{Binding TargetAmount, StringFormat={}{0:N0}}" />
-                                                            </TextBlock>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                        <ItemsControl
+                                            ItemTemplate="{StaticResource AnalyticsGoalContributionItemTemplate}"
+                                            ItemsSource="{Binding GoalsCreatedInPeriod}" />
                                         <TextBlock
                                             Style="{StaticResource AnalyticsNoDataTextStyle}"
                                             Text="No Goals Found"

@@ -15,70 +15,6 @@
             <Setter Property="CornerRadius" Value="18" />
         </Style>
 
-        
-
-        
-
-        <Style x:Key="HueSliderThumbStyle" TargetType="Thumb">
-            <Setter Property="Width" Value="18" />
-            <Setter Property="Height" Value="8" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Thumb">
-                        <Border
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Text.Primary}"
-                            BorderThickness="1"
-                            CornerRadius="4" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="HueSliderStyle" TargetType="Slider">
-            <Setter Property="Width" Value="20" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Slider">
-                        <Grid>
-                            <Border Margin="5,0" CornerRadius="8">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                                        <GradientStop Offset="0" Color="#FFFF0000" />
-                                        <GradientStop Offset="0.17" Color="#FFFFFF00" />
-                                        <GradientStop Offset="0.33" Color="#FF00FF00" />
-                                        <GradientStop Offset="0.5" Color="#FF00FFFF" />
-                                        <GradientStop Offset="0.67" Color="#FF0000FF" />
-                                        <GradientStop Offset="0.83" Color="#FFFF00FF" />
-                                        <GradientStop Offset="1" Color="#FFFF0000" />
-                                    </LinearGradientBrush>
-                                </Border.Background>
-                            </Border>
-                            <Track
-                                x:Name="PART_Track"
-                                IsDirectionReversed="True"
-                                Orientation="Vertical">
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton
-                                        Command="Slider.DecreaseLarge"
-                                        IsHitTestVisible="False"
-                                        Opacity="0" />
-                                </Track.DecreaseRepeatButton>
-                                <Track.Thumb>
-                                    <Thumb Style="{StaticResource HueSliderThumbStyle}" />
-                                </Track.Thumb>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton
-                                        Command="Slider.IncreaseLarge"
-                                        IsHitTestVisible="False"
-                                        Opacity="0" />
-                                </Track.IncreaseRepeatButton>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </customControls:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
@@ -131,12 +67,62 @@
                     <Slider
                         x:Name="HueSlider"
                         Grid.Column="2"
+                        Width="20"
                         Minimum="0"
                         Maximum="360"
                         Orientation="Vertical"
-                        Style="{StaticResource HueSliderStyle}"
                         TickFrequency="1"
-                        ValueChanged="OnHueSliderValueChanged" />
+                        ValueChanged="OnHueSliderValueChanged">
+                        <Slider.Template>
+                            <ControlTemplate TargetType="Slider">
+                                <Grid>
+                                    <Border Margin="5,0" CornerRadius="8">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                <GradientStop Offset="0" Color="#FFFF0000" />
+                                                <GradientStop Offset="0.17" Color="#FFFFFF00" />
+                                                <GradientStop Offset="0.33" Color="#FF00FF00" />
+                                                <GradientStop Offset="0.5" Color="#FF00FFFF" />
+                                                <GradientStop Offset="0.67" Color="#FF0000FF" />
+                                                <GradientStop Offset="0.83" Color="#FFFF00FF" />
+                                                <GradientStop Offset="1" Color="#FFFF0000" />
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+                                    <Track
+                                        x:Name="PART_Track"
+                                        IsDirectionReversed="True"
+                                        Orientation="Vertical">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton
+                                                Command="Slider.DecreaseLarge"
+                                                IsHitTestVisible="False"
+                                                Opacity="0" />
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb Width="18" Height="8">
+                                                <Thumb.Template>
+                                                    <ControlTemplate TargetType="Thumb">
+                                                        <Border
+                                                            Background="{StaticResource Brush.Background.Surface}"
+                                                            BorderBrush="{StaticResource Brush.Text.Primary}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="4" />
+                                                    </ControlTemplate>
+                                                </Thumb.Template>
+                                            </Thumb>
+                                        </Track.Thumb>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton
+                                                Command="Slider.IncreaseLarge"
+                                                IsHitTestVisible="False"
+                                                Opacity="0" />
+                                        </Track.IncreaseRepeatButton>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Slider.Template>
+                    </Slider>
                 </Grid>
 
                 <TextBox

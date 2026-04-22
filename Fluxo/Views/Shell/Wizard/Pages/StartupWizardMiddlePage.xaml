@@ -29,7 +29,16 @@
                     Text="{Binding StepCounterText}" />
 
                 <!--  Step 1  -->
-                <Border Style="{StaticResource Step1SidebarStepStyle}">
+                <Border>
+                    <Border.Style>
+                        <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStep2Active}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Border
                             x:Name="Step1Stripe"
@@ -85,7 +94,16 @@
                 </Border>
 
                 <!--  Step 2  -->
-                <Border Style="{StaticResource Step2SidebarStepStyle}" Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Border.Style>
+                        <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStep3Active}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Border
                             x:Name="Step2Stripe"
@@ -138,7 +156,16 @@
                 </Border>
 
                 <!--  Step 3  -->
-                <Border Style="{StaticResource Step3SidebarStepStyle}" Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Border.Style>
+                        <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStep4Active}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Border
                             x:Name="Step3Stripe"
@@ -188,7 +215,16 @@
                 </Border>
 
                 <!--  Step 4  -->
-                <Border Style="{StaticResource Step4SidebarStepStyle}">
+                <Border>
+                    <Border.Style>
+                        <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStep5Active}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Border
                             x:Name="Step4Stripe"
@@ -235,7 +271,16 @@
                 </Border>
 
                 <!--  Step 5  -->
-                <Border Style="{StaticResource Step5SidebarStepStyle}">
+                <Border>
+                    <Border.Style>
+                        <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStep6Active}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Border
                             x:Name="Step5Stripe"
@@ -279,7 +324,16 @@
                 </Border>
 
                 <!--  Step 6  -->
-                <Border Style="{StaticResource Step6SidebarStepStyle}">
+                <Border>
+                    <Border.Style>
+                        <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Border
                             x:Name="Step6Stripe"
@@ -419,8 +473,19 @@
                         Grid.Column="2"
                         HorizontalAlignment="Right"
                         Click="OnNextClick"
-                        IsEnabled="{Binding IsNextEnabled}"
-                        Style="{StaticResource PrimaryActionButtonStyle}">
+                        IsEnabled="{Binding IsNextEnabled}">
+                        <Button.Style>
+                            <Style BasedOn="{StaticResource ActionButtonStyle}" TargetType="Button">
+                                <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.4" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
                         <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                             <TextBlock
                                 Margin="0,0,6,0"

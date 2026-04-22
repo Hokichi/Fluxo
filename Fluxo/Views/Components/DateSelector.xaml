@@ -14,6 +14,42 @@
             <Setter Property="FontSize" Value="10" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
         </Style>
+
+        <ItemsPanelTemplate x:Key="CalendarDayItemsPanelTemplate">
+            <WrapPanel ItemHeight="38" ItemWidth="38" />
+        </ItemsPanelTemplate>
+
+        <DataTemplate x:Key="CalendarDayItemTemplate">
+            <Button
+                Click="OnDayButtonClick"
+                Content="{Binding DayNumber}"
+                Style="{StaticResource CalendarDayButtonStyle}"
+                Tag="{Binding Date}" />
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="CalendarMonthItemsPanelTemplate">
+            <WrapPanel ItemHeight="46" ItemWidth="86" />
+        </ItemsPanelTemplate>
+
+        <DataTemplate x:Key="CalendarMonthItemTemplate">
+            <Button
+                Click="OnMonthButtonClick"
+                Content="{Binding Label}"
+                Style="{StaticResource CalendarChoiceButtonStyle}"
+                Tag="{Binding Value}" />
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="CalendarYearItemsPanelTemplate">
+            <WrapPanel ItemHeight="46" ItemWidth="86" />
+        </ItemsPanelTemplate>
+
+        <DataTemplate x:Key="CalendarYearItemTemplate">
+            <Button
+                Click="OnYearButtonClick"
+                Content="{Binding Label}"
+                Style="{StaticResource CalendarChoiceButtonStyle}"
+                Tag="{Binding Value}" />
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>
@@ -123,65 +159,28 @@
                             <TextBlock Style="{StaticResource WeekdayLabelStyle}" Text="Sun" />
                         </UniformGrid>
 
-                        <ItemsControl HorizontalAlignment="Center" ItemsSource="{Binding Days}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel ItemHeight="38" ItemWidth="38" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Button
-                                        Click="OnDayButtonClick"
-                                        Content="{Binding DayNumber}"
-                                        Style="{StaticResource CalendarDayButtonStyle}"
-                                        Tag="{Binding Date}" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <ItemsControl
+                            HorizontalAlignment="Center"
+                            ItemTemplate="{StaticResource CalendarDayItemTemplate}"
+                            ItemsPanel="{StaticResource CalendarDayItemsPanelTemplate}"
+                            ItemsSource="{Binding Days}" />
                     </StackPanel>
 
                     <ItemsControl
                         Margin="0,14,0,0"
                         HorizontalAlignment="Center"
+                        ItemTemplate="{StaticResource CalendarMonthItemTemplate}"
+                        ItemsPanel="{StaticResource CalendarMonthItemsPanelTemplate}"
                         ItemsSource="{Binding Months}"
-                        Visibility="{Binding IsMonthMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel ItemHeight="46" ItemWidth="86" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button
-                                    Click="OnMonthButtonClick"
-                                    Content="{Binding Label}"
-                                    Style="{StaticResource CalendarChoiceButtonStyle}"
-                                    Tag="{Binding Value}" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        Visibility="{Binding IsMonthMode, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <ItemsControl
                         Margin="0,14,0,0"
                         HorizontalAlignment="Center"
+                        ItemTemplate="{StaticResource CalendarYearItemTemplate}"
+                        ItemsPanel="{StaticResource CalendarYearItemsPanelTemplate}"
                         ItemsSource="{Binding Years}"
-                        Visibility="{Binding IsYearMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel ItemHeight="46" ItemWidth="86" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button
-                                    Click="OnYearButtonClick"
-                                    Content="{Binding Label}"
-                                    Style="{StaticResource CalendarChoiceButtonStyle}"
-                                    Tag="{Binding Value}" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        Visibility="{Binding IsYearMode, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </StackPanel>
             </Border>
         </Popup>

@@ -12,28 +12,6 @@
     <customControls:BasePopup.Resources>
         <cons:SourceSequenceLabelConverter x:Key="SourceSequenceLabelConverter" />
 
-        <PathGeometry x:Key="PlanningPopup.AngleLeftPath">M9.17,11.29,13.41,7.05a1,1,0,0,1,1.42,0,1,1,0,0,1,0,1.41L11.29,12l3.54,3.54a1,1,0,0,1,0,1.41,1,1,0,0,1-.71.29,1,1,0,0,1-.71-.29L9.17,12.71A1,1,0,0,1,9.17,11.29Z</PathGeometry>
-        <GeometryDrawing
-            x:Key="PlanningPopup.AngleLeftIcon"
-            Brush="Black"
-            Geometry="{StaticResource PlanningPopup.AngleLeftPath}" />
-        <GeometryDrawing
-            x:Key="PlanningPopup.AngleRightIcon"
-            Brush="Black"
-            Geometry="{StaticResource AngleRight}" />
-        <GeometryDrawing
-            x:Key="PlanningPopup.CheckIcon"
-            Brush="Black"
-            Geometry="{StaticResource Check}" />
-
-        <Style x:Key="TableContainerStyle" TargetType="Border">
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Main}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
-        </Style>
-
         <Style x:Key="TableRowCardStyle" TargetType="Border">
             <Setter Property="Padding" Value="10" />
             <Setter Property="Margin" Value="0,0,0,8" />
@@ -109,6 +87,79 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <DataTemplate x:Key="PlanningIncomeItemTemplate">
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource SourceSequenceLabelConverter}}" />
+
+                <customControls:MoneyTextBox
+                    Grid.Column="2"
+                    AllowDecimal="False"
+                    Language="en-US"
+                    Style="{StaticResource RoundedMoneyTextInputStyle}"
+                    Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter='NoDecimal;Comma'}"
+                    UseCommaAsGroupSeparator="True" />
+
+                <customControls:BalloonButton
+                    Grid.Column="4"
+                    Margin="0,6,0,6"
+                    VerticalAlignment="Center"
+                    ButtonIcon="{StaticResource PopupStyles.Close}"
+                    Click="OnRemoveIncomeClick"
+                    Style="{StaticResource PlannerDangerBalloonButtonStyle}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="PlanningExpenseItemTemplate">
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <customControls:MoneyTextBox
+                    Grid.Column="2"
+                    Language="en-US"
+                    Style="{StaticResource RoundedMoneyTextInputStyle}"
+                    Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+
+                <ComboBox
+                    Grid.Column="4"
+                    DisplayMemberPath="Label"
+                    ItemsSource="{Binding AllocationCategories, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningPopup}}}"
+                    SelectedValue="{Binding ExpenseCategory, Mode=TwoWay}"
+                    SelectedValuePath="Value"
+                    Style="{StaticResource FluxoComboBoxStyle}" />
+
+                <customControls:BalloonButton
+                    Grid.Column="6"
+                    Margin="0,6,0,6"
+                    VerticalAlignment="Center"
+                    ButtonIcon="{StaticResource PopupStyles.Close}"
+                    Click="OnRemoveExpenseClick"
+                    Style="{StaticResource PlannerDangerBalloonButtonStyle}" />
+            </Grid>
+        </DataTemplate>
     </customControls:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24" PreviewKeyDown="OnPopupPreviewKeyDown">
@@ -182,44 +233,8 @@
                                     VerticalScrollBarVisibility="Auto">
                                     <ItemsControl
                                         AlternationCount="1000"
-                                        ItemsSource="{Binding Incomes}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,0,0,12">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="110" />
-                                                        <ColumnDefinition Width="8" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="8" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <TextBlock
-                                                        VerticalAlignment="Center"
-                                                        FontFamily="{StaticResource Bold}"
-                                                        FontSize="11"
-                                                        Foreground="{StaticResource Brush.Text.Secondary}"
-                                                        Text="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource SourceSequenceLabelConverter}}" />
-
-                                                    <customControls:MoneyTextBox
-                                                        Grid.Column="2"
-                                                        AllowDecimal="False"
-                                                        Language="en-US"
-                                                        Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter='NoDecimal;Comma'}"
-                                                        UseCommaAsGroupSeparator="True" />
-
-                                                    <customControls:BalloonButton
-                                                        Grid.Column="4"
-                                                        Margin="0,6,0,6"
-                                                        VerticalAlignment="Center"
-                                                        ButtonIcon="{StaticResource PopupStyles.Close}"
-                                                        Click="OnRemoveIncomeClick"
-                                                        Style="{StaticResource PlannerDangerBalloonButtonStyle}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                        ItemTemplate="{StaticResource PlanningIncomeItemTemplate}"
+                                        ItemsSource="{Binding Incomes}" />
                                 </customControls:FadingScrollViewer>
 
                                 <Button
@@ -309,47 +324,7 @@
                                     Margin="0"
                                     HorizontalScrollBarVisibility="Disabled"
                                     VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding Expenses}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,0,0,12">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="2*" />
-                                                        <ColumnDefinition Width="8" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="8" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="8" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <TextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                                                    <customControls:MoneyTextBox
-                                                        Grid.Column="2"
-                                                        Language="en-US"
-                                                        Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-
-                                                    <ComboBox
-                                                        Grid.Column="4"
-                                                        DisplayMemberPath="Label"
-                                                        ItemsSource="{Binding AllocationCategories, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningPopup}}}"
-                                                        SelectedValue="{Binding ExpenseCategory, Mode=TwoWay}"
-                                                        SelectedValuePath="Value"
-                                                        Style="{StaticResource FluxoComboBoxStyle}" />
-
-                                                    <customControls:BalloonButton
-                                                        Grid.Column="6"
-                                                        Margin="0,6,0,6"
-                                                        VerticalAlignment="Center"
-                                                        ButtonIcon="{StaticResource PopupStyles.Close}"
-                                                        Click="OnRemoveExpenseClick"
-                                                        Style="{StaticResource PlannerDangerBalloonButtonStyle}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                    <ItemsControl ItemTemplate="{StaticResource PlanningExpenseItemTemplate}" ItemsSource="{Binding Expenses}" />
                                 </customControls:FadingScrollViewer>
                             </Grid>
 

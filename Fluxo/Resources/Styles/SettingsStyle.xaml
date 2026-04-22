@@ -108,17 +108,4 @@
         <Setter Property="BorderThickness" Value="1" />
     </Style>
 
-    <Style x:Key="BudgetAllocationContainerStyle" TargetType="StackPanel">
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding HasSpendingSources}" Value="False">
-                <Setter Property="Effect">
-                    <Setter.Value>
-                        <BlurEffect Radius="15" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="Opacity" Value="0.4" />
-                <Setter Property="IsHitTestVisible" Value="False" />
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
 </ResourceDictionary>

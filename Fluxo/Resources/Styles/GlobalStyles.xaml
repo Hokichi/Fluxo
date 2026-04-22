@@ -78,46 +78,6 @@
         </Setter>
     </Style>
 
-    <ControlTemplate x:Key="RoundedHorizontalScrollBarTemplate" TargetType="ScrollBar">
-        <Grid x:Name="Root" Background="Transparent">
-            <Border
-                x:Name="TrackBackground"
-                Height="8"
-                Margin="0,2"
-                Background="{TemplateBinding Background}"
-                CornerRadius="4"
-                Opacity="0" />
-            <Track x:Name="PART_Track" Orientation="Horizontal">
-                <Track.DecreaseRepeatButton>
-                    <RepeatButton
-                        Command="ScrollBar.LineLeftCommand"
-                        IsHitTestVisible="False"
-                        Opacity="0" />
-                </Track.DecreaseRepeatButton>
-                <Track.Thumb>
-                    <Thumb Style="{StaticResource RoundedHorizontalScrollThumbStyle}" />
-                </Track.Thumb>
-                <Track.IncreaseRepeatButton>
-                    <RepeatButton
-                        Command="ScrollBar.LineRightCommand"
-                        IsHitTestVisible="False"
-                        Opacity="0" />
-                </Track.IncreaseRepeatButton>
-            </Track>
-        </Grid>
-        <ControlTemplate.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="TrackBackground" Property="Opacity" Value="1" />
-            </Trigger>
-            <Trigger SourceName="PART_Track" Property="IsMouseCaptureWithin" Value="True">
-                <Setter TargetName="TrackBackground" Property="Opacity" Value="1" />
-            </Trigger>
-            <Trigger Property="IsEnabled" Value="False">
-                <Setter TargetName="Root" Property="Opacity" Value="0.5" />
-            </Trigger>
-        </ControlTemplate.Triggers>
-    </ControlTemplate>
-
     <ControlTemplate x:Key="RoundedVerticalScrollBarTemplate" TargetType="ScrollBar">
         <Grid x:Name="Root" Background="Transparent">
             <Border
@@ -162,13 +122,6 @@
         </ControlTemplate.Triggers>
     </ControlTemplate>
 
-    <Style x:Key="RoundedHorizontalScrollBarStyle" TargetType="ScrollBar">
-        <Setter Property="Height" Value="12" />
-        <Setter Property="Margin" Value="0,12,0,0" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-        <Setter Property="Template" Value="{StaticResource RoundedHorizontalScrollBarTemplate}" />
-    </Style>
-
     <Style x:Key="RoundedVerticalScrollBarStyle" TargetType="ScrollBar">
         <Setter Property="Width" Value="12" />
         <Setter Property="Margin" Value="12,0,0,0" />
@@ -176,7 +129,53 @@
         <Setter Property="Template" Value="{StaticResource RoundedVerticalScrollBarTemplate}" />
     </Style>
 
-    <Style BasedOn="{StaticResource RoundedHorizontalScrollBarStyle}" TargetType="ScrollBar">
+    <Style TargetType="ScrollBar">
+        <Setter Property="Height" Value="12" />
+        <Setter Property="Margin" Value="0,12,0,0" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid x:Name="Root" Background="Transparent">
+                        <Border
+                            x:Name="TrackBackground"
+                            Height="8"
+                            Margin="0,2"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            Opacity="0" />
+                        <Track x:Name="PART_Track" Orientation="Horizontal">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton
+                                    Command="ScrollBar.LineLeftCommand"
+                                    IsHitTestVisible="False"
+                                    Opacity="0" />
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource RoundedHorizontalScrollThumbStyle}" />
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton
+                                    Command="ScrollBar.LineRightCommand"
+                                    IsHitTestVisible="False"
+                                    Opacity="0" />
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="TrackBackground" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger SourceName="PART_Track" Property="IsMouseCaptureWithin" Value="True">
+                            <Setter TargetName="TrackBackground" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
         <Style.Triggers>
             <Trigger Property="Orientation" Value="Vertical">
                 <Setter Property="Width" Value="12" />

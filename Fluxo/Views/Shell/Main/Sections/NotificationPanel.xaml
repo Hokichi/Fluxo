@@ -49,8 +49,12 @@
                             <Border
                                 Grid.Column="1"
                                 Margin="8,0,0,0"
+                                Padding="8,4"
                                 VerticalAlignment="Top"
-                                Style="{StaticResource DashboardCountBadgeStyle}">
+                                Background="{StaticResource Brush.Background.Hover}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="1"
+                                CornerRadius="999">
                                 <TextBlock
                                     FontFamily="{StaticResource Medium}"
                                     FontSize="9"

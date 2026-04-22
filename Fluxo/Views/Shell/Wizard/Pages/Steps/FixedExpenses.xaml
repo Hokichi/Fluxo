@@ -4,60 +4,62 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
+    <UserControl.Resources>
+        <ItemsPanelTemplate x:Key="WizardFixedExpensesItemsPanelTemplate">
+            <primitives:UniformGrid Columns="2" />
+        </ItemsPanelTemplate>
+
+        <Style x:Key="WizardFixedExpensesItemContainerStyle" TargetType="ContentPresenter">
+            <Setter Property="Margin" Value="0,0,12,12" />
+        </Style>
+
+        <DataTemplate x:Key="WizardFixedExpensesItemTemplate">
+            <Border Style="{StaticResource CardStyle}">
+                <Grid>
+                    <StackPanel
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal">
+                        <customControls:BalloonButton Click="OnEditFixedExpenseClick" Style="{StaticResource EditButton}" />
+                        <customControls:BalloonButton Click="OnDeleteFixedExpenseClick" Style="{StaticResource DeleteButton}" />
+                    </StackPanel>
+                    <StackPanel Margin="0,4,0,0">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="15"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Name}" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}">
+                            <Run Text="{Binding CategoryLabel}" />
+                            <Run Text=" &#183; " />
+                            <Run Text="{Binding SpendingSourceName}" />
+                        </TextBlock>
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Warning}"
+                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding DueDateDisplay}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <!--  Step 3: Fixed Expenses  -->
     <StackPanel Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}">
-        <ItemsControl ItemsSource="{Binding FixedExpenses}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <primitives:UniformGrid Columns="2" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemContainerStyle>
-                <Style TargetType="ContentPresenter">
-                    <Setter Property="Margin" Value="0,0,12,12" />
-                </Style>
-            </ItemsControl.ItemContainerStyle>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource CardStyle}">
-                        <Grid>
-                            <StackPanel
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Bottom"
-                                Orientation="Horizontal">
-                                <customControls:BalloonButton Click="OnEditFixedExpenseClick" Style="{StaticResource EditButton}" />
-                                <customControls:BalloonButton Click="OnDeleteFixedExpenseClick" Style="{StaticResource DeleteButton}" />
-                            </StackPanel>
-                            <StackPanel Margin="0,4,0,0">
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="15"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="{Binding Name}" />
-                                <TextBlock
-                                    Margin="0,8,0,0"
-                                    FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}">
-                                    <Run Text="{Binding CategoryLabel}" />
-                                    <Run Text=" · " />
-                                    <Run Text="{Binding SpendingSourceName}" />
-                                </TextBlock>
-                                <TextBlock
-                                    Margin="0,12,0,0"
-                                    FontFamily="{StaticResource Bold}"
-                                    Foreground="{StaticResource Brush.Warning}"
-                                    Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
-                                    ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
-                                <TextBlock
-                                    Margin="0,8,0,0"
-                                    FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="{Binding DueDateDisplay}" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <ItemsControl
+            ItemContainerStyle="{StaticResource WizardFixedExpensesItemContainerStyle}"
+            ItemTemplate="{StaticResource WizardFixedExpensesItemTemplate}"
+            ItemsPanel="{StaticResource WizardFixedExpensesItemsPanelTemplate}"
+            ItemsSource="{Binding FixedExpenses}" />
     </StackPanel>
 </UserControl>

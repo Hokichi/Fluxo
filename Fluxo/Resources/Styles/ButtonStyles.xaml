@@ -231,14 +231,6 @@
         </Setter>
     </Style>
 
-    <Style
-        x:Key="TagAddBalloonButtonStyle"
-        BasedOn="{StaticResource ToolbarActionBalloonButtonStyle}"
-        TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.PlusSolid}" />
-        <Setter Property="HoveredBackground" Value="{StaticResource Brush.Mint}" />
-    </Style>
-
     <Style x:Key="ToggleSwitchStyle" TargetType="ToggleButton">
         <Setter Property="Width" Value="40" />
         <Setter Property="Height" Value="20" />
@@ -295,13 +287,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
-
-    <Style
-        x:Key="DangerActionButtonStyle"
-        BasedOn="{StaticResource PopupTextButtonStyle}"
-        TargetType="Button">
-        <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
     </Style>
 
     <Style x:Key="AddTileButtonStyle" TargetType="Button">
@@ -378,20 +363,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
-
-    <Style
-        x:Key="PrimaryActionButtonStyle"
-        BasedOn="{StaticResource ActionButtonStyle}"
-        TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
-        <Style.Triggers>
-            <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Opacity" Value="0.4" />
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
     <Style
@@ -814,36 +785,6 @@
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Opacity" Value="0.4" />
             </Trigger>
-        </Style.Triggers>
-    </Style>
-
-    <Style
-        x:Key="DisableActionButtonStyle"
-        BasedOn="{StaticResource DetailActionBalloonButtonStyle}"
-        TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.LightningSlashFill}" />
-        <Setter Property="HoveredBackground" Value="{StaticResource Brush.Warning}" />
-        <Setter Property="ToolTip" Value="Disable source" />
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsEnabled}" Value="False">
-                <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.LightningFill}" />
-                <Setter Property="ToolTip" Value="Enable source" />
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
-
-    <Style
-        x:Key="HideActionButtonStyle"
-        BasedOn="{StaticResource DetailActionBalloonButtonStyle}"
-        TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.EyeOff}" />
-        <Setter Property="HoveredBackground" Value="{StaticResource Brush.Primary.Hover}" />
-        <Setter Property="ToolTip" Value="Hide source" />
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsHidden}" Value="True">
-                <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.Eye}" />
-                <Setter Property="ToolTip" Value="Unhide source" />
-            </DataTrigger>
         </Style.Triggers>
     </Style>
 

@@ -29,6 +29,14 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Fluxo;component/Resources/Styles/MainWindowStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <ItemsPanelTemplate x:Key="MainWindowSpendingSourcesItemsPanelTemplate">
+                <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+
+            <DataTemplate x:Key="MainWindowSpendingSourceItemTemplate">
+                <components:IncomeSource />
+            </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -411,8 +419,11 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock
+                            HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Style="{StaticResource HeaderText}"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Text.Primary}"
                             Text="Overview" />
 
                         <Button
@@ -462,20 +473,11 @@
                                     BorderBrush="Transparent"
                                     BorderThickness="0"
                                     ItemContainerStyle="{StaticResource IncomeSources}"
+                                    ItemTemplate="{StaticResource MainWindowSpendingSourceItemTemplate}"
+                                    ItemsPanel="{StaticResource MainWindowSpendingSourcesItemsPanelTemplate}"
                                     ItemsSource="{Binding SpendingSources}"
                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                    ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                                    <ListView.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" />
-                                        </ItemsPanelTemplate>
-                                    </ListView.ItemsPanel>
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate>
-                                            <components:IncomeSource />
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
+                                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
                         </customControls:FadingScrollViewer>
                     </Grid>
@@ -483,7 +485,7 @@
                     <Grid Grid.Row="2" Margin="0,8,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="200" />
+                            <RowDefinition Height="180" />
                         </Grid.RowDefinitions>
 
                         <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />

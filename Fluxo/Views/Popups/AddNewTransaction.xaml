@@ -69,6 +69,14 @@
                 IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"
                 Style="{StaticResource PopupTagItemToggleStyle}" />
         </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="PopupVisibleTagsItemsPanelTemplate">
+            <StackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+
+        <ItemsPanelTemplate x:Key="PopupOverflowTagsItemsPanelTemplate">
+            <WrapPanel />
+        </ItemsPanelTemplate>
     </customControls:BasePopup.Resources>
 
     <Border Padding="20,4,20,20">
@@ -280,15 +288,10 @@
                         DockPanel.Dock="Left"
                         ItemContainerStyle="{StaticResource PopupTagListBoxItemStyle}"
                         ItemTemplate="{StaticResource PopupTagTemplate}"
+                        ItemsPanel="{StaticResource PopupVisibleTagsItemsPanelTemplate}"
                         ItemsSource="{Binding VisibleTags}"
                         SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
-                        Style="{StaticResource PopupTagListBoxStyle}">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                    </ListBox>
+                        Style="{StaticResource PopupTagListBoxStyle}" />
 
                     <ToggleButton
                         x:Name="MoreTagsButton"
@@ -323,17 +326,12 @@
                                 Text="More Tags" />
                             <ListBox
                                 x:Name="MoreTagsListBox"
-                                ItemContainerStyle="{StaticResource PopupOtherTagListBoxItemStyle}"
-                                ItemTemplate="{StaticResource PopupTagTemplate}"
-                                ItemsSource="{Binding OverflowTags}"
-                                SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
-                                Style="{StaticResource PopupTagListBoxStyle}">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                            </ListBox>
+                                    ItemContainerStyle="{StaticResource PopupOtherTagListBoxItemStyle}"
+                                    ItemTemplate="{StaticResource PopupTagTemplate}"
+                                    ItemsPanel="{StaticResource PopupOverflowTagsItemsPanelTemplate}"
+                                    ItemsSource="{Binding OverflowTags}"
+                                    SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
+                                    Style="{StaticResource PopupTagListBoxStyle}" />
                         </StackPanel>
                     </Border>
                 </Popup>

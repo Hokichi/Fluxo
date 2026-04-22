@@ -3,6 +3,15 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components">
+    <UserControl.Resources>
+        <ItemsPanelTemplate x:Key="BudgetAllocationTagItemsPanelTemplate">
+            <StackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+
+        <ItemsPanelTemplate x:Key="BudgetAllocationPopupTagItemsPanelTemplate">
+            <WrapPanel />
+        </ItemsPanelTemplate>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -24,8 +33,17 @@
                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                     BorderThickness="1"
                     CornerRadius="12"
-                    Cursor="Hand"
-                    Style="{StaticResource AllTagUnselectedBorderStyle}">
+                    Cursor="Hand">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.InputBindings>
                         <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
                     </Border.InputBindings>
@@ -43,8 +61,17 @@
                     Background="{StaticResource Brush.Mint}"
                     BorderThickness="1"
                     CornerRadius="12"
-                    Cursor="Hand"
-                    Style="{StaticResource AllTagSelectedBorderStyle}">
+                    Cursor="Hand">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.InputBindings>
                         <MouseBinding Command="{Binding ClearSelectedTagCommand}" MouseAction="LeftClick" />
                     </Border.InputBindings>
@@ -63,16 +90,11 @@
                 BorderThickness="0"
                 ItemContainerStyle="{StaticResource ListViewItemStyle}"
                 ItemTemplate="{StaticResource Tags}"
+                ItemsPanel="{StaticResource BudgetAllocationTagItemsPanelTemplate}"
                 ItemsSource="{Binding Tags}"
                 PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                SelectedItem="{Binding SelectedVisibleTag}">
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-            </ListView>
+                SelectedItem="{Binding SelectedVisibleTag}" />
 
             <ToggleButton
                 x:Name="MoreTagsButton"
@@ -121,18 +143,13 @@
                                 BorderThickness="0"
                                 ItemContainerStyle="{StaticResource PopupTagListViewItemStyle}"
                                 ItemTemplate="{StaticResource PopupTags}"
+                                ItemsPanel="{StaticResource BudgetAllocationPopupTagItemsPanelTemplate}"
                                 ItemsSource="{Binding OtherTags}"
                                 PreviewMouseLeftButtonDown="OnTagListPreviewMouseLeftButtonDown"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                 SelectedItem="{Binding SelectedOtherTag}"
-                                SelectionChanged="OnMoreTagsSelectionChanged">
-                                <ListView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                    </ItemsPanelTemplate>
-                                </ListView.ItemsPanel>
-                            </ListView>
+                                SelectionChanged="OnMoreTagsSelectionChanged" />
                         </ScrollViewer>
                     </Grid>
                 </Border>

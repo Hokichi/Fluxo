@@ -19,6 +19,76 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <DataTemplate x:Key="QuickSearchResultItemTemplate">
+            <Border MouseLeftButtonUp="OnResultItemClick" Style="{StaticResource SearchResultItemStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Margin="0,0,8,0">
+                        <TextBlock
+                            FontFamily="{DynamicResource Bold}"
+                            FontSize="13"
+                            Foreground="{DynamicResource Brush.Text.Primary}"
+                            Text="{Binding Expense.Name}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                        <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                            <TextBlock
+                                FontFamily="{DynamicResource Regular}"
+                                FontSize="10"
+                                Foreground="{DynamicResource Brush.Text.Muted}"
+                                Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+
+                            <Border
+                                Margin="8,0,0,0"
+                                Padding="5,2"
+                                VerticalAlignment="Center"
+                                Background="{Binding Expense.ExpenseTag.HexCode}">
+                                <Border.CornerRadius>
+                                    <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                                    </MultiBinding>
+                                </Border.CornerRadius>
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="{DynamicResource Medium}"
+                                    FontSize="10"
+                                    Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                    Text="{Binding Expense.ExpenseTag.Name}" />
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{DynamicResource Bold}"
+                            FontSize="13"
+                            Foreground="{DynamicResource Brush.Text.Primary}"
+                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                        <TextBlock
+                            MaxWidth="120"
+                            Margin="0,6,0,0"
+                            HorizontalAlignment="Right"
+                            FontFamily="{DynamicResource Regular}"
+                            FontSize="10"
+                            Foreground="{DynamicResource Brush.Text.Muted}"
+                            Text="{Binding SpendingSource.Name}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </customControls:BasePopup.Resources>
 
     <Grid Width="450">
@@ -54,8 +124,20 @@
                     x:Name="SearchBox"
                     Grid.Column="1"
                     Margin="10,0,0,0"
-                    Style="{StaticResource SearchTextBoxStyle}"
-                    TextChanged="OnSearchTextChanged" />
+                    Background="Transparent"
+                    BorderThickness="0"
+                    CaretBrush="{DynamicResource Brush.Text.Primary}"
+                    FontFamily="{DynamicResource Regular}"
+                    FontSize="14"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    VerticalContentAlignment="Center"
+                    TextChanged="OnSearchTextChanged">
+                    <TextBox.Template>
+                        <ControlTemplate TargetType="TextBox">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                        </ControlTemplate>
+                    </TextBox.Template>
+                </TextBox>
             </Grid>
         </Border>
 
@@ -75,79 +157,7 @@
                     Foreground="{DynamicResource Brush.Text.Muted}"
                     Text="No expense found"
                     Visibility="Collapsed" />
-                <ItemsControl x:Name="ResultsList">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border MouseLeftButtonUp="OnResultItemClick" Style="{StaticResource SearchResultItemStyle}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel Margin="0,0,8,0">
-                                        <TextBlock
-                                            FontFamily="{DynamicResource Bold}"
-                                            FontSize="13"
-                                            Foreground="{DynamicResource Brush.Text.Primary}"
-                                            Text="{Binding Expense.Name}"
-                                            TextTrimming="CharacterEllipsis"
-                                            TextWrapping="NoWrap" />
-                                        <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
-                                            <TextBlock
-                                                FontFamily="{DynamicResource Regular}"
-                                                FontSize="10"
-                                                Foreground="{DynamicResource Brush.Text.Muted}"
-                                                Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
-
-                                            <Border
-                                                Margin="8,0,0,0"
-                                                Padding="5,2"
-                                                VerticalAlignment="Center"
-                                                Background="{Binding Expense.ExpenseTag.HexCode}">
-                                                <Border.CornerRadius>
-                                                    <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
-                                                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
-                                                    </MultiBinding>
-                                                </Border.CornerRadius>
-                                                <TextBlock
-                                                    VerticalAlignment="Center"
-                                                    FontFamily="{DynamicResource Medium}"
-                                                    FontSize="10"
-                                                    Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                                    Text="{Binding Expense.ExpenseTag.Name}" />
-                                            </Border>
-                                        </StackPanel>
-                                    </StackPanel>
-
-                                    <StackPanel
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center">
-                                        <TextBlock
-                                            HorizontalAlignment="Right"
-                                            FontFamily="{DynamicResource Bold}"
-                                            FontSize="13"
-                                            Foreground="{DynamicResource Brush.Text.Primary}"
-                                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
-                                            ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
-                                        <TextBlock
-                                            MaxWidth="120"
-                                            Margin="0,6,0,0"
-                                            HorizontalAlignment="Right"
-                                            FontFamily="{DynamicResource Regular}"
-                                            FontSize="10"
-                                            Foreground="{DynamicResource Brush.Text.Muted}"
-                                            Text="{Binding SpendingSource.Name}"
-                                            TextTrimming="CharacterEllipsis"
-                                            TextWrapping="NoWrap" />
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ItemsControl x:Name="ResultsList" ItemTemplate="{StaticResource QuickSearchResultItemTemplate}" />
             </Grid>
         </Border>
     </Grid>

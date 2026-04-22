@@ -92,23 +92,15 @@
                 </TextBlock>
             </Grid>
         </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="TrendBarLayerItemsPanelTemplate">
+            <UniformGrid Rows="1" />
+        </ItemsPanelTemplate>
     </UserControl.Resources>
 
     <Grid ClipToBounds="True">
-        <ItemsControl x:Name="LayerA">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="1" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
+        <ItemsControl x:Name="LayerA" ItemsPanel="{StaticResource TrendBarLayerItemsPanelTemplate}" />
 
-        <ItemsControl x:Name="LayerB" Opacity="0">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="1" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
+        <ItemsControl x:Name="LayerB" Opacity="0" ItemsPanel="{StaticResource TrendBarLayerItemsPanelTemplate}" />
     </Grid>
 </UserControl>

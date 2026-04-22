@@ -12,7 +12,29 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <DataTemplate x:Key="ExpenseListTemplate">
+        <Style x:Key="ExpenseListHeaderText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        </Style>
+
+        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="ExpenseListItemTemplate">
             <customControls:SwipeRevealContainer>
                 <customControls:SwipeRevealContainer.LeftContent>
                     <customControls:BalloonButton
@@ -42,7 +64,6 @@
                 </customControls:SwipeRevealContainer.RightContent>
 
                 <Grid>
-                    <!--  Category color strip on hover  -->
                     <Border
                         Margin="0,1,16,1"
                         Background="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
@@ -247,106 +268,6 @@
                 </Grid>
             </customControls:SwipeRevealContainer>
         </DataTemplate>
-
-        <Style x:Key="ExpenseListHeaderText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
-        </Style>
-
-        <Style x:Key="ExpenseListHeaderGridStyle" TargetType="Grid">
-            <Setter Property="Margin" Value="12,0,12,8" />
-        </Style>
-
-        <Style
-            x:Key="ExpenseListFadingScrollViewerStyle"
-            BasedOn="{StaticResource {x:Type customControls:FadingScrollViewer}}"
-            TargetType="{x:Type customControls:FadingScrollViewer}">
-            <Setter Property="Margin" Value="12,0,12,0" />
-            <Setter Property="FadedEdgeThickness" Value="20" />
-            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type customControls:FadingScrollViewer}">
-                        <Grid x:Name="Grid" Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <Border x:Name="PART_ScrollContentPresenterContainer">
-                                <ScrollContentPresenter
-                                    x:Name="PART_ScrollContentPresenter"
-                                    Margin="{TemplateBinding Padding}"
-                                    CanContentScroll="{TemplateBinding CanContentScroll}"
-                                    CanHorizontallyScroll="False"
-                                    CanVerticallyScroll="False"
-                                    Content="{TemplateBinding Content}" />
-                            </Border>
-
-                            <ScrollBar
-                                x:Name="PART_VerticalScrollBar"
-                                Grid.Row="0"
-                                Margin="0,0,-16,0"
-                                HorizontalAlignment="Right"
-                                AutomationProperties.AutomationId="VerticalScrollBar"
-                                Cursor="Arrow"
-                                Maximum="{TemplateBinding ScrollableHeight}"
-                                Minimum="0"
-                                ViewportSize="{TemplateBinding ViewportHeight}"
-                                Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
-                                Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
-
-                            <ScrollBar
-                                x:Name="PART_HorizontalScrollBar"
-                                Grid.Row="1"
-                                AutomationProperties.AutomationId="HorizontalScrollBar"
-                                Cursor="Arrow"
-                                Maximum="{TemplateBinding ScrollableWidth}"
-                                Minimum="0"
-                                Orientation="Horizontal"
-                                ViewportSize="{TemplateBinding ViewportWidth}"
-                                Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
-                                Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0,0,0,12" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="VerticalContentAlignment" Value="Stretch" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListViewItem">
-                        <ContentPresenter />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="ExpenseListViewStyle" TargetType="ListView">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="VerticalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="ClipToBounds" Value="True" />
-            <Setter Property="ItemContainerStyle" Value="{StaticResource ExpenseListViewItemStyle}" />
-            <Setter Property="ItemTemplate" Value="{StaticResource ExpenseListTemplate}" />
-            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
-            <EventSetter Event="PreviewMouseWheel" Handler="OnExpenseListPreviewMouseWheel" />
-        </Style>
     </UserControl.Resources>
 
     <Grid VerticalAlignment="Stretch" ClipToBounds="True">
@@ -460,7 +381,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Style="{StaticResource ExpenseListHeaderGridStyle}">
+            <Grid Margin="12,0,12,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -494,10 +415,73 @@
                 </StackPanel>
 
                 <customControls:FadingScrollViewer
+                    Margin="12,0,12,0"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    Style="{StaticResource ExpenseListFadingScrollViewerStyle}">
-                    <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Style="{StaticResource ExpenseListViewStyle}" />
+                    FadedEdgeThickness="20"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <customControls:FadingScrollViewer.Template>
+                        <ControlTemplate TargetType="{x:Type customControls:FadingScrollViewer}">
+                            <Grid x:Name="Grid" Background="{TemplateBinding Background}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Border x:Name="PART_ScrollContentPresenterContainer">
+                                    <ScrollContentPresenter
+                                        x:Name="PART_ScrollContentPresenter"
+                                        Margin="{TemplateBinding Padding}"
+                                        CanContentScroll="{TemplateBinding CanContentScroll}"
+                                        CanHorizontallyScroll="False"
+                                        CanVerticallyScroll="False"
+                                        Content="{TemplateBinding Content}" />
+                                </Border>
+
+                                <ScrollBar
+                                    x:Name="PART_VerticalScrollBar"
+                                    Grid.Row="0"
+                                    Margin="0,0,-16,0"
+                                    HorizontalAlignment="Right"
+                                    AutomationProperties.AutomationId="VerticalScrollBar"
+                                    Cursor="Arrow"
+                                    Maximum="{TemplateBinding ScrollableHeight}"
+                                    Minimum="0"
+                                    ViewportSize="{TemplateBinding ViewportHeight}"
+                                    Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                    Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                                <ScrollBar
+                                    x:Name="PART_HorizontalScrollBar"
+                                    Grid.Row="1"
+                                    AutomationProperties.AutomationId="HorizontalScrollBar"
+                                    Cursor="Arrow"
+                                    Maximum="{TemplateBinding ScrollableWidth}"
+                                    Minimum="0"
+                                    Orientation="Horizontal"
+                                    ViewportSize="{TemplateBinding ViewportWidth}"
+                                    Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                    Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </Grid>
+                        </ControlTemplate>
+                    </customControls:FadingScrollViewer.Template>
+                    <ListView
+                        Padding="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        ClipToBounds="True"
+                        ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
+                        ItemTemplate="{StaticResource ExpenseListItemTemplate}"
+                        ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        PreviewMouseWheel="OnExpenseListPreviewMouseWheel"
+                        ScrollViewer.CanContentScroll="False"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                 </customControls:FadingScrollViewer>
             </Grid>
         </Grid>

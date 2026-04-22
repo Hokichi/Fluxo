@@ -41,26 +41,6 @@
         </Style>
 
         <Style
-            x:Key="InlineHeaderNameTextBoxStyle"
-            BasedOn="{StaticResource InlineHeaderTextBoxBaseStyle}"
-            TargetType="TextBox">
-            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-            <Setter Property="FontSize" Value="22" />
-            <Setter Property="MinWidth" Value="24" />
-        </Style>
-
-        <Style
-            x:Key="InlineHeaderAmountTextBoxStyle"
-            BasedOn="{StaticResource InlineHeaderTextBoxBaseStyle}"
-            TargetType="TextBox">
-            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-            <Setter Property="FontSize" Value="26" />
-            <Setter Property="MinWidth" Value="24" />
-            <Setter Property="HorizontalContentAlignment" Value="Right" />
-            <Setter Property="TextAlignment" Value="Right" />
-        </Style>
-
-        <Style
             x:Key="InlineDetailValueTextBoxStyle"
             BasedOn="{StaticResource InlineHeaderTextBoxBaseStyle}"
             TargetType="TextBox">
@@ -70,6 +50,111 @@
             <Setter Property="TextAlignment" Value="Right" />
             <Setter Property="MinWidth" Value="24" />
         </Style>
+
+        <DataTemplate x:Key="SpendingSourceRecentActivityItemTemplate">
+            <Border
+                Margin="0,0,0,10"
+                Padding="12"
+                Background="{StaticResource Brush.Background.Hover}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Title}" />
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="10"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding Detail}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,6,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="9"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding Date, StringFormat={}{0:MMM d, yyyy}}" />
+                    </StackPanel>
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                                <Setter Property="Text" Value="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=+{0}}" />
+                                <Setter Property="ToolTip" Value="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=+{0}}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExpense}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                        <Setter Property="Text" Value="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=-{0}}" />
+                                        <Setter Property="ToolTip" Value="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=-{0}}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SpendingSourceTrendItemTemplate">
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="52" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="{Binding Label}" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <ProgressBar
+                        Height="5"
+                        Maximum="{Binding ElementName=Root, Path=DataContext.TrendMaximum}"
+                        Style="{StaticResource RoundedProgressBarStyle}"
+                        Value="{Binding IncomeAmount, Mode=OneWay}" />
+                    <ProgressBar
+                        Height="5"
+                        Margin="0,8,0,0"
+                        Foreground="{StaticResource Brush.Danger}"
+                        Maximum="{Binding ElementName=Root, Path=DataContext.TrendMaximum}"
+                        Style="{StaticResource RoundedProgressBarStyle}"
+                        Value="{Binding ExpenseAmount, Mode=OneWay}" />
+                </StackPanel>
+                <StackPanel Grid.Column="3">
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="10"
+                        Foreground="{StaticResource Brush.Success}"
+                        Text="{Binding IncomeAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=+{0}}"
+                        ToolTip="{Binding IncomeAmount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=+{0}}" />
+                    <TextBlock
+                        Margin="0,6,0,0"
+                        HorizontalAlignment="Right"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="10"
+                        Foreground="{StaticResource Brush.Danger}"
+                        Text="{Binding ExpenseAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=-{0}}"
+                        ToolTip="{Binding ExpenseAmount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=-{0}}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
     </customControls:BasePopup.Resources>
 
     <Grid MaxHeight="600" Margin="24,0,24,24">
@@ -112,7 +197,10 @@
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                     <TextBox
                         x:Name="NameTextBox"
-                        Style="{StaticResource InlineHeaderNameTextBoxStyle}"
+                        MinWidth="24"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="22"
+                        Style="{StaticResource InlineHeaderTextBoxBaseStyle}"
                         Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </StackPanel>
@@ -143,7 +231,12 @@
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}">
                         <customControls:MoneyTextBox
                             x:Name="PrimaryAmountTextBox"
-                            Style="{StaticResource InlineHeaderAmountTextBoxStyle}"
+                            MinWidth="24"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="26"
+                            HorizontalContentAlignment="Right"
+                            Style="{StaticResource InlineHeaderTextBoxBaseStyle}"
+                            TextAlignment="Right"
                             Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </StackPanel>
                 </StackPanel>
@@ -412,7 +505,21 @@
                         VerticalAlignment="Bottom"
                         Columns="3"
                         Rows="2">
-                        <customControls:BalloonButton Click="OnDisableButtonClick" Style="{StaticResource DisableActionButtonStyle}" />
+                        <customControls:BalloonButton Click="OnDisableButtonClick">
+                            <customControls:BalloonButton.Style>
+                                <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
+                                    <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.LightningSlashFill}" />
+                                    <Setter Property="HoveredBackground" Value="{StaticResource Brush.Warning}" />
+                                    <Setter Property="ToolTip" Value="Disable source" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                                            <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.LightningFill}" />
+                                            <Setter Property="ToolTip" Value="Enable source" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </customControls:BalloonButton.Style>
+                        </customControls:BalloonButton>
                         <customControls:BalloonButton
                             Click="OnEditButtonClick"
                             ToolTip="{Binding EditButtonLabel}">
@@ -436,8 +543,21 @@
                             ToolTip="Transfer funds" />
                         <customControls:BalloonButton
                             Click="OnHideOrUnhideButtonClick"
-                            IsEnabled="{Binding CanHideOrUnhide}"
-                            Style="{StaticResource HideActionButtonStyle}" />
+                            IsEnabled="{Binding CanHideOrUnhide}">
+                            <customControls:BalloonButton.Style>
+                                <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
+                                    <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.EyeOff}" />
+                                    <Setter Property="HoveredBackground" Value="{StaticResource Brush.Primary.Hover}" />
+                                    <Setter Property="ToolTip" Value="Hide source" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsHidden}" Value="True">
+                                            <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.Eye}" />
+                                            <Setter Property="ToolTip" Value="Unhide source" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </customControls:BalloonButton.Style>
+                        </customControls:BalloonButton>
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource SpendingSourceDetailPopup.SourceSwitch}"
                             Click="OnBackToSourcesButtonClick"
@@ -475,66 +595,9 @@
                             Foreground="{StaticResource Brush.Text.Primary}"
                             Text="Recent Activity" />
                         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding RecentActivities}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border
-                                            Margin="0,0,0,10"
-                                            Padding="12"
-                                            Background="{StaticResource Brush.Background.Hover}"
-                                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                            BorderThickness="1"
-                                            CornerRadius="14">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock
-                                                        FontFamily="{StaticResource Bold}"
-                                                        FontSize="12"
-                                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                                        Text="{Binding Title}" />
-                                                    <TextBlock
-                                                        Margin="0,4,0,0"
-                                                        FontFamily="{StaticResource Medium}"
-                                                        FontSize="10"
-                                                        Foreground="{StaticResource Brush.Text.Secondary}"
-                                                        Text="{Binding Detail}"
-                                                        TextWrapping="Wrap" />
-                                                    <TextBlock
-                                                        Margin="0,6,0,0"
-                                                        FontFamily="{StaticResource Medium}"
-                                                        FontSize="9"
-                                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                                        Text="{Binding Date, StringFormat={}{0:MMM d, yyyy}}" />
-                                                </StackPanel>
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Center"
-                                                    FontFamily="{StaticResource Bold}"
-                                                    FontSize="12">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
-                                                            <Setter Property="Text" Value="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=+{0}}" />
-                                                            <Setter Property="ToolTip" Value="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=+{0}}" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsExpense}" Value="True">
-                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
-                                                                    <Setter Property="Text" Value="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=-{0}}" />
-                                                                    <Setter Property="ToolTip" Value="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=-{0}}" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <ItemsControl
+                                ItemTemplate="{StaticResource SpendingSourceRecentActivityItemTemplate}"
+                                ItemsSource="{Binding RecentActivities}" />
                         </ScrollViewer>
                     </Grid>
                 </Border>
@@ -552,57 +615,7 @@
                             Foreground="{StaticResource Brush.Text.Primary}"
                             Text="Trends" />
                         <customControls:FadingScrollViewer Grid.Row="2">
-                            <ItemsControl ItemsSource="{Binding Trends}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="52" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                FontSize="11"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="{Binding Label}" />
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <ProgressBar
-                                                    Height="5"
-                                                    Maximum="{Binding ElementName=Root, Path=DataContext.TrendMaximum}"
-                                                    Style="{StaticResource RoundedProgressBarStyle}"
-                                                    Value="{Binding IncomeAmount, Mode=OneWay}" />
-                                                <ProgressBar
-                                                    Height="5"
-                                                    Margin="0,8,0,0"
-                                                    Foreground="{StaticResource Brush.Danger}"
-                                                    Maximum="{Binding ElementName=Root, Path=DataContext.TrendMaximum}"
-                                                    Style="{StaticResource RoundedProgressBarStyle}"
-                                                    Value="{Binding ExpenseAmount, Mode=OneWay}" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="3">
-                                                <TextBlock
-                                                    HorizontalAlignment="Right"
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="10"
-                                                    Foreground="{StaticResource Brush.Success}"
-                                                    Text="{Binding IncomeAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=+{0}}"
-                                                    ToolTip="{Binding IncomeAmount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=+{0}}" />
-                                                <TextBlock
-                                                    Margin="0,6,0,0"
-                                                    HorizontalAlignment="Right"
-                                                    FontFamily="{StaticResource Medium}"
-                                                    FontSize="10"
-                                                    Foreground="{StaticResource Brush.Danger}"
-                                                    Text="{Binding ExpenseAmount, Converter={StaticResource NumberWithCommasConverter}, StringFormat=-{0}}"
-                                                    ToolTip="{Binding ExpenseAmount, Converter={StaticResource MoneyFullDisplayConverter}, StringFormat=-{0}}" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <ItemsControl ItemTemplate="{StaticResource SpendingSourceTrendItemTemplate}" ItemsSource="{Binding Trends}" />
                         </customControls:FadingScrollViewer>
                     </Grid>
                 </Border>

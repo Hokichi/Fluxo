@@ -8,9 +8,6 @@
     xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
 
-
-
-
     <Style x:Key="IncomeSources" TargetType="ListViewItem">
         <Setter Property="Margin" Value="0,0,8,0" />
         <Setter Property="Padding" Value="0" />
@@ -31,22 +28,6 @@
         </Style.Triggers>
     </Style>
 
-
-
-    <Style x:Key="HeaderText" TargetType="TextBlock">
-        <Setter Property="HorizontalAlignment" Value="Left" />
-        <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-        <Setter Property="FontSize" Value="18" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-    </Style>
-
-    <Style x:Key="SpinnerNavigationContainerStyle" TargetType="Grid">
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
-                <Setter Property="Visibility" Value="Collapsed" />
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
     <Style x:Key="SpinnerArrowIconStyle" TargetType="icons:PackIconUnicons">
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
         <Style.Triggers>
@@ -61,22 +42,6 @@
                             Color="White" />
                     </Setter.Value>
                 </Setter>
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
-    <Style x:Key="AllTagUnselectedBorderStyle" TargetType="Border">
-        <Setter Property="Visibility" Value="Visible" />
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
-                <Setter Property="Visibility" Value="Collapsed" />
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
-    <Style x:Key="AllTagSelectedBorderStyle" TargetType="Border">
-        <Setter Property="Visibility" Value="Collapsed" />
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding SelectedTag}" Value="{x:Null}">
-                <Setter Property="Visibility" Value="Visible" />
             </DataTrigger>
         </Style.Triggers>
     </Style>
@@ -118,14 +83,6 @@
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="16" />
-    </Style>
-
-    <Style x:Key="DashboardCountBadgeStyle" TargetType="Border">
-        <Setter Property="Padding" Value="8,4" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="999" />
     </Style>
 
 
@@ -173,7 +130,7 @@
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock
-                        FontFamily="{StaticResource Black}"
+                        FontFamily="{StaticResource Bold}"
                         FontSize="18"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="{Binding Name}"
@@ -181,18 +138,25 @@
 
                     <TextBlock
                         Margin="0,8,0,0"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
+                        FontSize="14"
                         Foreground="{StaticResource Brush.Text.Secondary}">
-                        <TextBlock.ToolTip>
-                            <MultiBinding StringFormat="{}{0}/{1}">
-                                <Binding Converter="{StaticResource MoneyFullDisplayConverter}" Path="CurrentAmount" />
-                                <Binding Converter="{StaticResource MoneyFullDisplayConverter}" Path="TargetAmount" />
-                            </MultiBinding>
-                        </TextBlock.ToolTip>
-                        <Run Text="{Binding CurrentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
-                        <Run Text="/" />
-                        <Run Text="{Binding TargetAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                        <Run
+                            FontFamily="{StaticResource Black}"
+                            Foreground="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                            Text="{Binding CurrentAmount, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        <Run FontFamily="{StaticResource Light}" Text="saved" />
+                    </TextBlock>
+
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        FontFamily="{StaticResource Light}"
+                        FontSize="12"
+                        Foreground="{StaticResource Brush.Text.Secondary}">
+                        <Run Text="{Binding RemainingAmount, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        <Run Text="left" />
+                        <Run Text="&#x00B7;" />
+                        <Run Text="target" />
+                        <Run Text="{Binding TargetAmount, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </TextBlock>
                 </StackPanel>
             </Grid>

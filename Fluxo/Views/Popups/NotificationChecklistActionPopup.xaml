@@ -5,6 +5,14 @@
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="500"
     PopupTitle="Review Notifications">
+    <customControls:BasePopup.Resources>
+        <DataTemplate x:Key="NotificationChecklistItemTemplate">
+            <CheckBox
+                Margin="0,4,0,4"
+                Content="{Binding Label}"
+                IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+        </DataTemplate>
+    </customControls:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
         <Grid.RowDefinitions>
@@ -29,16 +37,9 @@
             BorderThickness="1"
             CornerRadius="12">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Items}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <CheckBox
-                                Margin="0,4,0,4"
-                                Content="{Binding Label}"
-                                IsChecked="{Binding IsSelected, Mode=TwoWay}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ItemsControl
+                    ItemTemplate="{StaticResource NotificationChecklistItemTemplate}"
+                    ItemsSource="{Binding Items}" />
             </ScrollViewer>
         </Border>
 
