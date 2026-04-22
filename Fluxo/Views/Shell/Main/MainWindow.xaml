@@ -398,13 +398,12 @@
                 <Grid
                     x:Name="MainContentGrid"
                     Grid.Row="1"
-                    Margin="80,48">
+                    Margin="200,48">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -426,11 +425,26 @@
 
                     <Grid Grid.Row="1" Margin="0,20,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
+                        <sections:SpentAllowancePanel
+                            x:Name="SpentAllowancePanelHost"
+                            Height="80"
+                            DataContext="{Binding SpentAllowancePanel}" />
+
+                        <Border
+                            Grid.Column="1"
+                            Width="1"
+                            Height="64"
+                            HorizontalAlignment="Center"
+                            Background="{StaticResource Brush.Border.Subtle}"
+                            SnapsToDevicePixels="True" />
+
                         <customControls:FadingScrollViewer
+                            Grid.Column="2"
                             HorizontalAlignment="Stretch"
                             CanContentScroll="False"
                             HorizontalScrollBarVisibility="Auto"
@@ -464,37 +478,32 @@
                                 </ListView>
                             </StackPanel>
                         </customControls:FadingScrollViewer>
-
-                        <sections:SpentAllowancePanel
-                            x:Name="SpentAllowancePanelHost"
-                            Grid.Column="1"
-                            Height="80"
-                            DataContext="{Binding SpentAllowancePanel}" />
                     </Grid>
 
                     <Grid Grid.Row="2" Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="160" />
+                        </Grid.RowDefinitions>
 
                         <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
 
-                        <Grid Grid.Column="1" Margin="16,16,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="16" />
-                                <RowDefinition Height="180" />
-                            </Grid.RowDefinitions>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="2*" />
+                            </Grid.ColumnDefinitions>
+
+                            <sections:SavingGoalsPanel
+                                x:Name="SavingGoalsPanelHost"
+                                Grid.Column="0"
+                                DataContext="{Binding SavingGoalsPanel}" />
 
                             <sections:NotificationPanel
                                 x:Name="NotificationPanelHost"
-                                Grid.Row="0"
+                                Grid.Column="2"
                                 DataContext="{Binding NotificationPanel}" />
-                            <sections:SavingGoalsPanel
-                                x:Name="SavingGoalsPanelHost"
-                                Grid.Row="2"
-                                DataContext="{Binding SavingGoalsPanel}" />
                         </Grid>
                     </Grid>
                 </Grid>
