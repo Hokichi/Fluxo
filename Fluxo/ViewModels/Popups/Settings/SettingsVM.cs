@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
@@ -12,6 +14,18 @@ namespace Fluxo.ViewModels.Popups.Settings;
 public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>,
     IRecipient<SettingsMaintenanceRequestedMessage>
 {
+    private static readonly IReadOnlyDictionary<string, bool> NotificationDefaultsAfterSettingsDeletion =
+        new Dictionary<string, bool>(StringComparer.Ordinal)
+        {
+            [UserSettingNames.IsFixedExpensesDeductionNotifEnabled] = true,
+            [UserSettingNames.IsCreditDeadlineNotifEnabled] = true,
+            [UserSettingNames.IsGoalDeadlineNotifEnabled] = false,
+            [UserSettingNames.IsLatePaymentNotifEnabled] = false,
+            [UserSettingNames.IsBudgetThresholdNotifEnabled] = false,
+            [UserSettingNames.IsLowCreditNotifEnabled] = false,
+            [UserSettingNames.IsLowAccountBalanceNotifEnabled] = false
+        };
+
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
     private bool _isBudgetPending;
@@ -227,17 +241,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         try
         {
             var settings = await _unitOfWork.UserSettings.GetAllAsync();
-            var actions = new List<ILogMemoryAction>();
+            var actions = await ApplySettingsResetPolicyAsync(settings, trackActions: true);
 
-            foreach (var setting in settings)
-            {
-                _unitOfWork.UserSettings.Remove(setting);
-                actions.Add(new SetUserSettingMemoryAction(
-                    UserSettingMemorySnapshot.Create(setting),
-                    UserSettingMemorySnapshot.Missing(setting.Name)));
-            }
-
-            if (settings.Count > 0)
+            if (actions.Count > 0)
             {
                 await _unitOfWork.SaveChangesAsync();
                 SettingsShared.RecordActions(actions, Messenger);
@@ -270,7 +276,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             var settings = keepSettings ? [] : await _unitOfWork.UserSettings.GetAllAsync();
 
             foreach (var tag in tags)
-                _unitOfWork.ExpenseTags.Remove(tag);
+                if (ShouldDeleteTagOnDeleteAllData(tag))
+                    _unitOfWork.ExpenseTags.Remove(tag);
 
             foreach (var source in spendingSources)
                 _unitOfWork.SpendingSources.Remove(source);
@@ -288,8 +295,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 _unitOfWork.SavingGoals.Remove(goal);
 
             if (!keepSettings)
-                foreach (var setting in settings)
-                    _unitOfWork.UserSettings.Remove(setting);
+                await ApplySettingsResetPolicyAsync(settings, trackActions: false);
 
             await _unitOfWork.SaveChangesAsync();
             Messenger.Send(new DashboardDataInvalidatedMessage(
@@ -419,5 +425,86 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             request.CompletionSource.TrySetResult(SettingsMaintenanceResult.Failure(
                 $"Unable to complete this settings action.\n\n{exception.Message}"));
         }
+    }
+
+    internal static bool ShouldDeleteTagOnDeleteAllData(ExpenseTag tag)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        return !tag.IsSystemTag;
+    }
+
+    internal static (HashSet<string> RemovedSettingNames, Dictionary<string, string> UpsertSettingValues)
+        BuildSettingsResetPlan(IReadOnlyList<UserSettings> existingSettings)
+    {
+        ArgumentNullException.ThrowIfNull(existingSettings);
+
+        var removedSettingNames = existingSettings
+            .Where(setting => !NotificationDefaultsAfterSettingsDeletion.ContainsKey(setting.Name))
+            .Select(setting => setting.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var upsertSettingValues = NotificationDefaultsAfterSettingsDeletion
+            .ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value.ToString(),
+                StringComparer.Ordinal);
+
+        return (removedSettingNames, upsertSettingValues);
+    }
+
+    private async Task<List<ILogMemoryAction>> ApplySettingsResetPolicyAsync(
+        IReadOnlyList<UserSettings> existingSettings,
+        bool trackActions)
+    {
+        var actions = new List<ILogMemoryAction>();
+        var (removedSettingNames, upsertSettingValues) = BuildSettingsResetPlan(existingSettings);
+
+        foreach (var setting in existingSettings)
+        {
+            if (removedSettingNames.Contains(setting.Name))
+            {
+                _unitOfWork.UserSettings.Remove(setting);
+                if (trackActions)
+                {
+                    actions.Add(new SetUserSettingMemoryAction(
+                        UserSettingMemorySnapshot.Create(setting),
+                        UserSettingMemorySnapshot.Missing(setting.Name)));
+                }
+
+                continue;
+            }
+
+            if (!upsertSettingValues.TryGetValue(setting.Name, out var desiredValue))
+                continue;
+
+            upsertSettingValues.Remove(setting.Name);
+            if (string.Equals(setting.Value, desiredValue, StringComparison.Ordinal))
+                continue;
+
+            var beforeSnapshot = UserSettingMemorySnapshot.Create(setting);
+            setting.Value = desiredValue;
+            _unitOfWork.UserSettings.Update(setting);
+
+            if (trackActions)
+            {
+                actions.Add(new SetUserSettingMemoryAction(
+                    beforeSnapshot,
+                    new UserSettingMemorySnapshot(setting.Name, desiredValue, true)));
+            }
+        }
+
+        foreach (var (name, value) in upsertSettingValues)
+        {
+            await _unitOfWork.UserSettings.AddAsync(new UserSettings { Name = name, Value = value });
+
+            if (trackActions)
+            {
+                actions.Add(new SetUserSettingMemoryAction(
+                    UserSettingMemorySnapshot.Missing(name),
+                    new UserSettingMemorySnapshot(name, value, true)));
+            }
+        }
+
+        return actions;
     }
 }
