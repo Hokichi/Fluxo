@@ -4,6 +4,8 @@ using CommunityToolkit.Mvvm.Input;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Services.Dialogs;
+using Fluxo.Services.Ui;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
@@ -14,12 +16,18 @@ public enum AnalyticsTrendMode
     Both
 }
 
-public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : ObservableObject, IDisposable
+public sealed partial class AnalyticsVM(
+    IAnalyticsService analyticsService,
+    IDialogService? dialogService = null,
+    IUiSettleAwaiter? uiSettleAwaiter = null) : ObservableObject, IDisposable
 {
     private const int MaxRangeDays = 31;
     private const int VerticalTrendLabelThresholdDays = 14;
 
     private readonly IAnalyticsService _analyticsService = analyticsService;
+    private readonly IDialogService? _dialogService = dialogService;
+    private readonly IUiSettleAwaiter? _uiSettleAwaiter = uiSettleAwaiter;
+    private readonly SemaphoreSlim _refreshFeedbackGate = new(1, 1);
     private CancellationTokenSource? _refreshDebounceCts;
     private bool _isApplyingDateBounds;
     private IReadOnlyList<AnalyticsTrendPoint> _expenseTrendPoints = [];
@@ -60,7 +68,7 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
 
     public async Task LoadAsync()
     {
-        await RefreshAsync(CancellationToken.None);
+        await RefreshWithFeedbackAsync(CancellationToken.None);
     }
 
     partial void OnStartDateChanged(DateTime value)
@@ -122,11 +130,47 @@ public sealed partial class AnalyticsVM(IAnalyticsService analyticsService) : Ob
         try
         {
             await Task.Delay(220, cancellationToken);
-            await RefreshAsync(cancellationToken);
+            await RefreshWithFeedbackAsync(cancellationToken);
         }
         catch (OperationCanceledException)
         {
         }
+    }
+
+    private async Task RefreshWithFeedbackAsync(CancellationToken cancellationToken)
+    {
+        if (_dialogService is null || _uiSettleAwaiter is null)
+        {
+            await RefreshAsync(cancellationToken);
+            return;
+        }
+
+        await _refreshFeedbackGate.WaitAsync(cancellationToken);
+        try
+        {
+            await _dialogService.ShowToastWhileAsync(
+                BuildAnalyticsLoadingMessage(),
+                async () =>
+                {
+                    await RefreshAsync(cancellationToken);
+                    await _uiSettleAwaiter.WaitForUiReadyAsync(cancellationToken: cancellationToken);
+                });
+        }
+        finally
+        {
+            _refreshFeedbackGate.Release();
+        }
+    }
+
+    private string BuildAnalyticsLoadingMessage()
+    {
+        var from = StartDate.Date;
+        var to = EndDate.Date;
+        const string DateFormat = "dd MMM yyyy";
+
+        return from == to
+            ? $"Loading analytics for {from.ToString(DateFormat, CultureInfo.InvariantCulture)}"
+            : $"Loading analytics from {from.ToString(DateFormat, CultureInfo.InvariantCulture)} to {to.ToString(DateFormat, CultureInfo.InvariantCulture)}";
     }
 
     private async Task RefreshAsync(CancellationToken cancellationToken)

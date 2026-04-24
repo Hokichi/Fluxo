@@ -11,7 +11,9 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Shell.Main;
@@ -33,10 +35,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly ITagService _tagService;
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
     private readonly ObservableCollection<SpendingSourceVM> _spendingSources = [];
+    private readonly IDialogService? _dialogService;
+    private readonly IUiSettleAwaiter? _uiSettleAwaiter;
+    private readonly SemaphoreSlim _filterFeedbackGate = new(1, 1);
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLogVM> _allIncomeLogs = [];
     private bool _isSynchronizingTagSelections;
+    private bool _suppressFilterFeedback;
     private (DateTime From, DateTime To)? _selectedRange = (DateTime.Today, DateTime.Today);
 
     public BudgetAllocationPanelVM(
@@ -45,7 +51,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         ITagService tagService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
-        IMessenger? messenger = null)
+        IMessenger? messenger = null,
+        IDialogService? dialogService = null,
+        IUiSettleAwaiter? uiSettleAwaiter = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseLogService = expenseLogService;
@@ -53,6 +61,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         _tagService = tagService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
+        _dialogService = dialogService;
+        _uiSettleAwaiter = uiSettleAwaiter;
 
         Initialize();
     }
@@ -219,7 +229,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
         if (SelectedSpendingSourceId is int selectedId &&
             _spendingSources.All(source => source.Id != selectedId))
-            SelectedSpendingSourceId = null;
+            SetSelectedSpendingSourceInternal(null);
         else
             SynchronizeSpendingSourceSelections(SelectedSpendingSourceId);
 
@@ -233,13 +243,30 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         SynchronizeTagSelections(value);
         OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
-        RefreshExpenseViews();
+
+        if (_suppressFilterFeedback)
+        {
+            RefreshExpenseViews();
+            return;
+        }
+
+        QueueFilterRefreshWithFeedback($"Filtering {value?.Name ?? "All"}");
     }
 
     partial void OnSelectedSpendingSourceIdChanged(int? value)
     {
         SynchronizeSpendingSourceSelections(value);
-        RefreshExpenseViews();
+
+        if (_suppressFilterFeedback)
+        {
+            RefreshExpenseViews();
+            return;
+        }
+
+        var sourceName = value is int sourceId
+            ? Enumerable.FirstOrDefault<SpendingSourceVM>(_spendingSources, source => source.Id == sourceId)?.Name
+            : null;
+        QueueFilterRefreshWithFeedback($"Filtering for {sourceName ?? "All sources"}");
     }
 
     partial void OnNeedsThresholdChanged(decimal value)
@@ -288,6 +315,19 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         SelectedSpendingSourceId = SelectedSpendingSourceId == selectedId
             ? null
             : selectedId;
+    }
+
+    private void SetSelectedSpendingSourceInternal(int? sourceId)
+    {
+        _suppressFilterFeedback = true;
+        try
+        {
+            SelectedSpendingSourceId = sourceId;
+        }
+        finally
+        {
+            _suppressFilterFeedback = false;
+        }
     }
 
     [RelayCommand]
@@ -492,6 +532,40 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         finally
         {
             _isSynchronizingTagSelections = false;
+        }
+    }
+
+    private void QueueFilterRefreshWithFeedback(string message)
+    {
+        _ = ApplyFilterFeedbackAsync(message);
+    }
+
+    private async Task ApplyFilterFeedbackAsync(string message)
+    {
+        if (_dialogService is null || _uiSettleAwaiter is null)
+        {
+            RefreshExpenseViews();
+            return;
+        }
+
+        await _filterFeedbackGate.WaitAsync();
+        try
+        {
+            await _dialogService.ShowToastWhileAsync(
+                message,
+                async () =>
+                {
+                    RefreshExpenseViews();
+                    await _uiSettleAwaiter.WaitForUiReadyAsync();
+                });
+        }
+        catch
+        {
+            RefreshExpenseViews();
+        }
+        finally
+        {
+            _filterFeedbackGate.Release();
         }
     }
 

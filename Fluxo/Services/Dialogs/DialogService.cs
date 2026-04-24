@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -209,9 +210,24 @@ public sealed class DialogService : IDialogService
     private static bool? ShowDialog(Window popup, Window? owner)
     {
         if (popup.Owner is null)
-            popup.Owner = owner;
+            popup.Owner = ResolveOwner(owner);
 
         return popup.ShowDialog();
+    }
+
+    private static Window? ResolveOwner(Window? owner)
+    {
+        if (owner is not null)
+            return owner;
+
+        var application = Application.Current;
+        if (application is null)
+            return null;
+
+        var activeWindow = Enumerable.FirstOrDefault<Window>(
+            application.Windows.OfType<Window>(),
+            window => window.IsActive);
+        return activeWindow ?? application.MainWindow;
     }
 
     private bool? ShowScopedDialog<TWindow>(Window? owner = null) where TWindow : Window

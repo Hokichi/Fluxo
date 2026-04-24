@@ -14,28 +14,28 @@
             CornerRadius="14">
             <StackPanel Orientation="Horizontal">
                 <Button
-                    Command="{Binding SetSelectedMainContentViewCommand}"
+                    Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.Daily}"
                     Content="Day"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"
                     Tag="{Binding IsDailyViewSelected}" />
                 <Button
                     Margin="4,0,0,0"
-                    Command="{Binding SetSelectedMainContentViewCommand}"
+                    Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.Weekly}"
                     Content="Week"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"
                     Tag="{Binding IsWeeklyViewSelected}" />
                 <Button
                     Margin="4,0,0,0"
-                    Command="{Binding SetSelectedMainContentViewCommand}"
+                    Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.Monthly}"
                     Content="Month"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"
                     Tag="{Binding IsMonthlyViewSelected}" />
                 <Button
                     Margin="4,0,0,0"
-                    Command="{Binding SetSelectedMainContentViewCommand}"
+                    Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.AllTime}"
                     Content="All-time"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"

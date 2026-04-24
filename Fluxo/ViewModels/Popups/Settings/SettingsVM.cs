@@ -5,6 +5,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Ui;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell.Main;
@@ -27,6 +28,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         };
 
     private readonly MainVM _mainViewModel;
+    private readonly IUiSettleAwaiter _uiSettleAwaiter;
     private readonly IUnitOfWork _unitOfWork;
     private bool _isBudgetPending;
     private bool _isPersonalizationPending;
@@ -34,6 +36,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     public SettingsVM(
         MainVM mainViewModel,
         IUnitOfWork unitOfWork,
+        IUiSettleAwaiter uiSettleAwaiter,
         SettingsBudgetTabVM budgetTab,
         SettingsSourcesTabVM sourcesTab,
         SettingsFixedExpensesTabVM fixedExpensesTab,
@@ -45,6 +48,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
+        _uiSettleAwaiter = uiSettleAwaiter;
         BudgetTab = budgetTab;
         SourcesTab = sourcesTab;
         FixedExpensesTab = fixedExpensesTab;
@@ -302,6 +306,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();
             await LoadAsync();
+            await _uiSettleAwaiter.WaitForUiReadyAsync();
 
             return SettingsOperationResult.Success();
         }

@@ -6,6 +6,7 @@ using Fluxo.Services.Mappings;
 using Fluxo.Services.Persistence;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Notifications;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -56,6 +57,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IUiSettleAwaiter, UiSettleAwaiter>();
 
         services.AddSingleton<MainVM>();
         services.AddSingleton<DaySpinnerVM>();

@@ -129,6 +129,11 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         Close();
     }
 
+    internal Task ShowToastWhileAsync(string message, Func<Task> work)
+    {
+        return _dialogService.ShowToastWhileAsync(message, work, this);
+    }
+
     private void OnPopupClosed(object? sender, EventArgs e)
     {
         _messenger.UnregisterAll(this);

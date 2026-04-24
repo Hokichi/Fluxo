@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups;
@@ -70,7 +71,21 @@ public partial class SettingsPersonalizationTab : UserControl
         if (confirmation != MessageBoxResult.Yes)
             return;
 
-        var result = await _viewModel.DeleteAllDataAsync(keepSettings);
+        var ownerPopup = Window.GetWindow(this) as SettingsPopup;
+        SettingsMaintenanceResult result;
+        if (ownerPopup is not null)
+        {
+            result = SettingsMaintenanceResult.Failure("Unable to delete all data.");
+            await ownerPopup.ShowToastWhileAsync("Deleting all data (and settings)", async () =>
+            {
+                result = await _viewModel.DeleteAllDataAsync(keepSettings);
+            });
+        }
+        else
+        {
+            result = await _viewModel.DeleteAllDataAsync(keepSettings);
+        }
+
         if (!result.IsSuccess)
         {
             FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage ?? "Unable to delete all data.",
