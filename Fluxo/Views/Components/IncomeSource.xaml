@@ -9,6 +9,7 @@
     Height="80"
     Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
     mc:Ignorable="d">
+
     <UserControl.Resources>
         <Style x:Key="IncomeSourceAccentStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
@@ -30,19 +31,6 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-
-        <Style x:Key="BankIconStyle" TargetType="components:Icon">
-            <Setter Property="Visibility" Value="Collapsed" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Checking">
-                    <Setter Property="Visibility" Value="Visible" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Cash">
-                    <Setter Property="Visibility" Value="Visible" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
     </UserControl.Resources>
 
     <Grid>
@@ -87,34 +75,44 @@
                     </Style.Triggers>
                 </Style>
             </Border.Style>
+            <Grid>
+                <StackPanel Margin="12" IsHitTestVisible="False">
+                    <StackPanel Orientation="Horizontal">
+                        <Border
+                            x:Name="AccentBorder"
+                            Width="8"
+                            Height="8"
+                            CornerRadius="16"
+                            Style="{StaticResource IncomeSourceAccentStyle}" />
 
-            <StackPanel Margin="12" IsHitTestVisible="False">
-                <StackPanel Orientation="Horizontal">
-                    <Border
-                        x:Name="AccentBorder"
-                        Width="12"
-                        Height="12"
-                        CornerRadius="16"
-                        Style="{StaticResource IncomeSourceAccentStyle}" />
+                        <TextBlock
+                            Margin="4,0,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding SpendingSourceType}" />
+                    </StackPanel>
 
                     <TextBlock
-                        Margin="8,0,0,0"
+                        Margin="0,8,0,0"
                         VerticalAlignment="Center"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="13"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding Name}" />
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="20"
+                        Foreground="{Binding Difference, Converter={StaticResource DifferenceToBrushConverter}}"
+                        Text="{Binding Difference, Converter={StaticResource NumberWithCommasConverter}}"
+                        ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
                 </StackPanel>
 
                 <TextBlock
-                    Margin="0,8,0,0"
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="20"
-                    Foreground="{Binding Difference, Converter={StaticResource DifferenceToBrushConverter}}"
-                    Text="{Binding Difference, Converter={StaticResource NumberWithCommasConverter}}"
-                    ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
-            </StackPanel>
+                    Margin="0,0,8,8"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    FontFamily="{StaticResource Light}"
+                    FontSize="8"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="{Binding Name}" />
+            </Grid>
         </Border>
 
         <Popup
