@@ -7,6 +7,8 @@ namespace Fluxo.Views.CustomControls;
 
 public sealed class StepNavigatorControl : Control
 {
+    private int _visibleWindowStart;
+
     static StepNavigatorControl()
     {
         DefaultStyleKeyProperty.OverrideMetadata(
@@ -34,6 +36,20 @@ public sealed class StepNavigatorControl : Control
             typeof(bool),
             typeof(StepNavigatorControl),
             new PropertyMetadata(true));
+
+    public static readonly DependencyProperty PaginationCountProperty =
+        DependencyProperty.Register(
+            nameof(PaginationCount),
+            typeof(int),
+            typeof(StepNavigatorControl),
+            new PropertyMetadata(5, OnPaginationChanged));
+
+    public static readonly DependencyProperty ShouldPaginateProperty =
+        DependencyProperty.Register(
+            nameof(ShouldPaginate),
+            typeof(bool),
+            typeof(StepNavigatorControl),
+            new PropertyMetadata(false, OnPaginationChanged));
 
     private static readonly DependencyPropertyKey DotsPropertyKey =
         DependencyProperty.RegisterReadOnly(
@@ -67,34 +83,90 @@ public sealed class StepNavigatorControl : Control
         set => SetValue(ShouldIndicateProgressProperty, value);
     }
 
+    public int PaginationCount
+    {
+        get => (int)GetValue(PaginationCountProperty);
+        set => SetValue(PaginationCountProperty, value);
+    }
+
+    public bool ShouldPaginate
+    {
+        get => (bool)GetValue(ShouldPaginateProperty);
+        set => SetValue(ShouldPaginateProperty, value);
+    }
+
     public ObservableCollection<StepNavigatorDotVM> Dots =>
         (ObservableCollection<StepNavigatorDotVM>)GetValue(DotsProperty);
 
     private static void OnStepCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        var control = (StepNavigatorControl)d;
-        var dots = control.Dots;
-        dots.Clear();
-
-        var count = (int)e.NewValue;
-        for (var i = 0; i < count; i++)
-            dots.Add(new StepNavigatorDotVM { IsFirst = i == 0 });
-
-        UpdateDotStates(dots, control.CurrentStep);
+        ((StepNavigatorControl)d).RefreshDots();
     }
 
     private static void OnCurrentStepChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        var control = (StepNavigatorControl)d;
-        UpdateDotStates(control.Dots, (int)e.NewValue);
+        ((StepNavigatorControl)d).RefreshDots();
+    }
+
+    private static void OnPaginationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((StepNavigatorControl)d).RefreshDots();
+    }
+
+    private void RefreshDots()
+    {
+        var dots = Dots;
+        var visibleWindow = CalculateVisibleWindow(StepCount, CurrentStep, PaginationCount, ShouldPaginate);
+
+        if (dots.Count != visibleWindow.Count || _visibleWindowStart != visibleWindow.Start)
+        {
+            dots.Clear();
+            _visibleWindowStart = visibleWindow.Start;
+
+            for (var i = 0; i < visibleWindow.Count; i++)
+                dots.Add(new StepNavigatorDotVM { IsFirst = i == 0 });
+        }
+
+        UpdateDotStates(dots, CurrentStep, _visibleWindowStart);
+    }
+
+    internal static (int Start, int Count) CalculateVisibleWindow(
+        int stepCount,
+        int currentStep,
+        int paginationCount,
+        bool shouldPaginate)
+    {
+        var safeStepCount = Math.Max(0, stepCount);
+        if (safeStepCount == 0)
+            return (0, 0);
+
+        var safePaginationCount = Math.Max(1, paginationCount);
+        if (!shouldPaginate || safeStepCount <= safePaginationCount)
+            return (0, safeStepCount);
+
+        var safeCurrentStep = Math.Clamp(currentStep, 1, safeStepCount);
+        var cycleIndex = (safeCurrentStep - 1) / safePaginationCount;
+        var start = cycleIndex * safePaginationCount;
+        var count = Math.Min(safePaginationCount, safeStepCount - start);
+
+        return (start, count);
     }
 
     internal static void UpdateDotStates(ObservableCollection<StepNavigatorDotVM> dots, int currentStep)
+        => UpdateDotStates(dots, currentStep, windowStart: 0);
+
+    internal static void UpdateDotStates(
+        ObservableCollection<StepNavigatorDotVM> dots,
+        int currentStep,
+        int windowStart)
     {
+        var currentStepIndex = currentStep - 1;
+
         for (var i = 0; i < dots.Count; i++)
         {
-            dots[i].IsCompleted = i < currentStep - 1;
-            dots[i].IsActive = i == currentStep - 1;
+            var absoluteDotIndex = windowStart + i;
+            dots[i].IsCompleted = absoluteDotIndex < currentStepIndex;
+            dots[i].IsActive = absoluteDotIndex == currentStepIndex;
         }
     }
 }
