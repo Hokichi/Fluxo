@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Windows;
 using Fluxo.ViewModels.Popups;
@@ -157,6 +158,28 @@ public sealed class DialogService : IDialogService
         var popup = new DeleteAllDataPopup();
         var dialogResult = ShowDialog(popup, owner);
         return (dialogResult, popup.Choice);
+    }
+
+    public Task ShowToastWhileAsync(string message, Func<Task> work, Window? owner = null)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new ArgumentException("Toast message cannot be empty.", nameof(message));
+
+        ArgumentNullException.ThrowIfNull(work);
+
+        var popup = new ToastPopup(message, work);
+        ShowDialog(popup, owner);
+
+        if (popup.ExecutionException is not null)
+            ExceptionDispatchInfo.Capture(popup.ExecutionException).Throw();
+
+        return Task.CompletedTask;
+    }
+
+    public Task ShowToastWhileAsync(string message, Action work, Window? owner = null)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+        return ShowToastWhileAsync(message, () => Task.Run(work), owner);
     }
 
     public MessageBoxResult ShowWarning(string message, string title, Window? owner = null,

@@ -299,7 +299,13 @@ public class BasePopup : Window, IPopupHost
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
+
+        fadeIn.Completed += (_, _) => OnFadeInCompleted();
         BeginAnimation(OpacityProperty, fadeIn);
+    }
+
+    protected virtual void OnFadeInCompleted()
+    {
     }
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)

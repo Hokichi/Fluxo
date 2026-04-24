@@ -57,6 +57,10 @@ public interface IDialogService
 
     (bool? DialogResult, DeleteAllDataChoice Choice) ShowDeleteAllData(Window? owner = null);
 
+    Task ShowToastWhileAsync(string message, Func<Task> work, Window? owner = null);
+
+    Task ShowToastWhileAsync(string message, Action work, Window? owner = null);
+
     MessageBoxResult ShowWarning(string message, string title, Window? owner = null,
         MessageBoxButton buttons = MessageBoxButton.OK);
 
