@@ -7,12 +7,12 @@ using System.Windows.Media.Effects;
 
 namespace Fluxo.Views.CustomControls;
 
-[TemplatePart(Name = "PART_ContentRoot",  Type = typeof(FrameworkElement))]
+[TemplatePart(Name = "PART_ContentRoot", Type = typeof(FrameworkElement))]
 [TemplatePart(Name = "PART_PopupOverlay", Type = typeof(UIElement))]
 public class BasePopup : Window, IPopupHost
 {
     private const int OverlayAnimDuration = 200; // ms
-    private const int PopupAnimDuration   = 180; // ms
+    private const int PopupAnimDuration = 180; // ms
     private const double RecenterDeltaTolerance = 0.1;
 
     // --- PopupTitle ---
@@ -164,13 +164,11 @@ public class BasePopup : Window, IPopupHost
         set => SetValue(ShowDeleteButtonProperty, value);
     }
 
-
     public bool ShowCloneButton
     {
         get => (bool)GetValue(ShowCloneButtonProperty);
         set => SetValue(ShowCloneButtonProperty, value);
     }
-
 
     public bool ShowCancelButton
     {
@@ -204,7 +202,7 @@ public class BasePopup : Window, IPopupHost
         WireButton("PART_CloneButton", _ => OnCloneButtonClick());
         WireButton("PART_CancelButton", _ => OnCancelButtonClick());
 
-        _contentRoot  = GetTemplateChild("PART_ContentRoot")  as FrameworkElement;
+        _contentRoot = GetTemplateChild("PART_ContentRoot") as FrameworkElement;
         _popupOverlay = GetTemplateChild("PART_PopupOverlay") as UIElement;
     }
 
@@ -291,6 +289,7 @@ public class BasePopup : Window, IPopupHost
                 }
 
                 break;
+
             case Key.Delete:
                 OnDeleteButtonClick();
                 e.Handled = true;
@@ -342,7 +341,7 @@ public class BasePopup : Window, IPopupHost
             return;
 
         var leftDelta = Math.Abs(targetLeft - Left);
-        var topDelta  = Math.Abs(targetTop - Top);
+        var topDelta = Math.Abs(targetTop - Top);
 
         if (leftDelta < RecenterDeltaTolerance && topDelta < RecenterDeltaTolerance)
             return;
@@ -467,4 +466,3 @@ public class BasePopup : Window, IPopupHost
         _popupOverlay.BeginAnimation(OpacityProperty, fadeOut);
     }
 }
-

@@ -77,22 +77,12 @@
             </Border.Style>
             <Grid>
                 <StackPanel Margin="12" IsHitTestVisible="False">
-                    <StackPanel Orientation="Horizontal">
-                        <Border
-                            x:Name="AccentBorder"
-                            Width="8"
-                            Height="8"
-                            CornerRadius="16"
-                            Style="{StaticResource IncomeSourceAccentStyle}" />
-
-                        <TextBlock
-                            Margin="4,0,0,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="12"
-                            Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding SpendingSourceType}" />
-                    </StackPanel>
+                    <TextBlock
+                        VerticalAlignment="Bottom"
+                        FontFamily="{StaticResource Light}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="{Binding Name}" />
 
                     <TextBlock
                         Margin="0,8,0,0"
@@ -104,14 +94,26 @@
                         ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
                 </StackPanel>
 
-                <TextBlock
-                    Margin="0,0,8,8"
+                <StackPanel
+                    Margin="0,0,8,12"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
-                    FontFamily="{StaticResource Light}"
-                    FontSize="8"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="{Binding Name}" />
+                    Orientation="Horizontal">
+                    <Border
+                        x:Name="AccentBorder"
+                        Width="6"
+                        Height="6"
+                        CornerRadius="16"
+                        Style="{StaticResource IncomeSourceAccentStyle}" />
+
+                    <TextBlock
+                        Margin="4,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="10"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="{Binding SpendingSourceType}" />
+                </StackPanel>
             </Grid>
         </Border>
 

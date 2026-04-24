@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using Fluxo.Services.Ui;
 
 namespace Fluxo.Views.Shell;
 

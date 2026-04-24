@@ -951,7 +951,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void ShowPopupOverlay()
     {
-        ContentGrid.Effect = new BlurEffect { Radius = 20, RenderingBias = RenderingBias.Performance };
+        ApplyPopupBlur();
 
         PopupOverlay.Visibility = Visibility.Visible;
         var fadeIn = new DoubleAnimation(0, 0.5, TimeSpan.FromMilliseconds(FadeDuration))
@@ -963,7 +963,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void HidePopupOverlay()
     {
-        ContentGrid.Effect = null;
+        ClearPopupBlur();
 
         var fadeOut = new DoubleAnimation(0.5, 0, TimeSpan.FromMilliseconds(FadeDuration))
         {
@@ -976,6 +976,25 @@ public partial class MainWindow : Window, IPopupHost
             PopupOverlay.Visibility = Visibility.Collapsed;
         };
         PopupOverlay.BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    private void ApplyPopupBlur()
+    {
+        ContentGrid.Effect = CreatePopupBlurEffect();
+        AnalyticsDrawerLayer.Effect = CreatePopupBlurEffect();
+        AnalyticsDrawerTabHost.Effect = CreatePopupBlurEffect();
+    }
+
+    private void ClearPopupBlur()
+    {
+        ContentGrid.Effect = null;
+        AnalyticsDrawerLayer.Effect = null;
+        AnalyticsDrawerTabHost.Effect = null;
+    }
+
+    private static BlurEffect CreatePopupBlurEffect()
+    {
+        return new BlurEffect { Radius = 20, RenderingBias = RenderingBias.Performance };
     }
 
     private async Task ExecuteSpendingSourceSettingsActionAsync(SpendingSourceVM spendingSource,
