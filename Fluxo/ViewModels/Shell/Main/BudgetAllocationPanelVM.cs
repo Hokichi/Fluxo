@@ -25,14 +25,19 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<RecordLogMemoryMessage>,
     IRecipient<LogMemoryActionAppliedMessage>
 {
+    private const int BucketPageSize = 25;
+
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
+    private readonly HashSet<ExpenseLogVM> _investVisibleWindow = [];
     private readonly IMapper _mapper;
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
+    private readonly HashSet<ExpenseLogVM> _needsVisibleWindow = [];
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly ISpendingSourceService _spendingSourceService;
     private readonly ITagService _tagService;
+    private readonly HashSet<ExpenseLogVM> _wantsVisibleWindow = [];
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
     private readonly ObservableCollection<SpendingSourceVM> _spendingSources = [];
     private readonly IDialogService? _dialogService;
@@ -41,9 +46,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLogVM> _allIncomeLogs = [];
+    private int _investVisibleCount = BucketPageSize;
     private bool _isSynchronizingTagSelections;
     private bool _suppressFilterFeedback;
+    private int _needsVisibleCount = BucketPageSize;
     private (DateTime From, DateTime To)? _selectedRange = (DateTime.Today, DateTime.Today);
+    private int _wantsVisibleCount = BucketPageSize;
 
     public BudgetAllocationPanelVM(
         IExpenseLogService expenseLogService,
@@ -126,6 +134,24 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     [ObservableProperty]
     private bool _isInvestEmpty;
+
+    [ObservableProperty]
+    private bool _needsHasMoreItems;
+
+    [ObservableProperty]
+    private bool _wantsHasMoreItems;
+
+    [ObservableProperty]
+    private bool _investHasMoreItems;
+
+    [ObservableProperty]
+    private bool _isNeedsLoading;
+
+    [ObservableProperty]
+    private bool _isWantsLoading;
+
+    [ObservableProperty]
+    private bool _isInvestLoading;
 
     [ObservableProperty]
     private ObservableCollection<ExpenseTagVM> _tags = [];
@@ -243,6 +269,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         SynchronizeTagSelections(value);
         OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
+        ResetPaginationWindows();
 
         if (_suppressFilterFeedback)
         {
@@ -256,6 +283,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     partial void OnSelectedSpendingSourceIdChanged(int? value)
     {
         SynchronizeSpendingSourceSelections(value);
+        ResetPaginationWindows();
 
         if (_suppressFilterFeedback)
         {
@@ -300,10 +328,94 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         SelectedTag = value;
     }
 
+    partial void OnNeedsHasMoreItemsChanged(bool value)
+    {
+        LoadMoreNeedsCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnWantsHasMoreItemsChanged(bool value)
+    {
+        LoadMoreWantsCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnInvestHasMoreItemsChanged(bool value)
+    {
+        LoadMoreInvestCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsNeedsLoadingChanged(bool value)
+    {
+        LoadMoreNeedsCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsWantsLoadingChanged(bool value)
+    {
+        LoadMoreWantsCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsInvestLoadingChanged(bool value)
+    {
+        LoadMoreInvestCommand.NotifyCanExecuteChanged();
+    }
+
     [RelayCommand]
     private void ClearSelectedTag()
     {
         SelectedTag = null;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadMoreNeeds))]
+    private void LoadMoreNeeds()
+    {
+        if (!CanLoadMoreNeeds())
+            return;
+
+        IsNeedsLoading = true;
+        try
+        {
+            _needsVisibleCount += BucketPageSize;
+            RefreshExpenseViews();
+        }
+        finally
+        {
+            IsNeedsLoading = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadMoreWants))]
+    private void LoadMoreWants()
+    {
+        if (!CanLoadMoreWants())
+            return;
+
+        IsWantsLoading = true;
+        try
+        {
+            _wantsVisibleCount += BucketPageSize;
+            RefreshExpenseViews();
+        }
+        finally
+        {
+            IsWantsLoading = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadMoreInvest))]
+    private void LoadMoreInvest()
+    {
+        if (!CanLoadMoreInvest())
+            return;
+
+        IsInvestLoading = true;
+        try
+        {
+            _investVisibleCount += BucketPageSize;
+            RefreshExpenseViews();
+        }
+        finally
+        {
+            IsInvestLoading = false;
+        }
     }
 
     public void ToggleSelectedSpendingSource(SpendingSourceVM? source)
@@ -344,6 +456,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private void Initialize()
     {
         ConfigureExpenseViews();
+        ResetPaginationWindows();
         IsActive = true;
     }
 
@@ -399,9 +512,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         Wants = CollectionViewSource.GetDefaultView(_wantsSource);
         Invest = CollectionViewSource.GetDefaultView(_investSource);
 
-        Needs.Filter = FilterExpenseLog;
-        Wants.Filter = FilterExpenseLog;
-        Invest.Filter = FilterExpenseLog;
+        Needs.Filter = FilterNeedsExpenseLog;
+        Wants.Filter = FilterWantsExpenseLog;
+        Invest.Filter = FilterInvestExpenseLog;
     }
 
     private void RefreshBudgetMetrics()
@@ -484,7 +597,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         return (int)Math.Round(threshold * 100m, MidpointRounding.AwayFromZero);
     }
 
-    private void ApplyVisibleExpenseLogs()
+    private void ApplyVisibleExpenseLogs(bool resetPaginationWindows = true)
     {
         var visibleExpenseLogs = _selectedRange is { } range
             ? _allExpenseLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
@@ -500,14 +613,40 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             _investSource,
             visibleExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings));
 
+        if (resetPaginationWindows)
+            ResetPaginationWindows();
+
         RefreshExpenseViews();
     }
 
-    private bool FilterExpenseLog(object item)
+    private bool FilterNeedsExpenseLog(object item)
+    {
+        return FilterPagedExpenseLog(item, _needsVisibleWindow);
+    }
+
+    private bool FilterWantsExpenseLog(object item)
+    {
+        return FilterPagedExpenseLog(item, _wantsVisibleWindow);
+    }
+
+    private bool FilterInvestExpenseLog(object item)
+    {
+        return FilterPagedExpenseLog(item, _investVisibleWindow);
+    }
+
+    private bool FilterPagedExpenseLog(object item, HashSet<ExpenseLogVM> visibleWindow)
     {
         if (item is not ExpenseLogVM expenseLog)
             return false;
 
+        if (!MatchesSelectedFilters(expenseLog))
+            return false;
+
+        return visibleWindow.Contains(expenseLog);
+    }
+
+    private bool MatchesSelectedFilters(ExpenseLogVM expenseLog)
+    {
         if (SelectedTag is not null &&
             expenseLog.Expense?.ExpenseTag?.Id != SelectedTag.Id)
             return false;
@@ -571,6 +710,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void RefreshExpenseViews()
     {
+        RecomputePagedVisibleWindows();
+
         Needs.Refresh();
         Wants.Refresh();
         Invest.Refresh();
@@ -777,7 +918,56 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             .ToList();
 
         RefreshBudgetMetrics();
-        ApplyVisibleExpenseLogs();
+        ApplyVisibleExpenseLogs(resetPaginationWindows: false);
+    }
+
+    private bool CanLoadMoreNeeds()
+    {
+        return NeedsHasMoreItems && !IsNeedsLoading;
+    }
+
+    private bool CanLoadMoreWants()
+    {
+        return WantsHasMoreItems && !IsWantsLoading;
+    }
+
+    private bool CanLoadMoreInvest()
+    {
+        return InvestHasMoreItems && !IsInvestLoading;
+    }
+
+    private void ResetPaginationWindows()
+    {
+        _needsVisibleCount = BucketPageSize;
+        _wantsVisibleCount = BucketPageSize;
+        _investVisibleCount = BucketPageSize;
+
+        IsNeedsLoading = false;
+        IsWantsLoading = false;
+        IsInvestLoading = false;
+    }
+
+    private void RecomputePagedVisibleWindows()
+    {
+        NeedsHasMoreItems = UpdatePagedVisibleWindow(_needsSource, _needsVisibleWindow, _needsVisibleCount);
+        WantsHasMoreItems = UpdatePagedVisibleWindow(_wantsSource, _wantsVisibleWindow, _wantsVisibleCount);
+        InvestHasMoreItems = UpdatePagedVisibleWindow(_investSource, _investVisibleWindow, _investVisibleCount);
+    }
+
+    private bool UpdatePagedVisibleWindow(
+        IEnumerable<ExpenseLogVM> source,
+        HashSet<ExpenseLogVM> visibleWindow,
+        int visibleCount)
+    {
+        var filteredLogs = source
+            .Where(MatchesSelectedFilters)
+            .ToList();
+
+        visibleWindow.Clear();
+        foreach (var log in filteredLogs.Take(visibleCount))
+            visibleWindow.Add(log);
+
+        return filteredLogs.Count > visibleCount;
     }
 
     private static ExpenseLogMemorySnapshot CreateExpenseLogSnapshot(ExpenseLogVM expenseLog)

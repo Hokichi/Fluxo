@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -14,20 +16,30 @@ namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsFixedExpensesTabVM : ObservableObject
 {
+    private const int PageSize = 25;
+
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly HashSet<SettingsFixedExpenseItemVM> _fixedExpensesVisibleWindow = [];
+    private int _visibleFixedExpenseCount = PageSize;
 
     [ObservableProperty] private bool _isFixedExpenseChecksEnabled;
+    [ObservableProperty] private bool _hasMoreItems;
+    [ObservableProperty] private bool _isLoading;
 
     public SettingsFixedExpensesTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
+
+        FixedExpensesView = CollectionViewSource.GetDefaultView(FixedExpenses);
+        FixedExpensesView.Filter = FilterFixedExpense;
     }
 
     public ObservableCollection<SettingsFixedExpenseItemVM> FixedExpenses { get; } = [];
+    public ICollectionView FixedExpensesView { get; }
     public bool AreAllFixedExpensesChecked => FixedExpenses.Count > 0 && FixedExpenses.All(item => item.IsChecked);
     public bool HasFixedExpenses => FixedExpenses.Count > 0;
 
@@ -56,7 +68,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
             new SettingsDialogRequest(
                 SettingsDialogRequestType.AddFixedExpense,
                 CreateAddFixedExpenseViewModel())));
-        await RefreshFixedExpensesAsync();
+        await RefreshFixedExpensesAsync(resetPagination: false);
     }
 
     public void ClearSelections()
@@ -163,7 +175,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _mainViewModel.ReloadCurrentDataAsync();
-            await RefreshFixedExpensesAsync();
+            await RefreshFixedExpensesAsync(resetPagination: false);
 
             return SettingsOperationResult.Success();
         }
@@ -181,11 +193,14 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
 
     public void SelectSingleItem(int itemId)
     {
+        if (EnsureItemVisible(itemId))
+            RefreshFixedExpensesView();
+
         foreach (var item in FixedExpenses)
             item.IsSelected = item.Id == itemId;
     }
 
-    public async Task RefreshFixedExpensesAsync()
+    public async Task RefreshFixedExpensesAsync(bool resetPagination = true)
     {
         SettingsShared.ReplaceCollection(FixedExpenses, (await _unitOfWork.Expenses.GetAllAsync())
             .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
@@ -193,6 +208,12 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
             .Select(expense => new SettingsFixedExpenseItemVM(expense)));
 
         AttachSelectableItemHandlers(FixedExpenses);
+        if (resetPagination)
+            ResetPaginationWindow();
+        else
+            IsLoading = false;
+
+        RefreshFixedExpensesView();
         OnPropertyChanged(nameof(HasFixedExpenses));
         OnSelectionStateChanged();
     }
@@ -200,6 +221,34 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
     partial void OnIsFixedExpenseChecksEnabledChanged(bool value)
     {
         OnSelectionStateChanged();
+    }
+
+    partial void OnHasMoreItemsChanged(bool value)
+    {
+        LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsLoadingChanged(bool value)
+    {
+        LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadMore))]
+    private void LoadMore()
+    {
+        if (!CanLoadMore())
+            return;
+
+        IsLoading = true;
+        try
+        {
+            _visibleFixedExpenseCount += PageSize;
+            RefreshFixedExpensesView();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private void AttachSelectableItemHandlers(IEnumerable<SettingsFixedExpenseItemVM> items)
@@ -225,6 +274,60 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         OnPropertyChanged(nameof(ShowFixedExpenseCheckAllButton));
         OnPropertyChanged(nameof(ShowFixedExpenseUncheckAllButton));
         OnPropertyChanged(nameof(ShowFixedExpenseEnableChecksButton));
+    }
+
+    private bool CanLoadMore()
+    {
+        return HasMoreItems && !IsLoading;
+    }
+
+    private bool FilterFixedExpense(object item)
+    {
+        return item is SettingsFixedExpenseItemVM fixedExpense &&
+               _fixedExpensesVisibleWindow.Contains(fixedExpense);
+    }
+
+    private void ResetPaginationWindow()
+    {
+        _visibleFixedExpenseCount = PageSize;
+        IsLoading = false;
+    }
+
+    private bool EnsureItemVisible(int itemId)
+    {
+        var index = -1;
+        for (var i = 0; i < FixedExpenses.Count; i++)
+            if (FixedExpenses[i].Id == itemId)
+            {
+                index = i;
+                break;
+            }
+
+        if (index < 0)
+            return false;
+
+        var requiredVisibleCount = ((index / PageSize) + 1) * PageSize;
+        if (requiredVisibleCount <= _visibleFixedExpenseCount)
+            return false;
+
+        _visibleFixedExpenseCount = requiredVisibleCount;
+        return true;
+    }
+
+    private void RefreshFixedExpensesView()
+    {
+        RecomputeVisibleWindow();
+        FixedExpensesView.Refresh();
+    }
+
+    private void RecomputeVisibleWindow()
+    {
+        _fixedExpensesVisibleWindow.Clear();
+
+        foreach (var fixedExpense in FixedExpenses.Take(_visibleFixedExpenseCount))
+            _fixedExpensesVisibleWindow.Add(fixedExpense);
+
+        HasMoreItems = FixedExpenses.Count > _visibleFixedExpenseCount;
     }
 
     private static bool ShouldShowDisableAction(IReadOnlyCollection<SettingsFixedExpenseItemVM> items)

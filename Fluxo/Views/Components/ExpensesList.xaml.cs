@@ -18,13 +18,13 @@ public partial class ExpensesList : UserControl
         nameof(Title), typeof(string), typeof(ExpensesList), new PropertyMetadata(default(string)));
 
     public static readonly DependencyProperty SpentAmountProperty = DependencyProperty.Register(
-        nameof(SpentAmount), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
+        nameof(SpentAmount), typeof(decimal), typeof(ExpensesList), new PropertyMetadata(default(decimal)));
 
     public static readonly DependencyProperty TotalAmountProperty = DependencyProperty.Register(
-        nameof(TotalAmount), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
+        nameof(TotalAmount), typeof(decimal), typeof(ExpensesList), new PropertyMetadata(default(decimal)));
 
     public static readonly DependencyProperty RemainingAmountProperty = DependencyProperty.Register(
-        nameof(RemainingAmount), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
+        nameof(RemainingAmount), typeof(decimal), typeof(ExpensesList), new PropertyMetadata(default(decimal)));
 
     public static readonly DependencyProperty AllocationProperty = DependencyProperty.Register(
         nameof(Allocation), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
@@ -45,6 +45,15 @@ public partial class ExpensesList : UserControl
     public static readonly DependencyProperty DeleteCommandProperty = DependencyProperty.Register(
         nameof(DeleteCommand), typeof(ICommand), typeof(ExpensesList), new PropertyMetadata(default(ICommand)));
 
+    public static readonly DependencyProperty LoadMoreCommandProperty = DependencyProperty.Register(
+        nameof(LoadMoreCommand), typeof(ICommand), typeof(ExpensesList), new PropertyMetadata(default(ICommand)));
+
+    public static readonly DependencyProperty HasMoreItemsProperty = DependencyProperty.Register(
+        nameof(HasMoreItems), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
+
+    public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
+        nameof(IsLoading), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
+
     public ExpensesList()
     {
         InitializeComponent();
@@ -56,23 +65,23 @@ public partial class ExpensesList : UserControl
         set => SetValue(TitleProperty, value);
     }
 
-    public int SpentAmount
+    public decimal SpentAmount
     {
-        get => (int)GetValue(SpentAmountProperty);
+        get => (decimal)GetValue(SpentAmountProperty);
         set => SetValue(SpentAmountProperty, value);
     }
 
-    public int TotalAmount
+    public decimal TotalAmount
     {
-        get => (int)GetValue(TotalAmountProperty);
+        get => (decimal)GetValue(TotalAmountProperty);
         set => SetValue(TotalAmountProperty, value);
     }
 
 
-    public int RemainingAmount
+    public decimal RemainingAmount
     {
-        get => (int)GetValue(TotalAmountProperty);
-        set => SetValue(TotalAmountProperty, value);
+        get => (decimal)GetValue(RemainingAmountProperty);
+        set => SetValue(RemainingAmountProperty, value);
     }
 
     public int Allocation
@@ -109,6 +118,24 @@ public partial class ExpensesList : UserControl
     {
         get => (ICommand)GetValue(DeleteCommandProperty);
         set => SetValue(DeleteCommandProperty, value);
+    }
+
+    public ICommand LoadMoreCommand
+    {
+        get => (ICommand)GetValue(LoadMoreCommandProperty);
+        set => SetValue(LoadMoreCommandProperty, value);
+    }
+
+    public bool HasMoreItems
+    {
+        get => (bool)GetValue(HasMoreItemsProperty);
+        set => SetValue(HasMoreItemsProperty, value);
+    }
+
+    public bool IsLoading
+    {
+        get => (bool)GetValue(IsLoadingProperty);
+        set => SetValue(IsLoadingProperty, value);
     }
 
     private void OnExpenseDetailButtonClick(object sender, RoutedEventArgs e)

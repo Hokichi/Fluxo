@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -14,20 +16,30 @@ namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsSourcesTabVM : ObservableObject
 {
+    private const int PageSize = 25;
+
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly HashSet<SettingsSpendingSourceItemVM> _spendingSourcesVisibleWindow = [];
+    private int _visibleSpendingSourceCount = PageSize;
 
     [ObservableProperty] private bool _isSpendingSourceChecksEnabled;
+    [ObservableProperty] private bool _hasMoreItems;
+    [ObservableProperty] private bool _isLoading;
 
     public SettingsSourcesTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
+
+        SpendingSourcesView = CollectionViewSource.GetDefaultView(SpendingSources);
+        SpendingSourcesView.Filter = FilterSpendingSource;
     }
 
     public ObservableCollection<SettingsSpendingSourceItemVM> SpendingSources { get; } = [];
+    public ICollectionView SpendingSourcesView { get; }
     public bool AreAllSpendingSourcesChecked => SpendingSources.Count > 0 && SpendingSources.All(item => item.IsChecked);
     public bool HasSpendingSources => SpendingSources.Count > 0;
 
@@ -45,7 +57,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     public async Task LoadAsync()
     {
-        await RefreshSpendingSourcesAsync();
+        await RefreshSpendingSourcesAsync(resetPagination: true);
         IsSpendingSourceChecksEnabled = false;
     }
 
@@ -74,7 +86,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
             new SettingsDialogRequest(
                 SettingsDialogRequestType.SpendingSourceDetail,
                 CreateSpendingSourceDetailViewModel(spendingSourceId))));
-        await RefreshSpendingSourcesAsync();
+        await RefreshSpendingSourcesAsync(keepVisibleItemId: spendingSourceId);
         SelectSingleItem(spendingSourceId);
     }
 
@@ -211,11 +223,14 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     public void SelectSingleItem(int itemId)
     {
+        if (EnsureItemVisible(itemId))
+            RefreshSpendingSourcesView();
+
         foreach (var item in SpendingSources)
             item.IsSelected = item.Id == itemId;
     }
 
-    public async Task RefreshSpendingSourcesAsync()
+    public async Task RefreshSpendingSourcesAsync(bool resetPagination = false, int? keepVisibleItemId = null)
     {
         SettingsShared.ReplaceCollection(SpendingSources, (await _unitOfWork.SpendingSources.GetAllAsync())
             .OrderByDescending(source => source.ShowOnUI)
@@ -223,6 +238,15 @@ public partial class SettingsSourcesTabVM : ObservableObject
             .Select(source => new SettingsSpendingSourceItemVM(source)));
 
         AttachSelectableItemHandlers(SpendingSources);
+        if (resetPagination)
+            ResetPaginationWindow();
+        else
+            IsLoading = false;
+
+        if (keepVisibleItemId is int itemId)
+            EnsureItemVisible(itemId);
+
+        RefreshSpendingSourcesView();
         OnPropertyChanged(nameof(HasSpendingSources));
         OnSelectionStateChanged();
     }
@@ -230,6 +254,34 @@ public partial class SettingsSourcesTabVM : ObservableObject
     partial void OnIsSpendingSourceChecksEnabledChanged(bool value)
     {
         OnSelectionStateChanged();
+    }
+
+    partial void OnHasMoreItemsChanged(bool value)
+    {
+        LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsLoadingChanged(bool value)
+    {
+        LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadMore))]
+    private void LoadMore()
+    {
+        if (!CanLoadMore())
+            return;
+
+        IsLoading = true;
+        try
+        {
+            _visibleSpendingSourceCount += PageSize;
+            RefreshSpendingSourcesView();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private void AttachSelectableItemHandlers(IEnumerable<SettingsSpendingSourceItemVM> items)
@@ -257,6 +309,60 @@ public partial class SettingsSourcesTabVM : ObservableObject
         OnPropertyChanged(nameof(ShowSpendingSourceCheckAllButton));
         OnPropertyChanged(nameof(ShowSpendingSourceUncheckAllButton));
         OnPropertyChanged(nameof(ShowSpendingSourceEnableChecksButton));
+    }
+
+    private bool CanLoadMore()
+    {
+        return HasMoreItems && !IsLoading;
+    }
+
+    private bool FilterSpendingSource(object item)
+    {
+        return item is SettingsSpendingSourceItemVM spendingSource &&
+               _spendingSourcesVisibleWindow.Contains(spendingSource);
+    }
+
+    private void ResetPaginationWindow()
+    {
+        _visibleSpendingSourceCount = PageSize;
+        IsLoading = false;
+    }
+
+    private bool EnsureItemVisible(int itemId)
+    {
+        var index = -1;
+        for (var i = 0; i < SpendingSources.Count; i++)
+            if (SpendingSources[i].Id == itemId)
+            {
+                index = i;
+                break;
+            }
+
+        if (index < 0)
+            return false;
+
+        var requiredVisibleCount = ((index / PageSize) + 1) * PageSize;
+        if (requiredVisibleCount <= _visibleSpendingSourceCount)
+            return false;
+
+        _visibleSpendingSourceCount = requiredVisibleCount;
+        return true;
+    }
+
+    private void RefreshSpendingSourcesView()
+    {
+        RecomputeVisibleWindow();
+        SpendingSourcesView.Refresh();
+    }
+
+    private void RecomputeVisibleWindow()
+    {
+        _spendingSourcesVisibleWindow.Clear();
+
+        foreach (var spendingSource in SpendingSources.Take(_visibleSpendingSourceCount))
+            _spendingSourcesVisibleWindow.Add(spendingSource);
+
+        HasMoreItems = SpendingSources.Count > _visibleSpendingSourceCount;
     }
 
     private static bool ShouldShowHideAction(IReadOnlyCollection<SettingsSpendingSourceItemVM> items)

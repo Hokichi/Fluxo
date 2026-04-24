@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
@@ -15,20 +17,30 @@ namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsGoalsTabVM : ObservableObject
 {
+    private const int PageSize = 25;
+
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly HashSet<SettingsSavingGoalItemVM> _savingGoalsVisibleWindow = [];
+    private int _visibleSavingGoalCount = PageSize;
 
     [ObservableProperty] private bool _isGoalChecksEnabled;
+    [ObservableProperty] private bool _hasMoreItems;
+    [ObservableProperty] private bool _isLoading;
 
     public SettingsGoalsTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
         _unitOfWork = unitOfWork;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
+
+        SavingGoalsView = CollectionViewSource.GetDefaultView(SavingGoals);
+        SavingGoalsView.Filter = FilterSavingGoal;
     }
 
     public ObservableCollection<SettingsSavingGoalItemVM> SavingGoals { get; } = [];
+    public ICollectionView SavingGoalsView { get; }
     public bool AreAllGoalsChecked => SavingGoals.Count > 0 && SavingGoals.All(item => item.IsChecked);
     public bool HasSavingGoals => SavingGoals.Count > 0;
 
@@ -59,7 +71,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
             new SettingsDialogRequest(
                 SettingsDialogRequestType.AddSavingGoal,
                 CreateAddSavingGoalViewModel())));
-        await RefreshSavingGoalsAsync();
+        await RefreshSavingGoalsAsync(resetPagination: false);
     }
 
     public void ClearSelections()
@@ -142,7 +154,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.SavingGoals));
             await _mainViewModel.ReloadCurrentDataAsync();
-            await RefreshSavingGoalsAsync();
+            await RefreshSavingGoalsAsync(resetPagination: false);
 
             return SettingsOperationResult.Success();
         }
@@ -160,11 +172,14 @@ public partial class SettingsGoalsTabVM : ObservableObject
 
     public void SelectSingleItem(int itemId)
     {
+        if (EnsureItemVisible(itemId))
+            RefreshSavingGoalsView();
+
         foreach (var item in SavingGoals)
             item.IsSelected = item.Id == itemId;
     }
 
-    public async Task RefreshSavingGoalsAsync()
+    public async Task RefreshSavingGoalsAsync(bool resetPagination = true)
     {
         var disabledSavingGoalIds = SettingsShared.ParseIdSet(
             await SettingsShared.GetSettingsDictionaryAsync(_unitOfWork),
@@ -178,6 +193,12 @@ public partial class SettingsGoalsTabVM : ObservableObject
                 !disabledSavingGoalIds.Contains(goal.Id))));
 
         AttachSelectableItemHandlers(SavingGoals);
+        if (resetPagination)
+            ResetPaginationWindow();
+        else
+            IsLoading = false;
+
+        RefreshSavingGoalsView();
         OnPropertyChanged(nameof(HasSavingGoals));
         OnSelectionStateChanged();
     }
@@ -185,6 +206,34 @@ public partial class SettingsGoalsTabVM : ObservableObject
     partial void OnIsGoalChecksEnabledChanged(bool value)
     {
         OnSelectionStateChanged();
+    }
+
+    partial void OnHasMoreItemsChanged(bool value)
+    {
+        LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsLoadingChanged(bool value)
+    {
+        LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLoadMore))]
+    private void LoadMore()
+    {
+        if (!CanLoadMore())
+            return;
+
+        IsLoading = true;
+        try
+        {
+            _visibleSavingGoalCount += PageSize;
+            RefreshSavingGoalsView();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private void AttachSelectableItemHandlers(IEnumerable<SettingsSavingGoalItemVM> items)
@@ -210,6 +259,60 @@ public partial class SettingsGoalsTabVM : ObservableObject
         OnPropertyChanged(nameof(ShowGoalCheckAllButton));
         OnPropertyChanged(nameof(ShowGoalUncheckAllButton));
         OnPropertyChanged(nameof(ShowGoalEnableChecksButton));
+    }
+
+    private bool CanLoadMore()
+    {
+        return HasMoreItems && !IsLoading;
+    }
+
+    private bool FilterSavingGoal(object item)
+    {
+        return item is SettingsSavingGoalItemVM savingGoal &&
+               _savingGoalsVisibleWindow.Contains(savingGoal);
+    }
+
+    private void ResetPaginationWindow()
+    {
+        _visibleSavingGoalCount = PageSize;
+        IsLoading = false;
+    }
+
+    private bool EnsureItemVisible(int itemId)
+    {
+        var index = -1;
+        for (var i = 0; i < SavingGoals.Count; i++)
+            if (SavingGoals[i].Id == itemId)
+            {
+                index = i;
+                break;
+            }
+
+        if (index < 0)
+            return false;
+
+        var requiredVisibleCount = ((index / PageSize) + 1) * PageSize;
+        if (requiredVisibleCount <= _visibleSavingGoalCount)
+            return false;
+
+        _visibleSavingGoalCount = requiredVisibleCount;
+        return true;
+    }
+
+    private void RefreshSavingGoalsView()
+    {
+        RecomputeVisibleWindow();
+        SavingGoalsView.Refresh();
+    }
+
+    private void RecomputeVisibleWindow()
+    {
+        _savingGoalsVisibleWindow.Clear();
+
+        foreach (var savingGoal in SavingGoals.Take(_visibleSavingGoalCount))
+            _savingGoalsVisibleWindow.Add(savingGoal);
+
+        HasMoreItems = SavingGoals.Count > _visibleSavingGoalCount;
     }
 
     private static bool ShouldShowDisableAction(IReadOnlyCollection<SettingsSavingGoalItemVM> items)
