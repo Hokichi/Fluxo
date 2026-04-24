@@ -1,10 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Dialogs;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Controls;
 
 namespace Fluxo.ViewModels.Shell.Main;
@@ -13,13 +16,21 @@ public partial class DaySpinnerVM : ObservableRecipient,
     IRecipient<ViewModeChangeMessage>,
     IRecipient<MoveToCurrentPeriodRequestedMessage>
 {
+    private readonly IDialogService? _dialogService;
+    private readonly IUiSettleAwaiter? _uiSettleAwaiter;
+    private readonly SemaphoreSlim _spinnerInteractionGate = new(1, 1);
     private bool _suppressSelectionPublishing;
     private MainContentViewMode _selectedMainContentViewMode = MainContentViewMode.Daily;
     private int _spinnerPageOffset;
 
-    public DaySpinnerVM(IMessenger? messenger = null)
+    public DaySpinnerVM(
+        IMessenger? messenger = null,
+        IDialogService? dialogService = null,
+        IUiSettleAwaiter? uiSettleAwaiter = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
+        _dialogService = dialogService;
+        _uiSettleAwaiter = uiSettleAwaiter;
         BuildSpinnerForMode(DateTime.Today, publishSelection: false);
         IsActive = true;
     }
@@ -94,25 +105,68 @@ public partial class DaySpinnerVM : ObservableRecipient,
         PublishSelectedRange(SelectedDay.Date);
     }
 
+    public async Task NavigateSpinnerBackFromUserAsync(Window? owner = null)
+    {
+        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+            return;
+
+        var targetDate = GetFirstDateForOffset(_spinnerPageOffset - 1);
+        await RunSpinnerInteractionWithFeedbackAsync(
+            MainDataLoadingMessageFormatter.Build(_selectedMainContentViewMode, targetDate),
+            () =>
+            {
+                NavigateSpinnerBackCore();
+                return Task.CompletedTask;
+            },
+            owner);
+    }
+
+    public async Task NavigateSpinnerForwardFromUserAsync(Window? owner = null)
+    {
+        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+            return;
+
+        if (_spinnerPageOffset >= 0)
+            return;
+
+        var targetDate = GetFirstDateForOffset(_spinnerPageOffset + 1);
+        await RunSpinnerInteractionWithFeedbackAsync(
+            MainDataLoadingMessageFormatter.Build(_selectedMainContentViewMode, targetDate),
+            () =>
+            {
+                NavigateSpinnerForwardCore();
+                return Task.CompletedTask;
+            },
+            owner);
+    }
+
+    public async Task SelectDayFromUserAsync(DayOfWeekVM selectedDay, Window? owner = null)
+    {
+        ArgumentNullException.ThrowIfNull(selectedDay);
+
+        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+            return;
+
+        await RunSpinnerInteractionWithFeedbackAsync(
+            MainDataLoadingMessageFormatter.Build(_selectedMainContentViewMode, selectedDay.Date),
+            () =>
+            {
+                SelectDay(selectedDay, publishSelection: true);
+                return Task.CompletedTask;
+            },
+            owner);
+    }
+
     [RelayCommand]
     private void NavigateSpinnerBack()
     {
-        _spinnerPageOffset--;
-        CanNavigateForward = true;
-        BuildSpinnerItems();
-        SelectFirstSpinnerItem();
+        NavigateSpinnerBackCore();
     }
 
     [RelayCommand]
     private void NavigateSpinnerForward()
     {
-        if (_spinnerPageOffset >= 0)
-            return;
-
-        _spinnerPageOffset++;
-        CanNavigateForward = _spinnerPageOffset < 0;
-        BuildSpinnerItems();
-        SelectFirstSpinnerItem();
+        NavigateSpinnerForwardCore();
     }
 
     [RelayCommand]
@@ -324,6 +378,62 @@ public partial class DaySpinnerVM : ObservableRecipient,
         BuildSpinnerForMode(DateTime.Today, publishSelection: true);
     }
 
+    private void NavigateSpinnerBackCore()
+    {
+        _spinnerPageOffset--;
+        CanNavigateForward = true;
+        BuildSpinnerItems();
+        SelectFirstSpinnerItem();
+    }
+
+    private void NavigateSpinnerForwardCore()
+    {
+        if (_spinnerPageOffset >= 0)
+            return;
+
+        _spinnerPageOffset++;
+        CanNavigateForward = _spinnerPageOffset < 0;
+        BuildSpinnerItems();
+        SelectFirstSpinnerItem();
+    }
+
+    private DateTime GetFirstDateForOffset(int offset)
+    {
+        return _selectedMainContentViewMode switch
+        {
+            MainContentViewMode.Daily => GetMonday(DateTime.Today).AddDays(offset * 7),
+            MainContentViewMode.Weekly => GetWeeklyWindowStart(GetMonday(DateTime.Today)).AddDays(offset * 28),
+            MainContentViewMode.Monthly => GetMonthlyWindowStart(DateTime.Today).AddMonths(offset * 4),
+            _ => DateTime.Today
+        };
+    }
+
+    private async Task RunSpinnerInteractionWithFeedbackAsync(string message, Func<Task> operation, Window? owner)
+    {
+        if (_dialogService is null || _uiSettleAwaiter is null)
+        {
+            await operation();
+            return;
+        }
+
+        await _spinnerInteractionGate.WaitAsync();
+        try
+        {
+            await _dialogService.ShowToastWhileAsync(
+                message,
+                async () =>
+                {
+                    await operation();
+                    await _uiSettleAwaiter.WaitForUiReadyAsync(owner);
+                },
+                owner);
+        }
+        finally
+        {
+            _spinnerInteractionGate.Release();
+        }
+    }
+
     private bool EvaluateIsAtCurrentPeriod(DateTime selectedDate)
     {
         var today = DateTime.Today;
@@ -364,6 +474,12 @@ public partial class DaySpinnerVM : ObservableRecipient,
     private static DateTime GetWeeklyWindowStart(DateTime mondayDate)
     {
         return DateTime.MinValue.Date.AddDays(GetWeeklyWindowIndex(mondayDate) * 28);
+    }
+
+    private static DateTime GetMonthlyWindowStart(DateTime date)
+    {
+        var groupStartMonth = (date.Month - 1) / 4 * 4 + 1;
+        return new DateTime(date.Year, groupStartMonth, 1);
     }
 
     private static int GetWeeklyWindowIndex(DateTime mondayDate)

@@ -29,8 +29,8 @@
         <Button
             HorizontalAlignment="Left"
             VerticalAlignment="Center"
+            Click="OnNavigateSpinnerBackClick"
             shell:WindowChrome.IsHitTestVisibleInChrome="True"
-            Command="{Binding NavigateSpinnerBackCommand}"
             Style="{StaticResource SpinnerArrowButtonStyle}">
             <icons:PackIconUnicons
                 Height="12"
@@ -39,6 +39,7 @@
         </Button>
 
         <ListView
+            x:Name="SpinnerListView"
             Grid.Column="1"
             HorizontalAlignment="Center"
             shell:WindowChrome.IsHitTestVisibleInChrome="True"
@@ -48,14 +49,19 @@
             ItemContainerStyle="{StaticResource DaysOfWeekStyle}"
             ItemsPanel="{StaticResource DaySpinnerItemsPanelTemplate}"
             ItemsSource="{Binding DaysOfWeek}"
-            SelectedItem="{Binding SelectedDay, Mode=TwoWay}" />
+            PreviewKeyDown="OnSpinnerListPreviewKeyDown"
+            PreviewKeyUp="OnSpinnerListPreviewKeyUp"
+            PreviewMouseLeftButtonDown="OnSpinnerListPreviewMouseLeftButtonDown"
+            PreviewMouseLeftButtonUp="OnSpinnerListPreviewMouseLeftButtonUp"
+            SelectedItem="{Binding SelectedDay, Mode=OneWay}"
+            SelectionChanged="OnSelectedDayChanged" />
 
         <Button
             Grid.Column="2"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
+            Click="OnNavigateSpinnerForwardClick"
             shell:WindowChrome.IsHitTestVisibleInChrome="True"
-            Command="{Binding NavigateSpinnerForwardCommand}"
             IsEnabled="{Binding CanNavigateForward}"
             Style="{StaticResource SpinnerArrowButtonStyle}">
             <icons:PackIconUnicons

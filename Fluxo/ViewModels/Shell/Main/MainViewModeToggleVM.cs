@@ -81,7 +81,7 @@ public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<Spin
         try
         {
             await _dialogService.ShowToastWhileAsync(
-                $"Switching to {ToViewModeLabel(viewMode)} view",
+                MainDataLoadingMessageFormatter.Build(viewMode, DateTime.Today),
                 async () =>
                 {
                     SetSelectedMainContentView(viewMode);
@@ -93,18 +93,6 @@ public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<Spin
         {
             _viewModeTransitionGate.Release();
         }
-    }
-
-    private static string ToViewModeLabel(MainContentViewMode viewMode)
-    {
-        return viewMode switch
-        {
-            MainContentViewMode.Daily => "Day",
-            MainContentViewMode.Weekly => "Week",
-            MainContentViewMode.Monthly => "Month",
-            MainContentViewMode.AllTime => "All-time",
-            _ => viewMode.ToString()
-        };
     }
 
     partial void OnSelectedMainContentViewModeChanged(MainContentViewMode oldValue, MainContentViewMode newValue)
