@@ -16,12 +16,12 @@
                         CornerRadius="16">
                         <Grid x:Name="PART_ContentRoot">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="60" />
+                                <RowDefinition x:Name="HeaderRow" Height="60" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
                             <!--  Header  -->
-                            <Grid Grid.Row="0" Margin="24,0">
+                            <Grid x:Name="HeaderHost" Grid.Row="0" Margin="24,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
@@ -147,6 +147,10 @@
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="ShowHeader" Value="False">
+                            <Setter TargetName="HeaderRow" Property="Height" Value="0" />
+                            <Setter TargetName="HeaderHost" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
                         <Trigger Property="PopupTitleContent" Value="{x:Null}">
                             <Setter TargetName="PopupTitleText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PopupTitleContentPresenter" Property="Visibility" Value="Collapsed" />

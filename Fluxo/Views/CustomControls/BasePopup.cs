@@ -69,6 +69,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(true));
 
+    public static readonly DependencyProperty ShowHeaderProperty =
+        DependencyProperty.Register(nameof(ShowHeader), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
     private IPopupHost? _popupHost;
     private FrameworkElement? _contentRoot;
     private UIElement? _popupOverlay;
@@ -178,6 +182,12 @@ public class BasePopup : Window, IPopupHost
     {
         get => (bool)GetValue(ShowCloseButtonProperty);
         set => SetValue(ShowCloseButtonProperty, value);
+    }
+
+    public bool ShowHeader
+    {
+        get => (bool)GetValue(ShowHeaderProperty);
+        set => SetValue(ShowHeaderProperty, value);
     }
 
     public override void OnApplyTemplate()

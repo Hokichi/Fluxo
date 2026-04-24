@@ -4,16 +4,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="360"
-    MinWidth="360"
-    MaxWidth="480"
-    ShowInTaskbar="False">
-    <Grid Margin="24,8,24,24">
+    ShowHeader="False"
+    ShowInTaskbar="False"
+    SizeToContent="WidthAndHeight">
+    <Grid Margin="120,24,120,24">
         <TextBlock
             x:Name="MessageTextBlock"
-            FontFamily="{DynamicResource Regular}"
+            MaxWidth="480"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontFamily="{DynamicResource Bold}"
             FontSize="12"
             Foreground="{DynamicResource Brush.Text.Primary}"
-            LineHeight="20"
             TextWrapping="Wrap" />
     </Grid>
 </customControls:BasePopup>
