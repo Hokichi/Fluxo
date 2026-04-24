@@ -2,11 +2,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.Messages;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardMiddlePageVM : ObservableRecipient,
-    IRecipient<StartupWizardSpendingSourcesChangedMessage>,
-    IRecipient<StartupWizardBudgetAllocationChangedMessage>
+public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
+    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>,
+    IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>
 {
     private const int FirstMiddleStepIndex = 2;
     private const int LastMiddleStepIndex = 7;
@@ -21,13 +21,13 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
     [ObservableProperty] private bool _isStep6Active;
     [ObservableProperty] private bool _isStep7Active;
 
-    public StartupWizardMiddlePageVM(
-        StartupWizardSpendingSourcesVM spendingSources,
-        StartupWizardFixedExpensesVM fixedExpenses,
-        StartupWizardSavingGoalsVM savingGoals,
-        StartupWizardBudgetAllocationVM budgetAllocation,
-        StartupWizardNotificationVM notification,
-        StartupWizardSummaryVM summary,
+    public QuickSetupWizardMiddlePageVM(
+        QuickSetupWizardSpendingSourcesVM spendingSources,
+        QuickSetupWizardFixedExpensesVM fixedExpenses,
+        QuickSetupWizardSavingGoalsVM savingGoals,
+        QuickSetupWizardBudgetAllocationVM budgetAllocation,
+        QuickSetupWizardNotificationVM notification,
+        QuickSetupWizardSummaryVM summary,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
@@ -41,17 +41,17 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
         IsActive = true;
     }
 
-    public StartupWizardSpendingSourcesVM SpendingSources { get; }
+    public QuickSetupWizardSpendingSourcesVM SpendingSources { get; }
 
-    public StartupWizardFixedExpensesVM FixedExpenses { get; }
+    public QuickSetupWizardFixedExpensesVM FixedExpenses { get; }
 
-    public StartupWizardSavingGoalsVM SavingGoals { get; }
+    public QuickSetupWizardSavingGoalsVM SavingGoals { get; }
 
-    public StartupWizardBudgetAllocationVM BudgetAllocation { get; }
+    public QuickSetupWizardBudgetAllocationVM BudgetAllocation { get; }
 
-    public StartupWizardNotificationVM Notification { get; }
+    public QuickSetupWizardNotificationVM Notification { get; }
 
-    public StartupWizardSummaryVM Summary { get; }
+    public QuickSetupWizardSummaryVM Summary { get; }
 
     public int MiddleStepCount => MiddleStepsCount;
 
@@ -117,12 +117,12 @@ public partial class StartupWizardMiddlePageVM : ObservableRecipient,
         OnPropertyChanged(nameof(CurrentStepDescription));
     }
 
-    public void Receive(StartupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
     {
         HasSpendingSources = message.Value.HasAny;
     }
 
-    public void Receive(StartupWizardBudgetAllocationChangedMessage message)
+    public void Receive(QuickSetupWizardBudgetAllocationChangedMessage message)
     {
         OnPropertyChanged(nameof(IsNextEnabled));
     }

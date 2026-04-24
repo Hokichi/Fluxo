@@ -1,12 +1,12 @@
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public static class StartupWizardLoadingCoordinator
+public static class QuickSetupWizardLoadingCoordinator
 {
     public const int AttemptsPerCycle = 5;
 
     public static readonly TimeSpan MinimumLoadingDuration = TimeSpan.FromSeconds(5);
 
-    public static async Task<StartupWizardLoadingOutcome> RunAsync(
+    public static async Task<QuickSetupWizardLoadingOutcome> RunAsync(
         Func<Task<bool>> tryStageAsync,
         Func<Task<bool>> confirmRetryCycleAsync,
         Func<TimeSpan, Task> delayAsync)
@@ -24,14 +24,14 @@ public static class StartupWizardLoadingCoordinator
                 if (await tryStageAsync().ConfigureAwait(false))
                 {
                     await minimumDelayTask.ConfigureAwait(false);
-                    return StartupWizardLoadingOutcome.Success;
+                    return QuickSetupWizardLoadingOutcome.Success;
                 }
             }
 
             if (!await confirmRetryCycleAsync().ConfigureAwait(false))
             {
                 await minimumDelayTask.ConfigureAwait(false);
-                return StartupWizardLoadingOutcome.Abandoned;
+                return QuickSetupWizardLoadingOutcome.Abandoned;
             }
         }
     }

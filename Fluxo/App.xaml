@@ -71,7 +71,7 @@
                 <ResourceDictionary Source="Resources/Styles/MainWindowStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/SettingsStyle.xaml" />
                 <ResourceDictionary Source="Resources/Styles/StepNavigatorStyle.xaml" />
-                <ResourceDictionary Source="Resources/Styles/StartupWizardStyle.xaml" />
+                <ResourceDictionary Source="Resources/Styles/QuickSetupWizardStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

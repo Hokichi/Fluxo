@@ -1,9 +1,9 @@
-using Fluxo.ViewModels.Shell.StartupWizard;
+using Fluxo.ViewModels.Shell.QuickSetupWizard;
 using Xunit;
 
-namespace Fluxo.Tests.ViewModels.Shell.StartupWizard;
+namespace Fluxo.Tests.ViewModels.Shell.QuickSetupWizard;
 
-public sealed class StartupWizardLoadingCoordinatorTests
+public sealed class QuickSetupWizardLoadingCoordinatorTests
 {
     [Fact]
     public async Task RunAsync_SuccessOnFirstAttempt_ReturnsSuccess()
@@ -12,7 +12,7 @@ public sealed class StartupWizardLoadingCoordinatorTests
         var prompted = 0;
         TimeSpan? observedDelay = null;
 
-        var outcome = await StartupWizardLoadingCoordinator.RunAsync(
+        var outcome = await QuickSetupWizardLoadingCoordinator.RunAsync(
             tryStageAsync: () =>
             {
                 attempts++;
@@ -32,7 +32,7 @@ public sealed class StartupWizardLoadingCoordinatorTests
         Assert.Equal(1, attempts);
         Assert.Equal(0, prompted);
         Assert.Equal(TimeSpan.FromSeconds(5), observedDelay);
-        Assert.Equal(StartupWizardLoadingOutcome.Success, outcome);
+        Assert.Equal(QuickSetupWizardLoadingOutcome.Success, outcome);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public sealed class StartupWizardLoadingCoordinatorTests
         var attempts = 0;
         var prompted = 0;
 
-        var outcome = await StartupWizardLoadingCoordinator.RunAsync(
+        var outcome = await QuickSetupWizardLoadingCoordinator.RunAsync(
             tryStageAsync: () =>
             {
                 attempts++;
@@ -56,7 +56,7 @@ public sealed class StartupWizardLoadingCoordinatorTests
 
         Assert.Equal(6, attempts);
         Assert.Equal(1, prompted);
-        Assert.Equal(StartupWizardLoadingOutcome.Success, outcome);
+        Assert.Equal(QuickSetupWizardLoadingOutcome.Success, outcome);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class StartupWizardLoadingCoordinatorTests
         var attempts = 0;
         var prompted = 0;
 
-        var outcome = await StartupWizardLoadingCoordinator.RunAsync(
+        var outcome = await QuickSetupWizardLoadingCoordinator.RunAsync(
             tryStageAsync: () =>
             {
                 attempts++;
@@ -80,6 +80,6 @@ public sealed class StartupWizardLoadingCoordinatorTests
 
         Assert.Equal(5, attempts);
         Assert.Equal(1, prompted);
-        Assert.Equal(StartupWizardLoadingOutcome.Abandoned, outcome);
+        Assert.Equal(QuickSetupWizardLoadingOutcome.Abandoned, outcome);
     }
 }

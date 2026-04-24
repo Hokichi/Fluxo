@@ -12,7 +12,7 @@ public partial class BudgetAllocation : UserControl
         InitializeComponent();
     }
 
-    private static StartupWizardPopup? FindPopup(DependencyObject source) => Window.GetWindow(source) as StartupWizardPopup;
+    private static QuickSetupWizard? FindPopup(DependencyObject source) => Window.GetWindow(source) as QuickSetupWizard;
 
     private void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
     {

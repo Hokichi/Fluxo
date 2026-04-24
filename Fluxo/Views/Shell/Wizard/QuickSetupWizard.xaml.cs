@@ -11,17 +11,17 @@ using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
-using StartupWizardLoadingOutcome = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardLoadingOutcome;
-using StartupWizardVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardVM;
+using QuickSetupWizardLoadingOutcome = Fluxo.ViewModels.Shell.QuickSetupWizard.QuickSetupWizardLoadingOutcome;
+using QuickSetupWizardVM = Fluxo.ViewModels.Shell.QuickSetupWizard.QuickSetupWizardVM;
 
 namespace Fluxo.Views.Shell.Wizard;
 
-public partial class StartupWizardPopup : BasePopup
+public partial class QuickSetupWizard : BasePopup
 {
     private static readonly Duration FadeDuration = new(TimeSpan.FromMilliseconds(150));
 
     private readonly IDialogService _dialogService;
-    private readonly StartupWizardVM _viewModel;
+    private readonly QuickSetupWizardVM _viewModel;
     private bool _allowClose;
     private bool _isAnimating;
     private bool _isHandlingClose;
@@ -30,7 +30,7 @@ public partial class StartupWizardPopup : BasePopup
     private int _heldAllocationDelta;
     private BudgetAllocationSegment _heldAllocationSegment;
 
-    public StartupWizardPopup(StartupWizardVM viewModel, IDialogService dialogService)
+    public QuickSetupWizard(QuickSetupWizardVM viewModel, IDialogService dialogService)
     {
         InitializeComponent();
         _dialogService = dialogService;
@@ -149,7 +149,7 @@ public partial class StartupWizardPopup : BasePopup
             var outcome = await _viewModel.ExecuteLoadingFlowAsync(
                 tryStageAsyncOverride: null,
                 confirmRetryCycleAsync: ConfirmRetryLoadingCycleAsync);
-            if (outcome is StartupWizardLoadingOutcome.Success or StartupWizardLoadingOutcome.Abandoned)
+            if (outcome is QuickSetupWizardLoadingOutcome.Success or QuickSetupWizardLoadingOutcome.Abandoned)
                 await AnimateStepTransitionAsync(_viewModel.GoNextAsync);
         }
         catch (Exception exception)

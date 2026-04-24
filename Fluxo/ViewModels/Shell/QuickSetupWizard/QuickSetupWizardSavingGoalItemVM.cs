@@ -1,15 +1,15 @@
 using Fluxo.Core.Entities;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public sealed record StartupWizardSavingGoalItemVM(
+public sealed record QuickSetupWizardSavingGoalItemVM(
     int Id,
     string Name,
     decimal CurrentAmount,
     decimal TargetAmount,
     DateTime SavingEndDate)
 {
-    public StartupWizardSavingGoalItemVM(SavingGoal goal) : this(
+    public QuickSetupWizardSavingGoalItemVM(SavingGoal goal) : this(
         goal.Id,
         goal.Name,
         goal.CurrentAmount,
@@ -18,7 +18,7 @@ public sealed record StartupWizardSavingGoalItemVM(
     {
     }
 
-    public StartupWizardSavingGoalItemVM(StartupWizardDraftSavingGoal goal) : this(
+    public QuickSetupWizardSavingGoalItemVM(QuickSetupWizardDraftSavingGoal goal) : this(
         goal.Id,
         goal.Name,
         goal.CurrentAmount,

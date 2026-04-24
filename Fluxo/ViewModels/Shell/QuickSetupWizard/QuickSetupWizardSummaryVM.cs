@@ -4,15 +4,15 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Converters;
 using Fluxo.Resources.Messages;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardSummaryVM : ObservableRecipient,
-    IRecipient<StartupWizardIdentityChangedMessage>,
-    IRecipient<StartupWizardSpendingSourcesChangedMessage>,
-    IRecipient<StartupWizardFixedExpensesChangedMessage>,
-    IRecipient<StartupWizardSavingGoalsChangedMessage>,
-    IRecipient<StartupWizardBudgetAllocationChangedMessage>,
-    IRecipient<StartupWizardNotificationsChangedMessage>
+public partial class QuickSetupWizardSummaryVM : ObservableRecipient,
+    IRecipient<QuickSetupWizardIdentityChangedMessage>,
+    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>,
+    IRecipient<QuickSetupWizardFixedExpensesChangedMessage>,
+    IRecipient<QuickSetupWizardSavingGoalsChangedMessage>,
+    IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>,
+    IRecipient<QuickSetupWizardNotificationsChangedMessage>
 {
     private int _investPercentage = 20;
     private int _needsPercentage = 50;
@@ -27,7 +27,7 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
 
     [ObservableProperty] private bool _isStep7Active;
 
-    public StartupWizardSummaryVM(IMessenger? messenger = null)
+    public QuickSetupWizardSummaryVM(IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         IsActive = true;
@@ -58,13 +58,13 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
 
     public int ReportNotificationsEnabledCount => _reportNotificationsEnabledCount;
 
-    public void Receive(StartupWizardIdentityChangedMessage message)
+    public void Receive(QuickSetupWizardIdentityChangedMessage message)
     {
         _reportUsernameText = message.Value.ResolvedUsername;
         OnPropertyChanged(nameof(ReportUsernameText));
     }
 
-    public void Receive(StartupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
     {
         _reportSpendingSourceCount = message.Value.Count;
         _totalPrimaryAmount = message.Value.TotalPrimaryAmount;
@@ -73,7 +73,7 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
         OnPropertyChanged(nameof(ReportTotalBalanceTooltipText));
     }
 
-    public void Receive(StartupWizardFixedExpensesChangedMessage message)
+    public void Receive(QuickSetupWizardFixedExpensesChangedMessage message)
     {
         _reportFixedExpenseCount = message.Value.Count;
         _totalFixedExpenseAmount = message.Value.TotalAmount;
@@ -82,13 +82,13 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
         OnPropertyChanged(nameof(ReportTotalFixedExpenseTooltipText));
     }
 
-    public void Receive(StartupWizardSavingGoalsChangedMessage message)
+    public void Receive(QuickSetupWizardSavingGoalsChangedMessage message)
     {
         _reportSavingGoalCount = message.Value.Count;
         OnPropertyChanged(nameof(ReportSavingGoalCount));
     }
 
-    public void Receive(StartupWizardBudgetAllocationChangedMessage message)
+    public void Receive(QuickSetupWizardBudgetAllocationChangedMessage message)
     {
         _needsPercentage = message.Value.NeedsPercentage;
         _wantsPercentage = message.Value.WantsPercentage;
@@ -96,7 +96,7 @@ public partial class StartupWizardSummaryVM : ObservableRecipient,
         OnPropertyChanged(nameof(ReportBudgetAllocationText));
     }
 
-    public void Receive(StartupWizardNotificationsChangedMessage message)
+    public void Receive(QuickSetupWizardNotificationsChangedMessage message)
     {
         _reportNotificationsEnabledCount = message.Value.EnabledCount;
         OnPropertyChanged(nameof(ReportNotificationsEnabledCount));

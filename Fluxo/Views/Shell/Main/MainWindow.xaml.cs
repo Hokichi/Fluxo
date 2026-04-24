@@ -715,9 +715,9 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowSettings(this);
     }
 
-    public void OpenStartupWizardPopup()
+    public void OpenQuickSetupWizardPopup()
     {
-        _dialogService.ShowStartupWizard(this);
+        _dialogService.ShowQuickSetupWizard(this);
     }
 
     public void OpenPlanningPopup()

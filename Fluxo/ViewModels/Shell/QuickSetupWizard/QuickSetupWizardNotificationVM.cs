@@ -7,16 +7,16 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardNotificationVM : ObservableObject
+public partial class QuickSetupWizardNotificationVM : ObservableObject
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessenger _messenger;
 
     [ObservableProperty] private bool _isStep6Active;
 
-    public StartupWizardNotificationVM(IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public QuickSetupWizardNotificationVM(IUnitOfWork unitOfWork, IMessenger? messenger = null)
     {
         _unitOfWork = unitOfWork;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
@@ -35,37 +35,37 @@ public partial class StartupWizardNotificationVM : ObservableObject
                 "Upcoming fixed expense reminders",
                 "Warn before recurring fixed expenses are due.",
                 UserSettingNames.IsFixedExpensesDeductionNotifEnabled,
-                StartupWizardShared.ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false)),
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false)),
             new SettingsNotificationOptionVM(
                 "Credit deadline reminders",
                 "Warn when credit and BNPL due dates are approaching.",
                 UserSettingNames.IsCreditDeadlineNotifEnabled,
-                StartupWizardShared.ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true)),
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true)),
             new SettingsNotificationOptionVM(
                 "Goal deadline alerts",
                 "Warn when a savings goal is close to its saving end date.",
                 UserSettingNames.IsGoalDeadlineNotifEnabled,
-                StartupWizardShared.ParseBool(settingsByName, UserSettingNames.IsGoalDeadlineNotifEnabled, true)),
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsGoalDeadlineNotifEnabled, true)),
             new SettingsNotificationOptionVM(
                 "Late payment alerts",
                 "Warn when credit and BNPL payments are past due.",
                 UserSettingNames.IsLatePaymentNotifEnabled,
-                StartupWizardShared.ParseBool(settingsByName, UserSettingNames.IsLatePaymentNotifEnabled, true)),
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsLatePaymentNotifEnabled, true)),
             new SettingsNotificationOptionVM(
                 "Budget threshold alerts",
                 "Warn when Needs, Wants, or Invest allocations are nearly spent.",
                 UserSettingNames.IsBudgetThresholdNotifEnabled,
-                StartupWizardShared.ParseBool(settingsByName, UserSettingNames.IsBudgetThresholdNotifEnabled, true)),
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsBudgetThresholdNotifEnabled, true)),
             new SettingsNotificationOptionVM(
                 "Low credit usage alerts",
                 "Warn when credit or BNPL sources cross their usage threshold.",
                 UserSettingNames.IsLowCreditNotifEnabled,
-                StartupWizardShared.ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false)),
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false)),
             new SettingsNotificationOptionVM(
                 "Low account balance alerts",
                 "Warn when checking or cash sources are running low.",
                 UserSettingNames.IsLowAccountBalanceNotifEnabled,
-                StartupWizardShared.ParseBool(settingsByName, UserSettingNames.IsLowAccountBalanceNotifEnabled, false))
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsLowAccountBalanceNotifEnabled, false))
         ]);
 
         PublishSnapshot();
@@ -83,7 +83,7 @@ public partial class StartupWizardNotificationVM : ObservableObject
     public async Task ApplyAsync(IUnitOfWork unitOfWork)
     {
         foreach (var setting in NotificationSettings)
-            await StartupWizardShared.UpsertUserSettingAsync(
+            await QuickSetupWizardShared.UpsertUserSettingAsync(
                 unitOfWork,
                 setting.SettingName,
                 setting.IsEnabled.ToString());
@@ -94,7 +94,7 @@ public partial class StartupWizardNotificationVM : ObservableObject
         foreach (var existing in NotificationSettings)
             existing.PropertyChanged -= OnNotificationOptionPropertyChanged;
 
-        StartupWizardShared.ReplaceCollection(NotificationSettings, options);
+        QuickSetupWizardShared.ReplaceCollection(NotificationSettings, options);
 
         foreach (var option in NotificationSettings)
             option.PropertyChanged += OnNotificationOptionPropertyChanged;
@@ -110,8 +110,8 @@ public partial class StartupWizardNotificationVM : ObservableObject
 
     private void PublishSnapshot()
     {
-        _messenger.Send(new StartupWizardNotificationsChangedMessage(
-            new StartupWizardNotificationsChanged(
+        _messenger.Send(new QuickSetupWizardNotificationsChangedMessage(
+            new QuickSetupWizardNotificationsChanged(
                 EnabledCount: NotificationSettings.Count(setting => setting.IsEnabled),
                 TotalCount: NotificationSettings.Count)));
     }

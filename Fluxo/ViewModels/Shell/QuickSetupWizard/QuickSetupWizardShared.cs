@@ -3,9 +3,9 @@ using System.Globalization;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-internal static class StartupWizardShared
+internal static class QuickSetupWizardShared
 {
     public const int TotalSteps = 10;
 

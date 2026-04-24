@@ -4,14 +4,14 @@ using Fluxo.Views.Shell.Wizard;
 
 namespace Fluxo.Views.Shell.Wizard.Pages;
 
-public partial class StartupWizardNamePage : UserControl
+public partial class QuickSetupWizardNamePage : UserControl
 {
-    public StartupWizardNamePage()
+    public QuickSetupWizardNamePage()
     {
         InitializeComponent();
     }
 
-    private static StartupWizardPopup? FindPopup(DependencyObject source) => Window.GetWindow(source) as StartupWizardPopup;
+    private static QuickSetupWizard? FindPopup(DependencyObject source) => Window.GetWindow(source) as QuickSetupWizard;
 
     private void OnContinueClick(object sender, RoutedEventArgs e)
     {

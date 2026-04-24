@@ -469,35 +469,35 @@
 
     <!--  StartupLoaderPopup  -->
 
-    <!--  StartupWizardFinalPage  -->
+    <!--  QuickSetupWizardFinalPage  -->
     <GeometryDrawing
-        x:Key="StartupWizardFinalPage.RocketSolid"
+        x:Key="QuickSetupWizardFinalPage.RocketSolid"
         Brush="Black"
         Geometry="{StaticResource RocketSolid}" />
 
-    <!--  StartupWizardGreetingPage  -->
+    <!--  QuickSetupWizardGreetingPage  -->
 
-    <!--  StartupWizardLoadingPage  -->
+    <!--  QuickSetupWizardLoadingPage  -->
 
-    <!--  StartupWizardMiddlePage  -->
+    <!--  QuickSetupWizardMiddlePage  -->
     <GeometryDrawing
-        x:Key="StartupWizardMiddlePage.BookDollar"
+        x:Key="QuickSetupWizardMiddlePage.BookDollar"
         Brush="Black"
         Geometry="{StaticResource BookDollar}" />
     <GeometryDrawing
-        x:Key="StartupWizardMiddlePage.BullseyeSolid"
+        x:Key="QuickSetupWizardMiddlePage.BullseyeSolid"
         Brush="Black"
         Geometry="{StaticResource BullseyeSolid}" />
     <GeometryDrawing
-        x:Key="StartupWizardMiddlePage.InvoiceLight"
+        x:Key="QuickSetupWizardMiddlePage.InvoiceLight"
         Brush="Black"
         Geometry="{StaticResource InvoiceLight}" />
     <GeometryDrawing
-        x:Key="StartupWizardMiddlePage.RegularBell"
+        x:Key="QuickSetupWizardMiddlePage.RegularBell"
         Brush="Black"
         Geometry="{StaticResource RegularBell}" />
     <GeometryDrawing
-        x:Key="StartupWizardMiddlePage.AccountBalanceWalletRound"
+        x:Key="QuickSetupWizardMiddlePage.AccountBalanceWalletRound"
         Brush="Black"
         Geometry="{StaticResource AccountBalanceWalletRound}" />
 

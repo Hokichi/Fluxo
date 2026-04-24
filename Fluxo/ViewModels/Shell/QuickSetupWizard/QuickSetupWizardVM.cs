@@ -12,11 +12,11 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Runtime.ExceptionServices;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardVM : ObservableRecipient,
-    IRecipient<StartupWizardSpendingSourcesChangedMessage>,
-    IRecipient<StartupWizardBudgetAllocationChangedMessage>
+public partial class QuickSetupWizardVM : ObservableRecipient,
+    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>,
+    IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
@@ -28,15 +28,15 @@ public partial class StartupWizardVM : ObservableRecipient,
     [ObservableProperty] private int _currentStepIndex;
     [ObservableProperty] private bool _hasSpendingSources;
 
-    public StartupWizardVM(
+    public QuickSetupWizardVM(
         MainVM mainViewModel,
         IUnitOfWork unitOfWork,
         IDataOperationScopeFactory dataOperationScopeFactory,
-        StartupWizardGreetingPageVM greetingPage,
-        StartupWizardNamePageVM namePage,
-        StartupWizardMiddlePageVM middlePage,
-        StartupWizardLoadingPageVM loadingPage,
-        StartupWizardFinalPageVM finalPage,
+        QuickSetupWizardGreetingPageVM greetingPage,
+        QuickSetupWizardNamePageVM namePage,
+        QuickSetupWizardMiddlePageVM middlePage,
+        QuickSetupWizardLoadingPageVM loadingPage,
+        QuickSetupWizardFinalPageVM finalPage,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
@@ -53,17 +53,17 @@ public partial class StartupWizardVM : ObservableRecipient,
         IsActive = true;
     }
 
-    public StartupWizardGreetingPageVM GreetingPage { get; }
+    public QuickSetupWizardGreetingPageVM GreetingPage { get; }
 
-    public StartupWizardNamePageVM NamePage { get; }
+    public QuickSetupWizardNamePageVM NamePage { get; }
 
-    public StartupWizardMiddlePageVM MiddlePage { get; }
+    public QuickSetupWizardMiddlePageVM MiddlePage { get; }
 
-    public StartupWizardLoadingPageVM LoadingPage { get; }
+    public QuickSetupWizardLoadingPageVM LoadingPage { get; }
 
-    public StartupWizardFinalPageVM FinalPage { get; }
+    public QuickSetupWizardFinalPageVM FinalPage { get; }
 
-    public int TotalSteps => StartupWizardShared.TotalSteps;
+    public int TotalSteps => QuickSetupWizardShared.TotalSteps;
 
     public int CurrentStep => CurrentStepIndex + 1;
 
@@ -96,12 +96,12 @@ public partial class StartupWizardVM : ObservableRecipient,
             MiddlePage.SetCurrentStepIndex(value);
     }
 
-    public void Receive(StartupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
     {
         HasSpendingSources = message.Value.HasAny;
     }
 
-    public void Receive(StartupWizardBudgetAllocationChangedMessage message)
+    public void Receive(QuickSetupWizardBudgetAllocationChangedMessage message)
     {
         OnPropertyChanged(nameof(IsNextEnabled));
     }
@@ -155,12 +155,12 @@ public partial class StartupWizardVM : ObservableRecipient,
         await _mainViewModel.Initialize();
     }
 
-    public Task<StartupWizardLoadingOutcome> ExecuteLoadingFlowAsync(
+    public Task<QuickSetupWizardLoadingOutcome> ExecuteLoadingFlowAsync(
         Func<Task<bool>>? tryStageAsyncOverride,
         Func<Task<bool>> confirmRetryCycleAsync,
         Func<TimeSpan, Task>? delayAsync = null)
     {
-        return StartupWizardLoadingCoordinator.RunAsync(
+        return QuickSetupWizardLoadingCoordinator.RunAsync(
             tryStageAsyncOverride ?? TryStageDraftAsync,
             confirmRetryCycleAsync,
             delayAsync ?? (duration => Task.Delay(duration)));
@@ -198,7 +198,7 @@ public partial class StartupWizardVM : ObservableRecipient,
 
         return capturedException is null
             ? SettingsOperationResult.Success()
-            : SettingsOperationResult.Failure(CreateStartupWizardErrorMessage("finish setup", capturedException));
+            : SettingsOperationResult.Failure(CreateQuickSetupWizardErrorMessage("finish setup", capturedException));
     }
 
     public async Task<SettingsOperationResult> DismissAsync()
@@ -216,7 +216,7 @@ public partial class StartupWizardVM : ObservableRecipient,
         catch (Exception exception)
         {
             return SettingsOperationResult.Failure(
-                CreateStartupWizardErrorMessage("close the startup wizard", exception));
+                CreateQuickSetupWizardErrorMessage("close the startup wizard", exception));
         }
 
         return SettingsOperationResult.Success();
@@ -365,14 +365,14 @@ public partial class StartupWizardVM : ObservableRecipient,
         capturedException?.Throw();
     }
 
-    private static string CreateStartupWizardErrorMessage(string action, Exception exception)
+    private static string CreateQuickSetupWizardErrorMessage(string action, Exception exception)
     {
         return $"Unable to {action}.\n\n{exception.Message}";
     }
 
     private async Task SaveIsFirstRunAsync(bool isFirstRun)
     {
-        await StartupWizardShared.UpsertUserSettingAsync(_unitOfWork, UserSettingNames.IsFirstRun, isFirstRun.ToString());
+        await QuickSetupWizardShared.UpsertUserSettingAsync(_unitOfWork, UserSettingNames.IsFirstRun, isFirstRun.ToString());
         await _unitOfWork.SaveChangesAsync();
     }
 }

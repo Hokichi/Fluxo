@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Views.Shell.Wizard.Pages.StartupWizardMiddlePage"
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardMiddlePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
@@ -54,7 +54,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource StartupWizardMiddlePage.BookDollar}"
+                                Path="{StaticResource QuickSetupWizardMiddlePage.BookDollar}"
                                 Color="{Binding Foreground, ElementName=Step1Label}" />
                             <TextBlock
                                 x:Name="Step1Label"
@@ -119,7 +119,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource StartupWizardMiddlePage.InvoiceLight}"
+                                Path="{StaticResource QuickSetupWizardMiddlePage.InvoiceLight}"
                                 Color="{Binding Foreground, ElementName=Step2Label}" />
                             <TextBlock
                                 x:Name="Step2Label"
@@ -181,7 +181,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource StartupWizardMiddlePage.BullseyeSolid}"
+                                Path="{StaticResource QuickSetupWizardMiddlePage.BullseyeSolid}"
                                 Color="{Binding Foreground, ElementName=Step3Label}" />
                             <TextBlock
                                 x:Name="Step3Label"
@@ -240,7 +240,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource StartupWizardMiddlePage.AccountBalanceWalletRound}"
+                                Path="{StaticResource QuickSetupWizardMiddlePage.AccountBalanceWalletRound}"
                                 Color="{Binding Foreground, ElementName=Step4Label}" />
                             <TextBlock
                                 x:Name="Step4Label"
@@ -296,7 +296,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource StartupWizardMiddlePage.RegularBell}"
+                                Path="{StaticResource QuickSetupWizardMiddlePage.RegularBell}"
                                 Color="{Binding Foreground, ElementName=Step5Label}" />
                             <TextBlock
                                 x:Name="Step5Label"
@@ -349,7 +349,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource StartupWizardMiddlePage.InvoiceLight}"
+                                Path="{StaticResource QuickSetupWizardMiddlePage.InvoiceLight}"
                                 Color="{Binding Foreground, ElementName=Step6Label}" />
                             <TextBlock
                                 x:Name="Step6Label"

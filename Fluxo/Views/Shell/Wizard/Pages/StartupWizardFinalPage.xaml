@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Views.Shell.Wizard.Pages.StartupWizardFinalPage"
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardFinalPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components">
@@ -63,7 +63,7 @@
                     <components:Icon
                         Width="16"
                         Height="16"
-                        Path="{StaticResource StartupWizardFinalPage.RocketSolid}"
+                        Path="{StaticResource QuickSetupWizardFinalPage.RocketSolid}"
                         Color="{StaticResource Brush.Background.Surface}" />
                 </Button>
             </StackPanel>

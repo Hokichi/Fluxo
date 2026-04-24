@@ -1,5 +1,5 @@
 <customControls:BasePopup
-    x:Class="Fluxo.Views.Shell.Wizard.StartupWizardPopup"
+    x:Class="Fluxo.Views.Shell.Wizard.QuickSetupWizard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
@@ -42,7 +42,7 @@
     <customControls:BasePopup.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Fluxo;component/Resources/Styles/StartupWizardStyle.xaml" />
+                <ResourceDictionary Source="/Fluxo;component/Resources/Styles/QuickSetupWizardStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </customControls:BasePopup.Resources>
@@ -53,25 +53,25 @@
         Margin="24,0,24,24">
         <Grid x:Name="ContentContainer">
             <!--  Greeting Page (Step 0)  -->
-            <pages:StartupWizardGreetingPage DataContext="{Binding GreetingPage}" Visibility="{Binding DataContext.IsGreetingStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <pages:QuickSetupWizardGreetingPage DataContext="{Binding GreetingPage}" Visibility="{Binding DataContext.IsGreetingStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Preferred Name Page (Step 1)  -->
-            <pages:StartupWizardNamePage DataContext="{Binding NamePage}" Visibility="{Binding DataContext.IsNameStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <pages:QuickSetupWizardNamePage DataContext="{Binding NamePage}" Visibility="{Binding DataContext.IsNameStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Middle Steps (2-7): Sidebar + Content  -->
-            <pages:StartupWizardMiddlePage
+            <pages:QuickSetupWizardMiddlePage
                 x:Name="MiddleStepPage"
                 DataContext="{Binding MiddlePage}"
                 Visibility="{Binding DataContext.IsMiddleStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Loading Page (Step 8)  -->
-            <pages:StartupWizardLoadingPage
+            <pages:QuickSetupWizardLoadingPage
                 x:Name="LoadingStepPage"
                 DataContext="{Binding LoadingPage}"
                 Visibility="{Binding DataContext.IsLoadingStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <!--  Welcome Page (Step 9)  -->
-            <pages:StartupWizardFinalPage
+            <pages:QuickSetupWizardFinalPage
                 x:Name="FinalStepPage"
                 DataContext="{Binding FinalPage}"
                 Visibility="{Binding DataContext.IsFinalStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />

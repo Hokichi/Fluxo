@@ -4,9 +4,9 @@ using Fluxo.Views.Shell.Wizard;
 
 namespace Fluxo.Views.Shell.Wizard.Pages;
 
-public partial class StartupWizardMiddlePage : UserControl
+public partial class QuickSetupWizardMiddlePage : UserControl
 {
-    public StartupWizardMiddlePage()
+    public QuickSetupWizardMiddlePage()
     {
         InitializeComponent();
     }
@@ -25,7 +25,7 @@ public partial class StartupWizardMiddlePage : UserControl
         _ => null
     };
 
-    private static StartupWizardPopup? FindPopup(DependencyObject source) => Window.GetWindow(source) as StartupWizardPopup;
+    private static QuickSetupWizard? FindPopup(DependencyObject source) => Window.GetWindow(source) as QuickSetupWizard;
 
     private void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
     {

@@ -1,8 +1,8 @@
 using Fluxo.Core.Enums;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public sealed record StartupWizardDraftSpendingSource(
+public sealed record QuickSetupWizardDraftSpendingSource(
     int Id,
     string Name,
     SpendingSourceType SpendingSourceType,

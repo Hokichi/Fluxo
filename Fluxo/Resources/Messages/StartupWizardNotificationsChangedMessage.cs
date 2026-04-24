@@ -2,10 +2,10 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 
 namespace Fluxo.Resources.Messages;
 
-public readonly record struct StartupWizardNotificationsChanged(
+public readonly record struct QuickSetupWizardNotificationsChanged(
     int EnabledCount,
     int TotalCount);
 
-public sealed class StartupWizardNotificationsChangedMessage(StartupWizardNotificationsChanged value)
-    : ValueChangedMessage<StartupWizardNotificationsChanged>(value);
+public sealed class QuickSetupWizardNotificationsChangedMessage(QuickSetupWizardNotificationsChanged value)
+    : ValueChangedMessage<QuickSetupWizardNotificationsChanged>(value);
 

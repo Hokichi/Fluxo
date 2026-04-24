@@ -5,12 +5,12 @@ using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.ViewModels.Popups;
-using Fluxo.ViewModels.Shell.StartupWizard;
+using Fluxo.ViewModels.Shell.QuickSetupWizard;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
 
-public sealed class StartupWizardVMTests
+public sealed class QuickSetupWizardVMTests
 {
     [Fact]
     public void CurrentStepTitle_AtStep1_AsksForPreferredName()
@@ -74,24 +74,24 @@ public sealed class StartupWizardVMTests
             },
             delayAsync: _ => Task.CompletedTask);
 
-        Assert.Equal(StartupWizardLoadingOutcome.Abandoned, outcome);
+        Assert.Equal(QuickSetupWizardLoadingOutcome.Abandoned, outcome);
         Assert.Equal(5, attempts);
         Assert.Equal(1, prompts);
     }
 
-    private static StartupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)
+    private static QuickSetupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)
     {
         unitOfWork ??= new TestUnitOfWork(new TestUserSettingsRepository([]));
         var messenger = new WeakReferenceMessenger();
-        var greeting = new StartupWizardGreetingPageVM();
-        var name = new StartupWizardNamePageVM(unitOfWork, messenger);
-        var spendingSources = new StartupWizardSpendingSourcesVM(null!, unitOfWork, messenger);
-        var fixedExpenses = new StartupWizardFixedExpensesVM(null!, unitOfWork, messenger);
-        var savingGoals = new StartupWizardSavingGoalsVM(null!, unitOfWork, messenger);
-        var budget = new StartupWizardBudgetAllocationVM(unitOfWork, messenger);
-        var notification = new StartupWizardNotificationVM(unitOfWork, messenger);
-        var summary = new StartupWizardSummaryVM(messenger);
-        var middle = new StartupWizardMiddlePageVM(
+        var greeting = new QuickSetupWizardGreetingPageVM();
+        var name = new QuickSetupWizardNamePageVM(unitOfWork, messenger);
+        var spendingSources = new QuickSetupWizardSpendingSourcesVM(null!, unitOfWork, messenger);
+        var fixedExpenses = new QuickSetupWizardFixedExpensesVM(null!, unitOfWork, messenger);
+        var savingGoals = new QuickSetupWizardSavingGoalsVM(null!, unitOfWork, messenger);
+        var budget = new QuickSetupWizardBudgetAllocationVM(unitOfWork, messenger);
+        var notification = new QuickSetupWizardNotificationVM(unitOfWork, messenger);
+        var summary = new QuickSetupWizardSummaryVM(messenger);
+        var middle = new QuickSetupWizardMiddlePageVM(
             spendingSources,
             fixedExpenses,
             savingGoals,
@@ -99,9 +99,9 @@ public sealed class StartupWizardVMTests
             notification,
             summary,
             messenger);
-        var loading = new StartupWizardLoadingPageVM();
-        var final = new StartupWizardFinalPageVM(messenger);
-        return new StartupWizardVM(
+        var loading = new QuickSetupWizardLoadingPageVM();
+        var final = new QuickSetupWizardFinalPageVM(messenger);
+        return new QuickSetupWizardVM(
             null!,
             unitOfWork,
             new TestDataOperationScopeFactory(),

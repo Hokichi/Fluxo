@@ -6,22 +6,22 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardNamePageVM : ObservableObject
+public partial class QuickSetupWizardNamePageVM : ObservableObject
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessenger _messenger;
 
     [ObservableProperty] private string _usernameText = "User";
 
-    public StartupWizardNamePageVM(IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public QuickSetupWizardNamePageVM(IUnitOfWork unitOfWork, IMessenger? messenger = null)
     {
         _unitOfWork = unitOfWork;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
-    public string ResolvedUsername => StartupWizardShared.ResolveUsername(UsernameText);
+    public string ResolvedUsername => QuickSetupWizardShared.ResolveUsername(UsernameText);
     public bool HasUsernameInput => !string.IsNullOrWhiteSpace(UsernameText);
 
     public async Task LoadAsync()
@@ -29,7 +29,7 @@ public partial class StartupWizardNamePageVM : ObservableObject
         var settings = await _unitOfWork.UserSettings.GetAllAsync();
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 
-        UsernameText = StartupWizardShared.ParseString(settingsByName, UserSettingNames.PreferredDisplayName, "User");
+        UsernameText = QuickSetupWizardShared.ParseString(settingsByName, UserSettingNames.PreferredDisplayName, "User");
 
         PublishIdentitySnapshot();
     }
@@ -46,7 +46,7 @@ public partial class StartupWizardNamePageVM : ObservableObject
 
     public Task ApplyAsync(IUnitOfWork unitOfWork)
     {
-        return StartupWizardShared.UpsertUserSettingAsync(
+        return QuickSetupWizardShared.UpsertUserSettingAsync(
             unitOfWork,
             UserSettingNames.PreferredDisplayName,
             ResolvedUsername);
@@ -65,7 +65,7 @@ public partial class StartupWizardNamePageVM : ObservableObject
 
     private void PublishIdentitySnapshot()
     {
-        _messenger.Send(new StartupWizardIdentityChangedMessage(
-            new StartupWizardIdentityChanged(ResolvedUsername)));
+        _messenger.Send(new QuickSetupWizardIdentityChangedMessage(
+            new QuickSetupWizardIdentityChanged(ResolvedUsername)));
     }
 }

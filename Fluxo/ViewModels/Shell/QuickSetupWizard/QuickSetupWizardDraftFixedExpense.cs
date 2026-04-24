@@ -1,8 +1,8 @@
 using Fluxo.Core.Enums;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public sealed record StartupWizardDraftFixedExpense(
+public sealed record QuickSetupWizardDraftFixedExpense(
     int Id,
     string Name,
     decimal Amount,

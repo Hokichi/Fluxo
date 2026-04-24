@@ -52,9 +52,9 @@ public sealed class DialogService : IDialogService
         return ShowScopedDialog<SettingsPopup>(owner);
     }
 
-    public bool? ShowStartupWizard(Window? owner = null)
+    public bool? ShowQuickSetupWizard(Window? owner = null)
     {
-        return ShowScopedDialog<StartupWizardPopup>(owner);
+        return ShowScopedDialog<QuickSetupWizard>(owner);
     }
 
     public bool? ShowPlanningPopup(Window? owner = null)

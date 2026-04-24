@@ -3,9 +3,9 @@ using System.Windows.Controls;
 
 namespace Fluxo.Views.Shell.Wizard.Pages;
 
-public partial class StartupWizardLoadingPage : UserControl
+public partial class QuickSetupWizardLoadingPage : UserControl
 {
-    public StartupWizardLoadingPage()
+    public QuickSetupWizardLoadingPage()
     {
         InitializeComponent();
     }

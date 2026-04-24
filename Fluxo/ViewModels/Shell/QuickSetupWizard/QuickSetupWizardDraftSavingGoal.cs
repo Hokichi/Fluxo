@@ -1,6 +1,6 @@
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public sealed record StartupWizardDraftSavingGoal(
+public sealed record QuickSetupWizardDraftSavingGoal(
     int Id,
     string Name,
     decimal TargetAmount,

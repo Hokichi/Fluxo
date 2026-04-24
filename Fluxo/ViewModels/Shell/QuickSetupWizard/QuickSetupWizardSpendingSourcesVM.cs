@@ -11,14 +11,14 @@ using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Popups;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardSpendingSourcesVM : ObservableObject
+public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessenger _messenger;
-    private readonly Dictionary<int, StartupWizardDraftSpendingSource> _draftSources = [];
+    private readonly Dictionary<int, QuickSetupWizardDraftSpendingSource> _draftSources = [];
     private readonly HashSet<int> _removedPersistedIds = [];
     private IReadOnlyDictionary<int, int> _lastPersistedIdMap = new Dictionary<int, int>();
     private int _nextTemporaryId = -1;
@@ -26,7 +26,7 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
 
     [ObservableProperty] private bool _isStep2Active;
 
-    public StartupWizardSpendingSourcesVM(
+    public QuickSetupWizardSpendingSourcesVM(
         MainVM mainViewModel,
         IUnitOfWork unitOfWork,
         IMessenger? messenger = null)
@@ -36,7 +36,7 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
-    public ObservableCollection<StartupWizardSpendingSourceItemVM> SpendingSources { get; } = [];
+    public ObservableCollection<QuickSetupWizardSpendingSourceItemVM> SpendingSources { get; } = [];
 
     public bool HasSpendingSources => SpendingSources.Count > 0;
 
@@ -228,8 +228,8 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
 
     private void PublishSnapshot()
     {
-        _messenger.Send(new StartupWizardSpendingSourcesChangedMessage(
-            new StartupWizardSpendingSourcesChanged(
+        _messenger.Send(new QuickSetupWizardSpendingSourcesChangedMessage(
+            new QuickSetupWizardSpendingSourcesChanged(
                 SpendingSources.Count,
                 HasSpendingSources,
                 TotalBudgetAmount)));
@@ -242,7 +242,7 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
 
         foreach (var source in persistedSources)
         {
-            _draftSources[source.Id] = new StartupWizardDraftSpendingSource(
+            _draftSources[source.Id] = new QuickSetupWizardDraftSpendingSource(
                 source.Id,
                 source.Name,
                 source.SpendingSourceType,
@@ -275,7 +275,7 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
         }
 
         var id = editingId ?? GetNextTemporaryId();
-        _draftSources[id] = new StartupWizardDraftSpendingSource(
+        _draftSources[id] = new QuickSetupWizardDraftSpendingSource(
             id,
             input.Name,
             input.SpendingSourceType,
@@ -307,11 +307,11 @@ public partial class StartupWizardSpendingSourcesVM : ObservableObject
 
     private void RefreshProjectionAndPublish()
     {
-        StartupWizardShared.ReplaceCollection(
+        QuickSetupWizardShared.ReplaceCollection(
             SpendingSources,
             _draftSources.Values
                 .OrderBy(source => source.Name)
-                .Select(source => new StartupWizardSpendingSourceItemVM(source)));
+                .Select(source => new QuickSetupWizardSpendingSourceItemVM(source)));
 
         OnPropertyChanged(nameof(HasSpendingSources));
         OnPropertyChanged(nameof(TotalBudgetAmount));

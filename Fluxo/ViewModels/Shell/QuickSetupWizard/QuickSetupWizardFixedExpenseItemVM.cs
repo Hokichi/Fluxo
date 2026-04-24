@@ -1,9 +1,9 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public sealed record StartupWizardFixedExpenseItemVM(
+public sealed record QuickSetupWizardFixedExpenseItemVM(
     int Id,
     string Name,
     decimal Amount,
@@ -13,7 +13,7 @@ public sealed record StartupWizardFixedExpenseItemVM(
 {
     public string DueDateDisplay => DueDate.HasValue ? $"Due day {DueDate.Value}" : "No due day";
 
-    public StartupWizardFixedExpenseItemVM(Expense expense) : this(
+    public QuickSetupWizardFixedExpenseItemVM(Expense expense) : this(
         expense.Id,
         expense.Name,
         expense.Amount,
@@ -28,7 +28,7 @@ public sealed record StartupWizardFixedExpenseItemVM(
     {
     }
 
-    public StartupWizardFixedExpenseItemVM(StartupWizardDraftFixedExpense expense, string spendingSourceName) : this(
+    public QuickSetupWizardFixedExpenseItemVM(QuickSetupWizardDraftFixedExpense expense, string spendingSourceName) : this(
         expense.Id,
         expense.Name,
         expense.Amount,

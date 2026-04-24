@@ -7,21 +7,21 @@ using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardSavingGoalsVM : ObservableObject
+public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessenger _messenger;
-    private readonly Dictionary<int, StartupWizardDraftSavingGoal> _draftGoals = [];
+    private readonly Dictionary<int, QuickSetupWizardDraftSavingGoal> _draftGoals = [];
     private readonly HashSet<int> _removedPersistedIds = [];
     private int _nextTemporaryId = -1;
     private bool _isLoaded;
 
     [ObservableProperty] private bool _isStep4Active;
 
-    public StartupWizardSavingGoalsVM(
+    public QuickSetupWizardSavingGoalsVM(
         MainVM mainViewModel,
         IUnitOfWork unitOfWork,
         IMessenger? messenger = null)
@@ -31,7 +31,7 @@ public partial class StartupWizardSavingGoalsVM : ObservableObject
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
-    public ObservableCollection<StartupWizardSavingGoalItemVM> SavingGoals { get; } = [];
+    public ObservableCollection<QuickSetupWizardSavingGoalItemVM> SavingGoals { get; } = [];
 
     public AddSavingGoalVM CreateAddViewModel()
     {
@@ -117,8 +117,8 @@ public partial class StartupWizardSavingGoalsVM : ObservableObject
 
     private void PublishSnapshot()
     {
-        _messenger.Send(new StartupWizardSavingGoalsChangedMessage(
-            new StartupWizardSavingGoalsChanged(SavingGoals.Count)));
+        _messenger.Send(new QuickSetupWizardSavingGoalsChangedMessage(
+            new QuickSetupWizardSavingGoalsChanged(SavingGoals.Count)));
     }
 
     private async Task LoadDraftGoalsAsync()
@@ -128,7 +128,7 @@ public partial class StartupWizardSavingGoalsVM : ObservableObject
         _draftGoals.Clear();
         foreach (var goal in persistedGoals)
         {
-            _draftGoals[goal.Id] = new StartupWizardDraftSavingGoal(
+            _draftGoals[goal.Id] = new QuickSetupWizardDraftSavingGoal(
                 goal.Id,
                 goal.Name,
                 goal.TargetAmount,
@@ -146,7 +146,7 @@ public partial class StartupWizardSavingGoalsVM : ObservableObject
         int? editingId)
     {
         var id = editingId ?? _nextTemporaryId--;
-        _draftGoals[id] = new StartupWizardDraftSavingGoal(
+        _draftGoals[id] = new QuickSetupWizardDraftSavingGoal(
             id,
             input.Name,
             input.TargetAmount,
@@ -162,12 +162,12 @@ public partial class StartupWizardSavingGoalsVM : ObservableObject
 
     private void RefreshProjectionAndPublish()
     {
-        StartupWizardShared.ReplaceCollection(
+        QuickSetupWizardShared.ReplaceCollection(
             SavingGoals,
             _draftGoals.Values
                 .OrderBy(goal => goal.SavingEndDate)
                 .ThenBy(goal => goal.Name)
-                .Select(goal => new StartupWizardSavingGoalItemVM(goal)));
+                .Select(goal => new QuickSetupWizardSavingGoalItemVM(goal)));
 
         PublishSnapshot();
     }

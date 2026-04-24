@@ -28,7 +28,7 @@ using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 using NotificationPanelVM = Fluxo.ViewModels.Shell.Main.NotificationPanelVM;
 using SavingGoalsPanelVM = Fluxo.ViewModels.Shell.Main.SavingGoalsPanelVM;
 using SpentAllowancePanelVM = Fluxo.ViewModels.Shell.Main.SpentAllowancePanelVM;
-using StartupWizardVM = Fluxo.ViewModels.Shell.StartupWizard.StartupWizardVM;
+using QuickSetupWizardVM = Fluxo.ViewModels.Shell.QuickSetupWizard.QuickSetupWizardVM;
 
 namespace Fluxo.Extensions;
 
@@ -90,18 +90,18 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SettingsTagsTabVM>();
         services.AddTransient<SettingsPersonalizationTabVM>();
         services.AddTransient<SettingsVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardGreetingPageVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardNamePageVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardMiddlePageVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardLoadingPageVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardFinalPageVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardSpendingSourcesVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardFixedExpensesVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardSavingGoalsVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardBudgetAllocationVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardNotificationVM>();
-        services.AddTransient<ViewModels.Shell.StartupWizard.StartupWizardSummaryVM>();
-        services.AddTransient<StartupWizardVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardGreetingPageVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardNamePageVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardMiddlePageVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardLoadingPageVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardFinalPageVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSpendingSourcesVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardFixedExpensesVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSavingGoalsVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardBudgetAllocationVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardNotificationVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSummaryVM>();
+        services.AddTransient<QuickSetupWizardVM>();
 
         services.AddTransient<QuickAddPopup>();
         services.AddTransient<QuickSearchPopup>();
@@ -112,7 +112,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<NotificationChecklistActionPopup>();
         services.AddTransient<GoalDeadlineActionPopup>();
         services.AddTransient<SettingsPopup>();
-        services.AddTransient<StartupWizardPopup>();
+        services.AddTransient<QuickSetupWizard>();
         services.AddTransient<PlanningPopup>();
         services.AddTransient<PlanningReportPopup>();
         services.AddTransient<Analytics>();

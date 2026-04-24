@@ -50,7 +50,7 @@ public partial class App : Application
             if (isFirstRun)
             {
                 using var wizardScope = _serviceProvider!.CreateScope();
-                var wizard = wizardScope.ServiceProvider.GetRequiredService<StartupWizardPopup>();
+                var wizard = wizardScope.ServiceProvider.GetRequiredService<QuickSetupWizard>();
                 wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 wizard.ShowDialog();
             }
@@ -92,7 +92,7 @@ public partial class App : Application
 
         using (var wizardScope = _serviceProvider!.CreateScope())
         {
-            var wizard = wizardScope.ServiceProvider.GetRequiredService<StartupWizardPopup>();
+            var wizard = wizardScope.ServiceProvider.GetRequiredService<QuickSetupWizard>();
             wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             wizard.ShowDialog();
         }

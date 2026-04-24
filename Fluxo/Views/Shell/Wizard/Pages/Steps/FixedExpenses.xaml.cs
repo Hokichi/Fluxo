@@ -11,7 +11,7 @@ public partial class FixedExpenses : UserControl
         InitializeComponent();
     }
 
-    private static StartupWizardPopup? FindPopup(DependencyObject source) => Window.GetWindow(source) as StartupWizardPopup;
+    private static QuickSetupWizard? FindPopup(DependencyObject source) => Window.GetWindow(source) as QuickSetupWizard;
 
     private void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)
     {

@@ -7,10 +7,10 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
-    IRecipient<StartupWizardSpendingSourcesChangedMessage>
+public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
+    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>
 {
     private readonly IUnitOfWork _unitOfWork;
     private decimal _totalBudgetAmount;
@@ -21,7 +21,7 @@ public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
     [ObservableProperty] private int _needsAllocationPercentage = 50;
     [ObservableProperty] private int _wantsAllocationPercentage = 30;
 
-    public StartupWizardBudgetAllocationVM(
+    public QuickSetupWizardBudgetAllocationVM(
         IUnitOfWork unitOfWork,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
@@ -38,7 +38,7 @@ public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
 
     public string InvestAllocationAmountText => BuildAllocationAmountText(InvestAllocationPercentage);
 
-    public void Receive(StartupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
     {
         _totalBudgetAmount = message.Value.TotalPrimaryAmount;
         RaiseAmountProperties();
@@ -49,9 +49,9 @@ public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
         var settings = await _unitOfWork.UserSettings.GetAllAsync();
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 
-        NeedsAllocationPercentage = StartupWizardShared.ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
-        WantsAllocationPercentage = StartupWizardShared.ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
-        InvestAllocationPercentage = StartupWizardShared.ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
+        NeedsAllocationPercentage = QuickSetupWizardShared.ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
+        WantsAllocationPercentage = QuickSetupWizardShared.ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
+        InvestAllocationPercentage = QuickSetupWizardShared.ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
 
         ValidateBudgetAllocation();
         PublishSnapshot();
@@ -74,15 +74,15 @@ public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
 
     public async Task ApplyAsync(IUnitOfWork unitOfWork)
     {
-        await StartupWizardShared.UpsertUserSettingAsync(
+        await QuickSetupWizardShared.UpsertUserSettingAsync(
             unitOfWork,
             UserSettingNames.NeedsThreshold,
             NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
-        await StartupWizardShared.UpsertUserSettingAsync(
+        await QuickSetupWizardShared.UpsertUserSettingAsync(
             unitOfWork,
             UserSettingNames.WantsThreshold,
             WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
-        await StartupWizardShared.UpsertUserSettingAsync(
+        await QuickSetupWizardShared.UpsertUserSettingAsync(
             unitOfWork,
             UserSettingNames.InvestThreshold,
             InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture));
@@ -151,8 +151,8 @@ public partial class StartupWizardBudgetAllocationVM : ObservableRecipient,
 
     private void PublishSnapshot()
     {
-        Messenger.Send(new StartupWizardBudgetAllocationChangedMessage(
-            new StartupWizardBudgetAllocationChanged(
+        Messenger.Send(new QuickSetupWizardBudgetAllocationChangedMessage(
+            new QuickSetupWizardBudgetAllocationChanged(
                 NeedsAllocationPercentage,
                 WantsAllocationPercentage,
                 InvestAllocationPercentage,

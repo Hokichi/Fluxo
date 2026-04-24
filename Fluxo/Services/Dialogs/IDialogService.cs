@@ -18,7 +18,7 @@ public interface IDialogService
 
     bool? ShowSettings(Window? owner = null);
 
-    bool? ShowStartupWizard(Window? owner = null);
+    bool? ShowQuickSetupWizard(Window? owner = null);
 
     bool? ShowPlanningPopup(Window? owner = null);
 

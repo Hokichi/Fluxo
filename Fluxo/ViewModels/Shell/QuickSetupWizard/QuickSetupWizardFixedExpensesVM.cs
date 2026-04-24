@@ -12,17 +12,17 @@ using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Popups.Settings;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardFixedExpensesVM : ObservableObject
+public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 {
     private const string DefaultTagColor = "#75B798";
 
     private readonly MainVM _mainViewModel;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessenger _messenger;
-    private StartupWizardSpendingSourcesVM? _spendingSources;
-    private readonly Dictionary<int, StartupWizardDraftFixedExpense> _draftExpenses = [];
+    private QuickSetupWizardSpendingSourcesVM? _spendingSources;
+    private readonly Dictionary<int, QuickSetupWizardDraftFixedExpense> _draftExpenses = [];
     private readonly HashSet<int> _removedPersistedIds = [];
     private readonly Dictionary<int, ExpenseTagVM> _tagCatalog = [];
     private int _nextTemporaryId = -1;
@@ -31,7 +31,7 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
 
     [ObservableProperty] private bool _isStep3Active;
 
-    public StartupWizardFixedExpensesVM(
+    public QuickSetupWizardFixedExpensesVM(
         MainVM mainViewModel,
         IUnitOfWork unitOfWork,
         IMessenger? messenger = null)
@@ -41,9 +41,9 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
-    public ObservableCollection<StartupWizardFixedExpenseItemVM> FixedExpenses { get; } = [];
+    public ObservableCollection<QuickSetupWizardFixedExpenseItemVM> FixedExpenses { get; } = [];
 
-    public void SetSpendingSources(StartupWizardSpendingSourcesVM spendingSources)
+    public void SetSpendingSources(QuickSetupWizardSpendingSourcesVM spendingSources)
     {
         _spendingSources = spendingSources;
     }
@@ -170,8 +170,8 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
 
     private void PublishSnapshot()
     {
-        _messenger.Send(new StartupWizardFixedExpensesChangedMessage(
-            new StartupWizardFixedExpensesChanged(
+        _messenger.Send(new QuickSetupWizardFixedExpensesChangedMessage(
+            new QuickSetupWizardFixedExpensesChanged(
                 FixedExpenses.Count,
                 FixedExpenses.Sum(expense => expense.Amount))));
     }
@@ -198,7 +198,7 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
 
         foreach (var expense in persistedExpenses.Where(expense => expense.ExpenseKind == ExpenseKind.Fixed))
         {
-            _draftExpenses[expense.Id] = new StartupWizardDraftFixedExpense(
+            _draftExpenses[expense.Id] = new QuickSetupWizardDraftFixedExpense(
                 expense.Id,
                 expense.Name,
                 expense.Amount,
@@ -225,7 +225,7 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
         int? editingId)
     {
         var id = editingId ?? _nextTemporaryId--;
-        _draftExpenses[id] = new StartupWizardDraftFixedExpense(
+        _draftExpenses[id] = new QuickSetupWizardDraftFixedExpense(
             id,
             input.Name,
             input.Amount,
@@ -243,7 +243,7 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
         return Task.FromResult(AddFixedExpenseVM.AddFixedExpenseResult.Success(true));
     }
 
-    private async Task<int> ResolveTagIdAsync(IUnitOfWork unitOfWork, StartupWizardDraftFixedExpense draft)
+    private async Task<int> ResolveTagIdAsync(IUnitOfWork unitOfWork, QuickSetupWizardDraftFixedExpense draft)
     {
         if (draft.ExpenseTagId > 0)
         {
@@ -333,18 +333,18 @@ public partial class StartupWizardFixedExpensesVM : ObservableObject
     {
         var spendingSourcesVm = GetSpendingSourcesOrThrow();
 
-        StartupWizardShared.ReplaceCollection(
+        QuickSetupWizardShared.ReplaceCollection(
             FixedExpenses,
             _draftExpenses.Values
                 .OrderBy(expense => expense.Name)
-                .Select(expense => new StartupWizardFixedExpenseItemVM(
+                .Select(expense => new QuickSetupWizardFixedExpenseItemVM(
                     expense,
                     spendingSourcesVm.ResolveSourceName(expense.SpendingSourceId))));
 
         PublishSnapshot();
     }
 
-    private StartupWizardSpendingSourcesVM GetSpendingSourcesOrThrow()
+    private QuickSetupWizardSpendingSourcesVM GetSpendingSourcesOrThrow()
     {
         return _spendingSources
                ?? throw new InvalidOperationException("Startup wizard spending sources were not configured.");

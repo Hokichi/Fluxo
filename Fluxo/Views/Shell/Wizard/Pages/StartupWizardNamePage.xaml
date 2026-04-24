@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Views.Shell.Wizard.Pages.StartupWizardNamePage"
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardNamePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks">

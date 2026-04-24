@@ -1,6 +1,6 @@
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public sealed class StartupWizardGreetingPageVM
+public sealed class QuickSetupWizardGreetingPageVM
 {
     public string CurrentStepTitle => "Let's get started";
 

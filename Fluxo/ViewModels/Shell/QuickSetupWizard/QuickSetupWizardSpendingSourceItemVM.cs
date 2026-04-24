@@ -1,16 +1,16 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public sealed record StartupWizardSpendingSourceItemVM(
+public sealed record QuickSetupWizardSpendingSourceItemVM(
     int Id,
     string Name,
     string TypeLabel,
     decimal PrimaryAmount,
     string PrimaryAmountLabel)
 {
-    public StartupWizardSpendingSourceItemVM(SpendingSource spendingSource) : this(
+    public QuickSetupWizardSpendingSourceItemVM(SpendingSource spendingSource) : this(
         spendingSource.Id,
         spendingSource.Name,
         spendingSource.SpendingSourceType switch
@@ -31,7 +31,7 @@ public sealed record StartupWizardSpendingSourceItemVM(
     {
     }
 
-    public StartupWizardSpendingSourceItemVM(StartupWizardDraftSpendingSource spendingSource) : this(
+    public QuickSetupWizardSpendingSourceItemVM(QuickSetupWizardDraftSpendingSource spendingSource) : this(
         spendingSource.Id,
         spendingSource.Name,
         spendingSource.SpendingSourceType switch

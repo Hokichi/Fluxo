@@ -4,16 +4,16 @@ using Fluxo.Views.Shell.Wizard;
 
 namespace Fluxo.Views.Shell.Wizard.Pages;
 
-public partial class StartupWizardFinalPage : UserControl
+public partial class QuickSetupWizardFinalPage : UserControl
 {
-    public StartupWizardFinalPage()
+    public QuickSetupWizardFinalPage()
     {
         InitializeComponent();
     }
 
     public UIElement ContentElement => PageContent;
 
-    private static StartupWizardPopup? FindPopup(DependencyObject source) => Window.GetWindow(source) as StartupWizardPopup;
+    private static QuickSetupWizard? FindPopup(DependencyObject source) => Window.GetWindow(source) as QuickSetupWizard;
 
     private void OnFinishClick(object sender, RoutedEventArgs e)
     {

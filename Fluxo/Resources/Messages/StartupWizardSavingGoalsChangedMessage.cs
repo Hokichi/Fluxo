@@ -2,8 +2,8 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 
 namespace Fluxo.Resources.Messages;
 
-public readonly record struct StartupWizardSavingGoalsChanged(int Count);
+public readonly record struct QuickSetupWizardSavingGoalsChanged(int Count);
 
-public sealed class StartupWizardSavingGoalsChangedMessage(StartupWizardSavingGoalsChanged value)
-    : ValueChangedMessage<StartupWizardSavingGoalsChanged>(value);
+public sealed class QuickSetupWizardSavingGoalsChangedMessage(QuickSetupWizardSavingGoalsChanged value)
+    : ValueChangedMessage<QuickSetupWizardSavingGoalsChanged>(value);
 

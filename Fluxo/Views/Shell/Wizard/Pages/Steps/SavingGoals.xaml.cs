@@ -11,7 +11,7 @@ public partial class SavingGoals : UserControl
         InitializeComponent();
     }
 
-    private static StartupWizardPopup? FindPopup(DependencyObject source) => Window.GetWindow(source) as StartupWizardPopup;
+    private static QuickSetupWizard? FindPopup(DependencyObject source) => Window.GetWindow(source) as QuickSetupWizard;
 
     private void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
     {

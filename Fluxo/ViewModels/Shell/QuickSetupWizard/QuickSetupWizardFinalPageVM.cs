@@ -2,19 +2,19 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.Messages;
 
-namespace Fluxo.ViewModels.Shell.StartupWizard;
+namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
-public partial class StartupWizardFinalPageVM : ObservableRecipient, IRecipient<StartupWizardIdentityChangedMessage>
+public partial class QuickSetupWizardFinalPageVM : ObservableRecipient, IRecipient<QuickSetupWizardIdentityChangedMessage>
 {
     [ObservableProperty] private string _resolvedUsername = "User";
 
-    public StartupWizardFinalPageVM(IMessenger? messenger = null)
+    public QuickSetupWizardFinalPageVM(IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         IsActive = true;
     }
 
-    public void Receive(StartupWizardIdentityChangedMessage message)
+    public void Receive(QuickSetupWizardIdentityChangedMessage message)
     {
         ResolvedUsername = message.Value.ResolvedUsername;
     }
