@@ -49,10 +49,6 @@
             ItemContainerStyle="{StaticResource DaysOfWeekStyle}"
             ItemsPanel="{StaticResource DaySpinnerItemsPanelTemplate}"
             ItemsSource="{Binding DaysOfWeek}"
-            PreviewKeyDown="OnSpinnerListPreviewKeyDown"
-            PreviewKeyUp="OnSpinnerListPreviewKeyUp"
-            PreviewMouseLeftButtonDown="OnSpinnerListPreviewMouseLeftButtonDown"
-            PreviewMouseLeftButtonUp="OnSpinnerListPreviewMouseLeftButtonUp"
             SelectedItem="{Binding SelectedDay, Mode=OneWay}"
             SelectionChanged="OnSelectedDayChanged" />
 
