@@ -163,6 +163,38 @@ public sealed class AnalyticsVMTests
     }
 
     [Fact]
+    public async Task RefreshForOpenAsync_ShowToastFalse_CancelsPendingDebounceRefresh()
+    {
+        var serviceCallCount = 0;
+        var service = Substitute.For<IAnalyticsService>();
+        service.GetAnalyticsAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                Interlocked.Increment(ref serviceCallCount);
+                return Task.FromResult(CreateAnalyticsDto());
+            });
+        var dialogService = Substitute.For<IDialogService>();
+        var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
+        var vm = new AnalyticsVM(service, dialogService, uiSettleAwaiter);
+
+        vm.StartDate = new DateTime(2026, 1, 1);
+        vm.EndDate = new DateTime(2026, 1, 2);
+
+        await vm.RefreshForOpenAsync(showToast: false, CancellationToken.None);
+        await Task.Delay(350);
+
+        await dialogService.DidNotReceive().ShowToastWhileAsync(
+            Arg.Any<string>(),
+            Arg.Any<Func<Task>>(),
+            Arg.Any<Window?>());
+        await service.Received(1).GetAnalyticsAsync(
+            Arg.Any<DateOnly>(),
+            Arg.Any<DateOnly>(),
+            Arg.Any<CancellationToken>());
+        Assert.Equal(1, Volatile.Read(ref serviceCallCount));
+    }
+
+    [Fact]
     public async Task RefreshForOpenAsync_ShowToastTrue_UsesDialogToastWrapper()
     {
         var service = Substitute.For<IAnalyticsService>();

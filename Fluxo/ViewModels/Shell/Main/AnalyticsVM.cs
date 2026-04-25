@@ -82,6 +82,9 @@ public sealed partial class AnalyticsVM(
 
     public Task RefreshForOpenAsync(bool showToast, CancellationToken cancellationToken = default)
     {
+        if (!showToast)
+            CancelPendingRefreshDebounce();
+
         return RefreshWithFeedbackAsync(cancellationToken, showToast);
     }
 
@@ -146,8 +149,7 @@ public sealed partial class AnalyticsVM(
 
     private void QueueRefresh()
     {
-        _refreshDebounceCts?.Cancel();
-        _refreshDebounceCts?.Dispose();
+        CancelPendingRefreshDebounce();
 
         var cts = new CancellationTokenSource();
         _refreshDebounceCts = cts;
@@ -462,11 +464,16 @@ public sealed partial class AnalyticsVM(
         return value.ToString("N0", CultureInfo.InvariantCulture);
     }
 
-    public void Dispose()
+    private void CancelPendingRefreshDebounce()
     {
         _refreshDebounceCts?.Cancel();
         _refreshDebounceCts?.Dispose();
         _refreshDebounceCts = null;
+    }
+
+    public void Dispose()
+    {
+        CancelPendingRefreshDebounce();
     }
 }
 
