@@ -154,6 +154,32 @@ public sealed class StepNavigatorControlTests
         Assert.False(dots[4].IsCompleted);
     }
 
+    [Fact]
+    public void BuildStepCounterText_ValidStepAndCount_ReturnsCurrentAndTotal()
+    {
+        var text = StepNavigatorControl.BuildStepCounterText(stepCount: 8, currentStep: 3);
+
+        Assert.Equal("3/8", text);
+    }
+
+    [Fact]
+    public void BuildStepCounterText_CurrentStepOutOfRange_ClampsToValidBounds()
+    {
+        var lower = StepNavigatorControl.BuildStepCounterText(stepCount: 8, currentStep: 0);
+        var upper = StepNavigatorControl.BuildStepCounterText(stepCount: 8, currentStep: 42);
+
+        Assert.Equal("1/8", lower);
+        Assert.Equal("8/8", upper);
+    }
+
+    [Fact]
+    public void BuildStepCounterText_NoSteps_ReturnsZeroOverZero()
+    {
+        var text = StepNavigatorControl.BuildStepCounterText(stepCount: 0, currentStep: 1);
+
+        Assert.Equal("0/0", text);
+    }
+
     private static ObservableCollection<StepNavigatorDotVM> MakeDots(int count)
     {
         var dots = new ObservableCollection<StepNavigatorDotVM>();

@@ -22,46 +22,36 @@
                 BorderThickness="1"
                 CornerRadius="16">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
                     <Border
-                        Margin="0,0,10,0"
-                        CornerRadius="999"
-                        Style="{StaticResource NotificationAccentStyle}" />
+                        Width="20"
+                        Height="{Binding Width, RelativeSource={RelativeSource Self}}"
+                        Margin="8,0,0,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Background="{StaticResource Brush.Mint}">
+                        <Border.CornerRadius>
+                            <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                            </MultiBinding>
+                        </Border.CornerRadius>
 
-                    <StackPanel Grid.Column="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="10"
+                            Foreground="{StaticResource Brush.Background.Main}"
+                            Text="{Binding Count, StringFormat={}{0}}" />
+                    </Border>
 
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="12"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="{Binding Header}"
-                                TextWrapping="Wrap" />
-
-                            <Border
-                                Grid.Column="1"
-                                Margin="8,0,0,0"
-                                Padding="8,4"
-                                VerticalAlignment="Top"
-                                Background="{StaticResource Brush.Background.Hover}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="1"
-                                CornerRadius="999">
-                                <TextBlock
-                                    FontFamily="{StaticResource Medium}"
-                                    FontSize="9"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="{Binding Count, StringFormat={}x{0}}" />
-                            </Border>
-                        </Grid>
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Header}"
+                            TextWrapping="Wrap" />
 
                         <TextBlock
                             Margin="0,6,0,0"
@@ -71,39 +61,33 @@
                             Text="{Binding Message}"
                             TextWrapping="Wrap" />
 
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="8" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="9"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding LatestCreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                    </StackPanel>
 
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontFamily="{StaticResource Medium}"
-                                FontSize="9"
-                                Foreground="{StaticResource Brush.Text.Muted}"
-                                Text="{Binding LatestCreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                    <StackPanel
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal">
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource ButtonStyles.Ban}"
+                            Click="OnNavigateNextClick"
+                            Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
+                            ToolTip="Next Notification"
+                            Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-                            <Button
-                                Grid.Column="2"
-                                Command="{Binding DataContext.ClearNotificationGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}"
-                                Content="Clear"
-                                Style="{StaticResource TextOnlyButtonStyle}" />
-
-                            <customControls:BalloonButton
-                                Grid.Column="4"
-                                Width="24"
-                                Height="24"
-                                ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
-                                Command="{Binding DataContext.OpenNotificationActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}"
-                                IconSize="11"
-                                Visibility="{Binding HasActionCta, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        </Grid>
+                        <customControls:BalloonButton
+                            Margin="8,0,0,0"
+                            ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                            Click="OnNavigateNextClick"
+                            Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
+                            ToolTip="Next Notification"
+                            Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
                 </Grid>
             </Border>

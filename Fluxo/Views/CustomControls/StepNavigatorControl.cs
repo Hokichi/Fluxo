@@ -58,7 +58,15 @@ public sealed class StepNavigatorControl : Control
             typeof(StepNavigatorControl),
             new PropertyMetadata(null));
 
+    private static readonly DependencyPropertyKey StepCounterTextPropertyKey =
+        DependencyProperty.RegisterReadOnly(
+            nameof(StepCounterText),
+            typeof(string),
+            typeof(StepNavigatorControl),
+            new PropertyMetadata("0/0"));
+
     public static readonly DependencyProperty DotsProperty = DotsPropertyKey.DependencyProperty;
+    public static readonly DependencyProperty StepCounterTextProperty = StepCounterTextPropertyKey.DependencyProperty;
 
     public StepNavigatorControl()
     {
@@ -98,6 +106,8 @@ public sealed class StepNavigatorControl : Control
     public ObservableCollection<StepNavigatorDotVM> Dots =>
         (ObservableCollection<StepNavigatorDotVM>)GetValue(DotsProperty);
 
+    public string StepCounterText => (string)GetValue(StepCounterTextProperty);
+
     private static void OnStepCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         ((StepNavigatorControl)d).RefreshDots();
@@ -115,6 +125,8 @@ public sealed class StepNavigatorControl : Control
 
     private void RefreshDots()
     {
+        SetValue(StepCounterTextPropertyKey, BuildStepCounterText(StepCount, CurrentStep));
+
         var dots = Dots;
         var visibleWindow = CalculateVisibleWindow(StepCount, CurrentStep, PaginationCount, ShouldPaginate);
 
@@ -128,6 +140,16 @@ public sealed class StepNavigatorControl : Control
         }
 
         UpdateDotStates(dots, CurrentStep, _visibleWindowStart);
+    }
+
+    internal static string BuildStepCounterText(int stepCount, int currentStep)
+    {
+        var safeStepCount = Math.Max(0, stepCount);
+        if (safeStepCount == 0)
+            return "0/0";
+
+        var safeCurrentStep = Math.Clamp(currentStep, 1, safeStepCount);
+        return $"{safeCurrentStep}/{safeStepCount}";
     }
 
     internal static (int Start, int Count) CalculateVisibleWindow(
