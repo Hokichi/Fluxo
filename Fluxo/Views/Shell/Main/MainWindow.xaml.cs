@@ -52,6 +52,7 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isPointerOverHeaderMenuPopup;
     private bool _isAnalyticsDrawerOpen;
     private bool _isAnalyticsDrawerTransitionActive;
+    private bool _isPreparingAnalyticsOpen;
     private int _analyticsDrawerTabVisibilityToken;
     private IServiceScope? _analyticsDrawerScope;
     private Analytics? _analyticsDrawerView;
@@ -150,12 +151,38 @@ public partial class MainWindow : Window, IPopupHost
 
     private void FadeContentOut(Action onCompleted)
     {
-        FadeElement(ContentGrid, 0, EasingMode.EaseIn, onCompleted);
+        FadeElements(
+            new UIElement[] { ContentGrid, AnalyticsDrawerLayer, AnalyticsDrawerTabHost },
+            0,
+            EasingMode.EaseIn,
+            onCompleted);
     }
 
     private void FadeContentIn(Action? onCompleted = null)
     {
-        FadeElement(ContentGrid, 1, EasingMode.EaseOut, onCompleted);
+        FadeElements(
+            new UIElement[] { ContentGrid, AnalyticsDrawerLayer, AnalyticsDrawerTabHost },
+            1,
+            EasingMode.EaseOut,
+            onCompleted);
+    }
+
+    private static void FadeElements(UIElement[] elements, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
+    {
+        if (elements.Length == 0)
+        {
+            onCompleted?.Invoke();
+            return;
+        }
+
+        var pending = elements.Length;
+        foreach (var element in elements)
+            FadeElement(element, toOpacity, easingMode, () =>
+            {
+                pending--;
+                if (pending == 0)
+                    onCompleted?.Invoke();
+            });
     }
 
     private static void FadeElement(UIElement element, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
@@ -533,7 +560,7 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))
         {
-            OpenAnalyticsPopup();
+            _ = OpenAnalyticsPopupAsync();
             e.Handled = true;
             return;
         }
@@ -632,13 +659,7 @@ public partial class MainWindow : Window, IPopupHost
         OpenPlanningPopup();
     }
 
-    private void OnAnalyticsButtonClick(object sender, RoutedEventArgs e)
-    {
-        CloseHeaderMenu();
-        OpenAnalyticsPopup();
-    }
-
-    private void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)
+    private async void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
 
@@ -648,7 +669,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        OpenAnalyticsPopup();
+        await OpenAnalyticsPopupAsync();
     }
 
     private void OnCloseAnalyticsDrawerButtonClick(object sender, RoutedEventArgs e)
@@ -728,9 +749,43 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAnalyticsPopup()
     {
-        EnsureAnalyticsDrawerLoaded();
-        ApplyMainWindowRangeToAnalyticsIfBounded();
-        OpenAnalyticsDrawer();
+        _ = OpenAnalyticsPopupAsync();
+    }
+
+    private async Task OpenAnalyticsPopupAsync()
+    {
+        if (_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive || _isPreparingAnalyticsOpen)
+            return;
+
+        _isPreparingAnalyticsOpen = true;
+        AnalyticsDrawerTabButton.IsEnabled = false;
+
+        try
+        {
+            EnsureAnalyticsDrawerLoaded();
+            ApplyMainWindowRangeToAnalyticsIfBounded();
+
+            if (_analyticsDrawerView is null)
+                return;
+
+            await _dialogService.ShowToastWhileAsync(
+                "Loading analytics",
+                () => _analyticsDrawerView.PrepareForOpenAsync(showInternalToast: false),
+                this);
+
+            OpenAnalyticsDrawer();
+        }
+        catch (Exception exception)
+        {
+            _dialogService.ShowError($"Unable to open analytics.\n\n{exception.Message}", "Analytics", this);
+        }
+        finally
+        {
+            _isPreparingAnalyticsOpen = false;
+
+            if (!_isAnalyticsDrawerOpen && !_isAnalyticsDrawerTransitionActive)
+                AnalyticsDrawerTabButton.IsEnabled = true;
+        }
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)

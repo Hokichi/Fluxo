@@ -62,7 +62,8 @@ public sealed class MainWindowLayoutTests
         while (currentDirectory is not null)
         {
             var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
-            if (File.Exists(solutionPath))
+            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
+            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
             {
                 var mainWindowXamlPath = Path.Combine(
                     currentDirectory.FullName,
