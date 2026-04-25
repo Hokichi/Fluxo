@@ -4,9 +4,12 @@ using System.Threading.Tasks;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Services.Dialogs;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.Main;
 using NSubstitute;
+using System.Windows;
 using Xunit;
 using AnalyticsVM = Fluxo.ViewModels.Shell.Main.AnalyticsVM;
 
@@ -136,7 +139,56 @@ public sealed class AnalyticsVMTests
             Arg.Any<CancellationToken>());
     }
 
-    private static AnalyticsVM CreateVm()
+    [Fact]
+    public async Task RefreshForOpenAsync_ShowToastFalse_RefreshesAndSettlesWithoutDialogToast()
+    {
+        var service = CreateAnalyticsService();
+        var dialogService = Substitute.For<IDialogService>();
+        var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
+        var vm = new AnalyticsVM(service, dialogService, uiSettleAwaiter);
+
+        await vm.RefreshForOpenAsync(showToast: false, CancellationToken.None);
+
+        await service.Received(1).GetAnalyticsAsync(
+            Arg.Any<DateOnly>(),
+            Arg.Any<DateOnly>(),
+            Arg.Any<CancellationToken>());
+        await uiSettleAwaiter.Received(1).WaitForUiReadyAsync(
+            Arg.Any<Window?>(),
+            Arg.Any<CancellationToken>());
+        await dialogService.DidNotReceive().ShowToastWhileAsync(
+            Arg.Any<string>(),
+            Arg.Any<Func<Task>>(),
+            Arg.Any<Window?>());
+    }
+
+    [Fact]
+    public async Task RefreshForOpenAsync_ShowToastTrue_UsesDialogToastWrapper()
+    {
+        var service = CreateAnalyticsService();
+        var dialogService = Substitute.For<IDialogService>();
+        dialogService.ShowToastWhileAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<Task>>(),
+                Arg.Any<Window?>())
+            .Returns(callInfo => ((Func<Task>)callInfo[1])());
+        var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
+        var vm = new AnalyticsVM(service, dialogService, uiSettleAwaiter);
+
+        await vm.RefreshForOpenAsync(showToast: true, CancellationToken.None);
+
+        await dialogService.Received(1).ShowToastWhileAsync(
+            Arg.Is<string>(message =>
+                message.StartsWith("Loading analytics", StringComparison.Ordinal)),
+            Arg.Any<Func<Task>>(),
+            Arg.Any<Window?>());
+        await service.Received(1).GetAnalyticsAsync(
+            Arg.Any<DateOnly>(),
+            Arg.Any<DateOnly>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    private static IAnalyticsService CreateAnalyticsService()
     {
         var service = Substitute.For<IAnalyticsService>();
         service.GetAnalyticsAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
@@ -161,6 +213,11 @@ public sealed class AnalyticsVMTests
                 ],
                 GoalsCreatedInPeriod: [])));
 
-        return new AnalyticsVM(service);
+        return service;
+    }
+
+    private static AnalyticsVM CreateVm()
+    {
+        return new AnalyticsVM(CreateAnalyticsService());
     }
 }
