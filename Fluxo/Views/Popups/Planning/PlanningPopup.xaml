@@ -117,7 +117,7 @@
                     Grid.Column="4"
                     Margin="0,6,0,6"
                     VerticalAlignment="Center"
-                    ButtonIcon="{StaticResource PopupStyles.Close}"
+                    ButtonIcon="{StaticResource Close}"
                     Click="OnRemoveIncomeClick"
                     Style="{StaticResource PlannerDangerBalloonButtonStyle}" />
             </Grid>
@@ -155,7 +155,7 @@
                     Grid.Column="6"
                     Margin="0,6,0,6"
                     VerticalAlignment="Center"
-                    ButtonIcon="{StaticResource PopupStyles.Close}"
+                    ButtonIcon="{StaticResource Close}"
                     Click="OnRemoveExpenseClick"
                     Style="{StaticResource PlannerDangerBalloonButtonStyle}" />
             </Grid>
@@ -478,7 +478,7 @@
                             Width="36"
                             Height="36"
                             Margin="0,0,8,0"
-                            ButtonIcon="{StaticResource PlanningPopup.AngleLeftIcon}"
+                            ButtonIcon="{StaticResource AngleLeft}"
                             Click="OnBackClick"
                             CornerRadius="8"
                             CurveHeight="8"
@@ -490,7 +490,7 @@
                             x:Name="NextButton"
                             Width="36"
                             Height="36"
-                            ButtonIcon="{StaticResource PlanningPopup.AngleRightIcon}"
+                            ButtonIcon="{StaticResource AngleRight}"
                             Click="OnNextOrFinishClick"
                             CornerRadius="8"
                             CurveHeight="8"

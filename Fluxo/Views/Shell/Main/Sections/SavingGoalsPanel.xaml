@@ -38,7 +38,7 @@
 
                 <customControls:BalloonButton
                     Grid.Column="1"
-                    ButtonIcon="{StaticResource ButtonStyles.PlusSolid}"
+                    ButtonIcon="{StaticResource PlusSolid}"
                     Click="OnAddSavingGoalClick"
                     Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
                     ToolTip="Add Saving Goal" />
@@ -86,7 +86,7 @@
 
                 <StackPanel Orientation="Horizontal">
                     <customControls:BalloonButton
-                        ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                        ButtonIcon="{StaticResource AngleRight}"
                         Click="OnNavigatePreviousClick"
                         RenderTransformOrigin="0.5,0.5"
                         Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
@@ -99,7 +99,7 @@
 
                     <customControls:BalloonButton
                         Margin="8,0,0,0"
-                        ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                        ButtonIcon="{StaticResource AngleRight}"
                         Click="OnNavigateNextClick"
                         Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
                         ToolTip="Next Goal"

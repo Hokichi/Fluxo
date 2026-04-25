@@ -178,7 +178,7 @@
                     Height="56"
                     Background="{StaticResource Brush.Background.Hover}"
                     CornerRadius="28">
-                    <components:Icon Margin="14" Path="{StaticResource SpendingSourceDetailPopup.Bank}" Color="{StaticResource Brush.Mint}" />
+                    <components:Icon Margin="14" Path="{StaticResource Bank}" Color="{StaticResource Brush.Mint}" />
                 </Border>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
@@ -508,12 +508,12 @@
                         <customControls:BalloonButton Click="OnDisableButtonClick">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
-                                    <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.LightningSlashFill}" />
+                                    <Setter Property="ButtonIcon" Value="{StaticResource LightningSlashFill}" />
                                     <Setter Property="HoveredBackground" Value="{StaticResource Brush.Warning}" />
                                     <Setter Property="ToolTip" Value="Disable source" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsEnabled}" Value="False">
-                                            <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.LightningFill}" />
+                                            <Setter Property="ButtonIcon" Value="{StaticResource LightningFill}" />
                                             <Setter Property="ToolTip" Value="Enable source" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -525,17 +525,17 @@
                             ToolTip="{Binding EditButtonLabel}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
-                                    <Setter Property="ButtonIcon" Value="{StaticResource SpendingSourceDetailPopup.Pen}" />
+                                    <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                                            <Setter Property="ButtonIcon" Value="{StaticResource SpendingSourceDetailPopup.ContentSave}" />
+                                            <Setter Property="ButtonIcon" Value="{StaticResource ContentSave}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </customControls:BalloonButton.Style>
                         </customControls:BalloonButton>
                         <customControls:BalloonButton
-                            ButtonIcon="{StaticResource SpendingSourceDetailPopup.Exchange}"
+                            ButtonIcon="{StaticResource Exchange}"
                             Click="OnTransferButtonClick"
                             HoveredBackground="{StaticResource Brush.Mint}"
                             IsEnabled="{Binding CanTransfer}"
@@ -546,12 +546,12 @@
                             IsEnabled="{Binding CanHideOrUnhide}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
-                                    <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.EyeOff}" />
+                                    <Setter Property="ButtonIcon" Value="{StaticResource EyeOff}" />
                                     <Setter Property="HoveredBackground" Value="{StaticResource Brush.Primary.Hover}" />
                                     <Setter Property="ToolTip" Value="Hide source" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsHidden}" Value="True">
-                                            <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.Eye}" />
+                                            <Setter Property="ButtonIcon" Value="{StaticResource Eye}" />
                                             <Setter Property="ToolTip" Value="Unhide source" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -559,13 +559,13 @@
                             </customControls:BalloonButton.Style>
                         </customControls:BalloonButton>
                         <customControls:BalloonButton
-                            ButtonIcon="{StaticResource SpendingSourceDetailPopup.SourceSwitch}"
+                            ButtonIcon="{StaticResource SourceSwitch}"
                             Click="OnBackToSourcesButtonClick"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Back to sources" />
                         <customControls:BalloonButton
-                            ButtonIcon="{StaticResource SpendingSourceDetailPopup.CircleMinusSolid}"
+                            ButtonIcon="{StaticResource CircleMinusSolid}"
                             Click="OnDeleteButtonClick"
                             HoveredBackground="{StaticResource Brush.Danger}"
                             IsEnabled="{Binding CanDelete}"

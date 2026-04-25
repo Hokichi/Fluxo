@@ -80,17 +80,17 @@
                             <components:Icon
                                 Margin="10"
                                 Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                Path="{StaticResource SpendingSourcesListPopup.Bank}"
+                                Path="{StaticResource Bank}"
                                 Style="{StaticResource BankIconStyle}" />
                             <components:Icon
                                 Margin="10"
                                 Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                Path="{StaticResource SpendingSourcesListPopup.CreditCardAlt}"
+                                Path="{StaticResource CreditCardAlt}"
                                 Style="{StaticResource CreditIconStyle}" />
                             <components:Icon
                                 Margin="10"
                                 Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                Path="{StaticResource SpendingSourcesListPopup.PiggyBank}">
+                                Path="{StaticResource PiggyBank}">
                                 <components:Icon.Style>
                                     <Style TargetType="components:Icon">
                                         <Setter Property="Visibility" Value="Collapsed" />
@@ -117,14 +117,14 @@
                                 Height="12"
                                 Margin="8,0,0,0"
                                 Visibility="{Binding IsDisabled, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <components:Icon Path="{StaticResource SpendingSourcesListPopup.LightningSlashFill}" Color="{StaticResource Brush.Danger}" />
+                                <components:Icon Path="{StaticResource LightningSlashFill}" Color="{StaticResource Brush.Danger}" />
                             </Border>
                             <Border
                                 Width="12"
                                 Height="12"
                                 Margin="8,0,0,0"
                                 Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <components:Icon Path="{StaticResource SpendingSourcesListPopup.EyeOff}" Color="{StaticResource Brush.Warning}" />
+                                <components:Icon Path="{StaticResource EyeOff}" Color="{StaticResource Brush.Warning}" />
                             </Border>
                         </StackPanel>
                         <TextBlock

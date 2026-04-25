@@ -232,7 +232,7 @@ public partial class MainWindow : Window, IPopupHost
         if (ExpandRestoreButton is null)
             return;
 
-        var iconKey = _isMaximized ? "MainWindow.CompressAlt" : "MainWindow.ExpandAlt";
+        var iconKey = _isMaximized ? "CompressAlt" : "ExpandAlt";
         ExpandRestoreButton.ButtonIcon = FindResource(iconKey);
     }
 

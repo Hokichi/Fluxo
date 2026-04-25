@@ -71,15 +71,15 @@ public partial class MessageBoxPopup : BasePopup
     {
         var (geometryKey, accentBrushKey) = icon switch
         {
-            MessageBoxImage.Error or MessageBoxImage.Stop or MessageBoxImage.Hand => ("MessageBoxPopup.Ban", "Brush.Danger"),
-            MessageBoxImage.Warning or MessageBoxImage.Exclamation => ("MessageBoxPopup.Info", "Brush.Warning"),
-            MessageBoxImage.Question => ("MessageBoxPopup.Info", "Brush.Primary.Hover"),
-            MessageBoxImage.Information or MessageBoxImage.Asterisk => ("MessageBoxPopup.Info", "Brush.Info"),
-            _ => ("MessageBoxPopup.Info", "Brush.Text.Secondary")
+            MessageBoxImage.Error or MessageBoxImage.Stop or MessageBoxImage.Hand => ("Ban", "Brush.Danger"),
+            MessageBoxImage.Warning or MessageBoxImage.Exclamation => ("Info", "Brush.Warning"),
+            MessageBoxImage.Question => ("Info", "Brush.Primary.Hover"),
+            MessageBoxImage.Information or MessageBoxImage.Asterisk => ("Info", "Brush.Info"),
+            _ => ("Info", "Brush.Text.Secondary")
         };
 
         var accentBrush = TryFindResource(accentBrushKey) as Brush ?? Brushes.White;
-        MessageIcon.Path = TryFindResource(geometryKey);
+        MessageIcon.Path = TryFindResource(geometryKey) as Geometry;
         MessageIcon.Color = accentBrush;
         IconBadge.Background = CreateBadgeBackground(accentBrush);
     }

@@ -52,7 +52,7 @@
                                     <!--  Clone  -->
                                     <c:BalloonButton
                                         x:Name="PART_CloneButton"
-                                        ButtonIcon="{StaticResource PopupStyles.CloneRegular}"
+                                        ButtonIcon="{StaticResource CloneRegular}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCloneButton,
@@ -61,7 +61,7 @@
                                     <!--  Delete  -->
                                     <c:BalloonButton
                                         x:Name="PART_DeleteButton"
-                                        ButtonIcon="{StaticResource PopupStyles.CircleMinusSolid}"
+                                        ButtonIcon="{StaticResource CircleMinusSolid}"
                                         HoveredBackground="{StaticResource Brush.Danger}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowDeleteButton,
@@ -70,7 +70,7 @@
                                     <!--  Edit  -->
                                     <c:BalloonButton
                                         x:Name="PART_EditButton"
-                                        ButtonIcon="{StaticResource PopupStyles.Edit}"
+                                        ButtonIcon="{StaticResource Pen}"
                                         HoveredBackground="{StaticResource Brush.Primary.Hover}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowEditButton,
@@ -79,7 +79,7 @@
                                     <!--  Revert  -->
                                     <c:BalloonButton
                                         x:Name="PART_RevertButton"
-                                        ButtonIcon="{StaticResource PopupStyles.RegularUndo}"
+                                        ButtonIcon="{StaticResource RegularUndo}"
                                         HoveredBackground="{StaticResource Brush.Warning}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowRevertButton,
@@ -88,7 +88,7 @@
                                     <!--  Apply  -->
                                     <c:BalloonButton
                                         x:Name="PART_ApplyButton"
-                                        ButtonIcon="{StaticResource PopupStyles.Check}"
+                                        ButtonIcon="{StaticResource Check}"
                                         HoveredBackground="{StaticResource Brush.Success}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowApplyButton,
@@ -97,7 +97,7 @@
                                     <!--  Cancel  -->
                                     <c:BalloonButton
                                         x:Name="PART_CancelButton"
-                                        ButtonIcon="{StaticResource PopupStyles.Ban}"
+                                        ButtonIcon="{StaticResource Ban}"
                                         HoveredBackground="{StaticResource Brush.Warning}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCancelButton,
@@ -106,7 +106,7 @@
                                     <!--  Save and Create New  -->
                                     <c:BalloonButton
                                         x:Name="PART_SaveAndCreateNewButton"
-                                        ButtonIcon="{StaticResource PopupStyles.ContentSaveMove}"
+                                        ButtonIcon="{StaticResource ContentSaveMove}"
                                         HoveredBackground="{StaticResource Brush.Mint.Muted}"
                                         IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
                                         Style="{StaticResource HeaderButtonStyle}"
@@ -116,7 +116,7 @@
                                     <!--  Save  -->
                                     <c:BalloonButton
                                         x:Name="PART_SaveButton"
-                                        ButtonIcon="{StaticResource PopupStyles.ContentSave}"
+                                        ButtonIcon="{StaticResource ContentSave}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
                                         IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
                                         Style="{StaticResource HeaderButtonStyle}"
@@ -126,7 +126,7 @@
                                     <!--  Close (always visible)  -->
                                     <c:BalloonButton
                                         x:Name="PART_CloseButton"
-                                        ButtonIcon="{StaticResource PopupStyles.Close}"
+                                        ButtonIcon="{StaticResource Close}"
                                         HoveredBackground="{StaticResource Brush.Danger}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCloseButton,

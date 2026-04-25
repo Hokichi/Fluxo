@@ -49,7 +49,7 @@
                     Tag="Budget Allocation">
                     <components:Icon
                         Width="12"
-                        Path="{StaticResource SettingsPopup.AccountBalanceWalletRound}"
+                        Path="{StaticResource AccountBalanceWalletRound}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
@@ -60,7 +60,7 @@
                     Tag="Spending Sources">
                     <components:Icon
                         Width="12"
-                        Path="{StaticResource SettingsPopup.BookDollar}"
+                        Path="{StaticResource BookDollar}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
@@ -71,7 +71,7 @@
                     Tag="Fixed Expenses">
                     <components:Icon
                         Width="12"
-                        Path="{StaticResource SettingsPopup.InvoiceLight}"
+                        Path="{StaticResource InvoiceLight}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
@@ -82,7 +82,7 @@
                     Tag="Goals">
                     <components:Icon
                         Width="12"
-                        Path="{StaticResource SettingsPopup.BullseyeSolid}"
+                        Path="{StaticResource BullseyeSolid}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
@@ -93,7 +93,7 @@
                     Tag="Tags">
                     <components:Icon
                         Width="12"
-                        Path="{StaticResource SettingsPopup.SolidPriceTagAlt}"
+                        Path="{StaticResource SolidPriceTagAlt}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
 
@@ -104,7 +104,7 @@
                     Tag="Personalization">
                     <components:Icon
                         Width="12"
-                        Path="{StaticResource SettingsPopup.AccountCircle}"
+                        Path="{StaticResource AccountCircle}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
             </StackPanel>

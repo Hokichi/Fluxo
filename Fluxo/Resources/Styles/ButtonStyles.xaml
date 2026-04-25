@@ -210,7 +210,7 @@
                                     x:Name="DotCloseIcon"
                                     Margin="2"
                                     Opacity="0"
-                                    Path="{StaticResource ButtonStyles.Close}"
+                                    Path="{StaticResource Close}"
                                     Color="{StaticResource Brush.Background.Surface}" />
                             </Grid>
                             <TextBlock
@@ -316,7 +316,7 @@
                                     x:Name="AddIcon"
                                     Width="24"
                                     Height="24"
-                                    Path="{StaticResource ButtonStyles.PlusSolid}"
+                                    Path="{StaticResource PlusSolid}"
                                     Color="{StaticResource Brush.Text.Muted}" />
                                 <TextBlock
                                     x:Name="AddLabel"
@@ -376,7 +376,7 @@
         x:Key="EditButton"
         BasedOn="{StaticResource CardActionButtonStyle}"
         TargetType="c:BalloonButton">
-        <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.Pen}" />
+        <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
         <Setter Property="Tag" Value="{Binding Id}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Mint}" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Main}" />
@@ -386,7 +386,7 @@
         x:Key="DeleteButton"
         BasedOn="{StaticResource CardActionButtonStyle}"
         TargetType="c:BalloonButton">
-        <Setter Property="ButtonIcon" Value="{StaticResource ButtonStyles.Close}" />
+        <Setter Property="ButtonIcon" Value="{StaticResource Close}" />
         <Setter Property="Tag" Value="{Binding Id}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Danger}" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Main}" />
@@ -626,7 +626,7 @@
                         <components:Icon
                             x:Name="Plus"
                             Margin="9"
-                            Path="{StaticResource ButtonStyles.PlusSolid}"
+                            Path="{StaticResource PlusSolid}"
                             Color="{StaticResource Brush.Text.Muted}" />
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -685,7 +685,7 @@
                                 Width="16"
                                 Height="16"
                                 VerticalAlignment="Center"
-                                Path="{StaticResource ButtonStyles.AngleRight}"
+                                Path="{StaticResource AngleRight}"
                                 Color="{StaticResource Brush.Text.Muted}" />
                         </Grid>
                     </Border>

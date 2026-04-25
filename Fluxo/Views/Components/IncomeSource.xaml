@@ -144,7 +144,7 @@
                             <components:Icon
                                 Width="14"
                                 Height="14"
-                                Path="{StaticResource IncomeSource.Eye}"
+                                Path="{StaticResource Eye}"
                                 Color="{StaticResource Brush.Info}" />
                             <TextBlock
                                 Grid.Column="2"
@@ -165,7 +165,7 @@
                             <components:Icon
                                 Width="14"
                                 Height="14"
-                                Path="{StaticResource IncomeSource.CircleMinusSolid}"
+                                Path="{StaticResource CircleMinusSolid}"
                                 Color="{StaticResource Brush.Danger}" />
                             <TextBlock
                                 Grid.Column="2"
@@ -186,7 +186,7 @@
                             <components:Icon
                                 Width="14"
                                 Height="14"
-                                Path="{StaticResource IncomeSource.EyeOff}"
+                                Path="{StaticResource EyeOff}"
                                 Color="{StaticResource Brush.Warning}" />
                             <TextBlock
                                 Grid.Column="2"
@@ -210,7 +210,7 @@
                             <components:Icon
                                 Width="14"
                                 Height="14"
-                                Path="{StaticResource IncomeSource.LightningSlashFill}"
+                                Path="{StaticResource LightningSlashFill}"
                                 Color="{StaticResource Brush.Warning}" />
                             <TextBlock
                                 Grid.Column="2"
@@ -234,7 +234,7 @@
                             <components:Icon
                                 Width="14"
                                 Height="14"
-                                Path="{StaticResource IncomeSource.Exchange}"
+                                Path="{StaticResource Exchange}"
                                 Color="{StaticResource Brush.Mint}" />
                             <TextBlock
                                 Grid.Column="2"

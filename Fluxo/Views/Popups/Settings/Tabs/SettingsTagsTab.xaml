@@ -27,7 +27,7 @@
                     Text="Tags" />
                 <customControls:BalloonButton
                     Grid.Column="1"
-                    ButtonIcon="{StaticResource ButtonStyles.PlusSolid}"
+                    ButtonIcon="{StaticResource PlusSolid}"
                     Click="OnAddTagClick"
                     HoveredBackground="{StaticResource Brush.Mint}"
                     Style="{StaticResource ToolbarActionBalloonButtonStyle}"

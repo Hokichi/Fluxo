@@ -174,7 +174,7 @@
                         Orientation="Horizontal">
                         <customControls:BalloonButton
                             x:Name="HeaderMenuButton"
-                            ButtonIcon="{StaticResource MainWindow.BarsSolid}"
+                            ButtonIcon="{StaticResource BarsSolid}"
                             Click="OnHeaderMenuButtonClick"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Background.Hover}"
@@ -230,7 +230,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource MainWindow.PlusSolid}"
+                                                Path="{StaticResource PlusSolid}"
                                                 Color="{StaticResource Brush.Mint}" />
                                             <TextBlock
                                                 Grid.Column="2"
@@ -257,7 +257,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource MainWindow.Bank}"
+                                                Path="{StaticResource Bank}"
                                                 Color="{StaticResource Brush.Mint}" />
                                             <TextBlock
                                                 Grid.Column="2"
@@ -284,7 +284,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource MainWindow.PlusSolid}"
+                                                Path="{StaticResource PlusSolid}"
                                                 Color="{StaticResource Brush.Warning}" />
                                             <TextBlock
                                                 Grid.Column="2"
@@ -311,7 +311,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource MainWindow.Bank}"
+                                                Path="{StaticResource Bank}"
                                                 Color="{StaticResource Brush.Info}" />
                                             <TextBlock
                                                 Grid.Column="2"
@@ -342,7 +342,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource MainWindow.RegularUndo}"
+                                                Path="{StaticResource RegularUndo}"
                                                 Color="{StaticResource Brush.Warning}" />
                                             <TextBlock
                                                 Grid.Column="2"
@@ -373,7 +373,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource MainWindow.RegularRedo}"
+                                                Path="{StaticResource RegularRedo}"
                                                 Color="{StaticResource Brush.Info}" />
                                             <TextBlock
                                                 Grid.Column="2"
@@ -400,7 +400,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource MainWindow.Cog}"
+                                                Path="{StaticResource Cog}"
                                                 Color="{StaticResource Brush.Info}" />
                                             <TextBlock
                                                 Grid.Column="2"
@@ -419,7 +419,7 @@
                         </Popup>
 
                         <customControls:BalloonButton
-                            ButtonIcon="{StaticResource MainWindow.Minus}"
+                            ButtonIcon="{StaticResource Minus}"
                             Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
@@ -427,13 +427,13 @@
 
                         <customControls:BalloonButton
                             x:Name="ExpandRestoreButton"
-                            ButtonIcon="{StaticResource MainWindow.ExpandAlt}"
+                            ButtonIcon="{StaticResource ExpandAlt}"
                             Click="OnExpandRestoreWindow"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
                             Style="{StaticResource HeaderButtonStyle}" />
 
                         <customControls:BalloonButton
-                            ButtonIcon="{StaticResource MainWindow.Close}"
+                            ButtonIcon="{StaticResource Close}"
                             Command="{x:Static SystemCommands.CloseWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Danger}"

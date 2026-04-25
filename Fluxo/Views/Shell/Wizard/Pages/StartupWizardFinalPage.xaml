@@ -63,7 +63,7 @@
                     <components:Icon
                         Width="16"
                         Height="16"
-                        Path="{StaticResource QuickSetupWizardFinalPage.RocketSolid}"
+                        Path="{StaticResource RocketSolid}"
                         Color="{StaticResource Brush.Background.Surface}" />
                 </Button>
             </StackPanel>

@@ -125,7 +125,7 @@
                     Grid.Column="4"
                     Margin="0,6,0,6"
                     VerticalAlignment="Center"
-                    ButtonIcon="{StaticResource PopupStyles.Close}"
+                    ButtonIcon="{StaticResource Close}"
                     Click="OnRemoveIncomeClick"
                     Style="{StaticResource ReportIconBalloonButtonStyle}" />
             </Grid>
@@ -165,7 +165,7 @@
                     Grid.Column="6"
                     Margin="0,6,0,6"
                     VerticalAlignment="Center"
-                    ButtonIcon="{StaticResource PopupStyles.Close}"
+                    ButtonIcon="{StaticResource Close}"
                     Click="OnRemoveExpenseClick"
                     Style="{StaticResource ReportIconBalloonButtonStyle}" />
             </Grid>

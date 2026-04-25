@@ -75,7 +75,7 @@
                         VerticalAlignment="Bottom"
                         Orientation="Horizontal">
                         <customControls:BalloonButton
-                            ButtonIcon="{StaticResource ButtonStyles.Ban}"
+                            ButtonIcon="{StaticResource Ban}"
                             Click="OnNavigateNextClick"
                             Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
                             ToolTip="Next Notification"
@@ -83,7 +83,7 @@
 
                         <customControls:BalloonButton
                             Margin="8,0,0,0"
-                            ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                            ButtonIcon="{StaticResource AngleRight}"
                             Click="OnNavigateNextClick"
                             Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
                             ToolTip="Next Notification"
@@ -126,7 +126,7 @@
                         Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         Margin="8,0,0,0"
-                        ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                        ButtonIcon="{StaticResource AngleRight}"
                         Click="OnNavigatePreviousClick"
                         RenderTransformOrigin="0.5,0.5"
                         Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
@@ -139,7 +139,7 @@
 
                     <customControls:BalloonButton
                         Margin="8,0,0,0"
-                        ButtonIcon="{StaticResource ButtonStyles.AngleRight}"
+                        ButtonIcon="{StaticResource AngleRight}"
                         Click="OnNavigateNextClick"
                         Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
                         ToolTip="Next Notification"

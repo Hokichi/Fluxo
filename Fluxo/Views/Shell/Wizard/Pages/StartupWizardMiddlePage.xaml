@@ -54,7 +54,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource QuickSetupWizardMiddlePage.BookDollar}"
+                                Path="{StaticResource BookDollar}"
                                 Color="{Binding Foreground, ElementName=Step1Label}" />
                             <TextBlock
                                 x:Name="Step1Label"
@@ -119,7 +119,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource QuickSetupWizardMiddlePage.InvoiceLight}"
+                                Path="{StaticResource InvoiceLight}"
                                 Color="{Binding Foreground, ElementName=Step2Label}" />
                             <TextBlock
                                 x:Name="Step2Label"
@@ -181,7 +181,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource QuickSetupWizardMiddlePage.BullseyeSolid}"
+                                Path="{StaticResource BullseyeSolid}"
                                 Color="{Binding Foreground, ElementName=Step3Label}" />
                             <TextBlock
                                 x:Name="Step3Label"
@@ -240,7 +240,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource QuickSetupWizardMiddlePage.AccountBalanceWalletRound}"
+                                Path="{StaticResource AccountBalanceWalletRound}"
                                 Color="{Binding Foreground, ElementName=Step4Label}" />
                             <TextBlock
                                 x:Name="Step4Label"
@@ -296,7 +296,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource QuickSetupWizardMiddlePage.RegularBell}"
+                                Path="{StaticResource RegularBell}"
                                 Color="{Binding Foreground, ElementName=Step5Label}" />
                             <TextBlock
                                 x:Name="Step5Label"
@@ -349,7 +349,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource QuickSetupWizardMiddlePage.InvoiceLight}"
+                                Path="{StaticResource InvoiceLight}"
                                 Color="{Binding Foreground, ElementName=Step6Label}" />
                             <TextBlock
                                 x:Name="Step6Label"

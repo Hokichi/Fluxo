@@ -244,8 +244,8 @@ public partial class PlanningPopup : BasePopup
         BackButton.Visibility = _currentStep == IncomesStep ? Visibility.Collapsed : Visibility.Visible;
         NextButton.IsEnabled = !_isStepTransitioning && (_currentStep != AllocationStep || _viewModel.IsAllocationValid);
         NextButton.ButtonIcon = FindResource(_currentStep == AllocationStep
-            ? "PlanningPopup.CheckIcon"
-            : "PlanningPopup.AngleRightIcon");
+            ? "Check"
+            : "AngleRight");
         NextButton.ToolTip = _currentStep == AllocationStep ? "Finish" : "Next";
 
         UpdateAddIncomeButtonState();
