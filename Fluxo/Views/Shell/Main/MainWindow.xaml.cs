@@ -54,6 +54,7 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isAnalyticsDrawerTransitionActive;
     private bool _isPreparingAnalyticsOpen;
     private int _analyticsDrawerTabVisibilityToken;
+    private bool _isAnalyticsDrawerTabVisibilityTransitionActive;
     private IServiceScope? _analyticsDrawerScope;
     private Analytics? _analyticsDrawerView;
 
@@ -152,7 +153,7 @@ public partial class MainWindow : Window, IPopupHost
     private void FadeContentOut(Action onCompleted)
     {
         FadeElements(
-            new UIElement[] { ContentGrid, AnalyticsDrawerLayer, AnalyticsDrawerTabHost },
+            GetStateChangeFadeElements(),
             0,
             EasingMode.EaseIn,
             onCompleted);
@@ -161,10 +162,18 @@ public partial class MainWindow : Window, IPopupHost
     private void FadeContentIn(Action? onCompleted = null)
     {
         FadeElements(
-            new UIElement[] { ContentGrid, AnalyticsDrawerLayer, AnalyticsDrawerTabHost },
+            GetStateChangeFadeElements(),
             1,
             EasingMode.EaseOut,
             onCompleted);
+    }
+
+    private UIElement[] GetStateChangeFadeElements()
+    {
+        // Avoid interrupting the tab host's own opacity animation because its completion callback re-enables the tab button.
+        return _isAnalyticsDrawerTabVisibilityTransitionActive
+            ? new UIElement[] { ContentGrid, AnalyticsDrawerLayer }
+            : new UIElement[] { ContentGrid, AnalyticsDrawerLayer, AnalyticsDrawerTabHost };
     }
 
     private static void FadeElements(UIElement[] elements, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
@@ -951,6 +960,7 @@ public partial class MainWindow : Window, IPopupHost
 
         _analyticsDrawerTabVisibilityToken++;
         var visibilityToken = _analyticsDrawerTabVisibilityToken;
+        _isAnalyticsDrawerTabVisibilityTransitionActive = false;
 
         AnalyticsDrawerTabHost.BeginAnimation(OpacityProperty, null);
 
@@ -985,6 +995,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        _isAnalyticsDrawerTabVisibilityTransitionActive = true;
         var tabAnimation = new DoubleAnimation(fromOpacity, toOpacity, TimeSpan.FromMilliseconds(AnalyticsDrawerTabFadeDuration))
         {
             EasingFunction = new CubicEase { EasingMode = visible ? EasingMode.EaseOut : EasingMode.EaseIn }
@@ -994,6 +1005,8 @@ public partial class MainWindow : Window, IPopupHost
         {
             if (visibilityToken != _analyticsDrawerTabVisibilityToken)
                 return;
+
+            _isAnalyticsDrawerTabVisibilityTransitionActive = false;
 
             if (!visible)
                 AnalyticsDrawerTabHost.Visibility = Visibility.Collapsed;

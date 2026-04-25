@@ -85,6 +85,6 @@ public sealed class MainWindowLayoutTests
         }
 
         throw new DirectoryNotFoundException(
-            $"Could not locate repository root containing 'Fluxo.sln' from '{AppContext.BaseDirectory}'.");
+            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
     }
 }
