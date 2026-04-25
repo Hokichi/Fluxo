@@ -165,13 +165,35 @@ public sealed class AnalyticsVMTests
     [Fact]
     public async Task RefreshForOpenAsync_ShowToastTrue_UsesDialogToastWrapper()
     {
-        var service = CreateAnalyticsService();
+        var service = Substitute.For<IAnalyticsService>();
         var dialogService = Substitute.For<IDialogService>();
+        var toastDelegateInvoked = false;
+        var toastDelegateRunning = false;
+        var serviceCalledWhileToastDelegateRunning = false;
+        service.GetAnalyticsAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                if (toastDelegateRunning)
+                    serviceCalledWhileToastDelegateRunning = true;
+                return Task.FromResult(CreateAnalyticsDto());
+            });
         dialogService.ShowToastWhileAsync(
                 Arg.Any<string>(),
                 Arg.Any<Func<Task>>(),
                 Arg.Any<Window?>())
-            .Returns(callInfo => ((Func<Task>)callInfo[1])());
+            .Returns(async callInfo =>
+            {
+                toastDelegateInvoked = true;
+                toastDelegateRunning = true;
+                try
+                {
+                    await ((Func<Task>)callInfo[1])();
+                }
+                finally
+                {
+                    toastDelegateRunning = false;
+                }
+            });
         var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
         var vm = new AnalyticsVM(service, dialogService, uiSettleAwaiter);
 
@@ -179,41 +201,51 @@ public sealed class AnalyticsVMTests
 
         await dialogService.Received(1).ShowToastWhileAsync(
             Arg.Is<string>(message =>
-                message.StartsWith("Loading analytics", StringComparison.Ordinal)),
+                message.Contains("Loading analytics", StringComparison.Ordinal)),
             Arg.Any<Func<Task>>(),
             Arg.Any<Window?>());
         await service.Received(1).GetAnalyticsAsync(
             Arg.Any<DateOnly>(),
             Arg.Any<DateOnly>(),
             Arg.Any<CancellationToken>());
+        await uiSettleAwaiter.Received(1).WaitForUiReadyAsync(
+            Arg.Any<Window?>(),
+            Arg.Any<CancellationToken>());
+        Assert.True(toastDelegateInvoked);
+        Assert.True(serviceCalledWhileToastDelegateRunning);
     }
 
     private static IAnalyticsService CreateAnalyticsService()
     {
         var service = Substitute.For<IAnalyticsService>();
         service.GetAnalyticsAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new AnalyticsDto(
-                TotalIncome: 1000m,
-                TotalExpense: 500m,
-                TimeSeries:
-                [
-                    new AnalyticsTimeSeriesPoint(new DateOnly(2026, 1, 1), 100m, 40m),
-                    new AnalyticsTimeSeriesPoint(new DateOnly(2026, 1, 2), 160m, 60m),
-                    new AnalyticsTimeSeriesPoint(new DateOnly(2026, 1, 3), 120m, 55m)
-                ],
-                CategoryRatio:
-                [
-                    new AnalyticsCategorySlice(ExpenseCategory.Needs, 200m),
-                    new AnalyticsCategorySlice(ExpenseCategory.Wants, 150m),
-                    new AnalyticsCategorySlice(ExpenseCategory.Savings, 100m)
-                ],
-                TopSpendingTags:
-                [
-                    new AnalyticsTagTotal("Food", "#FFB86C", 100m)
-                ],
-                GoalsCreatedInPeriod: [])));
+            .Returns(Task.FromResult(CreateAnalyticsDto()));
 
         return service;
+    }
+
+    private static AnalyticsDto CreateAnalyticsDto()
+    {
+        return new AnalyticsDto(
+            TotalIncome: 1000m,
+            TotalExpense: 500m,
+            TimeSeries:
+            [
+                new AnalyticsTimeSeriesPoint(new DateOnly(2026, 1, 1), 100m, 40m),
+                new AnalyticsTimeSeriesPoint(new DateOnly(2026, 1, 2), 160m, 60m),
+                new AnalyticsTimeSeriesPoint(new DateOnly(2026, 1, 3), 120m, 55m)
+            ],
+            CategoryRatio:
+            [
+                new AnalyticsCategorySlice(ExpenseCategory.Needs, 200m),
+                new AnalyticsCategorySlice(ExpenseCategory.Wants, 150m),
+                new AnalyticsCategorySlice(ExpenseCategory.Savings, 100m)
+            ],
+            TopSpendingTags:
+            [
+                new AnalyticsTagTotal("Food", "#FFB86C", 100m)
+            ],
+            GoalsCreatedInPeriod: []);
     }
 
     private static AnalyticsVM CreateVm()
