@@ -60,13 +60,6 @@
                             Foreground="{StaticResource Brush.Text.Secondary}"
                             Text="{Binding Message}"
                             TextWrapping="Wrap" />
-
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="9"
-                            Foreground="{StaticResource Brush.Text.Muted}"
-                            Text="{Binding LatestCreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
                     </StackPanel>
 
                     <StackPanel
@@ -76,19 +69,32 @@
                         Orientation="Horizontal">
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Ban}"
-                            Click="OnNavigateNextClick"
+                            Command="{Binding DataContext.ClearNotificationGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            HoveredBackground="{StaticResource Brush.Danger}"
                             Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
-                            ToolTip="Next Notification"
+                            ToolTip="Clear notification"
                             Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                         <customControls:BalloonButton
-                            Margin="8,0,0,0"
-                            ButtonIcon="{StaticResource AngleRight}"
-                            Click="OnNavigateNextClick"
+                            Margin="4,0,0,0"
+                            ButtonIcon="{StaticResource Pen}"
+                            Command="{Binding DataContext.OpenNotificationActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            HoveredBackground="{StaticResource Brush.Mint}"
+                            IconSize="10"
                             Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
-                            ToolTip="Next Notification"
-                            Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            ToolTip="Resolve"
+                            Visibility="{Binding HasActionCta, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
+
+                    <TextBlock
+                        Margin="02,6,0,0"
+                        VerticalAlignment="Bottom"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="9"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="{Binding LatestCreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
                 </Grid>
             </Border>
         </DataTemplate>
@@ -186,7 +192,7 @@
                 <customControls:StepNavigatorControl
                     Grid.Row="1"
                     Margin="0,8,0,0"
-                    HorizontalAlignment="Center"
+                    HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     CurrentStep="{Binding CurrentStepNumber}"
                     ShouldIndicateProgress="False"

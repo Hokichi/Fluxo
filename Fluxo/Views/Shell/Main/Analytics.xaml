@@ -211,7 +211,7 @@
         <!--  Third row: trend chart + donut  -->
         <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2.2*" />
+                <ColumnDefinition Width="4*" />
                 <ColumnDefinition Width="10" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>

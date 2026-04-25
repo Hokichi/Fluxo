@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Fluxo.ViewModels.Shell.Main;
@@ -109,6 +110,9 @@ public partial class NotificationPanel : UserControl
     private void OnCarouselViewportPreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (_viewModel is null || _isAnimating || !_viewModel.HasMultipleNotifications)
+            return;
+
+        if (IsWithinInteractiveControl(e.OriginalSource as DependencyObject))
             return;
 
         _isSwipeTracking = true;
@@ -362,5 +366,18 @@ public partial class NotificationPanel : UserControl
 
         if (IncomingNotificationPresenter.RenderTransform is not TranslateTransform)
             IncomingNotificationPresenter.RenderTransform = new TranslateTransform();
+    }
+
+    private static bool IsWithinInteractiveControl(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is ButtonBase)
+                return true;
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 }

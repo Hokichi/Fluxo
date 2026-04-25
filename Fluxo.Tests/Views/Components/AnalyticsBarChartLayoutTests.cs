@@ -28,6 +28,9 @@ public sealed class AnalyticsBarChartLayoutTests
         Assert.Contains("Binding=\"{Binding RotateLabelVertical}\"", xaml);
         Assert.Contains("Binding=\"{Binding IsExpenseMode}\"", xaml);
         Assert.Contains("Binding=\"{Binding IsIncomeMode}\"", xaml);
+        Assert.Contains("Binding=\"{Binding HasSecondaryBar}\"", xaml);
+        Assert.Contains("ScaleTransform ScaleY=\"{Binding SecondaryBarHeightRatio}\"", xaml);
+        Assert.Contains("Binding=\"{Binding IsSecondaryIncomeMode}\"", xaml);
         Assert.Contains("Brush.Danger", xaml);
         Assert.Contains("Brush.Mint", xaml);
     }

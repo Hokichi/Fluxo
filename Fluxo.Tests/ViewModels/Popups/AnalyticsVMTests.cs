@@ -50,24 +50,62 @@ public sealed class AnalyticsVMTests
         vm.EndDate = new DateTime(2026, 1, 20);
         await vm.LoadAsync();
 
+        Assert.Equal(3, vm.TrendBarItems.Count);
         Assert.All(vm.TrendBarItems, item =>
         {
             Assert.True(item.HideValueText);
             Assert.True(item.RotateLabelVertical);
         });
 
+        Assert.Equal("Thu", vm.TrendBarItems[0].Label);
+        Assert.Equal(40m, vm.TrendBarItems[0].Value);
+        Assert.Equal(100m, vm.TrendBarItems[0].SecondaryValue);
+        Assert.True(vm.TrendBarItems[0].HasSecondaryBar);
+        Assert.True(vm.TrendBarItems[0].IsExpenseMode);
+        Assert.False(vm.TrendBarItems[0].IsIncomeMode);
+        Assert.False(vm.TrendBarItems[0].IsSecondaryExpenseMode);
+        Assert.True(vm.TrendBarItems[0].IsSecondaryIncomeMode);
+
+        Assert.Equal("Fri", vm.TrendBarItems[1].Label);
+        Assert.Equal(60m, vm.TrendBarItems[1].Value);
+        Assert.Equal(160m, vm.TrendBarItems[1].SecondaryValue);
+        Assert.True(vm.TrendBarItems[1].HasSecondaryBar);
+        Assert.True(vm.TrendBarItems[1].IsExpenseMode);
+        Assert.False(vm.TrendBarItems[1].IsIncomeMode);
+        Assert.False(vm.TrendBarItems[1].IsSecondaryExpenseMode);
+        Assert.True(vm.TrendBarItems[1].IsSecondaryIncomeMode);
+
+        Assert.Equal("Sat", vm.TrendBarItems[2].Label);
+        Assert.Equal(55m, vm.TrendBarItems[2].Value);
+        Assert.Equal(120m, vm.TrendBarItems[2].SecondaryValue);
+        Assert.True(vm.TrendBarItems[2].HasSecondaryBar);
+        Assert.True(vm.TrendBarItems[2].IsExpenseMode);
+        Assert.False(vm.TrendBarItems[2].IsIncomeMode);
+        Assert.False(vm.TrendBarItems[2].IsSecondaryExpenseMode);
+        Assert.True(vm.TrendBarItems[2].IsSecondaryIncomeMode);
+
         vm.SelectedTrendMode = AnalyticsTrendMode.Expenses;
+        Assert.Equal(3, vm.TrendBarItems.Count);
         Assert.All(vm.TrendBarItems, item =>
         {
+            Assert.False(item.HasSecondaryBar);
+            Assert.Equal(0m, item.SecondaryValue);
             Assert.True(item.IsExpenseMode);
             Assert.False(item.IsIncomeMode);
+            Assert.False(item.IsSecondaryExpenseMode);
+            Assert.False(item.IsSecondaryIncomeMode);
         });
 
         vm.SelectedTrendMode = AnalyticsTrendMode.Incomes;
+        Assert.Equal(3, vm.TrendBarItems.Count);
         Assert.All(vm.TrendBarItems, item =>
         {
+            Assert.False(item.HasSecondaryBar);
+            Assert.Equal(0m, item.SecondaryValue);
             Assert.False(item.IsExpenseMode);
             Assert.True(item.IsIncomeMode);
+            Assert.False(item.IsSecondaryExpenseMode);
+            Assert.False(item.IsSecondaryIncomeMode);
         });
     }
 

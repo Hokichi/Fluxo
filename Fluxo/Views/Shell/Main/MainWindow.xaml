@@ -606,7 +606,7 @@
             <Grid x:Name="AnalyticsDrawerLayer" Panel.ZIndex="20">
                 <Border
                     x:Name="AnalyticsDrawerPanel"
-                    Margin="24,72,24,0"
+                    Margin="24,76,24,0"
                     Background="{StaticResource Brush.Background.Elevated}"
                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                     BorderThickness="1"

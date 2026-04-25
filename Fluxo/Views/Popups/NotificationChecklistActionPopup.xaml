@@ -10,7 +10,8 @@
             <CheckBox
                 Margin="0,4,0,4"
                 Content="{Binding Label}"
-                IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                Style="{StaticResource ItemCheckBoxWithContentStyle}" />
         </DataTemplate>
     </customControls:BasePopup.Resources>
 
@@ -37,9 +38,7 @@
             BorderThickness="1"
             CornerRadius="12">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl
-                    ItemTemplate="{StaticResource NotificationChecklistItemTemplate}"
-                    ItemsSource="{Binding Items}" />
+                <ItemsControl ItemTemplate="{StaticResource NotificationChecklistItemTemplate}" ItemsSource="{Binding Items}" />
             </ScrollViewer>
         </Border>
 
@@ -47,6 +46,7 @@
             Grid.Row="4"
             Height="36"
             Command="{Binding ProceedCommand}"
-            Content="Proceed" />
+            Content="Proceed"
+            Style="{StaticResource ActionTextButtonStyle}" />
     </Grid>
 </customControls:BasePopup>

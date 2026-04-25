@@ -32,6 +32,15 @@ public sealed partial class AnalyticsVM(
     private bool _isApplyingDateBounds;
     private IReadOnlyList<AnalyticsTrendPoint> _expenseTrendPoints = [];
     private IReadOnlyList<AnalyticsTrendPoint> _incomeTrendPoints = [];
+    private readonly record struct TrendBarSeed(
+        string Label,
+        decimal PrimaryValue,
+        bool IsPrimaryExpenseSeries,
+        bool IsPrimaryIncomeSeries,
+        decimal SecondaryValue,
+        bool HasSecondaryValue,
+        bool IsSecondaryExpenseSeries,
+        bool IsSecondaryIncomeSeries);
 
     [ObservableProperty] private DateTime _startDate = DateTime.Today;
     [ObservableProperty] private DateTime _endDate = DateTime.Today;
@@ -267,28 +276,72 @@ public sealed partial class AnalyticsVM(
 
     private void ApplyTrendMode()
     {
-        IReadOnlyList<AnalyticsTrendPoint> trendPoints = SelectedTrendMode switch
+        var trendBarSeeds = SelectedTrendMode switch
         {
-            AnalyticsTrendMode.Expenses => _expenseTrendPoints,
-            AnalyticsTrendMode.Incomes => _incomeTrendPoints,
-            _ => BuildCombinedTrendPoints()
+            AnalyticsTrendMode.Expenses => _expenseTrendPoints
+                .Select(point => new TrendBarSeed(
+                    point.Label,
+                    PrimaryValue: point.Value,
+                    IsPrimaryExpenseSeries: true,
+                    IsPrimaryIncomeSeries: false,
+                    SecondaryValue: 0m,
+                    HasSecondaryValue: false,
+                    IsSecondaryExpenseSeries: false,
+                    IsSecondaryIncomeSeries: false))
+                .ToArray(),
+            AnalyticsTrendMode.Incomes => _incomeTrendPoints
+                .Select(point => new TrendBarSeed(
+                    point.Label,
+                    PrimaryValue: point.Value,
+                    IsPrimaryExpenseSeries: false,
+                    IsPrimaryIncomeSeries: true,
+                    SecondaryValue: 0m,
+                    HasSecondaryValue: false,
+                    IsSecondaryExpenseSeries: false,
+                    IsSecondaryIncomeSeries: false))
+                .ToArray(),
+            _ => BuildBothTrendBarSeeds()
         };
 
-        HasTrendData = trendPoints.Any(point => point.Value > 0m);
+        HasTrendData = trendBarSeeds.Any(point =>
+            point.PrimaryValue > 0m ||
+            point.HasSecondaryValue && point.SecondaryValue > 0m);
+        var maxValue = trendBarSeeds
+            .Select(point => point.HasSecondaryValue
+                ? Math.Max(point.PrimaryValue, point.SecondaryValue)
+                : point.PrimaryValue)
+            .DefaultIfEmpty(0m)
+            .Max();
+        var highlightedIndex = Array.FindLastIndex(
+            trendBarSeeds,
+            point =>
+                (point.PrimaryValue > 0m || point.HasSecondaryValue && point.SecondaryValue > 0m) &&
+                !string.IsNullOrWhiteSpace(point.Label));
 
-        var isExpenseMode = SelectedTrendMode == AnalyticsTrendMode.Expenses;
-        var isIncomeMode = SelectedTrendMode == AnalyticsTrendMode.Incomes;
-        var maxValue = trendPoints.DefaultIfEmpty(default).Max(point => point.Value);
-        TrendBarItems = trendPoints
+        if (highlightedIndex < 0)
+        {
+            highlightedIndex = Array.FindLastIndex(
+                trendBarSeeds,
+                point => point.PrimaryValue > 0m || point.HasSecondaryValue && point.SecondaryValue > 0m);
+        }
+
+        TrendBarItems = trendBarSeeds
             .Select((point, index) => new AnalyticsTrendBarItem(
                 point.Label,
-                point.Value,
-                CalculateBarHeightRatio(point.Value, maxValue),
-                IsHighlighted: index == trendPoints.Count - 1 && point.Value > 0m,
+                point.PrimaryValue,
+                CalculateBarHeightRatio(point.PrimaryValue, maxValue),
+                point.SecondaryValue,
+                point.HasSecondaryValue
+                    ? CalculateBarHeightRatio(point.SecondaryValue, maxValue)
+                    : 0d,
+                point.HasSecondaryValue,
+                IsHighlighted: index == highlightedIndex,
                 HideValueText: HideTrendValueLabels,
                 RotateLabelVertical: IsTrendLabelVertical,
-                IsExpenseMode: isExpenseMode,
-                IsIncomeMode: isIncomeMode))
+                IsExpenseMode: point.IsPrimaryExpenseSeries,
+                IsIncomeMode: point.IsPrimaryIncomeSeries,
+                IsSecondaryExpenseMode: point.IsSecondaryExpenseSeries,
+                IsSecondaryIncomeMode: point.IsSecondaryIncomeSeries))
             .ToArray();
     }
 
@@ -336,18 +389,31 @@ public sealed partial class AnalyticsVM(
         HideTrendValueLabels = isWideRange;
     }
 
-    private IReadOnlyList<AnalyticsTrendPoint> BuildCombinedTrendPoints()
+    private TrendBarSeed[] BuildBothTrendBarSeeds()
     {
         if (_expenseTrendPoints.Count == 0 || _incomeTrendPoints.Count == 0)
             return [];
 
         var count = Math.Min(_expenseTrendPoints.Count, _incomeTrendPoints.Count);
-        return _expenseTrendPoints
-            .Take(count)
-            .Select((expensePoint, index) => new AnalyticsTrendPoint(
+        var items = new TrendBarSeed[count];
+
+        for (var index = 0; index < count; index++)
+        {
+            var expensePoint = _expenseTrendPoints[index];
+            var incomePoint = _incomeTrendPoints[index];
+
+            items[index] = new TrendBarSeed(
                 expensePoint.Label,
-                expensePoint.Value + _incomeTrendPoints[index].Value))
-            .ToArray();
+                PrimaryValue: expensePoint.Value,
+                IsPrimaryExpenseSeries: true,
+                IsPrimaryIncomeSeries: false,
+                SecondaryValue: incomePoint.Value,
+                HasSecondaryValue: true,
+                IsSecondaryExpenseSeries: false,
+                IsSecondaryIncomeSeries: true);
+        }
+
+        return items;
     }
 
     private static double CalculateBarHeightRatio(decimal value, decimal maxValue)
@@ -390,13 +456,19 @@ public sealed record AnalyticsTrendBarItem(
     string Label,
     decimal Value,
     double BarHeightRatio,
+    decimal SecondaryValue,
+    double SecondaryBarHeightRatio,
+    bool HasSecondaryBar,
     bool IsHighlighted,
     bool HideValueText,
     bool RotateLabelVertical,
     bool IsExpenseMode,
-    bool IsIncomeMode)
+    bool IsIncomeMode,
+    bool IsSecondaryExpenseMode,
+    bool IsSecondaryIncomeMode)
 {
     public string ValueText => $"${Value:N0}";
+    public string SecondaryValueText => $"${SecondaryValue:N0}";
 }
 
 public sealed record AnalyticsTopTagCardItem(
