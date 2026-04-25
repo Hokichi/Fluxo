@@ -189,10 +189,13 @@ public sealed partial class AnalyticsVM(
         await _refreshFeedbackGate.WaitAsync(cancellationToken);
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             await _dialogService.ShowToastWhileAsync(
                 BuildAnalyticsLoadingMessage(),
                 async () =>
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     await RefreshAsync(cancellationToken);
                     await _uiSettleAwaiter.WaitForUiReadyAsync(cancellationToken: cancellationToken);
                 });

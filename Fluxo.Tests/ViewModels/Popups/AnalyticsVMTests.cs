@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Fluxo.Core.DTO;
@@ -245,6 +246,44 @@ public sealed class AnalyticsVMTests
             Arg.Any<CancellationToken>());
         Assert.True(toastDelegateInvoked);
         Assert.True(serviceCalledWhileToastDelegateRunning);
+    }
+
+    [Fact]
+    public async Task RefreshForOpenAsync_ShowToastTrue_WithCanceledToken_DoesNotInvokeDialogToastWrapper()
+    {
+        var service = CreateAnalyticsService();
+        var dialogService = Substitute.For<IDialogService>();
+        var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
+        var vm = new AnalyticsVM(service, dialogService, uiSettleAwaiter);
+        var gateField = typeof(AnalyticsVM).GetField("_refreshFeedbackGate", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(gateField);
+
+        var refreshFeedbackGate = (SemaphoreSlim?)gateField!.GetValue(vm);
+        Assert.NotNull(refreshFeedbackGate);
+
+        await refreshFeedbackGate!.WaitAsync(CancellationToken.None);
+        var cancellationSource = new CancellationTokenSource();
+
+        try
+        {
+            var refreshTask = vm.RefreshForOpenAsync(showToast: true, cancellationSource.Token);
+            await Task.Delay(50);
+
+            refreshFeedbackGate.Release();
+            cancellationSource.Cancel();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await refreshTask);
+        }
+        finally
+        {
+            if (refreshFeedbackGate.CurrentCount == 0)
+                refreshFeedbackGate.Release();
+        }
+
+        await dialogService.DidNotReceive().ShowToastWhileAsync(
+            Arg.Any<string>(),
+            Arg.Any<Func<Task>>(),
+            Arg.Any<Window?>());
     }
 
     private static IAnalyticsService CreateAnalyticsService()
