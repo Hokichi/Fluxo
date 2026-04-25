@@ -21,6 +21,7 @@ using Fluxo.ViewModels.Shell;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups;
 using Microsoft.Extensions.DependencyInjection;
+using DateRangeResolver = Fluxo.ViewModels.Shell.Main.DateRangeResolver;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.Views.Shell.Main;
@@ -728,6 +729,7 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenAnalyticsPopup()
     {
         EnsureAnalyticsDrawerLoaded();
+        ApplyMainWindowRangeToAnalyticsIfBounded();
         OpenAnalyticsDrawer();
     }
 
@@ -780,6 +782,23 @@ public partial class MainWindow : Window, IPopupHost
         _analyticsDrawerScope = _serviceProvider.CreateScope();
         _analyticsDrawerView = _analyticsDrawerScope.ServiceProvider.GetRequiredService<Analytics>();
         AnalyticsDrawerContentHost.Content = _analyticsDrawerView;
+    }
+
+    private void ApplyMainWindowRangeToAnalyticsIfBounded()
+    {
+        if (_analyticsDrawerView is null)
+            return;
+
+        var selectedMode = _mainVM.ViewModeToggle.SelectedMainContentViewMode;
+        if (selectedMode == MainContentViewMode.AllTime)
+            return;
+
+        var selectedDate = _mainVM.DaySpinner.SelectedDay.Date;
+        if (selectedDate == default)
+            selectedDate = DateTime.Today;
+
+        var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
+        _analyticsDrawerView.ApplyOpenRange(range.From, range.To);
     }
 
     private void OpenAnalyticsDrawer()

@@ -109,6 +109,33 @@ public sealed class AnalyticsVMTests
         });
     }
 
+    [Fact]
+    public async Task ApplyExternalDateRangeWithoutRefresh_UsesRangeOnFirstLoad()
+    {
+        var service = Substitute.For<IAnalyticsService>();
+        service.GetAnalyticsAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new AnalyticsDto(
+                TotalIncome: 0m,
+                TotalExpense: 0m,
+                TimeSeries: [],
+                CategoryRatio: [],
+                TopSpendingTags: [],
+                GoalsCreatedInPeriod: [])));
+        var vm = new AnalyticsVM(service);
+
+        vm.ApplyExternalDateRange(
+            new DateTime(2026, 1, 6),
+            new DateTime(2026, 1, 12),
+            refresh: false);
+
+        await vm.LoadAsync();
+
+        await service.Received(1).GetAnalyticsAsync(
+            new DateOnly(2026, 1, 6),
+            new DateOnly(2026, 1, 12),
+            Arg.Any<CancellationToken>());
+    }
+
     private static AnalyticsVM CreateVm()
     {
         var service = Substitute.For<IAnalyticsService>();

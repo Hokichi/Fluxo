@@ -18,6 +18,11 @@ public partial class Analytics : UserControl
         Unloaded += OnUnloaded;
     }
 
+    public void ApplyOpenRange(DateTime from, DateTime to)
+    {
+        _viewModel.ApplyExternalDateRange(from, to, refresh: _hasLoadedData);
+    }
+
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         if (_hasLoadedData)

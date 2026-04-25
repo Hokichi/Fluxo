@@ -80,6 +80,22 @@ public sealed partial class AnalyticsVM(
         await RefreshWithFeedbackAsync(CancellationToken.None);
     }
 
+    public void ApplyExternalDateRange(DateTime startDate, DateTime endDate, bool refresh)
+    {
+        _isApplyingDateBounds = true;
+        try
+        {
+            StartDate = startDate.Date;
+            EndDate = endDate.Date;
+        }
+        finally
+        {
+            _isApplyingDateBounds = false;
+        }
+
+        ApplyDateRangeRulesAndRefresh(queueRefresh: refresh);
+    }
+
     partial void OnStartDateChanged(DateTime value)
     {
         if (_isApplyingDateBounds)
@@ -345,7 +361,7 @@ public sealed partial class AnalyticsVM(
             .ToArray();
     }
 
-    private void ApplyDateRangeRulesAndRefresh()
+    private void ApplyDateRangeRulesAndRefresh(bool queueRefresh = true)
     {
         _isApplyingDateBounds = true;
         try
@@ -379,7 +395,8 @@ public sealed partial class AnalyticsVM(
 
         UpdateTrendPresentation();
         ApplyTrendMode();
-        QueueRefresh();
+        if (queueRefresh)
+            QueueRefresh();
     }
 
     private void UpdateTrendPresentation()
