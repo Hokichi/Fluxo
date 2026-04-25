@@ -7,29 +7,32 @@ namespace Fluxo.Views.Shell.Main;
 public partial class Analytics : UserControl
 {
     private readonly AnalyticsVM _viewModel;
-    private bool _hasLoadedData;
+    private readonly SemaphoreSlim _openPreparationGate = new(1, 1);
 
     public Analytics(AnalyticsVM viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = viewModel;
-        Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
 
     public void ApplyOpenRange(DateTime from, DateTime to)
     {
-        _viewModel.ApplyExternalDateRange(from, to, refresh: _hasLoadedData);
+        _viewModel.ApplyExternalDateRange(from, to, refresh: false);
     }
 
-    private async void OnLoaded(object sender, RoutedEventArgs e)
+    public async Task PrepareForOpenAsync(bool showInternalToast, CancellationToken cancellationToken = default)
     {
-        if (_hasLoadedData)
-            return;
-
-        await _viewModel.LoadAsync();
-        _hasLoadedData = true;
+        await _openPreparationGate.WaitAsync(cancellationToken);
+        try
+        {
+            await _viewModel.RefreshForOpenAsync(showInternalToast, cancellationToken);
+        }
+        finally
+        {
+            _openPreparationGate.Release();
+        }
     }
 
     private void OnUnloaded(object? sender, RoutedEventArgs e)

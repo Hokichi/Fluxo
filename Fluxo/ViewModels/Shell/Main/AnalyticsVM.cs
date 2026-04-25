@@ -77,7 +77,12 @@ public sealed partial class AnalyticsVM(
 
     public async Task LoadAsync()
     {
-        await RefreshWithFeedbackAsync(CancellationToken.None);
+        await RefreshWithFeedbackAsync(CancellationToken.None, showToast: true);
+    }
+
+    public Task RefreshForOpenAsync(bool showToast, CancellationToken cancellationToken = default)
+    {
+        return RefreshWithFeedbackAsync(cancellationToken, showToast);
     }
 
     public void ApplyExternalDateRange(DateTime startDate, DateTime endDate, bool refresh)
@@ -155,15 +160,24 @@ public sealed partial class AnalyticsVM(
         try
         {
             await Task.Delay(220, cancellationToken);
-            await RefreshWithFeedbackAsync(cancellationToken);
+            await RefreshWithFeedbackAsync(cancellationToken, showToast: true);
         }
         catch (OperationCanceledException)
         {
         }
     }
 
-    private async Task RefreshWithFeedbackAsync(CancellationToken cancellationToken)
+    private async Task RefreshWithFeedbackAsync(CancellationToken cancellationToken, bool showToast)
     {
+        if (!showToast)
+        {
+            await RefreshAsync(cancellationToken);
+            if (_uiSettleAwaiter is not null)
+                await _uiSettleAwaiter.WaitForUiReadyAsync(cancellationToken: cancellationToken);
+
+            return;
+        }
+
         if (_dialogService is null || _uiSettleAwaiter is null)
         {
             await RefreshAsync(cancellationToken);
