@@ -36,11 +36,13 @@ public partial class MainWindow : Window, IPopupHost
     private const int AnalyticsDrawerTransitionDuration = 220; // ms
     private const int AnalyticsDrawerTabFadeDuration = 180; // ms
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new() { Interval = TimeSpan.FromMilliseconds(FadeDuration) };
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
     private readonly IDialogService _dialogService;
     private readonly IServiceProvider _serviceProvider;
+    private readonly PopupOverlayHandoffState _popupOverlayHandoffState = new();
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _hasInitializedDashboardPanels;
@@ -53,7 +55,9 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isAnalyticsDrawerOpen;
     private bool _isAnalyticsDrawerTransitionActive;
     private bool _isPreparingAnalyticsOpen;
+    private bool _isPopupOverlayHandoffPending;
     private int _analyticsDrawerTabVisibilityToken;
+    private int _popupOverlayDeferredHideGeneration;
     private bool _isAnalyticsDrawerTabVisibilityTransitionActive;
     private IServiceScope? _analyticsDrawerScope;
     private Analytics? _analyticsDrawerView;
@@ -97,6 +101,7 @@ public partial class MainWindow : Window, IPopupHost
         PreviewKeyDown += OnPreviewKeyDown;
         PreviewMouseLeftButtonDown += OnWindowPreviewMouseLeftButtonDown;
         _headerMenuCloseTimer.Tick += OnHeaderMenuCloseTimerTick;
+        _popupOverlayDeferredHideTimer.Tick += OnPopupOverlayDeferredHideTimerTick;
     }
 
     private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
@@ -231,6 +236,8 @@ public partial class MainWindow : Window, IPopupHost
         }
         finally
         {
+            _popupOverlayDeferredHideTimer.Stop();
+            _popupOverlayDeferredHideTimer.Tick -= OnPopupOverlayDeferredHideTimerTick;
             DisposeAnalyticsDrawer();
             Application.Current.Shutdown(0);
         }
@@ -1036,12 +1043,27 @@ public partial class MainWindow : Window, IPopupHost
 
     // ── Popup overlay & blur ────────────────────────────────────────
 
+    public void BeginPopupHandoff()
+    {
+        if (_popupOverlayHandoffState.ActivePopupCount <= 0)
+            return;
+
+        _isPopupOverlayHandoffPending = true;
+    }
+
     public void ShowPopupOverlay()
     {
-        ApplyPopupBlur();
+        CancelPendingPopupOverlayDeferredHide();
 
+        var hostAction = _popupOverlayHandoffState.OnPopupShown();
+        if (hostAction != PopupOverlayHostAction.ShowOverlay)
+            return;
+
+        ApplyPopupBlur();
+        PopupOverlay.BeginAnimation(OpacityProperty, null);
         PopupOverlay.Visibility = Visibility.Visible;
-        var fadeIn = new DoubleAnimation(0, 0.5, TimeSpan.FromMilliseconds(FadeDuration))
+
+        var fadeIn = new DoubleAnimation(PopupOverlay.Opacity, 0.5, TimeSpan.FromMilliseconds(FadeDuration))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
@@ -1050,17 +1072,71 @@ public partial class MainWindow : Window, IPopupHost
 
     public void HidePopupOverlay()
     {
-        ClearPopupBlur();
+        if (_isPopupOverlayHandoffPending)
+        {
+            _isPopupOverlayHandoffPending = false;
+            HidePopupOverlayForHandoff();
+            return;
+        }
 
-        var fadeOut = new DoubleAnimation(0.5, 0, TimeSpan.FromMilliseconds(FadeDuration))
+        var hostAction = _popupOverlayHandoffState.OnPopupHidden();
+        if (hostAction != PopupOverlayHostAction.HideOverlay)
+            return;
+
+        HidePopupOverlayCore();
+    }
+
+    private void HidePopupOverlayForHandoff()
+    {
+        var hostAction = _popupOverlayHandoffState.OnPopupHiddenForHandoff(out var deferredHideGeneration);
+        if (hostAction == PopupOverlayHostAction.HideOverlay)
+        {
+            HidePopupOverlayCore();
+            return;
+        }
+
+        if (hostAction != PopupOverlayHostAction.DeferHide)
+            return;
+
+        _popupOverlayDeferredHideGeneration = deferredHideGeneration;
+        _popupOverlayDeferredHideTimer.Stop();
+        _popupOverlayDeferredHideTimer.Start();
+    }
+
+    private void OnPopupOverlayDeferredHideTimerTick(object? sender, EventArgs e)
+    {
+        _popupOverlayDeferredHideTimer.Stop();
+
+        var hostAction = _popupOverlayHandoffState.ResolveDeferredHide(_popupOverlayDeferredHideGeneration);
+        if (hostAction != PopupOverlayHostAction.HideOverlay)
+            return;
+
+        HidePopupOverlayCore();
+    }
+
+    private void CancelPendingPopupOverlayDeferredHide()
+    {
+        _popupOverlayDeferredHideTimer.Stop();
+        _popupOverlayDeferredHideGeneration = 0;
+    }
+
+    private void HidePopupOverlayCore()
+    {
+        PopupOverlay.BeginAnimation(OpacityProperty, null);
+
+        var fadeOut = new DoubleAnimation(PopupOverlay.Opacity, 0, TimeSpan.FromMilliseconds(FadeDuration))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
         };
         fadeOut.Completed += (_, _) =>
         {
+            if (_popupOverlayHandoffState.ActivePopupCount > 0)
+                return;
+
             PopupOverlay.BeginAnimation(OpacityProperty, null);
             PopupOverlay.Opacity = 0;
             PopupOverlay.Visibility = Visibility.Collapsed;
+            ClearPopupBlur();
         };
         PopupOverlay.BeginAnimation(OpacityProperty, fadeOut);
     }
