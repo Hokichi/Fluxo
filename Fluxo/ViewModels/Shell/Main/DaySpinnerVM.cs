@@ -105,39 +105,25 @@ public partial class DaySpinnerVM : ObservableRecipient,
         PublishSelectedRange(SelectedDay.Date);
     }
 
-    public async Task NavigateSpinnerBackFromUserAsync(Window? owner = null)
+    public Task NavigateSpinnerBackFromUserAsync(Window? owner = null)
     {
         if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
-            return;
+            return Task.CompletedTask;
 
-        var targetDate = GetFirstDateForOffset(_spinnerPageOffset - 1);
-        await RunSpinnerInteractionWithFeedbackAsync(
-            MainDataLoadingMessageFormatter.Build(_selectedMainContentViewMode, targetDate),
-            () =>
-            {
-                NavigateSpinnerBackCore();
-                return Task.CompletedTask;
-            },
-            owner);
+        NavigateSpinnerBackCore();
+        return Task.CompletedTask;
     }
 
-    public async Task NavigateSpinnerForwardFromUserAsync(Window? owner = null)
+    public Task NavigateSpinnerForwardFromUserAsync(Window? owner = null)
     {
         if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
-            return;
+            return Task.CompletedTask;
 
         if (_spinnerPageOffset >= 0)
-            return;
+            return Task.CompletedTask;
 
-        var targetDate = GetFirstDateForOffset(_spinnerPageOffset + 1);
-        await RunSpinnerInteractionWithFeedbackAsync(
-            MainDataLoadingMessageFormatter.Build(_selectedMainContentViewMode, targetDate),
-            () =>
-            {
-                NavigateSpinnerForwardCore();
-                return Task.CompletedTask;
-            },
-            owner);
+        NavigateSpinnerForwardCore();
+        return Task.CompletedTask;
     }
 
     public async Task SelectDayFromUserAsync(DayOfWeekVM selectedDay, Window? owner = null)
@@ -323,7 +309,14 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     private void SelectSpinnerItemForDate(DateTime referenceDate)
     {
-        var match = _selectedMainContentViewMode switch
+        var match = FindSpinnerItemForDate(referenceDate);
+
+        SelectDay(match ?? Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek) ?? new DayOfWeekVM(), publishSelection: true);
+    }
+
+    private DayOfWeekVM? FindSpinnerItemForDate(DateTime referenceDate)
+    {
+        return _selectedMainContentViewMode switch
         {
             MainContentViewMode.Daily =>
                 Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek, day => day.Date.Date == referenceDate.Date),
@@ -338,8 +331,34 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
             _ => null
         };
+    }
 
-        SelectDay(match ?? Enumerable.FirstOrDefault<DayOfWeekVM>(DaysOfWeek) ?? new DayOfWeekVM(), publishSelection: true);
+    private void SyncVisibleSelectionAfterNavigation()
+    {
+        var selectedDate = SelectedDay.Date;
+        if (selectedDate == default)
+        {
+            ClearVisibleSelection();
+            return;
+        }
+
+        var match = FindSpinnerItemForDate(selectedDate);
+        if (match is not null)
+        {
+            SelectDay(match, publishSelection: false);
+            return;
+        }
+
+        ClearVisibleSelection();
+    }
+
+    private void ClearVisibleSelection()
+    {
+        foreach (var item in DaysOfWeek)
+            item.IsSelected = false;
+
+        IsAtCurrentPeriod = false;
+        PublishSpinnerPeriodState();
     }
 
     private void SelectFirstSpinnerItem(bool publishSelection = true)
@@ -383,7 +402,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
         _spinnerPageOffset--;
         CanNavigateForward = true;
         BuildSpinnerItems();
-        SelectFirstSpinnerItem();
+        SyncVisibleSelectionAfterNavigation();
     }
 
     private void NavigateSpinnerForwardCore()
@@ -394,18 +413,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
         _spinnerPageOffset++;
         CanNavigateForward = _spinnerPageOffset < 0;
         BuildSpinnerItems();
-        SelectFirstSpinnerItem();
-    }
-
-    private DateTime GetFirstDateForOffset(int offset)
-    {
-        return _selectedMainContentViewMode switch
-        {
-            MainContentViewMode.Daily => GetMonday(DateTime.Today).AddDays(offset * 7),
-            MainContentViewMode.Weekly => GetWeeklyWindowStart(GetMonday(DateTime.Today)).AddDays(offset * 28),
-            MainContentViewMode.Monthly => GetMonthlyWindowStart(DateTime.Today).AddMonths(offset * 4),
-            _ => DateTime.Today
-        };
+        SyncVisibleSelectionAfterNavigation();
     }
 
     private async Task RunSpinnerInteractionWithFeedbackAsync(string message, Func<Task> operation, Window? owner)

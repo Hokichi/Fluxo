@@ -122,6 +122,53 @@ public class DaySpinnerVMTests
     }
 
     [Fact]
+    public void NavigateSpinnerBack_WhenSelectedDateIsOutOfVisibleRange_ShowsNoHighlightedItemWithoutPublishingRange()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+
+        var vm = new DaySpinnerVM(messenger);
+        messenger.Send(new ViewModeChangeMessage(MainContentViewMode.Daily));
+
+        var selectedDateBeforeNavigation = vm.SelectedDay.Date;
+        recipient.DateRanges.Clear();
+
+        vm.NavigateSpinnerBackCommand.Execute(null);
+
+        Assert.Empty(recipient.DateRanges);
+        Assert.Equal(selectedDateBeforeNavigation, vm.SelectedDay.Date);
+        Assert.All(vm.DaysOfWeek, day => Assert.False(day.IsSelected));
+        Assert.False(vm.IsAtCurrentPeriod);
+    }
+
+    [Fact]
+    public void NavigateSpinnerForward_WhenReturningToVisibleRange_RehighlightsCurrentSelectionWithoutPublishingRange()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+
+        var vm = new DaySpinnerVM(messenger);
+        messenger.Send(new ViewModeChangeMessage(MainContentViewMode.Daily));
+
+        var persistedSelectedDate = vm.SelectedDay.Date;
+        vm.NavigateSpinnerBackCommand.Execute(null);
+        recipient.DateRanges.Clear();
+
+        vm.NavigateSpinnerForwardCommand.Execute(null);
+
+        Assert.Empty(recipient.DateRanges);
+        Assert.Equal(persistedSelectedDate, vm.SelectedDay.Date);
+        var selectedVisibleDay = Assert.Single(vm.DaysOfWeek, day => day.IsSelected);
+        Assert.Equal(persistedSelectedDate, selectedVisibleDay.Date);
+    }
+
+    [Fact]
     public void SelectingNonCurrentDay_PublishesSpinnerStateWithIsAtCurrentPeriodFalse()
     {
         var messenger = new WeakReferenceMessenger();
