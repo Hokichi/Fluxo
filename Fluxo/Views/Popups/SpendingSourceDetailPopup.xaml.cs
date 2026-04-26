@@ -152,7 +152,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
             return;
 
         _reopenSourcesOnClose = true;
-        Close();
+        CloseForPopupHandoff();
     }
 
     private async void OnDeleteButtonClick(object sender, RoutedEventArgs e)

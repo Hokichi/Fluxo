@@ -39,7 +39,7 @@ public partial class QuickAddPopup : BasePopup
             return;
         }
 
-        Close();
+        CloseForPopupHandoff();
         ownerWindow.Dispatcher.BeginInvoke(new Action(() => openPopupAction(ownerWindow)));
     }
 }

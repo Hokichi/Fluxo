@@ -26,7 +26,7 @@ public partial class SpendingSourcesListPopup : BasePopup
             return;
 
         var ownerWindow = Owner as MainWindow;
-        Close();
+        CloseForPopupHandoff();
 
         ownerWindow?.Dispatcher.BeginInvoke(new Action(() =>
             ownerWindow.OpenSpendingSourceDetailPopup(spendingSource)));

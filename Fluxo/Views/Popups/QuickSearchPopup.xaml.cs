@@ -62,7 +62,7 @@ public partial class QuickSearchPopup : BasePopup
             return;
 
         var mainWindow = Owner as MainWindow;
-        Close();
+        CloseForPopupHandoff();
 
         mainWindow?.OpenExpenseDetailPopup(log);
     }

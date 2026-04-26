@@ -64,7 +64,7 @@ public partial class ExpenseDetailPopup : BasePopup
         var draft = _viewModel.CreateQuickAddDraft();
         var ownerWindow = Owner as MainWindow;
 
-        Close();
+        CloseForPopupHandoff();
 
         ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenAddNewTransactionPopup(draft)));
     }

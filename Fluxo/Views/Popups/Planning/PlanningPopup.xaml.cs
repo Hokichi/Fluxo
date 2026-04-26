@@ -146,7 +146,7 @@ public partial class PlanningPopup : BasePopup
             _completionSnapshot = _viewModel.BuildSnapshot();
             _skipDiscardPrompt = true;
             DialogResult = true;
-            Close();
+            CloseForPopupHandoff();
             return;
         }
 
