@@ -1,6 +1,7 @@
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
 using Fluxo.Services.Dialogs;
@@ -9,6 +10,7 @@ using Fluxo.Views.CustomControls;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Wizard;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -45,7 +47,22 @@ public partial class App : Application
 
         try
         {
-            var isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
+            var loaderPopup = new StartupLoaderPopup();
+            bool isFirstRun;
+
+            try
+            {
+                loaderPopup.Show();
+                await MigrateDatabaseAsync(_dataOperationRunner);
+                isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
+
+                if (!isFirstRun)
+                    await _mainVM.Initialize();
+            }
+            finally
+            {
+                loaderPopup.CloseLoader();
+            }
 
             if (isFirstRun)
             {
@@ -53,19 +70,6 @@ public partial class App : Application
                 var wizard = wizardScope.ServiceProvider.GetRequiredService<QuickSetupWizard>();
                 wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 wizard.ShowDialog();
-            }
-            else
-            {
-                var loaderPopup = new StartupLoaderPopup();
-                try
-                {
-                    loaderPopup.Show();
-                    await _mainVM.Initialize();
-                }
-                finally
-                {
-                    loaderPopup.CloseLoader();
-                }
             }
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
@@ -121,6 +125,15 @@ public partial class App : Application
             }
 
             return !bool.TryParse(existingSetting.Value, out var isFirstRun) || isFirstRun;
+        });
+    }
+
+    private static Task MigrateDatabaseAsync(IDataOperationRunner dataOperationRunner)
+    {
+        return dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+            await dbContext.Database.MigrateAsync(ct);
         });
     }
 }
