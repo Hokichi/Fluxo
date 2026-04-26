@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using System.Windows.Threading;
 
 namespace Fluxo.Views.CustomControls;
 
@@ -76,7 +77,16 @@ public class BasePopup : Window, IPopupHost
     private IPopupHost? _popupHost;
     private FrameworkElement? _contentRoot;
     private UIElement? _popupOverlay;
+    private readonly PopupOverlayHandoffState _popupOverlayHandoffState = new();
+    private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(OverlayAnimDuration)
+    };
+    private EventHandler? _popupOverlayDeferredHideTickHandler;
     private bool _isAnimatingClose;
+    private bool _isClosingForPopupHandoff;
+    private bool _hasRoutedOwnerOverlayHide;
+    private bool _isPopupOverlayHandoffPending;
 
     static BasePopup()
     {
@@ -216,6 +226,12 @@ public class BasePopup : Window, IPopupHost
 
     protected virtual void OnCloseButtonClick()
     {
+        Close();
+    }
+
+    protected void CloseForPopupHandoff()
+    {
+        _isClosingForPopupHandoff = true;
         Close();
     }
 
@@ -404,11 +420,17 @@ public class BasePopup : Window, IPopupHost
 
         // Respect cancellation from popup-specific logic (e.g. unsaved-change prompts).
         if (e.Cancel)
+        {
+            _isClosingForPopupHandoff = false;
             return;
+        }
 
         // Preserve modal dialog results (true/false) by letting WPF finish the close immediately.
         if (DialogResult.HasValue)
+        {
+            RouteOwnerPopupOverlayHide();
             return;
+        }
 
         if (_isAnimatingClose)
             return;
@@ -416,7 +438,7 @@ public class BasePopup : Window, IPopupHost
         e.Cancel = true;
         _isAnimatingClose = true;
 
-        _popupHost?.HidePopupOverlay();
+        RouteOwnerPopupOverlayHide();
 
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(PopupAnimDuration))
         {
@@ -430,17 +452,48 @@ public class BasePopup : Window, IPopupHost
     private void OnClosed(object? sender, EventArgs e)
     {
         if (!_isAnimatingClose)
-            _popupHost?.HidePopupOverlay();
+            RouteOwnerPopupOverlayHide();
+
+        CancelPendingPopupOverlayDeferredHide();
+    }
+
+    private void RouteOwnerPopupOverlayHide()
+    {
+        if (_hasRoutedOwnerOverlayHide || _popupHost is null)
+            return;
+
+        if (_isClosingForPopupHandoff)
+            _popupHost.HidePopupOverlayForHandoff();
+        else
+            _popupHost.HidePopupOverlay();
+
+        _hasRoutedOwnerOverlayHide = true;
+    }
+
+    public void BeginPopupHandoff()
+    {
+        if (_popupOverlayHandoffState.ActivePopupCount <= 0)
+            return;
+
+        _isPopupOverlayHandoffPending = true;
     }
 
     public void ShowPopupOverlay()
     {
-        if (_contentRoot is null || _popupOverlay is null) return;
+        if (_contentRoot is null || _popupOverlay is null)
+            return;
+
+        CancelPendingPopupOverlayDeferredHide();
+
+        var hostAction = _popupOverlayHandoffState.OnPopupShown();
+        if (hostAction != PopupOverlayHostAction.ShowOverlay)
+            return;
 
         _contentRoot.Effect = new BlurEffect { Radius = 20, RenderingBias = RenderingBias.Performance };
 
+        _popupOverlay.BeginAnimation(OpacityProperty, null);
         _popupOverlay.Visibility = Visibility.Visible;
-        var fadeIn = new DoubleAnimation(0, 0.5, TimeSpan.FromMilliseconds(OverlayAnimDuration))
+        var fadeIn = new DoubleAnimation(_popupOverlay.Opacity, 0.5, TimeSpan.FromMilliseconds(OverlayAnimDuration))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
@@ -449,16 +502,81 @@ public class BasePopup : Window, IPopupHost
 
     public void HidePopupOverlay()
     {
-        if (_contentRoot is null || _popupOverlay is null) return;
+        if (_isPopupOverlayHandoffPending)
+        {
+            _isPopupOverlayHandoffPending = false;
+            HidePopupOverlayForHandoff();
+            return;
+        }
+
+        var hostAction = _popupOverlayHandoffState.OnPopupHidden();
+        if (hostAction != PopupOverlayHostAction.HideOverlay)
+            return;
+
+        HidePopupOverlayCore();
+    }
+
+    public void HidePopupOverlayForHandoff()
+    {
+        var hostAction = _popupOverlayHandoffState.OnPopupHiddenForHandoff(out var deferredHideGeneration);
+        if (hostAction == PopupOverlayHostAction.HideOverlay)
+        {
+            HidePopupOverlayCore();
+            return;
+        }
+
+        if (hostAction != PopupOverlayHostAction.DeferHide)
+            return;
+
+        SchedulePopupOverlayDeferredHide(deferredHideGeneration);
+    }
+
+    private void SchedulePopupOverlayDeferredHide(int deferredHideGeneration)
+    {
+        CancelPendingPopupOverlayDeferredHide();
+        _popupOverlayDeferredHideTickHandler = (_, _) => OnPopupOverlayDeferredHideTimerTick(deferredHideGeneration);
+        _popupOverlayDeferredHideTimer.Tick += _popupOverlayDeferredHideTickHandler;
+        _popupOverlayDeferredHideTimer.Start();
+    }
+
+    private void OnPopupOverlayDeferredHideTimerTick(int deferredHideGeneration)
+    {
+        CancelPendingPopupOverlayDeferredHide();
+
+        var hostAction = _popupOverlayHandoffState.ResolveDeferredHide(deferredHideGeneration);
+        if (hostAction != PopupOverlayHostAction.HideOverlay)
+            return;
+
+        HidePopupOverlayCore();
+    }
+
+    private void CancelPendingPopupOverlayDeferredHide()
+    {
+        _popupOverlayDeferredHideTimer.Stop();
+        if (_popupOverlayDeferredHideTickHandler is null)
+            return;
+
+        _popupOverlayDeferredHideTimer.Tick -= _popupOverlayDeferredHideTickHandler;
+        _popupOverlayDeferredHideTickHandler = null;
+    }
+
+    private void HidePopupOverlayCore()
+    {
+        if (_contentRoot is null || _popupOverlay is null)
+            return;
 
         _contentRoot.Effect = null;
+        _popupOverlay.BeginAnimation(OpacityProperty, null);
 
-        var fadeOut = new DoubleAnimation(0.5, 0, TimeSpan.FromMilliseconds(OverlayAnimDuration))
+        var fadeOut = new DoubleAnimation(_popupOverlay.Opacity, 0, TimeSpan.FromMilliseconds(OverlayAnimDuration))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
         };
         fadeOut.Completed += (_, _) =>
         {
+            if (_popupOverlayHandoffState.ActivePopupCount > 0)
+                return;
+
             _popupOverlay.BeginAnimation(OpacityProperty, null);
             _popupOverlay.Opacity = 0;
             _popupOverlay.Visibility = Visibility.Collapsed;

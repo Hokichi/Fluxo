@@ -4,7 +4,6 @@ public interface IPopupHost
 {
     void ShowPopupOverlay();
     void HidePopupOverlay();
-    void BeginPopupHandoff()
-    {
-    }
+    void HidePopupOverlayForHandoff();
+    void BeginPopupHandoff();
 }

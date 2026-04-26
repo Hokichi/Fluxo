@@ -55,9 +55,8 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isAnalyticsDrawerOpen;
     private bool _isAnalyticsDrawerTransitionActive;
     private bool _isPreparingAnalyticsOpen;
-    private bool _isPopupOverlayHandoffPending;
     private int _analyticsDrawerTabVisibilityToken;
-    private int _popupOverlayDeferredHideGeneration;
+    private EventHandler? _popupOverlayDeferredHideTickHandler;
     private bool _isAnalyticsDrawerTabVisibilityTransitionActive;
     private IServiceScope? _analyticsDrawerScope;
     private Analytics? _analyticsDrawerView;
@@ -101,7 +100,6 @@ public partial class MainWindow : Window, IPopupHost
         PreviewKeyDown += OnPreviewKeyDown;
         PreviewMouseLeftButtonDown += OnWindowPreviewMouseLeftButtonDown;
         _headerMenuCloseTimer.Tick += OnHeaderMenuCloseTimerTick;
-        _popupOverlayDeferredHideTimer.Tick += OnPopupOverlayDeferredHideTimerTick;
     }
 
     private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
@@ -236,8 +234,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         finally
         {
-            _popupOverlayDeferredHideTimer.Stop();
-            _popupOverlayDeferredHideTimer.Tick -= OnPopupOverlayDeferredHideTimerTick;
+            CancelPendingPopupOverlayDeferredHide();
             DisposeAnalyticsDrawer();
             Application.Current.Shutdown(0);
         }
@@ -1045,10 +1042,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void BeginPopupHandoff()
     {
-        if (_popupOverlayHandoffState.ActivePopupCount <= 0)
-            return;
-
-        _isPopupOverlayHandoffPending = true;
+        // Compatibility marker for hosts that still announce a handoff before closing.
     }
 
     public void ShowPopupOverlay()
@@ -1072,13 +1066,6 @@ public partial class MainWindow : Window, IPopupHost
 
     public void HidePopupOverlay()
     {
-        if (_isPopupOverlayHandoffPending)
-        {
-            _isPopupOverlayHandoffPending = false;
-            HidePopupOverlayForHandoff();
-            return;
-        }
-
         var hostAction = _popupOverlayHandoffState.OnPopupHidden();
         if (hostAction != PopupOverlayHostAction.HideOverlay)
             return;
@@ -1086,7 +1073,7 @@ public partial class MainWindow : Window, IPopupHost
         HidePopupOverlayCore();
     }
 
-    private void HidePopupOverlayForHandoff()
+    public void HidePopupOverlayForHandoff()
     {
         var hostAction = _popupOverlayHandoffState.OnPopupHiddenForHandoff(out var deferredHideGeneration);
         if (hostAction == PopupOverlayHostAction.HideOverlay)
@@ -1098,16 +1085,22 @@ public partial class MainWindow : Window, IPopupHost
         if (hostAction != PopupOverlayHostAction.DeferHide)
             return;
 
-        _popupOverlayDeferredHideGeneration = deferredHideGeneration;
-        _popupOverlayDeferredHideTimer.Stop();
+        SchedulePopupOverlayDeferredHide(deferredHideGeneration);
+    }
+
+    private void SchedulePopupOverlayDeferredHide(int deferredHideGeneration)
+    {
+        CancelPendingPopupOverlayDeferredHide();
+        _popupOverlayDeferredHideTickHandler = (_, _) => OnPopupOverlayDeferredHideTimerTick(deferredHideGeneration);
+        _popupOverlayDeferredHideTimer.Tick += _popupOverlayDeferredHideTickHandler;
         _popupOverlayDeferredHideTimer.Start();
     }
 
-    private void OnPopupOverlayDeferredHideTimerTick(object? sender, EventArgs e)
+    private void OnPopupOverlayDeferredHideTimerTick(int deferredHideGeneration)
     {
-        _popupOverlayDeferredHideTimer.Stop();
+        CancelPendingPopupOverlayDeferredHide();
 
-        var hostAction = _popupOverlayHandoffState.ResolveDeferredHide(_popupOverlayDeferredHideGeneration);
+        var hostAction = _popupOverlayHandoffState.ResolveDeferredHide(deferredHideGeneration);
         if (hostAction != PopupOverlayHostAction.HideOverlay)
             return;
 
@@ -1117,7 +1110,11 @@ public partial class MainWindow : Window, IPopupHost
     private void CancelPendingPopupOverlayDeferredHide()
     {
         _popupOverlayDeferredHideTimer.Stop();
-        _popupOverlayDeferredHideGeneration = 0;
+        if (_popupOverlayDeferredHideTickHandler is null)
+            return;
+
+        _popupOverlayDeferredHideTimer.Tick -= _popupOverlayDeferredHideTickHandler;
+        _popupOverlayDeferredHideTickHandler = null;
     }
 
     private void HidePopupOverlayCore()

@@ -12,16 +12,18 @@ public sealed class MainWindowPopupOverlayHandoffTests
 
         Assert.Contains("private readonly PopupOverlayHandoffState _popupOverlayHandoffState = new();", source);
         Assert.Contains("private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new()", source);
-        Assert.Contains("private int _popupOverlayDeferredHideGeneration;", source);
+        Assert.Contains("private EventHandler? _popupOverlayDeferredHideTickHandler;", source);
+        Assert.DoesNotContain("private bool _isPopupOverlayHandoffPending;", source);
+        Assert.DoesNotContain("private int _popupOverlayDeferredHideGeneration;", source);
     }
 
     [Fact]
-    public void BeginPopupHandoff_MarksHandoffOnHost()
+    public void BeginPopupHandoff_DoesNotUseGlobalPendingFlag()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
         var methodBody = ExtractMethodBodyBySignature(source, "public void BeginPopupHandoff()");
 
-        Assert.Contains("_isPopupOverlayHandoffPending = true;", methodBody);
+        Assert.DoesNotContain("_isPopupOverlayHandoffPending", methodBody);
     }
 
     [Fact]
@@ -37,27 +39,37 @@ public sealed class MainWindowPopupOverlayHandoffTests
     }
 
     [Fact]
-    public void HidePopupOverlay_UsesStateAndHandoffHelper()
+    public void HidePopupOverlay_UsesStateWithoutGlobalHandoffBranch()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
         var methodBody = ExtractMethodBodyBySignature(source, "public void HidePopupOverlay()");
 
-        Assert.Contains("if (_isPopupOverlayHandoffPending)", methodBody);
-        Assert.Contains("HidePopupOverlayForHandoff();", methodBody);
         Assert.Contains("var hostAction = _popupOverlayHandoffState.OnPopupHidden();", methodBody);
         Assert.Contains("if (hostAction != PopupOverlayHostAction.HideOverlay)", methodBody);
         Assert.Contains("HidePopupOverlayCore();", methodBody);
+        Assert.DoesNotContain("HidePopupOverlayForHandoff();", methodBody);
     }
 
     [Fact]
-    public void HidePopupOverlayForHandoff_SchedulesDeferredHideWhenRequested()
+    public void HidePopupOverlayForHandoff_IsPublicAndSchedulesDeferredHideWhenRequested()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
-        var methodBody = ExtractMethodBodyBySignature(source, "private void HidePopupOverlayForHandoff()");
+        var methodBody = ExtractMethodBodyBySignature(source, "public void HidePopupOverlayForHandoff()");
 
         Assert.Contains("OnPopupHiddenForHandoff(out var deferredHideGeneration)", methodBody);
         Assert.Contains("if (hostAction != PopupOverlayHostAction.DeferHide)", methodBody);
-        Assert.Contains("_popupOverlayDeferredHideGeneration = deferredHideGeneration;", methodBody);
+        Assert.Contains("SchedulePopupOverlayDeferredHide(deferredHideGeneration);", methodBody);
+    }
+
+    [Fact]
+    public void SchedulePopupOverlayDeferredHide_CapturesGenerationInTickHandler()
+    {
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+        var methodBody = ExtractMethodBodyBySignature(source, "private void SchedulePopupOverlayDeferredHide(int deferredHideGeneration)");
+
+        Assert.Contains("CancelPendingPopupOverlayDeferredHide();", methodBody);
+        Assert.Contains("_popupOverlayDeferredHideTickHandler = (_, _) => OnPopupOverlayDeferredHideTimerTick(deferredHideGeneration);", methodBody);
+        Assert.Contains("_popupOverlayDeferredHideTimer.Tick += _popupOverlayDeferredHideTickHandler;", methodBody);
         Assert.Contains("_popupOverlayDeferredHideTimer.Start();", methodBody);
     }
 
@@ -65,12 +77,24 @@ public sealed class MainWindowPopupOverlayHandoffTests
     public void DeferredHideTimerTick_ResolvesGenerationAndOnlyHidesOnHideOverlay()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
-        var methodBody = ExtractMethodBodyBySignature(source, "private void OnPopupOverlayDeferredHideTimerTick(");
+        var methodBody = ExtractMethodBodyBySignature(source, "private void OnPopupOverlayDeferredHideTimerTick(int deferredHideGeneration)");
 
-        Assert.Contains("_popupOverlayDeferredHideTimer.Stop();", methodBody);
-        Assert.Contains("ResolveDeferredHide(_popupOverlayDeferredHideGeneration)", methodBody);
+        Assert.Contains("CancelPendingPopupOverlayDeferredHide();", methodBody);
+        Assert.Contains("ResolveDeferredHide(deferredHideGeneration)", methodBody);
         Assert.Contains("if (hostAction != PopupOverlayHostAction.HideOverlay)", methodBody);
         Assert.Contains("HidePopupOverlayCore();", methodBody);
+    }
+
+    [Fact]
+    public void CancelPendingPopupOverlayDeferredHide_UnhooksCapturedTickHandler()
+    {
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+        var methodBody = ExtractMethodBodyBySignature(source, "private void CancelPendingPopupOverlayDeferredHide()");
+
+        Assert.Contains("_popupOverlayDeferredHideTimer.Stop();", methodBody);
+        Assert.Contains("if (_popupOverlayDeferredHideTickHandler is null)", methodBody);
+        Assert.Contains("_popupOverlayDeferredHideTimer.Tick -= _popupOverlayDeferredHideTickHandler;", methodBody);
+        Assert.Contains("_popupOverlayDeferredHideTickHandler = null;", methodBody);
     }
 
     [Fact]
