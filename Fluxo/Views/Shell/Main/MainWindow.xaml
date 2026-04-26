@@ -632,12 +632,16 @@
                                 </StackPanel>
                             </Border>
 
-                            <Button
+                            <customControls:BalloonButton
                                 Grid.Column="1"
                                 VerticalAlignment="Center"
+                                ButtonIcon="{StaticResource AngleRight}"
                                 Click="OnCloseAnalyticsDrawerButtonClick"
-                                Content="Return To Dashboard"
-                                Style="{StaticResource TextOnlyButtonStyle}" />
+                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                                HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                                IconSize="9"
+                                Style="{StaticResource HeaderButtonStyle}"
+                                ToolTip="Return To Dashboard" />
                         </Grid>
 
                         <ContentControl x:Name="AnalyticsDrawerContentHost" Grid.Row="1" />

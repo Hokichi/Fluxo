@@ -9,6 +9,7 @@ public sealed class AnalyticsPopupLayoutTests
         AppContext.BaseDirectory,
         "..", "..", "..", "..", "..",
         "Fluxo",
+        "Fluxo",
         "Views",
         "Shell",
         "Main",
@@ -32,7 +33,8 @@ public sealed class AnalyticsPopupLayoutTests
         Assert.Contains("Visibility=\"{Binding HasTrendData, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
         Assert.Contains("Visibility=\"{Binding HasRatioData, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
         Assert.Contains("Visibility=\"{Binding HasTagData, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
-        Assert.Contains("Text=\"No Data Found\"", xaml);
+        Assert.Contains("x:Key=\"AnalyticsNoDataTextStyle\"", xaml);
+        Assert.Contains("<Setter Property=\"Text\" Value=\"No Data Found\" />", xaml);
     }
 
     [Fact]
@@ -51,5 +53,19 @@ public sealed class AnalyticsPopupLayoutTests
         var sharedProgressBarStyleMarker = "Style=\"{StaticResource AnalyticsCardProgressBarStyle}\"";
         var sharedProgressBarStyleUsageCount = xaml.Split(sharedProgressBarStyleMarker).Length - 1;
         Assert.True(sharedProgressBarStyleUsageCount >= 2, "Expected top tags and goals to share the same progress bar style.");
+    }
+
+    [Fact]
+    public void RatioCardStacksLegendBelowResponsiveDonut()
+    {
+        var xaml = File.ReadAllText(AnalyticsXamlPath);
+
+        Assert.Contains("<RowDefinition Height=\"*\" />", xaml);
+        Assert.Contains("<RowDefinition Height=\"Auto\" />", xaml);
+        Assert.Contains("<Viewbox", xaml);
+        Assert.Contains("Stretch=\"Uniform\"", xaml);
+        Assert.DoesNotContain("Width=\"180\"", xaml);
+        Assert.DoesNotContain("Height=\"180\"", xaml);
+        Assert.DoesNotContain("<ColumnDefinition Width=\"14\" />", xaml);
     }
 }

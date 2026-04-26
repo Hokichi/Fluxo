@@ -355,7 +355,7 @@
                             </Border>
                         </StackPanel>
 
-                        <TextBlock Margin="0,4,0,0" VerticalAlignment="Bottom">
+                        <TextBlock Margin="0,8,0,0" VerticalAlignment="Bottom">
                             <Run
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="24"
@@ -484,13 +484,13 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
-                        Background="Transparent"
-                        BorderBrush="Transparent"
-                        BorderThickness="0"
                         behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding HasMoreItems, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
                         behaviors:ScrollOnDemandBehavior.IsEnabled="True"
                         behaviors:ScrollOnDemandBehavior.IsLoading="{Binding IsLoading, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
                         behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
                         ClipToBounds="True"
                         ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
                         ItemTemplate="{StaticResource ExpenseListItemTemplate}"

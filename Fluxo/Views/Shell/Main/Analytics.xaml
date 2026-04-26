@@ -302,22 +302,20 @@
 
                     <Grid Grid.Row="1" Margin="0,14,0,0">
                         <Grid Visibility="{Binding HasRatioData, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="14" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                            <Grid
-                                Width="180"
-                                Height="180"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
+                            <Viewbox
+                                Margin="0,0,0,16"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Stretch="Uniform">
                                 <Canvas
                                     Width="164"
                                     Height="164"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center">
+                                    Margin="16">
                                     <Ellipse
                                         Width="164"
                                         Height="164"
@@ -353,75 +351,101 @@
                                         </Path.RenderTransform>
                                     </Path>
                                 </Canvas>
+                            </Viewbox>
+
+                            <Grid Grid.Row="1" HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="4" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="4" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Ellipse
+                                    Width="8"
+                                    Height="8"
+                                    VerticalAlignment="Center"
+                                    Fill="{StaticResource Brush.Category.Needs}" />
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Needs" />
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="4"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding NeedsPercent, StringFormat={}{0}%}" />
+
+                                <Ellipse
+                                    Grid.Row="2"
+                                    Grid.Column="0"
+                                    Width="8"
+                                    Height="8"
+                                    VerticalAlignment="Center"
+                                    Fill="{StaticResource Brush.Category.Wants}" />
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Wants" />
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Grid.Column="4"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding WantsPercent, StringFormat={}{0}%}" />
+
+                                <Ellipse
+                                    Grid.Row="4"
+                                    Grid.Column="0"
+                                    Width="8"
+                                    Height="8"
+                                    VerticalAlignment="Center"
+                                    Fill="{StaticResource Brush.Category.Investments}" />
+                                <TextBlock
+                                    Grid.Row="4"
+                                    Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Invest" />
+                                <TextBlock
+                                    Grid.Row="4"
+                                    Grid.Column="4"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Medium}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding InvestPercent, StringFormat={}{0}%}" />
                             </Grid>
-
-                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                                    <Ellipse
-                                        Width="8"
-                                        Height="8"
-                                        VerticalAlignment="Center"
-                                        Fill="{StaticResource Brush.Category.Needs}" />
-                                    <TextBlock
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Needs" />
-                                    <TextBlock
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Medium}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Secondary}"
-                                        Text="{Binding NeedsPercent, StringFormat={}{0}%}" />
-                                </StackPanel>
-
-                                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                                    <Ellipse
-                                        Width="8"
-                                        Height="8"
-                                        VerticalAlignment="Center"
-                                        Fill="{StaticResource Brush.Category.Wants}" />
-                                    <TextBlock
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Wants" />
-                                    <TextBlock
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Medium}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Secondary}"
-                                        Text="{Binding WantsPercent, StringFormat={}{0}%}" />
-                                </StackPanel>
-
-                                <StackPanel Orientation="Horizontal">
-                                    <Ellipse
-                                        Width="8"
-                                        Height="8"
-                                        VerticalAlignment="Center"
-                                        Fill="{StaticResource Brush.Category.Investments}" />
-                                    <TextBlock
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="Invest" />
-                                    <TextBlock
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Medium}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Secondary}"
-                                        Text="{Binding InvestPercent, StringFormat={}{0}%}" />
-                                </StackPanel>
-                            </StackPanel>
                         </Grid>
                         <TextBlock Style="{StaticResource AnalyticsNoDataTextStyle}" Visibility="{Binding HasRatioData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                     </Grid>
