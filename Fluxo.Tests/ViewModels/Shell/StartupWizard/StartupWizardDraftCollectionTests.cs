@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Interfaces;
+using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Shell.QuickSetupWizard;
 using NSubstitute;
 using Xunit;
@@ -12,7 +13,8 @@ public sealed class QuickSetupWizardDraftCollectionTests
     public void NextTempId_DecrementsForEachNewSource()
     {
         var unitOfWork = Substitute.For<IUnitOfWork>();
-        var vm = new QuickSetupWizardSpendingSourcesVM(null!, unitOfWork, new WeakReferenceMessenger());
+        var vm = new QuickSetupWizardSpendingSourcesVM(null!, new AppDataService(unitOfWork),
+            new WeakReferenceMessenger());
 
         var first = vm.GetNextTemporaryId();
         var second = vm.GetNextTemporaryId();

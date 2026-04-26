@@ -4,6 +4,7 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.QuickSetupWizard;
 using Xunit;
@@ -82,14 +83,15 @@ public sealed class QuickSetupWizardVMTests
     private static QuickSetupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)
     {
         unitOfWork ??= new TestUnitOfWork(new TestUserSettingsRepository([]));
+        var appData = new AppDataService(unitOfWork);
         var messenger = new WeakReferenceMessenger();
         var greeting = new QuickSetupWizardGreetingPageVM();
-        var name = new QuickSetupWizardNamePageVM(unitOfWork, messenger);
-        var spendingSources = new QuickSetupWizardSpendingSourcesVM(null!, unitOfWork, messenger);
-        var fixedExpenses = new QuickSetupWizardFixedExpensesVM(null!, unitOfWork, messenger);
-        var savingGoals = new QuickSetupWizardSavingGoalsVM(null!, unitOfWork, messenger);
-        var budget = new QuickSetupWizardBudgetAllocationVM(unitOfWork, messenger);
-        var notification = new QuickSetupWizardNotificationVM(unitOfWork, messenger);
+        var name = new QuickSetupWizardNamePageVM(appData, messenger);
+        var spendingSources = new QuickSetupWizardSpendingSourcesVM(null!, appData, messenger);
+        var fixedExpenses = new QuickSetupWizardFixedExpensesVM(null!, appData, messenger);
+        var savingGoals = new QuickSetupWizardSavingGoalsVM(null!, appData, messenger);
+        var budget = new QuickSetupWizardBudgetAllocationVM(appData, messenger);
+        var notification = new QuickSetupWizardNotificationVM(appData, messenger);
         var summary = new QuickSetupWizardSummaryVM(messenger);
         var middle = new QuickSetupWizardMiddlePageVM(
             spendingSources,
@@ -103,7 +105,7 @@ public sealed class QuickSetupWizardVMTests
         var final = new QuickSetupWizardFinalPageVM(messenger);
         return new QuickSetupWizardVM(
             null!,
-            unitOfWork,
+            appData,
             new TestDataOperationScopeFactory(),
             greeting,
             name,

@@ -1,6 +1,6 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 
 namespace Fluxo.ViewModels.Popups;
 
@@ -14,9 +14,9 @@ public static class GoalUpdateTransactionSupport
         return sourceType is SpendingSourceType.Cash or SpendingSourceType.Checking;
     }
 
-    public static async Task<ExpenseTag> ResolveGoalUpdateTagAsync(IUnitOfWork unitOfWork)
+    public static async Task<ExpenseTag> ResolveGoalUpdateTagAsync(IAppDataService appData)
     {
-        var tags = await unitOfWork.ExpenseTags.GetAllAsync();
+        var tags = await appData.GetExpenseTagsAsync();
         var existingTag = tags.FirstOrDefault(tag =>
             string.Equals(tag.Name, GoalUpdateTagName, StringComparison.OrdinalIgnoreCase));
         if (existingTag is not null)
@@ -28,8 +28,8 @@ public static class GoalUpdateTransactionSupport
             HexCode = GoalUpdateTagColor
         };
 
-        await unitOfWork.ExpenseTags.AddAsync(goalUpdateTag);
-        await unitOfWork.SaveChangesAsync();
+        await appData.AddExpenseTagAsync(goalUpdateTag);
+        await appData.SaveChangesAsync();
         return goalUpdateTag;
     }
 }

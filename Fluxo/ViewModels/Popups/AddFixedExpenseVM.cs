@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
@@ -21,7 +21,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     private const int NoTagId = -1;
 
     private readonly MainVM _mainViewModel;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? _saveDraftAsync;
     private readonly Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? _loadDraftTagsAsync;
     private readonly Func<string, string, Task<SettingsOperationResult>>? _createDraftTagAsync;
@@ -44,14 +44,14 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     public AddFixedExpenseVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         IReadOnlyList<SpendingSourceVM>? spendingSourcesOverride = null,
         Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? saveDraftAsync = null,
         Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? loadDraftTagsAsync = null,
         Func<string, string, Task<SettingsOperationResult>>? createDraftTagAsync = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _saveDraftAsync = saveDraftAsync;
         _loadDraftTagsAsync = loadDraftTagsAsync;
         _createDraftTagAsync = createDraftTagAsync;
@@ -148,7 +148,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         }
         else
         {
-            availableTags = (await _unitOfWork.ExpenseTags.GetAllAsync(cancellationToken))
+            availableTags = (await _appData.GetExpenseTagsAsync(cancellationToken))
                 .Where(tag => !tag.IsSystemTag)
                 .OrderBy(tag => tag.Name)
                 .Select(tag => new ExpenseTagVM
@@ -223,13 +223,11 @@ public partial class AddFixedExpenseVM : ObservableObject
 
         try
         {
-            var unitOfWork = _unitOfWork;
-
-            var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(input.SpendingSourceId);
+            var spendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
             if (spendingSource is null)
                 return AddFixedExpenseResult.Failure("Please choose a valid spending source.");
 
-            var existingTags = await unitOfWork.ExpenseTags.GetAllAsync();
+            var existingTags = await _appData.GetExpenseTagsAsync();
             var tag = existingTags.FirstOrDefault(existing => existing.Id == input.TagId && !existing.IsSystemTag);
 
             if (tag is null)
@@ -240,13 +238,13 @@ public partial class AddFixedExpenseVM : ObservableObject
                     HexCode = DefaultTagColor
                 };
 
-                await unitOfWork.ExpenseTags.AddAsync(tag);
-                await unitOfWork.SaveChangesAsync();
+                await _appData.AddExpenseTagAsync(tag);
+                await _appData.SaveChangesAsync();
             }
 
             if (EditingId.HasValue)
             {
-                var existing = await unitOfWork.Expenses.GetByIdAsync(EditingId.Value);
+                var existing = await _appData.GetExpenseByIdAsync(EditingId.Value);
                 if (existing is null)
                     return AddFixedExpenseResult.Failure("Fixed expense not found.");
 
@@ -257,7 +255,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                 existing.SpendingSourceId = spendingSource.Id;
                 existing.ExpenseTagId = tag.Id;
                 existing.IsActive = input.IsActive;
-                unitOfWork.Expenses.Update(existing);
+                _appData.UpdateExpense(existing);
             }
             else
             {
@@ -272,10 +270,10 @@ public partial class AddFixedExpenseVM : ObservableObject
                     ExpenseTagId = tag.Id,
                     IsActive = input.IsActive
                 };
-                await unitOfWork.Expenses.AddAsync(expense);
+                await _appData.AddExpenseAsync(expense);
             }
 
-            await unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 

@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Popups;
@@ -21,7 +21,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
 
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly HashSet<SettingsSavingGoalItemVM> _savingGoalsVisibleWindow = [];
     private int _visibleSavingGoalCount = PageSize;
 
@@ -29,10 +29,10 @@ public partial class SettingsGoalsTabVM : ObservableObject
     [ObservableProperty] private bool _hasMoreItems;
     [ObservableProperty] private bool _isLoading;
 
-    public SettingsGoalsTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public SettingsGoalsTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
 
         SavingGoalsView = CollectionViewSource.GetDefaultView(SavingGoals);
@@ -62,7 +62,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
 
     public AddSavingGoalVM CreateAddSavingGoalViewModel()
     {
-        return new AddSavingGoalVM(_mainViewModel, _unitOfWork);
+        return new AddSavingGoalVM(_mainViewModel, _appData);
     }
 
     public async Task OpenAddSavingGoalAsync()
@@ -114,12 +114,12 @@ public partial class SettingsGoalsTabVM : ObservableObject
                 case SettingsBatchAction.Delete:
                     foreach (var selectedItem in selectedItems)
                     {
-                        var savingGoal = await _unitOfWork.SavingGoals.GetByIdAsync(selectedItem.Id);
+                        var savingGoal = await _appData.GetSavingGoalByIdAsync(selectedItem.Id);
                         if (savingGoal is null)
                             continue;
 
                         var snapshot = SavingGoalMemorySnapshot.Create(savingGoal);
-                        _unitOfWork.SavingGoals.Remove(savingGoal);
+                        _appData.RemoveSavingGoal(savingGoal);
                         actions.Add(new DeleteSavingGoalMemoryAction(snapshot));
                     }
 
@@ -132,7 +132,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
                 case SettingsBatchAction.Disable:
                 case SettingsBatchAction.Enable:
                     var disabledGoalIds = SettingsShared.ParseIdSet(
-                        await SettingsShared.GetSettingsDictionaryAsync(_unitOfWork),
+                        await SettingsShared.GetSettingsDictionaryAsync(_appData),
                         UserSettingNames.DisabledSavingGoalIds);
 
                     if (action == SettingsBatchAction.Disable)
@@ -140,7 +140,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
                     else
                         disabledGoalIds.ExceptWith(selectedItems.Select(item => item.Id));
 
-                    await SettingsShared.UpdateIdSetSettingAsync(_unitOfWork, UserSettingNames.DisabledSavingGoalIds,
+                    await SettingsShared.UpdateIdSetSettingAsync(_appData, UserSettingNames.DisabledSavingGoalIds,
                         disabledGoalIds, actions);
                     break;
             }
@@ -148,7 +148,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
             if (actions.Count == 0)
                 return SettingsOperationResult.Failure("Nothing changed for the selected goals.");
 
-            await _unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SavingGoals));
             _messenger.Send(new DashboardDataInvalidatedMessage(
@@ -182,10 +182,10 @@ public partial class SettingsGoalsTabVM : ObservableObject
     public async Task RefreshSavingGoalsAsync(bool resetPagination = true)
     {
         var disabledSavingGoalIds = SettingsShared.ParseIdSet(
-            await SettingsShared.GetSettingsDictionaryAsync(_unitOfWork),
+            await SettingsShared.GetSettingsDictionaryAsync(_appData),
             UserSettingNames.DisabledSavingGoalIds);
 
-        SettingsShared.ReplaceCollection(SavingGoals, (await _unitOfWork.SavingGoals.GetAllAsync())
+        SettingsShared.ReplaceCollection(SavingGoals, (await _appData.GetSavingGoalsAsync())
             .OrderBy(goal => goal.SavingEndDate)
             .ThenBy(goal => goal.Name)
             .Select(goal => new SettingsSavingGoalItemVM(
@@ -331,3 +331,4 @@ public partial class SettingsGoalsTabVM : ObservableObject
         return selectedItems.Length > 0 ? selectedItems : items.ToArray();
     }
 }
+

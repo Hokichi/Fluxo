@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Popups;
@@ -20,7 +20,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly HashSet<SettingsSpendingSourceItemVM> _spendingSourcesVisibleWindow = [];
     private int _visibleSpendingSourceCount = PageSize;
 
@@ -28,10 +28,10 @@ public partial class SettingsSourcesTabVM : ObservableObject
     [ObservableProperty] private bool _hasMoreItems;
     [ObservableProperty] private bool _isLoading;
 
-    public SettingsSourcesTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public SettingsSourcesTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
 
         SpendingSourcesView = CollectionViewSource.GetDefaultView(SpendingSources);
@@ -63,12 +63,12 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     public AddSpendingSourceVM CreateAddSpendingSourceViewModel()
     {
-        return new AddSpendingSourceVM(_mainViewModel, _unitOfWork);
+        return new AddSpendingSourceVM(_mainViewModel, _appData);
     }
 
     public SpendingSourceDetailVM CreateSpendingSourceDetailViewModel(int spendingSourceId)
     {
-        return new SpendingSourceDetailVM(_mainViewModel, spendingSourceId, _unitOfWork);
+        return new SpendingSourceDetailVM(_mainViewModel, spendingSourceId, _appData);
     }
 
     public async Task OpenAddSpendingSourceAsync()
@@ -129,15 +129,15 @@ public partial class SettingsSourcesTabVM : ObservableObject
             switch (action)
             {
                 case SettingsBatchAction.Delete:
-                    var allExpenseLogs = await _unitOfWork.ExpenseLogs.GetAllAsync();
+                    var allExpenseLogs = await _appData.GetExpenseLogsAsync();
                     var activeExpenseSourceIds = allExpenseLogs.Where(log => !log.IsForDeletion)
                         .Select(log => log.SpendingSourceId).ToHashSet();
-                    var allIncomeLogs = await _unitOfWork.IncomeLogs.GetAllAsync();
+                    var allIncomeLogs = await _appData.GetIncomeLogsAsync();
                     var incomeSourceIds = allIncomeLogs.Select(log => log.SpendingSourceId).ToHashSet();
 
                     foreach (var selectedId in selectedIds)
                     {
-                        var spendingSource = await _unitOfWork.SpendingSources.GetByIdAsync(selectedId);
+                        var spendingSource = await _appData.GetSpendingSourceByIdAsync(selectedId);
                         if (spendingSource is null)
                             continue;
 
@@ -146,7 +146,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
                                 $"{spendingSource.Name} still has activity, so it can't be deleted yet.");
 
                         var snapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
-                        _unitOfWork.SpendingSources.Remove(spendingSource);
+                        _appData.RemoveSpendingSource(spendingSource);
                         actions.Add(new DeleteSpendingSourceMemoryAction(snapshot));
                     }
 
@@ -158,7 +158,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
                 case SettingsBatchAction.Enable:
                     foreach (var selectedId in selectedIds)
                     {
-                        var spendingSource = await _unitOfWork.SpendingSources.GetByIdAsync(selectedId);
+                        var spendingSource = await _appData.GetSpendingSourceByIdAsync(selectedId);
                         if (spendingSource is null)
                             continue;
 
@@ -188,7 +188,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
                         if (!updated)
                             continue;
 
-                        _unitOfWork.SpendingSources.Update(spendingSource);
+                        _appData.UpdateSpendingSource(spendingSource);
                         var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
                         actions.Add(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot));
                     }
@@ -199,7 +199,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
             if (actions.Count == 0)
                 return SettingsOperationResult.Failure("Nothing changed for the selected spending sources.");
 
-            await _unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
             _messenger.Send(new DashboardDataInvalidatedMessage(
@@ -232,7 +232,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     public async Task RefreshSpendingSourcesAsync(bool resetPagination = false, int? keepVisibleItemId = null)
     {
-        SettingsShared.ReplaceCollection(SpendingSources, (await _unitOfWork.SpendingSources.GetAllAsync())
+        SettingsShared.ReplaceCollection(SpendingSources, (await _appData.GetSpendingSourcesAsync())
             .OrderByDescending(source => source.ShowOnUI)
             .ThenBy(source => source.Name)
             .Select(source => new SettingsSpendingSourceItemVM(source)));
@@ -390,3 +390,4 @@ public partial class SettingsSourcesTabVM : ObservableObject
         return selectedItems.Length > 0 ? selectedItems : items.ToArray();
     }
 }
+

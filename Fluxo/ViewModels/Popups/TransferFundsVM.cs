@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -16,7 +16,7 @@ public partial class TransferFundsVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly int _sourceSpendingSourceId;
-    private readonly IUnitOfWork _uow;
+    private readonly IAppDataService _appData;
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isSaving;
@@ -24,11 +24,11 @@ public partial class TransferFundsVM : ObservableObject
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private SpendingSourceVM? _selectedTarget;
 
-    public TransferFundsVM(MainVM mainViewModel, SpendingSourceVM source, IUnitOfWork uow)
+    public TransferFundsVM(MainVM mainViewModel, SpendingSourceVM source, IAppDataService appData)
     {
         _mainViewModel = mainViewModel;
         _sourceSpendingSourceId = source.Id;
-        _uow = uow;
+        _appData = appData;
         SourceName = source.Name;
 
         var candidateTargets = _mainViewModel.BudgetPanel.SpendingSources
@@ -61,11 +61,11 @@ public partial class TransferFundsVM : ObservableObject
 
         try
         {
-            var source = await _uow.SpendingSources.GetByIdAsync(_sourceSpendingSourceId);
+            var source = await _appData.GetSpendingSourceByIdAsync(_sourceSpendingSourceId);
             if (source is null)
                 return TransferFundsResult.Failure("Unable to load the source spending source.");
 
-            var target = await _uow.SpendingSources.GetByIdAsync(input.TargetSpendingSourceId);
+            var target = await _appData.GetSpendingSourceByIdAsync(input.TargetSpendingSourceId);
             if (target is null)
                 return TransferFundsResult.Failure("Please choose a valid destination account.");
 
@@ -103,17 +103,17 @@ public partial class TransferFundsVM : ObservableObject
                 SpendingSourceId = target.Id
             };
 
-            await _uow.Expenses.AddAsync(expense);
-            await _uow.ExpenseLogs.AddAsync(expenseLog);
-            await _uow.IncomeLogs.AddAsync(incomeLog);
+            await _appData.AddExpenseAsync(expense);
+            await _appData.AddExpenseLogAsync(expenseLog);
+            await _appData.AddIncomeLogAsync(incomeLog);
 
             ApplyExpenseToSpendingSource(source, input.Amount);
             ApplyIncomeToSpendingSource(target, input.Amount);
 
-            _uow.SpendingSources.Update(source);
-            _uow.SpendingSources.Update(target);
+            _appData.UpdateSpendingSource(source);
+            _appData.UpdateSpendingSource(target);
 
-            await _uow.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
 
             WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
                 new CompositeLogMemoryAction(
@@ -164,7 +164,7 @@ public partial class TransferFundsVM : ObservableObject
 
     private async Task<ExpenseTag?> ResolveTransferTagAsync()
     {
-        var expenseTags = await _uow.ExpenseTags.GetAllAsync();
+        var expenseTags = await _appData.GetExpenseTagsAsync();
         return expenseTags
             .OrderByDescending(tag => string.Equals(tag.Name, "Transfer", StringComparison.OrdinalIgnoreCase))
             .ThenBy(tag => tag.Name)

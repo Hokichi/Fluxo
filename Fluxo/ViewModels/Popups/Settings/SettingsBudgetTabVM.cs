@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Shell;
@@ -15,7 +15,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
 {
     private readonly Func<decimal> _totalBudgetAmountProvider;
     private readonly IMessenger _messenger;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private BudgetAllocationSnapshot _savedBudgetAllocation = new(50, 30, 20);
 
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
@@ -23,16 +23,16 @@ public partial class SettingsBudgetTabVM : ObservableObject
     [ObservableProperty] private int _needsAllocationPercentage;
     [ObservableProperty] private int _wantsAllocationPercentage;
 
-    public SettingsBudgetTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
-        : this(() => mainViewModel.BudgetPanel.TotalIncomeAmount, unitOfWork, messenger)
+    public SettingsBudgetTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
+        : this(() => mainViewModel.BudgetPanel.TotalIncomeAmount, appData, messenger)
     {
     }
 
-    public SettingsBudgetTabVM(Func<decimal> totalBudgetAmountProvider, IUnitOfWork unitOfWork,
+    public SettingsBudgetTabVM(Func<decimal> totalBudgetAmountProvider, IAppDataService appData,
         IMessenger? messenger = null)
     {
         _totalBudgetAmountProvider = totalBudgetAmountProvider;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -51,7 +51,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     public async Task LoadAsync()
     {
-        var settingsByName = await SettingsShared.GetSettingsDictionaryAsync(_unitOfWork);
+        var settingsByName = await SettingsShared.GetSettingsDictionaryAsync(_appData);
         NeedsAllocationPercentage = SettingsShared.ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
         WantsAllocationPercentage = SettingsShared.ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
         InvestAllocationPercentage = SettingsShared.ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
@@ -61,7 +61,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
             WantsAllocationPercentage,
             InvestAllocationPercentage);
 
-        HasSpendingSources = (await _unitOfWork.SpendingSources.GetAllAsync()).Count > 0;
+        HasSpendingSources = (await _appData.GetSpendingSourcesAsync()).Count > 0;
         ValidateBudgetAllocation();
         OnPropertyChanged(nameof(HasSpendingSources));
         OnPropertyChanged(nameof(TotalBudgetAmount));
@@ -78,11 +78,11 @@ public partial class SettingsBudgetTabVM : ObservableObject
             return (SettingsOperationResult.Failure(BudgetAllocationErrorMessage), []);
 
         var actions = new List<ILogMemoryAction>();
-        await SettingsShared.UpdateUserSettingAsync(_unitOfWork, UserSettingNames.NeedsThreshold,
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.NeedsThreshold,
             NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
-        await SettingsShared.UpdateUserSettingAsync(_unitOfWork, UserSettingNames.WantsThreshold,
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.WantsThreshold,
             WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
-        await SettingsShared.UpdateUserSettingAsync(_unitOfWork, UserSettingNames.InvestThreshold,
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.InvestThreshold,
             InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
 
         return (SettingsOperationResult.Success(), actions);
@@ -188,3 +188,4 @@ public partial class SettingsBudgetTabVM : ObservableObject
             new SettingsPendingChangesChanged(SettingsTabKey.Budget, HasPendingChanges)));
     }
 }
+

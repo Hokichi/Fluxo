@@ -49,6 +49,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISpendingSourceService, SpendingSourceService>();
         services.AddTransient<ITagService, TagService>();
         services.AddTransient<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<IAppDataService, AppDataService>();
 
         return services;
     }

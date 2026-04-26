@@ -9,6 +9,4 @@ public interface ISpendingSourceService
     Task<SpendingSourceDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SpendingSourceDto>> SearchAsync(SpendingSourceFilter filter, CancellationToken cancellationToken = default);
     Task AddAsync(SpendingSourceDto dto, CancellationToken cancellationToken = default);
-    Task DeleteAsync(CancellationToken cancellationToken = default);
-    Task AddIncomeAsync(int spendingSourceId, decimal amount, string notes, CancellationToken cancellationToken = default);
 }

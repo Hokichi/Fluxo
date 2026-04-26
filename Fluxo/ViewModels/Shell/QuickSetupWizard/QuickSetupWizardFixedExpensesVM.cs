@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -19,7 +19,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
     private const string DefaultTagColor = "#75B798";
 
     private readonly MainVM _mainViewModel;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly IMessenger _messenger;
     private QuickSetupWizardSpendingSourcesVM? _spendingSources;
     private readonly Dictionary<int, QuickSetupWizardDraftFixedExpense> _draftExpenses = [];
@@ -33,11 +33,11 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
     public QuickSetupWizardFixedExpensesVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -53,7 +53,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         var spendingSourcesVm = GetSpendingSourcesOrThrow();
         return new AddFixedExpenseVM(
             _mainViewModel,
-            _unitOfWork,
+            _appData,
             spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
             saveDraftAsync: input => SaveDraftExpenseAsync(input, null),
             loadDraftTagsAsync: _ => Task.FromResult<IReadOnlyList<ExpenseTagVM>>(BuildTagOptions()),
@@ -72,7 +72,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
         var vm = new AddFixedExpenseVM(
             _mainViewModel,
-            _unitOfWork,
+            _appData,
             spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
             saveDraftAsync: input => SaveDraftExpenseAsync(input, expense.Id),
             loadDraftTagsAsync: _ => Task.FromResult<IReadOnlyList<ExpenseTagVM>>(BuildTagOptions()),
@@ -118,9 +118,9 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         RefreshProjectionAndPublish();
     }
 
-    public async Task ApplyAsync(IUnitOfWork unitOfWork, IReadOnlyDictionary<int, int> sourceIdMap)
+    public async Task ApplyAsync(IAppDataService appData, IReadOnlyDictionary<int, int> sourceIdMap)
     {
-        var existingExpenses = (await unitOfWork.Expenses.GetAllAsync())
+        var existingExpenses = (await appData.GetExpensesAsync())
             .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
             .ToDictionary(expense => expense.Id);
 
@@ -132,7 +132,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             if (mappedSourceId <= 0)
                 continue;
 
-            var tagId = await ResolveTagIdAsync(unitOfWork, draft);
+            var tagId = await ResolveTagIdAsync(appData, draft);
 
             if (draft.Id > 0 && existingExpenses.TryGetValue(draft.Id, out var persisted))
             {
@@ -143,11 +143,11 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 persisted.SpendingSourceId = mappedSourceId;
                 persisted.ExpenseTagId = tagId;
                 persisted.IsActive = draft.IsActive;
-                unitOfWork.Expenses.Update(persisted);
+                appData.UpdateExpense(persisted);
             }
             else
             {
-                await unitOfWork.Expenses.AddAsync(new Expense
+                await appData.AddExpenseAsync(new Expense
                 {
                     Name = draft.Name,
                     Amount = draft.Amount,
@@ -164,7 +164,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         foreach (var removedId in _removedPersistedIds)
         {
             if (existingExpenses.TryGetValue(removedId, out var existing))
-                unitOfWork.Expenses.Remove(existing);
+                appData.RemoveExpense(existing);
         }
     }
 
@@ -178,7 +178,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
     private async Task LoadDraftExpensesAsync()
     {
-        var persistedTags = await _unitOfWork.ExpenseTags.GetAllAsync();
+        var persistedTags = await _appData.GetExpenseTagsAsync();
         _tagCatalog.Clear();
         foreach (var tag in persistedTags.Where(tag => !tag.IsSystemTag))
         {
@@ -192,7 +192,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         }
 
         var tagNamesById = _tagCatalog.Values.ToDictionary(tag => tag.Id, tag => tag.Name);
-        var persistedExpenses = await _unitOfWork.Expenses.GetAllAsync();
+        var persistedExpenses = await _appData.GetExpensesAsync();
 
         _draftExpenses.Clear();
 
@@ -243,11 +243,11 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         return Task.FromResult(AddFixedExpenseVM.AddFixedExpenseResult.Success(true));
     }
 
-    private async Task<int> ResolveTagIdAsync(IUnitOfWork unitOfWork, QuickSetupWizardDraftFixedExpense draft)
+    private async Task<int> ResolveTagIdAsync(IAppDataService appData, QuickSetupWizardDraftFixedExpense draft)
     {
         if (draft.ExpenseTagId > 0)
         {
-            var existingById = await unitOfWork.ExpenseTags.GetByIdAsync(draft.ExpenseTagId);
+            var existingById = await appData.GetExpenseTagByIdAsync(draft.ExpenseTagId);
             if (existingById is not null && !existingById.IsSystemTag)
                 return existingById.Id;
         }
@@ -256,7 +256,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             ? "General"
             : draft.TagName.Trim();
 
-        var existingTags = await unitOfWork.ExpenseTags.GetAllAsync();
+        var existingTags = await appData.GetExpenseTagsAsync();
         var existingByName = existingTags.FirstOrDefault(tag =>
             !tag.IsSystemTag &&
             string.Equals(tag.Name, desiredTagName, StringComparison.OrdinalIgnoreCase));
@@ -268,8 +268,8 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             Name = desiredTagName,
             HexCode = DefaultTagColor
         };
-        await unitOfWork.ExpenseTags.AddAsync(createdTag);
-        await unitOfWork.SaveChangesAsync();
+        await appData.AddExpenseTagAsync(createdTag);
+        await appData.SaveChangesAsync();
         return createdTag.Id;
     }
 
@@ -350,3 +350,4 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                ?? throw new InvalidOperationException("Startup wizard spending sources were not configured.");
     }
 }
+

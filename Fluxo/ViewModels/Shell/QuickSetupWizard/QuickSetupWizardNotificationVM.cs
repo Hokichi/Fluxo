@@ -3,7 +3,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
 
@@ -11,14 +11,14 @@ namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
 public partial class QuickSetupWizardNotificationVM : ObservableObject
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly IMessenger _messenger;
 
     [ObservableProperty] private bool _isStep6Active;
 
-    public QuickSetupWizardNotificationVM(IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public QuickSetupWizardNotificationVM(IAppDataService appData, IMessenger? messenger = null)
     {
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -26,7 +26,7 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
 
     public async Task LoadAsync()
     {
-        var settings = await _unitOfWork.UserSettings.GetAllAsync();
+        var settings = await _appData.GetUserSettingsAsync();
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 
         ReplaceNotificationSettings(
@@ -73,18 +73,18 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
 
     public async Task<SettingsOperationResult> SaveAsync()
     {
-        await ApplyAsync(_unitOfWork);
-        await _unitOfWork.SaveChangesAsync();
+        await ApplyAsync(_appData);
+        await _appData.SaveChangesAsync();
         _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.Notifications));
         PublishSnapshot();
         return SettingsOperationResult.Success();
     }
 
-    public async Task ApplyAsync(IUnitOfWork unitOfWork)
+    public async Task ApplyAsync(IAppDataService appData)
     {
         foreach (var setting in NotificationSettings)
             await QuickSetupWizardShared.UpsertUserSettingAsync(
-                unitOfWork,
+                appData,
                 setting.SettingName,
                 setting.IsEnabled.ToString());
     }
@@ -116,3 +116,4 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
                 TotalCount: NotificationSettings.Count)));
     }
 }
+

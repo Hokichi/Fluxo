@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.Ui;
 using Fluxo.Services.History;
@@ -29,13 +29,13 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     private readonly MainVM _mainViewModel;
     private readonly IUiSettleAwaiter _uiSettleAwaiter;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private bool _isBudgetPending;
     private bool _isPersonalizationPending;
 
     public SettingsVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         IUiSettleAwaiter uiSettleAwaiter,
         SettingsBudgetTabVM budgetTab,
         SettingsSourcesTabVM sourcesTab,
@@ -47,7 +47,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _uiSettleAwaiter = uiSettleAwaiter;
         BudgetTab = budgetTab;
         SourcesTab = sourcesTab;
@@ -125,7 +125,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         if (actions.Count == 0)
             return SettingsOperationResult.Success();
 
-        await _unitOfWork.SaveChangesAsync();
+        await _appData.SaveChangesAsync();
 
         if (!string.Equals(newUsername, oldUsername, StringComparison.Ordinal))
             Messenger.Send(new UsernameChangedMessage(newUsername ?? "User"));
@@ -244,12 +244,12 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         try
         {
-            var settings = await _unitOfWork.UserSettings.GetAllAsync();
+            var settings = await _appData.GetUserSettingsAsync();
             var actions = await ApplySettingsResetPolicyAsync(settings, trackActions: true);
 
             if (actions.Count > 0)
             {
-                await _unitOfWork.SaveChangesAsync();
+                await _appData.SaveChangesAsync();
                 SettingsShared.RecordActions(actions, Messenger);
             }
 
@@ -271,37 +271,37 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         try
         {
-            var expenseLogs = await _unitOfWork.ExpenseLogs.GetAllAsync();
-            var incomeLogs = await _unitOfWork.IncomeLogs.GetAllAsync();
-            var expenses = await _unitOfWork.Expenses.GetAllAsync();
-            var savingGoals = await _unitOfWork.SavingGoals.GetAllAsync();
-            var spendingSources = await _unitOfWork.SpendingSources.GetAllAsync();
-            var tags = await _unitOfWork.ExpenseTags.GetAllAsync();
-            var settings = keepSettings ? [] : await _unitOfWork.UserSettings.GetAllAsync();
+            var expenseLogs = await _appData.GetExpenseLogsAsync();
+            var incomeLogs = await _appData.GetIncomeLogsAsync();
+            var expenses = await _appData.GetExpensesAsync();
+            var savingGoals = await _appData.GetSavingGoalsAsync();
+            var spendingSources = await _appData.GetSpendingSourcesAsync();
+            var tags = await _appData.GetExpenseTagsAsync();
+            var settings = keepSettings ? [] : await _appData.GetUserSettingsAsync();
 
             foreach (var tag in tags)
                 if (ShouldDeleteTagOnDeleteAllData(tag))
-                    _unitOfWork.ExpenseTags.Remove(tag);
+                    _appData.RemoveExpenseTag(tag);
 
             foreach (var source in spendingSources)
-                _unitOfWork.SpendingSources.Remove(source);
+                _appData.RemoveSpendingSource(source);
 
             foreach (var expense in expenses)
-                _unitOfWork.Expenses.Remove(expense);
+                _appData.RemoveExpense(expense);
 
             foreach (var expenseLog in expenseLogs)
-                _unitOfWork.ExpenseLogs.Remove(expenseLog);
+                _appData.RemoveExpenseLog(expenseLog);
 
             foreach (var incomeLog in incomeLogs)
-                _unitOfWork.IncomeLogs.Remove(incomeLog);
+                _appData.RemoveIncomeLog(incomeLog);
 
             foreach (var goal in savingGoals)
-                _unitOfWork.SavingGoals.Remove(goal);
+                _appData.RemoveSavingGoal(goal);
 
             if (!keepSettings)
                 await ApplySettingsResetPolicyAsync(settings, trackActions: false);
 
-            await _unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             Messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();
@@ -468,7 +468,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         {
             if (removedSettingNames.Contains(setting.Name))
             {
-                _unitOfWork.UserSettings.Remove(setting);
+                _appData.RemoveUserSetting(setting);
                 if (trackActions)
                 {
                     actions.Add(new SetUserSettingMemoryAction(
@@ -488,7 +488,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
             var beforeSnapshot = UserSettingMemorySnapshot.Create(setting);
             setting.Value = desiredValue;
-            _unitOfWork.UserSettings.Update(setting);
+            _appData.UpdateUserSetting(setting);
 
             if (trackActions)
             {
@@ -500,7 +500,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
         foreach (var (name, value) in upsertSettingValues)
         {
-            await _unitOfWork.UserSettings.AddAsync(new UserSettings { Name = name, Value = value });
+            await _appData.AddUserSettingAsync(new UserSettings { Name = name, Value = value });
 
             if (trackActions)
             {
@@ -513,3 +513,4 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return actions;
     }
 }
+

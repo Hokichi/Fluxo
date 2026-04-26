@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Popups;
@@ -20,7 +20,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
 
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly HashSet<SettingsFixedExpenseItemVM> _fixedExpensesVisibleWindow = [];
     private int _visibleFixedExpenseCount = PageSize;
 
@@ -28,10 +28,10 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
     [ObservableProperty] private bool _hasMoreItems;
     [ObservableProperty] private bool _isLoading;
 
-    public SettingsFixedExpensesTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public SettingsFixedExpensesTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
 
         FixedExpensesView = CollectionViewSource.GetDefaultView(FixedExpenses);
@@ -59,7 +59,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
 
     public AddFixedExpenseVM CreateAddFixedExpenseViewModel()
     {
-        return new AddFixedExpenseVM(_mainViewModel, _unitOfWork);
+        return new AddFixedExpenseVM(_mainViewModel, _appData);
     }
 
     public async Task OpenAddFixedExpenseAsync()
@@ -109,7 +109,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
             switch (action)
             {
                 case SettingsBatchAction.Delete:
-                    var expenseLogs = await _unitOfWork.ExpenseLogs.GetAllAsync();
+                    var expenseLogs = await _appData.GetExpenseLogsAsync();
 
                     foreach (var selectedItem in selectedItems)
                     {
@@ -117,12 +117,12 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
                             return SettingsOperationResult.Failure(
                                 $"{selectedItem.Name} still has logged activity, so it can't be deleted yet.");
 
-                        var expense = await _unitOfWork.Expenses.GetByIdAsync(selectedItem.Id);
+                        var expense = await _appData.GetExpenseByIdAsync(selectedItem.Id);
                         if (expense is null)
                             continue;
 
                         var snapshot = ExpenseMemorySnapshot.Create(expense);
-                        _unitOfWork.Expenses.Remove(expense);
+                        _appData.RemoveExpense(expense);
                         actions.Add(new DeleteExpenseMemoryAction(snapshot));
                     }
 
@@ -132,7 +132,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
                 case SettingsBatchAction.Enable:
                     foreach (var selectedItem in selectedItems)
                     {
-                        var expense = await _unitOfWork.Expenses.GetByIdAsync(selectedItem.Id);
+                        var expense = await _appData.GetExpenseByIdAsync(selectedItem.Id);
                         if (expense is null)
                             continue;
 
@@ -153,7 +153,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
                         if (!updated)
                             continue;
 
-                        _unitOfWork.Expenses.Update(expense);
+                        _appData.UpdateExpense(expense);
                         var afterSnapshot = ExpenseMemorySnapshot.Create(expense);
                         actions.Add(new EditExpenseMemoryAction(beforeSnapshot, afterSnapshot));
                     }
@@ -169,7 +169,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
             if (actions.Count == 0)
                 return SettingsOperationResult.Failure("Nothing changed for the selected fixed expenses.");
 
-            await _unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.FixedExpenses));
             _messenger.Send(new DashboardDataInvalidatedMessage(
@@ -202,7 +202,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
 
     public async Task RefreshFixedExpensesAsync(bool resetPagination = true)
     {
-        SettingsShared.ReplaceCollection(FixedExpenses, (await _unitOfWork.Expenses.GetAllAsync())
+        SettingsShared.ReplaceCollection(FixedExpenses, (await _appData.GetExpensesAsync())
             .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
             .OrderBy(expense => expense.Name)
             .Select(expense => new SettingsFixedExpenseItemVM(expense)));
@@ -346,3 +346,4 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         return selectedItems.Length > 0 ? selectedItems : items.ToArray();
     }
 }
+

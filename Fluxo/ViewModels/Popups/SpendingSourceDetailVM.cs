@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Helpers;
@@ -15,6 +15,8 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class SpendingSourceDetailVM : ObservableObject
 {
+    private readonly IAppDataService _appData;
+
     [ObservableProperty] private decimal _accountLimitText;
     [ObservableProperty] private decimal _apyText;
     [ObservableProperty] private bool _isBusy;
@@ -32,11 +34,11 @@ public partial class SpendingSourceDetailVM : ObservableObject
     [ObservableProperty] private decimal _spentAmountText;
     [ObservableProperty] private decimal _trendMaximum = 1m;
 
-    public SpendingSourceDetailVM(MainVM mainViewModel, int spendingSourceId, IUnitOfWork uow)
+    public SpendingSourceDetailVM(MainVM mainViewModel, int spendingSourceId, IAppDataService appData)
     {
         MainViewModel = mainViewModel;
         SpendingSourceId = spendingSourceId;
-        UnitOfWork = uow;
+        _appData = appData;
     }
 
     public ObservableCollection<SpendingSourceActivityItemVM> RecentActivities { get; } = [];
@@ -45,7 +47,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public MainVM MainViewModel { get; }
 
-    public IUnitOfWork UnitOfWork { get; }
+    public IAppDataService AppData => _appData;
 
     public int SpendingSourceId { get; }
 
@@ -181,7 +183,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
+            var spendingSource = await _appData.GetSpendingSourceByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
@@ -189,8 +191,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
             ApplyInput(spendingSource, input);
 
-            UnitOfWork.SpendingSources.Update(spendingSource);
-            await UnitOfWork.SaveChangesAsync();
+            _appData.UpdateSpendingSource(spendingSource);
+            await _appData.SaveChangesAsync();
 
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
@@ -230,15 +232,15 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
+            var spendingSource = await _appData.GetSpendingSourceByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
             spendingSource.ShowOnUI = !spendingSource.ShowOnUI;
-            UnitOfWork.SpendingSources.Update(spendingSource);
-            await UnitOfWork.SaveChangesAsync();
+            _appData.UpdateSpendingSource(spendingSource);
+            await _appData.SaveChangesAsync();
 
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
@@ -274,15 +276,15 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
+            var spendingSource = await _appData.GetSpendingSourceByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
             spendingSource.IsEnabled = !spendingSource.IsEnabled;
-            UnitOfWork.SpendingSources.Update(spendingSource);
-            await UnitOfWork.SaveChangesAsync();
+            _appData.UpdateSpendingSource(spendingSource);
+            await _appData.SaveChangesAsync();
 
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             WeakReferenceMessenger.Default.Send(
@@ -315,23 +317,23 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var allExpenseLogs = await UnitOfWork.ExpenseLogs.GetAllAsync();
+            var allExpenseLogs = await _appData.GetExpenseLogsAsync();
             var expenseLogs = allExpenseLogs.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
-            var allIncomeLogs = await UnitOfWork.IncomeLogs.GetAllAsync();
+            var allIncomeLogs = await _appData.GetIncomeLogsAsync();
             var incomeLogs = allIncomeLogs.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
 
             if (expenseLogs.Any(log => !log.IsForDeletion) || incomeLogs.Count > 0)
                 return SpendingSourceDetailResult.Failure(
                     "This spending source still has activity, so it can't be deleted yet.");
 
-            var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
+            var spendingSource = await _appData.GetSpendingSourceByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
             var snapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
-            UnitOfWork.SpendingSources.Remove(spendingSource);
-            await UnitOfWork.SaveChangesAsync();
+            _appData.RemoveSpendingSource(spendingSource);
+            await _appData.SaveChangesAsync();
 
             WeakReferenceMessenger.Default.Send(
                 new RecordLogMemoryMessage(new DeleteSpendingSourceMemoryAction(snapshot)));
@@ -360,17 +362,17 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     private async Task<bool> RefreshAsync(bool resetDraft)
     {
-        var spendingSource = await UnitOfWork.SpendingSources.GetByIdAsync(SpendingSourceId);
+        var spendingSource = await _appData.GetSpendingSourceByIdAsync(SpendingSourceId);
         if (spendingSource is null)
             return false;
 
         await LoadDeductSourcesAsync();
 
-        var allExpenseLogs = await UnitOfWork.ExpenseLogs.GetAllAsync();
+        var allExpenseLogs = await _appData.GetExpenseLogsAsync();
         var expenseLogs = allExpenseLogs
             .Where(log => log.SpendingSourceId == SpendingSourceId && !log.IsForDeletion)
             .ToList();
-        var allIncomeLogsRaw = await UnitOfWork.IncomeLogs.GetAllAsync();
+        var allIncomeLogsRaw = await _appData.GetIncomeLogsAsync();
         var incomeLogs = allIncomeLogsRaw.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
 
         MoneyIn = incomeLogs.Sum(log => log.Amount);
@@ -511,7 +513,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     private async Task LoadDeductSourcesAsync()
     {
-        var options = (await UnitOfWork.SpendingSources.GetAllAsync())
+        var options = (await _appData.GetSpendingSourcesAsync())
             .Where(source => source.Id != SpendingSourceId)
             .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
             .OrderBy(source => source.Name)

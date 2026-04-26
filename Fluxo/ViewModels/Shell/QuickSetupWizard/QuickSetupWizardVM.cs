@@ -1,10 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Data.Context;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -19,7 +20,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
     IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>
 {
     private readonly MainVM _mainViewModel;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly IDataOperationScopeFactory _dataOperationScopeFactory;
     private IDataOperationScope? _stagedScope;
     private Func<Task>? _stagedCommitAsync;
@@ -30,7 +31,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
 
     public QuickSetupWizardVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         IDataOperationScopeFactory dataOperationScopeFactory,
         QuickSetupWizardGreetingPageVM greetingPage,
         QuickSetupWizardNamePageVM namePage,
@@ -41,7 +42,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _dataOperationScopeFactory = dataOperationScopeFactory;
 
         GreetingPage = greetingPage;
@@ -242,16 +243,16 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
             var stagedTransaction = transaction ??
                 throw new InvalidOperationException("Unable to begin startup wizard staging transaction.");
 
-            var stagedUnitOfWork = scope.UnitOfWork;
-            await NamePage.ApplyAsync(stagedUnitOfWork);
-            await MiddlePage.BudgetAllocation.ApplyAsync(stagedUnitOfWork);
-            await MiddlePage.Notification.ApplyAsync(stagedUnitOfWork);
-            await MiddlePage.SpendingSources.ApplyAsync(stagedUnitOfWork);
+            var stagedAppData = new AppDataService(scope.UnitOfWork);
+            await NamePage.ApplyAsync(stagedAppData);
+            await MiddlePage.BudgetAllocation.ApplyAsync(stagedAppData);
+            await MiddlePage.Notification.ApplyAsync(stagedAppData);
+            await MiddlePage.SpendingSources.ApplyAsync(stagedAppData);
             await MiddlePage.FixedExpenses.ApplyAsync(
-                stagedUnitOfWork,
+                stagedAppData,
                 MiddlePage.SpendingSources.LastPersistedIdMap);
-            await MiddlePage.SavingGoals.ApplyAsync(stagedUnitOfWork);
-            await stagedUnitOfWork.SaveChangesAsync();
+            await MiddlePage.SavingGoals.ApplyAsync(stagedAppData);
+            await stagedAppData.SaveChangesAsync();
 
             _stagedScope = scope;
             _stagedCommitAsync = async () =>
@@ -372,7 +373,8 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
 
     private async Task SaveIsFirstRunAsync(bool isFirstRun)
     {
-        await QuickSetupWizardShared.UpsertUserSettingAsync(_unitOfWork, UserSettingNames.IsFirstRun, isFirstRun.ToString());
-        await _unitOfWork.SaveChangesAsync();
+        await QuickSetupWizardShared.UpsertUserSettingAsync(_appData, UserSettingNames.IsFirstRun, isFirstRun.ToString());
+        await _appData.SaveChangesAsync();
     }
 }
+

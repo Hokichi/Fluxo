@@ -1,7 +1,6 @@
-﻿using Fluxo.Core.Entities;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
-using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Planning;
 using NSubstitute;
@@ -45,15 +44,15 @@ public class PlanningPopupVMTests
     [Fact]
     public async Task SetImportFixedExpensesAsync_LoadsFromDbOnceAndReusesCacheAfterToggle()
     {
-        var expenseRepository = Substitute.For<IExpenseRepository>();
-        expenseRepository.GetAllAsync(Arg.Any<CancellationToken>())
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetExpensesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Expense>>([
                 CreateExpense(1, ExpenseKind.Fixed, "Rent"),
                 CreateExpense(2, ExpenseKind.Fixed, "Internet"),
                 CreateExpense(3, ExpenseKind.Manual, "Lunch")
             ]));
 
-        var vm = CreateVm([], expenseRepository);
+        var vm = CreateVm([], appData);
         vm.Expenses.Add(new ExpenseVM
         {
             Id = 99,
@@ -77,7 +76,7 @@ public class PlanningPopupVMTests
 
         Assert.Equal(3, vm.Expenses.Count);
         Assert.Equal(2, vm.Expenses.Count(expense => expense.ExpenseKind == ExpenseKind.Fixed));
-        await expenseRepository.Received(1).GetAllAsync(Arg.Any<CancellationToken>());
+        await appData.Received(1).GetExpensesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -141,9 +140,9 @@ public class PlanningPopupVMTests
     [Fact]
     public async Task BuildSnapshot_RoundTripsImportedFixedExpenseCacheAndState()
     {
-        var expenseRepository = Substitute.For<IExpenseRepository>();
+        var appData = Substitute.For<IAppDataService>();
         var callCount = 0;
-        expenseRepository.GetAllAsync(Arg.Any<CancellationToken>())
+        appData.GetExpensesAsync(Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
                 callCount++;
@@ -156,14 +155,11 @@ public class PlanningPopupVMTests
                 ]);
             });
 
-        var unitOfWork = Substitute.For<IUnitOfWork>();
-        unitOfWork.Expenses.Returns(expenseRepository);
-
-        var vm = new PlanningPopupVM(unitOfWork);
+        var vm = new PlanningPopupVM(appData);
         await vm.SetImportFixedExpensesAsync(true);
 
         var snapshot = vm.BuildSnapshot();
-        var restoredVm = new PlanningPopupVM(unitOfWork, snapshot);
+        var restoredVm = new PlanningPopupVM(appData, snapshot);
 
         Assert.Single(restoredVm.Expenses);
         Assert.Equal(1, restoredVm.Expenses[0].Id);
@@ -181,23 +177,20 @@ public class PlanningPopupVMTests
     [Fact]
     public async Task BuildSnapshot_RoundTripsLoadedEmptyFixedExpenseCacheWithoutExtraDbCall()
     {
-        var expenseRepository = Substitute.For<IExpenseRepository>();
+        var appData = Substitute.For<IAppDataService>();
         var callCount = 0;
-        expenseRepository.GetAllAsync(Arg.Any<CancellationToken>())
+        appData.GetExpensesAsync(Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
                 callCount++;
                 return Task.FromResult<IReadOnlyList<Expense>>([]);
             });
 
-        var unitOfWork = Substitute.For<IUnitOfWork>();
-        unitOfWork.Expenses.Returns(expenseRepository);
-
-        var vm = new PlanningPopupVM(unitOfWork);
+        var vm = new PlanningPopupVM(appData);
         await vm.SetImportFixedExpensesAsync(true);
 
         var snapshot = vm.BuildSnapshot();
-        var restoredVm = new PlanningPopupVM(unitOfWork, snapshot);
+        var restoredVm = new PlanningPopupVM(appData, snapshot);
 
         await restoredVm.SetImportFixedExpensesAsync(true);
 
@@ -207,19 +200,16 @@ public class PlanningPopupVMTests
 
     private static PlanningPopupVM CreateVm(
         IReadOnlyList<Expense> fixedExpenses,
-        IExpenseRepository? expenseRepository = null)
+        IAppDataService? appData = null)
     {
-        if (expenseRepository is null)
+        if (appData is null)
         {
-            expenseRepository = Substitute.For<IExpenseRepository>();
-            expenseRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            appData = Substitute.For<IAppDataService>();
+            appData.GetExpensesAsync(Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(fixedExpenses));
         }
 
-        var unitOfWork = Substitute.For<IUnitOfWork>();
-        unitOfWork.Expenses.Returns(expenseRepository);
-
-        return new PlanningPopupVM(unitOfWork);
+        return new PlanningPopupVM(appData);
     }
 
     private static IncomeLogVM CreateIncome(int id, decimal amount)
@@ -302,3 +292,4 @@ public class PlanningPopupVMTests
         };
     }
 }
+

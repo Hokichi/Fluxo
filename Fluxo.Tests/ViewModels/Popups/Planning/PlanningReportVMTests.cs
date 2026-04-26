@@ -1,5 +1,5 @@
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Planning;
 using NSubstitute;
@@ -92,8 +92,8 @@ public class PlanningReportVMTests
         Assert.NotSame(addedIncome, report.Incomes[1]);
         Assert.NotSame(addedExpense, report.Expenses[1]);
         Assert.Equal(450m, report.TotalIncome);
-        Assert.Equal(550m, report.TotalExpenses);
-        Assert.Equal(-100m, report.Balance);
+        Assert.Equal(600m, report.TotalExpenses);
+        Assert.Equal(-150m, report.Balance);
 
         Assert.True(report.RemoveIncome(addedIncome));
         Assert.True(report.RemoveExpense(addedExpense));
@@ -109,8 +109,10 @@ public class PlanningReportVMTests
 
     private static PlanningPopupVM CreatePopupVm()
     {
-        var unitOfWork = Substitute.For<IUnitOfWork>();
-        return new PlanningPopupVM(unitOfWork);
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetExpensesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.Entities.Expense>>([]));
+        return new PlanningPopupVM(appData);
     }
 
     private static IncomeLogVM CreateIncome(int id, decimal amount)
@@ -163,3 +165,6 @@ public class PlanningReportVMTests
         };
     }
 }
+
+
+

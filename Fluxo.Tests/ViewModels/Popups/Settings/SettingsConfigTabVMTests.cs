@@ -3,6 +3,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups.Settings;
 using Xunit;
 
@@ -19,7 +20,7 @@ public sealed class SettingsConfigTabVMTests
         messenger.Register<PendingRecipient, SettingsPendingChangesChangedMessage>(recipient,
             static (r, m) => r.Messages.Add(m));
 
-        var vm = new SettingsBudgetTabVM(() => 1000m, new NullUnitOfWork(), messenger);
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()), messenger);
         vm.IncrementAllocation(BudgetAllocationSegment.Needs, 5);
 
         Assert.Contains(captured, m =>
@@ -36,7 +37,7 @@ public sealed class SettingsConfigTabVMTests
         messenger.Register<PendingRecipient, SettingsPendingChangesChangedMessage>(recipient,
             static (r, m) => r.Messages.Add(m));
 
-        var vm = new SettingsPersonalizationTabVM(new NullUnitOfWork(), messenger);
+        var vm = new SettingsPersonalizationTabVM(new AppDataService(new NullUnitOfWork()), messenger);
         vm.PreferredAppName = "Fluxo";
 
         Assert.Contains(captured, m =>

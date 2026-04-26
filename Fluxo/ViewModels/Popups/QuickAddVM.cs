@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -22,7 +22,7 @@ public partial class QuickAddVM : ObservableObject
     private readonly List<SavingGoalVM> _orderedGoals = [];
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
-    private readonly IUnitOfWork _uow;
+    private readonly IAppDataService _appData;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
 
@@ -40,10 +40,10 @@ public partial class QuickAddVM : ObservableObject
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
 
-    public QuickAddVM(MainVM mainViewModel, IUnitOfWork uoW)
+    public QuickAddVM(MainVM mainViewModel, IAppDataService appData)
     {
         _mainViewModel = mainViewModel;
-        _uow = uoW;
+        _appData = appData;
 
         ReloadChoicesFromMainViewModel();
         ResetForm(false);
@@ -178,7 +178,7 @@ public partial class QuickAddVM : ObservableObject
 
         try
         {
-            var spendingSource = await _uow.SpendingSources.GetByIdAsync(input.SpendingSourceId);
+            var spendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
             if (spendingSource is null)
                 return QuickAddSubmissionResult.Failure("Please select a valid spending source.");
 
@@ -192,11 +192,11 @@ public partial class QuickAddVM : ObservableObject
                 if (!GoalUpdateTransactionSupport.IsEligibleGoalSourceType(spendingSource.SpendingSourceType))
                     return QuickAddSubmissionResult.Failure("Goal updates can only be taken from Cash or Checking.");
 
-                var goal = await _uow.SavingGoals.GetByIdAsync(input.GoalId.Value);
+                var goal = await _appData.GetSavingGoalByIdAsync(input.GoalId.Value);
                 if (goal is null)
                     return QuickAddSubmissionResult.Failure("Please select a valid goal.");
 
-                var goalUpdateTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(_uow);
+                var goalUpdateTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(_appData);
                 var expense = new Expense
                 {
                     Name = BuildGoalUpdateName(goal.Name),
@@ -221,14 +221,14 @@ public partial class QuickAddVM : ObservableObject
 
                 goal.CurrentAmount += input.Amount;
 
-                await _uow.Expenses.AddAsync(expense);
-                await _uow.ExpenseLogs.AddAsync(expenseLog);
-                _uow.SavingGoals.Update(goal);
+                await _appData.AddExpenseAsync(expense);
+                await _appData.AddExpenseLogAsync(expenseLog);
+                _appData.UpdateSavingGoal(goal);
 
                 ApplyExpenseToSpendingSource(spendingSource, input.Amount);
-                _uow.SpendingSources.Update(spendingSource);
+                _appData.UpdateSpendingSource(spendingSource);
 
-                await _uow.SaveChangesAsync();
+                await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
                     new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
                         expense.Id,
@@ -249,7 +249,7 @@ public partial class QuickAddVM : ObservableObject
             }
             else if (input.IsExpense)
             {
-                var expenseTag = await _uow.ExpenseTags.GetByIdAsync(input.TagId!.Value);
+                var expenseTag = await _appData.GetExpenseTagByIdAsync(input.TagId!.Value);
                 if (expenseTag is null)
                     return QuickAddSubmissionResult.Failure("Please select a valid tag.");
 
@@ -275,13 +275,13 @@ public partial class QuickAddVM : ObservableObject
                     SpendingSourceId = spendingSource.Id
                 };
 
-                await _uow.Expenses.AddAsync(expense);
-                await _uow.ExpenseLogs.AddAsync(expenseLog);
+                await _appData.AddExpenseAsync(expense);
+                await _appData.AddExpenseLogAsync(expenseLog);
 
                 ApplyExpenseToSpendingSource(spendingSource, input.Amount);
-                _uow.SpendingSources.Update(spendingSource);
+                _appData.UpdateSpendingSource(spendingSource);
 
-                await _uow.SaveChangesAsync();
+                await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
                     new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
                         expense.Id,
@@ -308,12 +308,12 @@ public partial class QuickAddVM : ObservableObject
                     SpendingSourceId = spendingSource.Id
                 };
 
-                await _uow.IncomeLogs.AddAsync(incomeLog);
+                await _appData.AddIncomeLogAsync(incomeLog);
 
                 ApplyIncomeToSpendingSource(spendingSource, input.Amount);
-                _uow.SpendingSources.Update(spendingSource);
+                _appData.UpdateSpendingSource(spendingSource);
 
-                await _uow.SaveChangesAsync();
+                await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
                     new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
                         incomeLog.Id,

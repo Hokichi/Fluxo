@@ -140,7 +140,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
             SpendingSourceType = _viewModel.SpendingSourceType,
             IsEnabled = _viewModel.IsEnabled,
             ShowOnUI = _viewModel.ShowOnUI
-        }, _viewModel.UnitOfWork);
+        }, _viewModel.AppData);
 
         _dialogService.ShowTransferFunds(transferVm, this);
         _ = _viewModel.LoadAsync();

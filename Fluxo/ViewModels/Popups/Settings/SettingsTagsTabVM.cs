@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -15,12 +15,12 @@ public partial class SettingsTagsTabVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
 
-    public SettingsTagsTabVM(MainVM mainViewModel, IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public SettingsTagsTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -41,7 +41,7 @@ public partial class SettingsTagsTabVM : ObservableObject
 
     public async Task RefreshTagsAsync()
     {
-        SettingsShared.ReplaceCollection(Tags, (await _unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync())
+        SettingsShared.ReplaceCollection(Tags, (await _appData.GetExpenseTagsByCountDescendingAsync())
             .Select(item => new ExpenseTagVM
             {
                 Id = item.Tag.Id,
@@ -63,17 +63,17 @@ public partial class SettingsTagsTabVM : ObservableObject
 
         try
         {
-            var existingTags = await _unitOfWork.ExpenseTags.GetAllAsync();
+            var existingTags = await _appData.GetExpenseTagsAsync();
             if (existingTags.Any(tag => string.Equals(tag.Name, trimmedName, StringComparison.OrdinalIgnoreCase)))
                 return SettingsOperationResult.Failure($"A tag named \"{trimmedName}\" already exists.");
 
-            await _unitOfWork.ExpenseTags.AddAsync(new ExpenseTag
+            await _appData.AddExpenseTagAsync(new ExpenseTag
             {
                 Name = trimmedName,
                 HexCode = normalizedHexCode
             });
 
-            await _unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Tags));
             _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();
@@ -94,19 +94,19 @@ public partial class SettingsTagsTabVM : ObservableObject
 
         try
         {
-            var expenseTag = await _unitOfWork.ExpenseTags.GetByIdAsync(tag.Id);
+            var expenseTag = await _appData.GetExpenseTagByIdAsync(tag.Id);
             if (expenseTag is null)
                 return SettingsOperationResult.Failure("That tag could not be found anymore.");
 
-            var allExpenses = await _unitOfWork.Expenses.GetAllAsync();
+            var allExpenses = await _appData.GetExpensesAsync();
             var linkedExpenses = allExpenses.Where(e => e.ExpenseTagId == tag.Id).ToList();
             if (linkedExpenses.Count > 0)
                 return SettingsOperationResult.Failure(
                     $"{tag.Name} is still assigned to one or more expenses, so it can't be deleted yet.");
 
             var snapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
-            _unitOfWork.ExpenseTags.Remove(expenseTag);
-            await _unitOfWork.SaveChangesAsync();
+            _appData.RemoveExpenseTag(expenseTag);
+            await _appData.SaveChangesAsync();
 
             SettingsShared.RecordActions([new DeleteExpenseTagMemoryAction(snapshot)], _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Tags));
@@ -138,3 +138,4 @@ public partial class SettingsTagsTabVM : ObservableObject
                                                           (character >= 'A' && character <= 'F'));
     }
 }
+

@@ -1,6 +1,7 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups;
 using Xunit;
 
@@ -21,7 +22,7 @@ public sealed class GoalUpdateTransactionSupportTests
         var expenseTagRepository = new TestExpenseTagRepository([existingTag]);
         var unitOfWork = new TestUnitOfWork(expenseTagRepository);
 
-        var resolvedTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(unitOfWork);
+        var resolvedTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(new AppDataService(unitOfWork));
 
         Assert.Equal(existingTag.Id, resolvedTag.Id);
         Assert.Equal(1, expenseTagRepository.Tags.Count);
@@ -34,7 +35,7 @@ public sealed class GoalUpdateTransactionSupportTests
         var expenseTagRepository = new TestExpenseTagRepository([]);
         var unitOfWork = new TestUnitOfWork(expenseTagRepository);
 
-        var resolvedTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(unitOfWork);
+        var resolvedTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(new AppDataService(unitOfWork));
 
         Assert.Equal("Goal Update", resolvedTag.Name);
         Assert.Equal("#aed4e1", resolvedTag.HexCode);

@@ -4,7 +4,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Popups.Planning;
@@ -19,7 +19,7 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
     private readonly HashSet<int> _importedFixedExpenseIds = [];
     private readonly List<ExpenseVM> _trackedExpenseSubscriptions = [];
     private readonly List<IncomeLogVM> _trackedIncomeSubscriptions = [];
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private bool _fixedExpensesLoaded;
     private bool _disposed;
 
@@ -27,9 +27,9 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
     [ObservableProperty] private int _needsPercent = DefaultNeedsPercent;
     [ObservableProperty] private int _wantsPercent = DefaultWantsPercent;
 
-    public PlanningPopupVM(IUnitOfWork unitOfWork, PlanningSnapshot? snapshot = null)
+    public PlanningPopupVM(IAppDataService appData, PlanningSnapshot? snapshot = null)
     {
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         Incomes.CollectionChanged += OnIncomesChanged;
         Expenses.CollectionChanged += OnExpensesChanged;
 
@@ -58,7 +58,7 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
 
         if (!_fixedExpensesLoaded)
         {
-            var expenses = await _unitOfWork.Expenses.GetAllAsync();
+            var expenses = await _appData.GetExpensesAsync();
             foreach (var expense in expenses.Where(expense => expense.ExpenseKind == ExpenseKind.Fixed))
                 _cachedFixedExpenses[expense.Id] = MapExpense(expense);
 

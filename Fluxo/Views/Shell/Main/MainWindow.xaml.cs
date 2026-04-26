@@ -10,8 +10,8 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -705,8 +705,8 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
         using var scope = _serviceProvider.CreateScope();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var popupViewModel = new QuickAddVM(_mainVM, unitOfWork);
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popupViewModel = new QuickAddVM(_mainVM, appData);
         if (draft is { } popupDraft)
             popupViewModel.InitializeFromDraft(popupDraft);
 
@@ -716,8 +716,8 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
     {
         using var scope = _serviceProvider.CreateScope();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, unitOfWork);
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, appData);
         _dialogService.ShowExpenseDetail(popupViewModel, this);
     }
 
@@ -800,8 +800,8 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
     {
         using var scope = _serviceProvider.CreateScope();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var popupViewModel = new SpendingSourceDetailVM(_mainVM, spendingSource.Id, unitOfWork);
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popupViewModel = new SpendingSourceDetailVM(_mainVM, spendingSource.Id, appData);
         _dialogService.ShowSpendingSourceDetail(popupViewModel, this);
     }
 
@@ -833,8 +833,8 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         using var scope = _serviceProvider.CreateScope();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var transferVm = new TransferFundsVM(_mainVM, spendingSource, unitOfWork);
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var transferVm = new TransferFundsVM(_mainVM, spendingSource, appData);
         _dialogService.ShowTransferFunds(transferVm, this);
     }
 

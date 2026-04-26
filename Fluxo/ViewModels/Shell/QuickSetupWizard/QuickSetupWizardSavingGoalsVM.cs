@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -12,7 +12,7 @@ namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly IMessenger _messenger;
     private readonly Dictionary<int, QuickSetupWizardDraftSavingGoal> _draftGoals = [];
     private readonly HashSet<int> _removedPersistedIds = [];
@@ -23,11 +23,11 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
 
     public QuickSetupWizardSavingGoalsVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -37,7 +37,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
     {
         return new AddSavingGoalVM(
             _mainViewModel,
-            _unitOfWork,
+            _appData,
             saveDraftAsync: input => SaveDraftGoalAsync(input, null));
     }
 
@@ -51,7 +51,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
 
         return new AddSavingGoalVM(
             _mainViewModel,
-            _unitOfWork,
+            _appData,
             saveDraftAsync: input => SaveDraftGoalAsync(input, goal.Id))
         {
             EditingId = goal.Id,
@@ -80,9 +80,9 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
         RefreshProjectionAndPublish();
     }
 
-    public async Task ApplyAsync(IUnitOfWork unitOfWork)
+    public async Task ApplyAsync(IAppDataService appData)
     {
-        var existingGoals = (await unitOfWork.SavingGoals.GetAllAsync())
+        var existingGoals = (await appData.GetSavingGoalsAsync())
             .ToDictionary(goal => goal.Id);
 
         foreach (var draft in _draftGoals.Values.OrderBy(goal => goal.Id))
@@ -93,11 +93,11 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
                 persisted.TargetAmount = draft.TargetAmount;
                 persisted.CurrentAmount = draft.CurrentAmount;
                 persisted.SavingEndDate = draft.SavingEndDate;
-                unitOfWork.SavingGoals.Update(persisted);
+                appData.UpdateSavingGoal(persisted);
             }
             else
             {
-                await unitOfWork.SavingGoals.AddAsync(new SavingGoal
+                await appData.AddSavingGoalAsync(new SavingGoal
                 {
                     Name = draft.Name,
                     TargetAmount = draft.TargetAmount,
@@ -111,7 +111,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
         foreach (var removedId in _removedPersistedIds)
         {
             if (existingGoals.TryGetValue(removedId, out var existing))
-                unitOfWork.SavingGoals.Remove(existing);
+                appData.RemoveSavingGoal(existing);
         }
     }
 
@@ -123,7 +123,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
 
     private async Task LoadDraftGoalsAsync()
     {
-        var persistedGoals = await _unitOfWork.SavingGoals.GetAllAsync();
+        var persistedGoals = await _appData.GetSavingGoalsAsync();
 
         _draftGoals.Clear();
         foreach (var goal in persistedGoals)
@@ -172,3 +172,4 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
         PublishSnapshot();
     }
 }
+

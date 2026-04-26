@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Helpers;
@@ -19,7 +19,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     private const string BalanceUpdateTagName = "Balance Update";
 
     private readonly MainVM _mainViewModel;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly Func<AddSpendingSourceInput, Task<AddSpendingSourceResult>>? _saveDraftAsync;
     private readonly Func<int?, Task<IReadOnlyList<DeductSourceOption>>>? _loadDraftDeductSourcesAsync;
     private FormState _initialState;
@@ -41,12 +41,12 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     public AddSpendingSourceVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         Func<AddSpendingSourceInput, Task<AddSpendingSourceResult>>? saveDraftAsync = null,
         Func<int?, Task<IReadOnlyList<DeductSourceOption>>>? loadDraftDeductSourcesAsync = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _saveDraftAsync = saveDraftAsync;
         _loadDraftDeductSourcesAsync = loadDraftDeductSourcesAsync;
         _initialState = CaptureState();
@@ -134,7 +134,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         }
         else
         {
-            var existingSources = await _unitOfWork.SpendingSources.GetAllAsync(cancellationToken);
+            var existingSources = await _appData.GetSpendingSourcesAsync(cancellationToken);
             options = existingSources
                 .Where(source => source.Id != (EditingId ?? 0))
                 .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
@@ -174,9 +174,7 @@ public partial class AddSpendingSourceVM : ObservableObject
 
         try
         {
-            var unitOfWork = _unitOfWork;
-
-            var existingSources = await unitOfWork.SpendingSources.GetAllAsync();
+            var existingSources = await _appData.GetSpendingSourcesAsync();
             if (existingSources.Any(source =>
                     source.Id != (EditingId ?? -1) &&
                     string.Equals(source.Name, input.Name, StringComparison.OrdinalIgnoreCase)))
@@ -203,7 +201,7 @@ public partial class AddSpendingSourceVM : ObservableObject
                 spendingSource.InterestRate = input.InterestRate;
                 spendingSource.ShowOnUI = input.ShowOnUI;
                 spendingSource.IsEnabled = input.IsEnabled;
-                unitOfWork.SpendingSources.Update(spendingSource);
+                _appData.UpdateSpendingSource(spendingSource);
             }
             else
             {
@@ -220,13 +218,13 @@ public partial class AddSpendingSourceVM : ObservableObject
                     ShowOnUI = input.ShowOnUI,
                     IsEnabled = input.IsEnabled
                 };
-                await unitOfWork.SpendingSources.AddAsync(spendingSource);
+                await _appData.AddSpendingSourceAsync(spendingSource);
             }
 
-            await unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             var autoTransactionSnapshot = await TryCreateBalanceUpdateTransactionAsync(
-                unitOfWork,
+                _appData,
                 spendingSource,
                 previousSpentAmount,
                 input.SpentAmount,
@@ -279,9 +277,9 @@ public partial class AddSpendingSourceVM : ObservableObject
             : currentSpentAmount;
     }
 
-    private static async Task<ExpenseTag> ResolveBalanceUpdateTagAsync(IUnitOfWork unitOfWork)
+    private static async Task<ExpenseTag> ResolveBalanceUpdateTagAsync(IAppDataService appData)
     {
-        var tags = await unitOfWork.ExpenseTags.GetAllAsync();
+        var tags = await appData.GetExpenseTagsAsync();
         var existingTag = tags.FirstOrDefault(tag =>
             string.Equals(tag.Name, BalanceUpdateTagName, StringComparison.OrdinalIgnoreCase));
         if (existingTag is not null)
@@ -293,13 +291,13 @@ public partial class AddSpendingSourceVM : ObservableObject
             HexCode = BalanceUpdateTagColor
         };
 
-        await unitOfWork.ExpenseTags.AddAsync(balanceUpdateTag);
-        await unitOfWork.SaveChangesAsync();
+        await appData.AddExpenseTagAsync(balanceUpdateTag);
+        await appData.SaveChangesAsync();
         return balanceUpdateTag;
     }
 
     private static async Task<ExpenseLogMemorySnapshot?> TryCreateBalanceUpdateTransactionAsync(
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         SpendingSource spendingSource,
         decimal previousSpentAmount,
         decimal currentSpentAmount,
@@ -313,7 +311,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         if (triggerAmount <= 0m)
             return null;
 
-        var balanceUpdateTag = await ResolveBalanceUpdateTagAsync(unitOfWork);
+        var balanceUpdateTag = await ResolveBalanceUpdateTagAsync(appData);
         var expense = new Expense
         {
             Name = $"Balance Update",
@@ -326,7 +324,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             ExpenseTagId = balanceUpdateTag.Id
         };
 
-        await unitOfWork.Expenses.AddAsync(expense);
+        await appData.AddExpenseAsync(expense);
 
         var expenseLog = new ExpenseLog
         {
@@ -338,8 +336,8 @@ public partial class AddSpendingSourceVM : ObservableObject
             IsForDeletion = false
         };
 
-        await unitOfWork.ExpenseLogs.AddAsync(expenseLog);
-        await unitOfWork.SaveChangesAsync();
+        await appData.AddExpenseLogAsync(expenseLog);
+        await appData.SaveChangesAsync();
 
         return new ExpenseLogMemorySnapshot(
             expense.Id,

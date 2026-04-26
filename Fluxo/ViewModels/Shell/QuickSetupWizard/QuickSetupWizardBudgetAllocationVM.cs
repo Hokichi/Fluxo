@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
 
@@ -12,7 +12,7 @@ namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
     IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private decimal _totalBudgetAmount;
 
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
@@ -22,11 +22,11 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
     [ObservableProperty] private int _wantsAllocationPercentage = 30;
 
     public QuickSetupWizardBudgetAllocationVM(
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         IsActive = true;
     }
 
@@ -46,7 +46,7 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
 
     public async Task LoadAsync()
     {
-        var settings = await _unitOfWork.UserSettings.GetAllAsync();
+        var settings = await _appData.GetUserSettingsAsync();
         var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
 
         NeedsAllocationPercentage = QuickSetupWizardShared.ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
@@ -64,26 +64,26 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
             return SettingsOperationResult.Failure(
                 $"Needs, Wants, and Invest must add up to 100%. Current total: {total}%");
 
-        await ApplyAsync(_unitOfWork);
-        await _unitOfWork.SaveChangesAsync();
+        await ApplyAsync(_appData);
+        await _appData.SaveChangesAsync();
 
         Messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.Budget));
         PublishSnapshot();
         return SettingsOperationResult.Success();
     }
 
-    public async Task ApplyAsync(IUnitOfWork unitOfWork)
+    public async Task ApplyAsync(IAppDataService appData)
     {
         await QuickSetupWizardShared.UpsertUserSettingAsync(
-            unitOfWork,
+            appData,
             UserSettingNames.NeedsThreshold,
             NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
         await QuickSetupWizardShared.UpsertUserSettingAsync(
-            unitOfWork,
+            appData,
             UserSettingNames.WantsThreshold,
             WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
         await QuickSetupWizardShared.UpsertUserSettingAsync(
-            unitOfWork,
+            appData,
             UserSettingNames.InvestThreshold,
             InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture));
     }

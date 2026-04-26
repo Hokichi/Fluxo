@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
@@ -16,7 +16,7 @@ namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly IMessenger _messenger;
     private readonly Dictionary<int, QuickSetupWizardDraftSpendingSource> _draftSources = [];
     private readonly HashSet<int> _removedPersistedIds = [];
@@ -28,11 +28,11 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
 
     public QuickSetupWizardSpendingSourcesVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -82,7 +82,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
     {
         return new AddSpendingSourceVM(
             _mainViewModel,
-            _unitOfWork,
+            _appData,
             saveDraftAsync: input => SaveDraftSourceAsync(input, null),
             loadDraftDeductSourcesAsync: editingId =>
                 Task.FromResult<IReadOnlyList<AddSpendingSourceVM.DeductSourceOption>>(
@@ -99,7 +99,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
 
         var vm = new AddSpendingSourceVM(
             _mainViewModel,
-            _unitOfWork,
+            _appData,
             saveDraftAsync: input => SaveDraftSourceAsync(input, source.Id),
             loadDraftDeductSourcesAsync: editingId =>
                 Task.FromResult<IReadOnlyList<AddSpendingSourceVM.DeductSourceOption>>(
@@ -156,9 +156,9 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         RefreshProjectionAndPublish();
     }
 
-    public async Task ApplyAsync(IUnitOfWork unitOfWork)
+    public async Task ApplyAsync(IAppDataService appData)
     {
-        var existingSources = (await unitOfWork.SpendingSources.GetAllAsync())
+        var existingSources = (await appData.GetSpendingSourcesAsync())
             .ToDictionary(source => source.Id);
         var idMap = new Dictionary<int, int>();
 
@@ -176,7 +176,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 persisted.InterestRate = draft.InterestRate;
                 persisted.ShowOnUI = draft.ShowOnUi;
                 persisted.IsEnabled = draft.IsEnabled;
-                unitOfWork.SpendingSources.Update(persisted);
+                appData.UpdateSpendingSource(persisted);
                 idMap[draft.Id] = persisted.Id;
             }
             else
@@ -194,8 +194,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                     ShowOnUI = draft.ShowOnUi,
                     IsEnabled = draft.IsEnabled
                 };
-                await unitOfWork.SpendingSources.AddAsync(created);
-                await unitOfWork.SaveChangesAsync();
+                await appData.AddSpendingSourceAsync(created);
+                await appData.SaveChangesAsync();
                 idMap[draft.Id] = created.Id;
             }
         }
@@ -205,7 +205,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
             if (!idMap.TryGetValue(draft.Id, out var persistedId))
                 continue;
 
-            var persisted = await unitOfWork.SpendingSources.GetByIdAsync(persistedId);
+            var persisted = await appData.GetSpendingSourceByIdAsync(persistedId);
             if (persisted is null)
                 continue;
 
@@ -214,13 +214,13 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 mappedDeductSource = mapped;
 
             persisted.DeductSource = mappedDeductSource;
-            unitOfWork.SpendingSources.Update(persisted);
+            appData.UpdateSpendingSource(persisted);
         }
 
         foreach (var removedId in _removedPersistedIds)
         {
             if (existingSources.TryGetValue(removedId, out var existing))
-                unitOfWork.SpendingSources.Remove(existing);
+                appData.RemoveSpendingSource(existing);
         }
 
         _lastPersistedIdMap = new Dictionary<int, int>(idMap);
@@ -237,7 +237,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
 
     private async Task LoadDraftSourcesAsync()
     {
-        var persistedSources = await _unitOfWork.SpendingSources.GetAllAsync();
+        var persistedSources = await _appData.GetSpendingSourcesAsync();
         _draftSources.Clear();
 
         foreach (var source in persistedSources)
@@ -318,3 +318,4 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         PublishSnapshot();
     }
 }
+

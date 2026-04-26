@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Fluxo.Core.Entities;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
@@ -46,25 +46,26 @@ internal static class QuickSetupWizardShared
             collection.Add(item);
     }
 
-    public static async Task UpsertUserSettingAsync(IUnitOfWork unitOfWork, string name, string? value)
+    public static async Task UpsertUserSettingAsync(IAppDataService appData, string name, string? value)
     {
-        var existingSetting = await unitOfWork.UserSettings.GetByNameAsync(name);
+        var existingSetting = await appData.GetUserSettingByNameAsync(name);
 
         if (value is null)
         {
             if (existingSetting is not null)
-                unitOfWork.UserSettings.Remove(existingSetting);
+                appData.RemoveUserSetting(existingSetting);
 
             return;
         }
 
         if (existingSetting is null)
         {
-            await unitOfWork.UserSettings.AddAsync(new UserSettings { Name = name, Value = value });
+            await appData.AddUserSettingAsync(new UserSettings { Name = name, Value = value });
             return;
         }
 
         existingSetting.Value = value;
-        unitOfWork.UserSettings.Update(existingSetting);
+        appData.UpdateUserSetting(existingSetting);
     }
 }
+

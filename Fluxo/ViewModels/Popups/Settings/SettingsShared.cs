@@ -1,8 +1,8 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 
@@ -10,10 +10,10 @@ namespace Fluxo.ViewModels.Popups.Settings;
 
 internal static class SettingsShared
 {
-    public static async Task UpdateUserSettingAsync(IUnitOfWork unitOfWork, string name, string? value,
+    public static async Task UpdateUserSettingAsync(IAppDataService appData, string name, string? value,
         List<ILogMemoryAction> actions)
     {
-        var existingSetting = await unitOfWork.UserSettings.GetByNameAsync(name);
+        var existingSetting = await appData.GetUserSettingByNameAsync(name);
         var beforeSnapshot = existingSetting is null
             ? UserSettingMemorySnapshot.Missing(name)
             : UserSettingMemorySnapshot.Create(existingSetting);
@@ -23,14 +23,14 @@ internal static class SettingsShared
             if (existingSetting is null)
                 return;
 
-            unitOfWork.UserSettings.Remove(existingSetting);
+            appData.RemoveUserSetting(existingSetting);
             actions.Add(new SetUserSettingMemoryAction(beforeSnapshot, UserSettingMemorySnapshot.Missing(name)));
             return;
         }
 
         if (existingSetting is null)
         {
-            await unitOfWork.UserSettings.AddAsync(new UserSettings { Name = name, Value = value });
+            await appData.AddUserSettingAsync(new UserSettings { Name = name, Value = value });
         }
         else
         {
@@ -38,20 +38,20 @@ internal static class SettingsShared
                 return;
 
             existingSetting.Value = value;
-            unitOfWork.UserSettings.Update(existingSetting);
+            appData.UpdateUserSetting(existingSetting);
         }
 
         actions.Add(new SetUserSettingMemoryAction(beforeSnapshot, new UserSettingMemorySnapshot(name, value, true)));
     }
 
-    public static async Task UpdateIdSetSettingAsync(IUnitOfWork unitOfWork, string name, HashSet<int> ids,
+    public static async Task UpdateIdSetSettingAsync(IAppDataService appData, string name, HashSet<int> ids,
         List<ILogMemoryAction> actions)
     {
         var value = ids.Count == 0
             ? null
             : string.Join(",", ids.OrderBy(id => id).Select(id => id.ToString(CultureInfo.InvariantCulture)));
 
-        await UpdateUserSettingAsync(unitOfWork, name, value, actions);
+        await UpdateUserSettingAsync(appData, name, value, actions);
     }
 
     public static int[] NormalizeSelectionIds(IReadOnlyCollection<int>? selectedIdsOverride,
@@ -111,9 +111,9 @@ internal static class SettingsShared
             .ToHashSet();
     }
 
-    public static async Task<Dictionary<string, string>> GetSettingsDictionaryAsync(IUnitOfWork unitOfWork)
+    public static async Task<Dictionary<string, string>> GetSettingsDictionaryAsync(IAppDataService appData)
     {
-        var settings = await unitOfWork.UserSettings.GetAllAsync();
+        var settings = await appData.GetUserSettingsAsync();
         return settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
     }
 

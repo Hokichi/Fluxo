@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -18,7 +18,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly ExpenseLogVM _expenseLog;
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
-    private readonly IUnitOfWork _uow;
+    private readonly IAppDataService _appData;
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isEditing;
@@ -37,11 +37,11 @@ public partial class ExpenseDetailVM : ObservableObject
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
 
-    public ExpenseDetailVM(MainVM mainViewModel, ExpenseLogVM expenseLog, IUnitOfWork uow)
+    public ExpenseDetailVM(MainVM mainViewModel, ExpenseLogVM expenseLog, IAppDataService appData)
     {
         _mainViewModel = mainViewModel;
         _expenseLog = expenseLog;
-        _uow = uow;
+        _appData = appData;
 
         ReloadChoicesFromMainViewModel();
         _savedState = CreateSavedState(expenseLog);
@@ -126,7 +126,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
         try
         {
-            var expenseLog = await _uow.ExpenseLogs.GetByIdAsync(_expenseLog.Id);
+            var expenseLog = await _appData.GetExpenseLogByIdAsync(_expenseLog.Id);
             if (expenseLog?.Expense is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
 
@@ -134,11 +134,11 @@ public partial class ExpenseDetailVM : ObservableObject
 
             var expense = expenseLog.Expense;
             var currentSpendingSource = expenseLog.SpendingSource;
-            var newSpendingSource = await _uow.SpendingSources.GetByIdAsync(input.SpendingSourceId);
+            var newSpendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
             if (newSpendingSource is null)
                 return ExpenseDetailSaveResult.Failure("Please select a valid spending source.");
 
-            var expenseTag = await _uow.ExpenseTags.GetByIdAsync(input.TagId);
+            var expenseTag = await _appData.GetExpenseTagByIdAsync(input.TagId);
             if (expenseTag is null)
                 return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
 
@@ -159,14 +159,14 @@ public partial class ExpenseDetailVM : ObservableObject
             expenseLog.Notes = input.Note;
             expenseLog.SpendingSource = newSpendingSource;
 
-            _uow.Expenses.Update(expense);
-            _uow.ExpenseLogs.Update(expenseLog);
-            _uow.SpendingSources.Update(currentSpendingSource);
+            _appData.UpdateExpense(expense);
+            _appData.UpdateExpenseLog(expenseLog);
+            _appData.UpdateSpendingSource(currentSpendingSource);
 
             if (!ReferenceEquals(currentSpendingSource, newSpendingSource))
-                _uow.SpendingSources.Update(newSpendingSource);
+                _appData.UpdateSpendingSource(newSpendingSource);
 
-            await _uow.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             _savedState = new ExpenseDetailSavedState(
                 resolvedName,
                 input.Amount,

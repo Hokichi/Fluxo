@@ -4,7 +4,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 
@@ -14,14 +14,14 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 {
     private readonly IMessenger _messenger;
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private string _savedPreferredAppName = string.Empty;
 
     [ObservableProperty] private string _preferredAppName = string.Empty;
 
-    public SettingsPersonalizationTabVM(IUnitOfWork unitOfWork, IMessenger? messenger = null)
+    public SettingsPersonalizationTabVM(IAppDataService appData, IMessenger? messenger = null)
     {
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -36,7 +36,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     public async Task LoadAsync()
     {
-        var settingsByName = await SettingsShared.GetSettingsDictionaryAsync(_unitOfWork);
+        var settingsByName = await SettingsShared.GetSettingsDictionaryAsync(_appData);
         PreferredAppName = SettingsShared.ParseString(settingsByName, UserSettingNames.PreferredDisplayName, string.Empty);
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
         LoadNotificationSettings(settingsByName);
@@ -63,11 +63,11 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         var actions = new List<ILogMemoryAction>();
 
-        await SettingsShared.UpdateUserSettingAsync(_unitOfWork, UserSettingNames.PreferredDisplayName,
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.PreferredDisplayName,
             string.IsNullOrWhiteSpace(PreferredAppName) ? null : PreferredAppName.Trim(), actions);
 
         foreach (var notificationSetting in NotificationSettings)
-            await SettingsShared.UpdateUserSettingAsync(_unitOfWork, notificationSetting.SettingName,
+            await SettingsShared.UpdateUserSettingAsync(_appData, notificationSetting.SettingName,
                 notificationSetting.IsEnabled.ToString(CultureInfo.InvariantCulture), actions);
 
         var newUsername = string.IsNullOrWhiteSpace(PreferredAppName) ? "User" : PreferredAppName.Trim();
@@ -177,3 +177,4 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
             : SettingsMaintenanceResult.Failure("Unable to run this settings action.");
     }
 }
+

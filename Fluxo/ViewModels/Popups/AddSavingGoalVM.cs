@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
-using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -11,7 +11,7 @@ namespace Fluxo.ViewModels.Popups;
 public partial class AddSavingGoalVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppDataService _appData;
     private readonly Func<AddSavingGoalInput, Task<AddSavingGoalResult>>? _saveDraftAsync;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
@@ -26,11 +26,11 @@ public partial class AddSavingGoalVM : ObservableObject
 
     public AddSavingGoalVM(
         MainVM mainViewModel,
-        IUnitOfWork unitOfWork,
+        IAppDataService appData,
         Func<AddSavingGoalInput, Task<AddSavingGoalResult>>? saveDraftAsync = null)
     {
         _mainViewModel = mainViewModel;
-        _unitOfWork = unitOfWork;
+        _appData = appData;
         _saveDraftAsync = saveDraftAsync;
         _initialState = CaptureState();
     }
@@ -66,11 +66,9 @@ public partial class AddSavingGoalVM : ObservableObject
 
         try
         {
-            var unitOfWork = _unitOfWork;
-
             if (EditingId.HasValue)
             {
-                var existing = await unitOfWork.SavingGoals.GetByIdAsync(EditingId.Value);
+                var existing = await _appData.GetSavingGoalByIdAsync(EditingId.Value);
                 if (existing is null)
                     return AddSavingGoalResult.Failure("Saving goal not found.");
 
@@ -78,7 +76,7 @@ public partial class AddSavingGoalVM : ObservableObject
                 existing.TargetAmount = input.TargetAmount;
                 existing.CurrentAmount = input.CurrentAmount;
                 existing.SavingEndDate = input.EndDate;
-                unitOfWork.SavingGoals.Update(existing);
+                _appData.UpdateSavingGoal(existing);
             }
             else
             {
@@ -90,10 +88,10 @@ public partial class AddSavingGoalVM : ObservableObject
                     SavingEndDate = input.EndDate,
                     CreatedOn = DateTime.UtcNow
                 };
-                await unitOfWork.SavingGoals.AddAsync(savingGoal);
+                await _appData.AddSavingGoalAsync(savingGoal);
             }
 
-            await unitOfWork.SaveChangesAsync();
+            await _appData.SaveChangesAsync();
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.SavingGoals));
 
