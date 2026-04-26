@@ -11,15 +11,16 @@ public enum PopupOverlayHostAction
 public sealed class PopupOverlayHandoffState
 {
     private int _activePopupCount;
-    private bool _hasDeferredHide;
+    private int _deferredHideGeneration;
+    private int? _pendingDeferredHideGeneration;
 
     public int ActivePopupCount => _activePopupCount;
 
     public PopupOverlayHostAction OnPopupShown()
     {
-        if (_hasDeferredHide)
+        if (_pendingDeferredHideGeneration.HasValue)
         {
-            _hasDeferredHide = false;
+            _pendingDeferredHideGeneration = null;
             _activePopupCount++;
             return PopupOverlayHostAction.None;
         }
@@ -30,7 +31,7 @@ public sealed class PopupOverlayHandoffState
             : PopupOverlayHostAction.None;
     }
 
-    public PopupOverlayHostAction OnPopupHidden(bool allowHandoff = false)
+    public PopupOverlayHostAction OnPopupHidden()
     {
         if (_activePopupCount == 0)
             return PopupOverlayHostAction.None;
@@ -39,22 +40,36 @@ public sealed class PopupOverlayHandoffState
         if (_activePopupCount > 0)
             return PopupOverlayHostAction.None;
 
-        if (allowHandoff)
-        {
-            _hasDeferredHide = true;
-            return PopupOverlayHostAction.DeferHide;
-        }
-
-        _hasDeferredHide = false;
+        _pendingDeferredHideGeneration = null;
         return PopupOverlayHostAction.HideOverlay;
     }
 
-    public PopupOverlayHostAction ResolveDeferredHide()
+    public PopupOverlayHostAction OnPopupHiddenForHandoff(out int deferredHideGeneration)
     {
-        if (!_hasDeferredHide)
+        deferredHideGeneration = 0;
+
+        if (_activePopupCount == 0)
             return PopupOverlayHostAction.None;
 
-        _hasDeferredHide = false;
+        _activePopupCount--;
+        if (_activePopupCount > 0)
+            return PopupOverlayHostAction.None;
+
+        _deferredHideGeneration++;
+        _pendingDeferredHideGeneration = _deferredHideGeneration;
+        deferredHideGeneration = _deferredHideGeneration;
+        return PopupOverlayHostAction.DeferHide;
+    }
+
+    public PopupOverlayHostAction ResolveDeferredHide(int deferredHideGeneration)
+    {
+        if (_pendingDeferredHideGeneration is null)
+            return PopupOverlayHostAction.None;
+
+        if (_pendingDeferredHideGeneration.Value != deferredHideGeneration)
+            return PopupOverlayHostAction.None;
+
+        _pendingDeferredHideGeneration = null;
         return _activePopupCount == 0
             ? PopupOverlayHostAction.HideOverlay
             : PopupOverlayHostAction.None;

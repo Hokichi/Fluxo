@@ -34,9 +34,9 @@ public sealed class PopupOverlayHandoffStateTests
         var state = new PopupOverlayHandoffState();
         state.OnPopupShown();
 
-        var closeAction = state.OnPopupHidden(allowHandoff: true);
+        var closeAction = state.OnPopupHiddenForHandoff(out var deferredHideGeneration);
         var openAction = state.OnPopupShown();
-        var deferredResolutionAction = state.ResolveDeferredHide();
+        var deferredResolutionAction = state.ResolveDeferredHide(deferredHideGeneration);
 
         Assert.Equal(PopupOverlayHostAction.DeferHide, closeAction);
         Assert.Equal(PopupOverlayHostAction.None, openAction);
@@ -49,9 +49,9 @@ public sealed class PopupOverlayHandoffStateTests
     {
         var state = new PopupOverlayHandoffState();
         state.OnPopupShown();
-        state.OnPopupHidden(allowHandoff: true);
+        state.OnPopupHiddenForHandoff(out var deferredHideGeneration);
 
-        var resolveAction = state.ResolveDeferredHide();
+        var resolveAction = state.ResolveDeferredHide(deferredHideGeneration);
         var nextShowAction = state.OnPopupShown();
 
         Assert.Equal(PopupOverlayHostAction.HideOverlay, resolveAction);
@@ -71,6 +71,26 @@ public sealed class PopupOverlayHandoffStateTests
 
         Assert.Equal(PopupOverlayHostAction.None, extraHideBeforeShow);
         Assert.Equal(PopupOverlayHostAction.None, extraHideAfterLastHide);
+        Assert.Equal(0, state.ActivePopupCount);
+    }
+
+    [Fact]
+    public void ResolveDeferredHide_StaleGeneration_DoesNotHideDuringNewerHandoffWindow()
+    {
+        var state = new PopupOverlayHandoffState();
+        state.OnPopupShown();
+
+        var firstDeferAction = state.OnPopupHiddenForHandoff(out var firstGeneration);
+        state.OnPopupShown();
+        var secondDeferAction = state.OnPopupHiddenForHandoff(out var secondGeneration);
+
+        var staleResolveAction = state.ResolveDeferredHide(firstGeneration);
+        var currentResolveAction = state.ResolveDeferredHide(secondGeneration);
+
+        Assert.Equal(PopupOverlayHostAction.DeferHide, firstDeferAction);
+        Assert.Equal(PopupOverlayHostAction.DeferHide, secondDeferAction);
+        Assert.Equal(PopupOverlayHostAction.None, staleResolveAction);
+        Assert.Equal(PopupOverlayHostAction.HideOverlay, currentResolveAction);
         Assert.Equal(0, state.ActivePopupCount);
     }
 }
