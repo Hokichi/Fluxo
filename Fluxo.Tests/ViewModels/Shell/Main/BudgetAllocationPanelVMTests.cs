@@ -53,6 +53,9 @@ public class BudgetAllocationPanelVMTests
             var messenger = new WeakReferenceMessenger();
             var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
             vm.LoadAsync().GetAwaiter().GetResult();
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 10),
+                new DateTime(2026, 4, 18)));
 
             vm.SelectedVisibleTag = vm.Tags.Single(tag => tag.Id == 1);
 
@@ -64,6 +67,57 @@ public class BudgetAllocationPanelVMTests
             Assert.Collection(
                 GetItems(vm.Invest),
                 item => Assert.Equal(3, item.Id));
+        });
+    }
+
+    [Fact]
+    public void DateRangeMessage_OrdersTagsByUsageAndPushesSystemTagsToMore()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(
+                messenger,
+                CreateExpenseLogsForUsageOrdering(),
+                CreateTagsForUsageOrdering(),
+                CreateSpendingSources());
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 1),
+                new DateTime(2026, 4, 30)));
+
+            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, vm.Tags.Select(tag => tag.Id).ToArray());
+            Assert.Equal(new[] { 6 }, vm.OtherTags.Select(tag => tag.Id).ToArray());
+            Assert.True(vm.HasOtherTags);
+        });
+    }
+
+    [Fact]
+    public void DateRangeMessage_ResetsSelectedTagToAllWhenTagFallsOutOfRange()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 10),
+                new DateTime(2026, 4, 18)));
+            vm.SelectedVisibleTag = vm.Tags.Single(tag => tag.Id == 1);
+
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 12),
+                new DateTime(2026, 4, 12)));
+
+            Assert.Null(vm.SelectedTag);
+            Assert.Null(vm.SelectedVisibleTag);
+            Assert.Null(vm.SelectedOtherTag);
+            Assert.False(vm.HasOtherTags);
+            Assert.Collection(
+                GetItems(vm.Wants),
+                item => Assert.Equal(2, item.Id));
         });
     }
 
@@ -353,6 +407,62 @@ public class BudgetAllocationPanelVMTests
                 }
             }
         ];
+    }
+
+    private static IReadOnlyList<ExpenseTagVM> CreateTagsForUsageOrdering()
+    {
+        return
+        [
+            new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
+            new ExpenseTagVM { Id = 2, Name = "Transport", HexCode = "#06B6D4" },
+            new ExpenseTagVM { Id = 3, Name = "Dining", HexCode = "#F97316" },
+            new ExpenseTagVM { Id = 4, Name = "Bills", HexCode = "#0EA5E9" },
+            new ExpenseTagVM { Id = 5, Name = "Health", HexCode = "#10B981" },
+            new ExpenseTagVM { Id = 6, Name = "System", HexCode = "#9333EA", IsSystemTag = true }
+        ];
+    }
+
+    private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogsForUsageOrdering()
+    {
+        var tags = CreateTagsForUsageOrdering().ToDictionary(tag => tag.Id);
+        var source = CreateSpendingSources().Single();
+        var logs = new List<ExpenseLogVM>();
+        var nextId = 1;
+
+        AddLogs(logs, ref nextId, tags[1], 4, source);
+        AddLogs(logs, ref nextId, tags[2], 3, source);
+        AddLogs(logs, ref nextId, tags[3], 2, source);
+        AddLogs(logs, ref nextId, tags[4], 1, source);
+        AddLogs(logs, ref nextId, tags[5], 1, source);
+        AddLogs(logs, ref nextId, tags[6], 8, source);
+
+        return logs;
+    }
+
+    private static void AddLogs(
+        ICollection<ExpenseLogVM> logs,
+        ref int nextId,
+        ExpenseTagVM tag,
+        int count,
+        SpendingSourceVM source)
+    {
+        for (var index = 0; index < count; index++)
+        {
+            logs.Add(new ExpenseLogVM
+            {
+                Id = nextId++,
+                Amount = 10m + index,
+                DeductedOn = new DateTime(2026, 4, 1).AddDays(index),
+                Expense = new ExpenseVM
+                {
+                    Id = 1000 + nextId,
+                    Name = $"{tag.Name} #{index + 1}",
+                    ExpenseCategory = ExpenseCategory.Needs,
+                    ExpenseTag = tag
+                },
+                SpendingSource = source
+            });
+        }
     }
 
     private static List<ExpenseLogVM> GetItems(ICollectionView view)

@@ -30,6 +30,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
     private readonly HashSet<ExpenseLogVM> _investVisibleWindow = [];
+    private readonly Dictionary<int, ExpenseTagVM> _knownTagsById = [];
     private readonly IMapper _mapper;
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
     private readonly HashSet<ExpenseLogVM> _needsVisibleWindow = [];
@@ -199,15 +200,13 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     public void Receive(DateRangeSelectionChangedMessage message)
     {
         _selectedRange = message.Value;
-        ApplyVisibleExpenseLogs();
-        RefreshSourceDifferences();
+        RefreshRangeScopedData();
     }
 
     public void Receive(AllTimeViewModeMessage message)
     {
         _selectedRange = null;
-        ApplyVisibleExpenseLogs();
-        RefreshSourceDifferences();
+        RefreshRangeScopedData();
     }
 
     public void Receive(DashboardDataInvalidatedMessage message)
@@ -259,7 +258,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         else
             SynchronizeSpendingSourceSelections(SelectedSpendingSourceId);
 
-        LoadTags(tags);
+        CacheKnownTags(tags);
         RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs();
         RefreshSourceDifferences();
@@ -497,13 +496,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }, cancellationToken);
     }
 
-    private void LoadTags(IEnumerable<ExpenseTagVM> allTags)
+    private void CacheKnownTags(IEnumerable<ExpenseTagVM> allTags)
     {
-        Tags = new ObservableCollection<ExpenseTagVM>(allTags.Take(5));
-        OtherTags = new ObservableCollection<ExpenseTagVM>(allTags.Skip(5));
-        SynchronizeTagSelections(SelectedTag);
-        OnPropertyChanged(nameof(HasOtherTags));
-        OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
+        _knownTagsById.Clear();
+        foreach (var tag in allTags.Where(tag => tag.Id > 0))
+            _knownTagsById[tag.Id] = CloneTag(tag);
     }
 
     private void ConfigureExpenseViews()
@@ -599,9 +596,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void ApplyVisibleExpenseLogs(bool resetPaginationWindows = true)
     {
-        var visibleExpenseLogs = _selectedRange is { } range
+        var visibleExpenseLogs = (_selectedRange is { } range
             ? _allExpenseLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
-            : _allExpenseLogs;
+            : _allExpenseLogs)
+            .ToList();
 
         ReplaceExpenseLogs(
             _needsSource,
@@ -612,6 +610,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         ReplaceExpenseLogs(
             _investSource,
             visibleExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings));
+        LoadRangeTags(visibleExpenseLogs);
 
         if (resetPaginationWindows)
             ResetPaginationWindows();
@@ -676,14 +675,19 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void QueueFilterRefreshWithFeedback(string message)
     {
-        _ = ApplyFilterFeedbackAsync(message);
+        QueueFilterRefreshWithFeedback(message, RefreshExpenseViews);
     }
 
-    private async Task ApplyFilterFeedbackAsync(string message)
+    private void QueueFilterRefreshWithFeedback(string message, Action refreshOperation)
+    {
+        _ = ApplyFilterFeedbackAsync(message, refreshOperation);
+    }
+
+    private async Task ApplyFilterFeedbackAsync(string message, Action refreshOperation)
     {
         if (_dialogService is null || _uiSettleAwaiter is null)
         {
-            RefreshExpenseViews();
+            refreshOperation();
             return;
         }
 
@@ -694,18 +698,24 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                 message,
                 async () =>
                 {
-                    RefreshExpenseViews();
+                    refreshOperation();
                     await _uiSettleAwaiter.WaitForUiReadyAsync();
                 });
         }
         catch
         {
-            RefreshExpenseViews();
+            refreshOperation();
         }
         finally
         {
             _filterFeedbackGate.Release();
         }
+    }
+
+    private void RefreshRangeScopedData()
+    {
+        ApplyVisibleExpenseLogs();
+        RefreshSourceDifferences();
     }
 
     private void RefreshExpenseViews()
@@ -968,6 +978,69 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             visibleWindow.Add(log);
 
         return filteredLogs.Count > visibleCount;
+    }
+
+    private void LoadRangeTags(IEnumerable<ExpenseLogVM> visibleExpenseLogs)
+    {
+        var orderedTags = BuildOrderedRangeTags(visibleExpenseLogs).ToList();
+
+        Tags = new ObservableCollection<ExpenseTagVM>(orderedTags.Take(5));
+        OtherTags = new ObservableCollection<ExpenseTagVM>(orderedTags.Skip(5));
+
+        if (SelectedTag is not null &&
+            orderedTags.All(tag => tag.Id != SelectedTag.Id))
+            SetSelectedTagInternal(null);
+        else
+            SynchronizeTagSelections(SelectedTag);
+
+        OnPropertyChanged(nameof(HasOtherTags));
+        OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
+    }
+
+    private IEnumerable<ExpenseTagVM> BuildOrderedRangeTags(IEnumerable<ExpenseLogVM> visibleExpenseLogs)
+    {
+        return visibleExpenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Select(log => log.Expense?.ExpenseTag)
+            .Where(tag => tag is { Id: > 0 })
+            .GroupBy(tag => tag!.Id)
+            .Select(group =>
+            {
+                var sourceTag = _knownTagsById.GetValueOrDefault(group.Key) ?? group.First()!;
+                return new
+                {
+                    Tag = CloneTag(sourceTag),
+                    UsageCount = group.Count()
+                };
+            })
+            .OrderBy(item => item.Tag.IsSystemTag)
+            .ThenByDescending(item => item.UsageCount)
+            .ThenBy(item => item.Tag.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(item => item.Tag);
+    }
+
+    private void SetSelectedTagInternal(ExpenseTagVM? selectedTag)
+    {
+        _suppressFilterFeedback = true;
+        try
+        {
+            SelectedTag = selectedTag;
+        }
+        finally
+        {
+            _suppressFilterFeedback = false;
+        }
+    }
+
+    private static ExpenseTagVM CloneTag(ExpenseTagVM source)
+    {
+        return new ExpenseTagVM
+        {
+            Id = source.Id,
+            Name = source.Name,
+            HexCode = source.HexCode,
+            IsSystemTag = source.IsSystemTag
+        };
     }
 
     private static ExpenseLogMemorySnapshot CreateExpenseLogSnapshot(ExpenseLogVM expenseLog)
