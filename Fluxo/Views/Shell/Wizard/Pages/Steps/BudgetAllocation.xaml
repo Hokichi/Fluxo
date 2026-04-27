@@ -190,7 +190,7 @@
         </Border>
 
         <TextBlock
-            Margin="0,12,0,0"
+            Margin="0,8,0,0"
             FontFamily="{StaticResource Bold}"
             Foreground="{StaticResource Brush.Danger}"
             Text="{Binding BudgetAllocationErrorMessage}"

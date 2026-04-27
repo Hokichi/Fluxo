@@ -1017,7 +1017,7 @@
     </Style>
 
     <Style x:Key="SpendingSourceAddButtonStyle" TargetType="Button">
-        <Setter Property="Width" Value="80" />
+        <Setter Property="Width" Value="60" />
         <Setter Property="Height" Value="80" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
