@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Popups.Planning;
@@ -16,6 +17,24 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
     [ObservableProperty] private decimal _balance;
     [ObservableProperty] private decimal _totalExpenses;
     [ObservableProperty] private decimal _totalIncome;
+    [ObservableProperty] private double _needsUsage;
+    [ObservableProperty] private double _wantsUsage;
+    [ObservableProperty] private double _investUsage;
+    [ObservableProperty] private double _needsOverflow;
+    [ObservableProperty] private double _wantsOverflow;
+    [ObservableProperty] private double _investOverflow;
+    [ObservableProperty] private int _needsUsagePercent;
+    [ObservableProperty] private int _wantsUsagePercent;
+    [ObservableProperty] private int _investUsagePercent;
+
+
+    [ObservableProperty] private decimal _needsAllocated;
+    [ObservableProperty] private decimal _wantsAllocated;
+    [ObservableProperty] private decimal _investAllocated;
+
+    [ObservableProperty] private decimal _needsSpent;
+    [ObservableProperty] private decimal _wantsSpent;
+    [ObservableProperty] private decimal _investSpent;
 
     public PlanningReportVM(PlanningSnapshot snapshot)
     {
@@ -132,7 +151,8 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
 
     private void OnExpenseChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ExpenseVM.Amount))
+        if (e.PropertyName == nameof(ExpenseVM.Amount) ||
+            e.PropertyName == nameof(ExpenseVM.ExpenseCategory))
             RecalculateTotals();
     }
 
@@ -141,6 +161,74 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
         TotalIncome = Incomes.Sum(income => income.Amount);
         TotalExpenses = Expenses.Sum(expense => expense.Amount);
         Balance = TotalIncome - TotalExpenses;
+        RecalculateAllocationUsage();
+    }
+
+    private void RecalculateAllocationUsage()
+    {
+        NeedsAllocated = decimal.Round(TotalIncome * NeedsPercent / 100m, 2);
+        WantsAllocated = decimal.Round(TotalIncome * WantsPercent / 100m, 2);
+        InvestAllocated = decimal.Round(TotalIncome * InvestPercent / 100m, 2);
+
+        NeedsSpent = SumByCategory(ExpenseCategory.Needs);
+        WantsSpent = SumByCategory(ExpenseCategory.Wants);
+        InvestSpent = SumByCategory(ExpenseCategory.Savings);
+
+        ComputeUsageMetrics(
+            NeedsSpent,
+            NeedsAllocated,
+            out var needsUsage,
+            out var needsOverflow,
+            out var needsUsagePercent);
+        ComputeUsageMetrics(
+            WantsSpent,
+            WantsAllocated,
+            out var wantsUsage,
+            out var wantsOverflow,
+            out var wantsUsagePercent);
+        ComputeUsageMetrics(
+            InvestSpent,
+            InvestAllocated,
+            out var investUsage,
+            out var investOverflow,
+            out var investUsagePercent);
+
+        NeedsUsage = needsUsage;
+        WantsUsage = wantsUsage;
+        InvestUsage = investUsage;
+        NeedsOverflow = needsOverflow;
+        WantsOverflow = wantsOverflow;
+        InvestOverflow = investOverflow;
+        NeedsUsagePercent = needsUsagePercent;
+        WantsUsagePercent = wantsUsagePercent;
+        InvestUsagePercent = investUsagePercent;
+    }
+
+    private decimal SumByCategory(ExpenseCategory category)
+    {
+        return Expenses
+            .Where(expense => expense.ExpenseCategory == category)
+            .Sum(expense => expense.Amount);
+    }
+
+    private static void ComputeUsageMetrics(
+        decimal spent,
+        decimal allocation,
+        out double usage,
+        out double overflow,
+        out int usagePercent)
+    {
+        var totalPercentage = allocation <= 0m
+            ? 0d
+            : (double)(spent / allocation);
+
+        if (double.IsNaN(totalPercentage) || double.IsInfinity(totalPercentage))
+            totalPercentage = 0d;
+
+        totalPercentage = Math.Max(totalPercentage, 0d);
+        usage = Math.Clamp(totalPercentage, 0d, 1d);
+        overflow = Math.Max(0d, totalPercentage - 1d);
+        usagePercent = (int)Math.Round(totalPercentage * 100d, MidpointRounding.AwayFromZero);
     }
 
     public void Dispose()

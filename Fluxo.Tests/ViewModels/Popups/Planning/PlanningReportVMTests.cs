@@ -55,6 +55,13 @@ public class PlanningReportVMTests
         Assert.Equal(125m, report.TotalIncome);
         Assert.Equal(200m, report.TotalExpenses);
         Assert.Equal(-75m, report.Balance);
+        Assert.Equal(1d, report.NeedsUsage, 5);
+        Assert.Equal(2.55556d, report.NeedsOverflow, 5);
+        Assert.Equal(356, report.NeedsUsagePercent);
+        Assert.Equal(0d, report.WantsUsage, 5);
+        Assert.Equal(0d, report.WantsOverflow, 5);
+        Assert.Equal(0d, report.InvestUsage, 5);
+        Assert.Equal(0d, report.InvestOverflow, 5);
     }
 
     [Fact]
@@ -107,6 +114,48 @@ public class PlanningReportVMTests
         Assert.Equal(-50m, report.Balance);
     }
 
+    [Fact]
+    public void PlanningReportVM_ComputesAllocationUsageAndOverflowPerCategory()
+    {
+        var snapshot = new PlanningSnapshot(
+            [CreateIncome(1, 1000m)],
+            [
+                CreateExpense(1, "Rent", ExpenseCategory.Needs, 600m),
+                CreateExpense(2, "Coffee", ExpenseCategory.Wants, 250m),
+                CreateExpense(3, "ETF", ExpenseCategory.Savings, 300m)
+            ],
+            needsPercent: 50,
+            wantsPercent: 30,
+            investPercent: 20);
+
+        var report = new PlanningReportVM(snapshot);
+
+        Assert.Equal(1d, report.NeedsUsage, 5);
+        Assert.Equal(0.2d, report.NeedsOverflow, 5);
+        Assert.Equal(120, report.NeedsUsagePercent);
+        Assert.Equal(0.83333d, report.WantsUsage, 5);
+        Assert.Equal(0d, report.WantsOverflow, 5);
+        Assert.Equal(83, report.WantsUsagePercent);
+        Assert.Equal(1d, report.InvestUsage, 5);
+        Assert.Equal(0.5d, report.InvestOverflow, 5);
+        Assert.Equal(150, report.InvestUsagePercent);
+
+        report.Expenses[1].Amount = 360m;
+
+        Assert.Equal(1d, report.WantsUsage, 5);
+        Assert.Equal(0.2d, report.WantsOverflow, 5);
+        Assert.Equal(120, report.WantsUsagePercent);
+
+        report.Expenses[0].ExpenseCategory = ExpenseCategory.Wants;
+
+        Assert.Equal(0d, report.NeedsUsage, 5);
+        Assert.Equal(0d, report.NeedsOverflow, 5);
+        Assert.Equal(0, report.NeedsUsagePercent);
+        Assert.Equal(1d, report.WantsUsage, 5);
+        Assert.Equal(2.2d, report.WantsOverflow, 5);
+        Assert.Equal(320, report.WantsUsagePercent);
+    }
+
     private static PlanningPopupVM CreatePopupVm()
     {
         var appData = Substitute.For<IAppDataService>();
@@ -135,15 +184,19 @@ public class PlanningReportVMTests
         };
     }
 
-    private static ExpenseVM CreateExpense(int id, string name)
+    private static ExpenseVM CreateExpense(
+        int id,
+        string name,
+        ExpenseCategory category = ExpenseCategory.Needs,
+        decimal? amount = null)
     {
         return new ExpenseVM
         {
             Id = id,
             Name = name,
-            Amount = id * 100m,
+            Amount = amount ?? id * 100m,
             ExpenseKind = ExpenseKind.Fixed,
-            ExpenseCategory = ExpenseCategory.Needs,
+            ExpenseCategory = category,
             RecurringDate = id,
             IsActive = true,
             ExpenseTag = new ExpenseTagVM

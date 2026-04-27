@@ -7,7 +7,7 @@
     xmlns:local="clr-namespace:Fluxo.Views.Popups.Planning"
     Height="760"
     PopupTitle="Planning Report"
-    SizeToContent="Height">
+    SizeToContent="WidthAndHeight">
 
     <customControls:BasePopup.Resources>
         <cons:SourceSequenceLabelConverter x:Key="SourceSequenceLabelConverter" />
@@ -175,27 +175,7 @@
                     <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="16" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <StackPanel>
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="18"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="Planning Report" />
-                    <TextBlock
-                        Margin="0,8,0,0"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Review and adjust this planning snapshot. Changes are only in-memory for this report session." />
-                </StackPanel>
-
-                <Grid Grid.Row="2" Grid.Column="0">
+                <Grid Grid.Column="0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="2*" />
                         <RowDefinition Height="8" />
@@ -349,6 +329,231 @@
                             <ColumnDefinition Width="8" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
+
+                        <Border Style="{StaticResource SectionCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="NEEDS USED" />
+
+                                <Grid Grid.Row="1" Margin="0,10,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid
+                                        Width="64"
+                                        Height="64"
+                                        HorizontalAlignment="Center">
+                                        <Canvas
+                                            Width="80"
+                                            Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                            <Ellipse
+                                                Canvas.Left="4"
+                                                Canvas.Top="4"
+                                                Width="72"
+                                                Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                                                Stroke="{StaticResource Brush.Background.Hover}"
+                                                StrokeThickness="8" />
+                                            <Path
+                                                Canvas.Left="8"
+                                                Canvas.Top="8"
+                                                Data="{Binding AnimatedNeedsUsage, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
+                                                Stroke="{StaticResource Brush.Category.Needs}"
+                                                StrokeEndLineCap="Round"
+                                                StrokeLineJoin="Round"
+                                                StrokeStartLineCap="Round"
+                                                StrokeThickness="8" />
+                                            <Path
+                                                Canvas.Left="8"
+                                                Canvas.Top="8"
+                                                Data="{Binding AnimatedNeedsOverflow, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
+                                                Stroke="{StaticResource Brush.Danger}"
+                                                StrokeEndLineCap="Round"
+                                                StrokeLineJoin="Round"
+                                                StrokeStartLineCap="Round"
+                                                StrokeThickness="4" />
+                                        </Canvas>
+
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="12"
+                                            Foreground="{StaticResource Brush.Category.Needs}"
+                                            Text="{Binding AnimatedNeedsUsagePercent, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, StringFormat={}{0:0}%}" />
+                                    </Grid>
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        FontSize="11"
+                                        Foreground="{StaticResource Brush.Text.Secondary}">
+                                        <Run Text="{Binding NeedsSpent, Converter={StaticResource MoneyDisplayConverter}}" />
+                                        <Run Text="/" />
+                                        <Run Text="{Binding NeedsAllocated, Converter={StaticResource MoneyDisplayConverter}}" />
+                                    </TextBlock>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="WANTS USED" />
+
+                                <Grid Grid.Row="1" Margin="0,10,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid
+                                        Width="64"
+                                        Height="64"
+                                        HorizontalAlignment="Center">
+                                        <Canvas
+                                            Width="80"
+                                            Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                            <Ellipse
+                                                Canvas.Left="4"
+                                                Canvas.Top="4"
+                                                Width="72"
+                                                Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                                                Stroke="{StaticResource Brush.Background.Hover}"
+                                                StrokeThickness="8" />
+                                            <Path
+                                                Canvas.Left="8"
+                                                Canvas.Top="8"
+                                                Data="{Binding AnimatedWantsUsage, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
+                                                Stroke="{StaticResource Brush.Category.Wants}"
+                                                StrokeEndLineCap="Round"
+                                                StrokeLineJoin="Round"
+                                                StrokeStartLineCap="Round"
+                                                StrokeThickness="8" />
+                                            <Path
+                                                Canvas.Left="8"
+                                                Canvas.Top="8"
+                                                Data="{Binding AnimatedWantsOverflow, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
+                                                Stroke="{StaticResource Brush.Danger}"
+                                                StrokeEndLineCap="Round"
+                                                StrokeLineJoin="Round"
+                                                StrokeStartLineCap="Round"
+                                                StrokeThickness="4" />
+                                        </Canvas>
+
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="12"
+                                            Foreground="{StaticResource Brush.Category.Wants}"
+                                            Text="{Binding AnimatedWantsUsagePercent, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, StringFormat={}{0:0}%}" />
+                                    </Grid>
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        FontSize="11"
+                                        Foreground="{StaticResource Brush.Text.Secondary}">
+                                        <Run Text="{Binding WantsSpent, Converter={StaticResource MoneyDisplayConverter}}" />
+                                        <Run Text="/" />
+                                        <Run Text="{Binding WantsAllocated, Converter={StaticResource MoneyDisplayConverter}}" />
+                                    </TextBlock>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="4" Style="{StaticResource SectionCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="INVEST USED" />
+
+                                <Grid Grid.Row="1" Margin="0,10,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid
+                                        Width="64"
+                                        Height="64"
+                                        HorizontalAlignment="Center">
+                                        <Canvas
+                                            Width="80"
+                                            Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                            <Ellipse
+                                                Canvas.Left="4"
+                                                Canvas.Top="4"
+                                                Width="72"
+                                                Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                                                Stroke="{StaticResource Brush.Background.Hover}"
+                                                StrokeThickness="8" />
+                                            <Path
+                                                Canvas.Left="8"
+                                                Canvas.Top="8"
+                                                Data="{Binding AnimatedInvestUsage, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
+                                                Stroke="{StaticResource Brush.Category.Investments}"
+                                                StrokeEndLineCap="Round"
+                                                StrokeLineJoin="Round"
+                                                StrokeStartLineCap="Round"
+                                                StrokeThickness="8" />
+                                            <Path
+                                                Canvas.Left="8"
+                                                Canvas.Top="8"
+                                                Data="{Binding AnimatedInvestOverflow, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
+                                                Stroke="{StaticResource Brush.Danger}"
+                                                StrokeEndLineCap="Round"
+                                                StrokeLineJoin="Round"
+                                                StrokeStartLineCap="Round"
+                                                StrokeThickness="4" />
+                                        </Canvas>
+
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="12"
+                                            Foreground="{StaticResource Brush.Category.Investments}"
+                                            Text="{Binding AnimatedInvestUsagePercent, RelativeSource={RelativeSource AncestorType={x:Type local:PlanningReportPopup}}, StringFormat={}{0:0}%}" />
+                                    </Grid>
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        FontSize="11"
+                                        Foreground="{StaticResource Brush.Text.Secondary}">
+                                        <Run Text="{Binding InvestSpent, Converter={StaticResource MoneyDisplayConverter}}" />
+                                        <Run Text="/" />
+                                        <Run Text="{Binding InvestAllocated, Converter={StaticResource MoneyDisplayConverter}}" />
+                                    </TextBlock>
+                                </Grid>
+                            </Grid>
+                        </Border>
                     </Grid>
 
                     <Grid
@@ -406,7 +611,7 @@
                     </Grid>
                 </Grid>
 
-                <StackPanel Grid.Row="2" Grid.Column="2">
+                <StackPanel Grid.Column="2">
                     <StackPanel>
                         <Border>
                             <Border
@@ -445,6 +650,7 @@
                                         Opacity="0.25" />
 
                                     <ScrollViewer
+                                        x:Name="IncomeScrollViewer"
                                         Grid.Row="2"
                                         Height="152"
                                         VerticalScrollBarVisibility="Hidden">
@@ -507,6 +713,7 @@
                                     Opacity="0.25" />
 
                                 <ScrollViewer
+                                    x:Name="ExpenseScrollViewer"
                                     Grid.Row="2"
                                     Height="152"
                                     VerticalScrollBarVisibility="Hidden">

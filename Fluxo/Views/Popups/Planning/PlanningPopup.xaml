@@ -278,12 +278,13 @@
                                 Text="Name each planned expense, enter the amount, and choose its allocation bucket." />
 
                             <CheckBox
+                                x:Name="FixedExpenseImportCB"
                                 Margin="0,12,0,14"
                                 Checked="OnImportFixedExpensesChanged"
                                 Content="Import Fixed Expenses"
                                 Style="{StaticResource ItemCheckBoxWithContentStyle}"
                                 Unchecked="OnImportFixedExpensesChanged" />
-                            <Grid>
+                            <Grid Visibility="{Binding ElementName=FixedExpenseImportCB, Path=IsChecked, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
@@ -327,12 +328,6 @@
                                     <ItemsControl ItemTemplate="{StaticResource PlanningExpenseItemTemplate}" ItemsSource="{Binding Expenses}" />
                                 </customControls:FadingScrollViewer>
                             </Grid>
-
-                            <Button
-                                Margin="0,10,0,0"
-                                Click="OnAddExpenseClick"
-                                Content="Add Expense"
-                                Style="{StaticResource PlannerAddRowButtonStyle}" />
                         </StackPanel>
 
                         <StackPanel x:Name="AllocationStepPanel" Visibility="Collapsed">
