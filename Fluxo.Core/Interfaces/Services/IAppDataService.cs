@@ -47,6 +47,12 @@ public interface IAppDataService
     void UpdateSpendingSource(SpendingSource entity);
     void RemoveSpendingSource(SpendingSource entity);
 
+    Task<IReadOnlyList<Notification>> GetNotificationsAsync(CancellationToken cancellationToken = default);
+    Task<Notification?> GetNotificationByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task AddNotificationAsync(Notification entity, CancellationToken cancellationToken = default);
+    void UpdateNotification(Notification entity);
+    void RemoveNotification(Notification entity);
+
     Task<IReadOnlyList<UserSettings>> GetUserSettingsAsync(CancellationToken cancellationToken = default);
     Task<UserSettings?> GetUserSettingByNameAsync(string name, CancellationToken cancellationToken = default);
     Task AddUserSettingAsync(UserSettings entity, CancellationToken cancellationToken = default);

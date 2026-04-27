@@ -183,6 +183,31 @@ public sealed class AppDataService(IUnitOfWork unitOfWork) : IAppDataService
         unitOfWork.SpendingSources.Remove(entity);
     }
 
+    public Task<IReadOnlyList<Notification>> GetNotificationsAsync(CancellationToken cancellationToken = default)
+    {
+        return unitOfWork.Notifications.GetAllAsync(cancellationToken);
+    }
+
+    public Task<Notification?> GetNotificationByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return unitOfWork.Notifications.GetByIdAsync(id, cancellationToken);
+    }
+
+    public Task AddNotificationAsync(Notification entity, CancellationToken cancellationToken = default)
+    {
+        return unitOfWork.Notifications.AddAsync(entity, cancellationToken);
+    }
+
+    public void UpdateNotification(Notification entity)
+    {
+        unitOfWork.Notifications.Update(entity);
+    }
+
+    public void RemoveNotification(Notification entity)
+    {
+        unitOfWork.Notifications.Remove(entity);
+    }
+
     public Task<IReadOnlyList<UserSettings>> GetUserSettingsAsync(CancellationToken cancellationToken = default)
     {
         return unitOfWork.UserSettings.GetAllAsync(cancellationToken);

@@ -277,26 +277,18 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             var savingGoals = await _appData.GetSavingGoalsAsync();
             var spendingSources = await _appData.GetSpendingSourcesAsync();
             var tags = await _appData.GetExpenseTagsAsync();
+            var notifications = await _appData.GetNotificationsAsync();
             var settings = keepSettings ? [] : await _appData.GetUserSettingsAsync();
 
-            foreach (var tag in tags)
-                if (ShouldDeleteTagOnDeleteAllData(tag))
-                    _appData.RemoveExpenseTag(tag);
-
-            foreach (var source in spendingSources)
-                _appData.RemoveSpendingSource(source);
-
-            foreach (var expense in expenses)
-                _appData.RemoveExpense(expense);
-
-            foreach (var expenseLog in expenseLogs)
-                _appData.RemoveExpenseLog(expenseLog);
-
-            foreach (var incomeLog in incomeLogs)
-                _appData.RemoveIncomeLog(incomeLog);
-
-            foreach (var goal in savingGoals)
-                _appData.RemoveSavingGoal(goal);
+            ApplyDeleteAllDataRemovalPolicy(
+                _appData,
+                tags,
+                spendingSources,
+                expenses,
+                expenseLogs,
+                incomeLogs,
+                savingGoals,
+                notifications);
 
             if (!keepSettings)
                 await ApplySettingsResetPolicyAsync(settings, trackActions: false);
@@ -436,6 +428,55 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         ArgumentNullException.ThrowIfNull(tag);
         return !tag.IsSystemTag;
+    }
+
+    internal static bool ShouldDeleteNotificationOnDeleteAllData(Notification notification)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        return true;
+    }
+
+    internal static void ApplyDeleteAllDataRemovalPolicy(
+        IAppDataService appData,
+        IReadOnlyList<ExpenseTag> tags,
+        IReadOnlyList<SpendingSource> spendingSources,
+        IReadOnlyList<Expense> expenses,
+        IReadOnlyList<ExpenseLog> expenseLogs,
+        IReadOnlyList<IncomeLog> incomeLogs,
+        IReadOnlyList<SavingGoal> savingGoals,
+        IReadOnlyList<Notification> notifications)
+    {
+        ArgumentNullException.ThrowIfNull(appData);
+        ArgumentNullException.ThrowIfNull(tags);
+        ArgumentNullException.ThrowIfNull(spendingSources);
+        ArgumentNullException.ThrowIfNull(expenses);
+        ArgumentNullException.ThrowIfNull(expenseLogs);
+        ArgumentNullException.ThrowIfNull(incomeLogs);
+        ArgumentNullException.ThrowIfNull(savingGoals);
+        ArgumentNullException.ThrowIfNull(notifications);
+
+        foreach (var tag in tags)
+            if (ShouldDeleteTagOnDeleteAllData(tag))
+                appData.RemoveExpenseTag(tag);
+
+        foreach (var source in spendingSources)
+            appData.RemoveSpendingSource(source);
+
+        foreach (var expense in expenses)
+            appData.RemoveExpense(expense);
+
+        foreach (var expenseLog in expenseLogs)
+            appData.RemoveExpenseLog(expenseLog);
+
+        foreach (var incomeLog in incomeLogs)
+            appData.RemoveIncomeLog(incomeLog);
+
+        foreach (var goal in savingGoals)
+            appData.RemoveSavingGoal(goal);
+
+        foreach (var notification in notifications)
+            if (ShouldDeleteNotificationOnDeleteAllData(notification))
+                appData.RemoveNotification(notification);
     }
 
     internal static (HashSet<string> RemovedSettingNames, Dictionary<string, string> UpsertSettingValues)

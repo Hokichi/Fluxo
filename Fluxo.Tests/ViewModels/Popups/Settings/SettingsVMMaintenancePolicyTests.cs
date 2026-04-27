@@ -1,6 +1,8 @@
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Popups.Settings;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups.Settings;
@@ -56,5 +58,67 @@ public sealed class SettingsVMMaintenancePolicyTests
 
         Assert.False(SettingsVM.ShouldDeleteTagOnDeleteAllData(systemTag));
         Assert.True(SettingsVM.ShouldDeleteTagOnDeleteAllData(customTag));
+    }
+
+    [Fact]
+    public void ApplyDeleteAllDataRemovalPolicy_RemovesAllNotifications_AndOnlyNonSystemTags()
+    {
+        var appData = Substitute.For<IAppDataService>();
+
+        var systemTag = new ExpenseTag { Id = 1, Name = "System", HexCode = "#FFFFFF", IsSystemTag = true };
+        var customTag = new ExpenseTag { Id = 2, Name = "Custom", HexCode = "#000000", IsSystemTag = false };
+
+        var source = new SpendingSource { Id = 1, Name = "Wallet" };
+        var expense = new Expense
+        {
+            Id = 1,
+            Name = "Coffee",
+            SpendingSourceId = source.Id,
+            SpendingSource = source,
+            ExpenseTagId = customTag.Id,
+            ExpenseTag = customTag
+        };
+
+        var expenseLog = new ExpenseLog
+        {
+            Id = 1,
+            ExpenseId = expense.Id,
+            Expense = expense,
+            SpendingSourceId = source.Id,
+            SpendingSource = source,
+            Notes = string.Empty
+        };
+
+        var incomeLog = new IncomeLog
+        {
+            Id = 1,
+            SpendingSourceId = source.Id,
+            SpendingSource = source,
+            Notes = string.Empty
+        };
+
+        var savingGoal = new SavingGoal { Id = 1, Name = "Emergency" };
+        var firstNotification = new Notification { Id = 1, Type = "A", Header = "H1", Message = "M1" };
+        var secondNotification = new Notification { Id = 2, Type = "B", Header = "H2", Message = "M2" };
+
+        SettingsVM.ApplyDeleteAllDataRemovalPolicy(
+            appData,
+            [systemTag, customTag],
+            [source],
+            [expense],
+            [expenseLog],
+            [incomeLog],
+            [savingGoal],
+            [firstNotification, secondNotification]);
+
+        appData.DidNotReceive().RemoveExpenseTag(systemTag);
+        appData.Received(1).RemoveExpenseTag(customTag);
+        appData.Received(1).RemoveSpendingSource(source);
+        appData.Received(1).RemoveExpense(expense);
+        appData.Received(1).RemoveExpenseLog(expenseLog);
+        appData.Received(1).RemoveIncomeLog(incomeLog);
+        appData.Received(1).RemoveSavingGoal(savingGoal);
+        appData.Received(1).RemoveNotification(firstNotification);
+        appData.Received(1).RemoveNotification(secondNotification);
     }
 }
