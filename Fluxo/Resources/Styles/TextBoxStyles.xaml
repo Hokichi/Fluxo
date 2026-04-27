@@ -21,7 +21,7 @@
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="12">
+                        CornerRadius="8">
                         <ScrollViewer
                             x:Name="PART_ContentHost"
                             Margin="{TemplateBinding Padding}"
@@ -55,7 +55,7 @@
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="{TemplateBinding CornerRadius}">
+                        CornerRadius="8">
                         <Grid>
                             <TextBlock
                                 x:Name="PlaceholderText"
@@ -97,6 +97,4 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-    <Style BasedOn="{StaticResource RoundedTextInputStyle}" TargetType="TextBox" />
 </ResourceDictionary>

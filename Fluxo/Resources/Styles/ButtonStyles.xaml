@@ -406,7 +406,7 @@
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="12">
+                        CornerRadius="8">
                         <Grid Margin="10,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -910,6 +910,7 @@
                         CornerRadius="14">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse
+                                x:Name="ColorDot"
                                 Width="6"
                                 Height="6"
                                 VerticalAlignment="Center"
@@ -923,6 +924,12 @@
                                 Text="{TemplateBinding Content}" />
                         </StackPanel>
                     </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="ColorDot" Property="Fill" Value="{StaticResource Brush.Background.Surface}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -1018,7 +1025,7 @@
                         <Border
                             x:Name="RootBorder"
                             Background="{StaticResource Brush.Background.Surface}"
-                            CornerRadius="16"
+                            CornerRadius="8"
                             Opacity="0">
                             <Border.RenderTransform>
                                 <ScaleTransform ScaleX="1" ScaleY="1" />
@@ -1026,8 +1033,8 @@
                         </Border>
 
                         <Rectangle
-                            RadiusX="16"
-                            RadiusY="16"
+                            RadiusX="8"
+                            RadiusY="8"
                             Stroke="{TemplateBinding Foreground}"
                             StrokeDashArray="5"
                             StrokeThickness="1" />
@@ -1052,7 +1059,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
                             <Setter TargetName="RootBorder" Property="Opacity" Value="1" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>

@@ -326,10 +326,11 @@
                             <Ellipse
                                 Width="8"
                                 Height="8"
+                                Margin="0,2,0,0"
                                 Fill="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
 
                             <TextBlock
-                                Margin="12,0,0,0"
+                                Margin="12,2,0,0"
                                 VerticalAlignment="Center"
                                 FontFamily="{StaticResource ExtraBold}"
                                 FontSize="14"
@@ -338,7 +339,7 @@
 
                             <Border
                                 Height="24"
-                                Margin="12,-2,0,0"
+                                Margin="12,0,0,0"
                                 Padding="12,0"
                                 Background="{StaticResource Brush.Background.Surface}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"

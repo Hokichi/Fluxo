@@ -37,7 +37,7 @@
         <Border
             x:Name="SourceCard"
             BorderThickness="2"
-            CornerRadius="16"
+            CornerRadius="8"
             MouseLeftButtonDown="OnRootMouseLeftButtonDown"
             PreviewMouseRightButtonUp="OnRootPreviewMouseRightButtonUp">
             <Border.Background>

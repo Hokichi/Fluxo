@@ -55,8 +55,6 @@
                     <TextBox
                         Margin="0,8,0,0"
                         Background="{StaticResource Brush.Background.Surface}"
-                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                        BorderThickness="1"
                         Style="{StaticResource RoundedTextInputStyle}"
                         Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>

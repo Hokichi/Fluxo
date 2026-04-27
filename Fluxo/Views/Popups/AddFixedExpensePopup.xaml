@@ -123,8 +123,8 @@
                             Text="Tag" />
                         <ComboBox
                             x:Name="TagComboBox"
-                            ItemsSource="{Binding TagOptions}"
                             ItemTemplate="{StaticResource TagOptionTemplate}"
+                            ItemsSource="{Binding TagOptions}"
                             SelectedItem="{Binding SelectedTagOption, Mode=TwoWay}"
                             SelectionChanged="OnTagSelectionChanged"
                             Style="{StaticResource FluxoComboBoxStyle}" />
