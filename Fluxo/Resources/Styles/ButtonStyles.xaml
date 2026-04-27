@@ -403,6 +403,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Border
+                        x:Name="SelectorBorder"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
@@ -432,8 +433,14 @@
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="SelectorBorder" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="True">
+                            <Setter TargetName="SelectorBorder" Property="BorderBrush" Value="{StaticResource Brush.Danger}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

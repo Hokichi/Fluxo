@@ -83,6 +83,7 @@ public class MoneyTextBox : TextBox
 
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
+        SelectAllIfZeroAmount();
         e.Handled = !IsValidProposedInput(Text ?? string.Empty, SelectionStart, SelectionLength, e.Text, AllowDecimal);
     }
 
@@ -94,9 +95,31 @@ public class MoneyTextBox : TextBox
             return;
         }
 
+        SelectAllIfZeroAmount();
         var pastedText = e.SourceDataObject.GetData(DataFormats.Text) as string ?? string.Empty;
         if (!IsValidProposedInput(Text ?? string.Empty, SelectionStart, SelectionLength, pastedText, AllowDecimal))
             e.CancelCommand();
+    }
+
+    private void SelectAllIfZeroAmount()
+    {
+        var normalized = NormalizeSelectionForZeroAmount(Text ?? string.Empty, SelectionStart, SelectionLength, IsZeroAmount);
+        if (normalized.SelectionStart == SelectionStart && normalized.SelectionLength == SelectionLength)
+            return;
+
+        Select(normalized.SelectionStart, normalized.SelectionLength);
+    }
+
+    internal static SelectionState NormalizeSelectionForZeroAmount(
+        string currentText,
+        int selectionStart,
+        int selectionLength,
+        bool isZeroAmount)
+    {
+        if (!isZeroAmount || selectionLength > 0 || string.IsNullOrEmpty(currentText))
+            return new SelectionState(selectionStart, selectionLength);
+
+        return new SelectionState(0, currentText.Length);
     }
 
     private static bool IsValidProposedInput(
@@ -165,4 +188,6 @@ public class MoneyTextBox : TextBox
 
         IsZeroAmount = value == 0m;
     }
+
+    internal readonly record struct SelectionState(int SelectionStart, int SelectionLength);
 }

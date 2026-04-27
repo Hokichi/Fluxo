@@ -54,14 +54,30 @@ public partial class MainVM : ObservableRecipient
         BudgetPanel.ToggleSelectedSpendingSource(spendingSource);
     }
 
-    public async Task Initialize()
+    public Task Initialize()
     {
+        return InitializeWithStartupStagesAsync(static () => Task.CompletedTask);
+    }
+
+    public async Task InitializeWithStartupStagesAsync(Func<Task> betweenStagesAsync)
+    {
+        ArgumentNullException.ThrowIfNull(betweenStagesAsync);
+
         await LoadUserSettingsAsync();
-        await Task.WhenAll(
-            BudgetPanel.LoadAsync(),
-            SpentAllowancePanel.LoadAsync(),
-            NotificationPanel.LoadAsync(),
-            SavingGoalsPanel.LoadAsync());
+        await betweenStagesAsync();
+
+        await BudgetPanel.LoadAsync();
+        await betweenStagesAsync();
+
+        await SpentAllowancePanel.LoadAsync();
+        await betweenStagesAsync();
+
+        await NotificationPanel.LoadAsync();
+        await betweenStagesAsync();
+
+        await SavingGoalsPanel.LoadAsync();
+        await betweenStagesAsync();
+
         ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
             ViewModeToggle.SelectedMainContentViewMode);
         _isInitialized = true;

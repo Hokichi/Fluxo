@@ -343,6 +343,7 @@
                 BorderBrush="{StaticResource Brush.Border.Subtle}"
                 BorderThickness="1"
                 CornerRadius="12"
+                Cursor="Hand"
                 Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <Ellipse

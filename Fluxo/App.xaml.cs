@@ -5,6 +5,7 @@ using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
 using Fluxo.Services.Dialogs;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.CustomControls;
 using Fluxo.Views.Shell;
@@ -24,6 +25,7 @@ public partial class App : Application
 {
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly MainVM _mainVM;
+    private readonly IUiSettleAwaiter _uiSettleAwaiter;
     private readonly IServiceProvider? _serviceProvider;
 
     public App()
@@ -38,6 +40,7 @@ public partial class App : Application
 
         _mainVM = _serviceProvider.GetRequiredService<MainVM>();
         _dataOperationRunner = _serviceProvider.GetRequiredService<IDataOperationRunner>();
+        _uiSettleAwaiter = _serviceProvider.GetRequiredService<IUiSettleAwaiter>();
     }
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -53,11 +56,15 @@ public partial class App : Application
             try
             {
                 loaderPopup.Show();
+                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 await MigrateDatabaseAsync(_dataOperationRunner);
+                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
+                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
 
                 if (!isFirstRun)
-                    await _mainVM.Initialize();
+                    await _mainVM.InitializeWithStartupStagesAsync(() =>
+                        _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup));
             }
             finally
             {
