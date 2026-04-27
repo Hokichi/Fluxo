@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -49,6 +50,11 @@ public partial class AddSpendingSourceVM : ObservableObject
         _appData = appData;
         _saveDraftAsync = saveDraftAsync;
         _loadDraftDeductSourcesAsync = loadDraftDeductSourcesAsync;
+        DeductSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+            DeductSources,
+            nameof(DeductSourceOption.TypeDisplayName),
+            nameof(DeductSourceOption.SpendingSourceType),
+            nameof(DeductSourceOption.Name));
         _initialState = CaptureState();
     }
 
@@ -61,6 +67,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         new("Savings", SpendingSourceType.Saving)
     ];
     public ObservableCollection<DeductSourceOption> DeductSources { get; } = [];
+    public ICollectionView DeductSourcesView { get; }
 
     public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
@@ -137,9 +144,11 @@ public partial class AddSpendingSourceVM : ObservableObject
             var existingSources = await _appData.GetSpendingSourcesAsync(cancellationToken);
             options = existingSources
                 .Where(source => source.Id != (EditingId ?? 0))
+                .Where(source => source.IsEnabled)
                 .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
-                .OrderBy(source => source.Name)
-                .Select(source => new DeductSourceOption(source.Id, source.Name))
+                .OrderBy(source => source.SpendingSourceType)
+                .ThenBy(source => source.Name)
+                .Select(source => new DeductSourceOption(source.Id, source.Name, source.SpendingSourceType))
                 .ToList();
         }
 
@@ -508,5 +517,19 @@ public partial class AddSpendingSourceVM : ObservableObject
         bool ShowOnUI,
         bool IsEnabled);
 
-    public readonly record struct DeductSourceOption(int Id, string Name);
+    public readonly record struct DeductSourceOption(
+        int Id,
+        string Name,
+        SpendingSourceType SpendingSourceType = SpendingSourceType.Checking)
+    {
+        public string TypeDisplayName => SpendingSourceType switch
+        {
+            SpendingSourceType.Credit => "Credit",
+            SpendingSourceType.BNPL => "BNPL",
+            SpendingSourceType.Checking => "Checking",
+            SpendingSourceType.Cash => "Cash",
+            SpendingSourceType.Saving => "Savings",
+            _ => "Source"
+        };
+    }
 }

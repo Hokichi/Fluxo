@@ -1,0 +1,26 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Data;
+
+namespace Fluxo.ViewModels.Helpers;
+
+public static class SpendingSourceComboBoxViewFactory
+{
+    public static ListCollectionView CreateGroupedByTypeThenName<T>(
+        ObservableCollection<T> items,
+        string groupPropertyName,
+        string typeSortPropertyName,
+        string nameSortPropertyName)
+    {
+        var view = (ListCollectionView)CollectionViewSource.GetDefaultView(items);
+
+        view.GroupDescriptions.Clear();
+        view.SortDescriptions.Clear();
+
+        view.GroupDescriptions.Add(new PropertyGroupDescription(groupPropertyName));
+        view.SortDescriptions.Add(new SortDescription(typeSortPropertyName, ListSortDirection.Ascending));
+        view.SortDescriptions.Add(new SortDescription(nameSortPropertyName, ListSortDirection.Ascending));
+
+        return view;
+    }
+}

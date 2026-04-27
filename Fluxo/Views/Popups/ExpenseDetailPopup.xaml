@@ -148,9 +148,13 @@
                             x:Name="ExpenseSpendingSourceComboBox"
                             DisplayMemberPath="Name"
                             IsEnabled="{Binding CanEditFields}"
-                            ItemsSource="{Binding SpendingSources}"
+                            ItemsSource="{Binding SpendingSourcesView}"
                             SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
-                            Style="{StaticResource FluxoComboBoxStyle}" />
+                            Style="{StaticResource FluxoComboBoxStyle}">
+                            <ComboBox.GroupStyle>
+                                <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                            </ComboBox.GroupStyle>
+                        </ComboBox>
                     </StackPanel>
                 </Grid>
 

@@ -99,9 +99,13 @@
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Spending Source" />
                         <ComboBox
                             DisplayMemberPath="Name"
-                            ItemsSource="{Binding SpendingSources}"
+                            ItemsSource="{Binding SpendingSourcesView}"
                             SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
-                            Style="{StaticResource FluxoComboBoxStyle}" />
+                            Style="{StaticResource FluxoComboBoxStyle}">
+                            <ComboBox.GroupStyle>
+                                <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                            </ComboBox.GroupStyle>
+                        </ComboBox>
 
                         <TextBlock
                             Margin="0,14,0,8"

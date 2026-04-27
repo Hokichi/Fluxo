@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
@@ -39,11 +40,17 @@ public partial class SpendingSourceDetailVM : ObservableObject
         MainViewModel = mainViewModel;
         SpendingSourceId = spendingSourceId;
         _appData = appData;
+        DeductSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+            DeductSources,
+            nameof(DeductSourceOption.TypeDisplayName),
+            nameof(DeductSourceOption.SpendingSourceType),
+            nameof(DeductSourceOption.Name));
     }
 
     public ObservableCollection<SpendingSourceActivityItemVM> RecentActivities { get; } = [];
     public ObservableCollection<SpendingSourceTrendItemVM> Trends { get; } = [];
     public ObservableCollection<DeductSourceOption> DeductSources { get; } = [];
+    public ICollectionView DeductSourcesView { get; }
 
     public MainVM MainViewModel { get; }
 
@@ -515,9 +522,11 @@ public partial class SpendingSourceDetailVM : ObservableObject
     {
         var options = (await _appData.GetSpendingSourcesAsync())
             .Where(source => source.Id != SpendingSourceId)
+            .Where(source => source.IsEnabled)
             .Where(source => source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
-            .OrderBy(source => source.Name)
-            .Select(source => new DeductSourceOption(source.Id, source.Name))
+            .OrderBy(source => source.SpendingSourceType)
+            .ThenBy(source => source.Name)
+            .Select(source => new DeductSourceOption(source.Id, source.Name, source.SpendingSourceType))
             .ToList();
 
         DeductSources.Clear();
@@ -651,7 +660,21 @@ public partial class SpendingSourceDetailVM : ObservableObject
             true);
     }
 
-    public readonly record struct DeductSourceOption(int Id, string Name);
+    public readonly record struct DeductSourceOption(
+        int Id,
+        string Name,
+        SpendingSourceType SpendingSourceType = SpendingSourceType.Checking)
+    {
+        public string TypeDisplayName => SpendingSourceType switch
+        {
+            SpendingSourceType.Credit => "Credit",
+            SpendingSourceType.BNPL => "BNPL",
+            SpendingSourceType.Checking => "Checking",
+            SpendingSourceType.Cash => "Cash",
+            SpendingSourceType.Saving => "Savings",
+            _ => "Source"
+        };
+    }
 }
 
 public sealed record SpendingSourceActivityItemVM(

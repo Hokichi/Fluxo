@@ -176,9 +176,13 @@
                             <ComboBox
                                 x:Name="ExpenseSpendingSourceComboBox"
                                 DisplayMemberPath="Name"
-                                ItemsSource="{Binding SpendingSources}"
+                                ItemsSource="{Binding SpendingSourcesView}"
                                 SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
-                                Style="{StaticResource FluxoComboBoxStyle}" />
+                                Style="{StaticResource FluxoComboBoxStyle}">
+                                <ComboBox.GroupStyle>
+                                    <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                                </ComboBox.GroupStyle>
+                            </ComboBox>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
@@ -220,9 +224,13 @@
                             <ComboBox
                                 x:Name="IncomeSpendingSourceComboBox"
                                 DisplayMemberPath="Name"
-                                ItemsSource="{Binding SpendingSources}"
+                                ItemsSource="{Binding SpendingSourcesView}"
                                 SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
-                                Style="{StaticResource FluxoComboBoxStyle}" />
+                                Style="{StaticResource FluxoComboBoxStyle}">
+                                <ComboBox.GroupStyle>
+                                    <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                                </ComboBox.GroupStyle>
+                            </ComboBox>
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
@@ -258,9 +266,13 @@
                             <ComboBox
                                 x:Name="GoalSpendingSourceComboBox"
                                 DisplayMemberPath="Name"
-                                ItemsSource="{Binding SpendingSources}"
+                                ItemsSource="{Binding SpendingSourcesView}"
                                 SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
-                                Style="{StaticResource FluxoComboBoxStyle}" />
+                                Style="{StaticResource FluxoComboBoxStyle}">
+                                <ComboBox.GroupStyle>
+                                    <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                                </ComboBox.GroupStyle>
+                            </ComboBox>
                         </StackPanel>
                     </Grid>
 

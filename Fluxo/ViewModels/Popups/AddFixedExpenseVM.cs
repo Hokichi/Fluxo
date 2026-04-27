@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
@@ -55,12 +56,21 @@ public partial class AddFixedExpenseVM : ObservableObject
         _saveDraftAsync = saveDraftAsync;
         _loadDraftTagsAsync = loadDraftTagsAsync;
         _createDraftTagAsync = createDraftTagAsync;
+        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+            SpendingSources,
+            nameof(SpendingSourceVM.TypeDisplayName),
+            nameof(SpendingSourceVM.SpendingSourceType),
+            nameof(SpendingSourceVM.Name));
 
         var sourceList = spendingSourcesOverride ??
                          _mainViewModel.BudgetPanel.SpendingSources
-                             .Where(source => source.IsEnabled)
-                             .OrderBy(source => source.Name)
                              .ToList();
+
+        sourceList = sourceList
+            .Where(source => source.IsEnabled)
+            .OrderBy(source => source.SpendingSourceType)
+            .ThenBy(source => source.Name)
+            .ToList();
 
         foreach (var spendingSource in sourceList)
             SpendingSources.Add(spendingSource);
@@ -72,6 +82,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     }
 
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
+    public ICollectionView SpendingSourcesView { get; }
     public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
     public ObservableCollection<TagOption> TagOptions { get; } = [];
 

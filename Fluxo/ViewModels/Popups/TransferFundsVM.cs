@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -7,6 +8,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -30,10 +32,15 @@ public partial class TransferFundsVM : ObservableObject
         _sourceSpendingSourceId = source.Id;
         _appData = appData;
         SourceName = source.Name;
+        TargetsView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+            Targets,
+            nameof(SpendingSourceVM.TypeDisplayName),
+            nameof(SpendingSourceVM.SpendingSourceType),
+            nameof(SpendingSourceVM.Name));
 
         var candidateTargets = _mainViewModel.BudgetPanel.SpendingSources
-            .Where(spendingSource => spendingSource.Id != source.Id)
-            .OrderByDescending(spendingSource => spendingSource.ShowOnUI)
+            .Where(spendingSource => spendingSource.Id != source.Id && spendingSource.IsEnabled)
+            .OrderBy(spendingSource => spendingSource.SpendingSourceType)
             .ThenBy(spendingSource => spendingSource.Name)
             .ToList();
 
@@ -48,6 +55,7 @@ public partial class TransferFundsVM : ObservableObject
     public string SourceName { get; }
 
     public ObservableCollection<SpendingSourceVM> Targets { get; } = [];
+    public ICollectionView TargetsView { get; }
 
     public async Task<TransferFundsResult> SaveAsync()
     {

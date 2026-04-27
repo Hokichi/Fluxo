@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -7,6 +8,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -42,6 +44,11 @@ public partial class ExpenseDetailVM : ObservableObject
         _mainViewModel = mainViewModel;
         _expenseLog = expenseLog;
         _appData = appData;
+        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+            SpendingSources,
+            nameof(SpendingSourceVM.TypeDisplayName),
+            nameof(SpendingSourceVM.SpendingSourceType),
+            nameof(SpendingSourceVM.Name));
 
         ReloadChoicesFromMainViewModel();
         _savedState = CreateSavedState(expenseLog);
@@ -56,6 +63,7 @@ public partial class ExpenseDetailVM : ObservableObject
     ];
 
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
+    public ICollectionView SpendingSourcesView { get; }
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
 
@@ -258,7 +266,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private void ReloadChoicesFromMainViewModel()
     {
         _availableSpendingSources.Clear();
-        _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources);
+        _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources.Where(source => source.IsEnabled));
 
         _orderedTags.Clear();
         _orderedTags.AddRange(_mainViewModel.BudgetPanel.Tags
@@ -313,7 +321,9 @@ public partial class ExpenseDetailVM : ObservableObject
     private void RefreshSpendingSources()
     {
         var selectedSpendingSourceId = SelectedSpendingSource?.Id;
-        ReplaceCollection(SpendingSources, _availableSpendingSources.OrderBy(source => source.Name));
+        ReplaceCollection(SpendingSources, _availableSpendingSources
+            .OrderBy(source => source.SpendingSourceType)
+            .ThenBy(source => source.Name));
 
         SelectedSpendingSource = selectedSpendingSourceId is null
             ? SpendingSources.FirstOrDefault()

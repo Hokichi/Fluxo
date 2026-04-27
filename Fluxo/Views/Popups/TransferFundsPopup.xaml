@@ -44,9 +44,13 @@
         <ComboBox
             Grid.Row="6"
             DisplayMemberPath="Name"
-            ItemsSource="{Binding Targets}"
+            ItemsSource="{Binding TargetsView}"
             SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
-            Style="{StaticResource FluxoComboBoxStyle}" />
+            Style="{StaticResource FluxoComboBoxStyle}">
+            <ComboBox.GroupStyle>
+                <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+            </ComboBox.GroupStyle>
+        </ComboBox>
 
         <Grid Grid.Row="8">
             <Grid.RowDefinitions>

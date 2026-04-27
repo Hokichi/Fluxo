@@ -43,8 +43,12 @@
         <ComboBox
             Grid.Row="8"
             DisplayMemberPath="Name"
-            ItemsSource="{Binding EligibleSources}"
-            SelectedItem="{Binding SelectedSource, Mode=TwoWay}" />
+            ItemsSource="{Binding EligibleSourcesView}"
+            SelectedItem="{Binding SelectedSource, Mode=TwoWay}">
+            <ComboBox.GroupStyle>
+                <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+            </ComboBox.GroupStyle>
+        </ComboBox>
 
         <StackPanel
             Grid.Row="9"
