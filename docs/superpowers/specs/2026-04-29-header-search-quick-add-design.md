@@ -1,4 +1,4 @@
-# Header Search + Quick Add Design
+ï»¿# Header Search + Quick Add Design
 
 Date: 2026-04-29  
 Project: Fluxo  
@@ -16,6 +16,7 @@ Behavior requirements:
 - Quick Add opens `Add New Transaction` directly.
 - Search expands inline into a search box when clicked or when `Ctrl+F` is pressed.
 - Search reuses current quick-search matching behavior.
+- Selecting a search result collapses the expanded search UI.
 - Search auto-collapses when focus leaves the search UI, when clicking outside, or when `Esc` is pressed.
 - The standalone `QuickSearchPopup` is removed.
 
@@ -94,11 +95,11 @@ Remove references:
 - If empty or length `<= 3`: hide results.
 - Match where `Expense.Name` contains query (case-insensitive).
 - Return first 5 matches.
-- Show “No expense found” when no matches.
+- Show â€œNo expense foundâ€ when no matches.
 
 ### Result Selection
 - Clicking a result:
-  - collapses inline search UI
+  - collapses the expanded inline search UI
   - opens `ExpenseDetailPopup` via `OpenExpenseDetailPopup(log)`
 
 ## Error Handling and Resilience
@@ -121,8 +122,8 @@ Remove references:
 - `Ctrl+F` expands/focuses search UI.
 - Query with 4+ characters returns up to 5 matching expenses by name.
 - Query 3 chars or fewer hides results.
-- No-match query shows “No expense found”.
-- Selecting a result opens expense detail popup for selected entry.
+- No-match query shows â€œNo expense foundâ€.
+- Selecting a result collapses expanded search and opens expense detail popup for selected entry.
 
 ### Quick Add
 - Quick Add button opens `Add New Transaction` popup directly.
@@ -150,3 +151,5 @@ Out of scope:
 - Search ranking algorithm changes.
 - Search across additional fields (source/tag/amount/date).
 - Any new persistence, backend, or database changes.
+
+
