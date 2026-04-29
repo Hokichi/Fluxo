@@ -7,7 +7,6 @@ public sealed class PopupHandoffCallsiteTests
 {
     [Theory]
     [InlineData("Fluxo", "Views", "Popups", "QuickAddPopup.xaml.cs")]
-    [InlineData("Fluxo", "Views", "Popups", "QuickSearchPopup.xaml.cs")]
     [InlineData("Fluxo", "Views", "Popups", "ExpenseDetailPopup.xaml.cs")]
     [InlineData("Fluxo", "Views", "Popups", "SpendingSourcesListPopup.xaml.cs")]
     [InlineData("Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml.cs")]

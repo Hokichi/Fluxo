@@ -12,8 +12,6 @@ public interface IDialogService
 {
     bool? ShowQuickAdd(Window? owner = null);
 
-    bool? ShowQuickSearch(Window? owner = null);
-
     bool? ShowSpendingSourcesList(Window? owner = null);
 
     bool? ShowSettings(Window? owner = null);

@@ -37,11 +37,6 @@ public sealed class DialogService : IDialogService
         return ShowScopedDialog<QuickAddPopup>(owner);
     }
 
-    public bool? ShowQuickSearch(Window? owner = null)
-    {
-        return ShowScopedDialog<QuickSearchPopup>(owner);
-    }
-
     public bool? ShowSpendingSourcesList(Window? owner = null)
     {
         return ShowScopedDialog<SpendingSourcesListPopup>(owner);

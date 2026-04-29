@@ -105,7 +105,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<QuickSetupWizardVM>();
 
         services.AddTransient<QuickAddPopup>();
-        services.AddTransient<QuickSearchPopup>();
         services.AddTransient<SpendingSourcesListPopup>();
         services.AddTransient<AddSpendingSourcePopup>();
         services.AddTransient<AddFixedExpensePopup>();
