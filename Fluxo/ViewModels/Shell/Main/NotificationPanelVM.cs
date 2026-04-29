@@ -136,7 +136,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
                     await unitOfWork.Notifications.SaveChangesAsync(ct);
             });
 
-            Notifications.Clear();
+            ReplaceNotifications([]);
         }
         finally
         {
@@ -881,6 +881,18 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (prefix.Length == 0)
             return;
 
+        var isFixedExpenseDue = card.Category == NotificationGroupCategory.FixedExpenseDue;
+        var availableSources = isFixedExpenseDue
+            ? _spendingSources
+                .Where(source => source.IsEnabled)
+                .OrderBy(source => source.SpendingSourceType)
+                .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList()
+            : [];
+        var availableSourceIds = isFixedExpenseDue
+            ? availableSources.Select(source => source.Id).ToHashSet()
+            : new HashSet<int>();
+
         var items = card.Notifications
             .Select(notification => new
             {
@@ -890,10 +902,31 @@ public partial class NotificationPanelVM : ObservableRecipient,
             .Where(item => item.EntityId > 0)
             .GroupBy(item => item.EntityId)
             .Select(group => group.OrderByDescending(item => item.Notification.CreatedOn).First())
-            .Select(item => new NotificationChecklistActionItemVM
+            .Select(item =>
             {
-                EntityId = item.EntityId,
-                Label = item.Notification.Header
+                var checklistItem = new NotificationChecklistActionItemVM
+                {
+                    EntityId = item.EntityId,
+                    Label = item.Notification.Header
+                };
+
+                if (!isFixedExpenseDue)
+                    return checklistItem;
+
+                checklistItem.RequiresSourceSelection = true;
+                foreach (var source in availableSources)
+                    checklistItem.AvailableSources.Add(source);
+
+                var expenseSourceId = _expenses
+                    .FirstOrDefault(expense => expense.Id == item.EntityId)?
+                    .SpendingSource?.Id;
+                checklistItem.SelectedSourceId = expenseSourceId.HasValue &&
+                                                 expenseSourceId.Value > 0 &&
+                                                 availableSourceIds.Contains(expenseSourceId.Value)
+                    ? expenseSourceId.Value
+                    : availableSources.FirstOrDefault()?.Id;
+
+                return checklistItem;
             })
             .OrderBy(item => item.Label, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -906,15 +939,14 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (dialogResult != true && !viewModel.DidProceed)
             return;
 
-        var selectedIds = viewModel.SelectedItems
-            .Select(item => item.EntityId)
+        var decisions = viewModel.ActionDecisions
             .Distinct()
             .ToArray();
 
-        if (selectedIds.Length == 0)
+        if (decisions.Length == 0)
             return;
 
-        if (await _notificationActionService.ExecuteChecklistActionAsync(card, selectedIds))
+        if (await _notificationActionService.ExecuteChecklistActionAsync(card, decisions))
             await RefreshNotificationsAsync();
     }
 

@@ -6,9 +6,11 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Services.Dialogs;
 using Fluxo.Services.Notifications;
 using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
 using NSubstitute;
@@ -46,7 +48,7 @@ public class NotificationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Credit,
                 MonthlyDueDate = dueDate.Day,
                 AccountLimit = 1000m,
-                SpentAmount = 250m
+                SpentAmount = 0m
             }
         };
 
@@ -76,7 +78,7 @@ public class NotificationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Credit,
                 MonthlyDueDate = dueDate.Day,
                 AccountLimit = 1000m,
-                SpentAmount = 250m
+                SpentAmount = 0m
             }
         };
 
@@ -290,6 +292,65 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task OpenNotificationActionAsync_UpcomingPayment_ForwardsActionDecisionsToService()
+    {
+        var dueDate = DateTime.Today.AddDays(7);
+        var actionService = Substitute.For<INotificationActionService>();
+        actionService.ExecuteChecklistActionAsync(
+                Arg.Any<NotificationItemVM>(),
+                Arg.Any<IReadOnlyCollection<NotificationChecklistActionDecision>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(false));
+
+        var dialogService = Substitute.For<IDialogService>();
+        dialogService.ShowNotificationChecklistAction(
+                Arg.Any<NotificationChecklistActionVM>(),
+                Arg.Any<System.Windows.Window?>())
+            .Returns(call =>
+            {
+                var checklistVm = call.ArgAt<NotificationChecklistActionVM>(0);
+                checklistVm.Items[0].SelectedAction = NotificationChecklistItemActionType.Paid;
+                checklistVm.ProceedCommand.Execute(null);
+                return true;
+            });
+
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources:
+            [
+                new SpendingSourceVM
+                {
+                    Id = 1,
+                    Name = "Visa",
+                    SpendingSourceType = SpendingSourceType.Credit,
+                    MonthlyDueDate = dueDate.Day,
+                    AccountLimit = 1000m,
+                    SpentAmount = 0m
+                }
+            ],
+            out _,
+            actionService,
+            dialogService);
+
+        await vm.LoadAsync();
+
+        var upcomingPaymentCard = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.UpcomingPayment));
+
+        await vm.OpenNotificationActionCommand.ExecuteAsync(upcomingPaymentCard);
+
+        await actionService.Received(1).ExecuteChecklistActionAsync(
+            Arg.Is<NotificationItemVM>(card => card.Category == NotificationGroupCategory.UpcomingPayment),
+            Arg.Is<IReadOnlyCollection<NotificationChecklistActionDecision>>(decisions =>
+                decisions.Count == 1 &&
+                decisions.First().EntityId == 1 &&
+                decisions.First().Action == NotificationChecklistItemActionType.Paid &&
+                decisions.First().SelectedSourceId == null),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ClearAllNotificationsAsync_WithGroupedItems_ClearsAllPersistedActiveRows()
     {
         var vm = CreateVm(
@@ -462,7 +523,9 @@ public class NotificationPanelVMTests
         IReadOnlyList<ExpenseVM> expenses,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
         IReadOnlyList<SpendingSourceVM> spendingSources,
-        out List<Notification> persistedNotifications)
+        out List<Notification> persistedNotifications,
+        INotificationActionService? notificationActionService = null,
+        IDialogService? dialogService = null)
     {
         var expenseService = Substitute.For<IExpenseService>();
         expenseService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -542,6 +605,8 @@ public class NotificationPanelVMTests
             spendingSourceService,
             dataOperationRunner,
             mapper,
-            new NotificationGroupingService());
+            new NotificationGroupingService(),
+            notificationActionService,
+            dialogService);
     }
 }
