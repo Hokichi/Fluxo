@@ -13,7 +13,7 @@ public static class HeaderQuickSearchEngine
         }
 
         return logs.Where(log =>
-                log.Expense.Name.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+                log.Expense?.Name?.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) == true)
             .Take(5);
     }
 }

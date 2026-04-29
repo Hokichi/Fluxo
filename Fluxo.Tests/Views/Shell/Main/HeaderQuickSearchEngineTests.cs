@@ -41,6 +41,21 @@ public class HeaderQuickSearchEngineTests
     }
 
     [Fact]
+    public void Search_UsesTrimmedQuery_WhenEffectiveLengthIsFour()
+    {
+        var logs = new[]
+        {
+            CreateLog(1, "Apartment rent"),
+            CreateLog(2, "Utilities"),
+            CreateLog(3, "RENT insurance")
+        };
+
+        var result = HeaderQuickSearchEngine.Search(logs, "  rent  ").ToList();
+
+        Assert.Equal([1, 3], result.Select(log => log.Id).ToArray());
+    }
+
+    [Fact]
     public void Search_LimitsResultsToFirstFiveMatches()
     {
         var logs = Enumerable
@@ -52,6 +67,23 @@ public class HeaderQuickSearchEngineTests
 
         Assert.Equal(5, result.Count);
         Assert.Equal([1, 2, 3, 4, 5], result.Select(log => log.Id).ToArray());
+    }
+
+    [Fact]
+    public void Search_IgnoresNullNestedExpenseFields_WithoutThrowing()
+    {
+        var logs = new[]
+        {
+            new ExpenseLogVM { Id = 1, Expense = null! },
+            new ExpenseLogVM { Id = 2, Expense = new ExpenseVM { Name = null! } },
+            CreateLog(3, "Rent payment")
+        };
+
+        var exception = Record.Exception(() => HeaderQuickSearchEngine.Search(logs, "rent").ToList());
+
+        Assert.Null(exception);
+        var result = HeaderQuickSearchEngine.Search(logs, "rent").ToList();
+        Assert.Equal([3], result.Select(log => log.Id).ToArray());
     }
 
     private static ExpenseLogVM CreateLog(int id, string expenseName)
