@@ -36,7 +36,9 @@ public sealed class NotificationActionServiceTests
 
         var sut = CreateSut(persistedNotifications, out _, out _);
 
-        var succeeded = await sut.ExecuteChecklistActionAsync(card, [10]);
+        var succeeded = await sut.ExecuteChecklistActionAsync(
+            card,
+            [new NotificationChecklistActionDecision(10, NotificationChecklistItemActionType.Process, null)]);
 
         Assert.True(succeeded);
         Assert.True(persistedNotifications.Single(n => n.Id == 1).IsCleared);
@@ -147,7 +149,9 @@ public sealed class NotificationActionServiceTests
 
         var sut = CreateSut(persistedNotifications, out _, out _);
 
-        var succeeded = await sut.ExecuteChecklistActionAsync(card, [99]);
+        var succeeded = await sut.ExecuteChecklistActionAsync(
+            card,
+            [new NotificationChecklistActionDecision(99, NotificationChecklistItemActionType.Process, null)]);
 
         Assert.False(succeeded);
         Assert.False(persistedNotifications[0].IsCleared);

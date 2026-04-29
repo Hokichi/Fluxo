@@ -8,23 +8,6 @@ public interface INotificationActionService
     Task<bool> ExecuteChecklistActionAsync(
         NotificationItemVM card,
         IReadOnlyCollection<NotificationChecklistActionDecision> decisions,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(card);
-        ArgumentNullException.ThrowIfNull(decisions);
-
-        var selectedIds = decisions
-            .Where(decision => decision.Action != NotificationChecklistItemActionType.Ignore)
-            .Select(decision => decision.EntityId)
-            .Distinct()
-            .ToArray();
-
-        return ExecuteChecklistActionAsync(card, selectedIds, cancellationToken);
-    }
-
-    Task<bool> ExecuteChecklistActionAsync(
-        NotificationItemVM card,
-        IReadOnlyCollection<int> selectedIds,
         CancellationToken cancellationToken = default);
 
     Task<bool> ExecuteGoalActionAsync(

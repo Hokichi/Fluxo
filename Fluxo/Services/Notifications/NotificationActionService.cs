@@ -11,6 +11,23 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
 {
     public Task<bool> ExecuteChecklistActionAsync(
         NotificationItemVM card,
+        IReadOnlyCollection<NotificationChecklistActionDecision> decisions,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(card);
+        ArgumentNullException.ThrowIfNull(decisions);
+
+        var selectedIds = decisions
+            .Where(decision => decision.Action != NotificationChecklistItemActionType.Ignore)
+            .Select(decision => decision.EntityId)
+            .Distinct()
+            .ToArray();
+
+        return ExecuteChecklistActionBySelectedIdsAsync(card, selectedIds, cancellationToken);
+    }
+
+    private Task<bool> ExecuteChecklistActionBySelectedIdsAsync(
+        NotificationItemVM card,
         IReadOnlyCollection<int> selectedIds,
         CancellationToken cancellationToken = default)
     {
