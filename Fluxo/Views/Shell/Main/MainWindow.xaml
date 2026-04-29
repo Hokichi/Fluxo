@@ -258,7 +258,6 @@
                         Orientation="Horizontal">
                         <Grid
                             x:Name="HeaderSearchRegion"
-                            Margin="0,0,8,0"
                             VerticalAlignment="Top"
                             Panel.ZIndex="10"
                             PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus">
@@ -271,15 +270,13 @@
                                 x:Name="HeaderSearchButton"
                                 ButtonIcon="{StaticResource MagnifyingGlass}"
                                 Click="OnHeaderSearchButtonClick"
-                                DefaultBackground="{StaticResource Brush.Mint}"
-                                HoveredBackground="{StaticResource Brush.Mint.Muted}"
-                                IconSize="12"
+                                IconSize="11"
                                 Style="{StaticResource HeaderButtonStyle}" />
 
                             <Border
                                 x:Name="HeaderSearchInputBorder"
-                                Width="420"
-                                Padding="12,10"
+                                Width="300"
+                                Padding="10,6"
                                 Background="{StaticResource Brush.Background.Surface}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"
                                 BorderThickness="1"
@@ -292,8 +289,8 @@
                                     </Grid.ColumnDefinitions>
 
                                     <components:Icon
-                                        Width="14"
-                                        Height="14"
+                                        Width="12"
+                                        Height="12"
                                         VerticalAlignment="Center"
                                         Path="{StaticResource MagnifyingGlass}"
                                         Color="{StaticResource Brush.Text.Muted}" />
@@ -301,13 +298,13 @@
                                     <TextBox
                                         x:Name="HeaderSearchBox"
                                         Grid.Column="1"
-                                        Margin="10,0,0,0"
+                                        Margin="8,0,0,0"
                                         VerticalContentAlignment="Center"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         CaretBrush="{StaticResource Brush.Text.Primary}"
                                         FontFamily="{StaticResource Regular}"
-                                        FontSize="14"
+                                        FontSize="13"
                                         Foreground="{StaticResource Brush.Text.Primary}"
                                         PreviewKeyDown="OnHeaderSearchBoxPreviewKeyDown"
                                         TextChanged="OnHeaderSearchTextChanged">
@@ -320,38 +317,43 @@
                                 </Grid>
                             </Border>
 
-                            <Border
-                                x:Name="HeaderSearchResultsBorder"
-                                Grid.Row="1"
-                                Width="420"
-                                Margin="0,8,0,0"
-                                Padding="6"
-                                Background="{StaticResource Brush.Background.Elevated}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Visibility="Collapsed">
-                                <Grid>
-                                    <TextBlock
-                                        x:Name="HeaderSearchNoResultsText"
-                                        Padding="12,10"
-                                        HorizontalAlignment="Center"
-                                        FontFamily="{StaticResource Medium}"
-                                        FontSize="14"
-                                        Foreground="{StaticResource Brush.Text.Muted}"
-                                        Text="No expense found"
-                                        Visibility="Collapsed" />
-                                    <ItemsControl x:Name="HeaderSearchResultsList" ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
-                                </Grid>
-                            </Border>
+                            <Popup
+                                x:Name="HeaderSearchResultsPopup"
+                                AllowsTransparency="True"
+                                IsOpen="False"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding ElementName=HeaderSearchInputBorder}"
+                                PopupAnimation="Fade"
+                                StaysOpen="True"
+                                VerticalOffset="8">
+                                <Border
+                                    x:Name="HeaderSearchResultsBorder"
+                                    Width="300"
+                                    Padding="6"
+                                    Background="{StaticResource Brush.Background.Elevated}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                    <Grid>
+                                        <TextBlock
+                                            x:Name="HeaderSearchNoResultsText"
+                                            Padding="12,10"
+                                            HorizontalAlignment="Center"
+                                            FontFamily="{StaticResource Medium}"
+                                            FontSize="14"
+                                            Foreground="{StaticResource Brush.Text.Muted}"
+                                            Text="No expense found"
+                                            Visibility="Collapsed" />
+                                        <ItemsControl x:Name="HeaderSearchResultsList" ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
+                                    </Grid>
+                                </Border>
+                            </Popup>
                         </Grid>
 
                         <customControls:BalloonButton
                             x:Name="HeaderQuickAddButton"
                             ButtonIcon="{StaticResource PlusSolid}"
                             Click="OnHeaderQuickAddButtonClick"
-                            DefaultBackground="{StaticResource Brush.Mint}"
-                            HoveredBackground="{StaticResource Brush.Mint.Muted}"
                             Style="{StaticResource HeaderButtonStyle}" />
 
                         <customControls:BalloonButton

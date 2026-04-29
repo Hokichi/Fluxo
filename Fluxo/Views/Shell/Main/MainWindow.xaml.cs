@@ -693,7 +693,7 @@ public partial class MainWindow : Window, IPopupHost
         _isHeaderSearchExpanded = false;
         HeaderSearchButton.Visibility = Visibility.Visible;
         HeaderSearchInputBorder.Visibility = Visibility.Collapsed;
-        HeaderSearchResultsBorder.Visibility = Visibility.Collapsed;
+        HeaderSearchResultsPopup.IsOpen = false;
         HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
         HeaderSearchBox.Text = string.Empty;
         _headerSearchResults.Clear();
@@ -714,17 +714,17 @@ public partial class MainWindow : Window, IPopupHost
             var normalizedQuery = query?.Trim();
             if (string.IsNullOrEmpty(normalizedQuery) || normalizedQuery.Length <= 3)
             {
-                HeaderSearchResultsBorder.Visibility = Visibility.Collapsed;
+                HeaderSearchResultsPopup.IsOpen = false;
                 HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
                 return;
             }
 
-            HeaderSearchResultsBorder.Visibility = Visibility.Visible;
+            HeaderSearchResultsPopup.IsOpen = true;
             HeaderSearchNoResultsText.Visibility = Visibility.Visible;
             return;
         }
 
-        HeaderSearchResultsBorder.Visibility = Visibility.Visible;
+        HeaderSearchResultsPopup.IsOpen = true;
         HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
         foreach (var match in matches)
             _headerSearchResults.Add(match);
