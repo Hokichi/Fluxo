@@ -24,9 +24,18 @@ public partial class NotificationChecklistActionVM : ObservableObject
     public ObservableCollection<NotificationChecklistActionItemVM> Items { get; } = [];
 
     public IReadOnlyList<NotificationChecklistActionItemVM> SelectedItems =>
-        Items.Where(item => item.IsSelected).ToList();
+        Items.Where(item => item.SelectedAction != NotificationChecklistItemActionType.Ignore).ToList();
 
-    public bool CanProceed => Items.Any(item => item.IsSelected);
+    public IReadOnlyList<NotificationChecklistActionDecision> ActionDecisions =>
+        Items
+            .Where(item => item.SelectedAction != NotificationChecklistItemActionType.Ignore)
+            .Select(item => new NotificationChecklistActionDecision(
+                item.EntityId,
+                item.SelectedAction,
+                item.SelectedSourceId))
+            .ToList();
+
+    public bool CanProceed => Items.Any(item => item.SelectedAction != NotificationChecklistItemActionType.Ignore);
 
     [RelayCommand(CanExecute = nameof(CanProceed))]
     private void Proceed()
@@ -50,16 +59,19 @@ public partial class NotificationChecklistActionVM : ObservableObject
 
         OnPropertyChanged(nameof(CanProceed));
         OnPropertyChanged(nameof(SelectedItems));
+        OnPropertyChanged(nameof(ActionDecisions));
         ProceedCommand.NotifyCanExecuteChanged();
     }
 
     private void OnChecklistItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (!string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.IsSelected), StringComparison.Ordinal))
+        if (!string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedAction), StringComparison.Ordinal) &&
+            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedSourceId), StringComparison.Ordinal))
             return;
 
         OnPropertyChanged(nameof(CanProceed));
         OnPropertyChanged(nameof(SelectedItems));
+        OnPropertyChanged(nameof(ActionDecisions));
         ProceedCommand.NotifyCanExecuteChanged();
     }
 }
