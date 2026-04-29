@@ -22,6 +22,9 @@ public sealed class NotificationChecklistActionPopupLayoutTests
         Assert.Contains("Content=\"Ignore\"", xaml);
         Assert.Contains("Content=\"Paid\"", xaml);
         Assert.Contains("Content=\"Process\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsIgnoreSelected, Mode=TwoWay}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsPaidSelected, Mode=TwoWay}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsProcessSelected, Mode=TwoWay}\"", xaml);
         Assert.Contains("Style=\"{StaticResource SegmentedToggleOptionStyle}\"", xaml);
     }
 
@@ -43,5 +46,14 @@ public sealed class NotificationChecklistActionPopupLayoutTests
         Assert.Contains("SelectedValuePath=\"Id\"", xaml);
         Assert.Contains("DisplayMemberPath=\"Name\"", xaml);
         Assert.Contains("Visibility=\"{Binding ShowSourceSelector, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+    }
+
+    [Fact]
+    public void PopupUsesActionOrientedTitleAndInstructionCopy()
+    {
+        var xaml = File.ReadAllText(PopupXamlPath);
+
+        Assert.Contains("PopupTitle=\"Review Notification Actions\"", xaml);
+        Assert.Contains("Text=\"Choose Ignore, Paid, or Process for each notification\"", xaml);
     }
 }
