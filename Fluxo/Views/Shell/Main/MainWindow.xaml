@@ -252,14 +252,16 @@
 
                     <StackPanel
                         Grid.Column="2"
+                        Margin="0"
                         HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
                         Orientation="Horizontal">
                         <Grid
                             x:Name="HeaderSearchRegion"
                             Margin="0,0,8,0"
-                            PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus"
                             VerticalAlignment="Top"
-                            Panel.ZIndex="10">
+                            Panel.ZIndex="10"
+                            PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -271,6 +273,7 @@
                                 Click="OnHeaderSearchButtonClick"
                                 DefaultBackground="{StaticResource Brush.Mint}"
                                 HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                                IconSize="12"
                                 Style="{StaticResource HeaderButtonStyle}" />
 
                             <Border
@@ -292,13 +295,14 @@
                                         Width="14"
                                         Height="14"
                                         VerticalAlignment="Center"
-                                        Color="{StaticResource Brush.Text.Muted}"
-                                        Path="{StaticResource MagnifyingGlass}" />
+                                        Path="{StaticResource MagnifyingGlass}"
+                                        Color="{StaticResource Brush.Text.Muted}" />
 
                                     <TextBox
                                         x:Name="HeaderSearchBox"
                                         Grid.Column="1"
                                         Margin="10,0,0,0"
+                                        VerticalContentAlignment="Center"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         CaretBrush="{StaticResource Brush.Text.Primary}"
@@ -306,8 +310,7 @@
                                         FontSize="14"
                                         Foreground="{StaticResource Brush.Text.Primary}"
                                         PreviewKeyDown="OnHeaderSearchBoxPreviewKeyDown"
-                                        TextChanged="OnHeaderSearchTextChanged"
-                                        VerticalContentAlignment="Center">
+                                        TextChanged="OnHeaderSearchTextChanged">
                                         <TextBox.Template>
                                             <ControlTemplate TargetType="TextBox">
                                                 <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
@@ -338,9 +341,7 @@
                                         Foreground="{StaticResource Brush.Text.Muted}"
                                         Text="No expense found"
                                         Visibility="Collapsed" />
-                                    <ItemsControl
-                                        x:Name="HeaderSearchResultsList"
-                                        ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
+                                    <ItemsControl x:Name="HeaderSearchResultsList" ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
                                 </Grid>
                             </Border>
                         </Grid>
