@@ -37,21 +37,18 @@
                     <StackPanel Orientation="Horizontal">
                         <RadioButton
                             Content="Ignore"
-                            GroupName="{Binding EntityId, StringFormat=ActionSelection{0}}"
                             IsChecked="{Binding IsIgnoreSelected, Mode=TwoWay}"
                             MinWidth="0"
                             Style="{StaticResource SegmentedToggleOptionStyle}" />
                         <RadioButton
                             Margin="4,0,0,0"
                             Content="Paid"
-                            GroupName="{Binding EntityId, StringFormat=ActionSelection{0}}"
                             IsChecked="{Binding IsPaidSelected, Mode=TwoWay}"
                             MinWidth="0"
                             Style="{StaticResource SegmentedToggleOptionStyle}" />
                         <RadioButton
                             Margin="4,0,0,0"
                             Content="Process"
-                            GroupName="{Binding EntityId, StringFormat=ActionSelection{0}}"
                             IsChecked="{Binding IsProcessSelected, Mode=TwoWay}"
                             MinWidth="0"
                             Style="{StaticResource SegmentedToggleOptionStyle}" />
