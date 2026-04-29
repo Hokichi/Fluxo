@@ -8,6 +8,8 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class NotificationChecklistActionVM : ObservableObject
 {
+    private readonly HashSet<NotificationChecklistActionItemVM> _trackedItems = [];
+
     public NotificationChecklistActionVM(IEnumerable<NotificationChecklistActionItemVM>? items = null)
     {
         Items.CollectionChanged += OnItemsCollectionChanged;
@@ -28,14 +30,14 @@ public partial class NotificationChecklistActionVM : ObservableObject
 
     public IReadOnlyList<NotificationChecklistActionDecision> ActionDecisions =>
         Items
-            .Where(item => item.SelectedAction != NotificationChecklistItemActionType.Ignore)
+            .Where(IsActionExecutable)
             .Select(item => new NotificationChecklistActionDecision(
                 item.EntityId,
                 item.SelectedAction,
                 item.SelectedSourceId))
             .ToList();
 
-    public bool CanProceed => Items.Any(item => item.SelectedAction != NotificationChecklistItemActionType.Ignore);
+    public bool CanProceed => Items.Any(IsActionExecutable);
 
     [RelayCommand(CanExecute = nameof(CanProceed))]
     private void Proceed()
@@ -45,16 +47,29 @@ public partial class NotificationChecklistActionVM : ObservableObject
 
     private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.OldItems is not null)
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            foreach (var trackedItem in _trackedItems)
+                trackedItem.PropertyChanged -= OnChecklistItemPropertyChanged;
+
+            _trackedItems.Clear();
+        }
+        else if (e.OldItems is not null)
         {
             foreach (var oldItem in e.OldItems.OfType<NotificationChecklistActionItemVM>())
+            {
                 oldItem.PropertyChanged -= OnChecklistItemPropertyChanged;
+                _trackedItems.Remove(oldItem);
+            }
         }
 
         if (e.NewItems is not null)
         {
             foreach (var newItem in e.NewItems.OfType<NotificationChecklistActionItemVM>())
-                newItem.PropertyChanged += OnChecklistItemPropertyChanged;
+            {
+                if (_trackedItems.Add(newItem))
+                    newItem.PropertyChanged += OnChecklistItemPropertyChanged;
+            }
         }
 
         OnPropertyChanged(nameof(CanProceed));
@@ -66,12 +81,24 @@ public partial class NotificationChecklistActionVM : ObservableObject
     private void OnChecklistItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (!string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedAction), StringComparison.Ordinal) &&
-            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedSourceId), StringComparison.Ordinal))
+            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedSourceId), StringComparison.Ordinal) &&
+            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.RequiresSourceSelection), StringComparison.Ordinal))
             return;
 
         OnPropertyChanged(nameof(CanProceed));
         OnPropertyChanged(nameof(SelectedItems));
         OnPropertyChanged(nameof(ActionDecisions));
         ProceedCommand.NotifyCanExecuteChanged();
+    }
+
+    private static bool IsActionExecutable(NotificationChecklistActionItemVM item)
+    {
+        if (item.SelectedAction == NotificationChecklistItemActionType.Ignore)
+            return false;
+
+        if (item.RequiresSourceSelection && item.SelectedSourceId is null)
+            return false;
+
+        return true;
     }
 }

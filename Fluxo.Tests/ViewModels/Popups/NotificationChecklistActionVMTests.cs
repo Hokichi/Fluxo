@@ -39,6 +39,32 @@ public sealed class NotificationChecklistActionVMTests
     }
 
     [Fact]
+    public void ProceedCommand_Disabled_WhenActionRequiresSourceButSourceMissing()
+    {
+        var vm = new NotificationChecklistActionVM(
+        [
+            new NotificationChecklistActionItemVM
+            {
+                EntityId = 1,
+                Label = "Rent",
+                SelectedAction = NotificationChecklistItemActionType.Process,
+                RequiresSourceSelection = true
+            }
+        ]);
+
+        Assert.False(vm.CanProceed);
+        Assert.False(vm.ProceedCommand.CanExecute(null));
+        Assert.Empty(vm.ActionDecisions);
+
+        vm.Items[0].SelectedSourceId = 88;
+
+        Assert.True(vm.CanProceed);
+        Assert.True(vm.ProceedCommand.CanExecute(null));
+        var decision = Assert.Single(vm.ActionDecisions);
+        Assert.Equal(new NotificationChecklistActionDecision(1, NotificationChecklistItemActionType.Process, 88), decision);
+    }
+
+    [Fact]
     public void ProceedCommand_SetsDidProceed_AndCapturesActionDecisions()
     {
         var vm = new NotificationChecklistActionVM(
@@ -73,5 +99,57 @@ public sealed class NotificationChecklistActionVMTests
 
         Assert.Equal(new NotificationChecklistActionDecision(1, NotificationChecklistItemActionType.Paid, null), decisions[0]);
         Assert.Equal(new NotificationChecklistActionDecision(2, NotificationChecklistItemActionType.Process, 18), decisions[1]);
+    }
+
+    [Fact]
+    public void ActionDecisions_ExcludesInvalidActionableRowsThatNeedSource()
+    {
+        var vm = new NotificationChecklistActionVM(
+        [
+            new NotificationChecklistActionItemVM
+            {
+                EntityId = 1,
+                Label = "Rent",
+                SelectedAction = NotificationChecklistItemActionType.Process,
+                RequiresSourceSelection = true
+            },
+            new NotificationChecklistActionItemVM
+            {
+                EntityId = 2,
+                Label = "Water",
+                SelectedAction = NotificationChecklistItemActionType.Paid
+            }
+        ]);
+
+        var decisions = vm.ActionDecisions.ToArray();
+
+        var decision = Assert.Single(decisions);
+        Assert.Equal(new NotificationChecklistActionDecision(2, NotificationChecklistItemActionType.Paid, null), decision);
+    }
+
+    [Fact]
+    public void ItemsClear_UnsubscribesRemovedItemsFromPropertyChanged()
+    {
+        var item = new NotificationChecklistActionItemVM
+        {
+            EntityId = 1,
+            Label = "Rent",
+            SelectedAction = NotificationChecklistItemActionType.Paid
+        };
+        var vm = new NotificationChecklistActionVM([item]);
+
+        var canProceedNotifications = 0;
+        vm.PropertyChanged += (_, args) =>
+        {
+            if (string.Equals(args.PropertyName, nameof(NotificationChecklistActionVM.CanProceed), StringComparison.Ordinal))
+                canProceedNotifications++;
+        };
+
+        vm.Items.Clear();
+        canProceedNotifications = 0;
+
+        item.SelectedAction = NotificationChecklistItemActionType.Ignore;
+
+        Assert.Equal(0, canProceedNotifications);
     }
 }
