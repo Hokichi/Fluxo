@@ -62,4 +62,42 @@ public class MainWindowShortcutMatcherTests
 
         Assert.False(isShortcut);
     }
+
+    [Fact]
+    public void IsOpenSearchShortcut_ReturnsTrue_ForCtrlF()
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenSearchShortcut(Key.F, ModifierKeys.Control);
+
+        Assert.True(isShortcut);
+    }
+
+    [Theory]
+    [InlineData(Key.F, ModifierKeys.None)]
+    [InlineData(Key.F, ModifierKeys.Control | ModifierKeys.Shift)]
+    [InlineData(Key.S, ModifierKeys.Control)]
+    public void IsOpenSearchShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenSearchShortcut(key, modifiers);
+
+        Assert.False(isShortcut);
+    }
+
+    [Fact]
+    public void IsOpenQuickAddShortcut_ReturnsTrue_ForCtrlN()
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenQuickAddShortcut(Key.N, ModifierKeys.Control);
+
+        Assert.True(isShortcut);
+    }
+
+    [Theory]
+    [InlineData(Key.N, ModifierKeys.None)]
+    [InlineData(Key.N, ModifierKeys.Control | ModifierKeys.Shift)]
+    [InlineData(Key.M, ModifierKeys.Control)]
+    public void IsOpenQuickAddShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenQuickAddShortcut(key, modifiers);
+
+        Assert.False(isShortcut);
+    }
 }

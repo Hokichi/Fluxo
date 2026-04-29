@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,6 +44,7 @@ public partial class MainWindow : Window, IPopupHost
     private readonly IDialogService _dialogService;
     private readonly IServiceProvider _serviceProvider;
     private readonly PopupOverlayHandoffState _popupOverlayHandoffState = new();
+    private readonly ObservableCollection<ExpenseLogVM> _headerSearchResults = [];
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _hasInitializedDashboardPanels;
@@ -55,6 +57,7 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isAnalyticsDrawerOpen;
     private bool _isAnalyticsDrawerTransitionActive;
     private bool _isPreparingAnalyticsOpen;
+    private bool _isHeaderSearchExpanded;
     private int _analyticsDrawerTabVisibilityToken;
     private EventHandler? _popupOverlayDeferredHideTickHandler;
     private bool _isAnalyticsDrawerTabVisibilityTransitionActive;
@@ -77,6 +80,7 @@ public partial class MainWindow : Window, IPopupHost
         _serviceProvider = serviceProvider;
         _logMemoryManager = new LogMemoryManager(_mainVM, _dataOperationRunner);
 
+        HeaderSearchResultsList.ItemsSource = _headerSearchResults;
         DataContext = _mainVM;
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
         UpdateHistoryAvailability();
@@ -518,10 +522,26 @@ public partial class MainWindow : Window, IPopupHost
         return null;
     }
 
+    private static bool IsDescendantOf(DependencyObject source, DependencyObject ancestor)
+    {
+        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
+            if (ReferenceEquals(current, ancestor))
+                return true;
+
+        return false;
+    }
+
     // ── Keyboard shortcuts ────────────────────────────────────────────
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_isHeaderSearchExpanded && e.Key == Key.Escape)
+        {
+            CollapseHeaderSearch();
+            e.Handled = true;
+            return;
+        }
+
         if (_isAnalyticsDrawerOpen && e.Key == Key.Escape)
         {
             CloseAnalyticsDrawer();
@@ -529,16 +549,16 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        if (e.Key == Key.N && Keyboard.Modifiers == ModifierKeys.Control)
+        if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))
         {
-            OpenQuickAddPopup();
+            OpenAddNewTransactionPopup();
             e.Handled = true;
             return;
         }
 
-        if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+        if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))
         {
-            _dialogService.ShowQuickSearch(this);
+            ExpandHeaderSearch();
             e.Handled = true;
             return;
         }
@@ -604,6 +624,110 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         await ((App)Application.Current).RunSetupWizardAsync();
+    }
+
+    private void OnHeaderSearchButtonClick(object sender, RoutedEventArgs e)
+    {
+        ExpandHeaderSearch();
+    }
+
+    private void OnHeaderQuickAddButtonClick(object sender, RoutedEventArgs e)
+    {
+        OpenAddNewTransactionPopup();
+    }
+
+    private void OnHeaderSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateHeaderSearchResults();
+    }
+
+    private void OnHeaderSearchBoxPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape)
+            return;
+
+        CollapseHeaderSearch();
+        e.Handled = true;
+    }
+
+    private void OnHeaderSearchRegionPreviewLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (!_isHeaderSearchExpanded || e.NewFocus is not DependencyObject newFocus)
+            return;
+
+        if (IsDescendantOf(newFocus, HeaderSearchRegion))
+            return;
+
+        CollapseHeaderSearch();
+    }
+
+    private void OnHeaderSearchResultItemClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: ExpenseLogVM log })
+            return;
+
+        CollapseHeaderSearch();
+        OpenExpenseDetailPopup(log);
+        e.Handled = true;
+    }
+
+    private void ExpandHeaderSearch()
+    {
+        if (!_isHeaderSearchExpanded)
+        {
+            _isHeaderSearchExpanded = true;
+            HeaderSearchButton.Visibility = Visibility.Collapsed;
+            HeaderSearchInputBorder.Visibility = Visibility.Visible;
+        }
+
+        HeaderSearchBox.Focus();
+        HeaderSearchBox.SelectAll();
+        UpdateHeaderSearchResults();
+    }
+
+    private void CollapseHeaderSearch()
+    {
+        if (!_isHeaderSearchExpanded)
+            return;
+
+        _isHeaderSearchExpanded = false;
+        HeaderSearchButton.Visibility = Visibility.Visible;
+        HeaderSearchInputBorder.Visibility = Visibility.Collapsed;
+        HeaderSearchResultsBorder.Visibility = Visibility.Collapsed;
+        HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
+        HeaderSearchBox.Text = string.Empty;
+        _headerSearchResults.Clear();
+    }
+
+    private void UpdateHeaderSearchResults()
+    {
+        if (!_isHeaderSearchExpanded)
+            return;
+
+        var query = HeaderSearchBox.Text;
+        var matches = HeaderQuickSearchEngine.Search(_mainVM.BudgetPanel.GetAllExpenseLogs(), query).ToList();
+
+        _headerSearchResults.Clear();
+
+        if (matches.Count == 0)
+        {
+            var normalizedQuery = query?.Trim();
+            if (string.IsNullOrEmpty(normalizedQuery) || normalizedQuery.Length <= 3)
+            {
+                HeaderSearchResultsBorder.Visibility = Visibility.Collapsed;
+                HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            HeaderSearchResultsBorder.Visibility = Visibility.Visible;
+            HeaderSearchNoResultsText.Visibility = Visibility.Visible;
+            return;
+        }
+
+        HeaderSearchResultsBorder.Visibility = Visibility.Visible;
+        HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
+        foreach (var match in matches)
+            _headerSearchResults.Add(match);
     }
 
     private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)
@@ -1221,7 +1345,13 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnWindowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (!_isHeaderMenuPinned || e.OriginalSource is not DependencyObject source)
+        if (e.OriginalSource is not DependencyObject source)
+            return;
+
+        if (_isHeaderSearchExpanded && !IsDescendantOf(source, HeaderSearchRegion))
+            CollapseHeaderSearch();
+
+        if (!_isHeaderMenuPinned)
             return;
 
         if (FindAncestor<BalloonButton>(source) == HeaderMenuButton)
@@ -1232,6 +1362,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnWindowDeactivated(object? sender, EventArgs e)
     {
+        CollapseHeaderSearch();
         CloseHeaderMenu();
     }
 

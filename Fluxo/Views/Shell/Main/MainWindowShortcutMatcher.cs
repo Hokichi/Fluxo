@@ -18,4 +18,14 @@ public static class MainWindowShortcutMatcher
     {
         return key == Key.A && modifiers == ModifierKeys.Control;
     }
+
+    public static bool IsOpenSearchShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.F && modifiers == ModifierKeys.Control;
+    }
+
+    public static bool IsOpenQuickAddShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.N && modifiers == ModifierKeys.Control;
+    }
 }
