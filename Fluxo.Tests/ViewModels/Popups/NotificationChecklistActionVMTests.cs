@@ -65,6 +65,26 @@ public sealed class NotificationChecklistActionVMTests
     }
 
     [Fact]
+    public void PaidAction_DoesNotRequireSourceSelection()
+    {
+        var vm = new NotificationChecklistActionVM(
+        [
+            new NotificationChecklistActionItemVM
+            {
+                EntityId = 1,
+                Label = "Rent",
+                SelectedAction = NotificationChecklistItemActionType.Paid,
+                RequiresSourceSelection = true
+            }
+        ]);
+
+        Assert.True(vm.CanProceed);
+        Assert.True(vm.ProceedCommand.CanExecute(null));
+        var decision = Assert.Single(vm.ActionDecisions);
+        Assert.Equal(new NotificationChecklistActionDecision(1, NotificationChecklistItemActionType.Paid, null), decision);
+    }
+
+    [Fact]
     public void ProceedCommand_SetsDidProceed_AndCapturesActionDecisions()
     {
         var vm = new NotificationChecklistActionVM(

@@ -96,7 +96,9 @@ public partial class NotificationChecklistActionVM : ObservableObject
         if (item.SelectedAction == NotificationChecklistItemActionType.Ignore)
             return false;
 
-        if (item.RequiresSourceSelection && item.SelectedSourceId is null)
+        if (item.SelectedAction == NotificationChecklistItemActionType.Process &&
+            item.RequiresSourceSelection &&
+            item.SelectedSourceId is null)
             return false;
 
         return true;
