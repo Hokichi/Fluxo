@@ -13,7 +13,7 @@ using Fluxo.ViewModels.Shell.Main;
 namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>,
-    IRecipient<SettingsMaintenanceRequestedMessage>
+    IRecipient<SettingsMaintenanceRequestedMessage>, IDisposable
 {
     private static readonly IReadOnlyDictionary<string, bool> NotificationDefaultsAfterSettingsDeletion =
         new Dictionary<string, bool>(StringComparer.Ordinal)
@@ -32,6 +32,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     private readonly IAppDataService _appData;
     private bool _isBudgetPending;
     private bool _isPersonalizationPending;
+    private bool _isDisposed;
 
     public SettingsVM(
         MainVM mainViewModel,
@@ -88,7 +89,19 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public void Receive(SettingsMaintenanceRequestedMessage message)
     {
+        if (_isDisposed)
+            return;
+
         _ = HandleMaintenanceRequestAsync(message.Value);
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        IsActive = false;
     }
 
     public async Task LoadAsync()
