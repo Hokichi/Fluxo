@@ -4,14 +4,70 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="500"
-    PopupTitle="Review Notifications">
+    PopupTitle="Review Notification Actions">
     <customControls:BasePopup.Resources>
         <DataTemplate x:Key="NotificationChecklistItemTemplate">
-            <CheckBox
-                Margin="0,4,0,4"
-                Content="{Binding Label}"
-                IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                Style="{StaticResource ItemCheckBoxWithContentStyle}" />
+            <Grid Margin="0,4,0,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,10,12,0"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Medium}"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="{Binding Label}" />
+
+                <Border
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Padding="4"
+                    Background="{StaticResource Brush.Background.Surface}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="14">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton
+                            Content="Ignore"
+                            GroupName="{Binding EntityId, StringFormat=ActionSelection{0}}"
+                            IsChecked="{Binding IsIgnoreSelected, Mode=TwoWay}"
+                            MinWidth="0"
+                            Style="{StaticResource SegmentedToggleOptionStyle}" />
+                        <RadioButton
+                            Margin="4,0,0,0"
+                            Content="Paid"
+                            GroupName="{Binding EntityId, StringFormat=ActionSelection{0}}"
+                            IsChecked="{Binding IsPaidSelected, Mode=TwoWay}"
+                            MinWidth="0"
+                            Style="{StaticResource SegmentedToggleOptionStyle}" />
+                        <RadioButton
+                            Margin="4,0,0,0"
+                            Content="Process"
+                            GroupName="{Binding EntityId, StringFormat=ActionSelection{0}}"
+                            IsChecked="{Binding IsProcessSelected, Mode=TwoWay}"
+                            MinWidth="0"
+                            Style="{StaticResource SegmentedToggleOptionStyle}" />
+                    </StackPanel>
+                </Border>
+
+                <ComboBox
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,8,0,0"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding AvailableSources}"
+                    SelectedValue="{Binding SelectedSourceId, Mode=TwoWay}"
+                    SelectedValuePath="Id"
+                    Visibility="{Binding ShowSourceSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </Grid>
         </DataTemplate>
     </customControls:BasePopup.Resources>
 
@@ -28,7 +84,7 @@
             FontFamily="{StaticResource Bold}"
             FontSize="14"
             Foreground="{StaticResource Brush.Text.Primary}"
-            Text="Select items to process" />
+            Text="Choose Ignore, Paid, or Process for each notification" />
 
         <Border
             Grid.Row="2"
