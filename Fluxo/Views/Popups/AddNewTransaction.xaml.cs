@@ -19,8 +19,9 @@ public partial class AddNewTransaction : BasePopup
         _viewModel = viewModel;
         DataContext = viewModel;
 
-        Loaded += (_, _) =>
+        Loaded += async (_, _) =>
         {
+            await _viewModel.EnsureTagsLoadedAsync();
             SyncNoteDocumentFromViewModel();
             _viewModel.BeginChangeTracking();
             FocusPrimaryInput();

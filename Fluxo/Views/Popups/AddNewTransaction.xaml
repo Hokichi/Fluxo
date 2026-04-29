@@ -3,9 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
+    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add New Transaction"
@@ -20,8 +20,6 @@
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}" />
         </Style>
-
-
 
         <Style x:Key="PopupFieldBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="12,10" />
@@ -338,12 +336,12 @@
                                 Text="More Tags" />
                             <ListBox
                                 x:Name="MoreTagsListBox"
-                                    ItemContainerStyle="{StaticResource PopupOtherTagListBoxItemStyle}"
-                                    ItemTemplate="{StaticResource PopupTagTemplate}"
-                                    ItemsPanel="{StaticResource PopupOverflowTagsItemsPanelTemplate}"
-                                    ItemsSource="{Binding OverflowTags}"
-                                    SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
-                                    Style="{StaticResource PopupTagListBoxStyle}" />
+                                ItemContainerStyle="{StaticResource PopupOtherTagListBoxItemStyle}"
+                                ItemTemplate="{StaticResource PopupTagTemplate}"
+                                ItemsPanel="{StaticResource PopupOverflowTagsItemsPanelTemplate}"
+                                ItemsSource="{Binding OverflowTags}"
+                                SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
+                                Style="{StaticResource PopupTagListBoxStyle}" />
                         </StackPanel>
                     </Border>
                 </Popup>

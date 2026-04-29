@@ -26,6 +26,7 @@ public partial class QuickAddVM : ObservableObject
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IAppDataService _appData;
     private FormState _initialState;
+    private bool _hasLoadedFallbackTags;
     private bool _isChangeTrackingInitialized;
 
     [ObservableProperty] private decimal _amountText;
@@ -77,6 +78,49 @@ public partial class QuickAddVM : ObservableObject
         _initialState = CaptureState();
         _isChangeTrackingInitialized = true;
         NotifyFormStateChanged();
+    }
+
+    public async Task EnsureTagsLoadedAsync(CancellationToken cancellationToken = default)
+    {
+        if (_orderedTags.Count > 0 || _hasLoadedFallbackTags)
+            return;
+
+        IReadOnlyList<ExpenseTag> allTags;
+        try
+        {
+            allTags = await _appData.GetExpenseTagsAsync(cancellationToken);
+        }
+        catch
+        {
+            return;
+        }
+
+        _hasLoadedFallbackTags = true;
+
+        var fallbackTags = allTags
+            .Where(tag => !tag.IsSystemTag)
+            .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(tag => new ExpenseTagVM
+            {
+                Id = tag.Id,
+                Name = tag.Name,
+                HexCode = tag.HexCode,
+                IsSystemTag = tag.IsSystemTag
+            })
+            .ToList();
+
+        if (fallbackTags.Count == 0)
+            return;
+
+        var selectedTagId = SelectedTag?.Id;
+
+        _orderedTags.Clear();
+        _orderedTags.AddRange(fallbackTags);
+
+        RefreshTagCollections();
+        SelectedTag = selectedTagId is null
+            ? _orderedTags.FirstOrDefault()
+            : _orderedTags.FirstOrDefault(tag => tag.Id == selectedTagId.Value) ?? _orderedTags.FirstOrDefault();
     }
 
     public bool IsIncome
