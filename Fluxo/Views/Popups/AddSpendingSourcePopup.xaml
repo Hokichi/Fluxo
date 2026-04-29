@@ -67,7 +67,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <StackPanel Visibility="{Binding IsCashLike, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Visibility="{Binding IsBalanceLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
                                 <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding PrimaryAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </StackPanel>
@@ -109,7 +109,7 @@
                                 </ComboBox>
                             </StackPanel>
 
-                            <StackPanel Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel Margin="0,12,0,0" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
                                 <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </StackPanel>

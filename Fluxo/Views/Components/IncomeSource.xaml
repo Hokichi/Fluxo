@@ -5,7 +5,7 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Width="160"
+    Width="140"
     Height="80"
     Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
     mc:Ignorable="d">

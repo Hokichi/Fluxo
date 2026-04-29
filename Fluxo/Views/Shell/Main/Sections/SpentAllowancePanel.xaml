@@ -41,7 +41,6 @@
             BorderThickness="2"
             CornerRadius="8">
             <StackPanel>
-
                 <TextBlock
                     VerticalAlignment="Bottom"
                     FontFamily="{StaticResource Light}"

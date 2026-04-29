@@ -84,6 +84,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     public bool IsCreditLike => IsCredit || IsBnpl;
     public bool IsSaving => SelectedSpendingSourceType == SpendingSourceType.Saving;
     public bool IsCashLike => SelectedSpendingSourceType is SpendingSourceType.Checking or SpendingSourceType.Cash;
+    public bool IsBalanceLike => IsCashLike || IsSaving;
     public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
 
     partial void OnAccountLimitTextChanged(decimal value) => NotifyFormStateChanged();
@@ -112,6 +113,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         OnPropertyChanged(nameof(IsCreditLike));
         OnPropertyChanged(nameof(IsSaving));
         OnPropertyChanged(nameof(IsCashLike));
+        OnPropertyChanged(nameof(IsBalanceLike));
         OnPropertyChanged(nameof(PrimaryAmountLabel));
 
         if (!IsCreditLike)

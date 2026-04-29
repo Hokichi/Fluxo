@@ -110,7 +110,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
         TotalSpent = visibleExpenseLogs.Sum(log => log.Amount);
 
-        var totalIncomeAmount = _spendingSources.Sum(source => source.Balance);
+        var totalIncomeAmount = _spendingSources.Where(source => source.IsEnabled).Sum(source => source.Balance);
         Allowance = CalculateDailyAllowance(totalIncomeAmount);
     }
 
@@ -130,7 +130,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         var needsWantsBudget = totalIncomeAmount * (_needsThreshold + _wantsThreshold);
         var remainingNeedsWants = needsWantsBudget - monthNeedsWantsSpent;
 
-        var daysLeftInMonth = Math.Max(1, DateTime.DaysInMonth(today.Year, today.Month) - today.Day);
+        var daysLeftInMonth = Math.Max(1, DateTime.DaysInMonth(today.Year, today.Month) - today.Day) + 1;
         return decimal.Round(remainingNeedsWants / daysLeftInMonth, 2, MidpointRounding.AwayFromZero);
     }
 
