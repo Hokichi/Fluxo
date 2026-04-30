@@ -86,8 +86,9 @@ public sealed class StartupNotificationPopupLayoutTests
 
         Assert.Contains("private static double SafeClamp", codeBehind);
         Assert.Contains("if (max < min)", codeBehind);
-        Assert.Contains("Left = SafeClamp(", codeBehind);
-        Assert.Contains("Top = SafeClamp(", codeBehind);
+        Assert.Contains("var popupOrigin = CalculatePopupOrigin(", codeBehind);
+        Assert.Contains("Left = popupOrigin.X;", codeBehind);
+        Assert.Contains("Top = popupOrigin.Y;", codeBehind);
     }
 
     [Fact]

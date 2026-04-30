@@ -1,5 +1,8 @@
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
+using Drawing = System.Drawing;
+using Forms = System.Windows.Forms;
 
 namespace Fluxo.Views.Shell.Tray;
 
@@ -36,10 +39,16 @@ public partial class StartupNotificationPopup : Window
 
         var width = Math.Max(ActualWidth, 320);
         var height = Math.Max(ActualHeight, 120);
-        var workArea = SystemParameters.WorkArea;
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var dpiScaleX = dpi.DpiScaleX <= 0 ? 1 : dpi.DpiScaleX;
+        var dpiScaleY = dpi.DpiScaleY <= 0 ? 1 : dpi.DpiScaleY;
 
-        Left = SafeClamp(screenPoint.X - width + horizontalPadding, workArea.Left, workArea.Right - width);
-        Top = SafeClamp(screenPoint.Y - height - verticalPadding, workArea.Top, workArea.Bottom - height);
+        var workArea = ResolveWorkAreaInDip(screenPoint, dpiScaleX, dpiScaleY);
+        var anchorPointDip = ConvertDevicePointToDip(screenPoint, dpiScaleX, dpiScaleY);
+        var popupOrigin = CalculatePopupOrigin(anchorPointDip, new Size(width, height), workArea, horizontalPadding, verticalPadding);
+
+        Left = popupOrigin.X;
+        Top = popupOrigin.Y;
 
         if (!IsVisible)
             Show();
@@ -109,5 +118,58 @@ public partial class StartupNotificationPopup : Window
             return min;
 
         return Math.Clamp(value, min, max);
+    }
+
+    internal static Point CalculatePopupOrigin(
+        Point anchorPointDip,
+        Size popupSizeDip,
+        Rect workAreaDip,
+        double horizontalPadding = 12,
+        double verticalPadding = 12)
+    {
+        var left = SafeClamp(
+            anchorPointDip.X - popupSizeDip.Width + horizontalPadding,
+            workAreaDip.Left,
+            workAreaDip.Right - popupSizeDip.Width);
+
+        var top = SafeClamp(
+            anchorPointDip.Y - popupSizeDip.Height - verticalPadding,
+            workAreaDip.Top,
+            workAreaDip.Bottom - popupSizeDip.Height);
+
+        return new Point(left, top);
+    }
+
+    internal static Rect ResolveWorkAreaInDip(
+        Point screenPointPx,
+        double dpiScaleX,
+        double dpiScaleY,
+        Func<Drawing.Point, Drawing.Rectangle>? monitorWorkAreaResolver = null)
+    {
+        monitorWorkAreaResolver ??= static point => Forms.Screen.FromPoint(point).WorkingArea;
+        var screenPoint = new Drawing.Point((int)Math.Round(screenPointPx.X), (int)Math.Round(screenPointPx.Y));
+        var monitorWorkArea = monitorWorkAreaResolver(screenPoint);
+
+        return ConvertDeviceRectToDip(monitorWorkArea, dpiScaleX, dpiScaleY);
+    }
+
+    internal static Point ConvertDevicePointToDip(Point devicePoint, double dpiScaleX, double dpiScaleY)
+    {
+        var safeScaleX = dpiScaleX <= 0 ? 1 : dpiScaleX;
+        var safeScaleY = dpiScaleY <= 0 ? 1 : dpiScaleY;
+
+        return new Point(devicePoint.X / safeScaleX, devicePoint.Y / safeScaleY);
+    }
+
+    internal static Rect ConvertDeviceRectToDip(Drawing.Rectangle deviceRect, double dpiScaleX, double dpiScaleY)
+    {
+        var safeScaleX = dpiScaleX <= 0 ? 1 : dpiScaleX;
+        var safeScaleY = dpiScaleY <= 0 ? 1 : dpiScaleY;
+
+        return new Rect(
+            deviceRect.Left / safeScaleX,
+            deviceRect.Top / safeScaleY,
+            deviceRect.Width / safeScaleX,
+            deviceRect.Height / safeScaleY);
     }
 }
