@@ -240,26 +240,33 @@ public partial class App : Application
 
     private async Task TryShowStartupNotificationPopupOnceAsync()
     {
-        var summary = await _startupNotificationSummaryService.BuildAsync();
-        var shouldShow = _startupTrayPopupDisplayPolicy.ShouldShow(
-            _launchInTrayMode,
-            _hasShownStartupTrayPopup,
-            summary is not null);
+        try
+        {
+            var summary = await _startupNotificationSummaryService.BuildAsync();
+            var shouldShow = _startupTrayPopupDisplayPolicy.ShouldShow(
+                _launchInTrayMode,
+                _hasShownStartupTrayPopup,
+                summary is not null);
 
-        if (!shouldShow || summary is null)
-            return;
+            if (!shouldShow || summary is null)
+                return;
 
-        if (!IsMainWindowHiddenToTray())
-            return;
+            if (!IsMainWindowHiddenToTray())
+                return;
 
-        EnsureStartupNotificationPopupInitialized();
-        if (_startupNotificationPopup is null)
-            return;
+            EnsureStartupNotificationPopupInitialized();
+            if (_startupNotificationPopup is null)
+                return;
 
-        var cursorPosition = Forms.Cursor.Position;
-        _startupNotificationPopup.SummaryText = summary.Message;
-        _startupNotificationPopup.ShowNearScreenPoint(new System.Windows.Point(cursorPosition.X, cursorPosition.Y));
-        _hasShownStartupTrayPopup = true;
+            var cursorPosition = Forms.Cursor.Position;
+            _startupNotificationPopup.SummaryText = summary.Message;
+            _startupNotificationPopup.ShowNearScreenPoint(new System.Windows.Point(cursorPosition.X, cursorPosition.Y));
+            _hasShownStartupTrayPopup = true;
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"Startup notification popup failed: {exception}");
+        }
     }
 
     private bool IsMainWindowHiddenToTray()
