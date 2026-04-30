@@ -10,6 +10,7 @@ Implement a **Run with Windows** feature that:
 - Adds a toggle in **Settings > Personalization**.
 - Adds a matching toggle in **Startup Wizard > Preferences (Notifications step)**.
 - Persists the value in `UserSettings` under a new key: `ShouldRunAtStartup`.
+- Persists a close behavior preference under `UserSettings` for **When closing fluxo**.
 - When enabled, starts Fluxo automatically with Windows and keeps it **tray-only** at launch.
 - When disabled, removes autostart registration.
 
@@ -18,13 +19,19 @@ Implement a **Run with Windows** feature that:
 ### Settings > Personalization
 
 - Add a toggle row titled **Run with Windows** with a short description.
+- Add a selection control directly under it:
+  - Label: **When closing fluxo**
+  - Options: **Minimize to tray** / **Exit**
 - Toggle value participates in existing pending-changes behavior (Apply/Revert/Close prompt).
 - Toggle default is **off** when the setting is missing.
+- Close-behavior default is **Exit** when missing.
 
 ### Startup Wizard > Preferences
 
 - Add the same **Run with Windows** toggle in the notification preferences step.
+- Add the same **When closing fluxo** selection under the toggle on that step.
 - Toggle default is **off** for first-time users (or when missing).
+- Close-behavior default is **Exit** for first-time users (or when missing).
 - Value is staged with other wizard step data and committed only when setup is completed.
 
 ### Startup Behavior
@@ -40,8 +47,16 @@ Implement a **Run with Windows** feature that:
 - Popup actions:
 1. `Open fluxo` (brand typography matches existing `flux` + mint `o`)
 2. `Check for updates` (placeholder, no behavior yet)
-3. `Restart fluxo` (close current instance and relaunch as full-window mode)
+3. `Restart fluxo` (close current instance and relaunch in tray mode)
 4. `Exit` (terminate app)
+
+### Close Behavior
+
+- If **When closing fluxo** is set to **Minimize to tray**:
+  - Main window close action hides to tray instead of exiting.
+  - Tray icon remains available to reopen or exit.
+- If set to **Exit**:
+  - Current close behavior remains: app exits.
 
 ### Tray Popup Visuals
 
@@ -56,8 +71,10 @@ Implement a **Run with Windows** feature that:
 ### Settings Storage
 
 - Add `UserSettingNames.ShouldRunAtStartup`.
-- Persist as existing string bool pattern (`"True"` / `"False"`).
-- Default parse fallback: `false`.
+- Add `UserSettingNames.CloseBehavior`.
+- Persist `ShouldRunAtStartup` as existing string bool pattern (`"True"` / `"False"`).
+- Default parse fallback for `ShouldRunAtStartup`: `false`.
+- Persist close behavior as string enum (`"MinimizeToTray"` or `"Exit"`), default `"Exit"`.
 
 ### Registration Service
 
@@ -77,7 +94,9 @@ Implement a **Run with Windows** feature that:
 
 ### App Startup Flow
 
-- Extend `App.OnStartup` to detect `--startup-tray`.
+- Extend `App.OnStartup` to detect both tray args:
+  - `--startup-tray` (Windows autostart path)
+  - `--startup--tray` (restart path requirement)
 - Shared initialization remains intact (migration, first-run logic, main VM init).
 - In startup-tray mode:
   - Instantiate `MainWindow` but do not show initially.
@@ -91,15 +110,23 @@ Implement a **Run with Windows** feature that:
 - Open from tray:
   - Stop hidden mode, show window in taskbar, show window, activate.
 - Restart from tray:
-  - Launch new process without `--startup-tray`.
+  - Launch new process with `--startup--tray` (tray-mode relaunch as requested).
   - Dispose tray host and shut down current process.
+
+### Window Close Handling
+
+- Read `CloseBehavior` from settings into shell startup/runtime state.
+- On main window close request:
+  - `MinimizeToTray` -> cancel close, hide window, keep process + tray alive.
+  - `Exit` -> existing shutdown flow.
 
 ## Data Flow
 
 1. User toggles `Run with Windows` in Settings or Startup Wizard.
-2. Value persists to `UserSettings.ShouldRunAtStartup`.
-3. During apply/complete, app updates Windows Run registration to match value.
-4. On next login launch:
+2. User selects close behavior in `When closing fluxo`.
+3. Values persist to `UserSettings.ShouldRunAtStartup` and `UserSettings.CloseBehavior`.
+4. During apply/complete, app updates Windows Run registration to match value.
+5. On next login launch:
   - Windows invokes Fluxo with `--startup-tray`.
   - Fluxo starts tray-only.
 
@@ -118,10 +145,11 @@ Implement a **Run with Windows** feature that:
 
 - `SettingsPersonalizationTabVM`:
   - Load default false for missing `ShouldRunAtStartup`.
+  - Load default `Exit` for missing close behavior.
   - Pending-changes detection includes the new toggle.
-  - Apply/Revert/Commit covers new toggle.
+  - Apply/Revert/Commit covers new toggle + close-behavior selection.
 - `QuickSetupWizardNotificationVM`:
-  - Loads/stages/saves `ShouldRunAtStartup`.
+  - Loads/stages/saves `ShouldRunAtStartup` and close behavior.
 - Startup registration service:
   - Produces expected Run entry command.
   - Removes entry when disabled.
@@ -131,8 +159,11 @@ Implement a **Run with Windows** feature that:
 - Startup mode resolver for `--startup-tray` argument branch.
 - Tray command routing:
   - open -> shows window
-  - restart -> relaunch full mode
+  - restart -> relaunch tray mode with `--startup--tray`
   - exit -> shutdown
+- Close behavior:
+  - `MinimizeToTray` -> close hides to tray
+  - `Exit` -> close shuts down app
 
 ### Manual QA
 
@@ -142,7 +173,7 @@ Implement a **Run with Windows** feature that:
 4. Reboot/login: Fluxo starts tray-only.
 5. Left-click tray icon: custom popup opens with four options.
 6. Double-left-click tray icon: main window opens directly.
-7. Restart action relaunches full-window instance.
+7. Restart action relaunches tray-mode instance with `--startup--tray`.
 8. Exit action terminates Fluxo.
 
 ## Scope Notes
