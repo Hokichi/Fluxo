@@ -5,7 +5,7 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="520"
-    PopupTitle="Add New Tag"
+    PopupTitle="{Binding PopupTitle}"
     ShowSaveButton="True">
 
     <customControls:BasePopup.Resources>

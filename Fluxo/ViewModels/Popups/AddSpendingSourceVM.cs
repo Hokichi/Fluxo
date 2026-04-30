@@ -71,6 +71,13 @@ public partial class AddSpendingSourceVM : ObservableObject
 
     public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+    public bool IsEditMode => EditingId.HasValue;
+    public string PopupTitle => IsEditMode ? "Edit Income Source" : "Add New Income Source";
+    public string HeaderTitle => PopupTitle;
+    public string HeaderDescription => IsEditMode
+        ? "Update this source for checking, cash, credit, BNPL, or savings."
+        : "Set up a new source for checking, cash, credit, BNPL, or savings.";
+    public string ValidationDialogTitle => PopupTitle;
 
     public void BeginChangeTracking()
     {

@@ -5,7 +5,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="620"
     IsSaveButtonEnabled="{Binding CanSave}"
-    PopupTitle="Add Fixed Expense"
+    PopupTitle="{Binding PopupTitle}"
     ShowSaveButton="True">
 
     <customControls:BasePopup.Resources>
@@ -55,13 +55,13 @@
                     FontFamily="{StaticResource Bold}"
                     FontSize="16"
                     Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Add Fixed Expense" />
+                    Text="{Binding HeaderTitle}" />
                 <TextBlock
                     Margin="0,8,0,18"
                     FontFamily="{StaticResource Medium}"
                     FontSize="11"
                     Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="Add a recurring expense for rent, subscriptions, bills, and similar commitments." />
+                    Text="{Binding HeaderDescription}" />
 
                 <Grid>
                     <Grid.ColumnDefinitions>

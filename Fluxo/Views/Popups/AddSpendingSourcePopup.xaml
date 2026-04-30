@@ -5,7 +5,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="620"
     IsSaveButtonEnabled="{Binding CanSave}"
-    PopupTitle="Add New Income Source"
+    PopupTitle="{Binding PopupTitle}"
     ShowSaveButton="True">
 
     <customControls:BasePopup.Resources>
@@ -32,13 +32,13 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="16"
                         Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="Add New Income Source" />
+                        Text="{Binding HeaderTitle}" />
                     <TextBlock
                         Margin="0,8,0,18"
                         FontFamily="{StaticResource Medium}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Set up a new source for checking, cash, credit, BNPL, or savings." />
+                        Text="{Binding HeaderDescription}" />
 
                     <Grid>
                         <Grid.ColumnDefinitions>

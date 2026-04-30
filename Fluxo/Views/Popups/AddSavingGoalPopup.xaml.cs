@@ -38,8 +38,8 @@ public partial class AddSavingGoalPopup : BasePopup
         if (_viewModel.HasChanges)
         {
             var confirmation = FluxoMessageBox.Show(this,
-                "Close without saving your changes?",
-                "Add Goal",
+                "Discard all changes?",
+                _viewModel.PopupTitle,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
@@ -53,6 +53,7 @@ public partial class AddSavingGoalPopup : BasePopup
     private void ShowValidationMessage(string? message)
     {
         if (!string.IsNullOrWhiteSpace(message))
-            FluxoMessageBox.Show(this, message, "Add Goal", MessageBoxButton.OK, MessageBoxImage.Information);
+            FluxoMessageBox.Show(this, message, _viewModel.ValidationDialogTitle, MessageBoxButton.OK,
+                MessageBoxImage.Information);
     }
 }

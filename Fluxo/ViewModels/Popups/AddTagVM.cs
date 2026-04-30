@@ -5,8 +5,12 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class AddTagVM : ObservableObject
 {
+    private const string DefaultColor = "#3FE0A1";
+    private FormState _initialState;
+    private bool _isChangeTrackingInitialized;
+
     [ObservableProperty] private string _nameText = string.Empty;
-    [ObservableProperty] private string _selectedColorHex = "#3FE0A1";
+    [ObservableProperty] private string _selectedColorHex = DefaultColor;
 
     public ObservableCollection<TagColorOptionVM> ColorOptions { get; } =
     [
@@ -24,6 +28,24 @@ public partial class AddTagVM : ObservableObject
         new("Teal", "#14B8A6")
     ];
 
+    public AddTagVM()
+    {
+        _initialState = CaptureState();
+    }
+
+    public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+    public string PopupTitle => "Add New Tag";
+
+    public void BeginChangeTracking()
+    {
+        _initialState = CaptureState();
+        _isChangeTrackingInitialized = true;
+        NotifyFormStateChanged();
+    }
+
+    partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnSelectedColorHexChanged(string value) => NotifyFormStateChanged();
+
     public void AddCustomColorToFront(string hexCode)
     {
         var normalized = NormalizeHex(hexCode);
@@ -35,13 +57,27 @@ public partial class AddTagVM : ObservableObject
         ColorOptions.Insert(0, new TagColorOptionVM("Custom", normalized));
         ColorOptions.RemoveAt(ColorOptions.Count - 1);
         SelectedColorHex = normalized;
+        NotifyFormStateChanged();
+    }
+
+    private FormState CaptureState()
+    {
+        var optionFingerprint = string.Join("|", ColorOptions.Select(option => option.HexCode));
+        return new FormState(NameText ?? string.Empty, SelectedColorHex ?? DefaultColor, optionFingerprint);
+    }
+
+    private void NotifyFormStateChanged()
+    {
+        OnPropertyChanged(nameof(HasChanges));
     }
 
     private static string NormalizeHex(string value)
     {
         var normalized = (value ?? string.Empty).Trim().TrimStart('#').ToUpperInvariant();
-        return normalized.Length == 6 ? $"#{normalized}" : "#3FE0A1";
+        return normalized.Length == 6 ? $"#{normalized}" : DefaultColor;
     }
+
+    private readonly record struct FormState(string NameText, string SelectedColorHex, string OptionFingerprint);
 }
 
 public sealed record TagColorOptionVM(string Name, string HexCode);

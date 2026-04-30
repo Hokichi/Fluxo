@@ -65,6 +65,22 @@ public partial class SettingsGoalsTabVM : ObservableObject
         return new AddSavingGoalVM(_mainViewModel, _appData);
     }
 
+    public async Task<AddSavingGoalVM?> CreateEditSavingGoalViewModelAsync(int savingGoalId)
+    {
+        var goal = await _appData.GetSavingGoalByIdAsync(savingGoalId);
+        if (goal is null)
+            return null;
+
+        return new AddSavingGoalVM(_mainViewModel, _appData)
+        {
+            EditingId = goal.Id,
+            NameText = goal.Name,
+            TargetAmountText = goal.TargetAmount,
+            CurrentAmountText = goal.CurrentAmount,
+            EndDate = goal.SavingEndDate
+        };
+    }
+
     public async Task OpenAddSavingGoalAsync()
     {
         _messenger.Send(new SettingsDialogRequestedMessage(
@@ -72,6 +88,20 @@ public partial class SettingsGoalsTabVM : ObservableObject
                 SettingsDialogRequestType.AddSavingGoal,
                 CreateAddSavingGoalViewModel())));
         await RefreshSavingGoalsAsync(resetPagination: false);
+    }
+
+    public async Task OpenEditSavingGoalAsync(int savingGoalId)
+    {
+        var viewModel = await CreateEditSavingGoalViewModelAsync(savingGoalId);
+        if (viewModel is null)
+            return;
+
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AddSavingGoal,
+                viewModel)));
+        await RefreshSavingGoalsAsync(resetPagination: false);
+        SelectSingleItem(savingGoalId);
     }
 
     public void ClearSelections()

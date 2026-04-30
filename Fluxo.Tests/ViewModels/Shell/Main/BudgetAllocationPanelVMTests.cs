@@ -242,6 +242,46 @@ public class BudgetAllocationPanelVMTests
         });
     }
 
+    [Fact]
+    public void RecordLogMemoryMessage_EditExpensePreservesTagColorAndSourceNameWithoutReload()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            var before = new ExpenseLogMemorySnapshot(
+                ExpenseId: 11,
+                ExpenseLogId: 1,
+                ExpenseName: "Groceries",
+                Amount: 45m,
+                ExpenseKind: ExpenseKind.Manual,
+                ExpenseCategory: ExpenseCategory.Needs,
+                RecurringDate: null,
+                IsActive: false,
+                SpendingSourceId: 1,
+                TagId: 1,
+                DeductedOn: new DateTime(2026, 4, 10),
+                Notes: string.Empty,
+                IsForDeletion: false);
+
+            var after = before with
+            {
+                TagId = 2,
+                ExpenseName = "Movie",
+                Amount = 30m,
+                DeductedOn = new DateTime(2026, 4, 12)
+            };
+
+            messenger.Send(new RecordLogMemoryMessage(new EditExpenseLogMemoryAction(before, after)));
+
+            var updated = vm.GetAllExpenseLogs().Single(log => log.Id == 1);
+            Assert.Equal("Checking", updated.SpendingSource.Name);
+            Assert.Equal("#F97316", updated.Expense.ExpenseTag.HexCode);
+        });
+    }
+
     private static BudgetAllocationPanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,

@@ -47,6 +47,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         MainVM mainViewModel,
         IAppDataService appData,
         IReadOnlyList<SpendingSourceVM>? spendingSourcesOverride = null,
+        int? forceIncludeSpendingSourceId = null,
         Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? saveDraftAsync = null,
         Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? loadDraftTagsAsync = null,
         Func<string, string, Task<SettingsOperationResult>>? createDraftTagAsync = null)
@@ -67,7 +68,8 @@ public partial class AddFixedExpenseVM : ObservableObject
                              .ToList();
 
         sourceList = sourceList
-            .Where(source => source.IsEnabled)
+            .Where(source => source.IsEnabled ||
+                             (forceIncludeSpendingSourceId.HasValue && source.Id == forceIncludeSpendingSourceId.Value))
             .OrderBy(source => source.SpendingSourceType)
             .ThenBy(source => source.Name)
             .ToList();
@@ -85,6 +87,13 @@ public partial class AddFixedExpenseVM : ObservableObject
     public ICollectionView SpendingSourcesView { get; }
     public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
     public ObservableCollection<TagOption> TagOptions { get; } = [];
+    public bool IsEditMode => EditingId.HasValue;
+    public string PopupTitle => IsEditMode ? "Edit Fixed Expense" : "Add Fixed Expense";
+    public string HeaderTitle => IsEditMode ? "Edit Fixed Expense" : "Add Fixed Expense";
+    public string HeaderDescription => IsEditMode
+        ? "Update this recurring expense and save the changes."
+        : "Add a recurring expense for rent, subscriptions, bills, and similar commitments.";
+    public string ValidationDialogTitle => PopupTitle;
 
     public IReadOnlyList<ExpenseCategoryOption> Categories { get; } =
     [

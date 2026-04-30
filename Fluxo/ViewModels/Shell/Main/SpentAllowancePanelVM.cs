@@ -130,8 +130,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         var needsWantsBudget = totalIncomeAmount * (_needsThreshold + _wantsThreshold);
         var remainingNeedsWants = needsWantsBudget - monthNeedsWantsSpent;
 
-        var daysLeftInMonth = Math.Max(1, DateTime.DaysInMonth(today.Year, today.Month) - today.Day) + 1;
-        return decimal.Round(remainingNeedsWants / daysLeftInMonth, 2, MidpointRounding.AwayFromZero);
+        return decimal.Round(remainingNeedsWants / 30, 2, MidpointRounding.AwayFromZero);
     }
 
     private async Task LoadUserSettingsAsync(CancellationToken cancellationToken)

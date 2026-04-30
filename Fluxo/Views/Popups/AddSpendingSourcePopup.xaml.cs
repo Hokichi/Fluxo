@@ -44,8 +44,8 @@ public partial class AddSpendingSourcePopup : BasePopup
         if (_viewModel.HasChanges)
         {
             var confirmation = FluxoMessageBox.Show(this,
-                "Close without saving your changes?",
-                "Add New Income Source",
+                "Discard all changes?",
+                _viewModel.PopupTitle,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
@@ -61,7 +61,8 @@ public partial class AddSpendingSourcePopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FluxoMessageBox.Show(this, message, "Add New Income Source", MessageBoxButton.OK, MessageBoxImage.Information);
+        FluxoMessageBox.Show(this, message, _viewModel.ValidationDialogTitle, MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void OnMonthlyDueDatePreviewKeyDown(object sender, KeyEventArgs e)

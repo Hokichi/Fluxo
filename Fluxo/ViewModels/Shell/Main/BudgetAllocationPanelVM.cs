@@ -889,7 +889,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private void UpsertExpenseLog(ExpenseLogMemorySnapshot snapshot)
     {
         var existingIndex = _allExpenseLogs.FindIndex(log => log.Id == snapshot.ExpenseLogId);
-        var vm = ToExpenseLogVm(snapshot);
+        var existing = existingIndex >= 0 ? _allExpenseLogs[existingIndex] : null;
+        var vm = ToExpenseLogVm(snapshot, existing);
         if (existingIndex >= 0)
             _allExpenseLogs[existingIndex] = vm;
         else
@@ -1061,8 +1062,17 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             expenseLog.IsForDeletion);
     }
 
-    private static ExpenseLogVM ToExpenseLogVm(ExpenseLogMemorySnapshot snapshot)
+    private ExpenseLogVM ToExpenseLogVm(ExpenseLogMemorySnapshot snapshot, ExpenseLogVM? existing)
     {
+        var knownSpendingSource = _spendingSources.FirstOrDefault(source => source.Id == snapshot.SpendingSourceId);
+        var existingSpendingSource = existing?.SpendingSource;
+        var resolvedSpendingSourceType = knownSpendingSource?.SpendingSourceType ??
+                                         existingSpendingSource?.SpendingSourceType ??
+                                         SpendingSourceType.Checking;
+
+        var knownTag = _knownTagsById.GetValueOrDefault(snapshot.TagId);
+        var existingTag = existing?.Expense?.ExpenseTag;
+
         return new ExpenseLogVM
         {
             Id = snapshot.ExpenseLogId,
@@ -1072,7 +1082,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             IsForDeletion = snapshot.IsForDeletion,
             SpendingSource = new SpendingSourceVM
             {
-                Id = snapshot.SpendingSourceId
+                Id = snapshot.SpendingSourceId,
+                Name = knownSpendingSource?.Name ?? existingSpendingSource?.Name ?? string.Empty,
+                SpendingSourceType = resolvedSpendingSourceType
             },
             Expense = new ExpenseVM
             {
@@ -1085,7 +1097,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                 IsActive = snapshot.IsActive,
                 ExpenseTag = new ExpenseTagVM
                 {
-                    Id = snapshot.TagId
+                    Id = snapshot.TagId,
+                    Name = knownTag?.Name ?? existingTag?.Name ?? string.Empty,
+                    HexCode = knownTag?.HexCode ?? existingTag?.HexCode ?? string.Empty,
+                    IsSystemTag = knownTag?.IsSystemTag ?? existingTag?.IsSystemTag ?? false
                 }
             }
         };

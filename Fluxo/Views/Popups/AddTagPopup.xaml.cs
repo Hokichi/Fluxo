@@ -30,7 +30,11 @@ public partial class AddTagPopup : BasePopup
         _viewModel = new AddTagVM();
         DataContext = _viewModel;
 
-        Loaded += (_, _) => TagNameTextBox.Focus();
+        Loaded += (_, _) =>
+        {
+            _viewModel.BeginChangeTracking();
+            TagNameTextBox.Focus();
+        };
     }
 
     protected override async void OnSaveButtonClick()
@@ -50,7 +54,24 @@ public partial class AddTagPopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FluxoMessageBox.Show(this, message, "Add New Tag", MessageBoxButton.OK, MessageBoxImage.Information);
+        FluxoMessageBox.Show(this, message, _viewModel.PopupTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    protected override void OnCloseButtonClick()
+    {
+        if (_viewModel.HasChanges)
+        {
+            var confirmation = FluxoMessageBox.Show(this,
+                "Discard all changes?",
+                _viewModel.PopupTitle,
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmation != MessageBoxResult.Yes)
+                return;
+        }
+
+        base.OnCloseButtonClick();
     }
 
     private void OnAddCustomColorClick(object sender, RoutedEventArgs e)

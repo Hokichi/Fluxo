@@ -79,7 +79,7 @@ public partial class SettingsFixedExpensesTab : UserControl
         ShowResult(result);
     }
 
-    private void OnItemMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private async void OnItemMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var originalSource = e.OriginalSource as DependencyObject;
 
@@ -89,6 +89,11 @@ public partial class SettingsFixedExpensesTab : UserControl
             return;
 
         _viewModel.SelectSingleItem(fixedExpenseItem.Id);
+
+        if (e.ClickCount < 2 || IsCheckBoxClick(originalSource))
+            return;
+
+        await _viewModel.OpenEditFixedExpenseAsync(fixedExpenseItem.Id);
     }
 
     private static bool TryParseBatchAction(object sender, out SettingsBatchAction action)
@@ -136,6 +141,11 @@ public partial class SettingsFixedExpensesTab : UserControl
     {
         var clickedButton = FindAncestor<ButtonBase>(source);
         return clickedButton is not null && clickedButton is not CheckBox;
+    }
+
+    private static bool IsCheckBoxClick(DependencyObject? source)
+    {
+        return FindAncestor<CheckBox>(source) is not null;
     }
 
     private static T? FindAncestor<T>(DependencyObject? source)

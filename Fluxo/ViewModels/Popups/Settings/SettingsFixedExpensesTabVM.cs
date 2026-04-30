@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -62,6 +63,34 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         return new AddFixedExpenseVM(_mainViewModel, _appData);
     }
 
+    public async Task<AddFixedExpenseVM?> CreateEditFixedExpenseViewModelAsync(int fixedExpenseId)
+    {
+        var expense = await _appData.GetExpenseByIdAsync(fixedExpenseId);
+        if (expense is null)
+            return null;
+
+        var viewModel = new AddFixedExpenseVM(_mainViewModel, _appData, forceIncludeSpendingSourceId: expense.SpendingSourceId)
+        {
+            EditingId = expense.Id,
+            NameText = expense.Name,
+            AmountText = expense.Amount,
+            SelectedCategory = expense.ExpenseCategory,
+            RecurringDateText = expense.RecurringDate?.ToString(CultureInfo.InvariantCulture) ??
+                                string.Empty,
+            IsActive = expense.IsActive,
+            TagNameText = expense.ExpenseTag?.Name ?? "General"
+        };
+
+        if (expense.SpendingSourceId > 0)
+        {
+            var matchingSource = viewModel.SpendingSources.FirstOrDefault(source => source.Id == expense.SpendingSourceId);
+            if (matchingSource is not null)
+                viewModel.SelectedSpendingSource = matchingSource;
+        }
+
+        return viewModel;
+    }
+
     public async Task OpenAddFixedExpenseAsync()
     {
         _messenger.Send(new SettingsDialogRequestedMessage(
@@ -69,6 +98,21 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
                 SettingsDialogRequestType.AddFixedExpense,
                 CreateAddFixedExpenseViewModel())));
         await RefreshFixedExpensesAsync(resetPagination: false);
+    }
+
+    public async Task OpenEditFixedExpenseAsync(int fixedExpenseId)
+    {
+        var viewModel = await CreateEditFixedExpenseViewModelAsync(fixedExpenseId);
+        if (viewModel is null)
+            return;
+
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AddFixedExpense,
+                viewModel)));
+
+        await RefreshFixedExpensesAsync(resetPagination: false);
+        SelectSingleItem(fixedExpenseId);
     }
 
     public void ClearSelections()

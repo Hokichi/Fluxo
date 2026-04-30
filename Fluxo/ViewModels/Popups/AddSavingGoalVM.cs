@@ -37,6 +37,13 @@ public partial class AddSavingGoalVM : ObservableObject
 
     public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+    public bool IsEditMode => EditingId.HasValue;
+    public string PopupTitle => IsEditMode ? "Edit Goal" : "Add Goal";
+    public string HeaderTitle => IsEditMode ? "Edit Goal" : "Add Goal";
+    public string HeaderDescription => IsEditMode
+        ? "Update this savings goal so fluxo can keep tracking the right target."
+        : "Add a savings goal so fluxo can track progress from day one.";
+    public string ValidationDialogTitle => PopupTitle;
 
     public void BeginChangeTracking()
     {

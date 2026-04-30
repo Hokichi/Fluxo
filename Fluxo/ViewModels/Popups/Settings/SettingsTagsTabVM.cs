@@ -42,11 +42,13 @@ public partial class SettingsTagsTabVM : ObservableObject
     public async Task RefreshTagsAsync()
     {
         SettingsShared.ReplaceCollection(Tags, (await _appData.GetExpenseTagsByCountDescendingAsync())
+            .Where(item => !item.Tag.IsSystemTag)
             .Select(item => new ExpenseTagVM
             {
                 Id = item.Tag.Id,
                 Name = item.Tag.Name,
-                HexCode = item.Tag.HexCode
+                HexCode = item.Tag.HexCode,
+                IsSystemTag = item.Tag.IsSystemTag
             }));
     }
 

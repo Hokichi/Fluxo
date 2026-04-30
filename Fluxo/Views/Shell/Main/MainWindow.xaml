@@ -691,7 +691,7 @@
                     <Grid Grid.Row="2" Margin="0,8,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="180" />
+                            <RowDefinition Height="160" />
                         </Grid.RowDefinitions>
 
                         <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
