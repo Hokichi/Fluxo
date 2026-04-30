@@ -119,6 +119,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Analytics>();
         services.AddTransient<INotificationGroupingService, NotificationGroupingService>();
         services.AddTransient<INotificationActionService, NotificationActionService>();
+        services.AddTransient<IStartupNotificationSummaryService, StartupNotificationSummaryService>();
 
         services.AddSingleton<MainWindow>();
 
