@@ -20,7 +20,13 @@ public sealed class StartupNotificationSummaryService(
                 if (activeNotifications.Count == 0)
                     return null;
 
-                var notificationViewModels = activeNotifications
+                var visibleNotifications = activeNotifications
+                    .Where(notification => !notification.IsCleared && !notification.IsForDeletion)
+                    .ToList();
+                if (visibleNotifications.Count == 0)
+                    return null;
+
+                var notificationViewModels = visibleNotifications
                     .Select(MapToViewModel)
                     .OrderByDescending(notification => notification.CreatedOn)
                     .ToList();
@@ -45,6 +51,10 @@ public sealed class StartupNotificationSummaryService(
                     NotificationCount: singleGroup.Count,
                     Category: singleGroup.Category);
             }, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {

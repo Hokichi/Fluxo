@@ -195,6 +195,25 @@ public sealed class StartupNotificationSummaryServiceTests
     }
 
     [Fact]
+    public async Task GetSummaryAsync_IgnoresClearedAndDeletedNotifications()
+    {
+        var notifications = new[]
+        {
+            CreateNotification("UpcomingPayment-11_20260501", "Upcoming Payment - MasterCard", isCleared: true),
+            CreateNotification("LatePayment-4_20260503", "Late Payment - Amex", isForDeletion: true),
+            CreateNotification("GoalDeadline-3_20260503", "Goal Deadline - Vacation")
+        };
+        var sut = CreateSut(notifications);
+
+        var summary = await sut.GetSummaryAsync();
+
+        Assert.NotNull(summary);
+        Assert.Equal("Goal Vacation is reaching its deadline", summary!.Message);
+        Assert.Equal(1, summary.GroupCount);
+        Assert.Equal(1, summary.NotificationCount);
+    }
+
+    [Fact]
     public async Task GetSummaryAsync_ReturnsNull_WhenRepositoryThrows()
     {
         var notificationRepository = Substitute.For<INotificationRepository>();
@@ -213,6 +232,32 @@ public sealed class StartupNotificationSummaryServiceTests
         Assert.Null(summary);
     }
 
+    [Fact]
+    public async Task GetSummaryAsync_ThrowsOperationCanceledException_WhenCancellationRequested()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        var notificationRepository = Substitute.For<INotificationRepository>();
+        notificationRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var cancellationToken = call.Arg<CancellationToken>();
+                cancellationToken.ThrowIfCancellationRequested();
+                return Task.FromResult<IReadOnlyList<Notification>>([]);
+            });
+
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        unitOfWork.Notifications.Returns(notificationRepository);
+
+        var sut = new StartupNotificationSummaryService(
+            new InlineDataOperationRunner(unitOfWork),
+            new NotificationGroupingService());
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            sut.GetSummaryAsync(cancellationTokenSource.Token));
+    }
+
     private static StartupNotificationSummaryService CreateSut(IReadOnlyList<Notification> notifications)
     {
         var notificationRepository = Substitute.For<INotificationRepository>();
@@ -227,14 +272,20 @@ public sealed class StartupNotificationSummaryServiceTests
             new NotificationGroupingService());
     }
 
-    private static Notification CreateNotification(string type, string header)
+    private static Notification CreateNotification(
+        string type,
+        string header,
+        bool isCleared = false,
+        bool isForDeletion = false)
     {
         return new Notification
         {
             Type = type,
             Header = header,
             Message = $"{header} message",
-            CreatedOn = DateTime.UtcNow
+            CreatedOn = DateTime.UtcNow,
+            IsCleared = isCleared,
+            IsForDeletion = isForDeletion
         };
     }
 }
