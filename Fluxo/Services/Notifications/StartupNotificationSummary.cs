@@ -7,5 +7,5 @@ public sealed record StartupNotificationSummary(
     NotificationGroupCategory PrimaryGroupCategory,
     int PrimaryGroupItemCount,
     string PrimaryHeader,
-    string PrimaryEntityName,
+    string? PrimaryEntityName,
     string Message);
