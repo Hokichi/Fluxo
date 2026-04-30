@@ -26,7 +26,6 @@ public partial class QuickAddVM : ObservableObject
     private readonly List<ExpenseTagVM> _orderedTags = [];
     private readonly IAppDataService _appData;
     private FormState _initialState;
-    private bool _hasLoadedFallbackTags;
     private bool _isChangeTrackingInitialized;
 
     [ObservableProperty] private decimal _amountText;
@@ -47,11 +46,9 @@ public partial class QuickAddVM : ObservableObject
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
-        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByProperty(
             SpendingSources,
-            nameof(SpendingSourceVM.TypeDisplayName),
-            nameof(SpendingSourceVM.SpendingSourceType),
-            nameof(SpendingSourceVM.Name));
+            nameof(SpendingSourceVM.TypeDisplayName));
 
         ReloadChoicesFromMainViewModel();
         ResetForm(false);
@@ -82,9 +79,6 @@ public partial class QuickAddVM : ObservableObject
 
     public async Task EnsureTagsLoadedAsync(CancellationToken cancellationToken = default)
     {
-        if (_orderedTags.Count > 0 || _hasLoadedFallbackTags)
-            return;
-
         IReadOnlyList<ExpenseTag> allTags;
         try
         {
@@ -95,27 +89,15 @@ public partial class QuickAddVM : ObservableObject
             return;
         }
 
-        _hasLoadedFallbackTags = true;
+        var persistedTags = ProjectNonSystemTags(allTags).ToList();
 
-        var fallbackTags = allTags
-            .Where(tag => !tag.IsSystemTag)
-            .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(tag => new ExpenseTagVM
-            {
-                Id = tag.Id,
-                Name = tag.Name,
-                HexCode = tag.HexCode,
-                IsSystemTag = tag.IsSystemTag
-            })
-            .ToList();
-
-        if (fallbackTags.Count == 0)
+        if (persistedTags.Count == 0)
             return;
 
         var selectedTagId = SelectedTag?.Id;
 
         _orderedTags.Clear();
-        _orderedTags.AddRange(fallbackTags);
+        _orderedTags.AddRange(persistedTags);
 
         RefreshTagCollections();
         SelectedTag = selectedTagId is null
@@ -485,10 +467,10 @@ public partial class QuickAddVM : ObservableObject
         _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources.Where(source => source.IsEnabled));
 
         _orderedTags.Clear();
-        _orderedTags.AddRange(_mainViewModel.BudgetPanel.Tags
+        _orderedTags.AddRange(OrderNonSystemTags(_mainViewModel.BudgetPanel.Tags
             .Concat(_mainViewModel.BudgetPanel.OtherTags)
             .GroupBy(tag => tag.Id)
-            .Select(group => group.First()));
+            .Select(group => group.First())));
 
         _orderedGoals.Clear();
         _orderedGoals.AddRange(_mainViewModel.SavingGoalsPanel.SavingGoals
@@ -661,8 +643,9 @@ public partial class QuickAddVM : ObservableObject
                 IsGoal
                     ? GoalUpdateTransactionSupport.IsEligibleGoalSourceType(source.SpendingSourceType)
                     : IsExpense || source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
-            .OrderBy(source => source.SpendingSourceType)
-            .ThenBy(source => source.Name)
+            .OrderBy(GetSpendingSourceTypeSortOrder)
+            .ThenByDescending(GetSpendingSourceWithinTypeSortValue)
+            .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         ReplaceCollection(SpendingSources, filteredSources);
@@ -671,6 +654,51 @@ public partial class QuickAddVM : ObservableObject
             ? SpendingSources.FirstOrDefault()
             : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ??
               SpendingSources.FirstOrDefault();
+    }
+
+    internal static IEnumerable<ExpenseTagVM> ProjectNonSystemTags(IEnumerable<ExpenseTag> tags)
+    {
+        return tags
+            .Where(tag => !tag.IsSystemTag)
+            .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(tag => new ExpenseTagVM
+            {
+                Id = tag.Id,
+                Name = tag.Name,
+                HexCode = tag.HexCode,
+                IsSystemTag = false
+            });
+    }
+
+    internal static IEnumerable<ExpenseTagVM> OrderNonSystemTags(IEnumerable<ExpenseTagVM> tags)
+    {
+        return tags
+            .Where(tag => !tag.IsSystemTag)
+            .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
+    }
+
+    internal static int GetSpendingSourceTypeSortOrder(SpendingSourceVM source)
+    {
+        return source.SpendingSourceType switch
+        {
+            SpendingSourceType.Checking => 0,
+            SpendingSourceType.Cash => 1,
+            SpendingSourceType.Credit => 2,
+            SpendingSourceType.BNPL => 3,
+            SpendingSourceType.Saving => 4,
+            _ => 5
+        };
+    }
+
+    internal static decimal GetSpendingSourceWithinTypeSortValue(SpendingSourceVM source)
+    {
+        return source.SpendingSourceType switch
+        {
+            SpendingSourceType.Checking or SpendingSourceType.Cash => source.Balance,
+            SpendingSourceType.Credit or SpendingSourceType.BNPL => source.AccountLimit - source.SpentAmount,
+            SpendingSourceType.Saving => source.Balance,
+            _ => source.Balance
+        };
     }
 
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);

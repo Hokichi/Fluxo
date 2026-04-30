@@ -606,7 +606,7 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))
         {
-            OpenAddNewTransactionPopup();
+            OpenQuickAddPopup();
             e.Handled = true;
             return;
         }

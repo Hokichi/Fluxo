@@ -23,4 +23,17 @@ public static class SpendingSourceComboBoxViewFactory
 
         return view;
     }
+
+    public static ListCollectionView CreateGroupedByProperty<T>(
+        ObservableCollection<T> items,
+        string groupPropertyName)
+    {
+        var view = (ListCollectionView)CollectionViewSource.GetDefaultView(items);
+
+        view.GroupDescriptions.Clear();
+        view.SortDescriptions.Clear();
+        view.GroupDescriptions.Add(new PropertyGroupDescription(groupPropertyName));
+
+        return view;
+    }
 }
