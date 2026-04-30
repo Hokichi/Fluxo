@@ -10,7 +10,7 @@ public sealed class StartupNotificationSummaryService(
     INotificationGroupingService notificationGroupingService)
     : IStartupNotificationSummaryService
 {
-    public async Task<StartupNotificationSummary?> GetSummaryAsync(CancellationToken cancellationToken = default)
+    public async Task<StartupNotificationSummary?> BuildAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -35,21 +35,20 @@ public sealed class StartupNotificationSummaryService(
                 if (groupedNotifications.Count == 0)
                     return null;
 
-                if (groupedNotifications.Count > 1)
-                {
-                    return new StartupNotificationSummary(
-                        Message: $"There are {groupedNotifications.Count} notifications",
-                        GroupCount: groupedNotifications.Count,
-                        NotificationCount: notificationViewModels.Count,
-                        Category: null);
-                }
+                var primaryGroup = groupedNotifications[0];
+                var primaryHeader = ResolvePrimaryHeader(primaryGroup);
+                var primaryEntityName = ExtractName(primaryHeader);
+                var message = groupedNotifications.Count > 1
+                    ? $"There are {groupedNotifications.Count} notifications"
+                    : BuildSingleGroupMessage(primaryGroup.Category, primaryGroup.Count, primaryHeader, primaryEntityName);
 
-                var singleGroup = groupedNotifications[0];
                 return new StartupNotificationSummary(
-                    Message: BuildSingleGroupMessage(singleGroup),
-                    GroupCount: 1,
-                    NotificationCount: singleGroup.Count,
-                    Category: singleGroup.Category);
+                    GroupCount: groupedNotifications.Count,
+                    PrimaryGroupCategory: primaryGroup.Category,
+                    PrimaryGroupItemCount: primaryGroup.Count,
+                    PrimaryHeader: primaryHeader,
+                    PrimaryEntityName: primaryEntityName,
+                    Message: message);
             }, cancellationToken);
         }
         catch (OperationCanceledException)
@@ -74,13 +73,13 @@ public sealed class StartupNotificationSummaryService(
         };
     }
 
-    private static string BuildSingleGroupMessage(NotificationItemVM group)
+    private static string BuildSingleGroupMessage(
+        NotificationGroupCategory category,
+        int count,
+        string primaryHeader,
+        string primaryName)
     {
-        var count = group.Count;
-        var primaryHeader = ResolvePrimaryHeader(group);
-        var primaryName = ExtractName(primaryHeader);
-
-        return group.Category switch
+        return category switch
         {
             NotificationGroupCategory.FixedExpenseDue => count == 1
                 ? $"{primaryName} is due"

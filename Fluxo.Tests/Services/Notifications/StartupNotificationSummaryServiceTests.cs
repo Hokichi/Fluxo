@@ -12,34 +12,44 @@ namespace Fluxo.Tests.Services.Notifications;
 public sealed class StartupNotificationSummaryServiceTests
 {
     [Fact]
-    public async Task GetSummaryAsync_ReturnsNull_WhenNoActiveNotifications()
+    public async Task BuildAsync_ReturnsNull_WhenNoActiveNotifications()
     {
         var sut = CreateSut([]);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.Null(summary);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_ReturnsGroupCountMessage_WhenMultipleGroupsExist()
+    public async Task BuildAsync_ReturnsGroupCountMessage_WhenMultipleGroupsExist()
     {
         var notifications = new[]
         {
-            CreateNotification("UpcomingPayment-10_20260501", "Upcoming Payment - Visa"),
-            CreateNotification("GoalDeadline-3_20260503", "Goal Deadline - Vacation")
+            CreateNotification(
+                "UpcomingPayment-10_20260501",
+                "Upcoming Payment - Visa",
+                createdOn: new DateTime(2026, 05, 01, 9, 0, 0, DateTimeKind.Utc)),
+            CreateNotification(
+                "GoalDeadline-3_20260503",
+                "Goal Deadline - Vacation",
+                createdOn: new DateTime(2026, 05, 01, 10, 0, 0, DateTimeKind.Utc))
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("There are 2 notifications", summary!.Message);
         Assert.Equal(2, summary.GroupCount);
+        Assert.Equal(NotificationGroupCategory.GoalDeadline, summary.PrimaryGroupCategory);
+        Assert.Equal(1, summary.PrimaryGroupItemCount);
+        Assert.Equal("Goal Deadline - Vacation", summary.PrimaryHeader);
+        Assert.Equal("Vacation", summary.PrimaryEntityName);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_FixedExpenseDueSingular_UsesExpenseName()
+    public async Task BuildAsync_FixedExpenseDueSingular_UsesExpenseName()
     {
         var notifications = new[]
         {
@@ -47,15 +57,18 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("Rent is due", summary!.Message);
-        Assert.Equal(NotificationGroupCategory.FixedExpenseDue, summary.Category);
+        Assert.Equal(NotificationGroupCategory.FixedExpenseDue, summary.PrimaryGroupCategory);
+        Assert.Equal(1, summary.PrimaryGroupItemCount);
+        Assert.Equal("Upcoming Deduction - Rent", summary.PrimaryHeader);
+        Assert.Equal("Rent", summary.PrimaryEntityName);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_FixedExpenseDuePlural_UsesFixedExpenseMessage()
+    public async Task BuildAsync_FixedExpenseDuePlural_UsesFixedExpenseMessage()
     {
         var notifications = new[]
         {
@@ -64,14 +77,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("There are 2 fixed expenses due", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_UpcomingPaymentSingular_UsesSourceName()
+    public async Task BuildAsync_UpcomingPaymentSingular_UsesSourceName()
     {
         var notifications = new[]
         {
@@ -79,14 +92,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("MasterCard is due", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_UpcomingPaymentPlural_UsesCreditCardMessage()
+    public async Task BuildAsync_UpcomingPaymentPlural_UsesCreditCardMessage()
     {
         var notifications = new[]
         {
@@ -95,14 +108,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("There are 2 credit cards due", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_GoalDeadlineSingular_UsesGoalMessage()
+    public async Task BuildAsync_GoalDeadlineSingular_UsesGoalMessage()
     {
         var notifications = new[]
         {
@@ -110,14 +123,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("Goal Vacation is reaching its deadline", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_GoalDeadlinePlural_UsesGoalsMessage()
+    public async Task BuildAsync_GoalDeadlinePlural_UsesGoalsMessage()
     {
         var notifications = new[]
         {
@@ -126,14 +139,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("There are 2 goals reaching their deadlines", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_LatePaymentSingular_UsesLatePaymentSingularMessage()
+    public async Task BuildAsync_LatePaymentSingular_UsesLatePaymentSingularMessage()
     {
         var notifications = new[]
         {
@@ -141,14 +154,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("There is one late payment due", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_LatePaymentPlural_UsesLatePaymentPluralMessage()
+    public async Task BuildAsync_LatePaymentPlural_UsesLatePaymentPluralMessage()
     {
         var notifications = new[]
         {
@@ -157,14 +170,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("There are 2 late payments due", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_DefaultFallbackSingular_UsesPrimaryHeader()
+    public async Task BuildAsync_DefaultFallbackSingular_UsesPrimaryHeader()
     {
         var notifications = new[]
         {
@@ -172,14 +185,16 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("Custom Alert Header", summary!.Message);
+        Assert.Equal("Custom Alert Header", summary.PrimaryHeader);
+        Assert.Equal("Custom Alert Header", summary.PrimaryEntityName);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_DefaultFallbackPlural_UsesNotificationPluralMessage()
+    public async Task BuildAsync_DefaultFallbackPlural_UsesNotificationPluralMessage()
     {
         var notifications = new[]
         {
@@ -188,14 +203,14 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("There are 2 notifications", summary!.Message);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_IgnoresClearedAndDeletedNotifications()
+    public async Task BuildAsync_IgnoresClearedAndDeletedNotifications()
     {
         var notifications = new[]
         {
@@ -205,16 +220,16 @@ public sealed class StartupNotificationSummaryServiceTests
         };
         var sut = CreateSut(notifications);
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
         Assert.Equal("Goal Vacation is reaching its deadline", summary!.Message);
         Assert.Equal(1, summary.GroupCount);
-        Assert.Equal(1, summary.NotificationCount);
+        Assert.Equal(1, summary.PrimaryGroupItemCount);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_ReturnsNull_WhenRepositoryThrows()
+    public async Task BuildAsync_ReturnsNull_WhenRepositoryThrows()
     {
         var notificationRepository = Substitute.For<INotificationRepository>();
         notificationRepository.GetActiveAsync(Arg.Any<CancellationToken>())
@@ -227,13 +242,13 @@ public sealed class StartupNotificationSummaryServiceTests
             new InlineDataOperationRunner(unitOfWork),
             new NotificationGroupingService());
 
-        var summary = await sut.GetSummaryAsync();
+        var summary = await sut.BuildAsync();
 
         Assert.Null(summary);
     }
 
     [Fact]
-    public async Task GetSummaryAsync_ThrowsOperationCanceledException_WhenCancellationRequested()
+    public async Task BuildAsync_ThrowsOperationCanceledException_WhenCancellationRequested()
     {
         using var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.Cancel();
@@ -255,7 +270,7 @@ public sealed class StartupNotificationSummaryServiceTests
             new NotificationGroupingService());
 
         await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            sut.GetSummaryAsync(cancellationTokenSource.Token));
+            sut.BuildAsync(cancellationTokenSource.Token));
     }
 
     private static StartupNotificationSummaryService CreateSut(IReadOnlyList<Notification> notifications)
@@ -276,14 +291,15 @@ public sealed class StartupNotificationSummaryServiceTests
         string type,
         string header,
         bool isCleared = false,
-        bool isForDeletion = false)
+        bool isForDeletion = false,
+        DateTime? createdOn = null)
     {
         return new Notification
         {
             Type = type,
             Header = header,
             Message = $"{header} message",
-            CreatedOn = DateTime.UtcNow,
+            CreatedOn = createdOn ?? DateTime.UtcNow,
             IsCleared = isCleared,
             IsForDeletion = isForDeletion
         };
