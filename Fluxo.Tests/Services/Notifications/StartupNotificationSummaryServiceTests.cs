@@ -146,6 +146,26 @@ public sealed class StartupNotificationSummaryServiceTests
     }
 
     [Fact]
+    public async Task BuildAsync_SingleGoalDeadlineGroupWithMultipleItems_UsesGoalsPluralMessage()
+    {
+        var notifications = new[]
+        {
+            CreateNotification("GoalDeadline-3_20260503", "Goal Deadline - Vacation"),
+            CreateNotification("GoalDeadline-4_20260503", "Goal Deadline - Laptop"),
+            CreateNotification("GoalDeadline-5_20260503", "Goal Deadline - Emergency Fund")
+        };
+        var sut = CreateSut(notifications);
+
+        var summary = await sut.BuildAsync();
+
+        Assert.NotNull(summary);
+        Assert.Equal("There are 3 goals reaching their deadlines", summary!.Message);
+        Assert.Equal(1, summary.GroupCount);
+        Assert.Equal(NotificationGroupCategory.GoalDeadline, summary.PrimaryGroupCategory);
+        Assert.Equal(3, summary.PrimaryGroupItemCount);
+    }
+
+    [Fact]
     public async Task BuildAsync_LatePaymentSingular_UsesLatePaymentSingularMessage()
     {
         var notifications = new[]
