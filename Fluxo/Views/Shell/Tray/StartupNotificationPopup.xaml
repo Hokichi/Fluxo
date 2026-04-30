@@ -24,12 +24,13 @@
             <TextBlock
                 x:Name="SummaryTextBlock"
                 Margin="0,0,14,0"
+                MaxWidth="260"
                 VerticalAlignment="Center"
                 FontFamily="{StaticResource Medium}"
                 FontSize="12"
                 Foreground="{StaticResource Brush.Text.Primary}"
                 Text="Fluxo is running in tray mode."
-                TextWrapping="Wrap" />
+                TextWrapping="WrapWithOverflow" />
 
             <StackPanel Grid.Column="1" Orientation="Vertical">
                 <Button

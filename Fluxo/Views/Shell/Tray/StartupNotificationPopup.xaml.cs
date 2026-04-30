@@ -38,8 +38,8 @@ public partial class StartupNotificationPopup : Window
         var height = Math.Max(ActualHeight, 120);
         var workArea = SystemParameters.WorkArea;
 
-        Left = Math.Clamp(screenPoint.X - width + horizontalPadding, workArea.Left, workArea.Right - width);
-        Top = Math.Clamp(screenPoint.Y - height - verticalPadding, workArea.Top, workArea.Bottom - height);
+        Left = SafeClamp(screenPoint.X - width + horizontalPadding, workArea.Left, workArea.Right - width);
+        Top = SafeClamp(screenPoint.Y - height - verticalPadding, workArea.Top, workArea.Bottom - height);
 
         if (!IsVisible)
             Show();
@@ -84,6 +84,11 @@ public partial class StartupNotificationPopup : Window
     private void OnClosed(object? sender, EventArgs e)
     {
         _autoCloseTimer.Stop();
+        _autoCloseTimer.Tick -= OnAutoCloseTimerTick;
+        Deactivated -= OnDeactivated;
+        MouseEnter -= OnMouseEnter;
+        MouseLeave -= OnMouseLeave;
+        Closed -= OnClosed;
     }
 
     private void HidePopup()
@@ -96,5 +101,13 @@ public partial class StartupNotificationPopup : Window
     {
         _autoCloseTimer.Stop();
         _autoCloseTimer.Start();
+    }
+
+    private static double SafeClamp(double value, double min, double max)
+    {
+        if (max < min)
+            return min;
+
+        return Math.Clamp(value, min, max);
     }
 }
