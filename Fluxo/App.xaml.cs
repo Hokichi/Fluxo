@@ -249,6 +249,9 @@ public partial class App : Application
         if (!shouldShow || summary is null)
             return;
 
+        if (!IsMainWindowHiddenToTray())
+            return;
+
         EnsureStartupNotificationPopupInitialized();
         if (_startupNotificationPopup is null)
             return;
@@ -257,6 +260,13 @@ public partial class App : Application
         _startupNotificationPopup.SummaryText = summary.Message;
         _startupNotificationPopup.ShowNearScreenPoint(new System.Windows.Point(cursorPosition.X, cursorPosition.Y));
         _hasShownStartupTrayPopup = true;
+    }
+
+    private bool IsMainWindowHiddenToTray()
+    {
+        return MainWindow is MainWindow mainWindow
+               && !mainWindow.IsVisible
+               && !mainWindow.ShowInTaskbar;
     }
 
     private void OnStartupNotificationPopupOpenAppRequested(object? sender, EventArgs e)
