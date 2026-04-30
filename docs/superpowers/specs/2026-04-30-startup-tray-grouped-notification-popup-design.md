@@ -32,10 +32,10 @@ Build contextual sentence from the single group category:
 
 - Fixed expense due group:
   - Count > 1 in group: `There are <x> fixed expenses due`
-  - Count = 1 in group: `There is one fixed expense due`
+  - Count = 1 in group: `<expense name> is due`
 - Upcoming payment group:
   - Count > 1 in group: `There are <x> credit cards due`
-  - Count = 1 in group: `There is one credit card due`
+  - Count = 1 in group: `<card/source name> is due`
 - Goal deadline group:
   - Count > 1 in group: `There are <x> goals reaching their deadlines`
   - Count = 1 in group: `Goal <name> is reaching its deadline`
@@ -44,7 +44,7 @@ Build contextual sentence from the single group category:
   - Count = 1 in group: `There is one late payment due`
 - Default known category fallback:
   - Count > 1 in group: `There are <x> notifications`
-  - Count = 1 in group: `There is one notification`
+  - Count = 1 in group: show the same header text as the single notification/group card
 
 ### Group count > 1
 
@@ -90,6 +90,8 @@ Add a focused service (for example `IStartupNotificationSummaryService`) respons
   - `GroupCount`
   - `PrimaryGroupCategory`
   - `PrimaryGroupItemCount`
+  - `PrimaryHeader`
+  - `PrimaryEntityName` (for single-item fixed expense/upcoming payment wording)
   - `PrimaryGoalName` (optional, single goal-deadline message case)
   - `Message`
 
