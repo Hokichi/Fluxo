@@ -1,7 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsPersonalizationTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
     <UserControl.Resources>
         <DataTemplate x:Key="SettingsNotificationItemTemplate">
             <Border Style="{StaticResource RowCardStyle}">
@@ -58,6 +59,49 @@
                         Style="{StaticResource RoundedTextInputStyle}"
                         Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
+
+                <Border Margin="0,12,0,0" Style="{StaticResource RowCardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Run with Windows" />
+                                <TextBlock
+                                    Margin="0,6,0,0"
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="Start fluxo in the system tray when Windows signs in."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ToggleButton
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding ShouldRunAtStartup, Mode=TwoWay}"
+                                Style="{StaticResource ToggleSwitchStyle}" />
+                        </Grid>
+
+                        <StackPanel Margin="0,14,0,0">
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="When closing fluxo" />
+                            <ComboBox
+                                Margin="0,8,0,0"
+                                SelectedValue="{Binding CloseBehavior, Mode=TwoWay}"
+                                SelectedValuePath="Tag"
+                                Style="{StaticResource FluxoComboBoxStyle}">
+                                <ComboBoxItem Tag="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}">Minimize to tray</ComboBoxItem>
+                                <ComboBoxItem Tag="{x:Static coreEnums:AppCloseBehavior.Exit}">Exit</ComboBoxItem>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <Border
                     Height="0.5"

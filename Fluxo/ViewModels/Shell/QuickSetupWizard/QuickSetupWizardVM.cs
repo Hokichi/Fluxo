@@ -21,6 +21,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
 {
     private readonly MainVM _mainViewModel;
     private readonly IAppDataService _appData;
+    private readonly IStartupRegistrationService _startupRegistrationService;
     private readonly IDataOperationScopeFactory _dataOperationScopeFactory;
     private IDataOperationScope? _stagedScope;
     private Func<Task>? _stagedCommitAsync;
@@ -32,6 +33,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
     public QuickSetupWizardVM(
         MainVM mainViewModel,
         IAppDataService appData,
+        IStartupRegistrationService startupRegistrationService,
         IDataOperationScopeFactory dataOperationScopeFactory,
         QuickSetupWizardGreetingPageVM greetingPage,
         QuickSetupWizardNamePageVM namePage,
@@ -43,6 +45,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
+        _startupRegistrationService = startupRegistrationService;
         _dataOperationScopeFactory = dataOperationScopeFactory;
 
         GreetingPage = greetingPage;
@@ -177,6 +180,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
                 await _stagedCommitAsync();
 
             await SaveIsFirstRunAsync(false);
+            await SyncRunAtStartupRegistrationAsync();
 
             if (!_mainViewModel.IsInitialized)
                 await _mainViewModel.Initialize();
@@ -375,6 +379,13 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
     {
         await QuickSetupWizardShared.UpsertUserSettingAsync(_appData, UserSettingNames.IsFirstRun, isFirstRun.ToString());
         await _appData.SaveChangesAsync();
+    }
+
+    private async Task SyncRunAtStartupRegistrationAsync()
+    {
+        var setting = await _appData.GetUserSettingByNameAsync(UserSettingNames.ShouldRunAtStartup);
+        var shouldRunAtStartup = UserSettingValueParser.ParseBool(setting?.Value, false);
+        _startupRegistrationService.SetRunAtStartup(shouldRunAtStartup);
     }
 }
 

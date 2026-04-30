@@ -4,6 +4,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
@@ -16,8 +17,12 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
     private readonly IAppDataService _appData;
     private string _savedPreferredAppName = string.Empty;
+    private bool _savedShouldRunAtStartup;
+    private AppCloseBehavior _savedCloseBehavior = AppCloseBehavior.Exit;
 
     [ObservableProperty] private string _preferredAppName = string.Empty;
+    [ObservableProperty] private bool _shouldRunAtStartup;
+    [ObservableProperty] private AppCloseBehavior _closeBehavior = AppCloseBehavior.Exit;
 
     public SettingsPersonalizationTabVM(IAppDataService appData, IMessenger? messenger = null)
     {
@@ -29,6 +34,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     public bool HasPendingChanges =>
         !string.Equals((PreferredAppName ?? string.Empty).Trim(), _savedPreferredAppName, StringComparison.Ordinal) ||
+        ShouldRunAtStartup != _savedShouldRunAtStartup ||
+        CloseBehavior != _savedCloseBehavior ||
         NotificationSettings.Any(setting =>
             _savedNotificationSettings.TryGetValue(setting.SettingName, out var savedValue)
                 ? savedValue != setting.IsEnabled
@@ -38,7 +45,11 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         var settingsByName = await SettingsShared.GetSettingsDictionaryAsync(_appData);
         PreferredAppName = SettingsShared.ParseString(settingsByName, UserSettingNames.PreferredDisplayName, string.Empty);
+        ShouldRunAtStartup = SettingsShared.ParseBool(settingsByName, UserSettingNames.ShouldRunAtStartup, false);
+        CloseBehavior = SettingsShared.ParseCloseBehavior(settingsByName, UserSettingNames.CloseBehavior, AppCloseBehavior.Exit);
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
+        _savedShouldRunAtStartup = ShouldRunAtStartup;
+        _savedCloseBehavior = CloseBehavior;
         LoadNotificationSettings(settingsByName);
         PublishPendingState();
     }
@@ -58,7 +69,12 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         _messenger.Send(new SettingsPopupCloseRequestedMessage(new SettingsPopupCloseRequest()));
     }
 
-    public async Task<(SettingsOperationResult Result, List<ILogMemoryAction> Actions, string? OldUsername, string? NewUsername)>
+    public async Task<(
+        SettingsOperationResult Result,
+        List<ILogMemoryAction> Actions,
+        string? OldUsername,
+        string? NewUsername,
+        bool ShouldRunAtStartup)>
         BuildApplyChangesAsync()
     {
         var actions = new List<ILogMemoryAction>();
@@ -70,14 +86,22 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
             await SettingsShared.UpdateUserSettingAsync(_appData, notificationSetting.SettingName,
                 notificationSetting.IsEnabled.ToString(CultureInfo.InvariantCulture), actions);
 
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.ShouldRunAtStartup,
+            ShouldRunAtStartup.ToString(CultureInfo.InvariantCulture), actions);
+
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.CloseBehavior,
+            CloseBehavior.ToString(), actions);
+
         var newUsername = string.IsNullOrWhiteSpace(PreferredAppName) ? "User" : PreferredAppName.Trim();
         var oldUsername = string.IsNullOrWhiteSpace(_savedPreferredAppName) ? "User" : _savedPreferredAppName;
-        return (SettingsOperationResult.Success(), actions, oldUsername, newUsername);
+        return (SettingsOperationResult.Success(), actions, oldUsername, newUsername, ShouldRunAtStartup);
     }
 
     public void CommitSavedState()
     {
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
+        _savedShouldRunAtStartup = ShouldRunAtStartup;
+        _savedCloseBehavior = CloseBehavior;
         _savedNotificationSettings.Clear();
         foreach (var setting in NotificationSettings)
             _savedNotificationSettings[setting.SettingName] = setting.IsEnabled;
@@ -87,6 +111,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     public void RevertChanges()
     {
         PreferredAppName = _savedPreferredAppName;
+        ShouldRunAtStartup = _savedShouldRunAtStartup;
+        CloseBehavior = _savedCloseBehavior;
         foreach (var setting in NotificationSettings)
             if (_savedNotificationSettings.TryGetValue(setting.SettingName, out var value))
                 setting.IsEnabled = value;
@@ -94,6 +120,16 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     }
 
     partial void OnPreferredAppNameChanged(string value)
+    {
+        PublishPendingState();
+    }
+
+    partial void OnShouldRunAtStartupChanged(bool value)
+    {
+        PublishPendingState();
+    }
+
+    partial void OnCloseBehaviorChanged(AppCloseBehavior value)
     {
         PublishPendingState();
     }

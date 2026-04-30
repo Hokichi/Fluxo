@@ -29,7 +29,7 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
-    public void PersonalizationTab_ChangingDisplayName_PublishesPendingState()
+    public void PersonalizationTab_ChangingStartupToggle_PublishesPendingState()
     {
         var messenger = new WeakReferenceMessenger();
         var captured = new List<SettingsPendingChangesChangedMessage>();
@@ -38,7 +38,7 @@ public sealed class SettingsConfigTabVMTests
             static (r, m) => r.Messages.Add(m));
 
         var vm = new SettingsPersonalizationTabVM(new AppDataService(new NullUnitOfWork()), messenger);
-        vm.PreferredAppName = "Fluxo";
+        vm.ShouldRunAtStartup = true;
 
         Assert.Contains(captured, m =>
             m.Value.TabKey == SettingsTabKey.Personalization &&

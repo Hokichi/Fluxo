@@ -71,6 +71,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Black.ttf" />
     <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-BlackItalic.ttf" />
     <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Bold.ttf" />

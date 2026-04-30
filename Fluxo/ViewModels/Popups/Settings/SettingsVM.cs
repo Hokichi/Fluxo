@@ -15,21 +15,24 @@ namespace Fluxo.ViewModels.Popups.Settings;
 public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>,
     IRecipient<SettingsMaintenanceRequestedMessage>, IDisposable
 {
-    private static readonly IReadOnlyDictionary<string, bool> NotificationDefaultsAfterSettingsDeletion =
-        new Dictionary<string, bool>(StringComparer.Ordinal)
+    private static readonly IReadOnlyDictionary<string, string> SettingsDefaultsAfterDeletion =
+        new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [UserSettingNames.IsFixedExpensesDeductionNotifEnabled] = true,
-            [UserSettingNames.IsCreditDeadlineNotifEnabled] = true,
-            [UserSettingNames.IsGoalDeadlineNotifEnabled] = false,
-            [UserSettingNames.IsLatePaymentNotifEnabled] = false,
-            [UserSettingNames.IsBudgetThresholdNotifEnabled] = false,
-            [UserSettingNames.IsLowCreditNotifEnabled] = false,
-            [UserSettingNames.IsLowAccountBalanceNotifEnabled] = false
+            [UserSettingNames.IsFixedExpensesDeductionNotifEnabled] = bool.TrueString,
+            [UserSettingNames.IsCreditDeadlineNotifEnabled] = bool.TrueString,
+            [UserSettingNames.IsGoalDeadlineNotifEnabled] = bool.FalseString,
+            [UserSettingNames.IsLatePaymentNotifEnabled] = bool.FalseString,
+            [UserSettingNames.IsBudgetThresholdNotifEnabled] = bool.FalseString,
+            [UserSettingNames.IsLowCreditNotifEnabled] = bool.FalseString,
+            [UserSettingNames.IsLowAccountBalanceNotifEnabled] = bool.FalseString,
+            [UserSettingNames.ShouldRunAtStartup] = bool.FalseString,
+            [UserSettingNames.CloseBehavior] = AppCloseBehavior.Exit.ToString()
         };
 
     private readonly MainVM _mainViewModel;
     private readonly IUiSettleAwaiter _uiSettleAwaiter;
     private readonly IAppDataService _appData;
+    private readonly IStartupRegistrationService _startupRegistrationService;
     private bool _isBudgetPending;
     private bool _isPersonalizationPending;
     private bool _isDisposed;
@@ -37,6 +40,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     public SettingsVM(
         MainVM mainViewModel,
         IAppDataService appData,
+        IStartupRegistrationService startupRegistrationService,
         IUiSettleAwaiter uiSettleAwaiter,
         SettingsBudgetTabVM budgetTab,
         SettingsSourcesTabVM sourcesTab,
@@ -49,6 +53,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
+        _startupRegistrationService = startupRegistrationService;
         _uiSettleAwaiter = uiSettleAwaiter;
         BudgetTab = budgetTab;
         SourcesTab = sourcesTab;
@@ -126,7 +131,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         if (!budgetResult.IsSuccess)
             return budgetResult;
 
-        var (personalResult, personalizationActions, oldUsername, newUsername) =
+        var (personalResult, personalizationActions, oldUsername, newUsername, _) =
             await PersonalizationTab.BuildApplyChangesAsync();
         if (!personalResult.IsSuccess)
             return personalResult;
@@ -138,22 +143,31 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         if (actions.Count == 0)
             return SettingsOperationResult.Success();
 
-        await _appData.SaveChangesAsync();
+        try
+        {
+            _startupRegistrationService.SetRunAtStartup(PersonalizationTab.ShouldRunAtStartup);
+            await _appData.SaveChangesAsync();
 
-        if (!string.Equals(newUsername, oldUsername, StringComparison.Ordinal))
-            Messenger.Send(new UsernameChangedMessage(newUsername ?? "User"));
+            if (!string.Equals(newUsername, oldUsername, StringComparison.Ordinal))
+                Messenger.Send(new UsernameChangedMessage(newUsername ?? "User"));
 
-        SettingsShared.RecordActions(actions, Messenger);
-        Messenger.Send(new DashboardDataInvalidatedMessage(
-            DashboardDataInvalidationScope.All));
-        await _mainViewModel.ReloadCurrentDataAsync();
-        await LoadAsync();
+            SettingsShared.RecordActions(actions, Messenger);
+            Messenger.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.All));
+            await _mainViewModel.ReloadCurrentDataAsync();
+            await LoadAsync();
 
-        BudgetTab.CommitSavedState();
-        PersonalizationTab.CommitSavedState();
-        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+            BudgetTab.CommitSavedState();
+            PersonalizationTab.CommitSavedState();
+            OnPropertyChanged(nameof(HasPendingConfigurationChanges));
 
-        return SettingsOperationResult.Success();
+            return SettingsOperationResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return SettingsOperationResult.Failure(
+                $"Unable to apply settings.\n\n{exception.Message}");
+        }
     }
 
     public void RevertConfigurationChanges()
@@ -259,6 +273,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         {
             var settings = await _appData.GetUserSettingsAsync();
             var actions = await ApplySettingsResetPolicyAsync(settings, trackActions: true);
+            _startupRegistrationService.SetRunAtStartup(false);
 
             if (actions.Count > 0)
             {
@@ -304,7 +319,10 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 notifications);
 
             if (!keepSettings)
+            {
                 await ApplySettingsResetPolicyAsync(settings, trackActions: false);
+                _startupRegistrationService.SetRunAtStartup(false);
+            }
 
             await _appData.SaveChangesAsync();
             Messenger.Send(new DashboardDataInvalidatedMessage(
@@ -498,14 +516,14 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         ArgumentNullException.ThrowIfNull(existingSettings);
 
         var removedSettingNames = existingSettings
-            .Where(setting => !NotificationDefaultsAfterSettingsDeletion.ContainsKey(setting.Name))
+            .Where(setting => !SettingsDefaultsAfterDeletion.ContainsKey(setting.Name))
             .Select(setting => setting.Name)
             .ToHashSet(StringComparer.Ordinal);
 
-        var upsertSettingValues = NotificationDefaultsAfterSettingsDeletion
+        var upsertSettingValues = SettingsDefaultsAfterDeletion
             .ToDictionary(
                 pair => pair.Key,
-                pair => pair.Value.ToString(),
+                pair => pair.Value,
                 StringComparer.Ordinal);
 
         return (removedSettingNames, upsertSettingValues);

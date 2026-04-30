@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
@@ -93,8 +95,17 @@ internal static class SettingsShared
 
     public static bool ParseBool(IReadOnlyDictionary<string, string> settings, string name, bool defaultValue)
     {
-        return settings.TryGetValue(name, out var value) && bool.TryParse(value, out var parsedValue)
-            ? parsedValue
+        return settings.TryGetValue(name, out var value)
+            ? UserSettingValueParser.ParseBool(value, defaultValue)
+            : defaultValue;
+    }
+
+    public static AppCloseBehavior ParseCloseBehavior(IReadOnlyDictionary<string, string> settings,
+        string name,
+        AppCloseBehavior defaultValue)
+    {
+        return settings.TryGetValue(name, out var value)
+            ? UserSettingValueParser.ParseCloseBehavior(value, defaultValue)
             : defaultValue;
     }
 

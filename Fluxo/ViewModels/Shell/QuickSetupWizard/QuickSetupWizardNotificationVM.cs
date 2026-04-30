@@ -3,6 +3,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
@@ -15,6 +16,8 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
     private readonly IMessenger _messenger;
 
     [ObservableProperty] private bool _isStep6Active;
+    [ObservableProperty] private bool _shouldRunAtStartup;
+    [ObservableProperty] private AppCloseBehavior _closeBehavior = AppCloseBehavior.Exit;
 
     public QuickSetupWizardNotificationVM(IAppDataService appData, IMessenger? messenger = null)
     {
@@ -68,6 +71,9 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
                 QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsLowAccountBalanceNotifEnabled, false))
         ]);
 
+        ShouldRunAtStartup = QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.ShouldRunAtStartup, false);
+        CloseBehavior = QuickSetupWizardShared.ParseCloseBehavior(settingsByName, UserSettingNames.CloseBehavior, AppCloseBehavior.Exit);
+
         PublishSnapshot();
     }
 
@@ -87,6 +93,16 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
                 appData,
                 setting.SettingName,
                 setting.IsEnabled.ToString());
+
+        await QuickSetupWizardShared.UpsertUserSettingAsync(
+            appData,
+            UserSettingNames.ShouldRunAtStartup,
+            ShouldRunAtStartup.ToString());
+
+        await QuickSetupWizardShared.UpsertUserSettingAsync(
+            appData,
+            UserSettingNames.CloseBehavior,
+            CloseBehavior.ToString());
     }
 
     private void ReplaceNotificationSettings(IEnumerable<SettingsNotificationOptionVM> options)

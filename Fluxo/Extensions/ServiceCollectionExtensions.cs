@@ -59,6 +59,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IUiSettleAwaiter, UiSettleAwaiter>();
+        services.AddSingleton<IStartupRegistrationService, StartupRegistrationService>();
 
         services.AddSingleton<MainVM>();
         services.AddSingleton<DaySpinnerVM>();

@@ -3,10 +3,12 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Services;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.QuickSetupWizard;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
@@ -106,6 +108,7 @@ public sealed class QuickSetupWizardVMTests
         return new QuickSetupWizardVM(
             null!,
             appData,
+            Substitute.For<IStartupRegistrationService>(),
             new TestDataOperationScopeFactory(),
             greeting,
             name,

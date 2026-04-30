@@ -27,7 +27,7 @@ public sealed class SettingsVMMaintenancePolicyTests
         Assert.DoesNotContain(UserSettingNames.IsCreditDeadlineNotifEnabled, removedSettingNames);
         Assert.DoesNotContain(UserSettingNames.IsGoalDeadlineNotifEnabled, removedSettingNames);
 
-        Assert.Equal(7, upsertSettingValues.Count);
+        Assert.Equal(9, upsertSettingValues.Count);
         Assert.Equal("True", upsertSettingValues[UserSettingNames.IsFixedExpensesDeductionNotifEnabled]);
         Assert.Equal("True", upsertSettingValues[UserSettingNames.IsCreditDeadlineNotifEnabled]);
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsGoalDeadlineNotifEnabled]);
@@ -35,6 +35,8 @@ public sealed class SettingsVMMaintenancePolicyTests
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsBudgetThresholdNotifEnabled]);
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsLowCreditNotifEnabled]);
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsLowAccountBalanceNotifEnabled]);
+        Assert.Equal("False", upsertSettingValues[UserSettingNames.ShouldRunAtStartup]);
+        Assert.Equal("Exit", upsertSettingValues[UserSettingNames.CloseBehavior]);
     }
 
     [Fact]

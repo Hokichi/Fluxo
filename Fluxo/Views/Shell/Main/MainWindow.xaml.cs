@@ -228,6 +228,12 @@ public partial class MainWindow : Window, IPopupHost
         if (_hasCompletedPendingDeletionCleanup)
             return;
 
+        if (Application.Current is App app && await app.TryHandleMainWindowClosingToTrayAsync(this))
+        {
+            e.Cancel = true;
+            return;
+        }
+
         e.Cancel = true;
 
         try
@@ -247,6 +253,55 @@ public partial class MainWindow : Window, IPopupHost
     private void OnMinimizeWindow(object sender, ExecutedRoutedEventArgs e)
     {
         FadeOut(() => SystemCommands.MinimizeWindow(this));
+    }
+
+    public void HideToTray()
+    {
+        CancelPendingPopupOverlayDeferredHide();
+        CloseHeaderMenu();
+        CollapseHeaderSearch();
+
+        // If close-to-tray happens after a fade-out close animation, the window can
+        // remain at zero opacity. Normalize before hiding so next restore is visible.
+        BeginAnimation(OpacityProperty, null);
+        Opacity = 1;
+
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+
+        ShowInTaskbar = false;
+        Hide();
+    }
+
+    public void ShowFromTray()
+    {
+        // Always clear any previous opacity animation/state before showing.
+        BeginAnimation(OpacityProperty, null);
+        Opacity = 0;
+        ShowInTaskbar = true;
+
+        if (!IsVisible)
+            Show();
+
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+
+        // Force foreground activation from tray restores. A simple Activate/Focus
+        // is not always enough after interacting with a tray popup.
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
+        Keyboard.Focus(this);
+
+        Dispatcher.BeginInvoke(() =>
+        {
+            Activate();
+            Focus();
+            Keyboard.Focus(this);
+        }, DispatcherPriority.ApplicationIdle);
+
+        FadeIn();
     }
 
     private void OnWindowStateChanged(object? sender, EventArgs e)
