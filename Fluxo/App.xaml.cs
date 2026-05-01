@@ -110,10 +110,10 @@ public partial class App : Application
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
+            EnsureTrayIconInitialized();
 
             if (_launchInTrayMode)
             {
-                EnsureTrayIconInitialized();
                 HideMainWindowToTray(mainWindow);
                 await TryShowStartupNotificationPopupOnceAsync();
             }
