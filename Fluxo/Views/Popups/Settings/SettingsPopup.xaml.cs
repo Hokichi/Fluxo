@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.Dialogs;
@@ -66,6 +67,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
 
         e.Cancel = true;
         _isHandlingCloseRequest = true;
+        var shouldClose = false;
 
         try
         {
@@ -81,11 +83,15 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
             }
 
             _allowClose = true;
+            shouldClose = true;
         }
         finally
         {
             _isHandlingCloseRequest = false;
         }
+
+        if (shouldClose)
+            await Dispatcher.BeginInvoke(Close, DispatcherPriority.Background);
     }
 
     public void Receive(SettingsDialogRequestedMessage message)

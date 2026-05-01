@@ -50,6 +50,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(ShowRevertButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsRevertButtonEnabledProperty =
+        DependencyProperty.Register(nameof(IsRevertButtonEnabled), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
     public static readonly DependencyProperty ShowEditButtonProperty =
         DependencyProperty.Register(nameof(ShowEditButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
@@ -160,6 +164,12 @@ public class BasePopup : Window, IPopupHost
     {
         get => (bool)GetValue(ShowRevertButtonProperty);
         set => SetValue(ShowRevertButtonProperty, value);
+    }
+
+    public bool IsRevertButtonEnabled
+    {
+        get => (bool)GetValue(IsRevertButtonEnabledProperty);
+        set => SetValue(IsRevertButtonEnabledProperty, value);
     }
 
     public bool ShowEditButton

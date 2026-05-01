@@ -81,6 +81,7 @@
                                         x:Name="PART_RevertButton"
                                         ButtonIcon="{StaticResource RegularUndo}"
                                         HoveredBackground="{StaticResource Brush.Warning}"
+                                        IsEnabled="{TemplateBinding IsRevertButtonEnabled}"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowRevertButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />

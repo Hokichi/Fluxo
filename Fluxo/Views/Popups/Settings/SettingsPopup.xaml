@@ -5,6 +5,8 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
+    IsRevertButtonEnabled="{Binding HasPendingConfigurationChanges}"
+    IsSaveButtonEnabled="{Binding HasPendingConfigurationChanges}"
     PopupTitle="Settings"
     ShowRevertButton="True"
     ShowSaveButton="True">
