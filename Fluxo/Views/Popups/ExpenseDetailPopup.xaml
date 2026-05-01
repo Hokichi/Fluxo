@@ -161,6 +161,14 @@
                 <StackPanel Grid.Row="2" Margin="0,16,0,0">
                     <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
                     <DockPanel LastChildFill="False">
+                        <Button
+                            x:Name="AddTagButton"
+                            DockPanel.Dock="Left"
+                            Margin="0,0,8,0"
+                            Click="OnAddTagClick"
+                            Content="+ Add Tag"
+                            Visibility="{Binding CanEditFields, Converter={StaticResource BoolToVisibilityConverter}}" />
+
                         <ListBox
                             x:Name="VisibleTagsListBox"
                             DockPanel.Dock="Left"

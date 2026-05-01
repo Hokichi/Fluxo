@@ -102,103 +102,109 @@
 
     <Border Style="{StaticResource DashboardPanelStyle}">
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="12" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="13"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Notifications" />
-
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Command="{Binding ClearAllNotificationsCommand}"
-                        Content="Clear All Notifications"
-                        Style="{StaticResource TextOnlyButtonStyle}"
-                        Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        Margin="8,0,0,0"
-                        ButtonIcon="{StaticResource AngleRight}"
-                        Click="OnNavigatePreviousClick"
-                        RenderTransformOrigin="0.5,0.5"
-                        Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
-                        ToolTip="Previous Notification"
-                        Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <customControls:BalloonButton.RenderTransform>
-                            <ScaleTransform ScaleX="-1" />
-                        </customControls:BalloonButton.RenderTransform>
-                    </customControls:BalloonButton>
-
-                    <customControls:BalloonButton
-                        Margin="8,0,0,0"
-                        ButtonIcon="{StaticResource AngleRight}"
-                        Click="OnNavigateNextClick"
-                        Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
-                        ToolTip="Next Notification"
-                        Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
-            </Grid>
-
-            <Grid Grid.Row="2">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid
-                    x:Name="CarouselViewport"
-                    Grid.Row="0"
-                    Background="Transparent"
-                    ClipToBounds="True"
-                    LostMouseCapture="OnCarouselViewportLostMouseCapture"
-                    PreviewMouseLeftButtonDown="OnCarouselViewportPreviewMouseLeftButtonDown"
-                    PreviewMouseLeftButtonUp="OnCarouselViewportPreviewMouseLeftButtonUp"
-                    PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
-                    <ContentControl x:Name="CurrentNotificationPresenter" ContentTemplate="{StaticResource DashboardNotificationGroupTemplate}" />
-
-                    <ContentControl
-                        x:Name="IncomingNotificationPresenter"
-                        ContentTemplate="{StaticResource DashboardNotificationGroupTemplate}"
-                        IsHitTestVisible="False"
-                        Visibility="Collapsed" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
                     <TextBlock
-                        x:Name="EmptyStateText"
                         VerticalAlignment="Center"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Opacity="0"
-                        Text="You're all caught up."
-                        TextAlignment="Center"
-                        TextWrapping="Wrap"
-                        Visibility="Collapsed" />
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Notifications" />
                 </Grid>
 
-                <customControls:StepNavigatorControl
-                    Grid.Row="1"
-                    Margin="0,8,0,0"
+                <Grid Grid.Row="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid
+                        x:Name="CarouselViewport"
+                        Grid.Row="0"
+                        Background="Transparent"
+                        ClipToBounds="True"
+                        LostMouseCapture="OnCarouselViewportLostMouseCapture"
+                        PreviewMouseLeftButtonDown="OnCarouselViewportPreviewMouseLeftButtonDown"
+                        PreviewMouseLeftButtonUp="OnCarouselViewportPreviewMouseLeftButtonUp"
+                        PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
+                        <ContentControl x:Name="CurrentNotificationPresenter" ContentTemplate="{StaticResource DashboardNotificationGroupTemplate}" />
+
+                        <ContentControl
+                            x:Name="IncomingNotificationPresenter"
+                            ContentTemplate="{StaticResource DashboardNotificationGroupTemplate}"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed" />
+
+                        <TextBlock
+                            x:Name="EmptyStateText"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Opacity="0"
+                            Text="You're all caught up."
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+                    </Grid>
+
+                    <customControls:StepNavigatorControl
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        CurrentStep="{Binding CurrentStepNumber}"
+                        ShouldIndicateProgress="False"
+                        StepCount="{Binding NotificationStepCount}"
+                        Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </Grid>
+            </Grid>
+
+            <StackPanel
+                Margin="0,12,0,-8"
+                VerticalAlignment="Bottom"
+                Orientation="Horizontal">
+                <customControls:BalloonButton
+                    Margin="0"
+                    ButtonIcon="{StaticResource AngleRight}"
+                    Click="OnNavigatePreviousClick"
+                    RenderTransformOrigin="0.5,0.5"
+                    Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
+                    ToolTip="Previous Notification"
+                    Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <customControls:BalloonButton.RenderTransform>
+                        <ScaleTransform ScaleX="-1" />
+                    </customControls:BalloonButton.RenderTransform>
+                </customControls:BalloonButton>
+
+                <customControls:BalloonButton
+                    ButtonIcon="{StaticResource AngleRight}"
+                    Click="OnNavigateNextClick"
+                    Style="{StaticResource NotificationHeaderNavBalloonButtonStyle}"
+                    ToolTip="Next Notification"
+                    Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <Button
+                    Margin="8,0,0,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    CurrentStep="{Binding CurrentStepNumber}"
-                    ShouldIndicateProgress="False"
-                    StepCount="{Binding NotificationStepCount}"
-                    Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
-            </Grid>
+                    Command="{Binding ClearAllNotificationsCommand}"
+                    Content="Clear All Notifications"
+                    Style="{StaticResource TextOnlyButtonStyle}"
+                    Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

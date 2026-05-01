@@ -60,18 +60,6 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
 
             var expenseIds = markedLogs.Select(l => l.ExpenseId).Distinct().ToList();
 
-            // Restore balance on spending sources for logs being permanently deleted.
-            foreach (var grp in markedLogs.GroupBy(l => l.SpendingSourceId))
-            {
-                var source = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, ct);
-                if (source is null)
-                    continue;
-
-                var total = grp.Sum(l => l.Amount);
-                RestoreExpenseOnSpendingSource(source, total);
-                unitOfWork.SpendingSources.Update(source);
-            }
-
             foreach (var log in markedLogs)
                 unitOfWork.ExpenseLogs.Remove(log);
 

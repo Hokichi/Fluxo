@@ -1,21 +1,33 @@
+using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups;
 
 public partial class AddNewTransaction : BasePopup
 {
+    private readonly IDialogService _dialogService;
+    private readonly SettingsTagsTabVM _settingsTagsTabViewModel;
     private readonly QuickAddVM _viewModel;
+    private bool _isHandlingAddTagSelection;
     private bool _isSyncingNoteDocument;
 
-    public AddNewTransaction(QuickAddVM viewModel)
+    public AddNewTransaction(
+        QuickAddVM viewModel,
+        IDialogService dialogService,
+        SettingsTagsTabVM settingsTagsTabViewModel)
     {
         InitializeComponent();
 
+        _dialogService = dialogService;
+        _settingsTagsTabViewModel = settingsTagsTabViewModel;
         _viewModel = viewModel;
         DataContext = viewModel;
 
@@ -127,6 +139,38 @@ public partial class AddNewTransaction : BasePopup
         finally
         {
             _isSyncingNoteDocument = false;
+        }
+    }
+
+    private async void OnAddTagClick(object sender, RoutedEventArgs e)
+    {
+        if (_isHandlingAddTagSelection)
+            return;
+
+        _isHandlingAddTagSelection = true;
+        try
+        {
+            var previousTagNames = _viewModel.VisibleTags
+                .Concat(_viewModel.OverflowTags)
+                .Select(tag => tag.Name)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            _dialogService.ShowAddTag(_settingsTagsTabViewModel, this);
+            await _viewModel.EnsureTagsLoadedAsync();
+
+            var newTag = _viewModel.VisibleTags
+                .Concat(_viewModel.OverflowTags)
+                .FirstOrDefault(tag =>
+                    !string.IsNullOrWhiteSpace(tag.Name) &&
+                    !previousTagNames.Contains(tag.Name));
+
+            if (newTag is not null)
+                _viewModel.SelectedTag = newTag;
+        }
+        finally
+        {
+            _isHandlingAddTagSelection = false;
         }
     }
 

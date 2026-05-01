@@ -59,8 +59,6 @@
             <Setter Property="Margin" Value="0,0,8,8" />
         </Style>
 
-
-
         <DataTemplate x:Key="PopupTagTemplate">
             <ToggleButton
                 Content="{Binding Name}"
@@ -112,7 +110,7 @@
                         <RadioButton
                             x:Name="GoalRadioButton"
                             Margin="4,0,0,0"
-                            Content="Goal"
+                            Content="Goal Update"
                             GroupName="TransactionType"
                             IsChecked="{Binding IsGoal, Mode=TwoWay}"
                             Style="{StaticResource SegmentedToggleOptionStyle}" />
@@ -293,6 +291,13 @@
                 Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
                 <DockPanel LastChildFill="False">
+                    <Button
+                        x:Name="AddTagButton"
+                        DockPanel.Dock="Left"
+                        Margin="0,0,8,0"
+                        Click="OnAddTagClick"
+                        Content="+ Add Tag" />
+
                     <ListBox
                         x:Name="VisibleTagsListBox"
                         DockPanel.Dock="Left"
@@ -376,4 +381,3 @@
         </Grid>
     </Border>
 </customControls:BasePopup>
-

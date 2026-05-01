@@ -1,3 +1,4 @@
+using System;
 using AutoMapper;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
@@ -15,7 +16,7 @@ public sealed class ExpenseLogServiceTests
     [Fact]
     public async Task DeleteAsync_RestoresBalanceForCheckingSource_AndMarksLogForDeletion()
     {
-        var (sut, unitOfWork, expenseLogs, spendingSources) = CreateSut();
+        var (sut, unitOfWork, expenseLogs, _, spendingSources) = CreateSut();
         var expenseLog = new ExpenseLog
         {
             Id = 44,
@@ -48,7 +49,7 @@ public sealed class ExpenseLogServiceTests
     [Fact]
     public async Task DeleteAsync_RestoresSpentAmountForCreditSource_AndMarksLogForDeletion()
     {
-        var (sut, unitOfWork, expenseLogs, spendingSources) = CreateSut();
+        var (sut, unitOfWork, expenseLogs, _, spendingSources) = CreateSut();
         var expenseLog = new ExpenseLog
         {
             Id = 99,
@@ -78,17 +79,47 @@ public sealed class ExpenseLogServiceTests
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task PostTerminationCleanupAsync_RemovesMarkedLogs_WithoutRestoringBalancesAgain()
+    {
+        var (sut, unitOfWork, expenseLogs, expenses, spendingSources) = CreateSut();
+        var markedLog = new ExpenseLog
+        {
+            Id = 101,
+            ExpenseId = 30,
+            SpendingSourceId = 7,
+            Amount = 22m,
+            IsForDeletion = true
+        };
+
+        expenseLogs.GetMarkedForDeletionAsync(Arg.Any<CancellationToken>())
+            .Returns([markedLog]);
+        expenseLogs.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<ExpenseLog>());
+        expenses.GetByExpenseIdAsync(markedLog.ExpenseId, Arg.Any<CancellationToken>())
+            .Returns(new Expense { Id = markedLog.ExpenseId });
+
+        await sut.PostTerminationCleanupAsync();
+
+        expenseLogs.Received(1).Remove(markedLog);
+        expenses.Received(1).Remove(Arg.Is<Expense>(expense => expense.Id == markedLog.ExpenseId));
+        spendingSources.DidNotReceiveWithAnyArgs().Update(default!);
+        await unitOfWork.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
     private static (ExpenseLogService Sut, IUnitOfWork UnitOfWork, IExpenseLogRepository ExpenseLogs,
-        ISpendingSourceRepository SpendingSources) CreateSut()
+        IExpenseRepository Expenses, ISpendingSourceRepository SpendingSources) CreateSut()
     {
         var unitOfWork = Substitute.For<IUnitOfWork>();
         var expenseLogs = Substitute.For<IExpenseLogRepository>();
+        var expenses = Substitute.For<IExpenseRepository>();
         var spendingSources = Substitute.For<ISpendingSourceRepository>();
 
         unitOfWork.ExpenseLogs.Returns(expenseLogs);
+        unitOfWork.Expenses.Returns(expenses);
         unitOfWork.SpendingSources.Returns(spendingSources);
 
         var sut = new ExpenseLogService(new InlineDataOperationRunner(unitOfWork), Substitute.For<IMapper>());
-        return (sut, unitOfWork, expenseLogs, spendingSources);
+        return (sut, unitOfWork, expenseLogs, expenses, spendingSources);
     }
 }

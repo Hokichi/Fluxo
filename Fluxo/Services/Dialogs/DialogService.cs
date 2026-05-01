@@ -67,12 +67,16 @@ public sealed class DialogService : IDialogService
 
     public bool? ShowAddNewTransaction(QuickAddVM viewModel, Window? owner = null)
     {
-        return ShowDialog(new AddNewTransaction(viewModel), owner);
+        using var scope = _serviceProvider.CreateScope();
+        var popup = ActivatorUtilities.CreateInstance<AddNewTransaction>(scope.ServiceProvider, viewModel);
+        return ShowDialog(popup, owner);
     }
 
     public bool? ShowExpenseDetail(ExpenseDetailVM viewModel, Window? owner = null)
     {
-        return ShowDialog(new ExpenseDetailPopup(viewModel), owner);
+        using var scope = _serviceProvider.CreateScope();
+        var popup = ActivatorUtilities.CreateInstance<ExpenseDetailPopup>(scope.ServiceProvider, viewModel);
+        return ShowDialog(popup, owner);
     }
 
     public bool? ShowSpendingSourceDetail(SpendingSourceDetailVM viewModel, Window? owner = null)

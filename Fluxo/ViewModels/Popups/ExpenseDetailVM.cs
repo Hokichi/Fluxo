@@ -75,6 +75,7 @@ public partial class ExpenseDetailVM : ObservableObject
     {
         OnPropertyChanged(nameof(AreFieldsReadOnly));
         OnPropertyChanged(nameof(CanEditFields));
+        RefreshTagCollections();
 
         if (!value)
             IsMoreTagsOpen = false;
@@ -82,22 +83,55 @@ public partial class ExpenseDetailVM : ObservableObject
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
-        if (_isUpdatingTagCollections || value is null || !IsEditing)
+        if (_isUpdatingTagCollections || value is null)
             return;
+
+        if (!IsEditing)
+        {
+            RefreshTagCollections();
+            return;
+        }
 
         PromoteTagToVisibleStart(value);
         IsMoreTagsOpen = false;
     }
 
-    public void BeginEditing()
+    public async Task BeginEditingAsync()
     {
         IsEditing = true;
+        await EnsureTagsLoadedAsync();
     }
 
     public void CancelEditing()
     {
         IsEditing = false;
         LoadFromSavedState();
+    }
+
+    public async Task EnsureTagsLoadedAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<ExpenseTag> allTags;
+        try
+        {
+            allTags = await _appData.GetExpenseTagsAsync(cancellationToken);
+        }
+        catch
+        {
+            return;
+        }
+
+        var selectedTagId = SelectedTag?.Id;
+        var persistedTags = QuickAddVM.ProjectNonSystemTags(allTags).ToList();
+        if (persistedTags.Count == 0)
+            return;
+
+        _orderedTags.Clear();
+        _orderedTags.AddRange(persistedTags);
+        RefreshTagCollections();
+
+        SelectedTag = selectedTagId is null
+            ? _orderedTags.FirstOrDefault()
+            : _orderedTags.FirstOrDefault(tag => tag.Id == selectedTagId.Value) ?? _orderedTags.FirstOrDefault();
     }
 
     public QuickAddVM.QuickAddDraft CreateQuickAddDraft()
@@ -142,6 +176,9 @@ public partial class ExpenseDetailVM : ObservableObject
 
             var expense = expenseLog.Expense;
             var currentSpendingSource = expenseLog.SpendingSource;
+            if (currentSpendingSource is null)
+                return ExpenseDetailSaveResult.Failure("Unable to load this expense source.");
+
             var newSpendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
             if (newSpendingSource is null)
                 return ExpenseDetailSaveResult.Failure("Please select a valid spending source.");
@@ -152,8 +189,18 @@ public partial class ExpenseDetailVM : ObservableObject
 
             var resolvedName = BuildExpenseName(input.Name, input.Note, expenseTag.Name);
 
-            RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
-            ApplyExpenseToSpendingSource(newSpendingSource, input.Amount);
+            var sourceChanged = currentSpendingSource.Id != newSpendingSource.Id;
+            if (!sourceChanged)
+            {
+                RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
+                ApplyExpenseToSpendingSource(currentSpendingSource, input.Amount);
+                newSpendingSource = currentSpendingSource;
+            }
+            else
+            {
+                RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
+                ApplyExpenseToSpendingSource(newSpendingSource, input.Amount);
+            }
 
             expense.Name = resolvedName;
             expense.Amount = input.Amount;
@@ -171,7 +218,7 @@ public partial class ExpenseDetailVM : ObservableObject
             _appData.UpdateExpenseLog(expenseLog);
             _appData.UpdateSpendingSource(currentSpendingSource);
 
-            if (!ReferenceEquals(currentSpendingSource, newSpendingSource))
+            if (sourceChanged)
                 _appData.UpdateSpendingSource(newSpendingSource);
 
             await _appData.SaveChangesAsync();
@@ -300,8 +347,18 @@ public partial class ExpenseDetailVM : ObservableObject
 
         try
         {
-            ReplaceCollection(VisibleTags, _orderedTags.Take(4));
-            ReplaceCollection(OverflowTags, _orderedTags.Skip(4));
+            if (!IsEditing)
+            {
+                ReplaceCollection(VisibleTags, SelectedTag is null ? [] : [SelectedTag]);
+                ReplaceCollection(OverflowTags, []);
+                OnPropertyChanged(nameof(HasMoreTags));
+                IsMoreTagsOpen = false;
+                return;
+            }
+
+            var editableTags = _orderedTags.Where(tag => !tag.IsSystemTag).ToList();
+            ReplaceCollection(VisibleTags, editableTags.Take(4));
+            ReplaceCollection(OverflowTags, editableTags.Skip(4));
 
             OnPropertyChanged(nameof(HasMoreTags));
             if (!HasMoreTags)

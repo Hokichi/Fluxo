@@ -1,6 +1,7 @@
 using AutoMapper;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Filters;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
@@ -65,9 +66,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
             };
             await unitOfWork.ExpenseLogs.AddAsync(log, ct);
 
-            // Deduct from spending source.
-            source.Balance -= dto.Amount;
-            source.SpentAmount += dto.Amount;
+            ApplyExpenseToSpendingSource(source, dto.Amount);
             unitOfWork.SpendingSources.Update(source);
 
             await unitOfWork.SaveChangesAsync(ct);
@@ -106,8 +105,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
                     continue;
 
                 var total = grp.Sum(l => l.Amount);
-                source.Balance += total;
-                source.SpentAmount -= total;
+                RestoreExpenseOnSpendingSource(source, total);
                 unitOfWork.SpendingSources.Update(source);
             }
 
@@ -120,5 +118,27 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
 
             await unitOfWork.SaveChangesAsync(ct);
         }, cancellationToken);
+    }
+
+    private static void ApplyExpenseToSpendingSource(SpendingSource source, decimal amount)
+    {
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount += amount;
+            return;
+        }
+
+        source.Balance -= amount;
+    }
+
+    private static void RestoreExpenseOnSpendingSource(SpendingSource source, decimal amount)
+    {
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount = Math.Max(0m, source.SpentAmount - amount);
+            return;
+        }
+
+        source.Balance += amount;
     }
 }

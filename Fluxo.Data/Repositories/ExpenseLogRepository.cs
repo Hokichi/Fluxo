@@ -10,7 +10,9 @@ public sealed class ExpenseLogRepository(FluxoDbContext dbContext)
 {
     public override async Task<IReadOnlyList<ExpenseLog>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await QueryWithNavigations().ToListAsync(cancellationToken);
+        return await QueryWithNavigations()
+            .Where(log => !log.IsForDeletion)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<ExpenseLog?> GetByLogIdAsync(int id, CancellationToken cancellationToken = default)
@@ -26,7 +28,7 @@ public sealed class ExpenseLogRepository(FluxoDbContext dbContext)
         CancellationToken cancellationToken = default)
     {
         return await QueryWithNavigations()
-            .Where(log => log.ExpenseId == expenseId)
+            .Where(log => log.ExpenseId == expenseId && !log.IsForDeletion)
             .ToListAsync(cancellationToken);
     }
 

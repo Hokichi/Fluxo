@@ -2,6 +2,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
@@ -32,6 +33,7 @@ public partial class App : Application
     private const string StartupTrayArgument = "--startup-tray";
     private const string RestartTrayArgument = "--startup--tray";
     private readonly IDataOperationRunner _dataOperationRunner;
+    private readonly IExpenseLogService _expenseLogService;
     private readonly MainVM _mainVM;
     private readonly IStartupNotificationSummaryService _startupNotificationSummaryService;
     private readonly StartupTrayPopupDisplayPolicy _startupTrayPopupDisplayPolicy = new();
@@ -58,6 +60,7 @@ public partial class App : Application
 
         _mainVM = _serviceProvider.GetRequiredService<MainVM>();
         _dataOperationRunner = _serviceProvider.GetRequiredService<IDataOperationRunner>();
+        _expenseLogService = _serviceProvider.GetRequiredService<IExpenseLogService>();
         _startupNotificationSummaryService = _serviceProvider.GetRequiredService<IStartupNotificationSummaryService>();
         _uiSettleAwaiter = _serviceProvider.GetRequiredService<IUiSettleAwaiter>();
 
@@ -83,6 +86,8 @@ public partial class App : Application
                 await MigrateDatabaseAsync(_dataOperationRunner);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
+                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                await _expenseLogService.PostTerminationCleanupAsync();
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
 
                 if (!isFirstRun)
