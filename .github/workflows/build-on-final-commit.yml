@@ -1,0 +1,80 @@
+name: Build On Final Commit
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.parse.outputs.should_build }}
+      version: ${{ steps.parse.outputs.version }}
+      tag: ${{ steps.parse.outputs.tag }}
+    steps:
+      - name: Parse commit message
+        id: parse
+        shell: bash
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          message="${HEAD_COMMIT_MESSAGE:-}"
+          pattern='^Final commit for build v([0-9]+\.[0-9]+\.[0-9]+)$'
+
+          if [[ "$message" =~ $pattern ]]; then
+            version="${BASH_REMATCH[1]}"
+            tag="v${version}"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "version=${version}" >> "$GITHUB_OUTPUT"
+            echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+            echo "Build requested for ${tag}"
+          else
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "Commit message does not match release pattern."
+          fi
+
+  build_container:
+    runs-on: windows-latest
+    needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Windows container image
+        shell: pwsh
+        run: |
+          docker build `
+            --file Dockerfile `
+            --tag "fluxo:${{ needs.prepare.outputs.tag }}" `
+            .
+
+  create_tag:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build_container
+    if: needs.prepare.outputs.should_build == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        shell: bash
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          SHA: ${{ github.sha }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists. Skipping."
+            exit 0
+          fi
+
+          git tag "${TAG}" "${SHA}"
+          git push origin "refs/tags/${TAG}"
