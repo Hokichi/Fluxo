@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
-    Width="560"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="{Binding PopupTitle}"
     ShowSaveButton="True">
@@ -23,27 +22,12 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        
+
     </customControls:BasePopup.Resources>
 
-    <Grid Margin="24,0,24,24">
+    <Grid Width="480" Margin="24,0,24,24">
         <Border Style="{StaticResource PanelStyle}">
             <StackPanel>
-                <TextBlock
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="16"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="{Binding HeaderTitle}" />
-                <StackPanel
-                    Margin="0,8,0,18"
-                    Orientation="Horizontal">
-                    <TextBlock
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding HeaderDescription}" />
-                </StackPanel>
-
                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Goal Name" />
                 <TextBox
                     x:Name="NameTextBox"
@@ -59,16 +43,12 @@
 
                     <StackPanel>
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Target Amount" />
-                        <customControls:MoneyTextBox
-                            Style="{StaticResource RoundedMoneyTextInputStyle}"
-                            Text="{Binding TargetAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding TargetAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Amount" />
-                        <customControls:MoneyTextBox
-                            Style="{StaticResource RoundedMoneyTextInputStyle}"
-                            Text="{Binding CurrentAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding CurrentAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </StackPanel>
                 </Grid>
 

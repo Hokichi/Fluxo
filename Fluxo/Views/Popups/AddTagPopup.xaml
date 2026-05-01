@@ -22,7 +22,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-        
+
         <Style x:Key="ColorSelectorListBoxStyle" TargetType="ListBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -44,7 +44,12 @@
                                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                                         BorderThickness="1"
                                         CornerRadius="15">
-                                        <components:Icon Margin="8" x:Name="TickPath" Path="{StaticResource Check}" Color="{StaticResource Brush.Background.Surface}" Opacity="0" />
+                                        <components:Icon
+                                            x:Name="TickPath"
+                                            Margin="8"
+                                            Opacity="0"
+                                            Path="{StaticResource Check}"
+                                            Color="{StaticResource Brush.Background.Surface}" />
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -70,24 +75,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
     </customControls:BasePopup.Resources>
 
     <Grid Margin="24,0,24,24">
         <Border Style="{StaticResource PanelStyle}">
             <StackPanel>
-                <TextBlock
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="16"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="{Binding HeaderTitle}" />
-                <TextBlock
-                    Margin="0,8,0,18"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="11"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="{Binding DescriptionText}" />
-
                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Tag Name" />
                 <TextBox
                     x:Name="TagNameTextBox"
