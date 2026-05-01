@@ -31,18 +31,6 @@
 
         <Border Style="{StaticResource PanelStyle}">
             <StackPanel>
-                <TextBlock
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="14"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Sections" />
-                <TextBlock
-                    Margin="0,6,0,16"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="11"
-                    Foreground="{StaticResource Brush.Text.Muted}"
-                    Text="Apply saves budget and personalization changes. List actions save immediately."
-                    TextWrapping="Wrap" />
                 <RadioButton
                     x:Name="BudgetTabButton"
                     GroupName="SettingsTabs"
@@ -109,6 +97,17 @@
                         Path="{StaticResource AccountCircle}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
+
+                <RadioButton
+                    x:Name="AboutTabButton"
+                    GroupName="SettingsTabs"
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="About">
+                    <components:Icon
+                        Width="12"
+                        Path="{StaticResource InvoiceLight}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
+                </RadioButton>
             </StackPanel>
         </Border>
 
@@ -120,6 +119,7 @@
             <tabs:SettingsTagsTab DataContext="{Binding TagsTab}" Visibility="{Binding IsChecked, ElementName=TagsTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <tabs:SettingsPersonalizationTab DataContext="{Binding PersonalizationTab}" Visibility="{Binding IsChecked, ElementName=PersonalizationTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsAboutTab DataContext="{Binding PersonalizationTab}" Visibility="{Binding IsChecked, ElementName=AboutTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
         </Grid>
     </Grid>
 </customControls:BasePopup>

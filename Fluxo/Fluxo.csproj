@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Resources\fluxo.ico</ApplicationIcon>
     <StartupObject>Fluxo.App</StartupObject>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
