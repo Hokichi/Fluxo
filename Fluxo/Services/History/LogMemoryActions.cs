@@ -684,6 +684,36 @@ public sealed class DeleteExpenseTagMemoryAction(ExpenseTagMemorySnapshot snapsh
     }
 }
 
+public sealed class EditExpenseTagMemoryAction(
+    ExpenseTagMemorySnapshot before,
+    ExpenseTagMemorySnapshot after) : ILogMemoryAction
+{
+    public string Description => "Edit tag";
+
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
+    }
+
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
+    }
+
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, ExpenseTagMemorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        var expenseTag = await unitOfWork.ExpenseTags.GetByIdAsync(snapshot.ExpenseTagId, cancellationToken);
+        if (expenseTag is null)
+            return;
+
+        expenseTag.Name = snapshot.Name;
+        expenseTag.HexCode = snapshot.HexCode;
+        unitOfWork.ExpenseTags.Update(expenseTag);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
 public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapshot) : ILogMemoryAction
 {
     public string Description => "Delete saving goal";

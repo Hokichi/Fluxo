@@ -110,6 +110,10 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
                 _dialogService.ShowSpendingSourceDetail(spendingSourceDetail, this);
                 break;
 
+            case SettingsDialogRequestType.AddTag when request.Payload is SettingsTagDialogRequest tagDialogRequest:
+                _dialogService.ShowAddTag(tagDialogRequest.ViewModel, tagDialogRequest.SaveTagAsync, this);
+                break;
+
             case SettingsDialogRequestType.AddTag when request.Payload is SettingsTagsTabVM tagsTab:
                 _dialogService.ShowAddTag(tagsTab, this);
                 break;

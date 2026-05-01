@@ -136,6 +136,12 @@ public sealed class DialogService : IDialogService
         return ShowDialog(new AddTagPopup(settingsViewModel, this), owner);
     }
 
+    public bool? ShowAddTag(AddTagVM viewModel, Func<string, string, Task<SettingsOperationResult>> saveTagAsync,
+        Window? owner = null)
+    {
+        return ShowDialog(new AddTagPopup(this, viewModel, saveTagAsync), owner);
+    }
+
     public bool? ShowAddTag(Func<string, string, Task<SettingsOperationResult>> createTagAsync, Window? owner = null)
     {
         return ShowDialog(new AddTagPopup(this, createTagAsync), owner);

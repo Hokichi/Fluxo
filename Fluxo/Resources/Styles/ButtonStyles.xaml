@@ -202,8 +202,13 @@
                         Padding="{TemplateBinding Padding}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="12">
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <Border.CornerRadius>
+                            <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                            </MultiBinding>
+                        </Border.CornerRadius>
                         <StackPanel Orientation="Horizontal">
                             <Grid Width="10" Height="10">
                                 <Ellipse Fill="{Binding HexCode}" />

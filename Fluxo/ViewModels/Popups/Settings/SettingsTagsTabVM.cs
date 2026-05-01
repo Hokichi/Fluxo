@@ -5,11 +5,16 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups.Settings;
+
+public readonly record struct SettingsTagDialogRequest(
+    AddTagVM ViewModel,
+    Func<string, string, Task<SettingsOperationResult>> SaveTagAsync);
 
 public partial class SettingsTagsTabVM : ObservableObject
 {
@@ -36,7 +41,35 @@ public partial class SettingsTagsTabVM : ObservableObject
         _messenger.Send(new SettingsDialogRequestedMessage(
             new SettingsDialogRequest(
                 SettingsDialogRequestType.AddTag,
-                this)));
+                new SettingsTagDialogRequest(CreateAddTagViewModel(), CreateTagAsync))));
+    }
+
+    public AddTagVM CreateAddTagViewModel()
+    {
+        return new AddTagVM();
+    }
+
+    public async Task<AddTagVM?> CreateEditTagViewModelAsync(int tagId)
+    {
+        var expenseTag = await _appData.GetExpenseTagByIdAsync(tagId);
+        if (expenseTag is null || expenseTag.IsSystemTag)
+            return null;
+
+        return new AddTagVM(expenseTag.Id, expenseTag.Name, expenseTag.HexCode);
+    }
+
+    public async Task OpenEditTagAsync(int tagId)
+    {
+        var viewModel = await CreateEditTagViewModelAsync(tagId);
+        if (viewModel is null)
+            return;
+
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AddTag,
+                new SettingsTagDialogRequest(viewModel, (name, hexCode) => UpdateTagAsync(tagId, name, hexCode)))));
+
+        await RefreshTagsAsync();
     }
 
     public async Task RefreshTagsAsync()
@@ -122,6 +155,59 @@ public partial class SettingsTagsTabVM : ObservableObject
         {
             return SettingsOperationResult.Failure(
                 $"Unable to delete this tag.\n\n{exception.Message}");
+        }
+    }
+
+    public async Task<SettingsOperationResult> UpdateTagAsync(int tagId, string name, string hexCode)
+    {
+        var trimmedName = (name ?? string.Empty).Trim();
+        var normalizedHexCode = NormalizeHexColor(hexCode);
+
+        if (trimmedName.Length == 0)
+            return SettingsOperationResult.Failure("Please enter a tag name.");
+
+        if (!IsHexColor(normalizedHexCode))
+            return SettingsOperationResult.Failure("Please choose a valid tag color.");
+
+        try
+        {
+            var expenseTag = await _appData.GetExpenseTagByIdAsync(tagId);
+            if (expenseTag is null)
+                return SettingsOperationResult.Failure("That tag could not be found anymore.");
+
+            if (expenseTag.IsSystemTag)
+                return SettingsOperationResult.Failure("System tags can't be edited.");
+
+            var existingTags = await _appData.GetExpenseTagsAsync();
+            if (existingTags.Any(tag =>
+                    tag.Id != expenseTag.Id &&
+                    string.Equals(tag.Name, trimmedName, StringComparison.OrdinalIgnoreCase)))
+                return SettingsOperationResult.Failure($"A tag named \"{trimmedName}\" already exists.");
+
+            var beforeSnapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
+            var hasNameChanged = !string.Equals(expenseTag.Name, trimmedName, StringComparison.Ordinal);
+            var hasHexChanged = !string.Equals(expenseTag.HexCode, normalizedHexCode, StringComparison.OrdinalIgnoreCase);
+            if (!hasNameChanged && !hasHexChanged)
+                return SettingsOperationResult.Success();
+
+            expenseTag.Name = trimmedName;
+            expenseTag.HexCode = normalizedHexCode;
+            _appData.UpdateExpenseTag(expenseTag);
+            await _appData.SaveChangesAsync();
+
+            var afterSnapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
+            SettingsShared.RecordActions([new EditExpenseTagMemoryAction(beforeSnapshot, afterSnapshot)], _messenger);
+            _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Tags));
+            _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
+            await _mainViewModel.ReloadCurrentDataAsync();
+            await RefreshTagsAsync();
+
+            return SettingsOperationResult.Success();
+        }
+        catch (Exception exception)
+        {
+            return SettingsOperationResult.Failure(
+                $"Unable to update this tag.\n\n{exception.Message}");
         }
     }
 

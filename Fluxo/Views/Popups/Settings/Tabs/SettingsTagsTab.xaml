@@ -9,7 +9,11 @@
         </ItemsPanelTemplate>
 
         <DataTemplate x:Key="SettingsTagDeleteButtonTemplate">
-            <Button Click="OnTagDeleteClick" Style="{StaticResource TagDeleteButtonStyle}" />
+            <Button
+                IsHitTestVisible="True"
+                MouseDoubleClick="OnTagMouseDoubleClick"
+                PreviewMouseLeftButtonDown="OnTagPreviewMouseLeftButtonDown"
+                Style="{StaticResource TagDeleteButtonStyle}" />
         </DataTemplate>
     </UserControl.Resources>
 
@@ -38,7 +42,7 @@
                 FontFamily="{StaticResource Medium}"
                 FontSize="11"
                 Foreground="{StaticResource Brush.Text.Secondary}"
-                Text="Click to remove tags." />
+                Text="Click the color dot to remove tags. Double-click a tag to edit." />
             <ItemsControl
                 ItemTemplate="{StaticResource SettingsTagDeleteButtonTemplate}"
                 ItemsPanel="{StaticResource SettingsTagsItemsPanelTemplate}"

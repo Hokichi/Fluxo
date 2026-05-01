@@ -8,6 +8,7 @@ public partial class AddTagVM : ObservableObject
     private const string DefaultColor = "#3FE0A1";
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
+    private readonly int? _editingId;
 
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _selectedColorHex = DefaultColor;
@@ -28,13 +29,22 @@ public partial class AddTagVM : ObservableObject
         new("Teal", "#14B8A6")
     ];
 
-    public AddTagVM()
+    public AddTagVM(int? editingId = null, string? nameText = null, string? selectedColorHex = null)
     {
+        _editingId = editingId;
+        NameText = (nameText ?? string.Empty).Trim();
+        SelectedColorHex = NormalizeHex(selectedColorHex ?? DefaultColor);
+        EnsureColorOptionExists(SelectedColorHex);
         _initialState = CaptureState();
     }
 
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
-    public string PopupTitle => "Add New Tag";
+    public bool IsEditMode => _editingId.HasValue;
+    public string PopupTitle => IsEditMode ? "Edit Tag" : "Add New Tag";
+    public string HeaderTitle => IsEditMode ? "Edit Tag" : "Create Tag";
+    public string DescriptionText => IsEditMode
+        ? "Update the tag label or color."
+        : "Choose a color and set a label for the tag.";
 
     public void BeginChangeTracking()
     {
@@ -49,13 +59,7 @@ public partial class AddTagVM : ObservableObject
     public void AddCustomColorToFront(string hexCode)
     {
         var normalized = NormalizeHex(hexCode);
-        var existingMatch = ColorOptions.FirstOrDefault(option =>
-            string.Equals(option.HexCode, normalized, StringComparison.OrdinalIgnoreCase));
-        if (existingMatch is not null)
-            ColorOptions.Remove(existingMatch);
-
-        ColorOptions.Insert(0, new TagColorOptionVM("Custom", normalized));
-        ColorOptions.RemoveAt(ColorOptions.Count - 1);
+        AddColorToFront(normalized);
         SelectedColorHex = normalized;
         NotifyFormStateChanged();
     }
@@ -75,6 +79,27 @@ public partial class AddTagVM : ObservableObject
     {
         var normalized = (value ?? string.Empty).Trim().TrimStart('#').ToUpperInvariant();
         return normalized.Length == 6 ? $"#{normalized}" : DefaultColor;
+    }
+
+    private void EnsureColorOptionExists(string hexCode)
+    {
+        var normalized = NormalizeHex(hexCode);
+        var hasMatch = ColorOptions.Any(option =>
+            string.Equals(option.HexCode, normalized, StringComparison.OrdinalIgnoreCase));
+        if (!hasMatch)
+            AddColorToFront(normalized);
+    }
+
+    private void AddColorToFront(string hexCode)
+    {
+        var existingMatch = ColorOptions.FirstOrDefault(option =>
+            string.Equals(option.HexCode, hexCode, StringComparison.OrdinalIgnoreCase));
+        if (existingMatch is not null)
+            ColorOptions.Remove(existingMatch);
+
+        ColorOptions.Insert(0, new TagColorOptionVM("Custom", hexCode));
+        if (ColorOptions.Count > 12)
+            ColorOptions.RemoveAt(ColorOptions.Count - 1);
     }
 
     private readonly record struct FormState(string NameText, string SelectedColorHex, string OptionFingerprint);

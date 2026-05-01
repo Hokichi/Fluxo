@@ -47,6 +47,8 @@ public interface IDialogService
     bool? ShowGoalDeadlineAction(GoalDeadlineActionVM viewModel, Window? owner = null);
 
     bool? ShowAddTag(SettingsTagsTabVM settingsViewModel, Window? owner = null);
+    bool? ShowAddTag(AddTagVM viewModel, Func<string, string, Task<SettingsOperationResult>> saveTagAsync,
+        Window? owner = null);
     bool? ShowAddTag(Func<string, string, Task<SettingsOperationResult>> createTagAsync, Window? owner = null);
 
     (bool? DialogResult, string SelectedHexColor) ShowAddTagColorPicker(string initialHexColor, Window? owner = null);
