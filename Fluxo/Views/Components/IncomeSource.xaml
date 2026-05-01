@@ -85,7 +85,7 @@
                         Text="{Binding Name}" />
 
                     <TextBlock
-                        Margin="0,8,0,0"
+                        Margin="0,4,0,0"
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="20"
@@ -95,7 +95,7 @@
                 </StackPanel>
 
                 <StackPanel
-                    Margin="0,0,8,12"
+                    Margin="0,0,8,8"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     Orientation="Horizontal">
