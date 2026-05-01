@@ -52,8 +52,11 @@
                             Margin="0,6,0,0"
                             FontFamily="{StaticResource Medium}"
                             Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="Start fluxo in the system tray when Windows signs in."
-                            TextWrapping="Wrap" />
+                            TextWrapping="Wrap">
+                            <Run Text="Start " />
+                            <Run FontFamily="{StaticResource BoldItalic}" Text="fluxo" />
+                            <Run Text=" in the system tray when Windows signs in." />
+                        </TextBlock>
                     </StackPanel>
                     <ToggleButton
                         Grid.Column="1"
@@ -64,16 +67,34 @@
                 <StackPanel Margin="0,14,0,0">
                     <TextBlock
                         FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="When closing fluxo" />
-                    <ComboBox
+                        Foreground="{StaticResource Brush.Text.Primary}">
+                        <Run Text="When closing " />
+                        <Run FontFamily="{StaticResource BoldItalic}" Text="fluxo" />
+                    </TextBlock>
+                    <Border
+                        Height="32"
                         Margin="0,8,0,0"
-                        SelectedValue="{Binding CloseBehavior, Mode=TwoWay}"
-                        SelectedValuePath="Tag"
-                        Style="{StaticResource FluxoComboBoxStyle}">
-                        <ComboBoxItem Tag="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}">Minimize to tray</ComboBoxItem>
-                        <ComboBoxItem Tag="{x:Static coreEnums:AppCloseBehavior.Exit}">Exit</ComboBoxItem>
-                    </ComboBox>
+                        Padding="4"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                        <StackPanel Orientation="Horizontal">
+                            <Button
+                                Command="{Binding SetCloseBehaviorCommand}"
+                                CommandParameter="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}"
+                                Content="Minimize to tray"
+                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                Tag="{Binding IsMinimizeToTrayCloseBehaviorSelected}" />
+                            <Button
+                                Margin="4,0,0,0"
+                                Command="{Binding SetCloseBehaviorCommand}"
+                                CommandParameter="{x:Static coreEnums:AppCloseBehavior.Exit}"
+                                Content="Exit"
+                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                Tag="{Binding IsExitCloseBehaviorSelected}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </StackPanel>
         </Border>

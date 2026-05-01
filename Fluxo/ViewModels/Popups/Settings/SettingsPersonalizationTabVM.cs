@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
@@ -31,6 +32,10 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     }
 
     public ObservableCollection<SettingsNotificationOptionVM> NotificationSettings { get; } = [];
+
+    public bool IsMinimizeToTrayCloseBehaviorSelected => CloseBehavior == AppCloseBehavior.MinimizeToTray;
+
+    public bool IsExitCloseBehaviorSelected => CloseBehavior == AppCloseBehavior.Exit;
 
     public bool HasPendingChanges =>
         !string.Equals((PreferredAppName ?? string.Empty).Trim(), _savedPreferredAppName, StringComparison.Ordinal) ||
@@ -131,7 +136,15 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     partial void OnCloseBehaviorChanged(AppCloseBehavior value)
     {
+        OnPropertyChanged(nameof(IsMinimizeToTrayCloseBehaviorSelected));
+        OnPropertyChanged(nameof(IsExitCloseBehaviorSelected));
         PublishPendingState();
+    }
+
+    [RelayCommand]
+    private void SetCloseBehavior(AppCloseBehavior closeBehavior)
+    {
+        CloseBehavior = closeBehavior;
     }
 
     private void LoadNotificationSettings(IReadOnlyDictionary<string, string> settingsByName)

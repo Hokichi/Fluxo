@@ -72,12 +72,32 @@
                                     FontFamily="{StaticResource Bold}"
                                     Foreground="{StaticResource Brush.Text.Primary}"
                                     Text="Run with Windows" />
-                                <TextBlock
-                                    Margin="0,6,0,0"
-                                    FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="Start fluxo in the system tray when Windows signs in."
-                                    TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        FontFamily="{StaticResource Medium}"
+                                        Foreground="{StaticResource Brush.Text.Secondary}"
+                                        TextWrapping="Wrap">
+                                        <Run Text="Start " />
+                                    </TextBlock>
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{StaticResource Brush.Text.Secondary}"
+                                        Text="flux" />
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{StaticResource Brush.Mint.Muted}"
+                                        Text="o" />
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        FontFamily="{StaticResource Medium}"
+                                        Foreground="{StaticResource Brush.Text.Secondary}"
+                                        TextWrapping="Wrap">
+                                        <Run Text=" in the system tray when Windows signs in." />
+                                    </TextBlock>
+                                </StackPanel>
                             </StackPanel>
                             <ToggleButton
                                 Grid.Column="1"
@@ -86,20 +106,48 @@
                                 Style="{StaticResource ToggleSwitchStyle}" />
                         </Grid>
 
-                        <StackPanel Margin="0,14,0,0">
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="When closing fluxo" />
-                            <ComboBox
-                                Margin="0,8,0,0"
-                                SelectedValue="{Binding CloseBehavior, Mode=TwoWay}"
-                                SelectedValuePath="Tag"
-                                Style="{StaticResource FluxoComboBoxStyle}">
-                                <ComboBoxItem Tag="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}">Minimize to tray</ComboBoxItem>
-                                <ComboBoxItem Tag="{x:Static coreEnums:AppCloseBehavior.Exit}">Exit</ComboBoxItem>
-                            </ComboBox>
-                        </StackPanel>
+                        <Grid Margin="0,14,0,0">
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="When closing " />
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="flux" />
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Mint}"
+                                    Text="o" />
+                            </StackPanel>
+                            <Border
+                                Height="32"
+                                Padding="4"
+                                HorizontalAlignment="Right"
+                                Background="{StaticResource Brush.Background.Surface}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="1"
+                                CornerRadius="14">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        Width="120"
+                                        Command="{Binding SetCloseBehaviorCommand}"
+                                        CommandParameter="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}"
+                                        Content="Minimize to tray"
+                                        Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                        Tag="{Binding IsMinimizeToTrayCloseBehaviorSelected}" />
+                                    <Button
+                                        Width="120"
+                                        Margin="4,0,0,0"
+                                        Command="{Binding SetCloseBehaviorCommand}"
+                                        CommandParameter="{x:Static coreEnums:AppCloseBehavior.Exit}"
+                                        Content="Exit"
+                                        Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                        Tag="{Binding IsExitCloseBehaviorSelected}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </Border>
 

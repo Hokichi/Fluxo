@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
@@ -26,6 +27,10 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
     }
 
     public ObservableCollection<SettingsNotificationOptionVM> NotificationSettings { get; } = [];
+
+    public bool IsMinimizeToTrayCloseBehaviorSelected => CloseBehavior == AppCloseBehavior.MinimizeToTray;
+
+    public bool IsExitCloseBehaviorSelected => CloseBehavior == AppCloseBehavior.Exit;
 
     public async Task LoadAsync()
     {
@@ -130,6 +135,18 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
             new QuickSetupWizardNotificationsChanged(
                 EnabledCount: NotificationSettings.Count(setting => setting.IsEnabled),
                 TotalCount: NotificationSettings.Count)));
+    }
+
+    partial void OnCloseBehaviorChanged(AppCloseBehavior value)
+    {
+        OnPropertyChanged(nameof(IsMinimizeToTrayCloseBehaviorSelected));
+        OnPropertyChanged(nameof(IsExitCloseBehaviorSelected));
+    }
+
+    [RelayCommand]
+    private void SetCloseBehavior(AppCloseBehavior closeBehavior)
+    {
+        CloseBehavior = closeBehavior;
     }
 }
 
