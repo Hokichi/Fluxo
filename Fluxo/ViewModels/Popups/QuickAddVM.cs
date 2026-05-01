@@ -16,6 +16,7 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class QuickAddVM : ObservableObject
 {
+    private const int DefaultVisibleTagSlots = 4;
     private const int NoSpendingSourceId = -1;
     private const int NoTagId = -1;
     private const int NoSavingGoalId = -1;
@@ -34,6 +35,7 @@ public partial class QuickAddVM : ObservableObject
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
     private bool _isUpdatingTagCollections;
+    private int _visibleTagSlots = DefaultVisibleTagSlots;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
@@ -196,7 +198,9 @@ public partial class QuickAddVM : ObservableObject
         if (_isUpdatingTagCollections || value is null)
             return;
 
-        PromoteTagToVisibleStart(value);
+        if (OverflowTags.Any(tag => tag.Id == value.Id))
+            PromoteTagToVisibleStart(value);
+
         IsMoreTagsOpen = false;
     }
 
@@ -403,6 +407,16 @@ public partial class QuickAddVM : ObservableObject
         IsMoreTagsOpen = false;
     }
 
+    public void SetVisibleTagSlots(int visibleTagSlots)
+    {
+        var normalizedSlots = Math.Max(0, visibleTagSlots);
+        if (_visibleTagSlots == normalizedSlots)
+            return;
+
+        _visibleTagSlots = normalizedSlots;
+        RefreshTagCollections();
+    }
+
     private bool TryBuildTransactionInput(out QuickTransactionInput input, out string validationMessage)
     {
         input = default;
@@ -505,8 +519,8 @@ public partial class QuickAddVM : ObservableObject
 
         try
         {
-            ReplaceCollection(VisibleTags, _orderedTags.Take(4));
-            ReplaceCollection(OverflowTags, _orderedTags.Skip(4));
+            ReplaceCollection(VisibleTags, _orderedTags.Take(_visibleTagSlots));
+            ReplaceCollection(OverflowTags, _orderedTags.Skip(_visibleTagSlots));
 
             OnPropertyChanged(nameof(HasMoreTags));
             if (!HasMoreTags)

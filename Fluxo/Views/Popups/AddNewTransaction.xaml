@@ -290,13 +290,16 @@
                 Margin="0,16,0,0"
                 Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
-                <DockPanel LastChildFill="False">
+                <DockPanel
+                    x:Name="TagsDockPanel"
+                    LastChildFill="False">
                     <Button
                         x:Name="AddTagButton"
                         DockPanel.Dock="Left"
                         Margin="0,0,8,0"
                         Click="OnAddTagClick"
-                        Content="+ Add Tag" />
+                        Content="+ Add Tag"
+                        Style="{StaticResource PopupTagButtonStyle}" />
 
                     <ListBox
                         x:Name="VisibleTagsListBox"
@@ -305,32 +308,41 @@
                         ItemTemplate="{StaticResource PopupTagTemplate}"
                         ItemsPanel="{StaticResource PopupVisibleTagsItemsPanelTemplate}"
                         ItemsSource="{Binding VisibleTags}"
+                        SelectionChanged="OnTagSelectionChanged"
                         SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
                         Style="{StaticResource PopupTagListBoxStyle}" />
 
                     <ToggleButton
                         x:Name="MoreTagsButton"
                         Margin="4,0,0,0"
-                        Content="More Tags"
+                        Checked="OnMoreTagsButtonChecked"
+                        Content="More"
                         IsChecked="{Binding IsMoreTagsOpen, Mode=TwoWay}"
+                        MouseEnter="OnMoreTagsHoverChanged"
+                        MouseLeave="OnMoreTagsHoverChanged"
                         Style="{StaticResource PopupTagToggleStyle}"
+                        Unchecked="OnMoreTagsButtonUnchecked"
                         Visibility="{Binding HasMoreTags, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </DockPanel>
 
                 <Popup
+                    x:Name="MoreTagsPopup"
                     AllowsTransparency="True"
-                    IsOpen="{Binding IsMoreTagsOpen, Mode=TwoWay}"
+                    Closed="OnMoreTagsPopupClosed"
                     Placement="Bottom"
                     PlacementTarget="{Binding ElementName=MoreTagsButton}"
                     PopupAnimation="Fade"
-                    StaysOpen="False"
+                    StaysOpen="True"
                     VerticalOffset="8">
                     <Border
+                        x:Name="MoreTagsPopupContent"
                         MaxWidth="360"
                         Padding="12"
                         Background="{DynamicResource Brush.Background.Elevated}"
                         BorderBrush="{DynamicResource Brush.Border.Subtle}"
                         BorderThickness="1"
+                        MouseEnter="OnMoreTagsHoverChanged"
+                        MouseLeave="OnMoreTagsHoverChanged"
                         CornerRadius="16">
                         <StackPanel>
                             <TextBlock
@@ -345,6 +357,7 @@
                                 ItemTemplate="{StaticResource PopupTagTemplate}"
                                 ItemsPanel="{StaticResource PopupOverflowTagsItemsPanelTemplate}"
                                 ItemsSource="{Binding OverflowTags}"
+                                SelectionChanged="OnTagSelectionChanged"
                                 SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
                                 Style="{StaticResource PopupTagListBoxStyle}" />
                         </StackPanel>

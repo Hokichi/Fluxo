@@ -16,6 +16,7 @@ namespace Fluxo.ViewModels.Popups;
 
 public partial class ExpenseDetailVM : ObservableObject
 {
+    private const int DefaultVisibleTagSlots = 4;
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
     private readonly ExpenseLogVM _expenseLog;
     private readonly MainVM _mainViewModel;
@@ -27,6 +28,7 @@ public partial class ExpenseDetailVM : ObservableObject
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
     private bool _isUpdatingTagCollections;
+    private int _visibleTagSlots = DefaultVisibleTagSlots;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private string _popupTitle = "Expense Detail";
@@ -92,7 +94,9 @@ public partial class ExpenseDetailVM : ObservableObject
             return;
         }
 
-        PromoteTagToVisibleStart(value);
+        if (OverflowTags.Any(tag => tag.Id == value.Id))
+            PromoteTagToVisibleStart(value);
+
         IsMoreTagsOpen = false;
     }
 
@@ -260,6 +264,16 @@ public partial class ExpenseDetailVM : ObservableObject
         return GetChangedFields(input, _savedState) != ExpenseDetailChangedFields.None;
     }
 
+    public void SetVisibleTagSlots(int visibleTagSlots)
+    {
+        var normalizedSlots = Math.Max(0, visibleTagSlots);
+        if (_visibleTagSlots == normalizedSlots)
+            return;
+
+        _visibleTagSlots = normalizedSlots;
+        RefreshTagCollections();
+    }
+
     private void LoadFromSavedState()
     {
         AmountText = _savedState.Amount;
@@ -357,8 +371,8 @@ public partial class ExpenseDetailVM : ObservableObject
             }
 
             var editableTags = _orderedTags.Where(tag => !tag.IsSystemTag).ToList();
-            ReplaceCollection(VisibleTags, editableTags.Take(4));
-            ReplaceCollection(OverflowTags, editableTags.Skip(4));
+            ReplaceCollection(VisibleTags, editableTags.Take(_visibleTagSlots));
+            ReplaceCollection(OverflowTags, editableTags.Skip(_visibleTagSlots));
 
             OnPropertyChanged(nameof(HasMoreTags));
             if (!HasMoreTags)
