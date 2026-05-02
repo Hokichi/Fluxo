@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups;
 

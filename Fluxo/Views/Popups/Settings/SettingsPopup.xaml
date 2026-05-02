@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
     IsRevertButtonEnabled="{Binding HasPendingConfigurationChanges}"
     IsSaveButtonEnabled="{Binding HasPendingConfigurationChanges}"
@@ -123,4 +122,3 @@
         </Grid>
     </Grid>
 </customControls:BasePopup>
-

@@ -1,0 +1,16 @@
+﻿<Project Sdk="WixToolset.Sdk/7.0.0">
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.*" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.*" />
+    <PackageReference Include="WixToolset.Netfx.wixext" Version="4.*" />
+    <PackageReference Include="WixToolset.Bal.wixext" Version="4.*" />
+    <!-- For Burn/BA -->
+  </ItemGroup>
+  <PropertyGroup>
+    <AcceptEula>wix7</AcceptEula>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <OutputName>FluxoInstaller</OutputName>
+  </PropertyGroup>
+</Project>

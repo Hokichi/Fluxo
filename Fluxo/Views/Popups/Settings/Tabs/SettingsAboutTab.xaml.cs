@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using Fluxo.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;

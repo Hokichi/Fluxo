@@ -1,7 +1,7 @@
 using Fluxo.ViewModels.Shell.QuickSetupWizard;
 using Xunit;
 
-namespace Fluxo.Tests.ViewModels.Shell.QuickSetupWizard;
+namespace Fluxo.Tests.ViewModels.Shell.StartupWizard;
 
 public sealed class QuickSetupWizardLoadingCoordinatorTests
 {

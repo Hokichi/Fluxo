@@ -14,46 +14,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Black.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-BlackItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Bold.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-BoldItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlack.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlackIt.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBold.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBoldIt.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBold.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBoldIt.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExLightIt.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBold.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBoldIt.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraLight.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLight.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLightIt.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMedium.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMediumIt.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-CompRegular.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBold.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBoldItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExBoldItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExLightItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraBold.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraLight.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Italic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Light.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-LightItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Medium.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-MediumItalic.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIAL-Regular.ttf" />
-    <None Remove="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Resources\fluxo.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
@@ -75,42 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Black.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-BlackItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Bold.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-BoldItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlack.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlackIt.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBold.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBoldIt.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBold.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBoldIt.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExLightIt.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBold.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBoldIt.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraLight.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLight.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLightIt.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMedium.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMediumIt.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompRegular.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBold.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBoldItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExBoldItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExLightItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraBold.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraLight.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Italic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Light.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-LightItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Medium.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-MediumItalic.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Regular.ttf" />
-    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Converters\" />
   </ItemGroup>
 
@@ -127,17 +51,12 @@
     <MakeDir Directories="$(OrganizeOutputDir)libs" Condition="Exists('$(OrganizeOutputDir)') and '@(FirstPartyDlls)' != ''" />
     <MakeDir Directories="$(OrganizeOutputDir)vendor" Condition="Exists('$(OrganizeOutputDir)') and '@(VendorDlls)' != ''" />
 
-    <Move SourceFiles="@(FirstPartyDlls)"
-          DestinationFolder="$(OrganizeOutputDir)libs"
-          Condition="'@(FirstPartyDlls)' != ''" />
+    <Move SourceFiles="@(FirstPartyDlls)" DestinationFolder="$(OrganizeOutputDir)libs" Condition="'@(FirstPartyDlls)' != ''" />
 
-    <Move SourceFiles="@(VendorDlls)"
-          DestinationFolder="$(OrganizeOutputDir)vendor"
-          Condition="'@(VendorDlls)' != ''" />
+    <Move SourceFiles="@(VendorDlls)" DestinationFolder="$(OrganizeOutputDir)vendor" Condition="'@(VendorDlls)' != ''" />
 
     <!-- Keep a root path for project-reference copy steps without duplicating the file. -->
-    <Exec Command='cmd /c mklink /H "$(OrganizeOutputDir)$(TargetFileName)" "$(OrganizeOutputDir)libs\$(TargetFileName)"'
-          Condition="Exists('$(OrganizeOutputDir)libs\\$(TargetFileName)') and !Exists('$(OrganizeOutputDir)$(TargetFileName)')" />
+    <Exec Command="cmd /c mklink /H &quot;$(OrganizeOutputDir)$(TargetFileName)&quot; &quot;$(OrganizeOutputDir)libs\$(TargetFileName)&quot;" Condition="Exists('$(OrganizeOutputDir)libs\\$(TargetFileName)') and !Exists('$(OrganizeOutputDir)$(TargetFileName)')" />
   </Target>
 
   <Target Name="OrganizeOutputAfterPublish" AfterTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true'">
@@ -153,13 +72,9 @@
     <MakeDir Directories="$(OrganizeOutputDir)libs" Condition="Exists('$(OrganizeOutputDir)') and '@(FirstPartyDlls)' != ''" />
     <MakeDir Directories="$(OrganizeOutputDir)vendor" Condition="Exists('$(OrganizeOutputDir)') and '@(VendorDlls)' != ''" />
 
-    <Move SourceFiles="@(FirstPartyDlls)"
-          DestinationFolder="$(OrganizeOutputDir)libs"
-          Condition="'@(FirstPartyDlls)' != ''" />
+    <Move SourceFiles="@(FirstPartyDlls)" DestinationFolder="$(OrganizeOutputDir)libs" Condition="'@(FirstPartyDlls)' != ''" />
 
-    <Move SourceFiles="@(VendorDlls)"
-          DestinationFolder="$(OrganizeOutputDir)vendor"
-          Condition="'@(VendorDlls)' != ''" />
+    <Move SourceFiles="@(VendorDlls)" DestinationFolder="$(OrganizeOutputDir)vendor" Condition="'@(VendorDlls)' != ''" />
   </Target>
 
   <Target Name="CleanupOutputAfterBuild" AfterTargets="OrganizeOutputAfterBuild" Condition="'$(DesignTimeBuild)' != 'true'">

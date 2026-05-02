@@ -11,7 +11,6 @@ using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups;
 

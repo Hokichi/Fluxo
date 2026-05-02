@@ -20,7 +20,6 @@ using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
-using Fluxo.Views.CustomControls;
 using Fluxo.Views.Popups;
 using Microsoft.Extensions.DependencyInjection;
 using DateRangeResolver = Fluxo.ViewModels.Shell.Main.DateRangeResolver;

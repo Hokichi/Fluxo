@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Views.Components"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="{Binding PopupTitle}"
     ShowSaveButton="True">
@@ -22,7 +21,6 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
-
     </customControls:BasePopup.Resources>
 
     <Grid Width="480" Margin="24,0,24,24">
@@ -61,4 +59,3 @@
         </Border>
     </Grid>
 </customControls:BasePopup>
-

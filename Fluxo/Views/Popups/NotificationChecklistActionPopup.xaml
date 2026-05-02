@@ -2,7 +2,6 @@
     x:Class="Fluxo.Views.Popups.NotificationChecklistActionPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     Width="500"
     PopupTitle="Review Notification Actions">
     <customControls:BasePopup.Resources>

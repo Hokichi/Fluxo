@@ -2,7 +2,6 @@
     x:Class="Fluxo.Views.Popups.AddFixedExpensePopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="{Binding PopupTitle}"
     ShowSaveButton="True">
@@ -44,7 +43,6 @@
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
-
     </customControls:BasePopup.Resources>
 
     <Grid Width="480" Margin="24,0,24,24">
@@ -125,5 +123,3 @@
         </Border>
     </Grid>
 </customControls:BasePopup>
-
-

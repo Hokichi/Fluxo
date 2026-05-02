@@ -11,7 +11,6 @@ using Fluxo.Services.Notifications;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Shell;
-using Fluxo.Views.CustomControls;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
 using Fluxo.Views.Shell.Tray;

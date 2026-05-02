@@ -11,7 +11,6 @@ using Fluxo.Services.Dialogs;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.Views.CustomControls;
 using QuickSetupWizardLoadingOutcome = Fluxo.ViewModels.Shell.QuickSetupWizard.QuickSetupWizardLoadingOutcome;
 using QuickSetupWizardVM = Fluxo.ViewModels.Shell.QuickSetupWizard.QuickSetupWizardVM;
 

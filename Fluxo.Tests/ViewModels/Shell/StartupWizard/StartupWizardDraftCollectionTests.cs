@@ -5,7 +5,7 @@ using Fluxo.ViewModels.Shell.QuickSetupWizard;
 using NSubstitute;
 using Xunit;
 
-namespace Fluxo.Tests.ViewModels.Shell.QuickSetupWizard;
+namespace Fluxo.Tests.ViewModels.Shell.StartupWizard;
 
 public sealed class QuickSetupWizardDraftCollectionTests
 {

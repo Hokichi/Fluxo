@@ -2,7 +2,6 @@
     x:Class="Fluxo.Views.Shell.Wizard.QuickSetupWizard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:pages="clr-namespace:Fluxo.Views.Shell.Wizard.Pages"
     Title="fluxo Wizard"
     Icon="/Fluxo;component/Resources/fluxo.ico"

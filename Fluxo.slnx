@@ -1,6 +1,17 @@
 <Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
   <Project Path="Fluxo.Core/Fluxo.Core.csproj" Id="f7c1cabb-8600-455e-8c6a-2011b081b2c0" />
   <Project Path="Fluxo.Data/Fluxo.Data.csproj" Id="e43fbb0d-fde1-4524-8cd6-f83ba4a53721" />
+  <Project Path="Fluxo.Installer.Host/Fluxo.Installer.Host.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
+    <Platform Solution="*|Any CPU" Project="x64" />
+  </Project>
+  <Project Path="Fluxo.Installer/Fluxo.Installer.csproj" Id="41617572-60cf-4951-8d05-96b74ad10747" />
+  <Project Path="Fluxo.Resources/Fluxo.Resources.csproj" Id="3f1d461e-21ab-4565-97ad-0bca5313ff5c" />
   <Project Path="Fluxo.Services/Fluxo.Services.csproj" Id="e4c6d8b9-e7f7-4aef-9279-362dad39d8d6" />
   <Project Path="Fluxo.Tests/Fluxo.Tests.csproj" />
   <Project Path="Fluxo/Fluxo.csproj" />

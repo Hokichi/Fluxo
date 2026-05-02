@@ -2,7 +2,6 @@
     x:Class="Fluxo.Views.Shell.Wizard.Pages.Steps.FixedExpenses"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
     <UserControl.Resources>
         <ItemsPanelTemplate x:Key="WizardFixedExpensesItemsPanelTemplate">

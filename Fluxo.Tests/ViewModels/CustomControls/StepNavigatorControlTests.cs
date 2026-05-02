@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using Fluxo.ViewModels.CustomControls;
-using Fluxo.Views.CustomControls;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.CustomControls;

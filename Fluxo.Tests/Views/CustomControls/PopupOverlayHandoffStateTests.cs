@@ -1,4 +1,3 @@
-using Fluxo.Views.CustomControls;
 using Xunit;
 
 namespace Fluxo.Tests.Views.CustomControls;

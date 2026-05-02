@@ -1,0 +1,506 @@
+<UserControl
+    x:Class="Fluxo.Resources.Components.ExpensesList"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls"
+    xmlns:local="clr-namespace:Fluxo.Resources.Components"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="ExpenseListHeaderText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        </Style>
+
+        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="ExpenseListItemTemplate">
+            <customControls:SwipeRevealContainer>
+                <customControls:SwipeRevealContainer.LeftContent>
+                    <customControls:BalloonButton
+                        Width="32"
+                        Height="32"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        ButtonIcon="{StaticResource Info}"
+                        Click="OnExpenseDetailButtonClick"
+                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.Info}"
+                        IconSize="14" />
+                </customControls:SwipeRevealContainer.LeftContent>
+
+                <customControls:SwipeRevealContainer.RightContent>
+                    <customControls:BalloonButton
+                        Width="32"
+                        Height="32"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                        Command="{Binding DeleteCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        CommandParameter="{Binding}"
+                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.Danger}"
+                        IconSize="14" />
+                </customControls:SwipeRevealContainer.RightContent>
+
+                <Grid>
+                    <Border
+                        Margin="0,1,16,1"
+                        Background="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        CornerRadius="12 0 0 12">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+
+                    <Border CornerRadius="12">
+                        <Border.Clip>
+                            <MultiBinding Converter="{StaticResource BorderCornerClipConverter}">
+                                <Binding Path="CornerRadius" RelativeSource="{RelativeSource Self}" />
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
+                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource FindAncestor, AncestorType=Grid}" />
+                            </MultiBinding>
+                        </Border.Clip>
+                        <Border
+                            x:Name="ExpenseItemBGBorder"
+                            Background="{StaticResource Brush.Background.Hover}"
+                            ClipToBounds="True"
+                            CornerRadius="12">
+                            <Border.RenderTransform>
+                                <TranslateTransform />
+                            </Border.RenderTransform>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <MultiDataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                            To="2"
+                                                            Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut" />
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </MultiDataTrigger.EnterActions>
+                                            <MultiDataTrigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                            To="0"
+                                                            Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut" />
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </MultiDataTrigger.ExitActions>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                    </Border>
+
+                    <Border
+                        x:Name="ExpenseItemBorder"
+                        Background="Transparent"
+                        CornerRadius="12">
+                        <Grid
+                            MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth}"
+                            Margin="4,8"
+                            HorizontalAlignment="Stretch"
+                            ClipToBounds="True">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid MinWidth="0">
+                                <Grid.RenderTransform>
+                                    <TranslateTransform />
+                                </Grid.RenderTransform>
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsMouseOver}" Value="True" />
+                                                    <Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=customControls:SwipeRevealContainer}, Path=IsRevealed}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <MultiDataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                                To="4"
+                                                                Duration="0:0:0.15">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </MultiDataTrigger.EnterActions>
+                                                <MultiDataTrigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                                To="0"
+                                                                Duration="0:0:0.15">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </MultiDataTrigger.ExitActions>
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border
+                                    x:Name="ExpenseTagBorder"
+                                    Grid.Column="0"
+                                    Width="1"
+                                    Margin="0,0,12,0"
+                                    Padding="4"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Stretch"
+                                    Background="{Binding Expense.ExpenseTag.HexCode}" />
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    MinWidth="0"
+                                    Margin="0,0,8,0"
+                                    HorizontalAlignment="Stretch">
+                                    <TextBlock
+                                        MinWidth="0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="14"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="{Binding Expense.Name}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                        <TextBlock FontFamily="{StaticResource Regular}" FontSize="12">
+                                            <Run Foreground="{StaticResource Brush.Text.Muted}" Text="{Binding SpendingSource.Name}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel
+                                Grid.Column="1"
+                                MinWidth="0"
+                                HorizontalAlignment="Right">
+                                <TextBlock
+                                    HorizontalAlignment="Right"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="14"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
+                                    ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                                <TextBlock
+                                    MaxWidth="120"
+                                    Margin="0,4,0,0"
+                                    HorizontalAlignment="Right"
+                                    FontFamily="{StaticResource Regular}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </customControls:SwipeRevealContainer>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid VerticalAlignment="Stretch" ClipToBounds="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid
+                Grid.RowSpan="2"
+                Width="80"
+                Height="80"
+                Margin="0,4,8,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top">
+                <Canvas
+                    Width="80"
+                    Height="80"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <Ellipse
+                        Canvas.Left="8"
+                        Canvas.Top="8"
+                        Width="64"
+                        Height="64"
+                        Stroke="{StaticResource Brush.Background.Elevated}"
+                        StrokeThickness="6" />
+                    <Path
+                        Canvas.Left="11"
+                        Canvas.Top="11"
+                        Data="{Binding Percentage, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=58}"
+                        Stroke="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        StrokeEndLineCap="Round"
+                        StrokeLineJoin="Round"
+                        StrokeStartLineCap="Round"
+                        StrokeThickness="6" />
+                </Canvas>
+
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="12"
+                    Foreground="{StaticResource Brush.Text.Primary}">
+                    <Run Text="{Binding Percentage, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, StringFormat={}{0}%}" />
+                </TextBlock>
+            </Grid>
+
+            <StackPanel>
+                <Border Height="80" Padding="12,8">
+                    <StackPanel Height="56" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
+                            <Ellipse
+                                Width="8"
+                                Height="8"
+                                Margin="0,2,0,0"
+                                Fill="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
+
+                            <TextBlock
+                                Margin="12,2,0,0"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource ExtraBold}"
+                                FontSize="14"
+                                Foreground="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                                Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
+
+                            <Border
+                                Height="24"
+                                Margin="12,0,0,0"
+                                Padding="12,0"
+                                Background="{StaticResource Brush.Background.Surface}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="2"
+                                CornerRadius="4">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Light}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}">
+                                    <Run Text="{Binding Allocation, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, StringFormat={}{0}%}" />
+                                    <Run Text="alloc" />
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock Margin="0,8,0,0" VerticalAlignment="Bottom">
+                            <Run
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="24"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding SpentAmount, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            <Run
+                                FontFamily="{StaticResource Regular}"
+                                FontSize="16"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="/" />
+                            <Run
+                                FontFamily="{StaticResource Regular}"
+                                FontSize="16"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="{Binding TotalAmount, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Bottom"
+                    FontFamily="{StaticResource Light}"
+                    FontSize="12"
+                    Foreground="{StaticResource Brush.Text.Muted}">
+                    <Run Text="{Binding RemainingAmount, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                    <Run Text="remaining" />
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Margin="12,0,12,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource ExpenseListHeaderText}"
+                    Text="AMOUNT" />
+            </Grid>
+
+            <Border
+                Grid.Row="1"
+                Height="1"
+                Margin="12,0,12,12"
+                Background="{StaticResource Brush.Text.Muted}"
+                Opacity="0.25" />
+
+            <Grid Grid.Row="2">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Visibility="{Binding IsListEmpty, Converter={StaticResource BoolToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}">
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="14"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="No entry found" />
+                </StackPanel>
+
+                <customControls:FadingScrollViewer
+                    Margin="12,0,12,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    FadedEdgeThickness="20"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <customControls:FadingScrollViewer.Template>
+                        <ControlTemplate TargetType="{x:Type customControls:FadingScrollViewer}">
+                            <Grid x:Name="Grid" Background="{TemplateBinding Background}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Border x:Name="PART_ScrollContentPresenterContainer">
+                                    <ScrollContentPresenter
+                                        x:Name="PART_ScrollContentPresenter"
+                                        Margin="{TemplateBinding Padding}"
+                                        CanContentScroll="{TemplateBinding CanContentScroll}"
+                                        CanHorizontallyScroll="False"
+                                        CanVerticallyScroll="False"
+                                        Content="{TemplateBinding Content}" />
+                                </Border>
+
+                                <ScrollBar
+                                    x:Name="PART_VerticalScrollBar"
+                                    Grid.Row="0"
+                                    Margin="0,0,-16,0"
+                                    HorizontalAlignment="Right"
+                                    AutomationProperties.AutomationId="VerticalScrollBar"
+                                    Cursor="Arrow"
+                                    Maximum="{TemplateBinding ScrollableHeight}"
+                                    Minimum="0"
+                                    ViewportSize="{TemplateBinding ViewportHeight}"
+                                    Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                    Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                                <ScrollBar
+                                    x:Name="PART_HorizontalScrollBar"
+                                    Grid.Row="1"
+                                    AutomationProperties.AutomationId="HorizontalScrollBar"
+                                    Cursor="Arrow"
+                                    Maximum="{TemplateBinding ScrollableWidth}"
+                                    Minimum="0"
+                                    Orientation="Horizontal"
+                                    ViewportSize="{TemplateBinding ViewportWidth}"
+                                    Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                    Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </Grid>
+                        </ControlTemplate>
+                    </customControls:FadingScrollViewer.Template>
+                    <ListView
+                        Padding="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding HasMoreItems, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                        behaviors:ScrollOnDemandBehavior.IsLoading="{Binding IsLoading, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        ClipToBounds="True"
+                        ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
+                        ItemTemplate="{StaticResource ExpenseListItemTemplate}"
+                        ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        PreviewMouseWheel="OnExpenseListPreviewMouseWheel"
+                        ScrollViewer.CanContentScroll="False"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                </customControls:FadingScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

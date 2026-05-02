@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 

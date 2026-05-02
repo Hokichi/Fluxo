@@ -3,7 +3,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 

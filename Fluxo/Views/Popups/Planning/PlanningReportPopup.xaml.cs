@@ -10,7 +10,6 @@ using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.Views.Behaviors;
-using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups.Planning;
 

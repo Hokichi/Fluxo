@@ -1,0 +1,451 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
+    xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
+    xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components">
+
+    <Style x:Key="IncomeSources" TargetType="ListViewItem">
+        <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListViewItem">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ShowOnUI}" Value="False">
+                <Setter Property="Margin" Value="0" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="SpinnerArrowIconStyle" TargetType="components:Icon">
+        <Setter Property="Color" Value="{StaticResource Brush.Text.Muted}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                <Setter Property="Color" Value="{StaticResource Brush.Text.Primary}" />
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect
+                            BlurRadius="2"
+                            Opacity="0.8"
+                            ShadowDepth="0"
+                            Color="White" />
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ListViewItemStyle" TargetType="ListViewItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListViewItem">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NotificationAccentStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Brush.Info}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Severity}" Value="{x:Static coreEnums:NotificationSeverity.Success}">
+                <Setter Property="Background" Value="{StaticResource Brush.Success}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="{x:Static coreEnums:NotificationSeverity.Warning}">
+                <Setter Property="Background" Value="{StaticResource Brush.Warning}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="{x:Static coreEnums:NotificationSeverity.Danger}">
+                <Setter Property="Background" Value="{StaticResource Brush.Danger}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="DashboardPanelStyle" TargetType="Border">
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="16" />
+    </Style>
+
+
+    <DataTemplate x:Key="SavingGoalTemplate">
+        <Border Margin="0,0,0,12" Padding="12,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Width="64" Height="64">
+                    <Canvas
+                        Width="80"
+                        Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                        <Ellipse
+                            Canvas.Left="4"
+                            Canvas.Top="4"
+                            Width="72"
+                            Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
+                            Stroke="{StaticResource Brush.Background.Surface}"
+                            StrokeThickness="8" />
+                        <Path
+                            Canvas.Left="8"
+                            Canvas.Top="8"
+                            Data="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=64}"
+                            Stroke="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                            StrokeEndLineCap="Round"
+                            StrokeLineJoin="Round"
+                            StrokeStartLineCap="Round"
+                            StrokeThickness="8" />
+                    </Canvas>
+
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="12"
+                        Foreground="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                        Text="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, StringFormat={}{0:0%}}" />
+                </Grid>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="18"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        FontSize="14"
+                        Foreground="{StaticResource Brush.Text.Secondary}">
+                        <Run
+                            FontFamily="{StaticResource Black}"
+                            Foreground="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type sections:SavingGoalsPanel}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                            Text="{Binding CurrentAmount, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        <Run FontFamily="{StaticResource Light}" Text="saved" />
+                    </TextBlock>
+
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        FontFamily="{StaticResource Light}"
+                        FontSize="12"
+                        Foreground="{StaticResource Brush.Text.Secondary}">
+                        <Run Text="{Binding RemainingAmount, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        <Run Text="left" />
+                        <Run Text="&#x00B7;" />
+                        <Run Text="target" />
+                        <Run Text="{Binding TargetAmount, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
+
+
+    <Style x:Key="DaysOfWeekStyle" TargetType="ListViewItem">
+        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListViewItem">
+                    <RadioButton GroupName="DaysOfWeek" IsChecked="{Binding IsSelected}">
+                        <RadioButton.Template>
+                            <ControlTemplate TargetType="RadioButton">
+                                <Grid>
+                                    <StackPanel
+                                        Width="48"
+                                        VerticalAlignment="Center"
+                                        Background="Transparent">
+                                        <TextBlock
+                                            x:Name="DayOfWeekName"
+                                            Margin="0,0,0,6"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="12"
+                                            Text="{Binding DayName}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                                            <Setter Property="Effect">
+                                                                <Setter.Value>
+                                                                    <DropShadowEffect
+                                                                        BlurRadius="5"
+                                                                        Opacity="0.5"
+                                                                        ShadowDepth="0"
+                                                                        Color="{StaticResource Color.Mint}" />
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock
+                                            x:Name="DayOfWeekDate"
+                                            Margin="0,0,0,8"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Black}"
+                                            FontSize="14"
+                                            Text="{Binding DayNumber}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                                            <Setter Property="Effect">
+                                                                <Setter.Value>
+                                                                    <DropShadowEffect
+                                                                        BlurRadius="5"
+                                                                        Opacity="0.5"
+                                                                        ShadowDepth="0"
+                                                                        Color="{StaticResource Color.Text.Primary}" />
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <Border
+                                        Width="32"
+                                        Height="4"
+                                        VerticalAlignment="Bottom"
+                                        Background="{StaticResource Brush.Mint}"
+                                        CornerRadius="4 4 0 0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Opacity" Value="0" />
+                                                <Style.Triggers>
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsSelected}" Value="False" />
+                                                            <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True" />
+                                                        </MultiDataTrigger.Conditions>
+                                                        <MultiDataTrigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <DoubleAnimation
+                                                                        Storyboard.TargetProperty="Opacity"
+                                                                        To="0.5"
+                                                                        Duration="0:0:0.2" />
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </MultiDataTrigger.EnterActions>
+                                                        <MultiDataTrigger.ExitActions>
+                                                            <BeginStoryboard x:Name="HoverExitStoryboard">
+                                                                <Storyboard>
+                                                                    <DoubleAnimation
+                                                                        Storyboard.TargetProperty="Opacity"
+                                                                        To="0"
+                                                                        Duration="0:0:0.2" />
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </MultiDataTrigger.ExitActions>
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.Effect>
+                                            <DropShadowEffect
+                                                BlurRadius="10"
+                                                ShadowDepth="0"
+                                                Color="{StaticResource Color.Mint}" />
+                                        </Border.Effect>
+                                    </Border>
+
+                                    <Border
+                                        Width="32"
+                                        Height="4"
+                                        VerticalAlignment="Bottom"
+                                        Background="{StaticResource Brush.Mint}"
+                                        CornerRadius="4 4 0 0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Opacity" Value="0" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <DataTrigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <DoubleAnimation
+                                                                        Storyboard.TargetProperty="Opacity"
+                                                                        To="1"
+                                                                        Duration="0:0:0.1" />
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </DataTrigger.EnterActions>
+                                                        <DataTrigger.ExitActions>
+                                                            <BeginStoryboard x:Name="HoverExitStoryboard">
+                                                                <Storyboard>
+                                                                    <DoubleAnimation
+                                                                        Storyboard.TargetProperty="Opacity"
+                                                                        To="0"
+                                                                        Duration="0:0:0.1" />
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </DataTrigger.ExitActions>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.Effect>
+                                            <DropShadowEffect
+                                                BlurRadius="10"
+                                                ShadowDepth="0"
+                                                Color="{StaticResource Color.Mint}" />
+                                        </Border.Effect>
+                                    </Border>
+                                </Grid>
+                            </ControlTemplate>
+                        </RadioButton.Template>
+                    </RadioButton>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <DataTemplate x:Key="Tags">
+        <Grid>
+            <Border
+                Height="24"
+                Margin="16,0,0,0"
+                Padding="12,0"
+                Background="{StaticResource Brush.Background.Surface}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Cursor="Hand"
+                Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse
+                        Width="8"
+                        Height="8"
+                        Fill="{Binding HexCode}" />
+
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding Name}" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Height="24"
+                Margin="16,0,0,0"
+                Padding="12,0"
+                Background="{Binding HexCode}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse
+                        Width="8"
+                        Height="8"
+                        Fill="{StaticResource Brush.Background.Surface}" />
+
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Background.Surface}"
+                        Text="{Binding Name}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DataTemplate>
+
+    <Style x:Key="PopupTagListViewItemStyle" TargetType="ListViewItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListViewItem">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <DataTemplate x:Key="PopupTags">
+        <Grid>
+            <Border
+                Height="24"
+                Padding="12,0"
+                Background="{StaticResource Brush.Background.Surface}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse
+                        Width="6"
+                        Height="6"
+                        Fill="{Binding HexCode}" />
+
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding Name}" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Height="24"
+                Padding="12,0"
+                Background="{Binding HexCode}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}, Path=IsSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse
+                        Width="6"
+                        Height="6"
+                        Fill="{Binding HexCode}" />
+
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Background.Surface}"
+                        Text="{Binding Name}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DataTemplate>
+</ResourceDictionary>
+
