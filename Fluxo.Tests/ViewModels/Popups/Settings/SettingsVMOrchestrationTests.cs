@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Xunit;
 

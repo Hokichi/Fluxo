@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;

@@ -4,7 +4,6 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Data.Context;
-using Fluxo.Resources.Messages;
 using Fluxo.Services.Logging;
 using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups.Settings;
@@ -12,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using System.Runtime.ExceptionServices;
+using Fluxo.Resources.Resources.Messages;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;

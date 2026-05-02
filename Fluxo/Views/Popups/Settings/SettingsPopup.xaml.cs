@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;

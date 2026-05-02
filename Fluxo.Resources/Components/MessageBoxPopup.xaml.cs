@@ -1,8 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Fluxo.Resources.CustomControls;
 
-namespace Fluxo.Views.Popups;
+namespace Fluxo.Resources.Components;
 
 public partial class MessageBoxPopup : BasePopup
 {

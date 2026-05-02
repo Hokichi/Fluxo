@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Interfaces.Operations;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Shell.Main;

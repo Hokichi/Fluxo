@@ -113,7 +113,7 @@
 
                 <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Theme.xaml" />
 
-                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Fonts/ContainerStyles.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/ContainerStyles.xaml" />
                 <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/ButtonStyles.xaml" />
                 <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/TextBoxStyles.xaml" />
                 <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/GlobalStyles.xaml" />

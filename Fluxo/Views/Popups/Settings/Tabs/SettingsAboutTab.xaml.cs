@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.Popups;
 

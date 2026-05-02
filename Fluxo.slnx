@@ -7,7 +7,10 @@
   </Configurations>
   <Project Path="Fluxo.Core/Fluxo.Core.csproj" Id="f7c1cabb-8600-455e-8c6a-2011b081b2c0" />
   <Project Path="Fluxo.Data/Fluxo.Data.csproj" Id="e43fbb0d-fde1-4524-8cd6-f83ba4a53721" />
-  <Project Path="Fluxo.Installer.Host/Fluxo.Installer.Host.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
+  <Project Path="Fluxo.Installer.Bundle/Fluxo.Installer.Bundle.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" Id="f2995501-8859-4ac4-972e-fcc465f8a127">
+    <Platform Solution="*|Any CPU" Project="x64" />
+  </Project>
+  <Project Path="Fluxo.Installer.Msi/Fluxo.Installer.Msi.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
     <Platform Solution="*|Any CPU" Project="x64" />
   </Project>
   <Project Path="Fluxo.Installer/Fluxo.Installer.csproj" Id="41617572-60cf-4951-8d05-96b74ad10747" />

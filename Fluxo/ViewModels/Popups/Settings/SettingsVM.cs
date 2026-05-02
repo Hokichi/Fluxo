@@ -4,7 +4,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Logging;
 using Fluxo.Services.Ui;
 using Fluxo.Services.History;
@@ -604,4 +604,3 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return actions;
     }
 }
-

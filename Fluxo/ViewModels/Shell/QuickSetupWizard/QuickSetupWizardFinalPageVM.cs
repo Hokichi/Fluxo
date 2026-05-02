@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 

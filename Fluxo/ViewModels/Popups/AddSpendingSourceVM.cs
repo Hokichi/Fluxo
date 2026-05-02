@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Helpers;
@@ -67,6 +67,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         new("BNPL", SpendingSourceType.BNPL),
         new("Savings", SpendingSourceType.Saving)
     ];
+
     public ObservableCollection<DeductSourceOption> DeductSources { get; } = [];
     public ICollectionView DeductSourcesView { get; }
 
@@ -75,9 +76,11 @@ public partial class AddSpendingSourceVM : ObservableObject
     public bool IsEditMode => EditingId.HasValue;
     public string PopupTitle => IsEditMode ? "Edit Income Source" : "Add New Income Source";
     public string HeaderTitle => PopupTitle;
+
     public string HeaderDescription => IsEditMode
         ? "Update this source for checking, cash, credit, BNPL, or savings."
         : "Set up a new source for checking, cash, credit, BNPL, or savings.";
+
     public string ValidationDialogTitle => PopupTitle;
 
     public void BeginChangeTracking()
@@ -108,6 +111,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
 
     partial void OnPrimaryAmountTextChanged(decimal value) => NotifyFormStateChanged();
+
     partial void OnSelectedDeductSourceChanged(int? value) => NotifyFormStateChanged();
 
     partial void OnShowOnUIChanged(bool value) => NotifyFormStateChanged();

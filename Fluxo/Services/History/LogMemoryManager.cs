@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using CoreILogMemoryAction = Fluxo.Core.Interfaces.History.ILogMemoryAction;
 using Fluxo.Core.Interfaces.Operations;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.Services.History;

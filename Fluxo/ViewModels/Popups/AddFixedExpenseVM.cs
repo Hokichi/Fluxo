@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
@@ -91,9 +91,11 @@ public partial class AddFixedExpenseVM : ObservableObject
     public bool IsEditMode => EditingId.HasValue;
     public string PopupTitle => IsEditMode ? "Edit Fixed Expense" : "Add Fixed Expense";
     public string HeaderTitle => IsEditMode ? "Edit Fixed Expense" : "Add Fixed Expense";
+
     public string HeaderDescription => IsEditMode
         ? "Update this recurring expense and save the changes."
         : "Add a recurring expense for rent, subscriptions, bills, and similar commitments.";
+
     public string ValidationDialogTitle => PopupTitle;
 
     public IReadOnlyList<ExpenseCategoryOption> Categories { get; } =
@@ -116,12 +118,19 @@ public partial class AddFixedExpenseVM : ObservableObject
     }
 
     partial void OnAmountTextChanged(decimal value) => NotifyFormStateChanged();
+
     partial void OnIsActiveChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+
     partial void OnRecurringDateTextChanged(string value) => NotifyFormStateChanged();
+
     partial void OnSelectedCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
+
     partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
+
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
         if (!_isSyncingTagSelection)
@@ -436,4 +445,3 @@ public partial class AddFixedExpenseVM : ObservableObject
         int SelectedTagId,
         bool IsActive);
 }
-

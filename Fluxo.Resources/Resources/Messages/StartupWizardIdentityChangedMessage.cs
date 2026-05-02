@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Messages;
+namespace Fluxo.Resources.Resources.Messages;
 
 public readonly record struct QuickSetupWizardIdentityChanged(
     string ResolvedUsername);

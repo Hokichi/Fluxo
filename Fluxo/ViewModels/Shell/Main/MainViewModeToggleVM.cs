@@ -2,10 +2,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
-using Fluxo.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Ui;
 using System.Windows;
+using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.ViewModels.Shell.Main;
 

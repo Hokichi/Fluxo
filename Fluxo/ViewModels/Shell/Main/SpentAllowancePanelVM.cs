@@ -6,7 +6,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Shell.Main;

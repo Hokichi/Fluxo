@@ -11,7 +11,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
-using Fluxo.Resources.Messages;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups;
@@ -197,6 +197,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             case NotificationGroupCategory.LatePayment:
                 await OpenChecklistNotificationActionAsync(card);
                 break;
+
             case NotificationGroupCategory.GoalDeadline:
                 await OpenGoalDeadlineActionAsync(card);
                 break;

@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Messages;
+namespace Fluxo.Resources.Resources.Messages;
 
 public enum SettingsDialogRequestType
 {
