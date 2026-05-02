@@ -1,13 +1,13 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
-  <Bundle Id="TODO_Manufacturer.Fluxo.Installer.Bundle" Name="Fluxo.Installer.Bundle" Manufacturer="TODO Manufacturer" Version="1.0.0.0">
-    <BootstrapperApplication>
-      <bal:WixStandardBootstrapperApplication LicenseUrl="https://www.example.com/license" Theme="hyperlinkLicense" />
-    </BootstrapperApplication>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Bundle Id="FluxoInstallerBundle" Name="fluxo" Manufacturer="fluxo" Version="1.0.0.0" UpgradeCode="{A388A981-8C98-40B9-8B25-3A638D0BDA84}">
+    <BootstrapperApplication SourceFile="$(var.ManagedBootstrapperDll)" />
+
+    <Variable Name="InstallFolder" Type="string" Value="C:\Program Files\fluxo" />
 
     <Chain>
-      <!-- TODO: Define the list of chained packages. -->
-      <!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
+      <MsiPackage Id="FluxoMsi" SourceFile="$(var.OfflineMsiPath)" Visible="no">
+        <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+      </MsiPackage>
     </Chain>
-
   </Bundle>
 </Wix>

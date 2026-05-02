@@ -1,9 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
-    <ComponentGroup Id="ExampleComponents" Directory="INSTALLFOLDER">
-      <Component>
-        <File Source="ExampleComponents.wxs" />
-      </Component>
-    </ComponentGroup>
+    <!-- Payload components are generated at build time via HarvestDirectory in Fluxo.Installer.Msi.wixproj. -->
   </Fragment>
 </Wix>

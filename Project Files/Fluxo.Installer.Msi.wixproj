@@ -1,20 +1,37 @@
-﻿<Project Sdk="WixToolset.Sdk/7.0.0">
+<Project Sdk="WixToolset.Sdk/7.0.0">
   <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="4.*" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="4.*" />
-    <PackageReference Include="WixToolset.Netfx.wixext" Version="4.*" />
-    <PackageReference Include="WixToolset.Bal.wixext" Version="4.*" />
-    <!-- For Burn/BA -->
+    <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
   </ItemGroup>
+
   <PropertyGroup>
     <AcceptEula>wix7</AcceptEula>
-  </PropertyGroup>
-  <PropertyGroup>
     <OutputType>Package</OutputType>
-    <OutputName>FluxoInstaller</OutputName>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <OutputName>Fluxo.Installer</OutputName>
+    <FluxoMsiVersion Condition="'$(FluxoMsiVersion)' == ''">1.0.0</FluxoMsiVersion>
+    <FluxoAppOutputDir>$(MSBuildThisFileDirectory)..\bin\Fluxo\$(Configuration)\net10.0-windows\win-x64</FluxoAppOutputDir>
+    <DefineConstants>$(DefineConstants);FluxoMsiVersion=$(FluxoMsiVersion);FluxoAppOutputDir=$(FluxoAppOutputDir)</DefineConstants>
+    <BindInputPaths>$(FluxoAppOutputDir)</BindInputPaths>
   </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\Installer\Fluxo.Installer.Msi\**\*.wxs" Exclude="..\Installer\Fluxo.Installer.Msi\bin\**\*;..\Installer\Fluxo.Installer.Msi\obj\**\*" />
     <EmbeddedResource Include="..\Installer\Fluxo.Installer.Msi\**\*.wxl" Exclude="..\Installer\Fluxo.Installer.Msi\bin\**\*;..\Installer\Fluxo.Installer.Msi\obj\**\*" />
   </ItemGroup>
+
+  <ItemGroup>
+    <HarvestDirectory Include="$(FluxoAppOutputDir)">
+      <ComponentGroupName>FluxoAppFiles</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <SuppressCom>true</SuppressCom>
+      <SuppressRegistry>true</SuppressRegistry>
+      <AutogenerateGuids>true</AutogenerateGuids>
+      <GenerateGuidsNow>false</GenerateGuidsNow>
+    </HarvestDirectory>
+  </ItemGroup>
+
+  <Target Name="BuildFluxoApplicationForInstaller" BeforeTargets="BeforeBuild">
+    <MSBuild Projects="Fluxo.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+  </Target>
 </Project>

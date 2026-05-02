@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <ProjectReference Include="Fluxo.csproj" />
+    <ProjectReference Include="Fluxo.Installer.csproj" />
   </ItemGroup>
 
 </Project>
+
