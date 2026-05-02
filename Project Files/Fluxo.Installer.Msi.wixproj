@@ -13,4 +13,8 @@
     <OutputType>Package</OutputType>
     <OutputName>FluxoInstaller</OutputName>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Installer\Fluxo.Installer.Msi\**\*.wxs" Exclude="..\Installer\Fluxo.Installer.Msi\bin\**\*;..\Installer\Fluxo.Installer.Msi\obj\**\*" />
+    <EmbeddedResource Include="..\Installer\Fluxo.Installer.Msi\**\*.wxl" Exclude="..\Installer\Fluxo.Installer.Msi\bin\**\*;..\Installer\Fluxo.Installer.Msi\obj\**\*" />
+  </ItemGroup>
 </Project>

@@ -6,12 +6,20 @@
     <Nullable>enable</Nullable>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <UseWPF>true</UseWPF>
-	  <ApplicationIcon>..\Fluxo.Resources\Resources\fluxo.ico</ApplicationIcon>
+	  <EnableDefaultItems>false</EnableDefaultItems>
+	  <ApplicationIcon>..\UI\Fluxo.Resources\Resources\fluxo.ico</ApplicationIcon>
 	  <StartupObject>Fluxo.App</StartupObject>
 	  <Version>1.0.0</Version>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="..\UI\Fluxo\App.xaml" />
+    <Compile Include="..\UI\Fluxo\**\*.cs" Exclude="..\UI\Fluxo\bin\**\*;..\UI\Fluxo\obj\**\*" />
+    <Page Include="..\UI\Fluxo\**\*.xaml" Exclude="..\UI\Fluxo\App.xaml;..\UI\Fluxo\bin\**\*;..\UI\Fluxo\obj\**\*" />
+    <None Include="..\UI\Fluxo\**\*" Exclude="..\UI\Fluxo\**\*.cs;..\UI\Fluxo\**\*.xaml;..\UI\Fluxo\bin\**\*;..\UI\Fluxo\obj\**\*" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="16.1.1" />
@@ -25,10 +33,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Fluxo.Core\Fluxo.Core.csproj" />
-    <ProjectReference Include="..\Fluxo.Data\Fluxo.Data.csproj" />
-    <ProjectReference Include="..\Fluxo.Services\Fluxo.Services.csproj" />
-    <ProjectReference Include="..\Fluxo.Resources\Fluxo.Resources.csproj" />
+    <ProjectReference Include="Fluxo.Core.csproj" />
+    <ProjectReference Include="Fluxo.Data.csproj" />
+    <ProjectReference Include="Fluxo.Services.csproj" />
+    <ProjectReference Include="Fluxo.Resources.csproj" />
   </ItemGroup>
 
   <ItemGroup>

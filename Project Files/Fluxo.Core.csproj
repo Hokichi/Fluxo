@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Libs\Fluxo.Core\**\*.cs" Exclude="..\Libs\Fluxo.Core\bin\**\*;..\Libs\Fluxo.Core\obj\**\*" />
+    <Page Include="..\Libs\Fluxo.Core\**\*.xaml" Exclude="..\Libs\Fluxo.Core\bin\**\*;..\Libs\Fluxo.Core\obj\**\*" />
+    <None Include="..\Libs\Fluxo.Core\**\*" Exclude="..\Libs\Fluxo.Core\**\*.cs;..\Libs\Fluxo.Core\**\*.xaml;..\Libs\Fluxo.Core\bin\**\*;..\Libs\Fluxo.Core\obj\**\*" />
+  </ItemGroup>
+
+</Project>

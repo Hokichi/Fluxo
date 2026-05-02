@@ -6,7 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Tests\Fluxo.Tests\**\*.cs" Exclude="..\Tests\Fluxo.Tests\bin\**\*;..\Tests\Fluxo.Tests\obj\**\*" />
+    <None Include="..\Tests\Fluxo.Tests\**\*" Exclude="..\Tests\Fluxo.Tests\**\*.cs;..\Tests\Fluxo.Tests\bin\**\*;..\Tests\Fluxo.Tests\obj\**\*" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
@@ -19,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Fluxo\Fluxo.csproj" />
+    <ProjectReference Include="Fluxo.csproj" />
   </ItemGroup>
 
 </Project>
