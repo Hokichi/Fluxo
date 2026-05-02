@@ -114,4 +114,60 @@
     <Folder Include="Converters\" />
   </ItemGroup>
 
+  <Target Name="OrganizeOutputAfterBuild" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <OrganizeOutputDir>$(TargetDir)</OrganizeOutputDir>
+    </PropertyGroup>
+
+    <ItemGroup Condition="Exists('$(OrganizeOutputDir)')">
+      <FirstPartyDlls Include="$(OrganizeOutputDir)Fluxo*.dll" />
+      <VendorDlls Include="$(OrganizeOutputDir)*.dll" Exclude="@(FirstPartyDlls)" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(OrganizeOutputDir)libs" Condition="Exists('$(OrganizeOutputDir)') and '@(FirstPartyDlls)' != ''" />
+    <MakeDir Directories="$(OrganizeOutputDir)vendor" Condition="Exists('$(OrganizeOutputDir)') and '@(VendorDlls)' != ''" />
+
+    <Move SourceFiles="@(FirstPartyDlls)"
+          DestinationFolder="$(OrganizeOutputDir)libs"
+          Condition="'@(FirstPartyDlls)' != ''" />
+
+    <Move SourceFiles="@(VendorDlls)"
+          DestinationFolder="$(OrganizeOutputDir)vendor"
+          Condition="'@(VendorDlls)' != ''" />
+
+    <!-- Keep a root path for project-reference copy steps without duplicating the file. -->
+    <Exec Command='cmd /c mklink /H "$(OrganizeOutputDir)$(TargetFileName)" "$(OrganizeOutputDir)libs\$(TargetFileName)"'
+          Condition="Exists('$(OrganizeOutputDir)libs\\$(TargetFileName)') and !Exists('$(OrganizeOutputDir)$(TargetFileName)')" />
+  </Target>
+
+  <Target Name="OrganizeOutputAfterPublish" AfterTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <OrganizeOutputDir>$(PublishDir)</OrganizeOutputDir>
+    </PropertyGroup>
+
+    <ItemGroup Condition="Exists('$(OrganizeOutputDir)')">
+      <FirstPartyDlls Include="$(OrganizeOutputDir)Fluxo*.dll" />
+      <VendorDlls Include="$(OrganizeOutputDir)*.dll" Exclude="@(FirstPartyDlls)" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(OrganizeOutputDir)libs" Condition="Exists('$(OrganizeOutputDir)') and '@(FirstPartyDlls)' != ''" />
+    <MakeDir Directories="$(OrganizeOutputDir)vendor" Condition="Exists('$(OrganizeOutputDir)') and '@(VendorDlls)' != ''" />
+
+    <Move SourceFiles="@(FirstPartyDlls)"
+          DestinationFolder="$(OrganizeOutputDir)libs"
+          Condition="'@(FirstPartyDlls)' != ''" />
+
+    <Move SourceFiles="@(VendorDlls)"
+          DestinationFolder="$(OrganizeOutputDir)vendor"
+          Condition="'@(VendorDlls)' != ''" />
+  </Target>
+
+  <Target Name="CleanupOutputAfterBuild" AfterTargets="OrganizeOutputAfterBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <ItemGroup Condition="Exists('$(TargetDir)')">
+      <BuildArtifactsToDelete Include="$(TargetDir)*.pdb" />
+    </ItemGroup>
+
+    <Delete Files="@(BuildArtifactsToDelete)" />
+  </Target>
+
 </Project>

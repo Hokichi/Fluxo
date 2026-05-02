@@ -62,6 +62,51 @@
 
                 <Border Margin="0,6,0,0" Style="{StaticResource RowCardStyle}">
                     <Grid>
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="When closing " />
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="flux" />
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Mint}"
+                                Text="o" />
+                        </StackPanel>
+                        <Border
+                            Height="32"
+                            Padding="4"
+                            HorizontalAlignment="Right"
+                            Background="{StaticResource Brush.Background.Surface}"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="14">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    Width="120"
+                                    Command="{Binding SetCloseBehaviorCommand}"
+                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}"
+                                    Content="Minimize to tray"
+                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                    Tag="{Binding IsMinimizeToTrayCloseBehaviorSelected}" />
+                                <Button
+                                    Width="120"
+                                    Margin="4,0,0,0"
+                                    Command="{Binding SetCloseBehaviorCommand}"
+                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.Exit}"
+                                    Content="Exit"
+                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                    Tag="{Binding IsExitCloseBehaviorSelected}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Border Margin="0,12,0,0" Style="{StaticResource RowCardStyle}">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -108,51 +153,6 @@
                                 Content="Check for updates"
                                 Style="{StaticResource PopupTextButtonStyle}" />
                         </StackPanel>
-                    </Grid>
-                </Border>
-
-                <Border Margin="0,12,0,0" Style="{StaticResource RowCardStyle}">
-                    <Grid>
-                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="When closing " />
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="flux" />
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Mint}"
-                                Text="o" />
-                        </StackPanel>
-                        <Border
-                            Height="32"
-                            Padding="4"
-                            HorizontalAlignment="Right"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="14">
-                            <StackPanel Orientation="Horizontal">
-                                <Button
-                                    Width="120"
-                                    Command="{Binding SetCloseBehaviorCommand}"
-                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}"
-                                    Content="Minimize to tray"
-                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
-                                    Tag="{Binding IsMinimizeToTrayCloseBehaviorSelected}" />
-                                <Button
-                                    Width="120"
-                                    Margin="4,0,0,0"
-                                    Command="{Binding SetCloseBehaviorCommand}"
-                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.Exit}"
-                                    Content="Exit"
-                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
-                                    Tag="{Binding IsExitCloseBehaviorSelected}" />
-                            </StackPanel>
-                        </Border>
                     </Grid>
                 </Border>
 

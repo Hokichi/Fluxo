@@ -51,8 +51,8 @@
                     <components:Icon
                         Width="16"
                         Height="16"
-                        Color="{StaticResource Brush.Text.Primary}"
-                        Path="{StaticResource AngleRight}" />
+                        Path="{StaticResource AngleRight}"
+                        Color="{StaticResource Brush.Background.Surface}" />
                 </Button>
             </StackPanel>
         </Grid>

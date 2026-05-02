@@ -18,7 +18,12 @@ public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbC
 
     public static string BuildConnectionString()
     {
-        var databasePath = Path.Combine(AppContext.BaseDirectory, "fluxo.db");
+        var databasePath = GetDatabasePath();
         return $"Data Source={databasePath}";
+    }
+
+    public static string GetDatabasePath()
+    {
+        return Path.Combine(AppContext.BaseDirectory, "fluxo.db");
     }
 }

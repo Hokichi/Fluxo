@@ -49,7 +49,7 @@ public sealed class FluxoLogService : ILogService
 public static class FluxoLogManager
 {
     private const string DefaultUsername = "User";
-    private const string LogsDirectoryName = "Logs";
+    private const string LogsDirectoryName = "logs";
     private const string DateFormat = "MMddyyyy";
 
     public static string CurrentLogFileName { get; private set; } = BuildFileName(DefaultUsername, DateTime.Now);

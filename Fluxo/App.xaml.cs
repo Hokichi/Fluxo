@@ -18,7 +18,10 @@ using Fluxo.Views.Shell.Tray;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Data.Sqlite;
 using System.Diagnostics;
+using System.Data.Common;
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
@@ -497,8 +500,334 @@ public partial class App : Application
         return dataOperationRunner.RunAsync("migrate database", async (scope, ct) =>
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+            var databasePath = FluxoDbContextFactory.GetDatabasePath();
+            var databaseExists = File.Exists(databasePath);
+
+            if (!databaseExists)
+            {
+                await dbContext.Database.MigrateAsync(ct);
+                return;
+            }
+
+            var allMigrations = dbContext.Database.GetMigrations().ToList();
+            var appliedMigrations = await TryGetAppliedMigrationsAsync(dbContext, ct);
+
+            if (appliedMigrations.Count == 0)
+            {
+                var hasAnyApplicationTable = await HasAnyApplicationTableAsync(dbContext, ct);
+                if (!hasAnyApplicationTable)
+                {
+                    await dbContext.Database.EnsureDeletedAsync(ct);
+                    await dbContext.Database.EnsureCreatedAsync(ct);
+                    await EnsureMigrationHistoryTableAsync(dbContext, ct);
+
+                    if (allMigrations.Count > 0)
+                        await SeedMigrationHistoryAsync(dbContext, allMigrations, allMigrations[^1], ct);
+
+                    return;
+                }
+
+                var inferredLatestMigration = await InferLatestAppliedMigrationAsync(dbContext, allMigrations, ct);
+
+                if (!string.IsNullOrWhiteSpace(inferredLatestMigration))
+                {
+                    await EnsureMigrationHistoryTableAsync(dbContext, ct);
+                    await SeedMigrationHistoryAsync(dbContext, allMigrations, inferredLatestMigration, ct);
+                    appliedMigrations = await TryGetAppliedMigrationsAsync(dbContext, ct);
+                }
+            }
+
             await dbContext.Database.MigrateAsync(ct);
         });
+    }
+
+    private static async Task<List<string>> TryGetAppliedMigrationsAsync(
+        FluxoDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return (await dbContext.Database.GetAppliedMigrationsAsync(cancellationToken)).ToList();
+        }
+        catch (SqliteException exception) when (
+            exception.SqliteErrorCode == 1 &&
+            exception.Message.Contains("__EFMigrationsHistory", StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+    }
+
+    private static async Task EnsureMigrationHistoryTableAsync(
+        FluxoDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+                "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+                "ProductVersion" TEXT NOT NULL
+            );
+            """,
+            cancellationToken);
+    }
+
+    private static async Task SeedMigrationHistoryAsync(
+        FluxoDbContext dbContext,
+        IReadOnlyList<string> allMigrations,
+        string latestAppliedMigration,
+        CancellationToken cancellationToken)
+    {
+        var latestIndex = allMigrations
+            .ToList()
+            .FindIndex(migrationId => string.Equals(migrationId, latestAppliedMigration, StringComparison.Ordinal));
+        if (latestIndex < 0)
+            return;
+
+        var efCoreVersion = typeof(DbContext).Assembly.GetName().Version;
+        var productVersion = efCoreVersion is null
+            ? "10.0.0"
+            : $"{efCoreVersion.Major}.{efCoreVersion.Minor}.{Math.Max(0, efCoreVersion.Build)}";
+
+        for (var index = 0; index <= latestIndex; index++)
+        {
+            var migrationId = allMigrations[index];
+            await dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"""
+                 INSERT OR IGNORE INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                 VALUES ({migrationId}, {productVersion});
+                 """,
+                cancellationToken);
+        }
+    }
+
+    private static async Task<string?> InferLatestAppliedMigrationAsync(
+        FluxoDbContext dbContext,
+        IReadOnlyList<string> allMigrations,
+        CancellationToken cancellationToken)
+    {
+        if (allMigrations.Count == 0)
+            return null;
+
+        var hasCreatedOnColumn = await ColumnExistsAsync(dbContext, "SavingGoals", "CreatedOn", cancellationToken);
+        if (hasCreatedOnColumn)
+            return "20260421180000_AddSavingGoalCreatedOn";
+
+        var hasMonthlyDueDate = await ColumnExistsAsync(dbContext, "SpendingSources", "MonthlyDueDate", cancellationToken);
+        var hasIsSystemTag = await ColumnExistsAsync(dbContext, "ExpenseTags", "IsSystemTag", cancellationToken);
+        var hasDeductSource = await ColumnExistsAsync(dbContext, "SpendingSources", "DeductSource", cancellationToken);
+        var hasNotificationsTable = await TableExistsAsync(dbContext, "Notifications", cancellationToken);
+        var hasIconName = await ColumnExistsAsync(dbContext, "ExpenseTags", "IconName", cancellationToken);
+
+        if (hasMonthlyDueDate && hasIsSystemTag && hasDeductSource && hasNotificationsTable && !hasIconName)
+            return "20260421165000_RemoveIconNameFromExpenseTag";
+
+        if (hasMonthlyDueDate && hasIsSystemTag && hasDeductSource && hasNotificationsTable)
+        {
+            var accountLimitType = await GetColumnTypeAsync(dbContext, "SpendingSources", "AccountLimit", cancellationToken);
+            if (string.Equals(accountLimitType, "NUMERIC", StringComparison.OrdinalIgnoreCase))
+                return "20260419153000_ConvertMoneyColumnsToNumeric";
+
+            return "20260419120000_AddNotificationsAndDeductSource";
+        }
+
+        if (hasMonthlyDueDate && hasIsSystemTag)
+            return "20260417064811_AddIsSystemTagToExpenseTag";
+
+        if (hasMonthlyDueDate)
+        {
+            var monthlyDueDateNullable = await IsColumnNullableAsync(dbContext, "SpendingSources", "MonthlyDueDate", cancellationToken);
+            if (monthlyDueDateNullable is true)
+                return "20260416170000_MakeMonthlyDueDateNullable";
+
+            return "20260416153000_AddIconNameAndMonthlyDueDateToSpendingSource";
+        }
+
+        if (await ColumnExistsAsync(dbContext, "SpendingSources", "IsForDeletion", cancellationToken))
+            return "20260415014219_AddIsForDeletionToSpendingSource";
+
+        if (await ColumnExistsAsync(dbContext, "SpendingSources", "IsEnabled", cancellationToken))
+            return "20260411142128_AddIsEnabledToSpendingSource";
+
+        if (await ColumnExistsAsync(dbContext, "ExpenseLogs", "IsForDeletion", cancellationToken))
+            return "20260408110007_AddIsForDeletionToExpenseLog";
+
+        if (await TableExistsAsync(dbContext, "UserSettings", cancellationToken))
+            return "20260408105340_AddUserSettings";
+
+        if (await ColumnExistsAsync(dbContext, "SpendingSources", "ShowOnUI", cancellationToken))
+            return "20260401093922_AddShowOnUIToSpendingSource";
+
+        return null;
+    }
+
+    private static async Task<bool> HasAnyApplicationTableAsync(
+        FluxoDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        var tableResult = await ExecuteScalarAsync(
+            dbContext,
+            """
+            SELECT 1
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name NOT LIKE 'sqlite_%'
+              AND name NOT LIKE '__EFMigrations%'
+            LIMIT 1;
+            """,
+            cancellationToken);
+
+        return tableResult is not null;
+    }
+
+    private static async Task<bool> TableExistsAsync(
+        FluxoDbContext dbContext,
+        string tableName,
+        CancellationToken cancellationToken)
+    {
+        var tableResult = await ExecuteScalarAsync(
+            dbContext,
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = $name LIMIT 1;",
+            ("$name", tableName),
+            cancellationToken);
+
+        return tableResult is not null;
+    }
+
+    private static async Task<bool> ColumnExistsAsync(
+        FluxoDbContext dbContext,
+        string tableName,
+        string columnName,
+        CancellationToken cancellationToken)
+    {
+        var tableExists = await TableExistsAsync(dbContext, tableName, cancellationToken);
+        if (!tableExists)
+            return false;
+
+        await using var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info(\"{tableName}\");";
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (reader.IsDBNull(1))
+                continue;
+
+            var name = reader.GetString(1);
+            if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static async Task<string?> GetColumnTypeAsync(
+        FluxoDbContext dbContext,
+        string tableName,
+        string columnName,
+        CancellationToken cancellationToken)
+    {
+        var tableExists = await TableExistsAsync(dbContext, tableName, cancellationToken);
+        if (!tableExists)
+            return null;
+
+        await using var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info(\"{tableName}\");";
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (reader.IsDBNull(1))
+                continue;
+
+            var name = reader.GetString(1);
+            if (!string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return reader.IsDBNull(2) ? null : reader.GetString(2);
+        }
+
+        return null;
+    }
+
+    private static async Task<bool?> IsColumnNullableAsync(
+        FluxoDbContext dbContext,
+        string tableName,
+        string columnName,
+        CancellationToken cancellationToken)
+    {
+        var tableExists = await TableExistsAsync(dbContext, tableName, cancellationToken);
+        if (!tableExists)
+            return null;
+
+        await using var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info(\"{tableName}\");";
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (reader.IsDBNull(1))
+                continue;
+
+            var name = reader.GetString(1);
+            if (!string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            // PRAGMA table_info notnull: 0 means nullable, 1 means not nullable.
+            var notNull = reader.IsDBNull(3) ? 0 : reader.GetInt32(3);
+            return notNull == 0;
+        }
+
+        return null;
+    }
+
+    private static async Task<object?> ExecuteScalarAsync(
+        FluxoDbContext dbContext,
+        string commandText,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+        return await command.ExecuteScalarAsync(cancellationToken);
+    }
+
+    private static async Task<object?> ExecuteScalarAsync(
+        FluxoDbContext dbContext,
+        string commandText,
+        (string Name, object? Value) parameter,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+        AddParameter(command, parameter.Name, parameter.Value);
+        return await command.ExecuteScalarAsync(cancellationToken);
+    }
+
+    private static void AddParameter(DbCommand command, string name, object? value)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = value ?? DBNull.Value;
+        command.Parameters.Add(parameter);
     }
 
     private async Task InitializeLoggingAsync()
