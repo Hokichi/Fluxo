@@ -11,7 +11,7 @@ public sealed class SpendingSourceService(IDataOperationRunner dataOperationRunn
 {
     public async Task<IReadOnlyList<SpendingSourceDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load spending sources", async (scope, ct) =>
         {
             var sources = await scope.UnitOfWork.SpendingSources.GetAllAsync(ct);
             return mapper.Map<IReadOnlyList<SpendingSourceDto>>(sources);
@@ -20,7 +20,7 @@ public sealed class SpendingSourceService(IDataOperationRunner dataOperationRunn
 
     public async Task<SpendingSourceDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load spending source", async (scope, ct) =>
         {
             var source = await scope.UnitOfWork.SpendingSources.GetByIdAsync(id, ct);
             return source is null ? null : mapper.Map<SpendingSourceDto>(source);
@@ -30,7 +30,7 @@ public sealed class SpendingSourceService(IDataOperationRunner dataOperationRunn
     public async Task<IReadOnlyList<SpendingSourceDto>> SearchAsync(SpendingSourceFilter filter,
         CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("search spending sources", async (scope, ct) =>
         {
             var sources = await scope.UnitOfWork.SpendingSources.SearchAsync(filter, ct);
             return mapper.Map<IReadOnlyList<SpendingSourceDto>>(sources);
@@ -39,7 +39,7 @@ public sealed class SpendingSourceService(IDataOperationRunner dataOperationRunn
 
     public async Task AddAsync(SpendingSourceDto dto, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("add spending source", async (scope, ct) =>
         {
             var source = mapper.Map<SpendingSource>(dto);
             source.Id = 0; // ensure EF treats this as a new insert

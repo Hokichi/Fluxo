@@ -5,6 +5,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Logging;
 using Fluxo.Services.Ui;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
@@ -149,7 +150,21 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             await _appData.SaveChangesAsync();
 
             if (!string.Equals(newUsername, oldUsername, StringComparison.Ordinal))
-                Messenger.Send(new UsernameChangedMessage(newUsername ?? "User"));
+            {
+                var resolvedUsername = newUsername ?? "User";
+                Messenger.Send(new UsernameChangedMessage(resolvedUsername));
+
+                try
+                {
+                    FluxoLogManager.Initialize(resolvedUsername);
+                }
+                catch (Exception loggerException)
+                {
+                    FluxoLogManager.LogWarning(
+                        loggerException,
+                        "Failed to rotate log file after username update from settings.");
+                }
+            }
 
             SettingsShared.RecordActions(actions, Messenger);
             Messenger.Send(new DashboardDataInvalidatedMessage(
@@ -165,8 +180,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to apply settings.");
             return SettingsOperationResult.Failure(
-                $"Unable to apply settings.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("apply settings"));
         }
     }
 
@@ -290,8 +306,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to reset settings.");
             return SettingsOperationResult.Failure(
-                $"Unable to reset settings.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("reset settings"));
         }
     }
 
@@ -335,8 +352,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to delete all data from settings.");
             return SettingsOperationResult.Failure(
-                $"Unable to delete all data.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("delete all data"));
         }
     }
 
@@ -450,8 +468,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to complete deferred settings maintenance action.");
             request.CompletionSource.TrySetResult(SettingsMaintenanceResult.Failure(
-                $"Unable to complete this settings action.\n\n{exception.Message}"));
+                FluxoLogManager.CreateFailureMessage("complete settings action")));
         }
     }
 

@@ -43,7 +43,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         if (actionableDecisions.Count == 0)
             return Task.FromResult(false);
 
-        return dataOperationRunner.RunAsync(async (scope, ct) =>
+        return dataOperationRunner.RunAsync("process checklist notification action", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var persistedNotifications = await unitOfWork.Notifications.GetAllAsync(ct);
@@ -107,7 +107,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         if (goalIds.Length == 0)
             return Task.FromResult(false);
 
-        return dataOperationRunner.RunAsync(async (scope, ct) =>
+        return dataOperationRunner.RunAsync("process goal deadline notification action", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var mutationApplied = false;

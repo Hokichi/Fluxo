@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using Fluxo.Services.Logging;
 using Fluxo.Views.CustomControls;
 
 namespace Fluxo.Views.Popups;
@@ -62,6 +63,7 @@ public partial class ToastPopup : BasePopup
         }
         catch (Exception ex)
         {
+            FluxoLogManager.LogError(ex, "Failed to execute toast popup background work.");
             ExecutionException = ex;
         }
         finally

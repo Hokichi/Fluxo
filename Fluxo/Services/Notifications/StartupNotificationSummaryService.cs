@@ -1,5 +1,6 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell.Main;
 
@@ -14,7 +15,7 @@ public sealed class StartupNotificationSummaryService(
     {
         try
         {
-            return await dataOperationRunner.RunAsync(async (scope, ct) =>
+            return await dataOperationRunner.RunAsync("build startup notification summary", async (scope, ct) =>
             {
                 var activeNotifications = await scope.UnitOfWork.Notifications.GetActiveAsync(ct);
                 if (activeNotifications.Count == 0)
@@ -55,8 +56,9 @@ public sealed class StartupNotificationSummaryService(
         {
             throw;
         }
-        catch
+        catch (Exception exception)
         {
+            FluxoLogManager.LogWarning(exception, "Failed to build startup notification summary.");
             return null;
         }
     }

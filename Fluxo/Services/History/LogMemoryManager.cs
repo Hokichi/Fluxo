@@ -50,7 +50,7 @@ public sealed class LogMemoryManager : IDisposable
         {
             _isExecuting = true;
 
-            await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            await _dataOperationRunner.RunAsync("undo log memory action", async (scope, ct) =>
             {
                 await action.UndoAsync(scope.UnitOfWork, ct);
             }, cancellationToken);
@@ -82,7 +82,7 @@ public sealed class LogMemoryManager : IDisposable
         {
             _isExecuting = true;
 
-            await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            await _dataOperationRunner.RunAsync("redo log memory action", async (scope, ct) =>
             {
                 await action.RedoAsync(scope.UnitOfWork, ct);
             }, cancellationToken);

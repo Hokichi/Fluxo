@@ -2,10 +2,12 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Data.Context;
 using Fluxo.Data.Operations;
 using Fluxo.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo.Data.Extensions;
@@ -14,11 +16,21 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFluxoData(this IServiceCollection services)
     {
-        services.AddDbContext<FluxoDbContext>((_, optionsBuilder) =>
+        services.AddDbContext<FluxoDbContext>((serviceProvider, optionsBuilder) =>
         {
+            var logService = serviceProvider.GetService<ILogService>();
+
             optionsBuilder.UseSqlite(
                 FluxoDbContextFactory.BuildConnectionString(),
                 sqliteOptions => sqliteOptions.MigrationsAssembly("Fluxo"));
+
+            if (logService is not null)
+            {
+                optionsBuilder.LogTo(
+                    message => logService.LogInformation($"EF Core: {message}"),
+                    [DbLoggerCategory.Database.Name, DbLoggerCategory.Update.Name, DbLoggerCategory.Infrastructure.Name],
+                    LogLevel.Information);
+            }
         }, ServiceLifetime.Scoped);
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();

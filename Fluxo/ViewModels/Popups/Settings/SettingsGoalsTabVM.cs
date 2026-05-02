@@ -9,6 +9,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -190,8 +191,9 @@ public partial class SettingsGoalsTabVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to update selected saving goals from settings.");
             return SettingsOperationResult.Failure(
-                $"Unable to update the selected goals.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("update selected goals"));
         }
     }
 

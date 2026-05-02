@@ -8,6 +8,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -272,8 +273,9 @@ public partial class AddSpendingSourceVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to create this spending source.");
             return AddSpendingSourceResult.Failure(
-                $"Unable to create this spending source.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("create spending source"));
         }
         finally
         {

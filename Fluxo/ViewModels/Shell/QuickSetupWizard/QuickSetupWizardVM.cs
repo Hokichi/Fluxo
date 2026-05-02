@@ -5,6 +5,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Data.Context;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Logging;
 using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -180,6 +181,16 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
                 await _stagedCommitAsync();
 
             await SaveIsFirstRunAsync(false);
+            try
+            {
+                FluxoLogManager.Initialize(NamePage.ResolvedUsername);
+            }
+            catch (Exception loggerException)
+            {
+                FluxoLogManager.LogWarning(
+                    loggerException,
+                    "Failed to rotate log file after startup wizard username resolution.");
+            }
             await SyncRunAtStartupRegistrationAsync();
 
             if (!_mainViewModel.IsInitialized)
@@ -189,6 +200,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Failed to finalize startup wizard setup.");
             capturedException = exception;
         }
 
@@ -198,6 +210,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Failed to clear staged startup wizard state after setup completion.");
             capturedException ??= exception;
         }
 
@@ -220,6 +233,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Failed to dismiss startup wizard.");
             return SettingsOperationResult.Failure(
                 CreateQuickSetupWizardErrorMessage("close the startup wizard", exception));
         }
@@ -272,8 +286,9 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
             transaction = null;
             return true;
         }
-        catch
+        catch (Exception exception)
         {
+            FluxoLogManager.LogWarning(exception, "Startup wizard draft staging failed. Retry flow will be offered.");
             await DisposeQuietlyAsync(transaction);
             await DisposeQuietlyAsync(scope);
             await ClearStagedQuietlyAsync();
@@ -290,8 +305,9 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         {
             await disposable.DisposeAsync();
         }
-        catch
+        catch (Exception exception)
         {
+            FluxoLogManager.LogWarning(exception, "Failed to dispose staging resources quietly.");
             // Staging failures should surface as a retryable loading attempt.
         }
     }
@@ -302,8 +318,9 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         {
             await ClearStagedAsync();
         }
-        catch
+        catch (Exception exception)
         {
+            FluxoLogManager.LogWarning(exception, "Failed to clear staged startup wizard data quietly.");
             _stagedScope = null;
             _stagedCommitAsync = null;
             _stagedRollbackAsync = null;
@@ -322,6 +339,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Failed to execute staged transaction action.");
             capturedException = ExceptionDispatchInfo.Capture(exception);
         }
 
@@ -331,6 +349,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Failed to dispose staged transaction.");
             capturedException ??= ExceptionDispatchInfo.Capture(exception);
         }
 
@@ -354,6 +373,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Failed to rollback staged startup wizard changes.");
             capturedException = ExceptionDispatchInfo.Capture(exception);
         }
 
@@ -364,6 +384,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Failed to dispose staged startup wizard scope.");
             capturedException ??= ExceptionDispatchInfo.Capture(exception);
         }
 
@@ -372,7 +393,8 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
 
     private static string CreateQuickSetupWizardErrorMessage(string action, Exception exception)
     {
-        return $"Unable to {action}.\n\n{exception.Message}";
+        _ = exception;
+        return FluxoLogManager.CreateFailureMessage(action);
     }
 
     private async Task SaveIsFirstRunAsync(bool isFirstRun)

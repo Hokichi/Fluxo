@@ -8,6 +8,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
@@ -51,7 +52,8 @@ public partial class QuickSetupWizard : BasePopup
         }
         catch (Exception exception)
         {
-            FluxoMessageBox.Show(this, $"Unable to load the startup wizard.\n\n{exception.Message}",
+            FluxoLogManager.LogError(exception, "Unable to load startup wizard.");
+            FluxoMessageBox.Show(this, FluxoLogManager.CreateFailureMessage("load startup wizard"),
                 "Startup Wizard", MessageBoxButton.OK, MessageBoxImage.Information);
             _allowClose = true;
             Close();
@@ -154,7 +156,8 @@ public partial class QuickSetupWizard : BasePopup
         }
         catch (Exception exception)
         {
-            FluxoMessageBox.Show(this, $"Unable to load data.\n\n{exception.Message}",
+            FluxoLogManager.LogError(exception, "Unable to process startup wizard next-step action.");
+            FluxoMessageBox.Show(this, FluxoLogManager.CreateFailureMessage("load startup wizard data"),
                 "Startup Wizard", MessageBoxButton.OK, MessageBoxImage.Information);
             _allowClose = true;
             Close();

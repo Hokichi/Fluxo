@@ -6,6 +6,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
 using Fluxo.Extensions;
+using Fluxo.Services.Logging;
 using Fluxo.Services.Notifications;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Ui;
@@ -50,6 +51,8 @@ public partial class App : Application
 
     public App()
     {
+        RegisterGlobalExceptionHandlers();
+
         var services = new ServiceCollection();
         services
             .AddFluxoData()
@@ -73,6 +76,7 @@ public partial class App : Application
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         _launchInTrayMode = IsTrayLaunchMode(e.Args);
+        await InitializeLoggingAsync();
 
         try
         {
@@ -124,10 +128,12 @@ public partial class App : Application
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to start Fluxo.");
+
             if (_serviceProvider?.GetService<IDialogService>() is { } dialogService)
-                dialogService.ShowError($"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo");
+                dialogService.ShowError(FluxoLogManager.CreateFailureMessage("start Fluxo"), "Fluxo");
             else
-                FluxoMessageBox.Show(null, $"Unable to start Fluxo.\n\n{exception.Message}", "Fluxo",
+                FluxoMessageBox.Show(null, FluxoLogManager.CreateFailureMessage("start Fluxo"), "Fluxo",
                     MessageBoxButton.OK, MessageBoxImage.Error);
 
             Shutdown();
@@ -136,7 +142,16 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        DisposeTrayResources();
+        try
+        {
+            DisposeTrayResources();
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogFailureForProcess(exception, "dispose tray resources during app shutdown");
+        }
+
+        FluxoLogManager.CloseAndFlush();
         base.OnExit(e);
     }
 
@@ -145,17 +160,27 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         MainWindow?.Hide();
 
-        using (var wizardScope = _serviceProvider!.CreateScope())
+        try
         {
-            var wizard = wizardScope.ServiceProvider.GetRequiredService<QuickSetupWizard>();
-            wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            wizard.ShowDialog();
+            using (var wizardScope = _serviceProvider!.CreateScope())
+            {
+                var wizard = wizardScope.ServiceProvider.GetRequiredService<QuickSetupWizard>();
+                wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                wizard.ShowDialog();
+            }
+
+            await _mainVM.Initialize();
         }
-
-        await _mainVM.Initialize();
-
-        ShutdownMode = ShutdownMode.OnMainWindowClose;
-        MainWindow?.Show();
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogFailureForProcess(exception, "run setup wizard");
+            throw;
+        }
+        finally
+        {
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            MainWindow?.Show();
+        }
     }
 
     internal async Task<bool> TryHandleMainWindowClosingToTrayAsync(MainWindow mainWindow)
@@ -175,7 +200,7 @@ public partial class App : Application
     {
         try
         {
-            var closeBehavior = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            var closeBehavior = await _dataOperationRunner.RunAsync("resolve app close behavior", async (scope, ct) =>
             {
                 var setting = await scope.UnitOfWork.UserSettings.GetByNameAsync(UserSettingNames.CloseBehavior, ct);
                 return UserSettingValueParser.ParseCloseBehavior(setting?.Value, AppCloseBehavior.Exit);
@@ -183,8 +208,11 @@ public partial class App : Application
 
             return closeBehavior == AppCloseBehavior.MinimizeToTray;
         }
-        catch
+        catch (Exception exception)
         {
+            FluxoLogManager.LogWarning(
+                exception,
+                "Unable to resolve close behavior from user settings. Falling back to default exit behavior.");
             return false;
         }
     }
@@ -270,6 +298,7 @@ public partial class App : Application
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogFailureForProcess(exception, "show startup notification popup");
             Debug.WriteLine($"Startup notification popup failed: {exception}");
         }
     }
@@ -381,10 +410,12 @@ public partial class App : Application
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogFailureForProcess(exception, "restart Fluxo from tray");
+
             if (_serviceProvider?.GetService<IDialogService>() is { } dialogService)
-                dialogService.ShowError($"Unable to restart Fluxo.\n\n{exception.Message}", "Fluxo");
+                dialogService.ShowError(FluxoLogManager.CreateFailureMessage("restart Fluxo"), "Fluxo");
             else
-                FluxoMessageBox.Show(null, $"Unable to restart Fluxo.\n\n{exception.Message}", "Fluxo",
+                FluxoMessageBox.Show(null, FluxoLogManager.CreateFailureMessage("restart Fluxo"), "Fluxo",
                     MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -442,7 +473,7 @@ public partial class App : Application
 
     private static async Task<bool> EnsureFirstRunSettingAsync(IDataOperationRunner dataOperationRunner)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("ensure first-run setting", async (scope, ct) =>
         {
             var existingSetting = await scope.UnitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun, ct);
 
@@ -463,10 +494,80 @@ public partial class App : Application
 
     private static Task MigrateDatabaseAsync(IDataOperationRunner dataOperationRunner)
     {
-        return dataOperationRunner.RunAsync(async (scope, ct) =>
+        return dataOperationRunner.RunAsync("migrate database", async (scope, ct) =>
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
             await dbContext.Database.MigrateAsync(ct);
         });
+    }
+
+    private async Task InitializeLoggingAsync()
+    {
+        string? username = null;
+
+        try
+        {
+            username = await _dataOperationRunner.RunAsync("resolve app username for logging", async (scope, ct) =>
+            {
+                var userSetting = await scope.UnitOfWork.UserSettings
+                    .GetByNameAsync(UserSettingNames.PreferredDisplayName, ct);
+                return userSetting?.Value;
+            });
+        }
+        catch
+        {
+            // Falls through to default username initialization.
+        }
+
+        try
+        {
+            FluxoLogManager.Initialize(username);
+        }
+        catch (Exception exception)
+        {
+            try
+            {
+                FluxoLogManager.Initialize("User");
+                FluxoLogManager.LogFailureForProcess(
+                    exception,
+                    "initialize Serilog with the configured app username");
+            }
+            catch
+            {
+                // Startup continues even if logging initialization fails.
+            }
+        }
+    }
+
+    private void RegisterGlobalExceptionHandlers()
+    {
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+    }
+
+    private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        FluxoLogManager.LogError(e.Exception, "Unhandled dispatcher exception.");
+    }
+
+    private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception exception)
+        {
+            FluxoLogManager.LogError(
+                exception,
+                $"Unhandled app domain exception. IsTerminating={e.IsTerminating}");
+            return;
+        }
+
+        FluxoLogManager.LogInformation(
+            $"Unhandled app domain exception object (non-Exception). IsTerminating={e.IsTerminating}");
+    }
+
+    private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        FluxoLogManager.LogError(e.Exception, "Unobserved task exception.");
+        e.SetObserved();
     }
 }

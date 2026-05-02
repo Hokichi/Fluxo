@@ -7,6 +7,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Shell;
@@ -245,7 +246,8 @@ public partial class ExpenseDetailVM : ObservableObject
         }
         catch (Exception exception)
         {
-            return ExpenseDetailSaveResult.Failure($"Unable to save this expense.\n\n{exception.Message}");
+            FluxoLogManager.LogError(exception, "Unable to save expense detail changes.");
+            return ExpenseDetailSaveResult.Failure(FluxoLogManager.CreateFailureMessage("save expense"));
         }
         finally
         {

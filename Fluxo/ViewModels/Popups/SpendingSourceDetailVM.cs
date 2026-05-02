@@ -8,6 +8,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -215,8 +216,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to save this spending source.");
             return SpendingSourceDetailResult.Failure(
-                $"Unable to save this spending source.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("save spending source"));
         }
         finally
         {
@@ -262,8 +264,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to update this spending source.");
             return SpendingSourceDetailResult.Failure(
-                $"Unable to update this spending source.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("update spending source"));
         }
         finally
         {
@@ -306,8 +309,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to adjust this spending source.");
             return SpendingSourceDetailResult.Failure(
-                $"Unable to update this spending source.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("adjust spending source"));
         }
         finally
         {
@@ -353,8 +357,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to delete this spending source.");
             return SpendingSourceDetailResult.Failure(
-                $"Unable to delete this spending source.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("delete spending source"));
         }
         finally
         {

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -106,7 +107,8 @@ public partial class AddSavingGoalVM : ObservableObject
         }
         catch (Exception exception)
         {
-            return AddSavingGoalResult.Failure($"Unable to create this saving goal.\n\n{exception.Message}");
+            FluxoLogManager.LogError(exception, "Unable to create this saving goal.");
+            return AddSavingGoalResult.Failure(FluxoLogManager.CreateFailureMessage("create saving goal"));
         }
         finally
         {

@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.Views.CustomControls;
@@ -98,7 +99,8 @@ public partial class PlanningPopup : BasePopup
         }
         catch (Exception ex)
         {
-            FluxoMessageBox.Show(this, "Unable to import fixed expenses. " + ex.Message, "Planning",
+            FluxoLogManager.LogError(ex, "Unable to import fixed expenses in planning popup.");
+            FluxoMessageBox.Show(this, FluxoLogManager.CreateFailureMessage("import fixed expenses"), "Planning",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         finally

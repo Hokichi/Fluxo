@@ -7,6 +7,7 @@ using Fluxo.Services.Persistence;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Notifications;
 using Fluxo.Services.Ui;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -58,6 +59,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<ILogService, FluxoLogService>();
         services.AddSingleton<IUiSettleAwaiter, UiSettleAwaiter>();
         services.AddSingleton<IStartupRegistrationService, StartupRegistrationService>();
 

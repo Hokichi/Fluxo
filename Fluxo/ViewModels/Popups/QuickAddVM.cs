@@ -7,6 +7,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Shell;
@@ -375,7 +376,8 @@ public partial class QuickAddVM : ObservableObject
         }
         catch (Exception exception)
         {
-            return QuickAddSubmissionResult.Failure($"Unable to save the transaction.\n\n{exception.Message}");
+            FluxoLogManager.LogError(exception, "Unable to save quick-add transaction.");
+            return QuickAddSubmissionResult.Failure(FluxoLogManager.CreateFailureMessage("save transaction"));
         }
         finally
         {

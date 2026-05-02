@@ -11,7 +11,7 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
 {
     public async Task<IReadOnlyList<ExpenseTagDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load expense tags", async (scope, ct) =>
         {
             var tags = await scope.UnitOfWork.ExpenseTags.GetAllAsync(ct);
             return mapper.Map<IReadOnlyList<ExpenseTagDto>>(tags);
@@ -21,7 +21,7 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
     public async Task<IReadOnlyList<ExpenseTagDto>> GetTagsOrderedByExpenseCountAsync(ExpenseFilter filter,
         CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load tags ordered by expense count", async (scope, ct) =>
         {
             // Repository aggregation methods do not accept ExpenseFilter, so we group in memory.
             var expenses = await scope.UnitOfWork.Expenses.SearchAsync(filter, ct);
@@ -39,7 +39,7 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
 
     public async Task AddAsync(ExpenseTagDto dto, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("create tag", async (scope, ct) =>
         {
             var tag = mapper.Map<ExpenseTag>(dto);
             tag.Id = 0;
@@ -50,7 +50,7 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
 
     public async Task UpdateAsync(ExpenseTagDto dto, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("update tag", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var tag = await unitOfWork.ExpenseTags.GetByIdAsync(dto.Id, ct);
@@ -65,7 +65,7 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
 
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("delete tag", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var tag = await unitOfWork.ExpenseTags.GetByIdAsync(id, ct);

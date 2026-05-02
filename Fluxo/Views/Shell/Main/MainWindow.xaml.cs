@@ -15,6 +15,7 @@ using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
@@ -128,6 +129,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogFailureForProcess(exception, "drag the main window");
         }
     }
 
@@ -536,8 +538,9 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to initialize dashboard panels.");
             _dialogService.ShowError(
-                $"Unable to initialize dashboard panels.\n\n{exception.Message}",
+                FluxoLogManager.CreateFailureMessage("initialize dashboard panels"),
                 "Dashboard",
                 this);
         }
@@ -969,7 +972,8 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            _dialogService.ShowError($"Unable to open analytics.\n\n{exception.Message}", "Analytics", this);
+            FluxoLogManager.LogError(exception, "Unable to open analytics drawer.");
+            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("open analytics"), "Analytics", this);
         }
         finally
         {
@@ -1359,7 +1363,8 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            _dialogService.ShowError($"Unable to update this spending source.\n\n{exception.Message}", "Settings", this);
+            FluxoLogManager.LogError(exception, "Unable to update spending source from settings workflow.");
+            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("update spending source"), "Settings", this);
         }
     }
 
@@ -1432,7 +1437,8 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            _dialogService.ShowError($"Unable to undo the last action.\n\n{exception.Message}", "Undo", this);
+            FluxoLogManager.LogError(exception, "Unable to undo the last action.");
+            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("undo last action"), "Undo", this);
         }
     }
 
@@ -1447,7 +1453,8 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            _dialogService.ShowError($"Unable to redo the last action.\n\n{exception.Message}", "Redo", this);
+            FluxoLogManager.LogError(exception, "Unable to redo the last action.");
+            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("redo last action"), "Redo", this);
         }
     }
 

@@ -7,6 +7,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Shell;
@@ -157,7 +158,8 @@ public partial class TransferFundsVM : ObservableObject
         }
         catch (Exception exception)
         {
-            return TransferFundsResult.Failure($"Unable to save this transfer.\n\n{exception.Message}");
+            FluxoLogManager.LogError(exception, "Unable to save transfer funds transaction.");
+            return TransferFundsResult.Failure(FluxoLogManager.CreateFailureMessage("save transfer"));
         }
         finally
         {

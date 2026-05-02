@@ -7,6 +7,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Settings;
@@ -301,7 +302,8 @@ public partial class AddFixedExpenseVM : ObservableObject
         }
         catch (Exception exception)
         {
-            return AddFixedExpenseResult.Failure($"Unable to create this fixed expense.\n\n{exception.Message}");
+            FluxoLogManager.LogError(exception, "Unable to create this fixed expense.");
+            return AddFixedExpenseResult.Failure(FluxoLogManager.CreateFailureMessage("create fixed expense"));
         }
         finally
         {

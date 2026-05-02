@@ -11,7 +11,7 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
 {
     public async Task<IReadOnlyList<ExpenseLogDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load expense logs", async (scope, ct) =>
         {
             var logs = await scope.UnitOfWork.ExpenseLogs.GetAllAsync(ct);
             return mapper.Map<IReadOnlyList<ExpenseLogDto>>(logs);
@@ -20,7 +20,7 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
 
     public async Task<ExpenseLogDto?> GetByLogIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load expense log", async (scope, ct) =>
         {
             var log = await scope.UnitOfWork.ExpenseLogs.GetByLogIdAsync(id, ct);
             return log is null ? null : mapper.Map<ExpenseLogDto>(log);
@@ -29,7 +29,7 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("delete expense log", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var log = await unitOfWork.ExpenseLogs.GetByLogIdAsync(id, ct);
@@ -51,7 +51,7 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
 
     public async Task PostTerminationCleanupAsync(CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("cleanup terminated expense logs", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var markedLogs = await unitOfWork.ExpenseLogs.GetMarkedForDeletionAsync(ct);

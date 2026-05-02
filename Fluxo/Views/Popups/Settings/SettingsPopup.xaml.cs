@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.Dialogs;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.CustomControls;
@@ -54,7 +55,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         }
         catch (Exception exception)
         {
-            ShowMessage($"Unable to load settings.\n\n{exception.Message}", "Settings");
+            FluxoLogManager.LogError(exception, "Unable to load settings popup.");
+            ShowMessage(FluxoLogManager.CreateFailureMessage("load settings"), "Settings");
             _allowClose = true;
             Close();
         }

@@ -15,7 +15,7 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
         if (from > to)
             (from, to) = (to, from);
 
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load analytics data", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var expenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync(ct);

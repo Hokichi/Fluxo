@@ -5,6 +5,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
@@ -118,8 +119,9 @@ public partial class SettingsTagsTabVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to create this tag.");
             return SettingsOperationResult.Failure(
-                $"Unable to create this tag.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("create tag"));
         }
     }
 
@@ -153,8 +155,9 @@ public partial class SettingsTagsTabVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to delete this tag.");
             return SettingsOperationResult.Failure(
-                $"Unable to delete this tag.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("delete tag"));
         }
     }
 
@@ -206,8 +209,9 @@ public partial class SettingsTagsTabVM : ObservableObject
         }
         catch (Exception exception)
         {
+            FluxoLogManager.LogError(exception, "Unable to update this tag.");
             return SettingsOperationResult.Failure(
-                $"Unable to update this tag.\n\n{exception.Message}");
+                FluxoLogManager.CreateFailureMessage("update tag"));
         }
     }
 

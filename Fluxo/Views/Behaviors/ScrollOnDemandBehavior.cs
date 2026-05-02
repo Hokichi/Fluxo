@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Fluxo.Services.Logging;
 
 namespace Fluxo.Views.Behaviors;
 
@@ -240,6 +241,7 @@ public static class ScrollOnDemandBehavior
         catch (Exception exception)
         {
             // Command-side failures should never break UI scrolling.
+            FluxoLogManager.LogWarning(exception, "ScrollOnDemandBehavior command execution failed.");
             Trace.TraceWarning("ScrollOnDemandBehavior command execution failed: {0}", exception);
         }
         finally

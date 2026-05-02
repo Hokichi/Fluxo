@@ -12,7 +12,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
 {
     public async Task<IReadOnlyList<ExpenseDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("load expenses", async (scope, ct) =>
         {
             var expenses = await scope.UnitOfWork.Expenses.GetAllAsync(ct);
             return mapper.Map<IReadOnlyList<ExpenseDto>>(expenses);
@@ -22,7 +22,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
     public async Task<IReadOnlyList<ExpenseDto>> SearchAsync(ExpenseFilter filter,
         CancellationToken cancellationToken = default)
     {
-        return await dataOperationRunner.RunAsync(async (scope, ct) =>
+        return await dataOperationRunner.RunAsync("search expenses", async (scope, ct) =>
         {
             var expenses = await scope.UnitOfWork.Expenses.SearchAsync(filter, ct);
             return mapper.Map<IReadOnlyList<ExpenseDto>>(expenses);
@@ -31,7 +31,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
 
     public async Task AddAsync(ExpenseDto dto, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("log expense", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
 
@@ -75,7 +75,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
 
     public async Task UpdateAsync(ExpenseDto dto, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("update expense", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
             var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(dto.Id, ct);
@@ -90,7 +90,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
 
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
-        await dataOperationRunner.RunAsync(async (scope, ct) =>
+        await dataOperationRunner.RunAsync("remove expense", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
 
