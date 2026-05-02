@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public readonly record struct QuickSetupWizardNotificationsChanged(
     int EnabledCount,
@@ -6,4 +6,5 @@ public readonly record struct QuickSetupWizardNotificationsChanged(
 
 public sealed class QuickSetupWizardNotificationsChangedMessage(QuickSetupWizardNotificationsChanged value)
     : ValueChangedMessage<QuickSetupWizardNotificationsChanged>(value);
+
 

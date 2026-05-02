@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 [Flags]
 public enum SettingsTabKey
@@ -19,3 +19,4 @@ public readonly record struct SettingsTabLoaded(
 
 public sealed class SettingsTabLoadedMessage(SettingsTabLoaded value)
     : ValueChangedMessage<SettingsTabLoaded>(value);
+

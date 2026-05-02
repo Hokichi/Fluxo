@@ -1,10 +1,9 @@
 <UserControl
     x:Class="Fluxo.Resources.Components.AnalyticsBarChart"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:main="clr-namespace:Fluxo.ViewModels.Shell.Main">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
-        <DataTemplate DataType="{x:Type main:AnalyticsTrendBarItem}">
+        <DataTemplate x:Key="AnalyticsTrendBarItemTemplate">
             <Grid Margin="4,0,4,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -132,10 +131,14 @@
     </UserControl.Resources>
 
     <Grid ClipToBounds="True">
-        <ItemsControl x:Name="LayerA" ItemsPanel="{StaticResource TrendBarLayerItemsPanelTemplate}" />
+        <ItemsControl
+            x:Name="LayerA"
+            ItemTemplate="{StaticResource AnalyticsTrendBarItemTemplate}"
+            ItemsPanel="{StaticResource TrendBarLayerItemsPanelTemplate}" />
 
         <ItemsControl
             x:Name="LayerB"
+            ItemTemplate="{StaticResource AnalyticsTrendBarItemTemplate}"
             ItemsPanel="{StaticResource TrendBarLayerItemsPanelTemplate}"
             Opacity="0" />
     </Grid>

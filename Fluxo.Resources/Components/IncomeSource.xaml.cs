@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Fluxo.Resources.Infrastructure;
 
 namespace Fluxo.Resources.Components;
 
@@ -30,7 +31,7 @@ public partial class IncomeSource : UserControl
 
     private void OnRootPreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (DataContext is not SpendingSourceVM)
+        if (DataContext is null)
             return;
 
         SourceActionsPopup.IsOpen = true;
@@ -45,62 +46,53 @@ public partial class IncomeSource : UserControl
 
     private async void OnDeleteActionClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteAsyncAction((mainWindow, spendingSource) =>
-            mainWindow.ExecuteDeleteSpendingSourceActionAsync(spendingSource));
+        await ExecuteAsyncAction("ExecuteDeleteSpendingSourceActionAsync");
     }
 
     private async void OnHideActionClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteAsyncAction((mainWindow, spendingSource) =>
-            mainWindow.ExecuteHideSpendingSourceActionAsync(spendingSource));
+        await ExecuteAsyncAction("ExecuteHideSpendingSourceActionAsync");
     }
 
     private async void OnDisableActionClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteAsyncAction((mainWindow, spendingSource) =>
-            mainWindow.ExecuteDisableSpendingSourceActionAsync(spendingSource));
+        await ExecuteAsyncAction("ExecuteDisableSpendingSourceActionAsync");
     }
 
     private void OnTransferActionClick(object sender, RoutedEventArgs e)
     {
         CloseActionsPopup();
 
-        if (DataContext is not SpendingSourceVM spendingSource)
+        if (DataContext is null)
             return;
 
-        if (Window.GetWindow(this) is MainWindow mainWindow)
-            mainWindow.OpenTransferFundsPopup(spendingSource);
+        WindowMethodInvoker.TryInvoke(this, "OpenTransferFundsPopup", DataContext);
     }
 
-    private async Task ExecuteAsyncAction(Func<MainWindow, SpendingSourceVM, Task> action)
+    private async Task ExecuteAsyncAction(string methodName)
     {
         CloseActionsPopup();
 
-        if (DataContext is not SpendingSourceVM spendingSource)
+        if (DataContext is null)
             return;
 
-        if (Window.GetWindow(this) is not MainWindow mainWindow)
-            return;
-
-        await action(mainWindow, spendingSource);
+        await WindowMethodInvoker.TryInvokeAsync(this, methodName, DataContext);
     }
 
     private void OpenSpendingSourceDetail()
     {
-        if (DataContext is not SpendingSourceVM spendingSource)
+        if (DataContext is null)
             return;
 
-        if (Window.GetWindow(this) is MainWindow mainWindow)
-            mainWindow.OpenSpendingSourceDetailPopup(spendingSource);
+        WindowMethodInvoker.TryInvoke(this, "OpenSpendingSourceDetailPopup", DataContext);
     }
 
     private void ToggleSpendingSourceFilter()
     {
-        if (DataContext is not SpendingSourceVM spendingSource)
+        if (DataContext is null)
             return;
 
-        if (Window.GetWindow(this) is MainWindow mainWindow)
-            mainWindow.ToggleSpendingSourceFilter(spendingSource);
+        WindowMethodInvoker.TryInvoke(this, "ToggleSpendingSourceFilter", DataContext);
     }
 
     private void CloseActionsPopup()

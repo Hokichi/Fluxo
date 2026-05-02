@@ -1,3 +1,3 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public sealed class AllTimeViewModeMessage;

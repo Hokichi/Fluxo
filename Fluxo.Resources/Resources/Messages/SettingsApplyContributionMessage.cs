@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public readonly record struct SettingsSettingChange(
     string Name,
@@ -20,3 +20,4 @@ public readonly record struct SettingsApplyContribution(
 
 public sealed class SettingsApplyContributionMessage(SettingsApplyContribution value)
     : ValueChangedMessage<SettingsApplyContribution>(value);
+

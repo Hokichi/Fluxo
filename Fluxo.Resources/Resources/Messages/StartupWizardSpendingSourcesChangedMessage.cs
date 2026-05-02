@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public readonly record struct QuickSetupWizardSpendingSourcesChanged(
     int Count,
@@ -7,4 +7,5 @@ public readonly record struct QuickSetupWizardSpendingSourcesChanged(
 
 public sealed class QuickSetupWizardSpendingSourcesChangedMessage(QuickSetupWizardSpendingSourcesChanged value)
     : ValueChangedMessage<QuickSetupWizardSpendingSourcesChanged>(value);
+
 

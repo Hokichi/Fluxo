@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 [Flags]
 public enum SettingsDataChangedScope
@@ -14,3 +14,4 @@ public enum SettingsDataChangedScope
 
 public sealed class SettingsDataChangedMessage(SettingsDataChangedScope value)
     : ValueChangedMessage<SettingsDataChangedScope>(value);
+

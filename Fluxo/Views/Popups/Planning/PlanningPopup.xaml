@@ -2,7 +2,9 @@
     x:Class="Fluxo.Views.Popups.Planning.PlanningPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:cons="clr-namespace:Fluxo.Converters"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+xmlns:cons="clr-namespace:Fluxo.Converters"
     xmlns:local="clr-namespace:Fluxo.Views.Popups.Planning"
     Width="760"
     MaxHeight="720"
@@ -498,3 +500,6 @@
         </Border>
     </Grid>
 </customControls:BasePopup>
+
+
+

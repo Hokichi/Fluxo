@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
+using CoreILogMemoryAction = Fluxo.Core.Interfaces.History.ILogMemoryAction;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Resources.Messages;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -10,8 +11,8 @@ public sealed class LogMemoryManager : IDisposable
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
-    private readonly Stack<ILogMemoryAction> _redoStack = [];
-    private readonly Stack<ILogMemoryAction> _undoStack = [];
+    private readonly Stack<CoreILogMemoryAction> _redoStack = [];
+    private readonly Stack<CoreILogMemoryAction> _undoStack = [];
     private bool _isDisposed;
     private bool _isExecuting;
 
@@ -104,7 +105,7 @@ public sealed class LogMemoryManager : IDisposable
         }
     }
 
-    private void Record(ILogMemoryAction action)
+    private void Record(CoreILogMemoryAction action)
     {
         if (_isExecuting)
             return;

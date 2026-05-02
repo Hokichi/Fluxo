@@ -55,5 +55,13 @@
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fluxo.Core\Fluxo.Core.csproj" />
+    <ProjectReference Include="..\Fluxo.Services\Fluxo.Services.csproj" />
+  </ItemGroup>
 </Project>
+
+

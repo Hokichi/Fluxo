@@ -2,7 +2,9 @@
     x:Class="Fluxo.Views.Popups.AddTagColorPickerPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Width="460"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+Width="460"
     PopupTitle="Custom Tag Color">
 
     <customControls:BasePopup.Resources>
@@ -145,5 +147,9 @@
         </Border>
     </Grid>
 </customControls:BasePopup>
+
+
+
+
 
 

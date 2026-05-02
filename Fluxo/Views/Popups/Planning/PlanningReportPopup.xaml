@@ -2,7 +2,9 @@
     x:Class="Fluxo.Views.Popups.Planning.PlanningReportPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:cons="clr-namespace:Fluxo.Converters"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+xmlns:cons="clr-namespace:Fluxo.Converters"
     xmlns:local="clr-namespace:Fluxo.Views.Popups.Planning"
     Height="760"
     PopupTitle="Planning Report"
@@ -732,3 +734,6 @@
         </Border>
     </Grid>
 </customControls:BasePopup>
+
+
+

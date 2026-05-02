@@ -2,7 +2,9 @@
     x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardMiddlePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:components="clr-namespace:Fluxo.Views.Components"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
     xmlns:steps="clr-namespace:Fluxo.Views.Shell.Wizard.Pages.Steps">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -504,3 +506,6 @@
         </Border>
     </Grid>
 </UserControl>
+
+
+

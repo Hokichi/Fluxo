@@ -2,7 +2,7 @@
     x:Class="Fluxo.Views.Shell.Main.Sections.BudgetAllocationPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:components="clr-namespace:Fluxo.Views.Components">
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources">
     <UserControl.Resources>
         <ItemsPanelTemplate x:Key="BudgetAllocationTagItemsPanelTemplate">
             <StackPanel Orientation="Horizontal" />
@@ -214,3 +214,4 @@
         </Grid>
     </Grid>
 </UserControl>
+

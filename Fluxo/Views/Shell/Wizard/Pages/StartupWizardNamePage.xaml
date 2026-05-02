@@ -2,7 +2,7 @@
     x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardNamePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:components="clr-namespace:Fluxo.Views.Components">
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources">
     <Border Style="{StaticResource PanelStyle}">
         <Grid>
             <StackPanel
@@ -96,3 +96,4 @@
         </Grid>
     </Border>
 </UserControl>
+

@@ -7,39 +7,39 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
-                    <FontFamily x:Key="Black">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Black.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
-                    <FontFamily x:Key="BlackItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-BlackItalic.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
-                    <FontFamily x:Key="Bold">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Bold.ttf#SFT Schrifted Round TRIAL</FontFamily>
-                    <FontFamily x:Key="BoldItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-BoldItalic.ttf#SFT Schrifted Round TRIAL</FontFamily>
-                    <FontFamily x:Key="CompBlack">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBlack.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompBlackIt">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBlackIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompBold">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBold.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompBoldIt">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBoldIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompDemiBold">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompDemiBold.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompDemiBoldIt">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompDemiBoldIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompExLightIt">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExLightIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompExtraBold">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExtraBold.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompExtraBoldIt">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExtraBoldIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompExtraLight">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExtraLight.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompItalic.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompLight">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompLight.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompLightIt">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompLightIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompMedium">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompMedium.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompMediumIt">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompMediumIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="CompRegular">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompRegular.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
-                    <FontFamily x:Key="DemiBold">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-DemiBold.ttf#SFT Schrifted Round TRIAL DemiB</FontFamily>
-                    <FontFamily x:Key="DemiBoldItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-DemiBoldItalic.ttf#SFT Schrifted Round TRIAL DemiB</FontFamily>
-                    <FontFamily x:Key="ExBoldItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExBoldItalic.ttf#SFT Schrifted Round TRIAL ExBd</FontFamily>
-                    <FontFamily x:Key="ExLightItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExLightItalic.ttf#SFT Schrifted Round TRIAL ExLig</FontFamily>
-                    <FontFamily x:Key="ExtraBold">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExtraBold.ttf#SFT Schrifted Round TRIAL ExBd</FontFamily>
-                    <FontFamily x:Key="ExtraLight">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExtraLight.ttf#SFT Schrifted Round TRIAL ExLig</FontFamily>
-                    <FontFamily x:Key="Italic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Italic.ttf#SFT Schrifted Round TRIAL</FontFamily>
-                    <FontFamily x:Key="Light">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Light.ttf#SFT Schrifted Round TRIAL Light</FontFamily>
-                    <FontFamily x:Key="LightItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-LightItalic.ttf#SFT Schrifted Round TRIAL Light</FontFamily>
-                    <FontFamily x:Key="Medium">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Medium.ttf#SFT Schrifted Round TRIAL Mediu</FontFamily>
-                    <FontFamily x:Key="MediumItalic">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-MediumItalic.ttf#SFT Schrifted Round TRIAL Mediu</FontFamily>
-                    <FontFamily x:Key="Regular">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Regular.ttf#SFT Schrifted Round TRIAL</FontFamily>
-                    <FontFamily x:Key="Var">/Fluxo;component/Resources/Fonts/SFTSchriftedRoundTRIALVar.ttf#SFT Schrifted Round TRIAL Var</FontFamily>
+                    <FontFamily x:Key="Black">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Black.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
+                    <FontFamily x:Key="BlackItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-BlackItalic.ttf#SFT Schrifted Round TRIAL Black</FontFamily>
+                    <FontFamily x:Key="Bold">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Bold.ttf#SFT Schrifted Round TRIAL</FontFamily>
+                    <FontFamily x:Key="BoldItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-BoldItalic.ttf#SFT Schrifted Round TRIAL</FontFamily>
+                    <FontFamily x:Key="CompBlack">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBlack.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompBlackIt">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBlackIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompBold">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBold.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompBoldIt">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompBoldIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompDemiBold">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompDemiBold.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompDemiBoldIt">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompDemiBoldIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompExLightIt">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExLightIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompExtraBold">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExtraBold.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompExtraBoldIt">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExtraBoldIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompExtraLight">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompExtraLight.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompItalic.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompLight">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompLight.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompLightIt">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompLightIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompMedium">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompMedium.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompMediumIt">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompMediumIt.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="CompRegular">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-CompRegular.ttf#SFT Schrifted Round TRIAL Comp</FontFamily>
+                    <FontFamily x:Key="DemiBold">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-DemiBold.ttf#SFT Schrifted Round TRIAL DemiB</FontFamily>
+                    <FontFamily x:Key="DemiBoldItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-DemiBoldItalic.ttf#SFT Schrifted Round TRIAL DemiB</FontFamily>
+                    <FontFamily x:Key="ExBoldItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExBoldItalic.ttf#SFT Schrifted Round TRIAL ExBd</FontFamily>
+                    <FontFamily x:Key="ExLightItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExLightItalic.ttf#SFT Schrifted Round TRIAL ExLig</FontFamily>
+                    <FontFamily x:Key="ExtraBold">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExtraBold.ttf#SFT Schrifted Round TRIAL ExBd</FontFamily>
+                    <FontFamily x:Key="ExtraLight">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-ExtraLight.ttf#SFT Schrifted Round TRIAL ExLig</FontFamily>
+                    <FontFamily x:Key="Italic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Italic.ttf#SFT Schrifted Round TRIAL</FontFamily>
+                    <FontFamily x:Key="Light">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Light.ttf#SFT Schrifted Round TRIAL Light</FontFamily>
+                    <FontFamily x:Key="LightItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-LightItalic.ttf#SFT Schrifted Round TRIAL Light</FontFamily>
+                    <FontFamily x:Key="Medium">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Medium.ttf#SFT Schrifted Round TRIAL Mediu</FontFamily>
+                    <FontFamily x:Key="MediumItalic">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-MediumItalic.ttf#SFT Schrifted Round TRIAL Mediu</FontFamily>
+                    <FontFamily x:Key="Regular">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIAL-Regular.ttf#SFT Schrifted Round TRIAL</FontFamily>
+                    <FontFamily x:Key="Var">/Fluxo.Resources;component/Resources/Fonts/SFTSchriftedRoundTRIALVar.ttf#SFT Schrifted Round TRIAL Var</FontFamily>
                 </ResourceDictionary>
 
                 <ResourceDictionary>
@@ -111,18 +111,19 @@
                     <cons:ProgressToArcGeometryConverter x:Key="ProgressToArcGeometryConverter" />
                 </ResourceDictionary>
 
-                <ResourceDictionary Source="Resources/Theme.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Theme.xaml" />
 
-                <ResourceDictionary Source="Resources/Fonts/ContainerStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/TextBoxStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/GlobalStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/PopupStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/MainWindowStyles.xaml" />
-                <ResourceDictionary Source="Resources/Styles/SettingsStyle.xaml" />
-                <ResourceDictionary Source="Resources/Styles/StepNavigatorStyle.xaml" />
-                <ResourceDictionary Source="Resources/Styles/QuickSetupWizardStyle.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Fonts/ContainerStyles.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/ButtonStyles.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/TextBoxStyles.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/GlobalStyles.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/PopupStyles.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/MainWindowStyles.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/SettingsStyle.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/StepNavigatorStyle.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/QuickSetupWizardStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+

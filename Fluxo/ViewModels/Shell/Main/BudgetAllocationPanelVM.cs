@@ -15,6 +15,7 @@ using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Entities;
+using CoreILogMemoryAction = Fluxo.Core.Interfaces.History.ILogMemoryAction;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
@@ -781,7 +782,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         return _allIncomeLogs.Where(log => log.AddedOn.Date >= range.From.Date && log.AddedOn.Date <= range.To.Date);
     }
 
-    private void ApplyBalanceImpactsFromAction(ILogMemoryAction action, LogMemoryApplyDirection direction)
+    private void ApplyBalanceImpactsFromAction(CoreILogMemoryAction action, LogMemoryApplyDirection direction)
     {
         switch (action)
         {

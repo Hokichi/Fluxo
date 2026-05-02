@@ -2,7 +2,9 @@
     x:Class="Fluxo.Views.Popups.ExpenseDetailPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:components="clr-namespace:Fluxo.Views.Components"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     PopupTitle="Expense Detail"
@@ -259,5 +261,9 @@
         </Grid>
     </Border>
 </customControls:BasePopup>
+
+
+
+
 
 

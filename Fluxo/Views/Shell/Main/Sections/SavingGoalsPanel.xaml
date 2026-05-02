@@ -1,7 +1,10 @@
 <UserControl
     x:Class="Fluxo.Views.Shell.Main.Sections.SavingGoalsPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+>
     <UserControl.Resources>
         <Style
             x:Key="SavingGoalActionBalloonButtonStyle"
@@ -119,3 +122,6 @@
         </Grid>
     </Border>
 </UserControl>
+
+
+

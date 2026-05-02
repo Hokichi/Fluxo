@@ -2,9 +2,11 @@
     x:Class="Fluxo.Views.Shell.Wizard.QuickSetupWizard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:pages="clr-namespace:Fluxo.Views.Shell.Wizard.Pages"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+xmlns:pages="clr-namespace:Fluxo.Views.Shell.Wizard.Pages"
     Title="fluxo Wizard"
-    Icon="/Fluxo;component/Resources/fluxo.ico"
+    Icon="/Fluxo.Resources;component/Resources/fluxo.ico"
     ShowInTaskbar="True">
 
     <customControls:BasePopup.PopupTitleContent>
@@ -41,7 +43,7 @@
     <customControls:BasePopup.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Fluxo;component/Resources/Styles/QuickSetupWizardStyle.xaml" />
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/QuickSetupWizardStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </customControls:BasePopup.Resources>
@@ -77,3 +79,7 @@
         </Grid>
     </Grid>
 </customControls:BasePopup>
+
+
+
+

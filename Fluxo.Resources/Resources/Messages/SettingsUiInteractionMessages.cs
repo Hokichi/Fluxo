@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public enum SettingsDialogRequestType
 {
@@ -50,3 +50,4 @@ public readonly record struct SettingsMaintenanceRequest(
 
 public sealed class SettingsMaintenanceRequestedMessage(SettingsMaintenanceRequest value)
     : ValueChangedMessage<SettingsMaintenanceRequest>(value);
+

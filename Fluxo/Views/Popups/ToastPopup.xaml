@@ -2,7 +2,9 @@
     x:Class="Fluxo.Views.Popups.ToastPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Width="360"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+Width="360"
     ShowHeader="False"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight">
@@ -18,3 +20,6 @@
             TextWrapping="Wrap" />
     </Grid>
 </customControls:BasePopup>
+
+
+

@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public enum LogMemoryApplyDirection
 {
@@ -8,3 +8,4 @@ public enum LogMemoryApplyDirection
 
 public sealed class LogMemoryActionAppliedMessage(ILogMemoryAction action, LogMemoryApplyDirection direction)
     : ValueChangedMessage<(ILogMemoryAction Action, LogMemoryApplyDirection Direction)>((action, direction));
+

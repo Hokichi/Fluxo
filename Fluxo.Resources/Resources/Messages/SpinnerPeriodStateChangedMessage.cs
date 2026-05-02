@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public readonly record struct SpinnerPeriodState(
     bool IsAtCurrentPeriod,
@@ -7,3 +7,4 @@ public readonly record struct SpinnerPeriodState(
 
 public sealed class SpinnerPeriodStateChangedMessage(SpinnerPeriodState value)
     : ValueChangedMessage<SpinnerPeriodState>(value);
+

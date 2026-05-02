@@ -1,17 +1,11 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.History;
 using Fluxo.Core.Interfaces;
 
 namespace Fluxo.Services.History;
 
-public interface ILogMemoryAction
-{
-    string Description { get; }
-
-    Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
-
-    Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
-}
+public interface ILogMemoryAction : Fluxo.Core.Interfaces.History.ILogMemoryAction;
 
 public sealed record SpendingSourceMemorySnapshot(
     int SpendingSourceId,

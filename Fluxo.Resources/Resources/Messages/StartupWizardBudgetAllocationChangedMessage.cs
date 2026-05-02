@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public readonly record struct QuickSetupWizardBudgetAllocationChanged(
     int NeedsPercentage,
@@ -8,4 +8,5 @@ public readonly record struct QuickSetupWizardBudgetAllocationChanged(
 
 public sealed class QuickSetupWizardBudgetAllocationChangedMessage(QuickSetupWizardBudgetAllocationChanged value)
     : ValueChangedMessage<QuickSetupWizardBudgetAllocationChanged>(value);
+
 

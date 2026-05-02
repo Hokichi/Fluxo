@@ -1,4 +1,4 @@
-namespace Fluxo.Resources.Resources.Messages;
+namespace Fluxo.Resources.Messages;
 
 public readonly record struct SettingsPendingChangesChanged(
     SettingsTabKey TabKey,
@@ -6,3 +6,4 @@ public readonly record struct SettingsPendingChangesChanged(
 
 public sealed class SettingsPendingChangesChangedMessage(SettingsPendingChangesChanged value)
     : ValueChangedMessage<SettingsPendingChangesChanged>(value);
+
