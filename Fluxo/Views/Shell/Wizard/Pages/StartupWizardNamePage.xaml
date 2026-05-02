@@ -2,7 +2,7 @@
     x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardNamePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks">
+    xmlns:components="clr-namespace:Fluxo.Views.Components">
     <Border Style="{StaticResource PanelStyle}">
         <Grid>
             <StackPanel
@@ -86,10 +86,11 @@
                     Click="OnContinueClick"
                     Style="{StaticResource WizardCircleActionButtonStyle}"
                     Visibility="{Binding HasUsernameInput, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <icons:PackIconUnicons
+                    <components:Icon
                         Width="16"
                         Height="16"
-                        Kind="AngleRight" />
+                        Color="{StaticResource Brush.Text.Primary}"
+                        Path="{StaticResource AngleRight}" />
                 </Button>
             </StackPanel>
         </Grid>

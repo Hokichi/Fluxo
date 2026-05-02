@@ -4,7 +4,6 @@
     xmlns:components="clr-namespace:Fluxo.Views.Components"
     xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
     xmlns:customControls="clr-namespace:Fluxo.Views.CustomControls"
-    xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
 
@@ -28,11 +27,11 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="SpinnerArrowIconStyle" TargetType="icons:PackIconUnicons">
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+    <Style x:Key="SpinnerArrowIconStyle" TargetType="components:Icon">
+        <Setter Property="Color" Value="{StaticResource Brush.Text.Muted}" />
         <Style.Triggers>
             <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                <Setter Property="Color" Value="{StaticResource Brush.Text.Primary}" />
                 <Setter Property="Effect">
                     <Setter.Value>
                         <DropShadowEffect
