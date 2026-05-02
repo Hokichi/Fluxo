@@ -1,7 +1,6 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Converters;
 using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;

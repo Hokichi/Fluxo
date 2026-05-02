@@ -9,7 +9,7 @@ using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Helpers;
+using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 

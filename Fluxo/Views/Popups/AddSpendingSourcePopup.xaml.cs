@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.Views.Popups;
 

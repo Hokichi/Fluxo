@@ -3,7 +3,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Helpers;
+using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.ViewModels.Popups;
 

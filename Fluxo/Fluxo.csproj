@@ -7,8 +7,8 @@
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <UseWPF>true</UseWPF>
 	  <StartupObject>Fluxo.App</StartupObject>
-	  <EnableDefaultItems>false</EnableDefaultItems>
-	  <ApplicationIcon>..\UI\Fluxo.Resources\Resources\fluxo.ico</ApplicationIcon>
+	  <EnableDefaultItems>true</EnableDefaultItems>
+	  <ApplicationIcon>..\Fluxo.Resources\Resources\fluxo.ico</ApplicationIcon>
 	  <Version>1.0.0</Version>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
@@ -34,10 +34,6 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Converters\" />
   </ItemGroup>
 
   <Target Name="OrganizeOutputAfterBuild" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">

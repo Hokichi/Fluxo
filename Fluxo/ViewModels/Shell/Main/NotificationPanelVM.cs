@@ -16,7 +16,7 @@ using Fluxo.Services.Dialogs;
 using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Helpers;
+using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.ViewModels.Shell.Main;
 

@@ -19,9 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="Fluxo.csproj" />
-    <ProjectReference Include="Fluxo.Installer.csproj" />
+    <ProjectReference Include="..\Fluxo\Fluxo.csproj" />
+    <ProjectReference Include="..\Fluxo.Installer\Fluxo.Installer.csproj" />
   </ItemGroup>
 
 </Project>
-

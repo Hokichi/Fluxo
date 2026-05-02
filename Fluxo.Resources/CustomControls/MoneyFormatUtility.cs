@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Fluxo.Resources.CustomControls;
 
-internal static class MoneyFormatUtility
+public static class MoneyFormatUtility
 {
     private const decimal ThousandDivisor = 1_000m;
     private const decimal MillionDivisor = 1_000_000m;
@@ -145,24 +145,31 @@ internal static class MoneyFormatUtility
             case decimal decimalValue:
                 amount = decimalValue;
                 return true;
+
             case double doubleValue:
                 amount = Convert.ToDecimal(doubleValue, CultureInfo.InvariantCulture);
                 return true;
+
             case float floatValue:
                 amount = Convert.ToDecimal(floatValue, CultureInfo.InvariantCulture);
                 return true;
+
             case int intValue:
                 amount = intValue;
                 return true;
+
             case long longValue:
                 amount = longValue;
                 return true;
+
             case short shortValue:
                 amount = shortValue;
                 return true;
+
             case byte byteValue:
                 amount = byteValue;
                 return true;
+
             default:
                 if (value is IConvertible convertible)
                 {

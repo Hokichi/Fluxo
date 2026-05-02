@@ -19,7 +19,7 @@
                     CornerRadius="42">
                     <Image
                         Margin="20"
-                        Source="/Fluxo.Resources;component/fluxo.ico"
+                        Source="/Fluxo.Resources;component/Resources/fluxo.ico"
                         Stretch="Uniform" />
                 </Border>
                 <TextBlock

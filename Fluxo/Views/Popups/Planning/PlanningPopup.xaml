@@ -2,16 +2,15 @@
     x:Class="Fluxo.Views.Popups.Planning.PlanningPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    
+    xmlns:converters="clr-namespace:Fluxo.Resources.Converters;assembly=Fluxo.Resources"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
-xmlns:cons="clr-namespace:Fluxo.Converters"
     xmlns:local="clr-namespace:Fluxo.Views.Popups.Planning"
     Width="760"
     MaxHeight="720"
     PopupTitle="Planning">
 
     <customControls:BasePopup.Resources>
-        <cons:SourceSequenceLabelConverter x:Key="SourceSequenceLabelConverter" />
+        <converters:SourceSequenceLabelConverter x:Key="SourceSequenceLabelConverter" />
 
         <Style x:Key="TableRowCardStyle" TargetType="Border">
             <Setter Property="Padding" Value="10" />
@@ -500,6 +499,3 @@ xmlns:cons="clr-namespace:Fluxo.Converters"
         </Border>
     </Grid>
 </customControls:BasePopup>
-
-
-

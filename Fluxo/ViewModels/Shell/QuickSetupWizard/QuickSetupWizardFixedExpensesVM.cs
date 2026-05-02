@@ -8,9 +8,9 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
-using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Popups.Settings;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
+using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 

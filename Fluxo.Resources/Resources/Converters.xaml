@@ -1,0 +1,21 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Fluxo.Resources.Converters">
+
+    <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    <converters:BoolToVisibilityInvertedConverter x:Key="BoolToVisibilityInvertedConverter" />
+    <converters:BorderCornerClipConverter x:Key="BorderCornerClipConverter" />
+    <converters:BrushToColorConverter x:Key="BrushToColorConverter" />
+    <converters:BrushToLighterBrushConverter x:Key="BrushToLighterBrushConverter" />
+    <converters:CornerRadiusConverter x:Key="CornerRadiusConverter" />
+    <converters:DateTimeToRelativeDateConverter x:Key="DateTimeToRelativeDateConverter" />
+    <converters:DifferenceToBrushConverter x:Key="DifferenceToBrushConverter" />
+    <converters:GoalProgressToBrushConverter x:Key="GoalProgressToBrushConverter" />
+    <converters:MoneyAmountToCanonicalConverter x:Key="MoneyAmountToCanonicalConverter" />
+    <converters:MoneyDisplayConverter x:Key="MoneyDisplayConverter" />
+    <converters:MoneyFullDisplayConverter x:Key="MoneyFullDisplayConverter" />
+    <converters:NumberWithCommasConverter x:Key="NumberWithCommasConverter" />
+    <converters:ObjectToNullConverter x:Key="ObjectToNullConverter" />
+    <converters:ProgressToArcGeometryConverter x:Key="ProgressToArcGeometryConverter" />
+</ResourceDictionary>

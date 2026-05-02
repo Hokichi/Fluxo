@@ -6,7 +6,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
 xmlns:pages="clr-namespace:Fluxo.Views.Shell.Wizard.Pages"
     Title="fluxo Wizard"
-    Icon="/Fluxo.Resources;component/fluxo.ico"
+    Icon="/Fluxo.Resources;component/Resources/fluxo.ico"
     ShowInTaskbar="True">
 
     <customControls:BasePopup.PopupTitleContent>

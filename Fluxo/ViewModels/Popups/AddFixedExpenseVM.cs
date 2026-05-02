@@ -8,11 +8,11 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Logging;
-using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
+using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.ViewModels.Popups;
 

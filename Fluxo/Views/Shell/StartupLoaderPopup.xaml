@@ -6,7 +6,7 @@
     Height="220"
     AllowsTransparency="True"
     Background="Transparent"
-    Icon="/Fluxo.Resources;component/fluxo.ico"
+    Icon="/Fluxo.Resources;component/Resources/fluxo.ico"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
     WindowStartupLocation="CenterScreen"
@@ -29,7 +29,7 @@
                 CornerRadius="36">
                 <Image
                     Margin="18"
-                    Source="/Fluxo.Resources;component/fluxo.ico"
+                    Source="/Fluxo.Resources;component/Resources/fluxo.ico"
                     Stretch="Uniform" />
             </Border>
 

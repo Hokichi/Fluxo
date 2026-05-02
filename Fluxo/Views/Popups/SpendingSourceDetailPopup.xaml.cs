@@ -3,11 +3,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Fluxo.Services.Dialogs;
-using Fluxo.ViewModels.Helpers;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
+using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.Views.Popups;
 
