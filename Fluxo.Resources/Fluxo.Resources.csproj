@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\fluxo.ico" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Black.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-BlackItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Bold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-BoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlack.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBlackIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompBoldIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompDemiBoldIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExLightIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraBoldIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompExtraLight.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLight.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompLightIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMedium.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompMediumIt.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-CompRegular.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-DemiBoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExBoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExLightItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraBold.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-ExtraLight.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Italic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Light.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-LightItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Medium.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-MediumItalic.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIAL-Regular.ttf" />
+    <Resource Include="Resources\Fonts\SFTSchriftedRoundTRIALVar.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Components\ExpensesList.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Components\IncomeSource.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="CustomControls\BalloonBorder.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fluxo.Core\Fluxo.Core.csproj" />
+    <ProjectReference Include="..\Fluxo.Services\Fluxo.Services.csproj" />
+  </ItemGroup>
+</Project>
+
+

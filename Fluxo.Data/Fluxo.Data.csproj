@@ -5,17 +5,10 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Libs\Fluxo.Data\**\*.cs" Exclude="..\Libs\Fluxo.Data\bin\**\*;..\Libs\Fluxo.Data\obj\**\*" />
-    <Page Include="..\Libs\Fluxo.Data\**\*.xaml" Exclude="..\Libs\Fluxo.Data\bin\**\*;..\Libs\Fluxo.Data\obj\**\*" />
-    <None Include="..\Libs\Fluxo.Data\**\*" Exclude="..\Libs\Fluxo.Data\**\*.cs;..\Libs\Fluxo.Data\**\*.xaml;..\Libs\Fluxo.Data\bin\**\*;..\Libs\Fluxo.Data\obj\**\*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="Fluxo.Core.csproj" />
+    <Folder Include="Configurations\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +21,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fluxo.Core\Fluxo.Core.csproj" />
   </ItemGroup>
 
 </Project>
