@@ -8,6 +8,7 @@
         <Grid>
             <StackPanel
                 x:Name="PageContent"
+                Margin="0,-40,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
                 <Border
@@ -40,7 +41,11 @@
                     TextAlignment="Center" />
             </StackPanel>
 
-            <controls:FluxoWave Margin="0,180,0,-40" ClipToBounds="True" />
+            <controls:FluxoWave
+                Height="120"
+                Margin="0,200,0,0"
+                VerticalAlignment="Bottom"
+                ClipToBounds="True" />
         </Grid>
     </Border>
 </UserControl>
