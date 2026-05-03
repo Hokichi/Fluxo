@@ -1,12 +1,14 @@
-﻿<Project Sdk="WixToolset.Sdk/7.0.0">
+<Project Sdk="WixToolset.Sdk/7.0.0">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
+    <FluxoInstallerVersion Condition="'$(FluxoInstallerVersion)' == ''">1.0.0</FluxoInstallerVersion>
+    <OutputName>fluxo-$(FluxoInstallerVersion)-Installer</OutputName>
     <AcceptEula>wix7</AcceptEula>
     <ManagedBootstrapperExe>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\Fluxo.Installer.exe</ManagedBootstrapperExe>
     <ManagedBootstrapperOutputDir>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\</ManagedBootstrapperOutputDir>
     <OfflineMsiPlatformSegment Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU'">$(Platform)\</OfflineMsiPlatformSegment>
     <OfflineMsiPath>$(MSBuildThisFileDirectory)..\Fluxo.Installer.Msi\bin\$(OfflineMsiPlatformSegment)$(Configuration)\fluxoInstaller.msi</OfflineMsiPath>
-    <DefineConstants>$(DefineConstants);ManagedBootstrapperExe=$(ManagedBootstrapperExe);ManagedBootstrapperOutputDir=$(ManagedBootstrapperOutputDir);OfflineMsiPath=$(OfflineMsiPath)</DefineConstants>
+    <DefineConstants>$(DefineConstants);FluxoInstallerVersion=$(FluxoInstallerVersion);ManagedBootstrapperExe=$(ManagedBootstrapperExe);ManagedBootstrapperOutputDir=$(ManagedBootstrapperOutputDir);OfflineMsiPath=$(OfflineMsiPath)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="7.0.0" />

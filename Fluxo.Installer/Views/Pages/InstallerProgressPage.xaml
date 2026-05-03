@@ -48,7 +48,6 @@
     </UserControl.Resources>
 
     <Grid>
-
         <Border Style="{StaticResource PanelStyle}">
             <Grid>
                 <Grid.RowDefinitions>
@@ -112,6 +111,9 @@
             </Grid>
         </Border>
 
-        <controls:FluxoWave Margin="0,400,0,0" ClipToBounds="True" />
+        <controls:FluxoWave
+            Height="160"
+            Margin="0,240,0,0"
+            ClipToBounds="True" />
     </Grid>
 </UserControl>

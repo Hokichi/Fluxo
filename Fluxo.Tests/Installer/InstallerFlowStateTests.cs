@@ -82,6 +82,91 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void CloseInstaller_OnWelcome_DeclineCancellation_KeepsInstallerOpen()
+    {
+        var closeCalls = 0;
+        var vm = CreateViewModel(
+            requestCancelConfirmation: () => false,
+            closeInstallerAction: () => closeCalls++);
+
+        vm.CloseInstallerCommand.Execute(null);
+
+        Assert.Equal(0, closeCalls);
+        Assert.Equal(InstallerState.Welcome, vm.State);
+        Assert.Equal(InstallerScreen.Welcome, vm.Screen);
+    }
+
+    [Fact]
+    public void CloseInstaller_OnWelcome_ConfirmCancellation_TransitionsToFinishedCancelled()
+    {
+        var closeCalls = 0;
+        var vm = CreateViewModel(
+            requestCancelConfirmation: () => true,
+            closeInstallerAction: () => closeCalls++);
+
+        vm.CloseInstallerCommand.Execute(null);
+
+        Assert.Equal(0, closeCalls);
+        Assert.Equal(InstallerState.FinishedCancelled, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal("Installation cancelled.", vm.StatusMessage);
+        Assert.Equal("Installation cancelled", vm.FinishedTitle);
+        Assert.Equal("Please close the setup and run it again", vm.FinishedSubtitle);
+    }
+
+    [Fact]
+    public void CloseInstaller_DuringInstall_ConfirmCancellation_RunsRollback_AndShowsRollbackChecklistOnly()
+    {
+        var rollbackCalls = 0;
+        var vm = CreateViewModel(
+            requestRollback: () =>
+            {
+                rollbackCalls++;
+                return true;
+            },
+            requestCancelConfirmation: () => true,
+            requestDetect: static () => { },
+            fileExists: static _ => true);
+
+        vm.InstallCommand.Execute(null);
+        vm.CloseInstallerCommand.Execute(null);
+
+        Assert.Equal(1, rollbackCalls);
+        Assert.Equal(InstallerState.FinishedCancelled, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Single(vm.ChecklistSteps);
+        Assert.Equal("Rolling back", vm.ChecklistSteps[0].Label);
+        Assert.Equal(ChecklistStepState.Success, vm.ChecklistSteps[0].State);
+        Assert.Equal("Installation cancelled", vm.FinishedTitle);
+    }
+
+    [Fact]
+    public void DetectComplete_Failure_AfterInstallStart_UsesRollbackChecklistOnly()
+    {
+        var rollbackCalls = 0;
+        var vm = CreateViewModel(
+            requestRollback: () =>
+            {
+                rollbackCalls++;
+                return true;
+            },
+            requestDetect: static () => { },
+            fileExists: static _ => true);
+
+        vm.InstallCommand.Execute(null);
+        vm.OnDetectComplete(1);
+
+        Assert.Equal(1, rollbackCalls);
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Single(vm.ChecklistSteps);
+        Assert.Equal("Rolling back", vm.ChecklistSteps[0].Label);
+        Assert.Equal(ChecklistStepState.Success, vm.ChecklistSteps[0].State);
+        Assert.Equal("Installation failed", vm.FinishedTitle);
+        Assert.Equal("Please close the setup and run it again", vm.FinishedSubtitle);
+    }
+
+    [Fact]
     public void ApplyComplete_Success_TransitionsToVerifying_ThenSuccess()
     {
         var observedStates = new List<InstallerState>();
@@ -127,7 +212,10 @@ public sealed class InstallerFlowStateTests
         Action? requestDetect = null,
         Action? requestPlan = null,
         Action? requestApply = null,
-        Func<string, bool>? fileExists = null)
+        Func<string, bool>? fileExists = null,
+        Func<bool>? requestRollback = null,
+        Func<bool>? requestCancelConfirmation = null,
+        Action? closeInstallerAction = null)
     {
         return new InstallerViewModel(
             dotNetRuntimeDetector: new FixedRuntimeDetector(true),
@@ -135,7 +223,10 @@ public sealed class InstallerFlowStateTests
             requestDetect: requestDetect,
             requestPlan: requestPlan,
             requestApply: requestApply,
-            fileExists: fileExists);
+            fileExists: fileExists,
+            requestRollback: requestRollback,
+            requestCancelConfirmation: requestCancelConfirmation,
+            closeInstallerAction: closeInstallerAction);
     }
 
     private sealed class FixedRuntimeDetector(bool isInstalled) : IDotNetRuntimeDetector

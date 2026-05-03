@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Fluxo.Resources.CustomControls;
 
 namespace Fluxo.Installer.ViewModels;
 
@@ -26,6 +27,7 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Action requestPlan;
     private readonly Action requestApply;
     private readonly Func<bool> requestRollback;
+    private readonly Func<bool> requestCancelConfirmation;
     private readonly bool isRollbackConfigured;
     private readonly Func<string, bool> fileExists;
     private readonly Func<string, bool> directoryExists;
@@ -34,14 +36,13 @@ public partial class InstallerViewModel : ObservableObject
     private readonly bool hasConstructorCloseInstallerAction;
     private Action closeInstallerAction = () => { };
 
-    private readonly InstallerChecklistStep prerequisitesChecklistStep = new("Prerequisites");
+    private readonly InstallerChecklistStep prerequisitesChecklistStep = new("Checking prerequisites");
     private readonly InstallerChecklistStep installingChecklistStep = new("Installing the app");
-    private readonly InstallerChecklistStep cleanUpChecklistStep = new("Clean up (if exists)");
-    private readonly InstallerChecklistStep rollbackChecklistStep = new("Rollback (if failed)");
+    private readonly InstallerChecklistStep cleanUpChecklistStep = new("Cleaning up");
+    private readonly InstallerChecklistStep rollbackChecklistStep = new("Rolling back");
 
     private bool installFolderExistedBeforeInstall;
     private bool installStarted;
-    private bool hasUnresolvedPrerequisitesFailure;
     private string installFolderForCurrentRun = string.Empty;
 
     public InstallerViewModel(
@@ -53,6 +54,7 @@ public partial class InstallerViewModel : ObservableObject
         Func<string, bool>? fileExists = null,
         Action<string>? launchInstalledApp = null,
         Func<bool>? requestRollback = null,
+        Func<bool>? requestCancelConfirmation = null,
         Func<string, bool>? directoryExists = null,
         Action<string>? deleteDirectory = null,
         Action? closeInstallerAction = null)
@@ -63,6 +65,7 @@ public partial class InstallerViewModel : ObservableObject
         this.requestPlan = requestPlan ?? (() => { });
         this.requestApply = requestApply ?? (() => { });
         this.requestRollback = requestRollback ?? (() => false);
+        this.requestCancelConfirmation = requestCancelConfirmation ?? ShowCancelConfirmationMessage;
         isRollbackConfigured = requestRollback is not null;
         this.fileExists = fileExists ?? File.Exists;
         this.directoryExists = directoryExists ?? Directory.Exists;
@@ -74,8 +77,7 @@ public partial class InstallerViewModel : ObservableObject
         [
             prerequisitesChecklistStep,
             installingChecklistStep,
-            cleanUpChecklistStep,
-            rollbackChecklistStep,
+            cleanUpChecklistStep
         ]);
     }
 
@@ -99,19 +101,26 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private string statusMessage = string.Empty;
 
+    public string FinishedTitle => State switch
+    {
+        InstallerState.FinishedSuccess => "Let's begin",
+        InstallerState.FinishedCancelled => "Installation cancelled",
+        _ => "Installation failed",
+    };
+
+    public string FinishedSubtitle => State == InstallerState.FinishedSuccess
+        ? "Your finance, simplified"
+        : "Please close the setup and run it again";
+
     public int ExitCode
     {
         get
         {
-            if (State == InstallerState.Welcome && hasUnresolvedPrerequisitesFailure)
-            {
-                return FailureExitCode;
-            }
-
             return State switch
             {
                 InstallerState.FinishedSuccess => SuccessExitCode,
                 InstallerState.FinishedFailed => FailureExitCode,
+                InstallerState.FinishedCancelled => CancelExitCode,
                 _ => CancelExitCode,
             };
         }
@@ -141,10 +150,10 @@ public partial class InstallerViewModel : ObservableObject
     {
         Screen = InstallerScreen.Progress;
         State = InstallerState.Installing;
-        hasUnresolvedPrerequisitesFailure = false;
         installStarted = false;
         installFolderExistedBeforeInstall = false;
         installFolderForCurrentRun = string.Empty;
+        EnsureDefaultChecklistSteps();
         ResetChecklistStates();
         prerequisitesChecklistStep.State = ChecklistStepState.Running;
 
@@ -240,16 +249,15 @@ public partial class InstallerViewModel : ObservableObject
             prerequisitesChecklistStep.State = ChecklistStepState.Failed;
         }
 
-        Screen = InstallerScreen.Progress;
+        Screen = InstallerScreen.Finished;
         State = InstallerState.FinishedFailed;
         StatusMessage = message;
     }
 
     private void TransitionToPrerequisitesFailure(string message)
     {
-        Screen = InstallerScreen.Progress;
-        State = InstallerState.Welcome;
-        hasUnresolvedPrerequisitesFailure = true;
+        Screen = InstallerScreen.Finished;
+        State = InstallerState.FinishedFailed;
         installFolderForCurrentRun = string.Empty;
         StatusMessage = message;
     }
@@ -292,7 +300,158 @@ public partial class InstallerViewModel : ObservableObject
     [RelayCommand]
     private void CloseInstaller()
     {
-        closeInstallerAction();
+        if (Screen == InstallerScreen.Finished)
+        {
+            closeInstallerAction();
+            return;
+        }
+
+        if (!ConfirmCancellation())
+        {
+            return;
+        }
+
+        if (installStarted)
+        {
+            HandleCancellation();
+            return;
+        }
+
+        State = InstallerState.FinishedCancelled;
+        Screen = InstallerScreen.Finished;
+        StatusMessage = "Installation cancelled.";
+    }
+
+    private bool ConfirmCancellation()
+    {
+        try
+        {
+            return requestCancelConfirmation();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool ShowCancelConfirmationMessage()
+    {
+        if (Application.Current is null)
+        {
+            return false;
+        }
+
+        var result = FluxoMessageBox.Show(
+            Application.Current.MainWindow,
+            "Are you sure you want to cancel the installation?",
+            "Cancel installation",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        return result == MessageBoxResult.Yes;
+    }
+
+    private void HandleCancellation()
+    {
+        SetRollbackOnlyChecklist();
+        rollbackChecklistStep.State = ChecklistStepState.Running;
+        StatusMessage = "Cancelling installation. Starting rollback...";
+
+        var rollbackFailures = ExecuteRollbackAndCleanup();
+        if (rollbackFailures.Count == 0)
+        {
+            rollbackChecklistStep.State = ChecklistStepState.Success;
+            StatusMessage = "Installation cancelled. Rollback completed.";
+        }
+        else
+        {
+            rollbackChecklistStep.State = ChecklistStepState.Failed;
+            StatusMessage = $"Installation cancelled. {string.Join(" ", rollbackFailures)}";
+        }
+
+        State = InstallerState.FinishedCancelled;
+        Screen = InstallerScreen.Finished;
+    }
+
+    private void EnsureDefaultChecklistSteps()
+    {
+        if (ChecklistSteps.Count == 3
+            && ReferenceEquals(ChecklistSteps[0], prerequisitesChecklistStep)
+            && ReferenceEquals(ChecklistSteps[1], installingChecklistStep)
+            && ReferenceEquals(ChecklistSteps[2], cleanUpChecklistStep))
+        {
+            return;
+        }
+
+        ChecklistSteps.Clear();
+        ChecklistSteps.Add(prerequisitesChecklistStep);
+        ChecklistSteps.Add(installingChecklistStep);
+        ChecklistSteps.Add(cleanUpChecklistStep);
+    }
+
+    private void SetRollbackOnlyChecklist()
+    {
+        if (ChecklistSteps.Count == 1 && ReferenceEquals(ChecklistSteps[0], rollbackChecklistStep))
+        {
+            return;
+        }
+
+        ChecklistSteps.Clear();
+        ChecklistSteps.Add(rollbackChecklistStep);
+    }
+
+    private List<string> ExecuteRollbackAndCleanup()
+    {
+        var rollbackFailures = new List<string>();
+
+        if (!isRollbackConfigured)
+        {
+            rollbackFailures.Add("Rollback unavailable: callback is not configured.");
+        }
+        else
+        {
+            try
+            {
+                if (!requestRollback())
+                {
+                    rollbackFailures.Add("Rollback failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                rollbackFailures.Add($"Rollback failed: {ex.Message}");
+            }
+        }
+
+        if (!ShouldDeleteInstallFolder())
+        {
+            cleanUpChecklistStep.State = ChecklistStepState.Success;
+            return rollbackFailures;
+        }
+
+        cleanUpChecklistStep.State = ChecklistStepState.Running;
+        try
+        {
+            var installFolder = GetInstallFolderForCurrentRun();
+            if (!IsSafeDeleteTarget(installFolder))
+            {
+                throw new InvalidOperationException("Cleanup rejected: install folder path is unsafe for recursive deletion.");
+            }
+
+            if (directoryExists(installFolder))
+            {
+                deleteDirectory(installFolder);
+            }
+
+            cleanUpChecklistStep.State = ChecklistStepState.Success;
+        }
+        catch (Exception ex)
+        {
+            cleanUpChecklistStep.State = ChecklistStepState.Failed;
+            rollbackFailures.Add($"Cleanup failed: {ex.Message}");
+        }
+
+        return rollbackFailures;
     }
 
     public void SetCloseAction(Action? closeAction)
@@ -344,6 +503,8 @@ public partial class InstallerViewModel : ObservableObject
         ChangeDirectoryCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
         LaunchAppCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(FinishedTitle));
+        OnPropertyChanged(nameof(FinishedSubtitle));
     }
 
     private void ResetChecklistStates()
@@ -362,71 +523,24 @@ public partial class InstallerViewModel : ObservableObject
             installingChecklistStep.State = ChecklistStepState.Failed;
         }
 
+        SetRollbackOnlyChecklist();
         rollbackChecklistStep.State = ChecklistStepState.Running;
         StatusMessage = $"{message} Starting rollback...";
 
-        var rollbackFailures = new List<string>();
-
-        if (!isRollbackConfigured)
-        {
-            rollbackFailures.Add("Rollback unavailable: callback is not configured.");
-        }
-        else
-        {
-            try
-            {
-                if (!requestRollback())
-                {
-                    rollbackFailures.Add("Rollback failed.");
-                }
-            }
-            catch (Exception ex)
-            {
-                rollbackFailures.Add($"Rollback failed: {ex.Message}");
-            }
-        }
-
-        if (ShouldDeleteInstallFolder())
-        {
-            cleanUpChecklistStep.State = ChecklistStepState.Running;
-            try
-            {
-                var installFolder = GetInstallFolderForCurrentRun();
-                if (!IsSafeDeleteTarget(installFolder))
-                {
-                    throw new InvalidOperationException("Cleanup rejected: install folder path is unsafe for recursive deletion.");
-                }
-
-                if (directoryExists(installFolder))
-                {
-                    deleteDirectory(installFolder);
-                }
-
-                cleanUpChecklistStep.State = ChecklistStepState.Success;
-            }
-            catch (Exception ex)
-            {
-                cleanUpChecklistStep.State = ChecklistStepState.Failed;
-                rollbackFailures.Add($"Cleanup failed: {ex.Message}");
-            }
-        }
-        else
-        {
-            cleanUpChecklistStep.State = ChecklistStepState.Success;
-        }
+        var rollbackFailures = ExecuteRollbackAndCleanup();
 
         if (rollbackFailures.Count == 0)
         {
             rollbackChecklistStep.State = ChecklistStepState.Success;
-            Screen = InstallerScreen.Progress;
             State = InstallerState.FinishedFailed;
+            Screen = InstallerScreen.Finished;
             StatusMessage = $"{message} Rollback completed.";
             return;
         }
 
         rollbackChecklistStep.State = ChecklistStepState.Failed;
-        Screen = InstallerScreen.Progress;
         State = InstallerState.FinishedFailed;
+        Screen = InstallerScreen.Finished;
         StatusMessage = $"{message} {string.Join(" ", rollbackFailures)}";
     }
 

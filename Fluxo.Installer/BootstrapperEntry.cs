@@ -1,5 +1,6 @@
 using System.IO;
 using System.Threading;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Fluxo.Installer.ViewModels;
 using WixToolset.BootstrapperApplicationApi;
@@ -74,7 +75,20 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                     engine.Detect();
                 },
                 requestPlan: () => engine.Plan(LaunchAction.Install, BundleScope.Default),
-                requestApply: () => engine.Apply(IntPtr.Zero),
+                requestApply: () =>
+                {
+                    try
+                    {
+                        var parentHandle = new WindowInteropHelper(window).EnsureHandle();
+                        engine.Apply(parentHandle);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogFailure(ex);
+                        _lastApplyFailed = true;
+                        DispatchToUi(() => _viewModel?.OnApplyComplete(FailureExitCode));
+                    }
+                },
                 // Burn performs rollback internally before ApplyComplete on apply failures.
                 // We report rollback as successful only when the most recent apply failed.
                 requestRollback: () => _lastApplyFailed,

@@ -38,8 +38,9 @@ public sealed class DotNetRuntimeDetectorTests
 
         vm.InstallCommand.Execute(null);
 
-        Assert.Equal(InstallerState.Welcome, vm.State);
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
         Assert.Equal(".NET Runtime is required. Install it, then run setup again.", vm.StatusMessage);
+        Assert.Equal("Installation failed", vm.FinishedTitle);
     }
 
     [Fact]

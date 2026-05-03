@@ -2,6 +2,7 @@
     x:Class="Fluxo.Installer.Views.Pages.InstallerWelcomePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Fluxo.Controls;assembly=Fluxo.Resources"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -35,6 +36,8 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
+
+            <controls:RisingFlowBackground Grid.RowSpan="2" AccentBrush="{DynamicResource Color.Mint}" />
 
             <StackPanel Grid.Row="0" VerticalAlignment="Center">
                 <Border

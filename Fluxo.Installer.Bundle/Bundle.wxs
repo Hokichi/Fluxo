@@ -1,5 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-	<Bundle Id="FluxoInstallerBundle" Name="fluxo" Manufacturer="fluxo" Version="1.0.0.0" UpgradeCode="{A388A981-8C98-40B9-8B25-3A638D0BDA84}">
+	<Bundle Id="FluxoInstallerBundle" Name="fluxo" Manufacturer="fluxo" Version="$(var.FluxoInstallerVersion)" UpgradeCode="{A388A981-8C98-40B9-8B25-3A638D0BDA84}">
 		<BootstrapperApplication SourceFile="$(var.ManagedBootstrapperExe)">
 			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)AutoMapper.dll" />
 			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)CommunityToolkit.Mvvm.dll" />
@@ -53,7 +53,9 @@
 				Id="FluxoMsi"
 				SourceFile="$(var.Fluxo.Installer.Msi.TargetPath)"
 				Vital="yes"
-				Compressed="yes" />
+				Compressed="yes">
+				<MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+			</MsiPackage>
 		</Chain>
 	</Bundle>
 </Wix>
