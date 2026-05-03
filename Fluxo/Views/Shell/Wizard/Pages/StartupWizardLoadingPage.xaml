@@ -40,7 +40,7 @@
                     TextAlignment="Center" />
             </StackPanel>
 
-            <controls:FluxoWave Margin="0,120,0,-40" ClipToBounds="True" />
+            <controls:FluxoWave Margin="0,180,0,-40" ClipToBounds="True" />
         </Grid>
     </Border>
 </UserControl>

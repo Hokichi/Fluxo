@@ -38,10 +38,11 @@ public partial class App : Application
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
     private readonly MainVM _mainVM;
+    private readonly IStartupRegistrationService _startupRegistrationService;
     private readonly IStartupNotificationSummaryService _startupNotificationSummaryService;
     private readonly StartupTrayPopupDisplayPolicy _startupTrayPopupDisplayPolicy = new();
     private readonly IUiSettleAwaiter _uiSettleAwaiter;
-    private readonly IServiceProvider? _serviceProvider;
+    private readonly IServiceProvider _serviceProvider;
     private readonly DispatcherTimer _trayLeftClickTimer;
     private Forms.NotifyIcon? _trayIcon;
     private TrayMenuPopup? _trayMenuPopup;
@@ -66,6 +67,7 @@ public partial class App : Application
         _mainVM = _serviceProvider.GetRequiredService<MainVM>();
         _dataOperationRunner = _serviceProvider.GetRequiredService<IDataOperationRunner>();
         _expenseLogService = _serviceProvider.GetRequiredService<IExpenseLogService>();
+        _startupRegistrationService = _serviceProvider.GetRequiredService<IStartupRegistrationService>();
         _startupNotificationSummaryService = _serviceProvider.GetRequiredService<IStartupNotificationSummaryService>();
         _uiSettleAwaiter = _serviceProvider.GetRequiredService<IUiSettleAwaiter>();
 
@@ -94,6 +96,8 @@ public partial class App : Application
                 isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 await _expenseLogService.PostTerminationCleanupAsync();
+                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                await SyncRunAtStartupRegistrationAsync();
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
 
                 if (!isFirstRun)
@@ -227,6 +231,28 @@ public partial class App : Application
         return args.Any(arg =>
             string.Equals(arg, StartupTrayArgument, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(arg, RestartTrayArgument, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task SyncRunAtStartupRegistrationAsync()
+    {
+        try
+        {
+            var shouldRunAtStartup = await _dataOperationRunner.RunAsync(
+                "resolve run-at-startup setting",
+                async (scope, ct) =>
+                {
+                    var setting = await scope.UnitOfWork.UserSettings.GetByNameAsync(UserSettingNames.ShouldRunAtStartup, ct);
+                    return UserSettingValueParser.ParseBool(setting?.Value, false);
+                });
+
+            _startupRegistrationService.SetRunAtStartup(shouldRunAtStartup);
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogWarning(
+                exception,
+                "Unable to sync Windows startup registration from user settings.");
+        }
     }
 
     private void EnsureTrayIconInitialized()
