@@ -2,19 +2,17 @@
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
     <AcceptEula>wix7</AcceptEula>
-    <ManagedBootstrapperDll>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\Fluxo.Installer.dll</ManagedBootstrapperDll>
+    <ManagedBootstrapperExe>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\Fluxo.Installer.exe</ManagedBootstrapperExe>
+    <ManagedBootstrapperOutputDir>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\</ManagedBootstrapperOutputDir>
     <OfflineMsiPlatformSegment Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU'">$(Platform)\</OfflineMsiPlatformSegment>
     <OfflineMsiPath>$(MSBuildThisFileDirectory)..\Fluxo.Installer.Msi\bin\$(OfflineMsiPlatformSegment)$(Configuration)\fluxoInstaller.msi</OfflineMsiPath>
-    <DefineConstants>$(DefineConstants);ManagedBootstrapperDll=$(ManagedBootstrapperDll);OfflineMsiPath=$(OfflineMsiPath)</DefineConstants>
+    <DefineConstants>$(DefineConstants);ManagedBootstrapperExe=$(ManagedBootstrapperExe);ManagedBootstrapperOutputDir=$(ManagedBootstrapperOutputDir);OfflineMsiPath=$(OfflineMsiPath)</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="7.0.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Fluxo.Installer\Fluxo.Installer.csproj" />
     <ProjectReference Include="..\Fluxo.Installer.Msi\Fluxo.Installer.Msi.wixproj" />
   </ItemGroup>
-
 </Project>

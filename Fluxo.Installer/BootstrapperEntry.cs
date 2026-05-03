@@ -1,24 +1,13 @@
-using WixToolset.Mba.Core;
 using System.IO;
 using System.Threading;
-using Fluxo.Installer.ViewModels;
 using System.Windows.Threading;
-
-[assembly: BootstrapperApplicationFactory(typeof(Fluxo.Installer.InstallerFactory))]
+using Fluxo.Installer.ViewModels;
+using WixToolset.BootstrapperApplicationApi;
 
 namespace Fluxo.Installer;
 
-public sealed class InstallerFactory : BaseBootstrapperApplicationFactory
-{
-    protected override BootstrapperApplication Create(IEngine engine, IBootstrapperCommand bootstrapperCommand)
-    {
-        return new InstallerBootstrapperApplication(engine, bootstrapperCommand);
-    }
-}
-
 internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 {
-    private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
 
@@ -27,16 +16,12 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         "Fluxo.Installer",
         "bootstrapper-error.log");
 
-    private readonly IEngine _engine;
     private InstallerViewModel? _viewModel;
     private Dispatcher? _uiDispatcher;
-    private volatile bool lastApplyFailed;
+    private volatile bool _lastApplyFailed;
 
-    public InstallerBootstrapperApplication(IEngine engine, IBootstrapperCommand bootstrapperCommand)
-        : base(engine)
+    public InstallerBootstrapperApplication()
     {
-        _engine = engine;
-        _ = bootstrapperCommand;
         DetectComplete += OnDetectComplete;
         PlanComplete += OnPlanComplete;
         ApplyComplete += OnApplyComplete;
@@ -45,7 +30,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     protected override void Run()
     {
         var exitCode = RunUiWithStaGuard();
-        _engine.Quit(exitCode);
+        engine.Quit(exitCode);
     }
 
     private int RunUiWithStaGuard()
@@ -82,17 +67,17 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
             var window = new Views.MainWindow();
 
             _viewModel = new InstallerViewModel(
-                setInstallFolderVariable: value => _engine.SetVariableString("InstallFolder", value, formatted: false),
+                setInstallFolderVariable: value => engine.SetVariableString("InstallFolder", value, formatted: false),
                 requestDetect: () =>
                 {
-                    lastApplyFailed = false;
-                    _engine.Detect();
+                    _lastApplyFailed = false;
+                    engine.Detect();
                 },
-                requestPlan: () => _engine.Plan(LaunchAction.Install),
-                requestApply: () => _engine.Apply(IntPtr.Zero),
+                requestPlan: () => engine.Plan(LaunchAction.Install, BundleScope.Default),
+                requestApply: () => engine.Apply(IntPtr.Zero),
                 // Burn performs rollback internally before ApplyComplete on apply failures.
                 // We report rollback as successful only when the most recent apply failed.
-                requestRollback: () => lastApplyFailed,
+                requestRollback: () => _lastApplyFailed,
                 closeInstallerAction: () =>
                 {
                     if (window.Dispatcher.CheckAccess())
@@ -150,7 +135,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
     private void OnApplyComplete(object? sender, ApplyCompleteEventArgs e)
     {
-        lastApplyFailed = e.Status != 0;
+        _lastApplyFailed = e.Status != 0;
         DispatchToUi(() => _viewModel?.OnApplyComplete(e.Status));
     }
 
