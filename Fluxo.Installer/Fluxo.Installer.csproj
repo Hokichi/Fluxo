@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ApplicationDefinition Remove="App.xaml" />
+    <ProjectReference Include="..\Fluxo.Resources\Fluxo.Resources.csproj" />
   </ItemGroup>
 
 </Project>

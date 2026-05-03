@@ -4,8 +4,11 @@ using Fluxo.Installer.Models;
 using Fluxo.Installer.Services;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 
 namespace Fluxo.Installer.ViewModels;
 
@@ -22,8 +25,24 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Action requestDetect;
     private readonly Action requestPlan;
     private readonly Action requestApply;
+    private readonly Func<bool> requestRollback;
+    private readonly bool isRollbackConfigured;
     private readonly Func<string, bool> fileExists;
+    private readonly Func<string, bool> directoryExists;
+    private readonly Action<string> deleteDirectory;
     private readonly Action<string> launchInstalledApp;
+    private readonly bool hasConstructorCloseInstallerAction;
+    private Action closeInstallerAction = () => { };
+
+    private readonly InstallerChecklistStep prerequisitesChecklistStep = new("Prerequisites");
+    private readonly InstallerChecklistStep installingChecklistStep = new("Installing the app");
+    private readonly InstallerChecklistStep cleanUpChecklistStep = new("Clean up (if exists)");
+    private readonly InstallerChecklistStep rollbackChecklistStep = new("Rollback (if failed)");
+
+    private bool installFolderExistedBeforeInstall;
+    private bool installStarted;
+    private bool hasUnresolvedPrerequisitesFailure;
+    private string installFolderForCurrentRun = string.Empty;
 
     public InstallerViewModel(
         IDotNetRuntimeDetector? dotNetRuntimeDetector = null,
@@ -32,15 +51,32 @@ public partial class InstallerViewModel : ObservableObject
         Action? requestPlan = null,
         Action? requestApply = null,
         Func<string, bool>? fileExists = null,
-        Action<string>? launchInstalledApp = null)
+        Action<string>? launchInstalledApp = null,
+        Func<bool>? requestRollback = null,
+        Func<string, bool>? directoryExists = null,
+        Action<string>? deleteDirectory = null,
+        Action? closeInstallerAction = null)
     {
         this.dotNetRuntimeDetector = dotNetRuntimeDetector ?? new DotNetRuntimeDetector();
         this.setInstallFolderVariable = setInstallFolderVariable ?? (_ => { });
         this.requestDetect = requestDetect ?? (() => { });
         this.requestPlan = requestPlan ?? (() => { });
         this.requestApply = requestApply ?? (() => { });
+        this.requestRollback = requestRollback ?? (() => false);
+        isRollbackConfigured = requestRollback is not null;
         this.fileExists = fileExists ?? File.Exists;
+        this.directoryExists = directoryExists ?? Directory.Exists;
+        this.deleteDirectory = deleteDirectory ?? (path => Directory.Delete(path, recursive: true));
         this.launchInstalledApp = launchInstalledApp ?? LaunchInstalledApp;
+        hasConstructorCloseInstallerAction = closeInstallerAction is not null;
+        this.closeInstallerAction = closeInstallerAction ?? (() => { });
+        ChecklistSteps = new ObservableCollection<InstallerChecklistStep>(
+        [
+            prerequisitesChecklistStep,
+            installingChecklistStep,
+            cleanUpChecklistStep,
+            rollbackChecklistStep,
+        ]);
     }
 
     [ObservableProperty]
@@ -56,12 +92,22 @@ public partial class InstallerViewModel : ObservableObject
     private InstallerState state = InstallerState.Welcome;
 
     [ObservableProperty]
+    private InstallerScreen screen = InstallerScreen.Welcome;
+
+    public ObservableCollection<InstallerChecklistStep> ChecklistSteps { get; }
+
+    [ObservableProperty]
     private string statusMessage = string.Empty;
 
     public int ExitCode
     {
         get
         {
+            if (State == InstallerState.Welcome && hasUnresolvedPrerequisitesFailure)
+            {
+                return FailureExitCode;
+            }
+
             return State switch
             {
                 InstallerState.FinishedSuccess => SuccessExitCode,
@@ -71,7 +117,7 @@ public partial class InstallerViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanChangeDirectory))]
     private void ChangeDirectory()
     {
         var dialog = new OpenFolderDialog
@@ -93,13 +139,35 @@ public partial class InstallerViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanInstall))]
     private void Install()
     {
-        if (!dotNetRuntimeDetector.IsRequiredRuntimeInstalled())
+        Screen = InstallerScreen.Progress;
+        State = InstallerState.Installing;
+        hasUnresolvedPrerequisitesFailure = false;
+        installStarted = false;
+        installFolderExistedBeforeInstall = false;
+        installFolderForCurrentRun = string.Empty;
+        ResetChecklistStates();
+        prerequisitesChecklistStep.State = ChecklistStepState.Running;
+
+        if (!IsValidInstallFolder(InstallFolder))
         {
-            StatusMessage = ".NET Runtime is required. Install it, then run setup again.";
+            prerequisitesChecklistStep.State = ChecklistStepState.Failed;
+            TransitionToPrerequisitesFailure("A valid install folder is required.");
             return;
         }
 
-        State = InstallerState.Installing;
+        if (!dotNetRuntimeDetector.IsRequiredRuntimeInstalled())
+        {
+            prerequisitesChecklistStep.State = ChecklistStepState.Failed;
+            ShowPrerequisitesFailureMessage();
+            TransitionToPrerequisitesFailure(".NET Runtime is required. Install it, then run setup again.");
+            return;
+        }
+
+        prerequisitesChecklistStep.State = ChecklistStepState.Success;
+        installingChecklistStep.State = ChecklistStepState.Running;
+        installFolderExistedBeforeInstall = directoryExists(InstallFolder);
+        installFolderForCurrentRun = InstallFolder;
+        installStarted = true;
         StatusMessage = "Detecting installation state...";
         requestDetect();
     }
@@ -112,7 +180,7 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        setInstallFolderVariable(InstallFolder);
+        setInstallFolderVariable(GetInstallFolderForCurrentRun());
         StatusMessage = "Planning installation...";
         requestPlan();
     }
@@ -125,7 +193,7 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        setInstallFolderVariable(InstallFolder);
+        setInstallFolderVariable(GetInstallFolderForCurrentRun());
         State = InstallerState.Installing;
         StatusMessage = "Installing files...";
         requestApply();
@@ -146,9 +214,11 @@ public partial class InstallerViewModel : ObservableObject
 
     private void VerifyInstallation()
     {
-        var installedExePath = Path.Combine(InstallFolder, InstalledExecutableName);
+        var installedExePath = Path.Combine(GetInstallFolderForCurrentRun(), InstalledExecutableName);
         if (fileExists(installedExePath))
         {
+            installingChecklistStep.State = ChecklistStepState.Success;
+            Screen = InstallerScreen.Finished;
             State = InstallerState.FinishedSuccess;
             StatusMessage = "Installation complete.";
             return;
@@ -159,11 +229,37 @@ public partial class InstallerViewModel : ObservableObject
 
     private void TransitionToFailure(string message)
     {
+        if (installStarted)
+        {
+            HandlePostStartFailure(message);
+            return;
+        }
+
+        if (prerequisitesChecklistStep.State == ChecklistStepState.Running)
+        {
+            prerequisitesChecklistStep.State = ChecklistStepState.Failed;
+        }
+
+        Screen = InstallerScreen.Progress;
         State = InstallerState.FinishedFailed;
         StatusMessage = message;
     }
 
-    private bool CanInstall() => State == InstallerState.Welcome && IsValidInstallFolder(InstallFolder);
+    private void TransitionToPrerequisitesFailure(string message)
+    {
+        Screen = InstallerScreen.Progress;
+        State = InstallerState.Welcome;
+        hasUnresolvedPrerequisitesFailure = true;
+        installFolderForCurrentRun = string.Empty;
+        StatusMessage = message;
+    }
+
+    private bool CanInstall() =>
+        (State == InstallerState.Welcome || State == InstallerState.FinishedFailed) &&
+        IsValidInstallFolder(InstallFolder);
+
+    private bool CanChangeDirectory() =>
+        State == InstallerState.Welcome || State == InstallerState.FinishedFailed;
 
     [RelayCommand(CanExecute = nameof(CanLaunchApp))]
     private void LaunchApp()
@@ -173,7 +269,7 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        var installedExePath = Path.Combine(InstallFolder, InstalledExecutableName);
+        var installedExePath = Path.Combine(GetInstallFolderForCurrentRun(), InstalledExecutableName);
         if (!fileExists(installedExePath))
         {
             TransitionToFailure("Launch failed: Fluxo.exe was not found.");
@@ -192,6 +288,36 @@ public partial class InstallerViewModel : ObservableObject
     }
 
     private bool CanLaunchApp() => State == InstallerState.FinishedSuccess;
+
+    [RelayCommand]
+    private void CloseInstaller()
+    {
+        closeInstallerAction();
+    }
+
+    public void SetCloseAction(Action? closeAction)
+    {
+        if (hasConstructorCloseInstallerAction)
+        {
+            return;
+        }
+
+        closeInstallerAction = closeAction ?? (() => { });
+    }
+
+    private static void ShowPrerequisitesFailureMessage()
+    {
+        if (Application.Current is null)
+        {
+            return;
+        }
+
+        _ = MessageBox.Show(
+            ".NET Runtime is missing. Please install all required prerequisites, then run this installer again.",
+            "Missing prerequisites",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+    }
 
     private static bool IsValidInstallFolder(string? path)
     {
@@ -215,8 +341,122 @@ public partial class InstallerViewModel : ObservableObject
 
     partial void OnStateChanged(InstallerState value)
     {
+        ChangeDirectoryCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
         LaunchAppCommand.NotifyCanExecuteChanged();
+    }
+
+    private void ResetChecklistStates()
+    {
+        foreach (var checklistStep in ChecklistSteps)
+        {
+            checklistStep.State = ChecklistStepState.Pending;
+        }
+    }
+
+    private void HandlePostStartFailure(string message)
+    {
+        if (installingChecklistStep.State == ChecklistStepState.Running
+            || installingChecklistStep.State == ChecklistStepState.Pending)
+        {
+            installingChecklistStep.State = ChecklistStepState.Failed;
+        }
+
+        rollbackChecklistStep.State = ChecklistStepState.Running;
+        StatusMessage = $"{message} Starting rollback...";
+
+        var rollbackFailures = new List<string>();
+
+        if (!isRollbackConfigured)
+        {
+            rollbackFailures.Add("Rollback unavailable: callback is not configured.");
+        }
+        else
+        {
+            try
+            {
+                if (!requestRollback())
+                {
+                    rollbackFailures.Add("Rollback failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                rollbackFailures.Add($"Rollback failed: {ex.Message}");
+            }
+        }
+
+        if (ShouldDeleteInstallFolder())
+        {
+            cleanUpChecklistStep.State = ChecklistStepState.Running;
+            try
+            {
+                var installFolder = GetInstallFolderForCurrentRun();
+                if (!IsSafeDeleteTarget(installFolder))
+                {
+                    throw new InvalidOperationException("Cleanup rejected: install folder path is unsafe for recursive deletion.");
+                }
+
+                if (directoryExists(installFolder))
+                {
+                    deleteDirectory(installFolder);
+                }
+
+                cleanUpChecklistStep.State = ChecklistStepState.Success;
+            }
+            catch (Exception ex)
+            {
+                cleanUpChecklistStep.State = ChecklistStepState.Failed;
+                rollbackFailures.Add($"Cleanup failed: {ex.Message}");
+            }
+        }
+        else
+        {
+            cleanUpChecklistStep.State = ChecklistStepState.Success;
+        }
+
+        if (rollbackFailures.Count == 0)
+        {
+            rollbackChecklistStep.State = ChecklistStepState.Success;
+            Screen = InstallerScreen.Progress;
+            State = InstallerState.FinishedFailed;
+            StatusMessage = $"{message} Rollback completed.";
+            return;
+        }
+
+        rollbackChecklistStep.State = ChecklistStepState.Failed;
+        Screen = InstallerScreen.Progress;
+        State = InstallerState.FinishedFailed;
+        StatusMessage = $"{message} {string.Join(" ", rollbackFailures)}";
+    }
+
+    private bool ShouldDeleteInstallFolder()
+    {
+        return installStarted && !installFolderExistedBeforeInstall;
+    }
+
+    private string GetInstallFolderForCurrentRun()
+    {
+        return string.IsNullOrWhiteSpace(installFolderForCurrentRun) ? InstallFolder : installFolderForCurrentRun;
+    }
+
+    private static bool IsSafeDeleteTarget(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path))
+        {
+            return false;
+        }
+
+        var fullPath = Path.GetFullPath(path);
+        var rootPath = Path.GetPathRoot(fullPath);
+        if (string.IsNullOrWhiteSpace(rootPath))
+        {
+            return false;
+        }
+
+        var normalizedFullPath = fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var normalizedRootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return !string.Equals(normalizedFullPath, normalizedRootPath, StringComparison.OrdinalIgnoreCase);
     }
 
     private static void LaunchInstalledApp(string executablePath)

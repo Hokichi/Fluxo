@@ -30,6 +30,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private readonly IEngine _engine;
     private InstallerViewModel? _viewModel;
     private Dispatcher? _uiDispatcher;
+    private volatile bool lastApplyFailed;
 
     public InstallerBootstrapperApplication(IEngine engine, IBootstrapperCommand bootstrapperCommand)
         : base(engine)
@@ -69,20 +70,41 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     {
         try
         {
+#if DEBUG
+            // Pauses execution until you attach a debugger.
+            // A dialog will appear showing the process ID.
+            System.Diagnostics.Debugger.Launch();
+#endif
             var app = new App();
             app.InitializeComponent();
             _uiDispatcher = app.Dispatcher;
 
+            var window = new Views.MainWindow();
+
             _viewModel = new InstallerViewModel(
                 setInstallFolderVariable: value => _engine.SetVariableString("InstallFolder", value, formatted: false),
-                requestDetect: () => _engine.Detect(),
+                requestDetect: () =>
+                {
+                    lastApplyFailed = false;
+                    _engine.Detect();
+                },
                 requestPlan: () => _engine.Plan(LaunchAction.Install),
-                requestApply: () => _engine.Apply(IntPtr.Zero));
+                requestApply: () => _engine.Apply(IntPtr.Zero),
+                // Burn performs rollback internally before ApplyComplete on apply failures.
+                // We report rollback as successful only when the most recent apply failed.
+                requestRollback: () => lastApplyFailed,
+                closeInstallerAction: () =>
+                {
+                    if (window.Dispatcher.CheckAccess())
+                    {
+                        window.Close();
+                        return;
+                    }
 
-            var window = new Views.MainWindow
-            {
-                DataContext = _viewModel,
-            };
+                    window.Dispatcher.Invoke(window.Close);
+                });
+
+            window.DataContext = _viewModel;
 
             _ = app.Run(window);
             return _viewModel.ExitCode;
@@ -128,6 +150,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
     private void OnApplyComplete(object? sender, ApplyCompleteEventArgs e)
     {
+        lastApplyFailed = e.Status != 0;
         DispatchToUi(() => _viewModel?.OnApplyComplete(e.Status));
     }
 

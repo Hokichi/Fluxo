@@ -1,10 +1,10 @@
-<Project Sdk="WixToolset.Sdk/7.0.0">
+﻿<Project Sdk="WixToolset.Sdk/7.0.0">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
     <AcceptEula>wix7</AcceptEula>
     <ManagedBootstrapperDll>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\Fluxo.Installer.dll</ManagedBootstrapperDll>
     <OfflineMsiPlatformSegment Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU'">$(Platform)\</OfflineMsiPlatformSegment>
-    <OfflineMsiPath>$(MSBuildThisFileDirectory)..\Fluxo.Installer.Msi\bin\$(OfflineMsiPlatformSegment)$(Configuration)\en-US\Fluxo.Installer.msi</OfflineMsiPath>
+    <OfflineMsiPath>$(MSBuildThisFileDirectory)..\Fluxo.Installer.Msi\bin\$(OfflineMsiPlatformSegment)$(Configuration)\fluxoInstaller.msi</OfflineMsiPath>
     <DefineConstants>$(DefineConstants);ManagedBootstrapperDll=$(ManagedBootstrapperDll);OfflineMsiPath=$(OfflineMsiPath)</DefineConstants>
   </PropertyGroup>
 
