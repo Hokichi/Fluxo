@@ -17,6 +17,7 @@ public partial class InstallerViewModel : ObservableObject
 {
     private const int SuccessStatus = 0;
     private const string InstalledExecutableName = "Fluxo.exe";
+    private const string UninstallerExecutableName = "fluxo Uninstaller.exe";
     private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
@@ -33,6 +34,9 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Func<string, bool> directoryExists;
     private readonly Action<string> deleteDirectory;
     private readonly Action<string> launchInstalledApp;
+    private readonly Action<string, string, bool> copyFile;
+    private readonly InstallerOperationMode operationMode;
+    private readonly string bundleExecutablePath;
     private readonly bool hasConstructorCloseInstallerAction;
     private Action closeInstallerAction = () => { };
 
@@ -57,6 +61,9 @@ public partial class InstallerViewModel : ObservableObject
         Func<bool>? requestCancelConfirmation = null,
         Func<string, bool>? directoryExists = null,
         Action<string>? deleteDirectory = null,
+        InstallerOperationMode operationMode = InstallerOperationMode.Install,
+        string? bundleExecutablePath = null,
+        Action<string, string, bool>? copyFile = null,
         Action? closeInstallerAction = null)
     {
         this.dotNetRuntimeDetector = dotNetRuntimeDetector ?? new DotNetRuntimeDetector();
@@ -71,6 +78,9 @@ public partial class InstallerViewModel : ObservableObject
         this.directoryExists = directoryExists ?? Directory.Exists;
         this.deleteDirectory = deleteDirectory ?? (path => Directory.Delete(path, recursive: true));
         this.launchInstalledApp = launchInstalledApp ?? LaunchInstalledApp;
+        this.operationMode = operationMode;
+        this.bundleExecutablePath = bundleExecutablePath ?? string.Empty;
+        this.copyFile = copyFile ?? ((source, destination, overwrite) => File.Copy(source, destination, overwrite));
         hasConstructorCloseInstallerAction = closeInstallerAction is not null;
         this.closeInstallerAction = closeInstallerAction ?? (() => { });
         ChecklistSteps = new ObservableCollection<InstallerChecklistStep>(
@@ -101,10 +111,13 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private string statusMessage = string.Empty;
 
+    public bool IsUninstallMode => operationMode == InstallerOperationMode.Uninstall;
+
     public string FinishedTitle => State switch
     {
         InstallerState.FinishedSuccess => "Let's begin",
         InstallerState.FinishedUpToDate => "Let's begin",
+        InstallerState.FinishedUninstalled => "fluxo",
         InstallerState.FinishedCancelled => "Installation cancelled",
         _ => "Installation failed",
     };
@@ -113,6 +126,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         InstallerState.FinishedSuccess => "Your finance, simplified",
         InstallerState.FinishedUpToDate => "Version is up-to-date.",
+        InstallerState.FinishedUninstalled => "Thank you for letting fluxo help",
         _ => "Please close the setup and run it again",
     };
 
@@ -124,11 +138,22 @@ public partial class InstallerViewModel : ObservableObject
             {
                 InstallerState.FinishedSuccess => SuccessExitCode,
                 InstallerState.FinishedUpToDate => SuccessExitCode,
+                InstallerState.FinishedUninstalled => SuccessExitCode,
                 InstallerState.FinishedFailed => FailureExitCode,
                 InstallerState.FinishedCancelled => CancelExitCode,
                 _ => CancelExitCode,
             };
         }
+    }
+
+    public void Begin()
+    {
+        if (!IsUninstallMode)
+        {
+            return;
+        }
+
+        StartUninstall();
     }
 
     [RelayCommand(CanExecute = nameof(CanChangeDirectory))]
@@ -153,6 +178,11 @@ public partial class InstallerViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanInstall))]
     private void Install()
     {
+        if (IsUninstallMode)
+        {
+            return;
+        }
+
         Screen = InstallerScreen.Progress;
         State = InstallerState.Installing;
         installStarted = false;
@@ -188,6 +218,13 @@ public partial class InstallerViewModel : ObservableObject
 
     public void OnDetectComplete(int status)
     {
+        if (IsUninstallMode)
+        {
+            StatusMessage = "Planning uninstall...";
+            requestPlan();
+            return;
+        }
+
         setInstallFolderVariable(GetInstallFolderForCurrentRun());
         StatusMessage = "Planning installation...";
         requestPlan();
@@ -211,6 +248,14 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
+        if (IsUninstallMode)
+        {
+            State = InstallerState.Installing;
+            StatusMessage = "Uninstalling files...";
+            requestApply();
+            return;
+        }
+
         setInstallFolderVariable(GetInstallFolderForCurrentRun());
         State = InstallerState.Installing;
         StatusMessage = "Installing files...";
@@ -221,7 +266,15 @@ public partial class InstallerViewModel : ObservableObject
     {
         if (status != SuccessStatus)
         {
-            TransitionToFailure("Installation failed.");
+            TransitionToFailure(IsUninstallMode ? "Uninstallation failed." : "Installation failed.");
+            return;
+        }
+
+        if (IsUninstallMode)
+        {
+            State = InstallerState.Verifying;
+            StatusMessage = "Finalizing uninstallation...";
+            CompleteUninstall();
             return;
         }
 
@@ -235,6 +288,12 @@ public partial class InstallerViewModel : ObservableObject
         var installedExePath = Path.Combine(GetInstallFolderForCurrentRun(), InstalledExecutableName);
         if (fileExists(installedExePath))
         {
+            if (!EnsureUninstallerExecutable(out var uninstallerError))
+            {
+                TransitionToFailure(uninstallerError);
+                return;
+            }
+
             installingChecklistStep.State = ChecklistStepState.Success;
             Screen = InstallerScreen.Finished;
             State = InstallerState.FinishedSuccess;
@@ -272,11 +331,13 @@ public partial class InstallerViewModel : ObservableObject
     }
 
     private bool CanInstall() =>
+        !IsUninstallMode &&
         (State == InstallerState.Welcome || State == InstallerState.FinishedFailed) &&
         IsValidInstallFolder(InstallFolder);
 
     private bool CanChangeDirectory() =>
-        State == InstallerState.Welcome || State == InstallerState.FinishedFailed;
+        !IsUninstallMode &&
+        (State == InstallerState.Welcome || State == InstallerState.FinishedFailed);
 
     [RelayCommand(CanExecute = nameof(CanLaunchApp))]
     private void LaunchApp()
@@ -308,7 +369,9 @@ public partial class InstallerViewModel : ObservableObject
         }
     }
 
-    private bool CanLaunchApp() => State == InstallerState.FinishedSuccess || State == InstallerState.FinishedUpToDate;
+    private bool CanLaunchApp() =>
+        !IsUninstallMode &&
+        (State == InstallerState.FinishedSuccess || State == InstallerState.FinishedUpToDate);
 
     [RelayCommand]
     private void CloseInstaller()
@@ -594,5 +657,62 @@ public partial class InstallerViewModel : ObservableObject
             WorkingDirectory = Path.GetDirectoryName(executablePath) ?? Environment.CurrentDirectory,
         };
         _ = Process.Start(startInfo);
+    }
+
+    private void StartUninstall()
+    {
+        Screen = InstallerScreen.Uninstall;
+        State = InstallerState.Installing;
+        installStarted = true;
+        installFolderExistedBeforeInstall = true;
+        installFolderForCurrentRun = InstallFolder;
+        EnsureDefaultChecklistSteps();
+        ResetChecklistStates();
+        prerequisitesChecklistStep.State = ChecklistStepState.Success;
+        installingChecklistStep.State = ChecklistStepState.Running;
+        StatusMessage = "Detecting installed version...";
+        requestDetect();
+    }
+
+    private void CompleteUninstall()
+    {
+        prerequisitesChecklistStep.State = ChecklistStepState.Success;
+        installingChecklistStep.State = ChecklistStepState.Success;
+        cleanUpChecklistStep.State = ChecklistStepState.Success;
+        Screen = InstallerScreen.Finished;
+        State = InstallerState.FinishedUninstalled;
+        StatusMessage = "Uninstallation complete.";
+    }
+
+    private bool EnsureUninstallerExecutable(out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
+        var sourcePath = bundleExecutablePath;
+        if (string.IsNullOrWhiteSpace(sourcePath) || !fileExists(sourcePath))
+        {
+            errorMessage = "Installation failed: installer bundle executable was not found.";
+            return false;
+        }
+
+        try
+        {
+            var destinationPath = Path.Combine(GetInstallFolderForCurrentRun(), UninstallerExecutableName);
+            if (string.Equals(
+                    Path.GetFullPath(sourcePath),
+                    Path.GetFullPath(destinationPath),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            copyFile(sourcePath, destinationPath, true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Installation failed: could not prepare uninstaller executable. {ex.Message}";
+            return false;
+        }
     }
 }

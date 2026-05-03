@@ -14,6 +14,8 @@ public sealed class InstallerLaunchCommandTests
         var vm = new InstallerViewModel(
             dotNetRuntimeDetector: new FixedRuntimeDetector(true),
             fileExists: static _ => true,
+            bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
+            copyFile: static (_, _, _) => { },
             launchInstalledApp: path => launchedPath = path);
 
         vm.OnApplyComplete(0);
@@ -33,6 +35,8 @@ public sealed class InstallerLaunchCommandTests
         var vm = new InstallerViewModel(
             dotNetRuntimeDetector: new FixedRuntimeDetector(true),
             fileExists: static _ => false,
+            bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
+            copyFile: static (_, _, _) => { },
             launchInstalledApp: _ => launchCalls++);
 
         vm.OnApplyComplete(0);
@@ -52,6 +56,8 @@ public sealed class InstallerLaunchCommandTests
         var vm = new InstallerViewModel(
             dotNetRuntimeDetector: new FixedRuntimeDetector(true),
             fileExists: static _ => true,
+            bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
+            copyFile: static (_, _, _) => { },
             launchInstalledApp: path => launchedPath = path);
 
         vm.OnDetectedUpToDateVersion();
@@ -62,6 +68,28 @@ public sealed class InstallerLaunchCommandTests
         vm.LaunchAppCommand.Execute(null);
 
         Assert.Equal("C:\\Program Files\\fluxo\\Fluxo.exe", launchedPath);
+    }
+
+    [Fact]
+    public void LaunchApp_Disabled_WhenUninstallCompleted()
+    {
+        var launchCalls = 0;
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            operationMode: InstallerOperationMode.Uninstall,
+            fileExists: static _ => true,
+            bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
+            copyFile: static (_, _, _) => { },
+            launchInstalledApp: _ => launchCalls++);
+
+        vm.Begin();
+        vm.OnApplyComplete(0);
+
+        Assert.Equal(InstallerState.FinishedUninstalled, vm.State);
+        Assert.False(vm.LaunchAppCommand.CanExecute(null));
+
+        vm.LaunchAppCommand.Execute(null);
+        Assert.Equal(0, launchCalls);
     }
 
     private sealed class FixedRuntimeDetector(bool isInstalled) : IDotNetRuntimeDetector

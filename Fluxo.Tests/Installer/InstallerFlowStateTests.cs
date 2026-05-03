@@ -198,6 +198,78 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void Begin_UninstallMode_SkipsWelcome_AndStartsDetection()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Uninstall);
+
+        vm.Begin();
+
+        Assert.Equal(InstallerScreen.Uninstall, vm.Screen);
+        Assert.Equal(InstallerState.Installing, vm.State);
+        Assert.Equal("Detecting installed version...", vm.StatusMessage);
+        Assert.Equal(1, detectCalls);
+    }
+
+    [Fact]
+    public void DetectComplete_UninstallMode_RequestsPlan()
+    {
+        var planCalls = 0;
+        var vm = CreateViewModel(
+            requestPlan: () => planCalls++,
+            operationMode: InstallerOperationMode.Uninstall);
+
+        vm.Begin();
+        vm.OnDetectComplete(0);
+
+        Assert.Equal("Planning uninstall...", vm.StatusMessage);
+        Assert.Equal(1, planCalls);
+    }
+
+    [Fact]
+    public void ApplyComplete_Success_UninstallMode_TransitionsToFinishedUninstalled()
+    {
+        var vm = CreateViewModel(operationMode: InstallerOperationMode.Uninstall);
+
+        vm.Begin();
+        vm.OnApplyComplete(0);
+
+        Assert.Equal(InstallerState.FinishedUninstalled, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal("fluxo", vm.FinishedTitle);
+        Assert.Equal("Thank you for letting fluxo help", vm.FinishedSubtitle);
+        Assert.Equal("Uninstallation complete.", vm.StatusMessage);
+    }
+
+    [Fact]
+    public void ApplyComplete_Success_CopiesUninstallerExecutable()
+    {
+        string? copiedSource = null;
+        string? copiedDestination = null;
+        bool? copiedOverwrite = null;
+
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            fileExists: static _ => true,
+            bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
+            copyFile: (source, destination, overwrite) =>
+            {
+                copiedSource = source;
+                copiedDestination = destination;
+                copiedOverwrite = overwrite;
+            });
+
+        vm.OnApplyComplete(0);
+
+        Assert.Equal(@"C:\Temp\fluxo-installer.exe", copiedSource);
+        Assert.Equal(@"C:\Program Files\fluxo\fluxo Uninstaller.exe", copiedDestination);
+        Assert.True(copiedOverwrite);
+        Assert.Equal(InstallerState.FinishedSuccess, vm.State);
+    }
+
+    [Fact]
     public void ApplyComplete_Success_TransitionsToFailed_When_ExeMissing()
     {
         var vm = CreateViewModel(fileExists: static _ => false);
@@ -225,6 +297,7 @@ public sealed class InstallerFlowStateTests
         Func<string, bool>? fileExists = null,
         Func<bool>? requestRollback = null,
         Func<bool>? requestCancelConfirmation = null,
+        InstallerOperationMode operationMode = InstallerOperationMode.Install,
         Action? closeInstallerAction = null)
     {
         return new InstallerViewModel(
@@ -236,6 +309,9 @@ public sealed class InstallerFlowStateTests
             fileExists: fileExists,
             requestRollback: requestRollback,
             requestCancelConfirmation: requestCancelConfirmation,
+            operationMode: operationMode,
+            bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
+            copyFile: static (_, _, _) => { },
             closeInstallerAction: closeInstallerAction);
     }
 

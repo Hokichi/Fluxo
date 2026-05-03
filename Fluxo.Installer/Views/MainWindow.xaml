@@ -123,6 +123,19 @@
                     </pages:InstallerProgressPage.Style>
                 </pages:InstallerProgressPage>
 
+                <pages:UninstallPage>
+                    <pages:UninstallPage.Style>
+                        <Style TargetType="{x:Type pages:UninstallPage}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Screen}" Value="{x:Static models:InstallerScreen.Uninstall}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </pages:UninstallPage.Style>
+                </pages:UninstallPage>
+
                 <pages:InstallerFinishedPage>
                     <pages:InstallerFinishedPage.Style>
                         <Style TargetType="{x:Type pages:InstallerFinishedPage}">

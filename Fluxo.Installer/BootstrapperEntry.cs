@@ -2,6 +2,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using Fluxo.Installer.Models;
 using Fluxo.Installer.ViewModels;
 using WixToolset.BootstrapperApplicationApi;
 
@@ -12,6 +13,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
+    private const string UninstallerExecutableName = "fluxo Uninstaller.exe";
 
     private static readonly string DiagnosticLogPath = Path.Combine(
         Path.GetTempPath(),
@@ -126,7 +128,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                     _lastApplyFailed = false;
                     engine.Detect();
                 },
-                requestPlan: () => engine.Plan(LaunchAction.Install, BundleScope.Default),
+                requestPlan: () => engine.Plan(GetRequestedLaunchAction(), GetRequestedBundleScope()),
                 requestApply: () =>
                 {
                     try
@@ -144,6 +146,8 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                 // Burn performs rollback internally before ApplyComplete on apply failures.
                 // We report rollback as successful only when the most recent apply failed.
                 requestRollback: () => _lastApplyFailed,
+                operationMode: GetOperationMode(),
+                bundleExecutablePath: GetBundleOriginalSourcePath(),
                 closeInstallerAction: () =>
                 {
                     if (window.Dispatcher.CheckAccess())
@@ -156,6 +160,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                 });
 
             window.DataContext = _viewModel;
+            _viewModel.Begin();
 
             _ = app.Run(window);
             return _viewModel.ExitCode;
@@ -216,7 +221,9 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
     private void OnDetectComplete(object? sender, DetectCompleteEventArgs e)
     {
-        var shouldSkipInstall = e.Status == SuccessExitCode && IsInstalledVersionSameOrHigher();
+        var shouldSkipInstall = GetOperationMode() == InstallerOperationMode.Install
+            && e.Status == SuccessExitCode
+            && IsInstalledVersionSameOrHigher();
 
         if (_headlessMode)
         {
@@ -227,9 +234,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                 return;
             }
 
-            var action = _command?.Action ?? LaunchAction.Install;
-            var scope = _command?.Scope ?? BundleScope.Default;
-            engine.Plan(action, scope);
+            engine.Plan(GetRequestedLaunchAction(), GetRequestedBundleScope());
 
             return;
         }
@@ -352,4 +357,59 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         relationType == RelationType.Detect
         || relationType == RelationType.Upgrade
         || relationType == RelationType.Update;
+
+    private LaunchAction GetRequestedLaunchAction()
+    {
+        return GetOperationMode() == InstallerOperationMode.Uninstall
+            ? LaunchAction.Uninstall
+            : LaunchAction.Install;
+    }
+
+    private BundleScope GetRequestedBundleScope()
+    {
+        return _command?.Scope ?? BundleScope.Default;
+    }
+
+    private InstallerOperationMode GetOperationMode()
+    {
+        var executablePath = GetCurrentExecutablePath();
+        if (string.IsNullOrWhiteSpace(executablePath))
+        {
+            return InstallerOperationMode.Install;
+        }
+
+        var executableName = Path.GetFileName(executablePath);
+        return string.Equals(executableName, UninstallerExecutableName, StringComparison.OrdinalIgnoreCase)
+            ? InstallerOperationMode.Uninstall
+            : InstallerOperationMode.Install;
+    }
+
+    private string GetBundleOriginalSourcePath()
+    {
+        try
+        {
+            var sourcePath = engine.GetVariableString("WixBundleOriginalSource");
+            if (!string.IsNullOrWhiteSpace(sourcePath))
+            {
+                return sourcePath;
+            }
+        }
+        catch
+        {
+        }
+
+        return GetCurrentExecutablePath() ?? string.Empty;
+    }
+
+    private static string? GetCurrentExecutablePath()
+    {
+        try
+        {
+            return Environment.ProcessPath;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
