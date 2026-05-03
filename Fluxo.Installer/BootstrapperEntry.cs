@@ -9,6 +9,7 @@ namespace Fluxo.Installer;
 
 internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 {
+    private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
 
@@ -17,21 +18,40 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         "Fluxo.Installer",
         "bootstrapper-error.log");
 
+    private IBootstrapperCommand? _command;
     private InstallerViewModel? _viewModel;
     private Dispatcher? _uiDispatcher;
     private volatile bool _lastApplyFailed;
+    private volatile bool _headlessMode;
+    private volatile int _headlessExitCode = FailureExitCode;
+    private readonly ManualResetEventSlim _headlessCompleted = new(false);
+    private string? _currentBundleVersion;
+    private string? _highestDetectedInstalledVersion;
 
     public InstallerBootstrapperApplication()
     {
+        DetectBegin += OnDetectBegin;
+        DetectRelatedBundle += OnDetectRelatedBundle;
         DetectComplete += OnDetectComplete;
+        PlanRelatedBundleType += OnPlanRelatedBundleType;
+        PlanRelatedBundle += OnPlanRelatedBundle;
         PlanComplete += OnPlanComplete;
         ApplyComplete += OnApplyComplete;
     }
 
     protected override void Run()
     {
-        var exitCode = RunUiWithStaGuard();
+        var exitCode = ShouldRunInteractiveUi()
+            ? RunUiWithStaGuard()
+            : RunHeadless();
+
         engine.Quit(exitCode);
+    }
+
+    protected override void OnCreate(CreateEventArgs args)
+    {
+        base.OnCreate(args);
+        _command = args.Command;
     }
 
     private int RunUiWithStaGuard()
@@ -50,6 +70,38 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         uiThread.Start();
         uiThread.Join();
         return exitCode;
+    }
+
+    private int RunHeadless()
+    {
+        _headlessMode = true;
+        _headlessExitCode = FailureExitCode;
+        _headlessCompleted.Reset();
+        _lastApplyFailed = false;
+
+        try
+        {
+            engine.Detect();
+            _headlessCompleted.Wait();
+            return _headlessExitCode;
+        }
+        catch (Exception ex)
+        {
+            LogFailure(ex);
+            return FailureExitCode;
+        }
+        finally
+        {
+            _headlessMode = false;
+            _headlessCompleted.Reset();
+        }
+    }
+
+    private bool ShouldRunInteractiveUi()
+    {
+        // Burn invokes related bundles in quiet/embedded modes during upgrade cleanup.
+        // Those runs should stay headless to avoid spawning visible duplicate installer windows.
+        return _command is null || _command.Display == Display.Full;
     }
 
     private int RunUi()
@@ -137,19 +189,103 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         }
     }
 
+    private void OnDetectBegin(object? sender, DetectBeginEventArgs e)
+    {
+        _highestDetectedInstalledVersion = null;
+        _currentBundleVersion = GetCurrentBundleVersion();
+    }
+
+    private void OnDetectRelatedBundle(object? sender, DetectRelatedBundleEventArgs e)
+    {
+        if (!IsInstalledRelatedBundle(e.RelationType) || string.IsNullOrWhiteSpace(e.Version))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_highestDetectedInstalledVersion))
+        {
+            _highestDetectedInstalledVersion = e.Version;
+            return;
+        }
+
+        if (TryCompareVersions(e.Version, _highestDetectedInstalledVersion, out var comparison) && comparison > 0)
+        {
+            _highestDetectedInstalledVersion = e.Version;
+        }
+    }
+
     private void OnDetectComplete(object? sender, DetectCompleteEventArgs e)
     {
+        var shouldSkipInstall = e.Status == SuccessExitCode && IsInstalledVersionSameOrHigher();
+
+        if (_headlessMode)
+        {
+            if (shouldSkipInstall)
+            {
+                _headlessExitCode = SuccessExitCode;
+                _headlessCompleted.Set();
+                return;
+            }
+
+            var action = _command?.Action ?? LaunchAction.Install;
+            var scope = _command?.Scope ?? BundleScope.Default;
+            engine.Plan(action, scope);
+
+            return;
+        }
+
+        if (shouldSkipInstall)
+        {
+            DispatchToUi(() => _viewModel?.OnDetectedUpToDateVersion());
+            return;
+        }
+
         DispatchToUi(() => _viewModel?.OnDetectComplete(e.Status));
     }
 
     private void OnPlanComplete(object? sender, PlanCompleteEventArgs e)
     {
+        if (_headlessMode)
+        {
+            if (e.Status != 0)
+            {
+                _headlessExitCode = e.Status;
+                _headlessCompleted.Set();
+                return;
+            }
+
+            engine.Apply(IntPtr.Zero);
+
+            return;
+        }
+
         DispatchToUi(() => _viewModel?.OnPlanComplete(e.Status));
+    }
+
+    private static void OnPlanRelatedBundleType(object? sender, PlanRelatedBundleTypeEventArgs e)
+    {
+        // Prevent Burn from launching cached related bundle executables during upgrade cleanup.
+        // Those legacy bundles can display extra installer windows even when parent flow is quiet.
+        e.Type = RelatedBundlePlanType.None;
+    }
+
+    private static void OnPlanRelatedBundle(object? sender, PlanRelatedBundleEventArgs e)
+    {
+        // Keep related bundles out of the execution plan to guarantee single visible installer instance.
+        e.State = RequestState.None;
     }
 
     private void OnApplyComplete(object? sender, ApplyCompleteEventArgs e)
     {
         _lastApplyFailed = e.Status != 0;
+
+        if (_headlessMode)
+        {
+            _headlessExitCode = e.Status;
+            _headlessCompleted.Set();
+            return;
+        }
+
         DispatchToUi(() => _viewModel?.OnApplyComplete(e.Status));
     }
 
@@ -163,4 +299,57 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
         _uiDispatcher.Invoke(callback);
     }
+
+    private string? GetCurrentBundleVersion()
+    {
+        try
+        {
+            var version = engine.GetVariableVersion("WixBundleVersion");
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                return version;
+            }
+
+            version = engine.GetVariableString("WixBundleVersion");
+            return string.IsNullOrWhiteSpace(version) ? null : version;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private bool IsInstalledVersionSameOrHigher()
+    {
+        if (string.IsNullOrWhiteSpace(_currentBundleVersion)
+            || string.IsNullOrWhiteSpace(_highestDetectedInstalledVersion))
+        {
+            return false;
+        }
+
+        return TryCompareVersions(
+                   _highestDetectedInstalledVersion,
+                   _currentBundleVersion,
+                   out var comparison)
+               && comparison >= 0;
+    }
+
+    private bool TryCompareVersions(string left, string right, out int comparison)
+    {
+        try
+        {
+            comparison = engine.CompareVersions(left, right);
+            return true;
+        }
+        catch
+        {
+            comparison = 0;
+            return false;
+        }
+    }
+
+    private static bool IsInstalledRelatedBundle(RelationType relationType) =>
+        relationType == RelationType.Detect
+        || relationType == RelationType.Upgrade
+        || relationType == RelationType.Update;
 }

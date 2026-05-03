@@ -6,6 +6,7 @@ public enum InstallerState
     Installing,
     Verifying,
     FinishedSuccess,
+    FinishedUpToDate,
     FinishedFailed,
     FinishedCancelled,
 }

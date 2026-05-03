@@ -79,6 +79,9 @@
                                     <DataTrigger Binding="{Binding State}" Value="{x:Static models:InstallerState.FinishedSuccess}">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding State}" Value="{x:Static models:InstallerState.FinishedUpToDate}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>

@@ -67,18 +67,22 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void DetectComplete_Failure_TransitionsToFinishedFailed()
+    public void DetectComplete_Failure_ContinuesToPlanning()
     {
         var planCalls = 0;
+        var folderVariableValues = new List<string>();
         var vm = CreateViewModel(
+            setInstallFolderVariable: value => folderVariableValues.Add(value),
             requestPlan: () => planCalls++,
             fileExists: static _ => true);
 
         vm.OnDetectComplete(1);
 
-        Assert.Equal(InstallerState.FinishedFailed, vm.State);
-        Assert.Equal("Detection failed.", vm.StatusMessage);
-        Assert.Equal(0, planCalls);
+        Assert.Equal(InstallerState.Welcome, vm.State);
+        Assert.Equal("Planning installation...", vm.StatusMessage);
+        Assert.Single(folderVariableValues);
+        Assert.Equal(vm.InstallFolder, folderVariableValues[0]);
+        Assert.Equal(1, planCalls);
     }
 
     [Fact]
@@ -141,29 +145,35 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void DetectComplete_Failure_AfterInstallStart_UsesRollbackChecklistOnly()
+    public void DetectComplete_Failure_AfterInstallStart_ContinuesToPlanning()
     {
-        var rollbackCalls = 0;
+        var planCalls = 0;
         var vm = CreateViewModel(
-            requestRollback: () =>
-            {
-                rollbackCalls++;
-                return true;
-            },
+            requestPlan: () => planCalls++,
             requestDetect: static () => { },
             fileExists: static _ => true);
 
         vm.InstallCommand.Execute(null);
         vm.OnDetectComplete(1);
 
-        Assert.Equal(1, rollbackCalls);
-        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(1, planCalls);
+        Assert.Equal(InstallerState.Installing, vm.State);
+        Assert.Equal(InstallerScreen.Progress, vm.Screen);
+        Assert.Equal("Planning installation...", vm.StatusMessage);
+    }
+
+    [Fact]
+    public void DetectedUpToDateVersion_TransitionsToFinishedPage_WithExpectedSubtitle()
+    {
+        var vm = CreateViewModel(fileExists: static _ => true);
+
+        vm.OnDetectedUpToDateVersion();
+
+        Assert.Equal(InstallerState.FinishedUpToDate, vm.State);
         Assert.Equal(InstallerScreen.Finished, vm.Screen);
-        Assert.Single(vm.ChecklistSteps);
-        Assert.Equal("Rolling back", vm.ChecklistSteps[0].Label);
-        Assert.Equal(ChecklistStepState.Success, vm.ChecklistSteps[0].State);
-        Assert.Equal("Installation failed", vm.FinishedTitle);
-        Assert.Equal("Please close the setup and run it again", vm.FinishedSubtitle);
+        Assert.Equal("Let's begin", vm.FinishedTitle);
+        Assert.Equal("Version is up-to-date.", vm.FinishedSubtitle);
+        Assert.Equal(0, vm.ExitCode);
     }
 
     [Fact]

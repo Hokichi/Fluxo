@@ -104,13 +104,17 @@ public partial class InstallerViewModel : ObservableObject
     public string FinishedTitle => State switch
     {
         InstallerState.FinishedSuccess => "Let's begin",
+        InstallerState.FinishedUpToDate => "Let's begin",
         InstallerState.FinishedCancelled => "Installation cancelled",
         _ => "Installation failed",
     };
 
-    public string FinishedSubtitle => State == InstallerState.FinishedSuccess
-        ? "Your finance, simplified"
-        : "Please close the setup and run it again";
+    public string FinishedSubtitle => State switch
+    {
+        InstallerState.FinishedSuccess => "Your finance, simplified",
+        InstallerState.FinishedUpToDate => "Version is up-to-date.",
+        _ => "Please close the setup and run it again",
+    };
 
     public int ExitCode
     {
@@ -119,6 +123,7 @@ public partial class InstallerViewModel : ObservableObject
             return State switch
             {
                 InstallerState.FinishedSuccess => SuccessExitCode,
+                InstallerState.FinishedUpToDate => SuccessExitCode,
                 InstallerState.FinishedFailed => FailureExitCode,
                 InstallerState.FinishedCancelled => CancelExitCode,
                 _ => CancelExitCode,
@@ -183,15 +188,19 @@ public partial class InstallerViewModel : ObservableObject
 
     public void OnDetectComplete(int status)
     {
-        if (status != SuccessStatus)
-        {
-            TransitionToFailure("Detection failed.");
-            return;
-        }
-
         setInstallFolderVariable(GetInstallFolderForCurrentRun());
         StatusMessage = "Planning installation...";
         requestPlan();
+    }
+
+    public void OnDetectedUpToDateVersion()
+    {
+        prerequisitesChecklistStep.State = ChecklistStepState.Success;
+        installingChecklistStep.State = ChecklistStepState.Success;
+        cleanUpChecklistStep.State = ChecklistStepState.Success;
+        Screen = InstallerScreen.Finished;
+        State = InstallerState.FinishedUpToDate;
+        StatusMessage = "Detected installed version is up-to-date.";
     }
 
     public void OnPlanComplete(int status)
@@ -272,30 +281,34 @@ public partial class InstallerViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanLaunchApp))]
     private void LaunchApp()
     {
-        if (State != InstallerState.FinishedSuccess)
+        if (State != InstallerState.FinishedSuccess && State != InstallerState.FinishedUpToDate)
         {
-            return;
-        }
-
-        var installedExePath = Path.Combine(GetInstallFolderForCurrentRun(), InstalledExecutableName);
-        if (!fileExists(installedExePath))
-        {
-            TransitionToFailure("Launch failed: Fluxo.exe was not found.");
             return;
         }
 
         try
         {
+            var installedExePath = Path.Combine(GetInstallFolderForCurrentRun(), InstalledExecutableName);
+            if (!fileExists(installedExePath))
+            {
+                StatusMessage = "Fluxo executable was not found, closing installer.";
+                return;
+            }
+
             launchInstalledApp(installedExePath);
             StatusMessage = "Launching Fluxo...";
         }
         catch (Exception ex)
         {
-            TransitionToFailure($"Launch failed: {ex.Message}");
+            StatusMessage = $"Launch reported an error: {ex.Message}";
+        }
+        finally
+        {
+            closeInstallerAction();
         }
     }
 
-    private bool CanLaunchApp() => State == InstallerState.FinishedSuccess;
+    private bool CanLaunchApp() => State == InstallerState.FinishedSuccess || State == InstallerState.FinishedUpToDate;
 
     [RelayCommand]
     private void CloseInstaller()

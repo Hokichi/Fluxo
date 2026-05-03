@@ -45,6 +45,25 @@ public sealed class InstallerLaunchCommandTests
         Assert.Equal(0, launchCalls);
     }
 
+    [Fact]
+    public void LaunchApp_Enabled_WhenVersionIsUpToDate()
+    {
+        string? launchedPath = null;
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            fileExists: static _ => true,
+            launchInstalledApp: path => launchedPath = path);
+
+        vm.OnDetectedUpToDateVersion();
+
+        Assert.Equal(InstallerState.FinishedUpToDate, vm.State);
+        Assert.True(vm.LaunchAppCommand.CanExecute(null));
+
+        vm.LaunchAppCommand.Execute(null);
+
+        Assert.Equal("C:\\Program Files\\fluxo\\Fluxo.exe", launchedPath);
+    }
+
     private sealed class FixedRuntimeDetector(bool isInstalled) : IDotNetRuntimeDetector
     {
         public bool IsRequiredRuntimeInstalled() => isInstalled;
