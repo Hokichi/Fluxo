@@ -1,8 +1,8 @@
 namespace Fluxo.Installer.Models;
 
-public enum InstallerOperationMode
+public enum InstallerRequestedOperation
 {
     Install,
-    Maintenance,
+    Repair,
     Uninstall,
 }

@@ -214,6 +214,102 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void Begin_RepairerBundlePath_SkipsWelcome_EvenWhenOperationModeDefaultsToInstall()
+    {
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            bundleExecutablePath: @"G:\fluxo\fluxo.Repairer.exe",
+            copyFile: static (_, _, _) => { });
+
+        vm.Begin();
+
+        Assert.True(vm.IsMaintenanceMode);
+        Assert.False(vm.IsUninstallMode);
+        Assert.Equal(InstallerScreen.AppFound, vm.Screen);
+        Assert.Equal(InstallerState.Welcome, vm.State);
+    }
+
+    [Fact]
+    public void Begin_MaintenanceMode_ShowsAppFoundPage()
+    {
+        var vm = CreateViewModel(operationMode: InstallerOperationMode.Maintenance);
+
+        vm.Begin();
+
+        Assert.Equal(InstallerScreen.AppFound, vm.Screen);
+        Assert.Equal(InstallerState.Welcome, vm.State);
+        Assert.Equal(InstallerMaintenanceAction.Repair, vm.SelectedMaintenanceAction);
+        Assert.Equal(InstallerRequestedOperation.Install, vm.RequestedOperation);
+    }
+
+    [Fact]
+    public void Begin_RepairerBundlePath_ShowsAppFoundPage()
+    {
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            bundleExecutablePath: @"G:\fluxo\fluxo.Repairer.exe",
+            copyFile: static (_, _, _) => { });
+
+        vm.Begin();
+
+        Assert.Equal(InstallerScreen.AppFound, vm.Screen);
+        Assert.False(vm.IsUninstallMode);
+        Assert.True(vm.IsMaintenanceMode);
+    }
+
+    [Fact]
+    public void ContinueMaintenance_DefaultRepair_RequestsDetectAndSetsRepairOperation()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Maintenance);
+
+        vm.Begin();
+        vm.ContinueMaintenanceCommand.Execute(null);
+
+        Assert.Equal(InstallerRequestedOperation.Repair, vm.RequestedOperation);
+        Assert.Equal(InstallerScreen.Progress, vm.Screen);
+        Assert.Equal("Detecting installation state...", vm.StatusMessage);
+        Assert.Equal(1, detectCalls);
+    }
+
+    [Fact]
+    public void ContinueMaintenance_Uninstall_RequestsDetectAndSetsUninstallOperation()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Maintenance);
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+        vm.ContinueMaintenanceCommand.Execute(null);
+
+        Assert.Equal(InstallerRequestedOperation.Uninstall, vm.RequestedOperation);
+        Assert.Equal(InstallerScreen.Uninstall, vm.Screen);
+        Assert.Equal("Detecting installed version...", vm.StatusMessage);
+        Assert.Equal(1, detectCalls);
+    }
+
+    [Fact]
+    public void DetectComplete_RepairOperation_RequestsPlan()
+    {
+        var planCalls = 0;
+        var vm = CreateViewModel(
+            requestPlan: () => planCalls++,
+            operationMode: InstallerOperationMode.Maintenance);
+
+        vm.Begin();
+        vm.ContinueMaintenanceCommand.Execute(null);
+        vm.OnDetectComplete(0);
+
+        Assert.Equal(InstallerRequestedOperation.Repair, vm.RequestedOperation);
+        Assert.Equal("Planning repair...", vm.StatusMessage);
+        Assert.Equal(1, planCalls);
+    }
+
+    [Fact]
     public void DetectComplete_UninstallMode_RequestsPlan()
     {
         var planCalls = 0;
@@ -244,7 +340,22 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void ApplyComplete_Success_CopiesUninstallerExecutable()
+    public void ApplyComplete_Failure_MaintenanceUninstall_ShowsUninstallFailureCopy()
+    {
+        var vm = CreateViewModel(operationMode: InstallerOperationMode.Maintenance);
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+        vm.ContinueMaintenanceCommand.Execute(null);
+        vm.OnApplyComplete(1);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal("Uninstallation failed", vm.FinishedTitle);
+        Assert.StartsWith("Uninstallation failed.", vm.StatusMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ApplyComplete_Success_CopiesRepairerExecutable()
     {
         string? copiedSource = null;
         string? copiedDestination = null;
@@ -264,8 +375,28 @@ public sealed class InstallerFlowStateTests
         vm.OnApplyComplete(0);
 
         Assert.Equal(@"C:\Temp\fluxo-installer.exe", copiedSource);
-        Assert.Equal(@"C:\Program Files\fluxo\fluxo Uninstaller.exe", copiedDestination);
+        Assert.Equal(@"C:\Program Files\fluxo\fluxo.Repairer.exe", copiedDestination);
         Assert.True(copiedOverwrite);
+        Assert.Equal(InstallerState.FinishedSuccess, vm.State);
+    }
+
+    [Fact]
+    public void ApplyComplete_Success_DoesNotCopyRepairerOverItself()
+    {
+        var copyCalls = 0;
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            fileExists: static _ => true,
+            bundleExecutablePath: @"C:\Program Files\fluxo\fluxo.Repairer.exe",
+            copyFile: (_, _, _) =>
+            {
+                copyCalls++;
+                throw new InvalidOperationException("Copy should not be called.");
+            });
+
+        vm.OnApplyComplete(0);
+
+        Assert.Equal(0, copyCalls);
         Assert.Equal(InstallerState.FinishedSuccess, vm.State);
     }
 

@@ -17,7 +17,7 @@ public partial class InstallerViewModel : ObservableObject
 {
     private const int SuccessStatus = 0;
     private const string InstalledExecutableName = "Fluxo.exe";
-    private const string UninstallerExecutableName = "fluxo Uninstaller.exe";
+    private const string RepairerExecutableName = "fluxo.Repairer.exe";
     private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
@@ -111,7 +111,40 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private string statusMessage = string.Empty;
 
+    [ObservableProperty]
+    private InstallerMaintenanceAction selectedMaintenanceAction = InstallerMaintenanceAction.Repair;
+
+    public InstallerRequestedOperation RequestedOperation { get; private set; } = InstallerRequestedOperation.Install;
+
+    public bool IsMaintenanceMode =>
+        operationMode == InstallerOperationMode.Maintenance
+        || InstallerOperationModeDetector.Detect(bundleExecutablePath, null) == InstallerOperationMode.Maintenance;
+
     public bool IsUninstallMode => operationMode == InstallerOperationMode.Uninstall;
+
+    public bool IsRepairSelected
+    {
+        get => SelectedMaintenanceAction == InstallerMaintenanceAction.Repair;
+        set
+        {
+            if (value)
+            {
+                SelectedMaintenanceAction = InstallerMaintenanceAction.Repair;
+            }
+        }
+    }
+
+    public bool IsUninstallSelected
+    {
+        get => SelectedMaintenanceAction == InstallerMaintenanceAction.Uninstall;
+        set
+        {
+            if (value)
+            {
+                SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+            }
+        }
+    }
 
     public string FinishedTitle => State switch
     {
@@ -119,6 +152,8 @@ public partial class InstallerViewModel : ObservableObject
         InstallerState.FinishedUpToDate => "Let's begin",
         InstallerState.FinishedUninstalled => "fluxo",
         InstallerState.FinishedCancelled => "Installation cancelled",
+        InstallerState.FinishedFailed when RequestedOperation == InstallerRequestedOperation.Uninstall => "Uninstallation failed",
+        InstallerState.FinishedFailed when RequestedOperation == InstallerRequestedOperation.Repair => "Repair failed",
         _ => "Installation failed",
     };
 
@@ -148,6 +183,12 @@ public partial class InstallerViewModel : ObservableObject
 
     public void Begin()
     {
+        if (IsMaintenanceMode)
+        {
+            StartMaintenance();
+            return;
+        }
+
         if (!IsUninstallMode)
         {
             return;
@@ -178,11 +219,12 @@ public partial class InstallerViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanInstall))]
     private void Install()
     {
-        if (IsUninstallMode)
+        if (IsMaintenanceMode || IsUninstallMode)
         {
             return;
         }
 
+        RequestedOperation = InstallerRequestedOperation.Install;
         Screen = InstallerScreen.Progress;
         State = InstallerState.Installing;
         installStarted = false;
@@ -218,9 +260,17 @@ public partial class InstallerViewModel : ObservableObject
 
     public void OnDetectComplete(int status)
     {
-        if (IsUninstallMode)
+        if (RequestedOperation == InstallerRequestedOperation.Uninstall)
         {
             StatusMessage = "Planning uninstall...";
+            requestPlan();
+            return;
+        }
+
+        if (RequestedOperation == InstallerRequestedOperation.Repair)
+        {
+            setInstallFolderVariable(GetInstallFolderForCurrentRun());
+            StatusMessage = "Planning repair...";
             requestPlan();
             return;
         }
@@ -248,10 +298,19 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        if (IsUninstallMode)
+        if (RequestedOperation == InstallerRequestedOperation.Uninstall)
         {
             State = InstallerState.Installing;
             StatusMessage = "Uninstalling files...";
+            requestApply();
+            return;
+        }
+
+        if (RequestedOperation == InstallerRequestedOperation.Repair)
+        {
+            setInstallFolderVariable(GetInstallFolderForCurrentRun());
+            State = InstallerState.Installing;
+            StatusMessage = "Repairing files...";
             requestApply();
             return;
         }
@@ -266,11 +325,16 @@ public partial class InstallerViewModel : ObservableObject
     {
         if (status != SuccessStatus)
         {
-            TransitionToFailure(IsUninstallMode ? "Uninstallation failed." : "Installation failed.");
+            TransitionToFailure(RequestedOperation switch
+            {
+                InstallerRequestedOperation.Uninstall => "Uninstallation failed.",
+                InstallerRequestedOperation.Repair => "Repair failed.",
+                _ => "Installation failed.",
+            });
             return;
         }
 
-        if (IsUninstallMode)
+        if (RequestedOperation == InstallerRequestedOperation.Uninstall)
         {
             State = InstallerState.Verifying;
             StatusMessage = "Finalizing uninstallation...";
@@ -288,16 +352,18 @@ public partial class InstallerViewModel : ObservableObject
         var installedExePath = Path.Combine(GetInstallFolderForCurrentRun(), InstalledExecutableName);
         if (fileExists(installedExePath))
         {
-            if (!EnsureUninstallerExecutable(out var uninstallerError))
+            if (!EnsureRepairerExecutable(out var repairerError))
             {
-                TransitionToFailure(uninstallerError);
+                TransitionToFailure(repairerError);
                 return;
             }
 
             installingChecklistStep.State = ChecklistStepState.Success;
             Screen = InstallerScreen.Finished;
             State = InstallerState.FinishedSuccess;
-            StatusMessage = "Installation complete.";
+            StatusMessage = RequestedOperation == InstallerRequestedOperation.Repair
+                ? "Repair complete."
+                : "Installation complete.";
             return;
         }
 
@@ -331,11 +397,13 @@ public partial class InstallerViewModel : ObservableObject
     }
 
     private bool CanInstall() =>
+        !IsMaintenanceMode &&
         !IsUninstallMode &&
         (State == InstallerState.Welcome || State == InstallerState.FinishedFailed) &&
         IsValidInstallFolder(InstallFolder);
 
     private bool CanChangeDirectory() =>
+        !IsMaintenanceMode &&
         !IsUninstallMode &&
         (State == InstallerState.Welcome || State == InstallerState.FinishedFailed);
 
@@ -370,8 +438,37 @@ public partial class InstallerViewModel : ObservableObject
     }
 
     private bool CanLaunchApp() =>
-        !IsUninstallMode &&
+        RequestedOperation != InstallerRequestedOperation.Uninstall &&
         (State == InstallerState.FinishedSuccess || State == InstallerState.FinishedUpToDate);
+
+    [RelayCommand]
+    private void ContinueMaintenance()
+    {
+        if (!IsMaintenanceMode)
+        {
+            return;
+        }
+
+        if (SelectedMaintenanceAction == InstallerMaintenanceAction.Uninstall)
+        {
+            RequestedOperation = InstallerRequestedOperation.Uninstall;
+            StartUninstall();
+            return;
+        }
+
+        RequestedOperation = InstallerRequestedOperation.Repair;
+        Screen = InstallerScreen.Progress;
+        State = InstallerState.Installing;
+        installStarted = true;
+        installFolderExistedBeforeInstall = true;
+        installFolderForCurrentRun = InstallFolder;
+        EnsureDefaultChecklistSteps();
+        ResetChecklistStates();
+        prerequisitesChecklistStep.State = ChecklistStepState.Success;
+        installingChecklistStep.State = ChecklistStepState.Running;
+        StatusMessage = "Detecting installation state...";
+        requestDetect();
+    }
 
     [RelayCommand]
     private void CloseInstaller()
@@ -583,6 +680,12 @@ public partial class InstallerViewModel : ObservableObject
         OnPropertyChanged(nameof(FinishedSubtitle));
     }
 
+    partial void OnSelectedMaintenanceActionChanged(InstallerMaintenanceAction value)
+    {
+        OnPropertyChanged(nameof(IsRepairSelected));
+        OnPropertyChanged(nameof(IsUninstallSelected));
+    }
+
     private void ResetChecklistStates()
     {
         foreach (var checklistStep in ChecklistSteps)
@@ -661,6 +764,7 @@ public partial class InstallerViewModel : ObservableObject
 
     private void StartUninstall()
     {
+        RequestedOperation = InstallerRequestedOperation.Uninstall;
         Screen = InstallerScreen.Uninstall;
         State = InstallerState.Installing;
         installStarted = true;
@@ -684,7 +788,19 @@ public partial class InstallerViewModel : ObservableObject
         StatusMessage = "Uninstallation complete.";
     }
 
-    private bool EnsureUninstallerExecutable(out string errorMessage)
+    private void StartMaintenance()
+    {
+        RequestedOperation = InstallerRequestedOperation.Install;
+        SelectedMaintenanceAction = InstallerMaintenanceAction.Repair;
+        Screen = InstallerScreen.AppFound;
+        State = InstallerState.Welcome;
+        installStarted = false;
+        installFolderExistedBeforeInstall = true;
+        installFolderForCurrentRun = InstallFolder;
+        StatusMessage = string.Empty;
+    }
+
+    private bool EnsureRepairerExecutable(out string errorMessage)
     {
         errorMessage = string.Empty;
 
@@ -697,7 +813,7 @@ public partial class InstallerViewModel : ObservableObject
 
         try
         {
-            var destinationPath = Path.Combine(GetInstallFolderForCurrentRun(), UninstallerExecutableName);
+            var destinationPath = Path.Combine(GetInstallFolderForCurrentRun(), RepairerExecutableName);
             if (string.Equals(
                     Path.GetFullPath(sourcePath),
                     Path.GetFullPath(destinationPath),
@@ -711,7 +827,7 @@ public partial class InstallerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            errorMessage = $"Installation failed: could not prepare uninstaller executable. {ex.Message}";
+            errorMessage = $"Installation failed: could not prepare repairer executable. {ex.Message}";
             return false;
         }
     }

@@ -1,107 +1,80 @@
-# Fluxo Uninstaller Design
+# Fluxo Maintenance Flow Design
 
 ## Context
-Fluxo currently ships an install-only Burn bundle with a custom WPF bootstrapper application (`Fluxo.Installer`). The UI flow currently includes `Welcome -> Progress -> Finished` and does not support a dedicated uninstall UX path launched from the installed app directory.
+Fluxo ships a Burn bundle with a custom WPF bootstrapper application (`Fluxo.Installer`). The installed maintenance executable is the same bundle copied into the install directory, but it must not run the normal first-install welcome flow.
 
-The requested behavior is to install a dedicated executable named `fluxo Uninstaller.exe` into the install directory. Running that executable must launch the same WPF window, skip welcome, show a dedicated uninstall page, execute uninstall, then transition to the existing finished page with uninstall-specific copy.
+The requested behavior is to install a dedicated executable named `fluxo.Repairer.exe` into the install directory. Running that executable opens the existing WPF window at a maintenance choice page where the user can repair or uninstall Fluxo.
 
 ## Goals
-1. Install `fluxo Uninstaller.exe` into `INSTALLFOLDER` during installation.
-2. Launching `fluxo Uninstaller.exe` starts the same bootstrapper UI in uninstall mode.
-3. Uninstall mode skips welcome and starts directly on a new `UninstallPage`.
-4. `UninstallPage` displays:
-   - Header: `Uninstalling Fluxo`
-   - Sub-header: `It was a good ride with you`
-   - `FluxoWave` visual
-5. After uninstall success, show `Finished` page with:
-   - Main title: `fluxo`
-   - Subtitle: `Thank you for letting fluxo help`
-   - Text under button: `Uninstallation complete.`
-   - Close button available
-6. Launch button remains hidden for uninstall outcomes.
+1. Install `fluxo.Repairer.exe` into `INSTALLFOLDER` during installation and repair.
+2. Launching `fluxo.Repairer.exe` starts maintenance mode and skips `InstallerWelcomePage`.
+3. Maintenance mode starts on `InstallerAppFoundPage`.
+4. `InstallerAppFoundPage` displays two radio choices:
+   - `Repair`
+   - `Uninstall`
+5. `Repair` runs the Burn repair flow and overwrites installed app files from the bundle.
+6. Repair must not overwrite or package any existing `.db` file.
+7. `Uninstall` runs the Burn uninstall flow and removes the application, registry entries, and installed package state.
+8. Uninstall success transitions to the existing finished page with uninstall-specific copy.
 
 ## Non-Goals
-1. Building a second standalone bootstrapper codebase for uninstall.
-2. Adding uninstall triggers into the install welcome screen.
-3. Changing existing install success copy.
+1. Building a second standalone bootstrapper codebase.
+2. Keeping `fluxo Uninstaller.exe` as the installed maintenance executable name.
+3. Changing the normal first-install welcome flow.
 
 ## Architecture Overview
 
-### 1) Packaging: Install `fluxo Uninstaller.exe`
-- Add MSI authoring that installs `fluxo Uninstaller.exe` into `INSTALLFOLDER`.
-- Source the file from the built bundle output executable so the uninstaller and installer stay version-aligned.
-- Keep it managed by MSI so upgrades/repairs maintain the file.
+### 1) Packaging
+- Build app files into the MSI payload from `$(var.FluxoAppOutputDir)\**`.
+- Exclude `$(var.FluxoAppOutputDir)\**\*.db` from harvested app files so repair does not overwrite user data.
+- Copy the outer bundle executable into `INSTALLFOLDER` as `fluxo.Repairer.exe` after install or repair verification.
+- If the source bundle path and destination repairer path are the same file, skip the copy to avoid self-overwrite lock failures.
 
 ### 2) Bootstrapper Mode Detection
-- Detect startup mode from current process executable name.
-- If executable name equals `fluxo Uninstaller.exe` (case-insensitive), set operation mode to `Uninstall`; otherwise default to `Install`.
-- In uninstall mode:
-  - initialize VM/UI on uninstall screen,
-  - skip welcome,
-  - on detect completion plan `LaunchAction.Uninstall`.
+- Detect startup mode from Burn's source-process path, original bundle source path, and current process path.
+- If any executable name equals `fluxo.Repairer.exe`, or is a Fluxo `.exe` name containing `repair`, set operation mode to `Maintenance`; otherwise default to `Install`.
+- The Burn source-process path matters because maintenance launches can report `WixBundleSourceProcessPath` as `fluxo.Repairer.exe` while `WixBundleOriginalSource` resolves to the registered installer path from the previous install.
+- The current process path is only a fallback because the managed bootstrapper application can run from Burn's extraction cache as `Fluxo.Installer.exe`.
 
 ### 3) UI Flow
 - Install mode flow remains unchanged.
-- Uninstall mode flow:
-  1. Open main window
-  2. Show `UninstallPage`
-  3. Execute Burn flow (`Detect -> Plan(Uninstall) -> Apply`)
-  4. Transition to finished screen on completion
+- Maintenance mode flow:
+  1. Open main window.
+  2. Show `InstallerAppFoundPage`.
+  3. User selects `Repair` or `Uninstall`.
+  4. `Repair` executes `Detect -> Plan(Repair) -> Apply`.
+  5. `Uninstall` executes `Detect -> Plan(Uninstall) -> Apply`.
+  6. Transition to `FinishedPage` on completion.
 
 ### 4) ViewModel and State Model
-- Introduce an operation mode concept (`Install`, `Uninstall`) in the view model.
-- Add an `Uninstall` entry to `InstallerScreen` so page switching supports the new page.
-- Keep existing terminal states, but map finished copy by outcome + operation mode.
+- `InstallerOperationMode` distinguishes first install from maintenance launch.
+- `InstallerRequestedOperation` tracks the selected Burn operation: `Install`, `Repair`, or `Uninstall`.
+- `InstallerMaintenanceAction` tracks the radio selection on `InstallerAppFoundPage`.
+- `InstallerScreen.AppFound` drives the new page in `MainWindow`.
 
 ### 5) Finished Copy Mapping
 - Install success/up-to-date and failure/cancel mappings remain as currently implemented.
+- Repair success uses the existing success page with `Repair complete.` status.
 - Uninstall success mapping:
   - `FinishedTitle`: `fluxo`
   - `FinishedSubtitle`: `Thank you for letting fluxo help`
   - finished status text under buttons: `Uninstallation complete.`
-- Launch action must not be available for uninstall completion.
-
-## Data Flow
-1. User runs `fluxo Uninstaller.exe` from install folder.
-2. Bootstrapper detects uninstall mode from executable name.
-3. VM initializes with `Screen = Uninstall` and operation mode `Uninstall`.
-4. Engine detect runs.
-5. Detect complete triggers `Plan(LaunchAction.Uninstall, scope)`.
-6. Apply completes:
-   - success -> finished uninstall copy
-   - failure -> finished failure path with status message
-
-## Error Handling
-1. If detect/plan/apply fails in uninstall mode, transition to finished failure state with explicit status text.
-2. If uninstall launched when no installed product is detected, treat as no-op failure path and show finished failure state.
-3. Cancellation before finished remains guarded by existing confirmation flow.
+- Launch action remains hidden for uninstall outcomes.
 
 ## Testing Strategy
-Add/update tests in `Fluxo.Tests/Installer`:
-1. Uninstall mode initialization skips welcome and sets uninstall screen.
-2. Detect complete in uninstall mode requests uninstall planning.
-3. Successful uninstall transitions to finished with exact requested copy.
-4. Launch command is disabled for uninstall completion.
-5. Existing install mode tests continue passing.
-
-## Impacted Files
-1. `Fluxo.Installer/BootstrapperEntry.cs`
-2. `Fluxo.Installer/ViewModels/InstallerViewModel.cs`
-3. `Fluxo.Installer/Models/InstallerScreen.cs`
-4. `Fluxo.Installer/Views/MainWindow.xaml`
-5. `Fluxo.Installer/Views/Pages/UninstallPage.xaml` (new)
-6. `Fluxo.Installer/Views/Pages/UninstallPage.xaml.cs` (new)
-7. `Fluxo.Installer.Msi/*.wxs` (component for `fluxo Uninstaller.exe`)
-8. `Fluxo.Tests/Installer/*` (targeted VM/flow tests)
+Tests in `Fluxo.Tests/Installer` cover:
+1. Repairer path detection uses the original bundle source path before the extracted process path.
+2. Maintenance launch skips welcome and shows `InstallerAppFoundPage`.
+3. Repair selection requests detect and plans `LaunchAction.Repair`.
+4. Uninstall selection requests detect and plans `LaunchAction.Uninstall`.
+5. Successful install/repair prepares `fluxo.Repairer.exe`.
+6. Preparing `fluxo.Repairer.exe` skips self-copy when launched from the install directory.
+7. MSI authoring excludes `.db` files from the app payload.
 
 ## Acceptance Criteria
-1. `fluxo Uninstaller.exe` is installed into `INSTALLFOLDER` by MSI.
-2. Running `fluxo Uninstaller.exe` opens the existing installer window and skips welcome.
-3. `UninstallPage` displays required header, sub-header, and `FluxoWave`.
-4. Uninstall operation is executed (not install) from that path.
-5. Finished page shows:
-   - `fluxo`
-   - `Thank you for letting fluxo help`
-   - `Uninstallation complete.`
-6. Close button is available on finished page.
-7. Launch button is hidden/disabled for uninstall outcome.
+1. Running `fluxo.Repairer.exe` opens the existing installer window at `InstallerAppFoundPage`.
+2. `Repair` repairs installed files without overwriting `.db` files.
+3. `Uninstall` removes the installed app through Burn uninstall.
+4. The finished page shows the correct repair or uninstall result copy.
+5. The bundle and installer projects build successfully.
+6. Focused installer tests pass.

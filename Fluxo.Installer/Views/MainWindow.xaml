@@ -110,6 +110,19 @@
                     </pages:InstallerWelcomePage.Style>
                 </pages:InstallerWelcomePage>
 
+                <pages:InstallerAppFoundPage>
+                    <pages:InstallerAppFoundPage.Style>
+                        <Style TargetType="{x:Type pages:InstallerAppFoundPage}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Screen}" Value="{x:Static models:InstallerScreen.AppFound}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </pages:InstallerAppFoundPage.Style>
+                </pages:InstallerAppFoundPage>
+
                 <pages:InstallerProgressPage>
                     <pages:InstallerProgressPage.Style>
                         <Style TargetType="{x:Type pages:InstallerProgressPage}">

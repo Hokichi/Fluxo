@@ -13,7 +13,6 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
-    private const string UninstallerExecutableName = "fluxo Uninstaller.exe";
 
     private static readonly string DiagnosticLogPath = Path.Combine(
         Path.GetTempPath(),
@@ -147,7 +146,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                 // We report rollback as successful only when the most recent apply failed.
                 requestRollback: () => _lastApplyFailed,
                 operationMode: GetOperationMode(),
-                bundleExecutablePath: GetBundleOriginalSourcePath(),
+                bundleExecutablePath: GetBundleSourceProcessPath(),
                 closeInstallerAction: () =>
                 {
                     if (window.Dispatcher.CheckAccess())
@@ -360,9 +359,12 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
     private LaunchAction GetRequestedLaunchAction()
     {
-        return GetOperationMode() == InstallerOperationMode.Uninstall
-            ? LaunchAction.Uninstall
-            : LaunchAction.Install;
+        return GetRequestedOperation() switch
+        {
+            InstallerRequestedOperation.Uninstall => LaunchAction.Uninstall,
+            InstallerRequestedOperation.Repair => LaunchAction.Repair,
+            _ => LaunchAction.Install,
+        };
     }
 
     private BundleScope GetRequestedBundleScope()
@@ -372,16 +374,22 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
     private InstallerOperationMode GetOperationMode()
     {
-        var executablePath = GetCurrentExecutablePath();
-        if (string.IsNullOrWhiteSpace(executablePath))
+        return InstallerOperationModeDetector.Detect(
+            GetBundleOriginalSourcePath(),
+            GetBundleSourceProcessPath(),
+            GetCurrentExecutablePath());
+    }
+
+    private InstallerRequestedOperation GetRequestedOperation()
+    {
+        if (_viewModel is not null)
         {
-            return InstallerOperationMode.Install;
+            return _viewModel.RequestedOperation;
         }
 
-        var executableName = Path.GetFileName(executablePath);
-        return string.Equals(executableName, UninstallerExecutableName, StringComparison.OrdinalIgnoreCase)
-            ? InstallerOperationMode.Uninstall
-            : InstallerOperationMode.Install;
+        return GetOperationMode() == InstallerOperationMode.Uninstall
+            ? InstallerRequestedOperation.Uninstall
+            : InstallerRequestedOperation.Install;
     }
 
     private string GetBundleOriginalSourcePath()
@@ -399,6 +407,23 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         }
 
         return GetCurrentExecutablePath() ?? string.Empty;
+    }
+
+    private string GetBundleSourceProcessPath()
+    {
+        try
+        {
+            var sourcePath = engine.GetVariableString("WixBundleSourceProcessPath");
+            if (!string.IsNullOrWhiteSpace(sourcePath))
+            {
+                return sourcePath;
+            }
+        }
+        catch
+        {
+        }
+
+        return GetBundleOriginalSourcePath();
     }
 
     private static string? GetCurrentExecutablePath()
