@@ -295,6 +295,50 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void Install_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeDetect()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: () => false,
+            fileExists: static _ => true);
+
+        vm.InstallCommand.Execute(null);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(0, detectCalls);
+        Assert.Equal(
+            "Installation did not run because fluxo is still open. Please close fluxo and run setup again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
+    public void ContinueMaintenance_Repair_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeDetect()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Maintenance,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: () => false,
+            fileExists: static _ => true);
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Repair;
+        vm.ContinueMaintenanceCommand.Execute(null);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(InstallerRequestedOperation.Repair, vm.RequestedOperation);
+        Assert.Equal(0, detectCalls);
+        Assert.Equal(
+            "Repair did not run because fluxo is still open. Please close fluxo and run the repairer again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
     public void ContinueMaintenance_Uninstall_WhenFluxoRunningAndUserDeclines_ShowsRetryMessage()
     {
         var detectCalls = 0;
