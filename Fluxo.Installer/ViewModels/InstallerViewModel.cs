@@ -24,6 +24,7 @@ public partial class InstallerViewModel : ObservableObject
     private const string CleanupScriptPrefix = "fluxo-cleanup-";
     private const int DeferredCleanupRetryCount = 60;
     private const int DeferredCleanupRetryDelaySeconds = 1;
+    private const int ProcessTerminationTimeoutMilliseconds = 5000;
     private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
@@ -44,6 +45,9 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Func<string> createDeferredCleanupScriptPath;
     private readonly Action<string, string> writeAllText;
     private readonly Action<ProcessStartInfo> startProcess;
+    private readonly Func<IReadOnlyList<int>> getRunningFluxoProcessIds;
+    private readonly Func<int, bool> tryTerminateProcessById;
+    private readonly Func<bool> requestTerminateRunningAppConfirmation;
     private readonly Action<string> launchInstalledApp;
     private readonly Action<string, string, bool> copyFile;
     private readonly InstallerOperationMode operationMode;
@@ -77,6 +81,9 @@ public partial class InstallerViewModel : ObservableObject
         Func<string>? createDeferredCleanupScriptPath = null,
         Action<string, string>? writeAllText = null,
         Action<ProcessStartInfo>? startProcess = null,
+        Func<IReadOnlyList<int>>? getRunningFluxoProcessIds = null,
+        Func<int, bool>? tryTerminateProcessById = null,
+        Func<bool>? requestTerminateRunningAppConfirmation = null,
         InstallerOperationMode operationMode = InstallerOperationMode.Install,
         string? bundleExecutablePath = null,
         Action<string, string, bool>? copyFile = null,
@@ -102,6 +109,10 @@ public partial class InstallerViewModel : ObservableObject
                 $"{CleanupScriptPrefix}{Guid.NewGuid():N}.cmd"));
         this.writeAllText = writeAllText ?? File.WriteAllText;
         this.startProcess = startProcess ?? (startInfo => _ = Process.Start(startInfo));
+        this.getRunningFluxoProcessIds = getRunningFluxoProcessIds ?? GetRunningFluxoProcessIds;
+        this.tryTerminateProcessById = tryTerminateProcessById ?? TryTerminateProcessById;
+        this.requestTerminateRunningAppConfirmation = requestTerminateRunningAppConfirmation
+            ?? ShowTerminateRunningAppConfirmation;
         this.launchInstalledApp = launchInstalledApp ?? LaunchInstalledApp;
         this.operationMode = operationMode;
         this.bundleExecutablePath = bundleExecutablePath ?? string.Empty;
@@ -575,6 +586,23 @@ public partial class InstallerViewModel : ObservableObject
         return result == MessageBoxResult.Yes;
     }
 
+    private static bool ShowTerminateRunningAppConfirmation()
+    {
+        if (Application.Current is null)
+        {
+            return false;
+        }
+
+        var result = FluxoMessageBox.Show(
+            Application.Current.MainWindow,
+            "Fluxo is currently running. Do you want to close it now and continue uninstalling?",
+            "Close Fluxo first?",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        return result == MessageBoxResult.Yes;
+    }
+
     private void HandleCancellation()
     {
         SetRollbackOnlyChecklist();
@@ -817,6 +845,11 @@ public partial class InstallerViewModel : ObservableObject
     {
         RequestedOperation = InstallerRequestedOperation.Uninstall;
         installingChecklistStep.Label = InstallingChecklistLabel;
+        if (!CanProceedWithUninstall())
+        {
+            return;
+        }
+
         Screen = InstallerScreen.Uninstall;
         State = InstallerState.Installing;
         installStarted = true;
@@ -828,6 +861,51 @@ public partial class InstallerViewModel : ObservableObject
         installingChecklistStep.State = ChecklistStepState.Running;
         StatusMessage = "Detecting installed version...";
         requestDetect();
+    }
+
+    private bool CanProceedWithUninstall()
+    {
+        IReadOnlyList<int> runningProcessIds;
+        try
+        {
+            runningProcessIds = getRunningFluxoProcessIds();
+        }
+        catch
+        {
+            runningProcessIds = Array.Empty<int>();
+        }
+
+        if (runningProcessIds.Count == 0)
+        {
+            return true;
+        }
+
+        if (!requestTerminateRunningAppConfirmation())
+        {
+            BlockUninstallAndFinish(
+                "Uninstallation did not run because fluxo is still open. Please close fluxo and run the repairer again.");
+            return false;
+        }
+
+        foreach (var processId in runningProcessIds)
+        {
+            if (!tryTerminateProcessById(processId))
+            {
+                BlockUninstallAndFinish(
+                    "Uninstallation did not run because fluxo could not be terminated. Please close fluxo and run the repairer again.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void BlockUninstallAndFinish(string statusMessage)
+    {
+        installStarted = false;
+        Screen = InstallerScreen.Finished;
+        State = InstallerState.FinishedFailed;
+        StatusMessage = statusMessage;
     }
 
     private void CompleteUninstall()
@@ -1038,5 +1116,46 @@ public partial class InstallerViewModel : ObservableObject
 
         resolvedPath = parentDirectory;
         return true;
+    }
+
+    private static IReadOnlyList<int> GetRunningFluxoProcessIds()
+    {
+        var processIds = new List<int>();
+        foreach (var process in Process.GetProcessesByName("fluxo"))
+        {
+            try
+            {
+                processIds.Add(process.Id);
+            }
+            finally
+            {
+                process.Dispose();
+            }
+        }
+
+        return processIds;
+    }
+
+    private static bool TryTerminateProcessById(int processId)
+    {
+        try
+        {
+            using var process = Process.GetProcessById(processId);
+            if (process.HasExited)
+            {
+                return true;
+            }
+
+            process.Kill(entireProcessTree: true);
+            return process.WaitForExit(ProcessTerminationTimeoutMilliseconds);
+        }
+        catch (ArgumentException)
+        {
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

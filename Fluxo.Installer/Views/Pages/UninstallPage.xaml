@@ -90,7 +90,7 @@
         </Border>
 
         <controls:FluxoWave
-            Height="180"
+            Height="120"
             Margin="0,250,0,0"
             ClipToBounds="True" />
     </Grid>

@@ -78,6 +78,7 @@ public sealed class InstallerLaunchCommandTests
             dotNetRuntimeDetector: new FixedRuntimeDetector(true),
             operationMode: InstallerOperationMode.Uninstall,
             fileExists: static _ => true,
+            getRunningFluxoProcessIds: static () => [],
             bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
             copyFile: static (_, _, _) => { },
             launchInstalledApp: _ => launchCalls++);

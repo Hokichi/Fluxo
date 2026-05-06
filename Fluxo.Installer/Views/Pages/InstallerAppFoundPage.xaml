@@ -27,6 +27,23 @@
                 <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/StepNavigatorStyle.xaml" />
                 <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/QuickSetupWizardStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <Style
+                x:Key="MaintenanceActionButtonStyle"
+                BasedOn="{StaticResource ActionButtonStyle}"
+                TargetType="Button">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                        <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="{StaticResource Brush.Mint.Muted}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                        <Setter Property="Foreground" Value="{StaticResource Brush.Background.Surface}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -69,12 +86,12 @@
                     <Button
                         Content="Repair"
                         Command="{Binding RepairMaintenanceCommand}"
-                        Style="{StaticResource ActionButtonStyle}" />
+                        Style="{StaticResource MaintenanceActionButtonStyle}" />
                     <Button
                         Margin="0,10,0,0"
                         Content="Uninstall"
                         Command="{Binding UninstallMaintenanceCommand}"
-                        Style="{StaticResource ActionButtonStyle}" />
+                        Style="{StaticResource MaintenanceActionButtonStyle}" />
                 </StackPanel>
             </StackPanel>
         </Grid>

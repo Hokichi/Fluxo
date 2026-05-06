@@ -295,6 +295,59 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void ContinueMaintenance_Uninstall_WhenFluxoRunningAndUserDeclines_ShowsRetryMessage()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Maintenance,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: () => false);
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+        vm.ContinueMaintenanceCommand.Execute(null);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(InstallerRequestedOperation.Uninstall, vm.RequestedOperation);
+        Assert.Equal(0, detectCalls);
+        Assert.Equal(
+            "Uninstallation did not run because fluxo is still open. Please close fluxo and run the repairer again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
+    public void ContinueMaintenance_Uninstall_WhenTerminationFails_ShowsRetryMessage()
+    {
+        var detectCalls = 0;
+        var terminateCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Maintenance,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: () => true,
+            tryTerminateProcessById: _ =>
+            {
+                terminateCalls++;
+                return false;
+            });
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+        vm.ContinueMaintenanceCommand.Execute(null);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(InstallerRequestedOperation.Uninstall, vm.RequestedOperation);
+        Assert.Equal(0, detectCalls);
+        Assert.Equal(1, terminateCalls);
+        Assert.Equal(
+            "Uninstallation did not run because fluxo could not be terminated. Please close fluxo and run the repairer again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
     public void DetectComplete_RepairOperation_RequestsPlan()
     {
         var planCalls = 0;
@@ -396,6 +449,7 @@ public sealed class InstallerFlowStateTests
             createDeferredCleanupScriptPath: () => @"C:\Temp\fluxo-cleanup-test.cmd",
             writeAllText: (_, content) => writtenScriptContents = content,
             startProcess: _ => { },
+            getRunningFluxoProcessIds: static () => [],
             operationMode: InstallerOperationMode.Maintenance,
             bundleExecutablePath: repairerPath,
             copyFile: static (_, _, _) => { });
@@ -526,6 +580,9 @@ public sealed class InstallerFlowStateTests
         Func<string>? createDeferredCleanupScriptPath = null,
         Action<string, string>? writeAllText = null,
         Action<ProcessStartInfo>? startProcess = null,
+        Func<IReadOnlyList<int>>? getRunningFluxoProcessIds = null,
+        Func<int, bool>? tryTerminateProcessById = null,
+        Func<bool>? requestTerminateRunningAppConfirmation = null,
         Action? closeInstallerAction = null)
     {
         return new InstallerViewModel(
@@ -544,6 +601,9 @@ public sealed class InstallerFlowStateTests
             createDeferredCleanupScriptPath: createDeferredCleanupScriptPath,
             writeAllText: writeAllText,
             startProcess: startProcess,
+            getRunningFluxoProcessIds: getRunningFluxoProcessIds ?? (static () => []),
+            tryTerminateProcessById: tryTerminateProcessById,
+            requestTerminateRunningAppConfirmation: requestTerminateRunningAppConfirmation,
             operationMode: operationMode,
             bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
             copyFile: static (_, _, _) => { },
