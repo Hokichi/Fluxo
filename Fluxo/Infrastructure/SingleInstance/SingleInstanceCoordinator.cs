@@ -1,4 +1,5 @@
 using System.IO.Pipes;
+using System.Diagnostics;
 using System.Threading;
 
 namespace Fluxo.Infrastructure.SingleInstance;
@@ -8,6 +9,10 @@ public sealed class SingleInstanceCoordinator : ISingleInstanceCoordinator
     private readonly string _mutexName;
     private readonly string _pipeName;
     private readonly object _sync = new();
+    private static readonly TimeSpan ListenerErrorBackoff = TimeSpan.FromMilliseconds(150);
+    private static readonly TimeSpan SignalRetryWindow = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan SignalRetryDelay = TimeSpan.FromMilliseconds(120);
+    private const int ConnectAttemptTimeoutMilliseconds = 180;
     private Mutex? _mutex;
     private CancellationTokenSource? _listenerCts;
     private Task? _listenerTask;
@@ -47,9 +52,9 @@ public sealed class SingleInstanceCoordinator : ISingleInstanceCoordinator
 
     private async Task ListenAsync(Action onActivationRequested, CancellationToken cancellationToken)
     {
-        try
+        while (!cancellationToken.IsCancellationRequested)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
                 await using var server = new NamedPipeServerStream(
                     _pipeName,
@@ -61,33 +66,55 @@ public sealed class SingleInstanceCoordinator : ISingleInstanceCoordinator
                 await server.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
 
                 var signalBuffer = new byte[1];
-                _ = await server.ReadAsync(signalBuffer.AsMemory(0, 1), cancellationToken).ConfigureAwait(false);
+                var bytesRead = await server.ReadAsync(signalBuffer.AsMemory(0, 1), cancellationToken).ConfigureAwait(false);
 
-                onActivationRequested();
+                if (bytesRead > 0)
+                    onActivationRequested();
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // Listener cancellation is expected during shutdown.
-        }
-        catch (ObjectDisposedException)
-        {
-            // Listener resources may already be disposed during shutdown.
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Listener cancellation is expected during shutdown.
+                break;
+            }
+            catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Listener resources may already be disposed during shutdown.
+                break;
+            }
+            catch (Exception) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Transient pipe failures should not permanently disable activation handling.
+                try
+                {
+                    await Task.Delay(ListenerErrorBackoff, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
         }
     }
 
     private void TrySignalExistingInstance()
     {
-        try
+        var retryTimer = Stopwatch.StartNew();
+        while (retryTimer.Elapsed < SignalRetryWindow)
         {
-            using var client = new NamedPipeClientStream(".", _pipeName, PipeDirection.Out);
-            client.Connect(timeout: 250);
-            client.WriteByte(1);
-            client.Flush();
-        }
-        catch
-        {
-            // Activation signal is best-effort only.
+            try
+            {
+                using var client = new NamedPipeClientStream(".", _pipeName, PipeDirection.Out);
+                client.Connect(timeout: ConnectAttemptTimeoutMilliseconds);
+                client.WriteByte(1);
+                client.Flush();
+                return;
+            }
+            catch
+            {
+                // Activation signal is best-effort only.
+            }
+
+            Thread.Sleep(SignalRetryDelay);
         }
     }
 

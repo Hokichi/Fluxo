@@ -135,20 +135,32 @@ public partial class App : Application
             MainWindow = mainWindow;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             EnsureTrayIconInitialized();
-            if (_isPrimaryActivationPending)
-            {
-                _isPrimaryActivationPending = false;
-                RestoreMainWindowFromTray();
-            }
+            var shouldForegroundOnStartup = _isPrimaryActivationPending;
 
             if (_launchInTrayMode)
             {
-                HideMainWindowToTray(mainWindow);
-                await TryShowStartupNotificationPopupOnceAsync();
+                if (shouldForegroundOnStartup)
+                {
+                    _isPrimaryActivationPending = false;
+                    RestoreMainWindowFromTray();
+                }
+                else
+                {
+                    HideMainWindowToTray(mainWindow);
+                    await TryShowStartupNotificationPopupOnceAsync();
+                }
             }
             else
             {
-                mainWindow.Show();
+                if (shouldForegroundOnStartup)
+                {
+                    _isPrimaryActivationPending = false;
+                    RestoreMainWindowFromTray();
+                }
+                else
+                {
+                    mainWindow.Show();
+                }
             }
         }
         catch (Exception exception)
