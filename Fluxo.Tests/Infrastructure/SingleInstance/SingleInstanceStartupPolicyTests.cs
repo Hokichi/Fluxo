@@ -10,7 +10,7 @@ public sealed class SingleInstanceStartupPolicyTests
     {
         var coordinator = new SecondaryInstanceCoordinatorStub();
 
-        var shouldContinueStartup = SingleInstanceStartupPolicy.Evaluate(
+        var shouldContinueStartup = SingleInstanceStartupPolicy.ShouldContinueStartup(
             coordinator,
             onActivationRequested: static () => { });
 
@@ -24,23 +24,13 @@ public sealed class SingleInstanceStartupPolicyTests
         var activationCalls = 0;
         var coordinator = new PrimaryInstanceCoordinatorStub();
 
-        var shouldContinueStartup = SingleInstanceStartupPolicy.Evaluate(
+        var shouldContinueStartup = SingleInstanceStartupPolicy.ShouldContinueStartup(
             coordinator,
             onActivationRequested: () => activationCalls++);
         coordinator.TriggerActivation();
 
         Assert.True(shouldContinueStartup);
         Assert.Equal(1, activationCalls);
-    }
-
-    private static class SingleInstanceStartupPolicy
-    {
-        public static bool Evaluate(
-            ISingleInstanceCoordinator coordinator,
-            Action onActivationRequested)
-        {
-            return coordinator.TryEnterAsPrimary(onActivationRequested);
-        }
     }
 
     private sealed class SecondaryInstanceCoordinatorStub : ISingleInstanceCoordinator
