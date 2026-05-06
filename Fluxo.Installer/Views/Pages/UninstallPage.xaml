@@ -32,37 +32,60 @@
     <Grid>
         <Border Style="{StaticResource PanelStyle}">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
                 <controls:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border
+                        Width="72"
+                        Height="72"
+                        HorizontalAlignment="Center"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="36">
+                        <Image
+                            Margin="18"
+                            Source="/Fluxo.Resources;component/Resources/fluxo.ico"
+                            Stretch="Uniform" />
+                    </Border>
 
-                <TextBlock
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="24"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Uninstalling Fluxo" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="24"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Uninstalling " />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="24"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="flux" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="24"
+                            Foreground="{StaticResource Brush.Mint}"
+                            Text="o" />
+                    </StackPanel>
 
-                <TextBlock
-                    Grid.Row="1"
-                    Margin="0,8,0,0"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="13"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="It was a good ride with you" />
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="It was fun while it lasted." />
 
-                <TextBlock
-                    Grid.Row="2"
-                    Margin="0,16,0,0"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="12"
-                    Foreground="{StaticResource Brush.Text.Muted}"
-                    Text="{Binding StatusMessage}"
-                    TextWrapping="Wrap" />
+                    <TextBlock
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="12"
+                        Foreground="{StaticResource Brush.Text.Muted}"
+                        Text="{Binding StatusMessage}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
             </Grid>
         </Border>
 

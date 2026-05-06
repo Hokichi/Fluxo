@@ -10,7 +10,12 @@
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <StartupObject>Fluxo.Installer.Program</StartupObject>
     <AcceptEula>wix7</AcceptEula>
+    <ApplicationIcon>fluxo.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="fluxo.ico" />
+  </ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="WixToolset.BootstrapperApplicationApi" Version="7.0.0" />

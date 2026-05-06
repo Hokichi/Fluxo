@@ -488,7 +488,7 @@ public partial class InstallerViewModel : ObservableObject
         State = InstallerState.Installing;
         installStarted = true;
         installFolderExistedBeforeInstall = true;
-        installFolderForCurrentRun = InstallFolder;
+        installFolderForCurrentRun = ResolveInstallFolderForCurrentRun();
         EnsureDefaultChecklistSteps();
         ResetChecklistStates();
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
@@ -821,7 +821,7 @@ public partial class InstallerViewModel : ObservableObject
         State = InstallerState.Installing;
         installStarted = true;
         installFolderExistedBeforeInstall = true;
-        installFolderForCurrentRun = InstallFolder;
+        installFolderForCurrentRun = ResolveInstallFolderForCurrentRun();
         EnsureDefaultChecklistSteps();
         ResetChecklistStates();
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
@@ -858,7 +858,7 @@ public partial class InstallerViewModel : ObservableObject
         State = InstallerState.Welcome;
         installStarted = false;
         installFolderExistedBeforeInstall = true;
-        installFolderForCurrentRun = InstallFolder;
+        installFolderForCurrentRun = ResolveInstallFolderForCurrentRun();
         StatusMessage = string.Empty;
     }
 
@@ -992,5 +992,51 @@ public partial class InstallerViewModel : ObservableObject
         builder.AppendLine("del /f /q \"%~f0\" >nul 2>nul");
         builder.AppendLine("exit /b 0");
         return builder.ToString();
+    }
+
+    private string ResolveInstallFolderForCurrentRun()
+    {
+        if (!string.IsNullOrWhiteSpace(installFolderForCurrentRun)
+            && IsValidInstallFolder(installFolderForCurrentRun))
+        {
+            return installFolderForCurrentRun;
+        }
+
+        if (!TryResolveInstallFolderFromRepairerPath(out var resolvedFromRepairer))
+        {
+            return InstallFolder;
+        }
+
+        if (IsValidInstallFolder(resolvedFromRepairer))
+        {
+            InstallFolder = resolvedFromRepairer;
+            return resolvedFromRepairer;
+        }
+
+        return InstallFolder;
+    }
+
+    private bool TryResolveInstallFolderFromRepairerPath(out string resolvedPath)
+    {
+        resolvedPath = string.Empty;
+        if (string.IsNullOrWhiteSpace(bundleExecutablePath))
+        {
+            return false;
+        }
+
+        var executableName = Path.GetFileName(bundleExecutablePath);
+        if (!string.Equals(executableName, RepairerExecutableName, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var parentDirectory = Path.GetDirectoryName(bundleExecutablePath);
+        if (string.IsNullOrWhiteSpace(parentDirectory))
+        {
+            return false;
+        }
+
+        resolvedPath = parentDirectory;
+        return true;
     }
 }

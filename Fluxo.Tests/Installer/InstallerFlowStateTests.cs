@@ -375,6 +375,45 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void MaintenanceUninstall_UsesRepairerParentDirectory_ForCleanupTarget()
+    {
+        var deletedFiles = new List<string>();
+        var deletedDirectories = new List<string>();
+        string? writtenScriptContents = null;
+        var installFolder = @"D:\Apps\Fluxo";
+        var staleFilePath = Path.Combine(installFolder, "Fluxo.exe");
+        var staleDirectoryPath = Path.Combine(installFolder, "cache");
+        var repairerPath = Path.Combine(installFolder, "fluxo.Repairer.exe");
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            requestDetect: static () => { },
+            directoryExists: path =>
+                string.Equals(path, installFolder, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(path, staleDirectoryPath, StringComparison.OrdinalIgnoreCase),
+            enumerateFileSystemEntries: _ => [staleFilePath, staleDirectoryPath, repairerPath],
+            deleteDirectory: path => deletedDirectories.Add(path),
+            deleteFile: path => deletedFiles.Add(path),
+            createDeferredCleanupScriptPath: () => @"C:\Temp\fluxo-cleanup-test.cmd",
+            writeAllText: (_, content) => writtenScriptContents = content,
+            startProcess: _ => { },
+            operationMode: InstallerOperationMode.Maintenance,
+            bundleExecutablePath: repairerPath,
+            copyFile: static (_, _, _) => { });
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+        vm.ContinueMaintenanceCommand.Execute(null);
+        vm.OnApplyComplete(0);
+
+        Assert.Single(deletedFiles);
+        Assert.Equal(staleFilePath, deletedFiles[0]);
+        Assert.Single(deletedDirectories);
+        Assert.Equal(staleDirectoryPath, deletedDirectories[0]);
+        Assert.NotNull(writtenScriptContents);
+        Assert.Contains(installFolder, writtenScriptContents, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void ApplyComplete_Failure_MaintenanceUninstall_ShowsUninstallFailureCopy()
     {
         var vm = CreateViewModel(operationMode: InstallerOperationMode.Maintenance);
