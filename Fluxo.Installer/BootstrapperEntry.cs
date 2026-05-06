@@ -220,9 +220,13 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
     private void OnDetectComplete(object? sender, DetectCompleteEventArgs e)
     {
-        var shouldSkipInstall = GetOperationMode() == InstallerOperationMode.Install
-            && e.Status == SuccessExitCode
-            && IsInstalledVersionSameOrHigher();
+        var operationMode = GetOperationMode();
+        var shouldSkipInstall = InstallerUpToDateDecision.ShouldSkipInstall(
+            operationMode,
+            e.Status,
+            _currentBundleVersion,
+            _highestDetectedInstalledVersion,
+            (left, right) => engine.CompareVersions(left, right));
 
         if (_headlessMode)
         {
@@ -321,21 +325,6 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         {
             return null;
         }
-    }
-
-    private bool IsInstalledVersionSameOrHigher()
-    {
-        if (string.IsNullOrWhiteSpace(_currentBundleVersion)
-            || string.IsNullOrWhiteSpace(_highestDetectedInstalledVersion))
-        {
-            return false;
-        }
-
-        return TryCompareVersions(
-                   _highestDetectedInstalledVersion,
-                   _currentBundleVersion,
-                   out var comparison)
-               && comparison >= 0;
     }
 
     private bool TryCompareVersions(string left, string right, out int comparison)
