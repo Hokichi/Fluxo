@@ -339,6 +339,64 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void Install_WhenTerminationFails_BlocksBeforeDetect()
+    {
+        var detectCalls = 0;
+        var terminateCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: () => true,
+            tryTerminateProcessById: _ =>
+            {
+                terminateCalls++;
+                return false;
+            },
+            fileExists: static _ => true);
+
+        vm.InstallCommand.Execute(null);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(0, detectCalls);
+        Assert.Equal(1, terminateCalls);
+        Assert.Equal(
+            "Installation did not run because fluxo could not be terminated. Please close fluxo and run setup again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
+    public void ContinueMaintenance_Repair_WhenTerminationFails_BlocksBeforeDetect()
+    {
+        var detectCalls = 0;
+        var terminateCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Maintenance,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: () => true,
+            tryTerminateProcessById: _ =>
+            {
+                terminateCalls++;
+                return false;
+            },
+            fileExists: static _ => true);
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Repair;
+        vm.ContinueMaintenanceCommand.Execute(null);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(InstallerRequestedOperation.Repair, vm.RequestedOperation);
+        Assert.Equal(0, detectCalls);
+        Assert.Equal(1, terminateCalls);
+        Assert.Equal(
+            "Repair did not run because fluxo could not be terminated. Please close fluxo and run the repairer again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
     public void ContinueMaintenance_Uninstall_WhenFluxoRunningAndUserDeclines_ShowsRetryMessage()
     {
         var detectCalls = 0;

@@ -287,6 +287,11 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
+        if (!EnsureFluxoCanBeStoppedForOperation(InstallerRequestedOperation.Install))
+        {
+            return;
+        }
+
         installingChecklistStep.State = ChecklistStepState.Running;
         installFolderExistedBeforeInstall = directoryExists(InstallFolder);
         installFolderForCurrentRun = InstallFolder;
@@ -494,6 +499,11 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         RequestedOperation = InstallerRequestedOperation.Repair;
+        if (!EnsureFluxoCanBeStoppedForOperation(RequestedOperation))
+        {
+            return;
+        }
+
         installingChecklistStep.Label = RepairingChecklistLabel;
         Screen = InstallerScreen.Progress;
         State = InstallerState.Installing;
@@ -845,7 +855,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         RequestedOperation = InstallerRequestedOperation.Uninstall;
         installingChecklistStep.Label = InstallingChecklistLabel;
-        if (!CanProceedWithUninstall())
+        if (!EnsureFluxoCanBeStoppedForOperation(RequestedOperation))
         {
             return;
         }
@@ -863,7 +873,7 @@ public partial class InstallerViewModel : ObservableObject
         requestDetect();
     }
 
-    private bool CanProceedWithUninstall()
+    private bool EnsureFluxoCanBeStoppedForOperation(InstallerRequestedOperation operation)
     {
         IReadOnlyList<int> runningProcessIds;
         try
@@ -882,8 +892,12 @@ public partial class InstallerViewModel : ObservableObject
 
         if (!requestTerminateRunningAppConfirmation())
         {
-            BlockUninstallAndFinish(
-                "Uninstallation did not run because fluxo is still open. Please close fluxo and run the repairer again.");
+            BlockOperationAndFinish(
+                operation,
+                "is still open",
+                operation == InstallerRequestedOperation.Install
+                    ? "Please close fluxo and run setup again."
+                    : "Please close fluxo and run the repairer again.");
             return false;
         }
 
@@ -891,8 +905,12 @@ public partial class InstallerViewModel : ObservableObject
         {
             if (!tryTerminateProcessById(processId))
             {
-                BlockUninstallAndFinish(
-                    "Uninstallation did not run because fluxo could not be terminated. Please close fluxo and run the repairer again.");
+                BlockOperationAndFinish(
+                    operation,
+                    "could not be terminated",
+                    operation == InstallerRequestedOperation.Install
+                        ? "Please close fluxo and run setup again."
+                        : "Please close fluxo and run the repairer again.");
                 return false;
             }
         }
@@ -900,12 +918,21 @@ public partial class InstallerViewModel : ObservableObject
         return true;
     }
 
-    private void BlockUninstallAndFinish(string statusMessage)
+    private void BlockOperationAndFinish(
+        InstallerRequestedOperation operation,
+        string reason,
+        string retrySuffix)
     {
         installStarted = false;
         Screen = InstallerScreen.Finished;
         State = InstallerState.FinishedFailed;
-        StatusMessage = statusMessage;
+        var operationLabel = operation switch
+        {
+            InstallerRequestedOperation.Repair => "Repair",
+            InstallerRequestedOperation.Uninstall => "Uninstallation",
+            _ => "Installation",
+        };
+        StatusMessage = $"{operationLabel} did not run because fluxo {reason}. {retrySuffix}";
     }
 
     private void CompleteUninstall()
