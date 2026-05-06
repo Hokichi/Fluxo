@@ -5,5 +5,13 @@
     <Feature Id="MainFeature" Title="fluxo" Level="1">
       <ComponentGroupRef Id="FluxoAppFiles" />
     </Feature>
+
+    <InstallExecuteSequence>
+      <InstallFiles Sequence="4000" />
+      <WriteRegistryValues Sequence="5000" />
+      <RemoveFiles Sequence="3500" />
+      <RemoveFolders Sequence="3600" />
+      <RemoveRegistryValues Sequence="3650" />
+    </InstallExecuteSequence>
   </Package>
 </Wix>
