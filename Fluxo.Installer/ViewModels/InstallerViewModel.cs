@@ -47,7 +47,7 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Action<ProcessStartInfo> startProcess;
     private readonly Func<IReadOnlyList<int>> getRunningFluxoProcessIds;
     private readonly Func<int, bool> tryTerminateProcessById;
-    private readonly Func<bool> requestTerminateRunningAppConfirmation;
+    private readonly Func<InstallerRequestedOperation, bool> requestTerminateRunningAppConfirmation;
     private readonly Action<string> launchInstalledApp;
     private readonly Action<string, string, bool> copyFile;
     private readonly InstallerOperationMode operationMode;
@@ -83,7 +83,7 @@ public partial class InstallerViewModel : ObservableObject
         Action<ProcessStartInfo>? startProcess = null,
         Func<IReadOnlyList<int>>? getRunningFluxoProcessIds = null,
         Func<int, bool>? tryTerminateProcessById = null,
-        Func<bool>? requestTerminateRunningAppConfirmation = null,
+        Func<InstallerRequestedOperation, bool>? requestTerminateRunningAppConfirmation = null,
         InstallerOperationMode operationMode = InstallerOperationMode.Install,
         string? bundleExecutablePath = null,
         Action<string, string, bool>? copyFile = null,
@@ -596,16 +596,23 @@ public partial class InstallerViewModel : ObservableObject
         return result == MessageBoxResult.Yes;
     }
 
-    private static bool ShowTerminateRunningAppConfirmation()
+    private static bool ShowTerminateRunningAppConfirmation(InstallerRequestedOperation operation)
     {
         if (Application.Current is null)
         {
             return false;
         }
 
+        var operationText = operation switch
+        {
+            InstallerRequestedOperation.Repair => "repairing",
+            InstallerRequestedOperation.Uninstall => "uninstalling",
+            _ => "installing",
+        };
+
         var result = FluxoMessageBox.Show(
             Application.Current.MainWindow,
-            "Fluxo is currently running. Do you want to close it now and continue uninstalling?",
+            $"Fluxo is currently running. Do you want to close it now and continue {operationText}?",
             "Close Fluxo first?",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -890,7 +897,7 @@ public partial class InstallerViewModel : ObservableObject
             return true;
         }
 
-        if (!requestTerminateRunningAppConfirmation())
+        if (!requestTerminateRunningAppConfirmation(operation))
         {
             BlockOperationAndFinish(
                 operation,
