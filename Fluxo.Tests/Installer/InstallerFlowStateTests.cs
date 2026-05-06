@@ -3,6 +3,8 @@ using Fluxo.Installer.Services;
 using Fluxo.Installer.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using Xunit;
 
 namespace Fluxo.Tests.Installer;
@@ -327,11 +329,44 @@ public sealed class InstallerFlowStateTests
     [Fact]
     public void ApplyComplete_Success_UninstallMode_TransitionsToFinishedUninstalled()
     {
-        var vm = CreateViewModel(operationMode: InstallerOperationMode.Uninstall);
+        var deletedFiles = new List<string>();
+        var deletedDirectories = new List<string>();
+        var startProcessCalls = 0;
+        string? writtenScriptPath = null;
+        string? writtenScriptContents = null;
+        var installFolder = @"C:\Program Files\fluxo";
+        var staleFilePath = Path.Combine(installFolder, "Fluxo.exe");
+        var staleDirectoryPath = Path.Combine(installFolder, "cache");
+        var repairerPath = Path.Combine(installFolder, "fluxo.Repairer.exe");
+        var vm = CreateViewModel(
+            operationMode: InstallerOperationMode.Uninstall,
+            directoryExists: path =>
+            {
+                return string.Equals(path, installFolder, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(path, staleDirectoryPath, StringComparison.OrdinalIgnoreCase);
+            },
+            enumerateFileSystemEntries: _ => [staleFilePath, staleDirectoryPath, repairerPath],
+            deleteDirectory: path => deletedDirectories.Add(path),
+            deleteFile: path => deletedFiles.Add(path),
+            createDeferredCleanupScriptPath: () => @"C:\Temp\fluxo-cleanup-test.cmd",
+            writeAllText: (path, content) =>
+            {
+                writtenScriptPath = path;
+                writtenScriptContents = content;
+            },
+            startProcess: _ => startProcessCalls++);
 
         vm.Begin();
         vm.OnApplyComplete(0);
 
+        Assert.Single(deletedFiles);
+        Assert.Equal(staleFilePath, deletedFiles[0]);
+        Assert.Single(deletedDirectories);
+        Assert.Equal(staleDirectoryPath, deletedDirectories[0]);
+        Assert.Equal(1, startProcessCalls);
+        Assert.Equal(@"C:\Temp\fluxo-cleanup-test.cmd", writtenScriptPath);
+        Assert.NotNull(writtenScriptContents);
+        Assert.Contains("fluxo.Repairer.exe", writtenScriptContents, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(InstallerState.FinishedUninstalled, vm.State);
         Assert.Equal(InstallerScreen.Finished, vm.Screen);
         Assert.Equal("fluxo", vm.FinishedTitle);
@@ -352,6 +387,22 @@ public sealed class InstallerFlowStateTests
         Assert.Equal(InstallerState.FinishedFailed, vm.State);
         Assert.Equal("Uninstallation failed", vm.FinishedTitle);
         Assert.StartsWith("Uninstallation failed.", vm.StatusMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ApplyComplete_Success_Uninstall_Fails_WhenDeferredCleanupCannotBeScheduled()
+    {
+        var vm = CreateViewModel(
+            operationMode: InstallerOperationMode.Uninstall,
+            directoryExists: static _ => true,
+            enumerateFileSystemEntries: static _ => [],
+            writeAllText: static (_, _) => throw new IOException("Access denied."));
+
+        vm.Begin();
+        vm.OnApplyComplete(0);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.StartsWith("Uninstallation failed:", vm.StatusMessage, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -429,6 +480,13 @@ public sealed class InstallerFlowStateTests
         Func<bool>? requestRollback = null,
         Func<bool>? requestCancelConfirmation = null,
         InstallerOperationMode operationMode = InstallerOperationMode.Install,
+        Func<string, bool>? directoryExists = null,
+        Func<string, string[]>? enumerateFileSystemEntries = null,
+        Action<string>? deleteDirectory = null,
+        Action<string>? deleteFile = null,
+        Func<string>? createDeferredCleanupScriptPath = null,
+        Action<string, string>? writeAllText = null,
+        Action<ProcessStartInfo>? startProcess = null,
         Action? closeInstallerAction = null)
     {
         return new InstallerViewModel(
@@ -440,6 +498,13 @@ public sealed class InstallerFlowStateTests
             fileExists: fileExists,
             requestRollback: requestRollback,
             requestCancelConfirmation: requestCancelConfirmation,
+            directoryExists: directoryExists,
+            enumerateFileSystemEntries: enumerateFileSystemEntries,
+            deleteDirectory: deleteDirectory,
+            deleteFile: deleteFile,
+            createDeferredCleanupScriptPath: createDeferredCleanupScriptPath,
+            writeAllText: writeAllText,
+            startProcess: startProcess,
             operationMode: operationMode,
             bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
             copyFile: static (_, _, _) => { },

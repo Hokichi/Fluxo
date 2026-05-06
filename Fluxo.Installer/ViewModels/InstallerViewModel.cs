@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Windows;
 using Fluxo.Resources.CustomControls;
 
@@ -16,8 +17,13 @@ namespace Fluxo.Installer.ViewModels;
 public partial class InstallerViewModel : ObservableObject
 {
     private const int SuccessStatus = 0;
+    private const string InstallingChecklistLabel = "Installing";
+    private const string RepairingChecklistLabel = "Repairing";
     private const string InstalledExecutableName = "Fluxo.exe";
     private const string RepairerExecutableName = "fluxo.Repairer.exe";
+    private const string CleanupScriptPrefix = "fluxo-cleanup-";
+    private const int DeferredCleanupRetryCount = 60;
+    private const int DeferredCleanupRetryDelaySeconds = 1;
     private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
@@ -32,7 +38,12 @@ public partial class InstallerViewModel : ObservableObject
     private readonly bool isRollbackConfigured;
     private readonly Func<string, bool> fileExists;
     private readonly Func<string, bool> directoryExists;
+    private readonly Func<string, string[]> enumerateFileSystemEntries;
     private readonly Action<string> deleteDirectory;
+    private readonly Action<string> deleteFile;
+    private readonly Func<string> createDeferredCleanupScriptPath;
+    private readonly Action<string, string> writeAllText;
+    private readonly Action<ProcessStartInfo> startProcess;
     private readonly Action<string> launchInstalledApp;
     private readonly Action<string, string, bool> copyFile;
     private readonly InstallerOperationMode operationMode;
@@ -41,7 +52,7 @@ public partial class InstallerViewModel : ObservableObject
     private Action closeInstallerAction = () => { };
 
     private readonly InstallerChecklistStep prerequisitesChecklistStep = new("Checking prerequisites");
-    private readonly InstallerChecklistStep installingChecklistStep = new("Installing");
+    private readonly InstallerChecklistStep installingChecklistStep = new(InstallingChecklistLabel);
     private readonly InstallerChecklistStep cleanUpChecklistStep = new("Cleaning up");
     private readonly InstallerChecklistStep rollbackChecklistStep = new("Rolling back");
 
@@ -60,7 +71,12 @@ public partial class InstallerViewModel : ObservableObject
         Func<bool>? requestRollback = null,
         Func<bool>? requestCancelConfirmation = null,
         Func<string, bool>? directoryExists = null,
+        Func<string, string[]>? enumerateFileSystemEntries = null,
         Action<string>? deleteDirectory = null,
+        Action<string>? deleteFile = null,
+        Func<string>? createDeferredCleanupScriptPath = null,
+        Action<string, string>? writeAllText = null,
+        Action<ProcessStartInfo>? startProcess = null,
         InstallerOperationMode operationMode = InstallerOperationMode.Install,
         string? bundleExecutablePath = null,
         Action<string, string, bool>? copyFile = null,
@@ -76,7 +92,16 @@ public partial class InstallerViewModel : ObservableObject
         isRollbackConfigured = requestRollback is not null;
         this.fileExists = fileExists ?? File.Exists;
         this.directoryExists = directoryExists ?? Directory.Exists;
+        this.enumerateFileSystemEntries = enumerateFileSystemEntries
+            ?? (path => Directory.EnumerateFileSystemEntries(path).ToArray());
         this.deleteDirectory = deleteDirectory ?? (path => Directory.Delete(path, recursive: true));
+        this.deleteFile = deleteFile ?? File.Delete;
+        this.createDeferredCleanupScriptPath = createDeferredCleanupScriptPath
+            ?? (() => Path.Combine(
+                Path.GetTempPath(),
+                $"{CleanupScriptPrefix}{Guid.NewGuid():N}.cmd"));
+        this.writeAllText = writeAllText ?? File.WriteAllText;
+        this.startProcess = startProcess ?? (startInfo => _ = Process.Start(startInfo));
         this.launchInstalledApp = launchInstalledApp ?? LaunchInstalledApp;
         this.operationMode = operationMode;
         this.bundleExecutablePath = bundleExecutablePath ?? string.Empty;
@@ -230,6 +255,7 @@ public partial class InstallerViewModel : ObservableObject
         installStarted = false;
         installFolderExistedBeforeInstall = false;
         installFolderForCurrentRun = string.Empty;
+        installingChecklistStep.Label = InstallingChecklistLabel;
         EnsureDefaultChecklistSteps();
         ResetChecklistStates();
         prerequisitesChecklistStep.State = ChecklistStepState.Running;
@@ -457,6 +483,7 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         RequestedOperation = InstallerRequestedOperation.Repair;
+        installingChecklistStep.Label = RepairingChecklistLabel;
         Screen = InstallerScreen.Progress;
         State = InstallerState.Installing;
         installStarted = true;
@@ -468,6 +495,30 @@ public partial class InstallerViewModel : ObservableObject
         installingChecklistStep.State = ChecklistStepState.Running;
         StatusMessage = "Detecting installation state...";
         requestDetect();
+    }
+
+    [RelayCommand]
+    private void RepairMaintenance()
+    {
+        if (!IsMaintenanceMode)
+        {
+            return;
+        }
+
+        SelectedMaintenanceAction = InstallerMaintenanceAction.Repair;
+        ContinueMaintenance();
+    }
+
+    [RelayCommand]
+    private void UninstallMaintenance()
+    {
+        if (!IsMaintenanceMode)
+        {
+            return;
+        }
+
+        SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+        ContinueMaintenance();
     }
 
     [RelayCommand]
@@ -765,6 +816,7 @@ public partial class InstallerViewModel : ObservableObject
     private void StartUninstall()
     {
         RequestedOperation = InstallerRequestedOperation.Uninstall;
+        installingChecklistStep.Label = InstallingChecklistLabel;
         Screen = InstallerScreen.Uninstall;
         State = InstallerState.Installing;
         installStarted = true;
@@ -782,6 +834,15 @@ public partial class InstallerViewModel : ObservableObject
     {
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
         installingChecklistStep.State = ChecklistStepState.Success;
+        if (!TryDeleteInstallFolderAfterUninstall(out var cleanupError))
+        {
+            cleanUpChecklistStep.State = ChecklistStepState.Failed;
+            Screen = InstallerScreen.Finished;
+            State = InstallerState.FinishedFailed;
+            StatusMessage = $"Uninstallation failed: {cleanupError}";
+            return;
+        }
+
         cleanUpChecklistStep.State = ChecklistStepState.Success;
         Screen = InstallerScreen.Finished;
         State = InstallerState.FinishedUninstalled;
@@ -792,6 +853,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         RequestedOperation = InstallerRequestedOperation.Install;
         SelectedMaintenanceAction = InstallerMaintenanceAction.Repair;
+        installingChecklistStep.Label = InstallingChecklistLabel;
         Screen = InstallerScreen.AppFound;
         State = InstallerState.Welcome;
         installStarted = false;
@@ -830,5 +892,105 @@ public partial class InstallerViewModel : ObservableObject
             errorMessage = $"Installation failed: could not prepare repairer executable. {ex.Message}";
             return false;
         }
+    }
+
+    private bool TryDeleteInstallFolderAfterUninstall(out string cleanupError)
+    {
+        cleanupError = string.Empty;
+        var installFolder = GetInstallFolderForCurrentRun();
+        if (!IsSafeDeleteTarget(installFolder))
+        {
+            cleanupError = "cleanup rejected because install folder path is unsafe for recursive deletion.";
+            return false;
+        }
+
+        if (!directoryExists(installFolder))
+        {
+            return true;
+        }
+
+        try
+        {
+            DeleteInstallFolderContentsExceptRepairer(installFolder);
+            ScheduleDeferredInstallFolderCleanup(installFolder);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            cleanupError = ex.Message;
+            return false;
+        }
+    }
+
+    private void DeleteInstallFolderContentsExceptRepairer(string installFolder)
+    {
+        foreach (var entryPath in enumerateFileSystemEntries(installFolder))
+        {
+            var entryName = Path.GetFileName(entryPath);
+            if (string.Equals(entryName, RepairerExecutableName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (directoryExists(entryPath))
+            {
+                deleteDirectory(entryPath);
+                continue;
+            }
+
+            deleteFile(entryPath);
+        }
+    }
+
+    private void ScheduleDeferredInstallFolderCleanup(string installFolder)
+    {
+        var repairerPath = Path.Combine(installFolder, RepairerExecutableName);
+        var scriptPath = createDeferredCleanupScriptPath();
+        var scriptContent = BuildDeferredCleanupScript(installFolder, repairerPath);
+        writeAllText(scriptPath, scriptContent);
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            Arguments = $"/d /c \"\"{scriptPath}\"\"",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+        };
+
+        startProcess(startInfo);
+    }
+
+    private static string BuildDeferredCleanupScript(string installFolder, string repairerPath)
+    {
+        static string QuoteForBatchValue(string value) => value.Replace("\"", "\"\"");
+
+        var builder = new StringBuilder();
+        builder.AppendLine("@echo off");
+        builder.AppendLine("setlocal");
+        builder.AppendLine($"set \"INSTALL_DIR={QuoteForBatchValue(installFolder)}\"");
+        builder.AppendLine($"set \"REPAIRER_PATH={QuoteForBatchValue(repairerPath)}\"");
+        builder.AppendLine($"set /a \"RETRIES={DeferredCleanupRetryCount}\"");
+        builder.AppendLine(":wait_loop");
+        builder.AppendLine("if not exist \"%REPAIRER_PATH%\" goto delete_folder");
+        builder.AppendLine("del /f /q \"%REPAIRER_PATH%\" >nul 2>nul");
+        builder.AppendLine("if not exist \"%REPAIRER_PATH%\" goto delete_folder");
+        builder.AppendLine("set /a RETRIES-=1");
+        builder.AppendLine("if %RETRIES% LEQ 0 goto delete_folder");
+        builder.AppendLine($"timeout /t {DeferredCleanupRetryDelaySeconds} /nobreak >nul");
+        builder.AppendLine("goto wait_loop");
+        builder.AppendLine(":delete_folder");
+        builder.AppendLine($"set /a \"RETRIES={DeferredCleanupRetryCount}\"");
+        builder.AppendLine(":folder_loop");
+        builder.AppendLine("rmdir /s /q \"%INSTALL_DIR%\" >nul 2>nul");
+        builder.AppendLine("if not exist \"%INSTALL_DIR%\" goto cleanup_self");
+        builder.AppendLine("set /a RETRIES-=1");
+        builder.AppendLine("if %RETRIES% LEQ 0 goto cleanup_self");
+        builder.AppendLine($"timeout /t {DeferredCleanupRetryDelaySeconds} /nobreak >nul");
+        builder.AppendLine("goto folder_loop");
+        builder.AppendLine(":cleanup_self");
+        builder.AppendLine("del /f /q \"%~f0\" >nul 2>nul");
+        builder.AppendLine("exit /b 0");
+        return builder.ToString();
     }
 }

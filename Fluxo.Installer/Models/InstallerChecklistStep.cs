@@ -2,9 +2,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Fluxo.Installer.Models;
 
-public partial class InstallerChecklistStep(string label) : ObservableObject
+public partial class InstallerChecklistStep(string initialLabel) : ObservableObject
 {
-    public string Label => label;
+    [ObservableProperty]
+    private string label = initialLabel;
 
     [ObservableProperty]
     private ChecklistStepState state = ChecklistStepState.Pending;

@@ -54,6 +54,6 @@
             </StackPanel>
         </Border>
 
-        <controls:FluxoWave Margin="0,160,0,-40" ClipToBounds="True" />
+        <controls:FluxoWave Margin="0,160,0,0" ClipToBounds="True" />
     </Grid>
 </Window>

@@ -6,6 +6,8 @@
     xmlns:controls="clr-namespace:Fluxo.Controls;assembly=Fluxo.Resources">
     <Border Padding="0,24" Style="{StaticResource PanelStyle}">
         <Grid>
+            <controls:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
+
             <StackPanel
                 x:Name="PageContent"
                 Margin="0,-40,0,0"
