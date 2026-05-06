@@ -39,6 +39,8 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
+                <controls:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
+
                 <TextBlock
                     FontFamily="{StaticResource Bold}"
                     FontSize="24"

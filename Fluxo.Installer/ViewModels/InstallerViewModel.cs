@@ -41,7 +41,7 @@ public partial class InstallerViewModel : ObservableObject
     private Action closeInstallerAction = () => { };
 
     private readonly InstallerChecklistStep prerequisitesChecklistStep = new("Checking prerequisites");
-    private readonly InstallerChecklistStep installingChecklistStep = new("Installing the app");
+    private readonly InstallerChecklistStep installingChecklistStep = new("Installing");
     private readonly InstallerChecklistStep cleanUpChecklistStep = new("Cleaning up");
     private readonly InstallerChecklistStep rollbackChecklistStep = new("Rolling back");
 
