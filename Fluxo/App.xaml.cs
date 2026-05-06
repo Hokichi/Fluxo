@@ -10,6 +10,7 @@ using Fluxo.Services.Logging;
 using Fluxo.Services.Notifications;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Ui;
+using Fluxo.Infrastructure.SingleInstance;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Shell;
 using Fluxo.Views.Shell.Main;
@@ -50,7 +51,9 @@ public partial class App : Application
     private bool _hasShownStartupTrayPopup;
     private bool _isTrayLeftClickPending;
     private bool _isForcedShutdownRequested;
+    private bool _isPrimaryActivationPending;
     private bool _launchInTrayMode;
+    private ISingleInstanceCoordinator? _singleInstanceCoordinator;
 
     public App()
     {
@@ -77,6 +80,17 @@ public partial class App : Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        _singleInstanceCoordinator ??= new SingleInstanceCoordinator();
+        var shouldContinueStartup = SingleInstanceStartupPolicy.ShouldContinueStartup(
+            _singleInstanceCoordinator,
+            OnPrimaryActivationRequested);
+
+        if (!shouldContinueStartup)
+        {
+            Shutdown();
+            return;
+        }
+
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         _launchInTrayMode = IsTrayLaunchMode(e.Args);
@@ -121,6 +135,11 @@ public partial class App : Application
             MainWindow = mainWindow;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             EnsureTrayIconInitialized();
+            if (_isPrimaryActivationPending)
+            {
+                _isPrimaryActivationPending = false;
+                RestoreMainWindowFromTray();
+            }
 
             if (_launchInTrayMode)
             {
@@ -151,14 +170,31 @@ public partial class App : Application
         try
         {
             DisposeTrayResources();
+            _singleInstanceCoordinator?.Dispose();
+            _singleInstanceCoordinator = null;
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogFailureForProcess(exception, "dispose tray resources during app shutdown");
+            FluxoLogManager.LogFailureForProcess(exception, "dispose app resources during app shutdown");
         }
 
         FluxoLogManager.CloseAndFlush();
         base.OnExit(e);
+    }
+
+    private void OnPrimaryActivationRequested()
+    {
+        RunOnUiThread(() =>
+        {
+            if (MainWindow is not Fluxo.Views.Shell.Main.MainWindow)
+            {
+                _isPrimaryActivationPending = true;
+                return;
+            }
+
+            _isPrimaryActivationPending = false;
+            RestoreMainWindowFromTray();
+        });
     }
 
     public async Task RunSetupWizardAsync()
