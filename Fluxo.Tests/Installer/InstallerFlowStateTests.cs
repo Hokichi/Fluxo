@@ -27,6 +27,22 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void InstallCommand_SetsInstallFolderBeforeDetect()
+    {
+        var folderVariableValues = new List<string>();
+        var vm = CreateViewModel(
+            setInstallFolderVariable: value => folderVariableValues.Add(value),
+            requestDetect: static () => { },
+            fileExists: static _ => true);
+        vm.InstallFolder = @"D:\Apps\fluxo";
+
+        vm.InstallCommand.Execute(null);
+
+        Assert.Single(folderVariableValues);
+        Assert.Equal(@"D:\Apps\fluxo", folderVariableValues[0]);
+    }
+
+    [Fact]
     public void PlanComplete_Success_TransitionsToApplying()
     {
         var applyCalls = 0;
@@ -176,6 +192,18 @@ public sealed class InstallerFlowStateTests
         Assert.Equal("Let's begin", vm.FinishedTitle);
         Assert.Equal("Version is up-to-date.", vm.FinishedSubtitle);
         Assert.Equal(0, vm.ExitCode);
+    }
+
+    [Fact]
+    public void DetectedNewerVersion_TransitionsToFinishedPage_WithNewerVersionSubtitle()
+    {
+        var vm = CreateViewModel(fileExists: static _ => true);
+
+        vm.OnDetectedUpToDateVersion("1.2.3.4", isNewerVersion: true);
+
+        Assert.Equal(InstallerState.FinishedUpToDate, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal("Newer version found: 1.2.3.4", vm.FinishedSubtitle);
     }
 
     [Fact]
@@ -634,7 +662,7 @@ public sealed class InstallerFlowStateTests
         string? writtenScriptPath = null;
         string? writtenScriptContents = null;
         var installFolder = @"C:\Program Files\fluxo";
-        var staleFilePath = Path.Combine(installFolder, "Fluxo.exe");
+        var staleFilePath = Path.Combine(installFolder, "fluxo.exe");
         var staleDirectoryPath = Path.Combine(installFolder, "cache");
         var repairerPath = Path.Combine(installFolder, "fluxo.Repairer.exe");
         var vm = CreateViewModel(
@@ -680,7 +708,7 @@ public sealed class InstallerFlowStateTests
         var deletedDirectories = new List<string>();
         string? writtenScriptContents = null;
         var installFolder = @"D:\Apps\Fluxo";
-        var staleFilePath = Path.Combine(installFolder, "Fluxo.exe");
+        var staleFilePath = Path.Combine(installFolder, "fluxo.exe");
         var staleDirectoryPath = Path.Combine(installFolder, "cache");
         var repairerPath = Path.Combine(installFolder, "fluxo.Repairer.exe");
         var vm = new InstallerViewModel(
@@ -837,7 +865,7 @@ public sealed class InstallerFlowStateTests
         vm.OnApplyComplete(0);
 
         Assert.Equal(InstallerState.FinishedFailed, vm.State);
-        Assert.Equal("Verification failed: Fluxo.exe was not found.", vm.StatusMessage);
+        Assert.Equal("Verification failed: fluxo.exe was not found.", vm.StatusMessage);
         Assert.Equal(1, vm.ExitCode);
     }
 

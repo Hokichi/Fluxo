@@ -4,6 +4,15 @@
       <Files Include="$(var.FluxoAppOutputDir)\**">
         <Exclude Files="$(var.FluxoAppOutputDir)\**\*.db" />
       </Files>
+      <Component Id="FluxoInstalledVersionRegistryValue">
+        <RegistryValue
+          Root="HKLM"
+          Key="SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo"
+          Name="InstalledVersion"
+          Value="$(var.FluxoMsiVersion)"
+          Type="string"
+          KeyPath="yes" />
+      </Component>
     </ComponentGroup>
   </Fragment>
 </Wix>

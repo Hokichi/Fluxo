@@ -25,7 +25,7 @@ public sealed class InstallerLaunchCommandTests
 
         vm.LaunchAppCommand.Execute(null);
 
-        Assert.Equal("C:\\Program Files\\fluxo\\Fluxo.exe", launchedPath);
+        Assert.Equal("C:\\Program Files\\fluxo\\fluxo.exe", launchedPath);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public sealed class InstallerLaunchCommandTests
 
         vm.LaunchAppCommand.Execute(null);
 
-        Assert.Equal("C:\\Program Files\\fluxo\\Fluxo.exe", launchedPath);
+        Assert.Equal("C:\\Program Files\\fluxo\\fluxo.exe", launchedPath);
     }
 
     [Fact]

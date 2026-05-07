@@ -19,7 +19,7 @@ public partial class InstallerViewModel : ObservableObject
     private const int SuccessStatus = 0;
     private const string InstallingChecklistLabel = "Installing";
     private const string RepairingChecklistLabel = "Repairing";
-    private const string InstalledExecutableName = "Fluxo.exe";
+    private const string InstalledExecutableName = "fluxo.exe";
     private const string RepairerExecutableName = "fluxo.Repairer.exe";
     private const string FluxoFolderName = "fluxo";
     private const string CleanupScriptPrefix = "fluxo-cleanup-";
@@ -146,6 +146,9 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private InstallerScreen screen = InstallerScreen.Welcome;
 
+    private string? upToDateInstalledVersion;
+    private bool upToDateInstalledVersionIsNewer;
+
     public ObservableCollection<InstallerChecklistStep> ChecklistSteps { get; }
 
     [ObservableProperty]
@@ -200,6 +203,9 @@ public partial class InstallerViewModel : ObservableObject
     public string FinishedSubtitle => State switch
     {
         InstallerState.FinishedSuccess => "Your finance, simplified",
+        InstallerState.FinishedUpToDate when upToDateInstalledVersionIsNewer
+            && !string.IsNullOrWhiteSpace(upToDateInstalledVersion)
+                => $"Newer version found: {upToDateInstalledVersion}",
         InstallerState.FinishedUpToDate => "Version is up-to-date.",
         InstallerState.FinishedUninstalled => "Thank you for letting fluxo help",
         _ => "Please close the setup and run it again",
@@ -305,6 +311,7 @@ public partial class InstallerViewModel : ObservableObject
         installFolderExistedBeforeInstall = directoryExists(InstallFolder);
         installFolderForCurrentRun = InstallFolder;
         installStarted = true;
+        setInstallFolderVariable(GetInstallFolderForCurrentRun());
         StatusMessage = "Detecting installation state...";
         requestDetect();
     }
@@ -326,13 +333,19 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        setInstallFolderVariable(GetInstallFolderForCurrentRun());
+        if (string.IsNullOrWhiteSpace(installFolderForCurrentRun))
+        {
+            setInstallFolderVariable(GetInstallFolderForCurrentRun());
+        }
+
         StatusMessage = "Planning installation...";
         requestPlan();
     }
 
-    public void OnDetectedUpToDateVersion()
+    public void OnDetectedUpToDateVersion(string? installedVersion = null, bool isNewerVersion = false)
     {
+        upToDateInstalledVersion = installedVersion;
+        upToDateInstalledVersionIsNewer = isNewerVersion;
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
         installingChecklistStep.State = ChecklistStepState.Success;
         cleanUpChecklistStep.State = ChecklistStepState.Success;
@@ -418,7 +431,7 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        TransitionToFailure("Verification failed: Fluxo.exe was not found.");
+        TransitionToFailure("Verification failed: fluxo.exe was not found.");
     }
 
     private void TransitionToFailure(string message)

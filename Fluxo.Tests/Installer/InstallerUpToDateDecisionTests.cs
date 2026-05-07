@@ -55,4 +55,115 @@ public sealed class InstallerUpToDateDecisionTests
         Assert.False(skip);
         Assert.False(compareCalled);
     }
+
+    [Fact]
+    public void Install_WhenInstalledExecutableVersionIsHigher_ShouldSkip()
+    {
+        var decision = InstallerUpToDateDecision.Evaluate(
+            InstallerOperationMode.Install,
+            detectStatus: 0,
+            currentBundleVersion: "1.0.0.0",
+            highestDetectedInstalledVersion: null,
+            registryInstalledVersion: null,
+            installedExecutableVersion: "1.1.0.0",
+            compareVersions: CompareVersions);
+
+        Assert.True(decision.ShouldSkipInstall);
+        Assert.True(decision.IsNewerVersion);
+        Assert.Equal("1.1.0.0", decision.InstalledVersion);
+    }
+
+    [Fact]
+    public void Install_WhenInstalledExecutableVersionIsLower_ShouldNotSkip()
+    {
+        var skip = InstallerUpToDateDecision.ShouldSkipInstall(
+            InstallerOperationMode.Install,
+            detectStatus: 0,
+            currentBundleVersion: "1.1.0.0",
+            highestDetectedInstalledVersion: null,
+            installedExecutableVersion: "1.0.0.0",
+            compareVersions: CompareVersions);
+
+        Assert.False(skip);
+    }
+
+    [Fact]
+    public void Install_WhenBundleAndExecutableVersionsExist_ShouldCompareHighestDetectedCandidate()
+    {
+        string? comparedInstalledVersion = null;
+
+        var skip = InstallerUpToDateDecision.ShouldSkipInstall(
+            InstallerOperationMode.Install,
+            detectStatus: 0,
+            currentBundleVersion: "1.0.0.0",
+            highestDetectedInstalledVersion: "1.1.0.0",
+            registryInstalledVersion: null,
+            installedExecutableVersion: "1.2.0.0",
+            compareVersions: (left, right) =>
+            {
+                if (right == "1.0.0.0")
+                {
+                    comparedInstalledVersion = left;
+                }
+
+                return CompareVersions(left, right);
+            });
+
+        Assert.True(skip);
+        Assert.Equal("1.2.0.0", comparedInstalledVersion);
+    }
+
+    [Fact]
+    public void Install_WhenRegistryVersionIsHigher_ShouldSkipAndReportRegistryVersion()
+    {
+        var decision = InstallerUpToDateDecision.Evaluate(
+            InstallerOperationMode.Install,
+            detectStatus: 0,
+            currentBundleVersion: "1.0.0.0",
+            highestDetectedInstalledVersion: null,
+            registryInstalledVersion: "1.3.0.0",
+            installedExecutableVersion: null,
+            compareVersions: CompareVersions);
+
+        Assert.True(decision.ShouldSkipInstall);
+        Assert.True(decision.IsNewerVersion);
+        Assert.Equal("1.3.0.0", decision.InstalledVersion);
+    }
+
+    [Fact]
+    public void Install_WhenRegistryAndExecutableVersionsExist_ShouldReportHighestCandidate()
+    {
+        var decision = InstallerUpToDateDecision.Evaluate(
+            InstallerOperationMode.Install,
+            detectStatus: 0,
+            currentBundleVersion: "1.0.0.0",
+            highestDetectedInstalledVersion: null,
+            registryInstalledVersion: "1.4.0.0",
+            installedExecutableVersion: "1.3.0.0",
+            compareVersions: CompareVersions);
+
+        Assert.True(decision.ShouldSkipInstall);
+        Assert.True(decision.IsNewerVersion);
+        Assert.Equal("1.4.0.0", decision.InstalledVersion);
+    }
+
+    [Fact]
+    public void Install_WhenInstalledExecutableVersionIsSame_ShouldSkipWithoutNewerFlag()
+    {
+        var decision = InstallerUpToDateDecision.Evaluate(
+            InstallerOperationMode.Install,
+            detectStatus: 0,
+            currentBundleVersion: "1.0.0.0",
+            highestDetectedInstalledVersion: null,
+            registryInstalledVersion: null,
+            installedExecutableVersion: "1.0.0.0",
+            compareVersions: CompareVersions);
+
+        Assert.True(decision.ShouldSkipInstall);
+        Assert.False(decision.IsNewerVersion);
+        Assert.Equal("1.0.0.0", decision.InstalledVersion);
+    }
+
+    private static int CompareVersions(string left, string right) =>
+        Version.Parse(left).CompareTo(Version.Parse(right));
 }

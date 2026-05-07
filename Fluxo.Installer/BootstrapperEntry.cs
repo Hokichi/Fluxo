@@ -1,8 +1,10 @@
 using System.IO;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Fluxo.Installer.Models;
+using Fluxo.Installer.Services;
 using Fluxo.Installer.ViewModels;
 using WixToolset.BootstrapperApplicationApi;
 
@@ -13,6 +15,8 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private const int SuccessExitCode = 0;
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
+    private const string InstalledExecutableName = "fluxo.exe";
+    private const string DefaultInstallFolderName = "fluxo";
 
     private static readonly string DiagnosticLogPath = Path.Combine(
         Path.GetTempPath(),
@@ -28,6 +32,8 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private readonly ManualResetEventSlim _headlessCompleted = new(false);
     private string? _currentBundleVersion;
     private string? _highestDetectedInstalledVersion;
+    private string? _registryInstalledVersion;
+    private string? _installedExecutableVersion;
 
     public InstallerBootstrapperApplication()
     {
@@ -197,6 +203,8 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     {
         _highestDetectedInstalledVersion = null;
         _currentBundleVersion = GetCurrentBundleVersion();
+        _registryInstalledVersion = InstalledVersionRegistryReader.ReadInstalledVersion();
+        _installedExecutableVersion = GetInstalledExecutableVersion();
     }
 
     private void OnDetectRelatedBundle(object? sender, DetectRelatedBundleEventArgs e)
@@ -221,16 +229,18 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private void OnDetectComplete(object? sender, DetectCompleteEventArgs e)
     {
         var operationMode = GetOperationMode();
-        var shouldSkipInstall = InstallerUpToDateDecision.ShouldSkipInstall(
+        var upToDateDecision = InstallerUpToDateDecision.Evaluate(
             operationMode,
             e.Status,
             _currentBundleVersion,
             _highestDetectedInstalledVersion,
+            _registryInstalledVersion,
+            _installedExecutableVersion,
             (left, right) => engine.CompareVersions(left, right));
 
         if (_headlessMode)
         {
-            if (shouldSkipInstall)
+            if (upToDateDecision.ShouldSkipInstall)
             {
                 _headlessExitCode = SuccessExitCode;
                 _headlessCompleted.Set();
@@ -242,9 +252,11 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
             return;
         }
 
-        if (shouldSkipInstall)
+        if (upToDateDecision.ShouldSkipInstall)
         {
-            DispatchToUi(() => _viewModel?.OnDetectedUpToDateVersion());
+            DispatchToUi(() => _viewModel?.OnDetectedUpToDateVersion(
+                upToDateDecision.InstalledVersion,
+                upToDateDecision.IsNewerVersion));
             return;
         }
 
@@ -320,6 +332,53 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
             version = engine.GetVariableString("WixBundleVersion");
             return string.IsNullOrWhiteSpace(version) ? null : version;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string? GetInstalledExecutableVersion()
+    {
+        try
+        {
+            var installFolder = GetInstallFolderVariable();
+            if (string.IsNullOrWhiteSpace(installFolder))
+            {
+                installFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    DefaultInstallFolderName);
+            }
+
+            var executablePath = Path.Combine(installFolder, InstalledExecutableName);
+            if (!File.Exists(executablePath))
+            {
+                return null;
+            }
+
+            var versionInfo = FileVersionInfo.GetVersionInfo(executablePath);
+            if (!string.IsNullOrWhiteSpace(versionInfo.FileVersion))
+            {
+                return versionInfo.FileVersion;
+            }
+
+            return string.IsNullOrWhiteSpace(versionInfo.ProductVersion)
+                ? null
+                : versionInfo.ProductVersion;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string? GetInstallFolderVariable()
+    {
+        try
+        {
+            var installFolder = engine.GetVariableString("InstallFolder");
+            return string.IsNullOrWhiteSpace(installFolder) ? null : installFolder;
         }
         catch
         {
