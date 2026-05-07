@@ -260,6 +260,61 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
+    public void Begin_InstallMode_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeAnyAction()
+    {
+        var vm = CreateViewModel(
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: _ => false,
+            fileExists: static _ => true);
+
+        vm.Begin();
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(
+            "Installation did not run because fluxo is still open. Please close fluxo and run setup again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
+    public void Begin_MaintenanceMode_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeActionSelection()
+    {
+        var vm = CreateViewModel(
+            operationMode: InstallerOperationMode.Maintenance,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: _ => false,
+            fileExists: static _ => true);
+
+        vm.Begin();
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(
+            "Repair did not run because fluxo is still open. Please close fluxo and run the repairer again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
+    public void Begin_UninstallMode_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeDetect()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Uninstall,
+            getRunningFluxoProcessIds: static () => [1234],
+            requestTerminateRunningAppConfirmation: _ => false);
+
+        vm.Begin();
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal(0, detectCalls);
+        Assert.Equal(
+            "Uninstallation did not run because fluxo is still open. Please close fluxo and run the repairer again.",
+            vm.StatusMessage);
+    }
+
+    [Fact]
     public void ContinueMaintenance_DefaultRepair_RequestsDetectAndSetsRepairOperation()
     {
         var detectCalls = 0;
@@ -318,10 +373,15 @@ public sealed class InstallerFlowStateTests
     public void ContinueMaintenance_Repair_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeDetect()
     {
         var detectCalls = 0;
+        var processCheckCalls = 0;
         var vm = CreateViewModel(
             requestDetect: () => detectCalls++,
             operationMode: InstallerOperationMode.Maintenance,
-            getRunningFluxoProcessIds: static () => [1234],
+            getRunningFluxoProcessIds: () =>
+            {
+                processCheckCalls++;
+                return processCheckCalls == 1 ? [] : [1234];
+            },
             requestTerminateRunningAppConfirmation: _ => false,
             fileExists: static _ => true);
 
@@ -360,9 +420,14 @@ public sealed class InstallerFlowStateTests
     public void ContinueMaintenance_Repair_WhenFluxoRunning_RequestsRepairSpecificTerminationConfirmation()
     {
         InstallerRequestedOperation? requestedOperation = null;
+        var processCheckCalls = 0;
         var vm = CreateViewModel(
             operationMode: InstallerOperationMode.Maintenance,
-            getRunningFluxoProcessIds: static () => [1234],
+            getRunningFluxoProcessIds: () =>
+            {
+                processCheckCalls++;
+                return processCheckCalls == 1 ? [] : [1234];
+            },
             requestTerminateRunningAppConfirmation: operation =>
             {
                 requestedOperation = operation;
@@ -381,9 +446,14 @@ public sealed class InstallerFlowStateTests
     public void ContinueMaintenance_Uninstall_WhenFluxoRunning_RequestsUninstallSpecificTerminationConfirmation()
     {
         InstallerRequestedOperation? requestedOperation = null;
+        var processCheckCalls = 0;
         var vm = CreateViewModel(
             operationMode: InstallerOperationMode.Maintenance,
-            getRunningFluxoProcessIds: static () => [1234],
+            getRunningFluxoProcessIds: () =>
+            {
+                processCheckCalls++;
+                return processCheckCalls == 1 ? [] : [1234];
+            },
             requestTerminateRunningAppConfirmation: operation =>
             {
                 requestedOperation = operation;
@@ -429,10 +499,15 @@ public sealed class InstallerFlowStateTests
     {
         var detectCalls = 0;
         var terminateCalls = 0;
+        var processCheckCalls = 0;
         var vm = CreateViewModel(
             requestDetect: () => detectCalls++,
             operationMode: InstallerOperationMode.Maintenance,
-            getRunningFluxoProcessIds: static () => [1234],
+            getRunningFluxoProcessIds: () =>
+            {
+                processCheckCalls++;
+                return processCheckCalls == 1 ? [] : [1234];
+            },
             requestTerminateRunningAppConfirmation: _ => true,
             tryTerminateProcessById: _ =>
             {
@@ -459,10 +534,15 @@ public sealed class InstallerFlowStateTests
     public void ContinueMaintenance_Uninstall_WhenFluxoRunningAndUserDeclines_ShowsRetryMessage()
     {
         var detectCalls = 0;
+        var processCheckCalls = 0;
         var vm = CreateViewModel(
             requestDetect: () => detectCalls++,
             operationMode: InstallerOperationMode.Maintenance,
-            getRunningFluxoProcessIds: static () => [1234],
+            getRunningFluxoProcessIds: () =>
+            {
+                processCheckCalls++;
+                return processCheckCalls == 1 ? [] : [1234];
+            },
             requestTerminateRunningAppConfirmation: _ => false);
 
         vm.Begin();
@@ -483,10 +563,15 @@ public sealed class InstallerFlowStateTests
     {
         var detectCalls = 0;
         var terminateCalls = 0;
+        var processCheckCalls = 0;
         var vm = CreateViewModel(
             requestDetect: () => detectCalls++,
             operationMode: InstallerOperationMode.Maintenance,
-            getRunningFluxoProcessIds: static () => [1234],
+            getRunningFluxoProcessIds: () =>
+            {
+                processCheckCalls++;
+                return processCheckCalls == 1 ? [] : [1234];
+            },
             requestTerminateRunningAppConfirmation: _ => true,
             tryTerminateProcessById: _ =>
             {
@@ -611,6 +696,7 @@ public sealed class InstallerFlowStateTests
             writeAllText: (_, content) => writtenScriptContents = content,
             startProcess: _ => { },
             getRunningFluxoProcessIds: static () => [],
+            requestUninstallConfirmation: static () => true,
             operationMode: InstallerOperationMode.Maintenance,
             bundleExecutablePath: repairerPath,
             copyFile: static (_, _, _) => { });
@@ -626,6 +712,44 @@ public sealed class InstallerFlowStateTests
         Assert.Equal(staleDirectoryPath, deletedDirectories[0]);
         Assert.NotNull(writtenScriptContents);
         Assert.Contains(installFolder, writtenScriptContents, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("FLUXO_DIR", writtenScriptContents, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ContinueMaintenance_Uninstall_WhenUninstallConfirmationDeclined_CancelsWithoutStarting()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Maintenance,
+            requestUninstallConfirmation: () => false);
+
+        vm.Begin();
+        vm.SelectedMaintenanceAction = InstallerMaintenanceAction.Uninstall;
+        vm.ContinueMaintenanceCommand.Execute(null);
+
+        Assert.Equal(InstallerState.Welcome, vm.State);
+        Assert.Equal(InstallerScreen.AppFound, vm.Screen);
+        Assert.Equal(InstallerRequestedOperation.Install, vm.RequestedOperation);
+        Assert.Equal("Uninstallation cancelled.", vm.StatusMessage);
+        Assert.Equal(0, detectCalls);
+    }
+
+    [Fact]
+    public void Begin_UninstallMode_WhenUninstallConfirmationDeclined_TransitionsToFinishedCancelled()
+    {
+        var detectCalls = 0;
+        var vm = CreateViewModel(
+            requestDetect: () => detectCalls++,
+            operationMode: InstallerOperationMode.Uninstall,
+            requestUninstallConfirmation: () => false);
+
+        vm.Begin();
+
+        Assert.Equal(InstallerState.FinishedCancelled, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal("Uninstallation cancelled.", vm.StatusMessage);
+        Assert.Equal(0, detectCalls);
     }
 
     [Fact]
@@ -733,6 +857,7 @@ public sealed class InstallerFlowStateTests
         Func<string, bool>? fileExists = null,
         Func<bool>? requestRollback = null,
         Func<bool>? requestCancelConfirmation = null,
+        Func<bool>? requestUninstallConfirmation = null,
         InstallerOperationMode operationMode = InstallerOperationMode.Install,
         Func<string, bool>? directoryExists = null,
         Func<string, string[]>? enumerateFileSystemEntries = null,
@@ -755,6 +880,7 @@ public sealed class InstallerFlowStateTests
             fileExists: fileExists,
             requestRollback: requestRollback,
             requestCancelConfirmation: requestCancelConfirmation,
+            requestUninstallConfirmation: requestUninstallConfirmation ?? (static () => true),
             directoryExists: directoryExists,
             enumerateFileSystemEntries: enumerateFileSystemEntries,
             deleteDirectory: deleteDirectory,

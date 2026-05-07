@@ -21,6 +21,7 @@ public partial class InstallerViewModel : ObservableObject
     private const string RepairingChecklistLabel = "Repairing";
     private const string InstalledExecutableName = "Fluxo.exe";
     private const string RepairerExecutableName = "fluxo.Repairer.exe";
+    private const string FluxoFolderName = "fluxo";
     private const string CleanupScriptPrefix = "fluxo-cleanup-";
     private const int DeferredCleanupRetryCount = 60;
     private const int DeferredCleanupRetryDelaySeconds = 1;
@@ -36,6 +37,7 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Action requestApply;
     private readonly Func<bool> requestRollback;
     private readonly Func<bool> requestCancelConfirmation;
+    private readonly Func<bool> requestUninstallConfirmation;
     private readonly bool isRollbackConfigured;
     private readonly Func<string, bool> fileExists;
     private readonly Func<string, bool> directoryExists;
@@ -74,6 +76,7 @@ public partial class InstallerViewModel : ObservableObject
         Action<string>? launchInstalledApp = null,
         Func<bool>? requestRollback = null,
         Func<bool>? requestCancelConfirmation = null,
+        Func<bool>? requestUninstallConfirmation = null,
         Func<string, bool>? directoryExists = null,
         Func<string, string[]>? enumerateFileSystemEntries = null,
         Action<string>? deleteDirectory = null,
@@ -96,6 +99,7 @@ public partial class InstallerViewModel : ObservableObject
         this.requestApply = requestApply ?? (() => { });
         this.requestRollback = requestRollback ?? (() => false);
         this.requestCancelConfirmation = requestCancelConfirmation ?? ShowCancelConfirmationMessage;
+        this.requestUninstallConfirmation = requestUninstallConfirmation ?? ShowUninstallConfirmationMessage;
         isRollbackConfigured = requestRollback is not null;
         this.fileExists = fileExists ?? File.Exists;
         this.directoryExists = directoryExists ?? Directory.Exists;
@@ -219,6 +223,11 @@ public partial class InstallerViewModel : ObservableObject
 
     public void Begin()
     {
+        if (!EnsureFluxoCanBeStoppedForOperation(GetStartupPreflightOperation()))
+        {
+            return;
+        }
+
         if (IsMaintenanceMode)
         {
             StartMaintenance();
@@ -491,6 +500,11 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
+        if (Screen != InstallerScreen.AppFound)
+        {
+            return;
+        }
+
         if (SelectedMaintenanceAction == InstallerMaintenanceAction.Uninstall)
         {
             RequestedOperation = InstallerRequestedOperation.Uninstall;
@@ -596,6 +610,23 @@ public partial class InstallerViewModel : ObservableObject
         return result == MessageBoxResult.Yes;
     }
 
+    private static bool ShowUninstallConfirmationMessage()
+    {
+        if (Application.Current is null)
+        {
+            return false;
+        }
+
+        var result = FluxoMessageBox.Show(
+            Application.Current.MainWindow,
+            "Are you sure you want to uninstall fluxo?",
+            "Confirm uninstallation",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        return result == MessageBoxResult.Yes;
+    }
+
     private static bool ShowTerminateRunningAppConfirmation(InstallerRequestedOperation operation)
     {
         if (Application.Current is null)
@@ -618,6 +649,21 @@ public partial class InstallerViewModel : ObservableObject
             MessageBoxImage.Question);
 
         return result == MessageBoxResult.Yes;
+    }
+
+    private InstallerRequestedOperation GetStartupPreflightOperation()
+    {
+        if (IsUninstallMode)
+        {
+            return InstallerRequestedOperation.Uninstall;
+        }
+
+        if (IsMaintenanceMode)
+        {
+            return InstallerRequestedOperation.Repair;
+        }
+
+        return InstallerRequestedOperation.Install;
     }
 
     private void HandleCancellation()
@@ -862,6 +908,12 @@ public partial class InstallerViewModel : ObservableObject
     {
         RequestedOperation = InstallerRequestedOperation.Uninstall;
         installingChecklistStep.Label = InstallingChecklistLabel;
+        if (!ConfirmUninstallRequest())
+        {
+            HandleUninstallCancelled();
+            return;
+        }
+
         if (!EnsureFluxoCanBeStoppedForOperation(RequestedOperation))
         {
             return;
@@ -878,6 +930,35 @@ public partial class InstallerViewModel : ObservableObject
         installingChecklistStep.State = ChecklistStepState.Running;
         StatusMessage = "Detecting installed version...";
         requestDetect();
+    }
+
+    private bool ConfirmUninstallRequest()
+    {
+        try
+        {
+            return requestUninstallConfirmation();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void HandleUninstallCancelled()
+    {
+        installStarted = false;
+        if (IsMaintenanceMode)
+        {
+            RequestedOperation = InstallerRequestedOperation.Install;
+            Screen = InstallerScreen.AppFound;
+            State = InstallerState.Welcome;
+            StatusMessage = "Uninstallation cancelled.";
+            return;
+        }
+
+        Screen = InstallerScreen.Finished;
+        State = InstallerState.FinishedCancelled;
+        StatusMessage = "Uninstallation cancelled.";
     }
 
     private bool EnsureFluxoCanBeStoppedForOperation(InstallerRequestedOperation operation)
@@ -1057,8 +1138,9 @@ public partial class InstallerViewModel : ObservableObject
     private void ScheduleDeferredInstallFolderCleanup(string installFolder)
     {
         var repairerPath = Path.Combine(installFolder, RepairerExecutableName);
+        var fluxoFolderPath = ResolveFluxoFolderCleanupTarget(installFolder);
         var scriptPath = createDeferredCleanupScriptPath();
-        var scriptContent = BuildDeferredCleanupScript(installFolder, repairerPath);
+        var scriptContent = BuildDeferredCleanupScript(installFolder, repairerPath, fluxoFolderPath);
         writeAllText(scriptPath, scriptContent);
 
         var startInfo = new ProcessStartInfo
@@ -1073,7 +1155,32 @@ public partial class InstallerViewModel : ObservableObject
         startProcess(startInfo);
     }
 
-    private static string BuildDeferredCleanupScript(string installFolder, string repairerPath)
+    private static string ResolveFluxoFolderCleanupTarget(string installFolder)
+    {
+        var normalizedInstallFolder = Path.GetFullPath(installFolder)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (string.Equals(
+                Path.GetFileName(normalizedInstallFolder),
+                FluxoFolderName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return normalizedInstallFolder;
+        }
+
+        var parentDirectory = Path.GetDirectoryName(normalizedInstallFolder);
+        if (!string.IsNullOrWhiteSpace(parentDirectory)
+            && string.Equals(
+                Path.GetFileName(parentDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
+                FluxoFolderName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return parentDirectory;
+        }
+
+        return normalizedInstallFolder;
+    }
+
+    private static string BuildDeferredCleanupScript(string installFolder, string repairerPath, string fluxoFolderPath)
     {
         static string QuoteForBatchValue(string value) => value.Replace("\"", "\"\"");
 
@@ -1082,6 +1189,7 @@ public partial class InstallerViewModel : ObservableObject
         builder.AppendLine("setlocal");
         builder.AppendLine($"set \"INSTALL_DIR={QuoteForBatchValue(installFolder)}\"");
         builder.AppendLine($"set \"REPAIRER_PATH={QuoteForBatchValue(repairerPath)}\"");
+        builder.AppendLine($"set \"FLUXO_DIR={QuoteForBatchValue(fluxoFolderPath)}\"");
         builder.AppendLine($"set /a \"RETRIES={DeferredCleanupRetryCount}\"");
         builder.AppendLine(":wait_loop");
         builder.AppendLine("if not exist \"%REPAIRER_PATH%\" goto delete_folder");
@@ -1095,11 +1203,21 @@ public partial class InstallerViewModel : ObservableObject
         builder.AppendLine($"set /a \"RETRIES={DeferredCleanupRetryCount}\"");
         builder.AppendLine(":folder_loop");
         builder.AppendLine("rmdir /s /q \"%INSTALL_DIR%\" >nul 2>nul");
-        builder.AppendLine("if not exist \"%INSTALL_DIR%\" goto cleanup_self");
+        builder.AppendLine("if not exist \"%INSTALL_DIR%\" goto delete_fluxo_folder");
+        builder.AppendLine("set /a RETRIES-=1");
+        builder.AppendLine("if %RETRIES% LEQ 0 goto delete_fluxo_folder");
+        builder.AppendLine($"timeout /t {DeferredCleanupRetryDelaySeconds} /nobreak >nul");
+        builder.AppendLine("goto folder_loop");
+        builder.AppendLine(":delete_fluxo_folder");
+        builder.AppendLine("if /I \"%FLUXO_DIR%\"==\"%INSTALL_DIR%\" goto cleanup_self");
+        builder.AppendLine($"set /a \"RETRIES={DeferredCleanupRetryCount}\"");
+        builder.AppendLine(":fluxo_folder_loop");
+        builder.AppendLine("rmdir /s /q \"%FLUXO_DIR%\" >nul 2>nul");
+        builder.AppendLine("if not exist \"%FLUXO_DIR%\" goto cleanup_self");
         builder.AppendLine("set /a RETRIES-=1");
         builder.AppendLine("if %RETRIES% LEQ 0 goto cleanup_self");
         builder.AppendLine($"timeout /t {DeferredCleanupRetryDelaySeconds} /nobreak >nul");
-        builder.AppendLine("goto folder_loop");
+        builder.AppendLine("goto fluxo_folder_loop");
         builder.AppendLine(":cleanup_self");
         builder.AppendLine("del /f /q \"%~f0\" >nul 2>nul");
         builder.AppendLine("exit /b 0");
