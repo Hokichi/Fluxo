@@ -1163,6 +1163,7 @@ public partial class InstallerViewModel : ObservableObject
             UseShellExecute = false,
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden,
+            WorkingDirectory = Path.GetTempPath(),
         };
 
         startProcess(startInfo);
@@ -1200,6 +1201,7 @@ public partial class InstallerViewModel : ObservableObject
         var builder = new StringBuilder();
         builder.AppendLine("@echo off");
         builder.AppendLine("setlocal");
+        builder.AppendLine("cd /d \"%TEMP%\" >nul 2>nul");
         builder.AppendLine($"set \"INSTALL_DIR={QuoteForBatchValue(installFolder)}\"");
         builder.AppendLine($"set \"REPAIRER_PATH={QuoteForBatchValue(repairerPath)}\"");
         builder.AppendLine($"set \"FLUXO_DIR={QuoteForBatchValue(fluxoFolderPath)}\"");

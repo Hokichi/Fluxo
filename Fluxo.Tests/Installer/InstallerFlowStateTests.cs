@@ -659,6 +659,7 @@ public sealed class InstallerFlowStateTests
         var deletedFiles = new List<string>();
         var deletedDirectories = new List<string>();
         var startProcessCalls = 0;
+        ProcessStartInfo? deferredCleanupStartInfo = null;
         string? writtenScriptPath = null;
         string? writtenScriptContents = null;
         var installFolder = @"C:\Program Files\fluxo";
@@ -681,7 +682,11 @@ public sealed class InstallerFlowStateTests
                 writtenScriptPath = path;
                 writtenScriptContents = content;
             },
-            startProcess: _ => startProcessCalls++);
+            startProcess: startInfo =>
+            {
+                startProcessCalls++;
+                deferredCleanupStartInfo = startInfo;
+            });
 
         vm.Begin();
         vm.OnApplyComplete(0);
@@ -691,8 +696,11 @@ public sealed class InstallerFlowStateTests
         Assert.Single(deletedDirectories);
         Assert.Equal(staleDirectoryPath, deletedDirectories[0]);
         Assert.Equal(1, startProcessCalls);
+        Assert.NotNull(deferredCleanupStartInfo);
+        Assert.Equal(Path.GetTempPath(), deferredCleanupStartInfo!.WorkingDirectory);
         Assert.Equal(@"C:\Temp\fluxo-cleanup-test.cmd", writtenScriptPath);
         Assert.NotNull(writtenScriptContents);
+        Assert.Contains("cd /d \"%TEMP%\"", writtenScriptContents, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("fluxo.Repairer.exe", writtenScriptContents, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(InstallerState.FinishedUninstalled, vm.State);
         Assert.Equal(InstallerScreen.Finished, vm.Screen);
