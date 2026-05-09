@@ -21,6 +21,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
 using System.Data.Common;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
@@ -104,6 +105,8 @@ public partial class App : Application
             try
             {
                 loaderPopup.Show();
+                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                await BackupDatabaseOnStartupAsync();
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 await MigrateDatabaseAsync(_dataOperationRunner);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
@@ -937,6 +940,88 @@ public partial class App : Application
             catch
             {
                 // Startup continues even if logging initialization fails.
+            }
+        }
+    }
+
+    private async Task BackupDatabaseOnStartupAsync()
+    {
+        var databasePath = FluxoDbContextFactory.GetDatabasePath();
+        var databaseDirectoryPath = Path.GetDirectoryName(databasePath);
+        if (string.IsNullOrWhiteSpace(databaseDirectoryPath))
+            return;
+
+        var backupDirectoryPath = Path.Combine(databaseDirectoryPath, "backup");
+
+        try
+        {
+            Directory.CreateDirectory(databaseDirectoryPath);
+            Directory.CreateDirectory(backupDirectoryPath);
+
+            if (!File.Exists(databasePath))
+                return;
+
+            var username = await TryResolveBackupUsernameAsync();
+            var safeUsername = SanitizeBackupToken(username);
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            var backupFileName = $"{safeUsername}_{timestamp}_backup.db";
+            var backupPath = Path.Combine(backupDirectoryPath, backupFileName);
+
+            File.Copy(databasePath, backupPath, overwrite: true);
+            PruneExpiredBackups(backupDirectoryPath);
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogWarning(exception, "Unable to create startup database backup.");
+        }
+    }
+
+    private async Task<string?> TryResolveBackupUsernameAsync()
+    {
+        try
+        {
+            return await _dataOperationRunner.RunAsync("resolve app username for database backup", async (scope, ct) =>
+            {
+                var userSetting = await scope.UnitOfWork.UserSettings
+                    .GetByNameAsync(UserSettingNames.PreferredDisplayName, ct);
+                return userSetting?.Value;
+            });
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogWarning(
+                exception,
+                "Unable to resolve app username for startup database backup. Falling back to default username.");
+            return null;
+        }
+    }
+
+    private static string SanitizeBackupToken(string? username)
+    {
+        const string defaultUsername = "User";
+        var rawUsername = string.IsNullOrWhiteSpace(username) ? defaultUsername : username.Trim();
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var sanitizedCharacters = rawUsername.Where(character => !invalidCharacters.Contains(character)).ToArray();
+        var sanitizedUsername = new string(sanitizedCharacters).Trim();
+        return string.IsNullOrWhiteSpace(sanitizedUsername) ? defaultUsername : sanitizedUsername;
+    }
+
+    private static void PruneExpiredBackups(string backupDirectoryPath)
+    {
+        var retentionCutoffUtc = DateTime.UtcNow.AddDays(-3);
+        var backupFiles = Directory.EnumerateFiles(backupDirectoryPath, "*_backup.db");
+
+        foreach (var backupFile in backupFiles)
+        {
+            try
+            {
+                var createdAtUtc = File.GetCreationTimeUtc(backupFile);
+                if (createdAtUtc <= retentionCutoffUtc)
+                    File.Delete(backupFile);
+            }
+            catch (Exception exception)
+            {
+                FluxoLogManager.LogWarning(exception, $"Unable to prune expired backup file: {backupFile}");
             }
         }
     }
