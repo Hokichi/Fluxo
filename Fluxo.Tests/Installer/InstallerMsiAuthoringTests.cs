@@ -77,11 +77,14 @@ public sealed class InstallerMsiAuthoringTests
             "Package.wxs"));
 
         Assert.Contains("RepairFluxoProgramDataAcl", wxs);
+        Assert.Contains("Action=\"RepairFluxoProgramDataAcl\" After=\"InstallFiles\"", wxs);
+        Assert.Contains("Condition=\"NOT REMOVE=&quot;ALL&quot; AND (NOT Installed OR REINSTALL)\"", wxs);
         Assert.Contains("icacls.exe", wxs);
-        Assert.Contains("*S-1-5-32-545:(OI)(CI)M", wxs);
+        Assert.Contains("*S-1-5-32-545:(OI)(CI)M /C", wxs);
         Assert.Contains("Execute=\"deferred\"", wxs);
         Assert.Contains("Impersonate=\"no\"", wxs);
-        Assert.Contains("NOT REMOVE~=&quot;ALL&quot;", wxs);
+        Assert.DoesNotContain(" /T ", wxs);
+        Assert.DoesNotContain("/grant *S-1-5-32-545:(OI)(CI)M /T", wxs);
     }
 
     [Fact]
