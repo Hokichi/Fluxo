@@ -9,14 +9,33 @@ internal static class Program
 
     private static int Main()
     {
-        using var singleInstanceMutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out var createdNew);
-        if (!createdNew)
+        Mutex? singleInstanceMutex = null;
+        try
         {
-            return 0;
+            singleInstanceMutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out var createdNew);
+            if (!createdNew)
+            {
+                return 0;
+            }
+
+            void ReleaseSingleInstanceForElevationRelaunch()
+            {
+                // Burn invokes the bootstrapper on a native thread that may differ from this Main() thread.
+                // ReleaseMutex() would throw (only the owning thread may release). Closing the handle abandons
+                // the mutex so the elevated child can create it again; otherwise createdNew is false for the
+                // child and we exit immediately while the parent handle is still open.
+                singleInstanceMutex?.Dispose();
+                singleInstanceMutex = null;
+            }
+
+            var bootstrapper = new InstallerBootstrapperApplication(ReleaseSingleInstanceForElevationRelaunch);
+            ManagedBootstrapperApplication.Run(bootstrapper);
+        }
+        finally
+        {
+            singleInstanceMutex?.Dispose();
         }
 
-        var bootstrapper = new InstallerBootstrapperApplication(singleInstanceMutex.ReleaseMutex);
-        ManagedBootstrapperApplication.Run(bootstrapper);
         return 0;
     }
 }

@@ -95,6 +95,29 @@ public partial class App : Application
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         _launchInTrayMode = IsTrayLaunchMode(e.Args);
+
+        // Serilog must be ready before IDataOperationRunner runs (it logs failures). Default username until DB exists.
+        try
+        {
+            FluxoLogManager.Initialize("User");
+        }
+        catch (Exception exception)
+        {
+            try
+            {
+                FluxoLogManager.LogFailureForProcess(
+                    exception,
+                    "bootstrap Serilog before database initialization");
+            }
+            catch
+            {
+                // Startup continues; later InitializeLoggingAsync may still configure logging.
+            }
+        }
+
+        FluxoDbContextFactory.EnsureDatabaseDirectoryExists();
+        await BackupDatabaseOnStartupAsync();
+        await MigrateDatabaseAsync(_dataOperationRunner);
         await InitializeLoggingAsync();
 
         try
@@ -105,10 +128,6 @@ public partial class App : Application
             try
             {
                 loaderPopup.Show();
-                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
-                await BackupDatabaseOnStartupAsync();
-                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
-                await MigrateDatabaseAsync(_dataOperationRunner);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
@@ -961,6 +980,9 @@ public partial class App : Application
             if (!File.Exists(databasePath))
                 return;
 
+            if (await ShouldSkipDatabaseBackupForFirstRunAsync())
+                return;
+
             var username = await TryResolveBackupUsernameAsync();
             var safeUsername = SanitizeBackupToken(username);
             var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
@@ -973,6 +995,25 @@ public partial class App : Application
         catch (Exception exception)
         {
             FluxoLogManager.LogWarning(exception, "Unable to create startup database backup.");
+        }
+    }
+
+    private async Task<bool> ShouldSkipDatabaseBackupForFirstRunAsync()
+    {
+        try
+        {
+            return await _dataOperationRunner.RunAsync("check first-run before database backup", async (scope, ct) =>
+            {
+                var setting = await scope.UnitOfWork.UserSettings.GetByNameAsync(UserSettingNames.IsFirstRun, ct);
+                if (setting is null)
+                    return true;
+
+                return !bool.TryParse(setting.Value, out var isFirstRun) || isFirstRun;
+            });
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 

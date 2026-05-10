@@ -112,6 +112,7 @@
                     ButtonIcon="{DynamicResource DotsHorizontal}"
                     Command="{Binding ChangeDirectoryCommand}"
                     CornerRadius="8"
+                    Cursor="Hand"
                     DefaultBackground="{DynamicResource Brush.Mint}"
                     HoveredBackground="{DynamicResource Brush.Mint.Muted}"
                     IconSize="16"
@@ -125,6 +126,7 @@
                     ButtonIcon="{DynamicResource ControllerPlay}"
                     Command="{Binding InstallCommand}"
                     CornerRadius="8"
+                    Cursor="Hand"
                     DefaultBackground="{DynamicResource Brush.Mint}"
                     HoveredBackground="{DynamicResource Brush.Mint.Muted}"
                     IconSize="12" />

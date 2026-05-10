@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using Fluxo.Resources.CustomControls;
 
@@ -1090,19 +1091,69 @@ public partial class InstallerViewModel : ObservableObject
             return false;
         }
 
+        string fullSource;
+        string fullDest;
         try
         {
             var destinationPath = Path.Combine(GetInstallFolderForCurrentRun(), RepairerExecutableName);
-            if (string.Equals(
-                    Path.GetFullPath(sourcePath),
-                    Path.GetFullPath(destinationPath),
-                    StringComparison.OrdinalIgnoreCase))
+            fullSource = Path.GetFullPath(sourcePath);
+            fullDest = Path.GetFullPath(destinationPath);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Installation failed: could not prepare repairer executable. {ex.Message}";
+            return false;
+        }
+
+        if (string.Equals(fullSource, fullDest, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        try
+        {
+            if (fileExists(fullDest))
             {
-                return true;
+                try
+                {
+                    var attributes = File.GetAttributes(fullDest);
+                    if ((attributes & FileAttributes.ReadOnly) != 0)
+                    {
+                        File.SetAttributes(fullDest, attributes & ~FileAttributes.ReadOnly);
+                    }
+                }
+                catch (IOException)
+                {
+                    // Stale existence checks or race with deletion; copy may still succeed.
+                }
+                catch (UnauthorizedAccessException)
+                {
+                }
             }
 
-            copyFile(sourcePath, destinationPath, true);
-            return true;
+            Exception? lastRetriableError = null;
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                try
+                {
+                    copyFile(fullSource, fullDest, true);
+                    return true;
+                }
+                catch (Exception ex) when (attempt < 2 && IsRetriableRepairerCopyException(ex))
+                {
+                    lastRetriableError = ex;
+                    Thread.Sleep(250 * (attempt + 1));
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = $"Installation failed: could not prepare repairer executable. {ex.Message}";
+                    return false;
+                }
+            }
+
+            errorMessage =
+                $"Installation failed: could not prepare repairer executable. {lastRetriableError?.Message ?? "The operation failed after multiple attempts."}";
+            return false;
         }
         catch (Exception ex)
         {
@@ -1110,6 +1161,9 @@ public partial class InstallerViewModel : ObservableObject
             return false;
         }
     }
+
+    private static bool IsRetriableRepairerCopyException(Exception ex) =>
+        ex is IOException or UnauthorizedAccessException;
 
     private bool TryDeleteResidualStateAfterUninstall(out string cleanupError)
     {

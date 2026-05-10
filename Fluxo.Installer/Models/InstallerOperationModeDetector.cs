@@ -25,6 +25,32 @@ public static class InstallerOperationModeDetector
         return Detect(originalSourcePath, null, processPath);
     }
 
+    /// <summary>
+    /// WiX can set <c>WixBundleOriginalSource</c> to the registered bundle (installer) while
+    /// <c>WixBundleSourceProcessPath</c> is the executable that actually launched Burn (e.g. fluxo.Repairer.exe).
+    /// The view model needs the repairer path for maintenance UI, install-folder resolution, and repairer copy source.
+    /// </summary>
+    public static string SelectBundleExecutablePathForViewModel(
+        string? wixBundleSourceProcessPath,
+        string? wixBundleOriginalSource,
+        string fallbackBundlePath)
+    {
+        foreach (var candidate in new[] { wixBundleSourceProcessPath, wixBundleOriginalSource })
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                continue;
+            }
+
+            if (Detect(candidate, null, null) == InstallerOperationMode.Maintenance)
+            {
+                return candidate;
+            }
+        }
+
+        return fallbackBundlePath;
+    }
+
     private static bool IsMaintenanceExecutable(string? executablePath)
     {
         if (string.IsNullOrWhiteSpace(executablePath))

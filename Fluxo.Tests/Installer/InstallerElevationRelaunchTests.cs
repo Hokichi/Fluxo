@@ -25,6 +25,39 @@ public sealed class InstallerElevationRelaunchTests : IDisposable
     }
 
     [Fact]
+    public void ShouldRelaunchForElevation_RequiresInteractiveUnelevatedExistingBundle()
+    {
+        Assert.True(InstallerElevationRelaunch.ShouldRelaunchForElevation(
+            isInteractive: true,
+            isElevated: false,
+            bundlePath));
+
+        Assert.False(InstallerElevationRelaunch.ShouldRelaunchForElevation(
+            isInteractive: false,
+            isElevated: false,
+            bundlePath));
+        Assert.False(InstallerElevationRelaunch.ShouldRelaunchForElevation(
+            isInteractive: true,
+            isElevated: true,
+            bundlePath));
+        Assert.False(InstallerElevationRelaunch.ShouldRelaunchForElevation(
+            isInteractive: true,
+            isElevated: false,
+            bundlePath: Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}-missing.exe")));
+    }
+
+    [Fact]
+    public void SelectBundlePathForElevationRelaunch_PrefersRepairerSourceProcess_WhenOriginalIsInstaller()
+    {
+        var path = InstallerElevationRelaunch.SelectBundlePathForElevationRelaunch(
+            wixBundleSourceProcessPath: @"F:\fluxo\fluxo.Repairer.exe",
+            wixBundleOriginalSource: @"C:\Downloads\fluxo-1.0.0-Installer.exe",
+            processPath: @"C:\Users\Admins\AppData\Local\Temp\{bundle}\Fluxo.Installer.exe");
+
+        Assert.Equal(@"F:\fluxo\fluxo.Repairer.exe", path);
+    }
+
+    [Fact]
     public void ShouldRelaunch_SkipsHeadlessOrAlreadyElevatedRuns()
     {
         Assert.False(InstallerElevationRelaunch.ShouldRelaunch(

@@ -52,11 +52,111 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
 
     protected override void Run()
     {
+        if (TryExitForInteractiveElevationRelaunch())
+        {
+            engine.Quit(SuccessExitCode);
+            return;
+        }
+
         var exitCode = ShouldRunInteractiveUi()
             ? RunUiWithStaGuard()
             : RunHeadless();
 
         engine.Quit(exitCode);
+    }
+
+    /// <summary>
+    /// Burn often applies the per-machine MSI elevated while the managed bootstrapper host stays
+    /// medium-integrity. Post-apply steps (copy repairer, rollback folder cleanup) then hit
+    /// "Access denied" under Program Files. Relaunch interactively with <c>runas</c> first.
+    /// </summary>
+    private bool TryExitForInteractiveElevationRelaunch()
+    {
+        if (!ShouldRunInteractiveUi() || IsProcessElevated())
+        {
+            return false;
+        }
+
+        var bundlePath = ResolveBundlePathForElevationRelaunch();
+        if (!InstallerElevationRelaunch.ShouldRelaunchForElevation(
+                isInteractive: true,
+                isElevated: false,
+                bundlePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            releaseSingleInstanceMutex();
+            _ = Process.Start(InstallerElevationRelaunch.CreateStartInfo(bundlePath!));
+            return true;
+        }
+        catch (Win32Exception)
+        {
+            // User cancelled UAC or elevation launch failed; continue without elevation.
+            return false;
+        }
+    }
+
+    private static bool IsProcessElevated()
+    {
+        using var identity = WindowsIdentity.GetCurrent();
+        return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
+    }
+
+    private string? ResolveBundlePathForElevationRelaunch()
+    {
+        var sourceProcessPath = TryGetEngineVariable("WixBundleSourceProcessPath");
+        var originalSource = TryGetEngineVariable("WixBundleOriginalSource");
+        var processPath = TryGetProcessPath();
+        var preferredPath = InstallerElevationRelaunch.SelectBundlePathForElevationRelaunch(
+            sourceProcessPath,
+            originalSource,
+            processPath);
+
+        string?[] candidates =
+        [
+            preferredPath,
+            originalSource,
+            sourceProcessPath,
+            processPath,
+        ];
+
+        foreach (var candidate in candidates)
+        {
+            if (!string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? TryGetProcessPath()
+    {
+        try
+        {
+            return Environment.ProcessPath;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string? TryGetEngineVariable(string name)
+    {
+        try
+        {
+            var value = engine.GetVariableString(name);
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     protected override void OnCreate(CreateEventArgs args)
@@ -156,7 +256,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                 // We report rollback as successful only when the most recent apply failed.
                 requestRollback: () => _lastApplyFailed,
                 operationMode: GetOperationMode(),
-                bundleExecutablePath: GetBundleSourceProcessPath(),
+                bundleExecutablePath: GetBundleExecutablePathForViewModel(),
                 closeInstallerAction: () =>
                 {
                     if (window.Dispatcher.CheckAccess())
@@ -476,6 +576,14 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         }
 
         return GetBundleOriginalSourcePath();
+    }
+
+    private string GetBundleExecutablePathForViewModel()
+    {
+        return InstallerOperationModeDetector.SelectBundleExecutablePathForViewModel(
+            TryGetEngineVariable("WixBundleSourceProcessPath"),
+            TryGetEngineVariable("WixBundleOriginalSource"),
+            GetBundleSourceProcessPath());
     }
 
     private static string? GetCurrentExecutablePath()
