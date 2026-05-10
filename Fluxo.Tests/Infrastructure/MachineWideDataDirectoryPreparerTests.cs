@@ -7,17 +7,16 @@ namespace Fluxo.Tests.Infrastructure;
 
 public sealed class MachineWideDataDirectoryPreparerTests
 {
-    [Fact]
+    [WindowsOnlyFact]
     public void Prepare_GrantsUsersModifyAccessToDirectoryAndExistingRuntimeFiles()
     {
-        if (!OperatingSystem.IsWindows())
-            return;
-
         var directory = Path.Combine(Path.GetTempPath(), $"fluxo-acl-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
         var dbPath = Path.Combine(directory, "fluxo.db");
+        var journalPath = Path.Combine(directory, "fluxo.db-journal");
         var walPath = Path.Combine(directory, "fluxo.db-wal");
         File.WriteAllText(dbPath, string.Empty);
+        File.WriteAllText(journalPath, string.Empty);
         File.WriteAllText(walPath, string.Empty);
 
         try
@@ -26,15 +25,18 @@ public sealed class MachineWideDataDirectoryPreparerTests
 
             var directorySecurity = new DirectoryInfo(directory).GetAccessControl();
             Assert.Contains(
-                GetUsersRules(directorySecurity),
+                GetExplicitUsersRules(directorySecurity),
                 rule => HasModify(rule)
+                        && !rule.IsInherited
                         && rule.InheritanceFlags.HasFlag(InheritanceFlags.ContainerInherit)
                         && rule.InheritanceFlags.HasFlag(InheritanceFlags.ObjectInherit));
 
-            foreach (var path in new[] { dbPath, walPath })
+            foreach (var path in new[] { dbPath, journalPath, walPath })
             {
                 var fileSecurity = new FileInfo(path).GetAccessControl();
-                Assert.Contains(GetUsersRules(fileSecurity), rule => HasModify(rule));
+                Assert.Contains(
+                    GetExplicitUsersRules(fileSecurity),
+                    rule => HasModify(rule) && !rule.IsInherited);
             }
         }
         finally
@@ -51,6 +53,7 @@ public sealed class MachineWideDataDirectoryPreparerTests
         var expected = new[]
         {
             Path.Combine(directory, "fluxo.db"),
+            Path.Combine(directory, "fluxo.db-journal"),
             Path.Combine(directory, "fluxo.db-wal"),
             Path.Combine(directory, "fluxo.db-shm"),
         };
@@ -78,11 +81,11 @@ public sealed class MachineWideDataDirectoryPreparerTests
         }
     }
 
-    private static IEnumerable<FileSystemAccessRule> GetUsersRules(FileSystemSecurity security)
+    private static IEnumerable<FileSystemAccessRule> GetExplicitUsersRules(FileSystemSecurity security)
     {
         var usersSid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
         return security
-            .GetAccessRules(includeExplicit: true, includeInherited: true, typeof(SecurityIdentifier))
+            .GetAccessRules(includeExplicit: true, includeInherited: false, typeof(SecurityIdentifier))
             .OfType<FileSystemAccessRule>()
             .Where(rule => usersSid.Equals(rule.IdentityReference)
                            && rule.AccessControlType == AccessControlType.Allow);
@@ -90,4 +93,13 @@ public sealed class MachineWideDataDirectoryPreparerTests
 
     private static bool HasModify(FileSystemAccessRule rule) =>
         (rule.FileSystemRights & FileSystemRights.Modify) == FileSystemRights.Modify;
+
+    private sealed class WindowsOnlyFactAttribute : FactAttribute
+    {
+        public WindowsOnlyFactAttribute()
+        {
+            if (!OperatingSystem.IsWindows())
+                Skip = "Windows-only ACL test.";
+        }
+    }
 }

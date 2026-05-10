@@ -11,6 +11,7 @@ internal static class MachineWideDataDirectoryPreparer
     private static readonly string[] RuntimeFileNames =
     [
         "fluxo.db",
+        "fluxo.db-journal",
         "fluxo.db-wal",
         "fluxo.db-shm",
     ];
