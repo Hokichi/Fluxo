@@ -28,6 +28,57 @@ public sealed class ExecutableNamingTests
     }
 
     [Fact]
+    public void AppProject_CleansExactLegacyPrimaryArtifactsWithoutWildcardDeletion()
+    {
+        var project = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo",
+            "Fluxo.csproj"));
+
+        var legacyArtifacts = new[]
+        {
+            "Fluxo.exe",
+            "Fluxo.dll",
+            "Fluxo.deps.json",
+            "Fluxo.runtimeconfig.json",
+            "Fluxo.pdb",
+        };
+
+        Assert.Contains("LegacyPrimaryArtifactsToDelete", project);
+
+        var buildCleanupTarget = GetTarget(project, "CleanupLegacyPrimaryArtifactsBeforeBuild");
+        var publishCleanupTarget = GetTarget(project, "CleanupLegacyPrimaryArtifactsBeforePublish");
+
+        Assert.Contains("BeforeTargets=\"Build\"", buildCleanupTarget);
+        Assert.Contains("BeforeTargets=\"Publish\"", publishCleanupTarget);
+        Assert.Contains("Condition=\"'$(DesignTimeBuild)' != 'true'\"", buildCleanupTarget);
+        Assert.Contains("Condition=\"'$(DesignTimeBuild)' != 'true'\"", publishCleanupTarget);
+        Assert.Contains("FLUXO_LEGACY_CLEANUP_DIR=$(TargetDir)", buildCleanupTarget);
+        Assert.Contains("FLUXO_LEGACY_CLEANUP_DIR=$(PublishDir)", publishCleanupTarget);
+        Assert.Contains("$cleanupDir = $env:FLUXO_LEGACY_CLEANUP_DIR", buildCleanupTarget);
+        Assert.Contains("$cleanupDir = $env:FLUXO_LEGACY_CLEANUP_DIR", publishCleanupTarget);
+
+        foreach (var artifact in legacyArtifacts)
+        {
+            Assert.Contains(artifact, project);
+        }
+
+        Assert.DoesNotContain("Include=\"$(TargetDir)Fluxo*\"", project);
+        Assert.DoesNotContain("Include=\"$(PublishDir)Fluxo*\"", project);
+        Assert.DoesNotContain("<LegacyPrimaryArtifactsToDelete>'Fluxo*", project);
+        Assert.DoesNotContain("Remove-Item -LiteralPath '$(TargetDir)Fluxo*", project);
+        Assert.DoesNotContain("Remove-Item -LiteralPath '$(PublishDir)Fluxo*", project);
+        Assert.DoesNotContain("-LiteralPath '$(TargetDir)'", project);
+        Assert.DoesNotContain("-LiteralPath '$(PublishDir)'", project);
+        Assert.DoesNotContain("AfterTargets=\"Build\"", buildCleanupTarget);
+        Assert.DoesNotContain("AfterTargets=\"Publish\"", publishCleanupTarget);
+        Assert.DoesNotContain("Fluxo.Core.dll", project);
+        Assert.DoesNotContain("Fluxo.Data.dll", project);
+        Assert.DoesNotContain("Fluxo.Resources.dll", project);
+        Assert.DoesNotContain("Fluxo.Services.dll", project);
+    }
+
+    [Fact]
     public void MsiHarvest_IncludesRootAndRecursiveAppOutputFiles()
     {
         var wxs = File.ReadAllText(Path.Combine(
@@ -56,6 +107,17 @@ public sealed class ExecutableNamingTests
         Assert.Equal("ENTRYPOINT [\"C:\\\\app\\\\fluxo.exe\"]", finalNonEmptyLine);
         Assert.DoesNotContain("ENTRYPOINT [\"C:\\\\app\\\\Fluxo.exe\"]", dockerfile);
         Assert.Contains("COPY [\"Fluxo.Resources/Fluxo.Resources.csproj\", \"Fluxo.Resources/\"]", dockerfile);
+    }
+
+    private static string GetTarget(string project, string targetName)
+    {
+        var start = project.IndexOf($"<Target Name=\"{targetName}\"", StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Expected target '{targetName}' to exist.");
+
+        var end = project.IndexOf("</Target>", start, StringComparison.Ordinal);
+        Assert.True(end >= 0, $"Expected target '{targetName}' to have a closing tag.");
+
+        return project[start..(end + "</Target>".Length)];
     }
 
     private static string GetRepositoryRoot()
