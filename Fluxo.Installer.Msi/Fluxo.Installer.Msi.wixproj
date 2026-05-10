@@ -10,6 +10,6 @@
   </PropertyGroup>
 
   <Target Name="BuildFluxoApplicationForInstaller" BeforeTargets="BeforeBuild">
-    <MSBuild Projects="..\Fluxo\Fluxo.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+    <MSBuild Projects="..\Fluxo\Fluxo.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
   </Target>
 </Project>

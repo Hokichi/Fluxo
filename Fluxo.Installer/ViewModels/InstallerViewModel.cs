@@ -44,6 +44,8 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Func<string, string[]> enumerateFileSystemEntries;
     private readonly Action<string> deleteDirectory;
     private readonly Action<string> deleteFile;
+    private readonly Action<string> deleteLocalMachineRegistrySubKeyTree;
+    private readonly string commonApplicationDataFluxoFolder;
     private readonly Func<string> createDeferredCleanupScriptPath;
     private readonly Action<string, string> writeAllText;
     private readonly Action<ProcessStartInfo> startProcess;
@@ -81,6 +83,8 @@ public partial class InstallerViewModel : ObservableObject
         Func<string, string[]>? enumerateFileSystemEntries = null,
         Action<string>? deleteDirectory = null,
         Action<string>? deleteFile = null,
+        Action<string>? deleteLocalMachineRegistrySubKeyTree = null,
+        string? commonApplicationDataFluxoFolder = null,
         Func<string>? createDeferredCleanupScriptPath = null,
         Action<string, string>? writeAllText = null,
         Action<ProcessStartInfo>? startProcess = null,
@@ -107,6 +111,12 @@ public partial class InstallerViewModel : ObservableObject
             ?? (path => Directory.EnumerateFileSystemEntries(path).ToArray());
         this.deleteDirectory = deleteDirectory ?? (path => Directory.Delete(path, recursive: true));
         this.deleteFile = deleteFile ?? File.Delete;
+        this.deleteLocalMachineRegistrySubKeyTree = deleteLocalMachineRegistrySubKeyTree
+            ?? (path => Registry.LocalMachine.DeleteSubKeyTree(path, throwOnMissingSubKey: false));
+        this.commonApplicationDataFluxoFolder = commonApplicationDataFluxoFolder
+            ?? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                FluxoFolderName);
         this.createDeferredCleanupScriptPath = createDeferredCleanupScriptPath
             ?? (() => Path.Combine(
                 Path.GetTempPath(),
@@ -1040,7 +1050,8 @@ public partial class InstallerViewModel : ObservableObject
     {
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
         installingChecklistStep.State = ChecklistStepState.Success;
-        if (!TryDeleteInstallFolderAfterUninstall(out var cleanupError))
+        if (!TryDeleteInstallFolderAfterUninstall(out var cleanupError)
+            || !TryDeleteResidualStateAfterUninstall(out cleanupError))
         {
             cleanUpChecklistStep.State = ChecklistStepState.Failed;
             Screen = InstallerScreen.Finished;
@@ -1096,6 +1107,43 @@ public partial class InstallerViewModel : ObservableObject
         catch (Exception ex)
         {
             errorMessage = $"Installation failed: could not prepare repairer executable. {ex.Message}";
+            return false;
+        }
+    }
+
+    private bool TryDeleteResidualStateAfterUninstall(out string cleanupError)
+    {
+        cleanupError = string.Empty;
+
+        try
+        {
+            deleteLocalMachineRegistrySubKeyTree(InstalledVersionRegistryReader.InstalledVersionSubKeyPath);
+        }
+        catch (Exception ex)
+        {
+            cleanupError = $"could not delete installed version registry key. {ex.Message}";
+            return false;
+        }
+
+        if (!directoryExists(commonApplicationDataFluxoFolder))
+        {
+            return true;
+        }
+
+        if (!IsSafeDeleteTarget(commonApplicationDataFluxoFolder))
+        {
+            cleanupError = "cleanup rejected because ProgramData folder path is unsafe for recursive deletion.";
+            return false;
+        }
+
+        try
+        {
+            deleteDirectory(commonApplicationDataFluxoFolder);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            cleanupError = $"could not delete ProgramData folder. {ex.Message}";
             return false;
         }
     }
