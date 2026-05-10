@@ -24,10 +24,9 @@ public sealed class InstallerMsiAuthoringTests
             "Fluxo.Installer.Msi",
             "ExampleComponents.wxs"));
 
-        Assert.Contains("<RemoveRegistryKey", wxs);
+        Assert.Contains("Name=\"InstalledVersion\"", wxs);
         Assert.Contains("Root=\"HKLM\"", wxs);
         Assert.Contains("Key=\"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\fluxo\"", wxs);
-        Assert.Contains("Action=\"removeOnUninstall\"", wxs);
     }
 
     [Fact]
@@ -42,18 +41,17 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
-    public void Package_SequencesFilesBeforeRegistryActions()
+    public void Package_SchedulesDeferredRegistryCleanupOnUninstall()
     {
         var wxs = File.ReadAllText(Path.Combine(
             GetRepositoryRoot(),
             "Fluxo.Installer.Msi",
             "Package.wxs"));
 
-        Assert.Contains("<InstallFiles Sequence=\"4000\" />", wxs);
-        Assert.Contains("<WriteRegistryValues Sequence=\"5000\" />", wxs);
-        Assert.Contains("<RemoveFiles Sequence=\"3500\" />", wxs);
-        Assert.Contains("<RemoveFolders Sequence=\"3600\" />", wxs);
-        Assert.Contains("<RemoveRegistryValues Sequence=\"3650\" />", wxs);
+        Assert.Contains("RemoveFluxoInstalledVersionRegistryKey", wxs);
+        Assert.Contains("Execute=\"deferred\"", wxs);
+        Assert.Contains("Impersonate=\"no\"", wxs);
+        Assert.Contains(@"reg.exe delete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo /f", wxs);
     }
 
     [Fact]
@@ -86,16 +84,14 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
-    public void InstallerExecutable_DoesNotRequestAdministratorManifest()
+    public void InstallerExecutable_DoesNotEmbedAdministratorManifest()
     {
         var repositoryRoot = GetRepositoryRoot();
-        var project = File.ReadAllText(Path.Combine(
-            repositoryRoot,
-            "Fluxo.Installer",
-            "Fluxo.Installer.csproj"));
+        var installerDir = Path.Combine(repositoryRoot, "Fluxo.Installer");
+        var project = File.ReadAllText(Path.Combine(installerDir, "Fluxo.Installer.csproj"));
 
-        Assert.DoesNotContain("<ApplicationManifest>app.manifest</ApplicationManifest>", project);
-        Assert.False(File.Exists(Path.Combine(repositoryRoot, "Fluxo.Installer", "app.manifest")));
+        Assert.DoesNotContain("<ApplicationManifest>", project);
+        Assert.False(File.Exists(Path.Combine(installerDir, "app.manifest")));
     }
 
     private static string GetRepositoryRoot()
