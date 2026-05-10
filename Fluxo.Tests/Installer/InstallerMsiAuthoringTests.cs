@@ -55,6 +55,36 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
+    public void Folders_DeclaresMachineWideProgramDataFolder()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Msi",
+            "Folders.wxs"));
+
+        Assert.Contains("CommonAppDataFolder", wxs);
+        Assert.Contains("FLUXOPROGRAMDATAFOLDER", wxs);
+        Assert.Contains("Name=\"fluxo\"", wxs);
+        Assert.Contains("CreateFolder", wxs);
+    }
+
+    [Fact]
+    public void Package_RepairsProgramDataAclDuringInstallAndRepair()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Msi",
+            "Package.wxs"));
+
+        Assert.Contains("RepairFluxoProgramDataAcl", wxs);
+        Assert.Contains("icacls.exe", wxs);
+        Assert.Contains("*S-1-5-32-545:(OI)(CI)M", wxs);
+        Assert.Contains("Execute=\"deferred\"", wxs);
+        Assert.Contains("Impersonate=\"no\"", wxs);
+        Assert.Contains("NOT REMOVE~=&quot;ALL&quot;", wxs);
+    }
+
+    [Fact]
     public void Bundle_ForcesMsiPackagePerMachine()
     {
         var wxs = File.ReadAllText(Path.Combine(
