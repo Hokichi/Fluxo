@@ -81,6 +81,16 @@ public sealed class MachineWideDataDirectoryPreparerTests
         }
     }
 
+    [Fact]
+    public void DatabaseDirectoryPath_IsTheParentOfMachineWideDatabasePath()
+    {
+        var databasePath = Fluxo.Data.Context.FluxoDbContextFactory.GetDatabasePath();
+        var directoryPath = Fluxo.Data.Context.FluxoDbContextFactory.GetDatabaseDirectoryPath();
+
+        Assert.Equal(Path.GetDirectoryName(databasePath), directoryPath);
+        Assert.EndsWith(Path.Combine("fluxo", "fluxo.db"), databasePath, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static IEnumerable<FileSystemAccessRule> GetExplicitUsersRules(FileSystemSecurity security)
     {
         var usersSid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);

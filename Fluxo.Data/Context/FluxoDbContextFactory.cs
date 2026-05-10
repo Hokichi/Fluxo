@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -24,8 +25,13 @@ public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbC
 
     public static string GetDatabasePath()
     {
+        return Path.Combine(GetDatabaseDirectoryPath(), "fluxo.db");
+    }
+
+    public static string GetDatabaseDirectoryPath()
+    {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        return Path.Combine(appDataPath, "fluxo", "fluxo.db");
+        return Path.Combine(appDataPath, "fluxo");
     }
 
     /// <summary>
@@ -33,9 +39,23 @@ public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbC
     /// </summary>
     public static void EnsureDatabaseDirectoryExists()
     {
-        var databasePath = GetDatabasePath();
-        var databaseDirectory = Path.GetDirectoryName(databasePath);
-        if (!string.IsNullOrWhiteSpace(databaseDirectory))
-            Directory.CreateDirectory(databaseDirectory);
+        MachineWideDataDirectoryPreparer.Prepare(GetDatabaseDirectoryPath());
+    }
+
+    private static class MachineWideDataDirectoryPreparer
+    {
+        public static void Prepare(string directoryPath)
+        {
+            var preparerType = Type.GetType("Fluxo.Infrastructure.MachineWideDataDirectoryPreparer, fluxo");
+            var prepareMethod = preparerType?.GetMethod("Prepare", BindingFlags.Public | BindingFlags.Static, [typeof(string)]);
+
+            if (prepareMethod is not null)
+            {
+                prepareMethod.Invoke(obj: null, parameters: [directoryPath]);
+                return;
+            }
+
+            Directory.CreateDirectory(directoryPath);
+        }
     }
 }
