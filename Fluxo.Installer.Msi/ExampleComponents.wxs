@@ -1,7 +1,11 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <ComponentGroup Id="FluxoAppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.FluxoAppOutputDir)\*">
+        <Exclude Files="$(var.FluxoAppOutputDir)\*.db" />
+      </Files>
       <Files Include="$(var.FluxoAppOutputDir)\**">
+        <Exclude Files="$(var.FluxoAppOutputDir)\*" />
         <Exclude Files="$(var.FluxoAppOutputDir)\**\*.db" />
       </Files>
       <Component Id="FluxoInstalledVersionRegistryValue">

@@ -13,6 +13,8 @@
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	  <AssemblyTitle>fluxo</AssemblyTitle>
+	  <AssemblyName>fluxo</AssemblyName>
+	  <RootNamespace>Fluxo</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

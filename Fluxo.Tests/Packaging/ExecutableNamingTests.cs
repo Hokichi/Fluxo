@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace Fluxo.Tests.Packaging;
@@ -14,8 +15,16 @@ public sealed class ExecutableNamingTests
             "Fluxo",
             "Fluxo.csproj"));
 
-        Assert.Contains("<AssemblyName>fluxo</AssemblyName>", project);
-        Assert.Contains("<RootNamespace>Fluxo</RootNamespace>", project);
+        var normalizedProject = string.Join("\n", project
+            .Replace("\r\n", "\n")
+            .Split('\n')
+            .Select(line => line.Trim()));
+        var expectedSequence = string.Join("\n",
+            "<AssemblyTitle>fluxo</AssemblyTitle>",
+            "<AssemblyName>fluxo</AssemblyName>",
+            "<RootNamespace>Fluxo</RootNamespace>");
+
+        Assert.Contains(expectedSequence, normalizedProject);
     }
 
     [Fact]
@@ -28,7 +37,8 @@ public sealed class ExecutableNamingTests
 
         Assert.Contains("<Files Include=\"$(var.FluxoAppOutputDir)\\*\">", wxs);
         Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\*.db\" />", wxs);
-        Assert.Contains("<Files Include=\"$(var.FluxoAppOutputDir)\\**\\*\">", wxs);
+        Assert.Contains("<Files Include=\"$(var.FluxoAppOutputDir)\\**\">", wxs);
+        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\*\" />", wxs);
         Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\**\\*.db\" />", wxs);
     }
 
@@ -39,8 +49,13 @@ public sealed class ExecutableNamingTests
             GetRepositoryRoot(),
             "Dockerfile"));
 
-        Assert.Contains("ENTRYPOINT [\"C:\\\\app\\\\fluxo.exe\"]", dockerfile);
+        var finalNonEmptyLine = dockerfile
+            .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+            .Last(line => !string.IsNullOrWhiteSpace(line));
+
+        Assert.Equal("ENTRYPOINT [\"C:\\\\app\\\\fluxo.exe\"]", finalNonEmptyLine);
         Assert.DoesNotContain("ENTRYPOINT [\"C:\\\\app\\\\Fluxo.exe\"]", dockerfile);
+        Assert.Contains("COPY [\"Fluxo.Resources/Fluxo.Resources.csproj\", \"Fluxo.Resources/\"]", dockerfile);
     }
 
     private static string GetRepositoryRoot()

@@ -7,6 +7,7 @@ WORKDIR /src
 COPY ["Fluxo/Fluxo.csproj", "Fluxo/"]
 COPY ["Fluxo.Core/Fluxo.Core.csproj", "Fluxo.Core/"]
 COPY ["Fluxo.Data/Fluxo.Data.csproj", "Fluxo.Data/"]
+COPY ["Fluxo.Resources/Fluxo.Resources.csproj", "Fluxo.Resources/"]
 COPY ["Fluxo.Services/Fluxo.Services.csproj", "Fluxo.Services/"]
 
 RUN dotnet restore "Fluxo/Fluxo.csproj"
@@ -26,4 +27,4 @@ WORKDIR /app
 
 COPY --from=build C:\app\publish\ .\
 
-ENTRYPOINT ["C:\\app\\Fluxo.exe"]
+ENTRYPOINT ["C:\\app\\fluxo.exe"]
