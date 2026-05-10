@@ -4,14 +4,4 @@
       <Directory Id="INSTALLFOLDER" Name="fluxo" />
     </StandardDirectory>
   </Fragment>
-
-  <Fragment>
-    <StandardDirectory Id="CommonAppDataFolder">
-      <Directory Id="FLUXOPROGRAMDATAFOLDER" Name="fluxo">
-        <Component Id="FluxoProgramDataFolderComponent" Guid="B1F116D7-78E8-46D1-9037-8DAF2470A806" Bitness="always64">
-          <CreateFolder />
-        </Component>
-      </Directory>
-    </StandardDirectory>
-  </Fragment>
 </Wix>

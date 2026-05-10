@@ -46,7 +46,7 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Action<string> deleteDirectory;
     private readonly Action<string> deleteFile;
     private readonly Action<RegistryView, string> deleteLocalMachineRegistrySubKeyTree;
-    private readonly string commonApplicationDataFluxoFolder;
+    private readonly string localApplicationDataFluxoFolder;
     private readonly Func<string> createDeferredCleanupScriptPath;
     private readonly Action<string, string> writeAllText;
     private readonly Action<ProcessStartInfo> startProcess;
@@ -85,7 +85,7 @@ public partial class InstallerViewModel : ObservableObject
         Action<string>? deleteDirectory = null,
         Action<string>? deleteFile = null,
         Action<RegistryView, string>? deleteLocalMachineRegistrySubKeyTree = null,
-        string? commonApplicationDataFluxoFolder = null,
+        string? localApplicationDataFluxoFolder = null,
         Func<string>? createDeferredCleanupScriptPath = null,
         Action<string, string>? writeAllText = null,
         Action<ProcessStartInfo>? startProcess = null,
@@ -114,9 +114,9 @@ public partial class InstallerViewModel : ObservableObject
         this.deleteFile = deleteFile ?? File.Delete;
         this.deleteLocalMachineRegistrySubKeyTree = deleteLocalMachineRegistrySubKeyTree
             ?? DeleteLocalMachineRegistrySubKeyTree;
-        this.commonApplicationDataFluxoFolder = commonApplicationDataFluxoFolder
+        this.localApplicationDataFluxoFolder = localApplicationDataFluxoFolder
             ?? Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 FluxoFolderName);
         this.createDeferredCleanupScriptPath = createDeferredCleanupScriptPath
             ?? (() => Path.Combine(
@@ -353,10 +353,19 @@ public partial class InstallerViewModel : ObservableObject
         requestPlan();
     }
 
-    public void OnDetectedUpToDateVersion(string? installedVersion = null, bool isNewerVersion = false)
+    public void OnDetectedUpToDateVersion(
+        string? installedVersion = null,
+        bool isNewerVersion = false,
+        string? installFolder = null)
     {
         upToDateInstalledVersion = installedVersion;
         upToDateInstalledVersionIsNewer = isNewerVersion;
+        if (!string.IsNullOrWhiteSpace(installFolder) && IsValidInstallFolder(installFolder))
+        {
+            InstallFolder = installFolder;
+            installFolderForCurrentRun = installFolder;
+        }
+
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
         installingChecklistStep.State = ChecklistStepState.Success;
         cleanUpChecklistStep.State = ChecklistStepState.Success;
@@ -495,20 +504,17 @@ public partial class InstallerViewModel : ObservableObject
             var installedExePath = Path.Combine(GetInstallFolderForCurrentRun(), InstalledExecutableName);
             if (!fileExists(installedExePath))
             {
-                StatusMessage = "Fluxo executable was not found, closing installer.";
+                StatusMessage = "Fluxo executable was not found. Setup will stay open.";
                 return;
             }
 
             launchInstalledApp(installedExePath);
             StatusMessage = "Launching Fluxo...";
+            closeInstallerAction();
         }
         catch (Exception ex)
         {
             StatusMessage = $"Launch reported an error: {ex.Message}";
-        }
-        finally
-        {
-            closeInstallerAction();
         }
     }
 
@@ -925,7 +931,10 @@ public partial class InstallerViewModel : ObservableObject
             UseShellExecute = true,
             WorkingDirectory = Path.GetDirectoryName(executablePath) ?? Environment.CurrentDirectory,
         };
-        _ = Process.Start(startInfo);
+        if (Process.Start(startInfo) is null)
+        {
+            throw new InvalidOperationException("Windows did not return a started Fluxo process.");
+        }
     }
 
     private void StartUninstall()
@@ -1184,25 +1193,25 @@ public partial class InstallerViewModel : ObservableObject
             return false;
         }
 
-        if (!directoryExists(commonApplicationDataFluxoFolder))
+        if (!directoryExists(localApplicationDataFluxoFolder))
         {
             return true;
         }
 
-        if (!IsSafeDeleteTarget(commonApplicationDataFluxoFolder))
+        if (!IsSafeDeleteTarget(localApplicationDataFluxoFolder))
         {
-            cleanupError = "cleanup rejected because ProgramData folder path is unsafe for recursive deletion.";
+            cleanupError = "cleanup rejected because LocalAppData folder path is unsafe for recursive deletion.";
             return false;
         }
 
         try
         {
-            deleteDirectory(commonApplicationDataFluxoFolder);
+            deleteDirectory(localApplicationDataFluxoFolder);
             return true;
         }
         catch (Exception ex)
         {
-            cleanupError = $"could not delete ProgramData folder. {ex.Message}";
+            cleanupError = $"could not delete LocalAppData folder. {ex.Message}";
             return false;
         }
     }

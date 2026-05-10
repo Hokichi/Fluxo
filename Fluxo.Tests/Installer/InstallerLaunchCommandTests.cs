@@ -71,6 +71,69 @@ public sealed class InstallerLaunchCommandTests
     }
 
     [Fact]
+    public void LaunchApp_UsesResolvedInstallFolder_WhenVersionIsUpToDate()
+    {
+        string? launchedPath = null;
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            fileExists: static _ => true,
+            bundleExecutablePath: @"C:\Temp\fluxo-installer.exe",
+            copyFile: static (_, _, _) => { },
+            launchInstalledApp: path => launchedPath = path);
+
+        vm.OnDetectedUpToDateVersion(installFolder: @"D:\Apps\fluxo");
+
+        Assert.Equal(InstallerState.FinishedUpToDate, vm.State);
+        Assert.True(vm.LaunchAppCommand.CanExecute(null));
+
+        vm.LaunchAppCommand.Execute(null);
+
+        Assert.Equal(@"D:\Apps\fluxo\fluxo.exe", launchedPath);
+    }
+
+    [Fact]
+    public void LaunchApp_DoesNotCloseInstaller_WhenExecutableCannotBeFound()
+    {
+        var closeCalls = 0;
+        var launchCalls = 0;
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            fileExists: static _ => false,
+            launchInstalledApp: _ => launchCalls++,
+            closeInstallerAction: () => closeCalls++);
+
+        vm.OnDetectedUpToDateVersion();
+
+        Assert.True(vm.LaunchAppCommand.CanExecute(null));
+
+        vm.LaunchAppCommand.Execute(null);
+
+        Assert.Equal(0, launchCalls);
+        Assert.Equal(0, closeCalls);
+        Assert.Equal("Fluxo executable was not found. Setup will stay open.", vm.StatusMessage);
+    }
+
+    [Fact]
+    public void LaunchApp_DoesNotCloseInstaller_WhenLaunchFails()
+    {
+        var closeCalls = 0;
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            fileExists: static _ => true,
+            launchInstalledApp: _ => throw new InvalidOperationException("start failed"),
+            closeInstallerAction: () => closeCalls++);
+
+        vm.OnDetectedUpToDateVersion();
+
+        Assert.True(vm.LaunchAppCommand.CanExecute(null));
+
+        vm.LaunchAppCommand.Execute(null);
+
+        Assert.Equal(0, closeCalls);
+        Assert.Equal("Launch reported an error: start failed", vm.StatusMessage);
+    }
+
+    [Fact]
     public void LaunchApp_Disabled_WhenUninstallCompleted()
     {
         var launchCalls = 0;

@@ -1,5 +1,4 @@
 using System.IO;
-using Fluxo.Data.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -30,7 +29,7 @@ public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbC
 
     public static string GetDatabaseDirectoryPath()
     {
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return Path.Combine(appDataPath, "fluxo");
     }
 
@@ -39,6 +38,6 @@ public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbC
     /// </summary>
     public static void EnsureDatabaseDirectoryExists()
     {
-        MachineWideDataDirectoryPreparer.Prepare(GetDatabaseDirectoryPath());
+        Directory.CreateDirectory(GetDatabaseDirectoryPath());
     }
 }

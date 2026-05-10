@@ -665,8 +665,8 @@ public sealed class InstallerFlowStateTests
         string? writtenScriptPath = null;
         string? writtenScriptContents = null;
         var installFolder = @"C:\Program Files\fluxo";
-        var programDataFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        var localAppDataFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "fluxo");
         var staleFilePath = Path.Combine(installFolder, "fluxo.exe");
         var staleDirectoryPath = Path.Combine(installFolder, "cache");
@@ -677,13 +677,14 @@ public sealed class InstallerFlowStateTests
             {
                 return string.Equals(path, installFolder, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(path, staleDirectoryPath, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(path, programDataFolder, StringComparison.OrdinalIgnoreCase);
+                    || string.Equals(path, localAppDataFolder, StringComparison.OrdinalIgnoreCase);
             },
             enumerateFileSystemEntries: _ => [staleFilePath, staleDirectoryPath, repairerPath],
             deleteDirectory: path => deletedDirectories.Add(path),
             deleteFile: path => deletedFiles.Add(path),
             deleteLocalMachineRegistrySubKeyTree: (registryView, path) =>
                 deletedRegistrySubKeys.Add((registryView, path)),
+            localApplicationDataFluxoFolder: localAppDataFolder,
             createDeferredCleanupScriptPath: () => @"C:\Temp\fluxo-cleanup-test.cmd",
             writeAllText: (path, content) =>
             {
@@ -703,7 +704,7 @@ public sealed class InstallerFlowStateTests
         Assert.Equal(staleFilePath, deletedFiles[0]);
         Assert.Equal(2, deletedDirectories.Count);
         Assert.Contains(staleDirectoryPath, deletedDirectories);
-        Assert.Contains(programDataFolder, deletedDirectories);
+        Assert.Contains(localAppDataFolder, deletedDirectories);
         Assert.Equal(2, deletedRegistrySubKeys.Count);
         Assert.Contains(
             (RegistryView.Registry64, InstalledVersionRegistryReader.InstalledVersionSubKeyPath),
@@ -916,6 +917,7 @@ public sealed class InstallerFlowStateTests
         Action<string>? deleteDirectory = null,
         Action<string>? deleteFile = null,
         Action<RegistryView, string>? deleteLocalMachineRegistrySubKeyTree = null,
+        string? localApplicationDataFluxoFolder = null,
         Func<string>? createDeferredCleanupScriptPath = null,
         Action<string, string>? writeAllText = null,
         Action<ProcessStartInfo>? startProcess = null,
@@ -939,6 +941,7 @@ public sealed class InstallerFlowStateTests
             deleteDirectory: deleteDirectory,
             deleteFile: deleteFile,
             deleteLocalMachineRegistrySubKeyTree: deleteLocalMachineRegistrySubKeyTree,
+            localApplicationDataFluxoFolder: localApplicationDataFluxoFolder,
             createDeferredCleanupScriptPath: createDeferredCleanupScriptPath,
             writeAllText: writeAllText,
             startProcess: startProcess,

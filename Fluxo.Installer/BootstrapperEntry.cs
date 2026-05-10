@@ -35,6 +35,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private string? _currentBundleVersion;
     private string? _highestDetectedInstalledVersion;
     private string? _registryInstalledVersion;
+    private string? _registryInstallLocation;
     private string? _installedExecutableVersion;
     private readonly Action releaseSingleInstanceMutex;
 
@@ -308,6 +309,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         _highestDetectedInstalledVersion = null;
         _currentBundleVersion = GetCurrentBundleVersion();
         _registryInstalledVersion = InstalledVersionRegistryReader.ReadInstalledVersion();
+        _registryInstallLocation = InstalledVersionRegistryReader.ReadInstallLocation();
         _installedExecutableVersion = GetInstalledExecutableVersion();
     }
 
@@ -360,7 +362,8 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         {
             DispatchToUi(() => _viewModel?.OnDetectedUpToDateVersion(
                 upToDateDecision.InstalledVersion,
-                upToDateDecision.IsNewerVersion));
+                upToDateDecision.IsNewerVersion,
+                _registryInstallLocation));
             return;
         }
 

@@ -20,6 +20,12 @@
             Value="$(var.FluxoMsiVersion)"
             Type="string"
             KeyPath="yes" />
+        <RegistryValue
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo"
+            Name="InstallLocation"
+            Value="[INSTALLFOLDER]"
+            Type="string" />
       </Component>
     </ComponentGroup>
   </Fragment>

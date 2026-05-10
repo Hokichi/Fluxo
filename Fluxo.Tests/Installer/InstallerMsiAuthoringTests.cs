@@ -30,6 +30,18 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
+    public void AppFileHarvest_WritesInstallLocationRegistryValue()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Msi",
+            "ExampleComponents.wxs"));
+
+        Assert.Contains("Name=\"InstallLocation\"", wxs);
+        Assert.Contains("Value=\"[INSTALLFOLDER]\"", wxs);
+    }
+
+    [Fact]
     public void Package_DeclaresPerMachineScope()
     {
         var wxs = File.ReadAllText(Path.Combine(
@@ -55,36 +67,29 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
-    public void Folders_DeclaresMachineWideProgramDataFolder()
+    public void Folders_DoesNotDeclareMachineWideProgramDataFolder()
     {
         var wxs = File.ReadAllText(Path.Combine(
             GetRepositoryRoot(),
             "Fluxo.Installer.Msi",
             "Folders.wxs"));
 
-        Assert.Contains("CommonAppDataFolder", wxs);
-        Assert.Contains("FLUXOPROGRAMDATAFOLDER", wxs);
-        Assert.Contains("Name=\"fluxo\"", wxs);
-        Assert.Contains("CreateFolder", wxs);
+        Assert.DoesNotContain("CommonAppDataFolder", wxs);
+        Assert.DoesNotContain("FLUXOPROGRAMDATAFOLDER", wxs);
+        Assert.DoesNotContain("FluxoProgramDataFolderComponent", wxs);
     }
 
     [Fact]
-    public void Package_RepairsProgramDataAclDuringInstallAndRepair()
+    public void Package_DoesNotRepairProgramDataAclDuringInstallOrRepair()
     {
         var wxs = File.ReadAllText(Path.Combine(
             GetRepositoryRoot(),
             "Fluxo.Installer.Msi",
             "Package.wxs"));
 
-        Assert.Contains("RepairFluxoProgramDataAcl", wxs);
-        Assert.Contains("Action=\"RepairFluxoProgramDataAcl\" After=\"InstallFiles\"", wxs);
-        Assert.Contains("Condition=\"NOT REMOVE=&quot;ALL&quot; AND (NOT Installed OR REINSTALL)\"", wxs);
-        Assert.Contains("icacls.exe", wxs);
-        Assert.Contains("*S-1-5-32-545:(OI)(CI)M /C", wxs);
-        Assert.Contains("Execute=\"deferred\"", wxs);
-        Assert.Contains("Impersonate=\"no\"", wxs);
-        Assert.DoesNotContain(" /T ", wxs);
-        Assert.DoesNotContain("/grant *S-1-5-32-545:(OI)(CI)M /T", wxs);
+        Assert.DoesNotContain("RepairFluxoProgramDataAcl", wxs);
+        Assert.DoesNotContain("icacls.exe", wxs);
+        Assert.DoesNotContain("%ProgramData%\\fluxo", wxs);
     }
 
     [Fact]

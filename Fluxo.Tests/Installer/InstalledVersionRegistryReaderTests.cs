@@ -23,6 +23,20 @@ public sealed class InstalledVersionRegistryReaderTests : IDisposable
     }
 
     [Fact]
+    public void ReadInstallLocation_ReturnsInstallLocationFromConfiguredFluxoKey()
+    {
+        using var testRoot = Registry.CurrentUser.CreateSubKey(testRootPath);
+        using var fluxoKey = testRoot.CreateSubKey(@"Microsoft\Windows\CurrentVersion\fluxo");
+        fluxoKey.SetValue("InstallLocation", @"D:\Apps\fluxo", RegistryValueKind.String);
+
+        var installLocation = InstalledVersionRegistryReader.ReadInstallLocation(
+            Registry.CurrentUser,
+            $@"{testRootPath}\Microsoft\Windows\CurrentVersion\fluxo");
+
+        Assert.Equal(@"D:\Apps\fluxo", installLocation);
+    }
+
+    [Fact]
     public void ReadInstalledVersion_IgnoresLegacyUninstallDisplayVersionEntries()
     {
         using var testRoot = Registry.CurrentUser.CreateSubKey(testRootPath);
