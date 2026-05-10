@@ -1,5 +1,5 @@
 using System.IO;
-using System.Reflection;
+using Fluxo.Data.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -40,22 +40,5 @@ public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbC
     public static void EnsureDatabaseDirectoryExists()
     {
         MachineWideDataDirectoryPreparer.Prepare(GetDatabaseDirectoryPath());
-    }
-
-    private static class MachineWideDataDirectoryPreparer
-    {
-        public static void Prepare(string directoryPath)
-        {
-            var preparerType = Type.GetType("Fluxo.Infrastructure.MachineWideDataDirectoryPreparer, fluxo");
-            var prepareMethod = preparerType?.GetMethod("Prepare", BindingFlags.Public | BindingFlags.Static, [typeof(string)]);
-
-            if (prepareMethod is not null)
-            {
-                prepareMethod.Invoke(obj: null, parameters: [directoryPath]);
-                return;
-            }
-
-            Directory.CreateDirectory(directoryPath);
-        }
     }
 }

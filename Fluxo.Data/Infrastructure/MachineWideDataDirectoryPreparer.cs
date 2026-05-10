@@ -2,9 +2,9 @@ using System.IO;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
-namespace Fluxo.Infrastructure;
+namespace Fluxo.Data.Infrastructure;
 
-internal static class MachineWideDataDirectoryPreparer
+public static class MachineWideDataDirectoryPreparer
 {
     private static readonly SecurityIdentifier UsersSid = new(WellKnownSidType.BuiltinUsersSid, null);
     private static readonly FileSystemRights SharedDataRights = FileSystemRights.Modify;
@@ -27,7 +27,7 @@ internal static class MachineWideDataDirectoryPreparer
             GrantFileModifyAccess(filePath);
     }
 
-    internal static IEnumerable<string> EnumerateExistingRuntimeFiles(string directoryPath)
+    public static IEnumerable<string> EnumerateExistingRuntimeFiles(string directoryPath)
     {
         if (!Directory.Exists(directoryPath))
             return [];

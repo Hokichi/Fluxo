@@ -1,6 +1,6 @@
 using System.Security.AccessControl;
 using System.Security.Principal;
-using Fluxo.Infrastructure;
+using Fluxo.Data.Infrastructure;
 using Xunit;
 
 namespace Fluxo.Tests.Infrastructure;
