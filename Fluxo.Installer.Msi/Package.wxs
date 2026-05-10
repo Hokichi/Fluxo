@@ -1,5 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Id="FluxoInstallerMsi" Name="fluxo" Manufacturer="fluxo" Version="$(FluxoMsiVersion)" UpgradeCode="{66DCBC7E-8077-4078-81C9-5618245C0435}">
+  <Package Id="FluxoInstallerMsi" Name="fluxo" Manufacturer="fluxo" Version="$(FluxoMsiVersion)" Scope="perMachine" UpgradeCode="{66DCBC7E-8077-4078-81C9-5618245C0435}">
     <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 
     <Feature Id="MainFeature" Title="fluxo" Level="1">

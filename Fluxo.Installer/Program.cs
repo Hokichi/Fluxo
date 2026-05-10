@@ -15,7 +15,7 @@ internal static class Program
             return 0;
         }
 
-        var bootstrapper = new InstallerBootstrapperApplication();
+        var bootstrapper = new InstallerBootstrapperApplication(singleInstanceMutex.ReleaseMutex);
         ManagedBootstrapperApplication.Run(bootstrapper);
         return 0;
     }

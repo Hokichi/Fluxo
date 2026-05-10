@@ -1,5 +1,7 @@
 using System.IO;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -34,9 +36,11 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private string? _highestDetectedInstalledVersion;
     private string? _registryInstalledVersion;
     private string? _installedExecutableVersion;
+    private readonly Action releaseSingleInstanceMutex;
 
-    public InstallerBootstrapperApplication()
+    public InstallerBootstrapperApplication(Action? releaseSingleInstanceMutex = null)
     {
+        this.releaseSingleInstanceMutex = releaseSingleInstanceMutex ?? (() => { });
         DetectBegin += OnDetectBegin;
         DetectRelatedBundle += OnDetectRelatedBundle;
         DetectComplete += OnDetectComplete;

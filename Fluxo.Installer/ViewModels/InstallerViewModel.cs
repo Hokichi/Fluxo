@@ -44,7 +44,7 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Func<string, string[]> enumerateFileSystemEntries;
     private readonly Action<string> deleteDirectory;
     private readonly Action<string> deleteFile;
-    private readonly Action<string> deleteLocalMachineRegistrySubKeyTree;
+    private readonly Action<RegistryView, string> deleteLocalMachineRegistrySubKeyTree;
     private readonly string commonApplicationDataFluxoFolder;
     private readonly Func<string> createDeferredCleanupScriptPath;
     private readonly Action<string, string> writeAllText;
@@ -83,7 +83,7 @@ public partial class InstallerViewModel : ObservableObject
         Func<string, string[]>? enumerateFileSystemEntries = null,
         Action<string>? deleteDirectory = null,
         Action<string>? deleteFile = null,
-        Action<string>? deleteLocalMachineRegistrySubKeyTree = null,
+        Action<RegistryView, string>? deleteLocalMachineRegistrySubKeyTree = null,
         string? commonApplicationDataFluxoFolder = null,
         Func<string>? createDeferredCleanupScriptPath = null,
         Action<string, string>? writeAllText = null,
@@ -112,7 +112,7 @@ public partial class InstallerViewModel : ObservableObject
         this.deleteDirectory = deleteDirectory ?? (path => Directory.Delete(path, recursive: true));
         this.deleteFile = deleteFile ?? File.Delete;
         this.deleteLocalMachineRegistrySubKeyTree = deleteLocalMachineRegistrySubKeyTree
-            ?? (path => Registry.LocalMachine.DeleteSubKeyTree(path, throwOnMissingSubKey: false));
+            ?? DeleteLocalMachineRegistrySubKeyTree;
         this.commonApplicationDataFluxoFolder = commonApplicationDataFluxoFolder
             ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
@@ -1117,7 +1117,12 @@ public partial class InstallerViewModel : ObservableObject
 
         try
         {
-            deleteLocalMachineRegistrySubKeyTree(InstalledVersionRegistryReader.InstalledVersionSubKeyPath);
+            foreach (var registryView in new[] { RegistryView.Registry64, RegistryView.Registry32 })
+            {
+                deleteLocalMachineRegistrySubKeyTree(
+                    registryView,
+                    InstalledVersionRegistryReader.InstalledVersionSubKeyPath);
+            }
         }
         catch (Exception ex)
         {
@@ -1240,6 +1245,12 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         return normalizedInstallFolder;
+    }
+
+    private static void DeleteLocalMachineRegistrySubKeyTree(RegistryView registryView, string subKeyPath)
+    {
+        using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView);
+        baseKey.DeleteSubKeyTree(subKeyPath, throwOnMissingSubKey: false);
     }
 
     private static string BuildDeferredCleanupScript(string installFolder, string repairerPath, string fluxoFolderPath)

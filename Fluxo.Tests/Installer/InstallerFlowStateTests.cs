@@ -1,6 +1,7 @@
 using Fluxo.Installer.Models;
 using Fluxo.Installer.Services;
 using Fluxo.Installer.ViewModels;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -658,7 +659,7 @@ public sealed class InstallerFlowStateTests
     {
         var deletedFiles = new List<string>();
         var deletedDirectories = new List<string>();
-        var deletedRegistrySubKeys = new List<string>();
+        var deletedRegistrySubKeys = new List<(RegistryView RegistryView, string Path)>();
         var startProcessCalls = 0;
         ProcessStartInfo? deferredCleanupStartInfo = null;
         string? writtenScriptPath = null;
@@ -681,7 +682,8 @@ public sealed class InstallerFlowStateTests
             enumerateFileSystemEntries: _ => [staleFilePath, staleDirectoryPath, repairerPath],
             deleteDirectory: path => deletedDirectories.Add(path),
             deleteFile: path => deletedFiles.Add(path),
-            deleteLocalMachineRegistrySubKeyTree: path => deletedRegistrySubKeys.Add(path),
+            deleteLocalMachineRegistrySubKeyTree: (registryView, path) =>
+                deletedRegistrySubKeys.Add((registryView, path)),
             createDeferredCleanupScriptPath: () => @"C:\Temp\fluxo-cleanup-test.cmd",
             writeAllText: (path, content) =>
             {
@@ -702,10 +704,13 @@ public sealed class InstallerFlowStateTests
         Assert.Equal(2, deletedDirectories.Count);
         Assert.Contains(staleDirectoryPath, deletedDirectories);
         Assert.Contains(programDataFolder, deletedDirectories);
-        Assert.Single(deletedRegistrySubKeys);
-        Assert.Equal(
-            InstalledVersionRegistryReader.InstalledVersionSubKeyPath,
-            deletedRegistrySubKeys[0]);
+        Assert.Equal(2, deletedRegistrySubKeys.Count);
+        Assert.Contains(
+            (RegistryView.Registry64, InstalledVersionRegistryReader.InstalledVersionSubKeyPath),
+            deletedRegistrySubKeys);
+        Assert.Contains(
+            (RegistryView.Registry32, InstalledVersionRegistryReader.InstalledVersionSubKeyPath),
+            deletedRegistrySubKeys);
         Assert.Equal(1, startProcessCalls);
         Assert.NotNull(deferredCleanupStartInfo);
         Assert.Equal(Path.GetTempPath(), deferredCleanupStartInfo!.WorkingDirectory);
@@ -910,7 +915,7 @@ public sealed class InstallerFlowStateTests
         Func<string, string[]>? enumerateFileSystemEntries = null,
         Action<string>? deleteDirectory = null,
         Action<string>? deleteFile = null,
-        Action<string>? deleteLocalMachineRegistrySubKeyTree = null,
+        Action<RegistryView, string>? deleteLocalMachineRegistrySubKeyTree = null,
         Func<string>? createDeferredCleanupScriptPath = null,
         Action<string, string>? writeAllText = null,
         Action<ProcessStartInfo>? startProcess = null,

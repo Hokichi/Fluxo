@@ -53,7 +53,8 @@
 				Id="FluxoMsi"
 				SourceFile="$(var.Fluxo.Installer.Msi.TargetPath)"
 				Vital="yes"
-				Compressed="yes">
+				Compressed="yes"
+				ForcePerMachine="yes">
 				<MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
 			</MsiPackage>
 		</Chain>

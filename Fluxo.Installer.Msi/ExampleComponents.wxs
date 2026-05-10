@@ -9,6 +9,10 @@
         <Exclude Files="$(var.FluxoAppOutputDir)\**\*.db" />
       </Files>
       <Component Id="FluxoInstalledVersionRegistryValue">
+        <RemoveRegistryKey
+          Root="HKLM"
+          Key="SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo"
+          Action="removeOnUninstall" />
         <RegistryValue
           Root="HKLM"
           Key="SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo"
