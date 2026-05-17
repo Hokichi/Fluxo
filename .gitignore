@@ -369,7 +369,6 @@ docs/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 *.db
-*.md
 
 # Worktrees
 .worktree/
