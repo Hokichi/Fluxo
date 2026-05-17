@@ -68,7 +68,8 @@ public static class InstallerUpToDateDecision
         string? highestDetectedInstalledVersion,
         string? registryInstalledVersion,
         string? installedExecutableVersion,
-        Func<string, string, int> compareVersions)
+        Func<string, string, int> compareVersions,
+        bool hasOlderRelatedBundle = false)
     {
         if (operationMode != InstallerOperationMode.Install || detectStatus != 0)
         {
@@ -86,6 +87,11 @@ public static class InstallerUpToDateDecision
         ConsiderDetectedVersion(highestDetectedInstalledVersion);
         ConsiderDetectedVersion(registryInstalledVersion);
         ConsiderDetectedVersion(installedExecutableVersion);
+
+        if (hasOlderRelatedBundle && highestDetectedComparison >= 0)
+        {
+            return new InstallerUpToDateDecisionResult(false, highestDetectedVersion, false);
+        }
 
         return highestDetectedComparison >= 0
             ? new InstallerUpToDateDecisionResult(

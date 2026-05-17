@@ -164,6 +164,23 @@ public sealed class InstallerUpToDateDecisionTests
         Assert.Equal("1.0.0.0", decision.InstalledVersion);
     }
 
+    [Fact]
+    public void Install_WhenOlderRelatedBundleNeedsCleanup_ShouldNotSkip()
+    {
+        var decision = InstallerUpToDateDecision.Evaluate(
+            InstallerOperationMode.Install,
+            detectStatus: 0,
+            currentBundleVersion: "1.0.1",
+            highestDetectedInstalledVersion: "1.0.1",
+            registryInstalledVersion: null,
+            installedExecutableVersion: "1.0.1",
+            compareVersions: CompareVersions,
+            hasOlderRelatedBundle: true);
+
+        Assert.False(decision.ShouldSkipInstall);
+        Assert.Equal("1.0.1", decision.InstalledVersion);
+    }
+
     private static int CompareVersions(string left, string right) =>
         Version.Parse(left).CompareTo(Version.Parse(right));
 }

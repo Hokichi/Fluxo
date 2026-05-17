@@ -35,6 +35,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private readonly ManualResetEventSlim _headlessCompleted = new(false);
     private string? _currentBundleVersion;
     private string? _highestDetectedInstalledVersion;
+    private bool _hasOlderRelatedBundle;
     private string? _registryInstalledVersion;
     private string? _registryInstallLocation;
     private string? _installedExecutableVersion;
@@ -46,8 +47,6 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         DetectBegin += OnDetectBegin;
         DetectRelatedBundle += OnDetectRelatedBundle;
         DetectComplete += OnDetectComplete;
-        PlanRelatedBundleType += OnPlanRelatedBundleType;
-        PlanRelatedBundle += OnPlanRelatedBundle;
         PlanComplete += OnPlanComplete;
         ApplyComplete += OnApplyComplete;
     }
@@ -312,6 +311,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     {
         _highestDetectedInstalledVersion = null;
         _currentBundleVersion = GetCurrentBundleVersion();
+        _hasOlderRelatedBundle = false;
         _registryInstalledVersion = InstalledVersionRegistryReader.ReadInstalledVersion();
         _registryInstallLocation = InstalledVersionRegistryReader.ReadInstallLocation();
         _installedExecutableVersion = GetInstalledExecutableVersion();
@@ -322,6 +322,13 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         if (!IsInstalledRelatedBundle(e.RelationType) || string.IsNullOrWhiteSpace(e.Version))
         {
             return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_currentBundleVersion)
+            && TryCompareVersions(e.Version, _currentBundleVersion, out var comparisonToCurrent)
+            && comparisonToCurrent < 0)
+        {
+            _hasOlderRelatedBundle = true;
         }
 
         if (string.IsNullOrWhiteSpace(_highestDetectedInstalledVersion))
@@ -346,7 +353,8 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
             _highestDetectedInstalledVersion,
             _registryInstalledVersion,
             _installedExecutableVersion,
-            (left, right) => engine.CompareVersions(left, right));
+            (left, right) => engine.CompareVersions(left, right),
+            _hasOlderRelatedBundle);
 
         if (_headlessMode)
         {
@@ -391,19 +399,6 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         }
 
         DispatchToUi(() => _viewModel?.OnPlanComplete(e.Status));
-    }
-
-    private static void OnPlanRelatedBundleType(object? sender, PlanRelatedBundleTypeEventArgs e)
-    {
-        // Prevent Burn from launching cached related bundle executables during upgrade cleanup.
-        // Those legacy bundles can display extra installer windows even when parent flow is quiet.
-        e.Type = RelatedBundlePlanType.None;
-    }
-
-    private static void OnPlanRelatedBundle(object? sender, PlanRelatedBundleEventArgs e)
-    {
-        // Keep related bundles out of the execution plan to guarantee single visible installer instance.
-        e.State = RequestState.None;
     }
 
     private void OnApplyComplete(object? sender, ApplyCompleteEventArgs e)

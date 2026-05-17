@@ -64,6 +64,17 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
+    public void Package_DoesNotUseMsiMajorUpgradeRemoval()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Msi",
+            "Package.wxs"));
+
+        Assert.DoesNotContain("<MajorUpgrade", wxs);
+    }
+
+    [Fact]
     public void Package_SchedulesDeferredRegistryCleanupOnUninstall()
     {
         var wxs = File.ReadAllText(Path.Combine(
@@ -152,6 +163,20 @@ public sealed class InstallerMsiAuthoringTests
 
         Assert.DoesNotContain("<ApplicationManifest>", project);
         Assert.False(File.Exists(Path.Combine(installerDir, "app.manifest")));
+    }
+
+    [Fact]
+    public void Bootstrapper_DoesNotSuppressRelatedBundleUpgradeCleanup()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer",
+            "BootstrapperEntry.cs"));
+
+        Assert.DoesNotContain("RelatedBundlePlanType.None", source);
+        Assert.DoesNotContain("RequestState.None", source);
+        Assert.DoesNotContain("PlanRelatedBundleType +=", source);
+        Assert.DoesNotContain("PlanRelatedBundle +=", source);
     }
 
     private static string GetRepositoryRoot()
