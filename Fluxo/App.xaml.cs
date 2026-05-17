@@ -620,21 +620,28 @@ public partial class App : Application
         });
     }
 
-    private static Task MigrateDatabaseAsync(IDataOperationRunner dataOperationRunner)
+    internal static Task MigrateDatabaseAsync(IDataOperationRunner dataOperationRunner)
+    {
+        return MigrateDatabaseAsync(dataOperationRunner, FluxoDbContextFactory.GetDatabasePath);
+    }
+
+    internal static Task MigrateDatabaseAsync(
+        IDataOperationRunner dataOperationRunner,
+        Func<string> databasePathProvider)
     {
         return dataOperationRunner.RunAsync("migrate database", async (scope, ct) =>
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
-            var databasePath = FluxoDbContextFactory.GetDatabasePath();
+            var databasePath = databasePathProvider();
             var databaseExists = File.Exists(databasePath);
+            var allMigrations = dbContext.Database.GetMigrations().ToList();
 
             if (!databaseExists)
             {
-                await dbContext.Database.MigrateAsync(ct);
+                await CreateCurrentSchemaAndSeedMigrationHistoryAsync(dbContext, allMigrations, ct);
                 return;
             }
 
-            var allMigrations = dbContext.Database.GetMigrations().ToList();
             var appliedMigrations = await TryGetAppliedMigrationsAsync(dbContext, ct);
 
             if (appliedMigrations.Count == 0)
@@ -642,13 +649,7 @@ public partial class App : Application
                 var hasAnyApplicationTable = await HasAnyApplicationTableAsync(dbContext, ct);
                 if (!hasAnyApplicationTable)
                 {
-                    await dbContext.Database.EnsureDeletedAsync(ct);
-                    await dbContext.Database.EnsureCreatedAsync(ct);
-                    await EnsureMigrationHistoryTableAsync(dbContext, ct);
-
-                    if (allMigrations.Count > 0)
-                        await SeedMigrationHistoryAsync(dbContext, allMigrations, allMigrations[^1], ct);
-
+                    await CreateCurrentSchemaAndSeedMigrationHistoryAsync(dbContext, allMigrations, ct);
                     return;
                 }
 
@@ -664,6 +665,19 @@ public partial class App : Application
 
             await dbContext.Database.MigrateAsync(ct);
         });
+    }
+
+    private static async Task CreateCurrentSchemaAndSeedMigrationHistoryAsync(
+        FluxoDbContext dbContext,
+        IReadOnlyList<string> allMigrations,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.EnsureDeletedAsync(cancellationToken);
+        await dbContext.Database.EnsureCreatedAsync(cancellationToken);
+        await EnsureMigrationHistoryTableAsync(dbContext, cancellationToken);
+
+        if (allMigrations.Count > 0)
+            await SeedMigrationHistoryAsync(dbContext, allMigrations, allMigrations[^1], cancellationToken);
     }
 
     private static async Task<List<string>> TryGetAppliedMigrationsAsync(

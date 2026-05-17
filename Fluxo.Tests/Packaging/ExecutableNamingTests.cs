@@ -94,6 +94,19 @@ public sealed class ExecutableNamingTests
     }
 
     [Fact]
+    public void MsiHarvest_ExcludesLocalRuntimeDataAndLogs()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Msi",
+            "ExampleComponents.wxs"));
+
+        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\*.log\" />", wxs);
+        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\logs\\**\" />", wxs);
+        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\**\\*.log\" />", wxs);
+    }
+
+    [Fact]
     public void Dockerfile_UsesLowercaseExecutableEntrypoint()
     {
         var dockerfile = File.ReadAllText(Path.Combine(

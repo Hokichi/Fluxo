@@ -3,10 +3,13 @@
     <ComponentGroup Id="FluxoAppFiles" Directory="INSTALLFOLDER">
       <Files Include="$(var.FluxoAppOutputDir)\*">
         <Exclude Files="$(var.FluxoAppOutputDir)\*.db" />
+        <Exclude Files="$(var.FluxoAppOutputDir)\*.log" />
+        <Exclude Files="$(var.FluxoAppOutputDir)\logs\**" />
       </Files>
       <Files Include="$(var.FluxoAppOutputDir)\**">
         <Exclude Files="$(var.FluxoAppOutputDir)\*" />
         <Exclude Files="$(var.FluxoAppOutputDir)\**\*.db" />
+        <Exclude Files="$(var.FluxoAppOutputDir)\**\*.log" />
       </Files>
       <!-- HKLM cleanup on uninstall: deferred CustomAction in Package.wxs (WiX v4 omits RemoveRegistryKeys). -->
       <Component
