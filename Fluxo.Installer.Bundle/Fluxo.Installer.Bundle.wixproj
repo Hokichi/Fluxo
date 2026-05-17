@@ -1,7 +1,7 @@
 <Project Sdk="WixToolset.Sdk/7.0.0">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
-    <FluxoInstallerVersion Condition="'$(FluxoInstallerVersion)' == ''">1.0.0</FluxoInstallerVersion>
+    <FluxoInstallerVersion Condition="'$(FluxoInstallerVersion)' == ''">1.0.1</FluxoInstallerVersion>
     <OutputName>fluxo-$(FluxoInstallerVersion)-Installer</OutputName>
     <AcceptEula>wix7</AcceptEula>
     <ManagedBootstrapperExe>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\Fluxo.Installer.exe</ManagedBootstrapperExe>
