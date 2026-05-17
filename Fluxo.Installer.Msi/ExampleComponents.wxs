@@ -1,0 +1,32 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <ComponentGroup Id="FluxoAppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.FluxoAppOutputDir)\*">
+        <Exclude Files="$(var.FluxoAppOutputDir)\*.db" />
+      </Files>
+      <Files Include="$(var.FluxoAppOutputDir)\**">
+        <Exclude Files="$(var.FluxoAppOutputDir)\*" />
+        <Exclude Files="$(var.FluxoAppOutputDir)\**\*.db" />
+      </Files>
+      <!-- HKLM cleanup on uninstall: deferred CustomAction in Package.wxs (WiX v4 omits RemoveRegistryKeys). -->
+      <Component
+          Id="FluxoInstalledVersionRegistryValue"
+          Guid="A4F8E9D2-7C31-4B6E-9F01-2B8E7D4C3A90"
+          Bitness="always64">
+        <RegistryValue
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo"
+            Name="InstalledVersion"
+            Value="$(var.FluxoMsiVersion)"
+            Type="string"
+            KeyPath="yes" />
+        <RegistryValue
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo"
+            Name="InstallLocation"
+            Value="[INSTALLFOLDER]"
+            Type="string" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

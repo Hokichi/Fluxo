@@ -1,0 +1,844 @@
+<Window
+    x:Class="Fluxo.Views.Shell.Main.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:controls="clr-namespace:Fluxo.Views.Shell.Main.Controls"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
+    Title="Fluxo"
+    Width="1600"
+    Height="900"
+    MinWidth="1600"
+    MinHeight="900"
+    AllowsTransparency="True"
+    Background="Transparent"
+    Icon="/Fluxo.Resources;component/Resources/fluxo.ico"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" Executed="OnCloseWindow" />
+        <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" Executed="OnMinimizeWindow" />
+    </Window.CommandBindings>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/MainWindowStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <ItemsPanelTemplate x:Key="MainWindowSpendingSourcesItemsPanelTemplate">
+                <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+
+            <DataTemplate x:Key="MainWindowSpendingSourceItemTemplate">
+                <components:IncomeSource />
+            </DataTemplate>
+
+            <Style x:Key="AnalyticsDrawerTabButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border
+                                x:Name="ButtonSurface"
+                                Margin="0,0,0,-2"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12,12,0,0">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                    <Setter TargetName="ButtonSurface" Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.9" />
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint.Muted}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint.Muted}" />
+                                    <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                    <Setter TargetName="ButtonSurface" Property="BorderThickness" Value="1" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.55" />
+                                    <Setter Property="Cursor" Value="Arrow" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="HeaderSearchResultItemStyle" TargetType="Border">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="12,10" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <DataTemplate x:Key="HeaderSearchResultItemTemplate">
+                <Border MouseLeftButtonUp="OnHeaderSearchResultItemClick" Style="{StaticResource HeaderSearchResultItemStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Margin="0,0,8,0">
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="13"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Expense.Name}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                            <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource Regular}"
+                                    FontSize="10"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+
+                                <Border
+                                    Margin="8,0,0,0"
+                                    Padding="5,2"
+                                    VerticalAlignment="Center"
+                                    Background="{Binding Expense.ExpenseTag.HexCode}">
+                                    <Border.CornerRadius>
+                                        <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
+                                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                                        </MultiBinding>
+                                    </Border.CornerRadius>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        FontSize="10"
+                                        Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                        Text="{Binding Expense.ExpenseTag.Name}" />
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="13"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
+                                ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                            <TextBlock
+                                MaxWidth="120"
+                                Margin="0,6,0,0"
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource Regular}"
+                                FontSize="10"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="{Binding SpendingSource.Name}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border
+        x:Name="RootBorder"
+        Background="{StaticResource Brush.Background.Main}"
+        BorderBrush="{StaticResource Brush.Border.Subtle}"
+        BorderThickness="1"
+        CornerRadius="16"
+        MouseMove="MainWindow_OnMouseMove">
+        <Grid>
+            <Grid x:Name="ContentGrid" Margin="0,16,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border
+                    x:Name="TopBorderHitArea"
+                    Grid.Row="0"
+                    Margin="24,0"
+                    Background="Transparent"
+                    MouseLeftButtonDown="OnTopBorderHitAreaMouseLeftButtonDown" />
+
+                <Grid Grid.Row="0" Margin="24,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel
+                        Margin="32,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Image
+                            Width="24"
+                            Height="24"
+                            VerticalAlignment="Center"
+                            Source="/Fluxo.Resources;component/Resources/fluxo.ico"
+                            Stretch="Uniform" />
+
+                        <TextBlock
+                            Margin="8,1,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Black}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="flux" />
+
+                        <TextBlock
+                            Margin="0,1,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Black}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Mint}"
+                            Text="o" />
+
+                        <Border
+                            Width="1"
+                            Height="32"
+                            Margin="16,0"
+                            Background="{StaticResource Brush.Border.Subtle}" />
+
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="14">
+                            <Run
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Welcome back," />
+                            <Run
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Username}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <controls:DaySpinnerControl
+                        x:Name="DaySpinnerControlHost"
+                        Grid.Column="1"
+                        DataContext="{Binding DaySpinner}" />
+
+                    <StackPanel
+                        Grid.Column="2"
+                        Margin="0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Grid
+                            x:Name="HeaderSearchRegion"
+                            VerticalAlignment="Top"
+                            Panel.ZIndex="10"
+                            PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <customControls:BalloonButton
+                                x:Name="HeaderSearchButton"
+                                ButtonIcon="{StaticResource MagnifyingGlass}"
+                                Click="OnHeaderSearchButtonClick"
+                                IconSize="11"
+                                Style="{StaticResource HeaderButtonStyle}" />
+
+                            <Border
+                                x:Name="HeaderSearchInputBorder"
+                                Width="300"
+                                Padding="10,6"
+                                Background="{StaticResource Brush.Background.Surface}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <components:Icon
+                                        Width="12"
+                                        Height="12"
+                                        VerticalAlignment="Center"
+                                        Path="{StaticResource MagnifyingGlass}"
+                                        Color="{StaticResource Brush.Text.Muted}" />
+
+                                    <TextBox
+                                        x:Name="HeaderSearchBox"
+                                        Grid.Column="1"
+                                        Margin="8,0,0,0"
+                                        VerticalContentAlignment="Center"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        CaretBrush="{StaticResource Brush.Text.Primary}"
+                                        FontFamily="{StaticResource Regular}"
+                                        FontSize="13"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        PreviewKeyDown="OnHeaderSearchBoxPreviewKeyDown"
+                                        TextChanged="OnHeaderSearchTextChanged">
+                                        <TextBox.Template>
+                                            <ControlTemplate TargetType="TextBox">
+                                                <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                                            </ControlTemplate>
+                                        </TextBox.Template>
+                                    </TextBox>
+                                </Grid>
+                            </Border>
+
+                            <Popup
+                                x:Name="HeaderSearchResultsPopup"
+                                AllowsTransparency="True"
+                                IsOpen="False"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding ElementName=HeaderSearchInputBorder}"
+                                PopupAnimation="Fade"
+                                StaysOpen="True"
+                                VerticalOffset="8">
+                                <Border
+                                    x:Name="HeaderSearchResultsBorder"
+                                    Width="300"
+                                    Padding="6"
+                                    Background="{StaticResource Brush.Background.Elevated}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                    <Grid>
+                                        <TextBlock
+                                            x:Name="HeaderSearchNoResultsText"
+                                            Padding="12,10"
+                                            HorizontalAlignment="Center"
+                                            FontFamily="{StaticResource Medium}"
+                                            FontSize="14"
+                                            Foreground="{StaticResource Brush.Text.Muted}"
+                                            Text="No expense found"
+                                            Visibility="Collapsed" />
+                                        <ItemsControl x:Name="HeaderSearchResultsList" ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
+                                    </Grid>
+                                </Border>
+                            </Popup>
+                        </Grid>
+
+                        <customControls:BalloonButton
+                            x:Name="HeaderQuickAddButton"
+                            ButtonIcon="{StaticResource PlusSolid}"
+                            Click="OnHeaderQuickAddButtonClick"
+                            Style="{StaticResource HeaderButtonStyle}" />
+
+                        <customControls:BalloonButton
+                            x:Name="HeaderMenuButton"
+                            ButtonIcon="{StaticResource BarsSolid}"
+                            Click="OnHeaderMenuButtonClick"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            HoveredBackground="{StaticResource Brush.Background.Hover}"
+                            IconSize="9"
+                            MouseEnter="OnHeaderMenuButtonMouseEnter"
+                            MouseLeave="OnHeaderMenuButtonMouseLeave"
+                            Style="{StaticResource HeaderButtonStyle}" />
+
+                        <Popup
+                            x:Name="HeaderMenuPopup"
+                            AllowsTransparency="True"
+                            IsOpen="False"
+                            Placement="Bottom"
+                            PlacementTarget="{Binding ElementName=HeaderMenuButton}"
+                            PopupAnimation="Fade"
+                            StaysOpen="True"
+                            VerticalOffset="8">
+                            <Border
+                                x:Name="HeaderMenuPopupRoot"
+                                Width="220"
+                                Padding="8"
+                                Background="{StaticResource Brush.Background.Elevated}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="1"
+                                CornerRadius="18"
+                                MouseEnter="OnHeaderMenuPopupMouseEnter"
+                                MouseLeave="OnHeaderMenuPopupMouseLeave">
+                                <Border.Resources>
+                                    <Style x:Key="HeaderMenuShortcutTextStyle" TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+                                        <Setter Property="FontSize" Value="11" />
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Resources>
+                                <StackPanel>
+                                    <Button Click="OnQuickAddButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource PlusSolid}"
+                                                Color="{StaticResource Brush.Mint}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Add" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+N" />
+                                        </Grid>
+                                    </Button>
+
+                                    <Button Click="OnSpendingSourcesButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource Bank}"
+                                                Color="{StaticResource Brush.Mint}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Sources" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+L" />
+                                        </Grid>
+                                    </Button>
+
+                                    <Button Click="OnPlanningButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource PlusSolid}"
+                                                Color="{StaticResource Brush.Warning}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Planning" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+P" />
+                                        </Grid>
+                                    </Button>
+
+                                    <Button
+                                        x:Name="UndoMenuButton"
+                                        Click="OnUndoButtonClick"
+                                        IsEnabled="False"
+                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource RegularUndo}"
+                                                Color="{StaticResource Brush.Warning}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Undo" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+Z" />
+                                        </Grid>
+                                    </Button>
+
+                                    <Button
+                                        x:Name="RedoMenuButton"
+                                        Click="OnRedoButtonClick"
+                                        IsEnabled="False"
+                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource RegularRedo}"
+                                                Color="{StaticResource Brush.Info}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Redo" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+Y" />
+                                        </Grid>
+                                    </Button>
+
+                                    <Button Click="OnSettingsButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <components:Icon
+                                                Width="14"
+                                                Height="14"
+                                                Path="{StaticResource Cog}"
+                                                Color="{StaticResource Brush.Info}" />
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="Settings" />
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                Text="Ctrl+S" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource Minus}"
+                            Command="{x:Static SystemCommands.MinimizeWindowCommand}"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                            Style="{StaticResource HeaderButtonStyle}" />
+
+                        <customControls:BalloonButton
+                            x:Name="ExpandRestoreButton"
+                            ButtonIcon="{StaticResource ExpandAlt}"
+                            Click="OnExpandRestoreWindow"
+                            HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                            Style="{StaticResource HeaderButtonStyle}" />
+
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource Close}"
+                            Command="{x:Static SystemCommands.CloseWindowCommand}"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            HoveredBackground="{StaticResource Brush.Danger}"
+                            Style="{StaticResource HeaderButtonStyle}" />
+                    </StackPanel>
+                </Grid>
+
+                <controls:MainViewModeToggleControl
+                    x:Name="ViewModeToggleControlHost"
+                    Grid.Row="1"
+                    Margin="0,16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    DataContext="{Binding ViewModeToggle}" />
+
+                <Grid
+                    x:Name="MainContentGrid"
+                    Grid.Row="1"
+                    Margin="200,48">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Overview" />
+
+                        <Button
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Click="OnSpendingSourcesButtonClick"
+                            Content="View All Spending Sources"
+                            Style="{StaticResource TextOnlyButtonStyle}" />
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,20,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <sections:SpentAllowancePanel
+                            x:Name="SpentAllowancePanelHost"
+                            Height="120"
+                            VerticalAlignment="Top"
+                            DataContext="{Binding SpentAllowancePanel}" />
+
+                        <Border
+                            Grid.Column="1"
+                            Width="1"
+                            Height="64"
+                            Margin="12,0,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Background="{StaticResource Brush.Border.Subtle}"
+                            SnapsToDevicePixels="True" />
+
+                        <customControls:FadingScrollViewer
+                            Grid.Column="2"
+                            HorizontalAlignment="Stretch"
+                            CanContentScroll="False"
+                            HorizontalScrollBarVisibility="Hidden"
+                            VerticalScrollBarVisibility="Disabled">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="AddSpendingSourceButton"
+                                    Margin="0,0,8,0"
+                                    Click="OnAddSpendingSourceButtonClick"
+                                    Style="{StaticResource SpendingSourceAddButtonStyle}" />
+
+                                <ListView
+                                    HorizontalAlignment="Left"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="0"
+                                    ItemContainerStyle="{StaticResource IncomeSources}"
+                                    ItemTemplate="{StaticResource MainWindowSpendingSourceItemTemplate}"
+                                    ItemsPanel="{StaticResource MainWindowSpendingSourcesItemsPanelTemplate}"
+                                    ItemsSource="{Binding SpendingSources}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+                        </customControls:FadingScrollViewer>
+                    </Grid>
+
+                    <Grid Grid.Row="2" Margin="0,8,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="160" />
+                        </Grid.RowDefinitions>
+
+                        <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
+
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.5*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <sections:SavingGoalsPanel
+                                x:Name="SavingGoalsPanelHost"
+                                Grid.Column="0"
+                                DataContext="{Binding SavingGoalsPanel}" />
+
+                            <sections:NotificationPanel
+                                x:Name="NotificationPanelHost"
+                                Grid.Column="2"
+                                DataContext="{Binding NotificationPanel}" />
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <Border
+                x:Name="AnalyticsDrawerTabHost"
+                Width="170"
+                Height="28"
+                Margin="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Background="{StaticResource Brush.Background.Elevated}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1,1,1,0"
+                CornerRadius="14,14,0,0">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsMouseOver, ElementName=AnalyticsDrawerTabButton}" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=AnalyticsDrawerTabButton}" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Button
+                    x:Name="AnalyticsDrawerTabButton"
+                    AutomationProperties.Name="Open Analytics Drawer"
+                    Click="OnAnalyticsDrawerTabClick"
+                    Style="{StaticResource AnalyticsDrawerTabButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                            Text="Analytics" />
+                    </StackPanel>
+                </Button>
+            </Border>
+
+            <Grid x:Name="AnalyticsDrawerLayer" Panel.ZIndex="20">
+                <Border
+                    x:Name="AnalyticsDrawerPanel"
+                    Margin="24,76,24,0"
+                    Background="{StaticResource Brush.Background.Elevated}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="18 18 0 0"
+                    Visibility="Collapsed">
+                    <Border.Effect>
+                        <DropShadowEffect
+                            BlurRadius="20"
+                            Opacity="0.2"
+                            ShadowDepth="4" />
+                    </Border.Effect>
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="AnalyticsDrawerTransform" Y="1200" />
+                    </Border.RenderTransform>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="60" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="20,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="18"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Analytics" />
+
+                            <Border
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                    <components:DateSelector SelectedDate="{Binding ElementName=AnalyticsDrawerContentHost, Path=Content.DataContext.StartDate, Mode=TwoWay}" />
+
+                                    <TextBlock
+                                        Margin="12,0,8,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Medium}"
+                                        Foreground="{StaticResource Brush.Text.Secondary}"
+                                        Text="To" />
+
+                                    <components:DateSelector SelectedDate="{Binding ElementName=AnalyticsDrawerContentHost, Path=Content.DataContext.EndDate, Mode=TwoWay}" />
+                                </StackPanel>
+                            </Border>
+
+                            <customControls:BalloonButton
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                ButtonIcon="{StaticResource AngleRight}"
+                                Click="OnCloseAnalyticsDrawerButtonClick"
+                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                                HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                                IconSize="9"
+                                Style="{StaticResource HeaderButtonStyle}"
+                                ToolTip="Return To Dashboard" />
+                        </Grid>
+
+                        <ContentControl x:Name="AnalyticsDrawerContentHost" Grid.Row="1" />
+                    </Grid>
+                </Border>
+            </Grid>
+            <Border
+                x:Name="PopupOverlay"
+                Panel.ZIndex="30"
+                Background="Black"
+                CornerRadius="16"
+                IsHitTestVisible="False"
+                Opacity="0"
+                Visibility="Collapsed" />
+        </Grid>
+    </Border>
+</Window>

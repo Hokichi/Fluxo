@@ -1,0 +1,56 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package Id="FluxoInstallerMsi" Name="fluxo" Manufacturer="fluxo" Version="$(FluxoMsiVersion)" Scope="perMachine" UpgradeCode="{66DCBC7E-8077-4078-81C9-5618245C0435}">
+
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+
+
+
+    <Feature Id="MainFeature" Title="fluxo" Level="1">
+
+      <ComponentGroupRef Id="FluxoAppFiles" />
+
+    </Feature>
+
+
+
+    <!--
+
+      WiX v4 does not expose the RemoveRegistryKeys standard action in InstallExecuteSequence (ICE27),
+
+      so RemoveRegistryKey rows never execute. Run reg.exe deferred without impersonation so HKLM cleanup
+
+      happens during elevated MSI uninstall.
+
+    -->
+
+    <InstallExecuteSequence>
+
+      <Custom Action="RemoveFluxoInstalledVersionRegistryKey" After="RemoveRegistryValues" Condition="REMOVE~=&quot;ALL&quot;" />
+
+    </InstallExecuteSequence>
+
+  </Package>
+
+
+
+  <Fragment>
+
+    <CustomAction
+
+        Id="RemoveFluxoInstalledVersionRegistryKey"
+
+        Directory="System64Folder"
+
+        Execute="deferred"
+
+        Impersonate="no"
+
+        ExeCommand="reg.exe delete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo /f"
+
+        Return="ignore" />
+
+  </Fragment>
+
+</Wix>
+

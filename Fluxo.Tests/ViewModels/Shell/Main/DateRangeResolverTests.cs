@@ -1,0 +1,83 @@
+using Fluxo.Core.Enums;
+using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell.Main;
+using Xunit;
+
+namespace Fluxo.Tests.ViewModels.Shell.Main;
+
+public class DateRangeResolverTests
+{
+    [Fact]
+    public void Resolve_Daily_ReturnsSameFromAndTo()
+    {
+        var selected = new DateTime(2026, 4, 16);
+
+        var result = DateRangeResolver.Resolve(selected, MainContentViewMode.Daily);
+
+        Assert.Equal(selected, result.From);
+        Assert.Equal(selected, result.To);
+    }
+
+    [Fact]
+    public void Resolve_Weekly_ReturnsMondayToSunday()
+    {
+        var selected = new DateTime(2026, 4, 19, 14, 30, 0, DateTimeKind.Local);
+        var expectedFrom = new DateTime(2026, 4, 13, 0, 0, 0, DateTimeKind.Local);
+        var expectedTo = new DateTime(2026, 4, 19, 0, 0, 0, DateTimeKind.Local);
+
+        var result = DateRangeResolver.Resolve(selected, MainContentViewMode.Weekly);
+
+        Assert.Equal(expectedFrom, result.From);
+        Assert.Equal(expectedTo, result.To);
+        Assert.Equal(DateTimeKind.Local, result.From.Kind);
+        Assert.Equal(DateTimeKind.Local, result.To.Kind);
+    }
+
+    [Fact]
+    public void Resolve_Monthly_ReturnsFirstToLastDay()
+    {
+        var selected = new DateTime(2024, 2, 15, 9, 45, 0, DateTimeKind.Utc);
+        var expectedFrom = new DateTime(2024, 2, 1, 0, 0, 0, DateTimeKind.Utc);
+        var expectedTo = new DateTime(2024, 2, 29, 0, 0, 0, DateTimeKind.Utc);
+
+        var result = DateRangeResolver.Resolve(selected, MainContentViewMode.Monthly);
+
+        Assert.Equal(expectedFrom, result.From);
+        Assert.Equal(expectedTo, result.To);
+        Assert.Equal(DateTimeKind.Utc, result.From.Kind);
+        Assert.Equal(DateTimeKind.Utc, result.To.Kind);
+    }
+
+    [Fact]
+    public void Resolve_Weekly_WhenSelectedDayIsSunday_ReturnsMondayToSunday()
+    {
+        var selected = new DateTime(2026, 4, 19, 8, 0, 0, DateTimeKind.Unspecified);
+        var expectedFrom = new DateTime(2026, 4, 13, 0, 0, 0, DateTimeKind.Unspecified);
+        var expectedTo = new DateTime(2026, 4, 19, 0, 0, 0, DateTimeKind.Unspecified);
+
+        var result = DateRangeResolver.Resolve(selected, MainContentViewMode.Weekly);
+
+        Assert.Equal(expectedFrom, result.From);
+        Assert.Equal(expectedTo, result.To);
+    }
+
+    [Fact]
+    public void Resolve_Monthly_PreservesKind()
+    {
+        var selected = new DateTime(2025, 11, 3, 18, 0, 0, DateTimeKind.Local);
+
+        var result = DateRangeResolver.Resolve(selected, MainContentViewMode.Monthly);
+
+        Assert.Equal(DateTimeKind.Local, result.From.Kind);
+        Assert.Equal(DateTimeKind.Local, result.To.Kind);
+    }
+
+    [Fact]
+    public void Resolve_AllTime_ThrowsInvalidOperationException()
+    {
+        var selected = new DateTime(2026, 4, 16);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            DateRangeResolver.Resolve(selected, MainContentViewMode.AllTime));
+    }
+}

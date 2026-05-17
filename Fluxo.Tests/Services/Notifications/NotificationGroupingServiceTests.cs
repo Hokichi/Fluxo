@@ -1,0 +1,145 @@
+using Fluxo.Core.Enums;
+using Fluxo.Services.Notifications;
+using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Shell.Main;
+using Xunit;
+
+namespace Fluxo.Tests.Services.Notifications;
+
+public sealed class NotificationGroupingServiceTests
+{
+    [Fact]
+    public void Group_MapsUpcomingDeduction_ToFixedExpenseDue_WithActionCta()
+    {
+        var input = new[]
+        {
+            CreateNotification("UpcomingDeduction-1", DateTime.Today, NotificationSeverity.Warning)
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var cards = sut.Group(input);
+
+        var card = Assert.Single(cards);
+        Assert.Equal(NotificationGroupCategory.FixedExpenseDue, card.Category);
+        Assert.True(card.HasActionCta);
+        Assert.Equal(1, card.Count);
+    }
+
+    [Fact]
+    public void Group_SetsActionability_ByCategory()
+    {
+        var input = new[]
+        {
+            CreateNotification("GoalDeadline-9_20260429", DateTime.Today, NotificationSeverity.Warning),
+            CreateNotification("LowBalance-2", DateTime.Today.AddMinutes(-1), NotificationSeverity.Danger)
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var cards = sut.Group(input);
+
+        Assert.Equal(2, cards.Count);
+        Assert.True(cards.Single(card => card.Category == NotificationGroupCategory.GoalDeadline).HasActionCta);
+        Assert.False(cards.Single(card => card.Category == NotificationGroupCategory.LowBalance).HasActionCta);
+    }
+
+    [Fact]
+    public void Group_GroupsByCategory_SetsCountAndLatestCreatedOn_AndOrdersDescending()
+    {
+        var now = DateTime.Now;
+        var input = new[]
+        {
+            CreateNotification("BudgetThresholdNeeds", now.AddMinutes(-20), NotificationSeverity.Warning, message: "Needs"),
+            CreateNotification("BudgetThresholdWants", now.AddMinutes(-10), NotificationSeverity.Warning, message: "Wants"),
+            CreateNotification("LowCredit-7", now.AddMinutes(-5), NotificationSeverity.Warning, message: "Credit")
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var cards = sut.Group(input);
+
+        Assert.Equal(2, cards.Count);
+
+        var first = cards[0];
+        var second = cards[1];
+
+        Assert.Equal(NotificationGroupCategory.LowCredit, first.Category);
+        Assert.Equal(NotificationGroupCategory.BudgetThreshold, second.Category);
+        Assert.Equal(2, second.Count);
+        Assert.Equal(now.AddMinutes(-10), second.LatestCreatedOn);
+        Assert.Contains("2", second.Header);
+        Assert.Contains("2 items", second.Message);
+    }
+
+    [Fact]
+    public void Group_UsesSeverityPrecedence_DangerOverWarningOverSuccessOverInfo()
+    {
+        var input = new[]
+        {
+            CreateNotification("BudgetThresholdNeeds", DateTime.Today, NotificationSeverity.Success),
+            CreateNotification("BudgetThresholdWants", DateTime.Today.AddMinutes(-1), NotificationSeverity.Warning),
+            CreateNotification("BudgetThresholdSavings", DateTime.Today.AddMinutes(-2), NotificationSeverity.Danger),
+            CreateNotification("BudgetThresholdOther", DateTime.Today.AddMinutes(-3), NotificationSeverity.Info)
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var card = Assert.Single(sut.Group(input));
+
+        Assert.Equal(NotificationGroupCategory.BudgetThreshold, card.Category);
+        Assert.Equal(NotificationSeverity.Danger, card.Severity);
+    }
+
+    [Fact]
+    public void Group_MapsUnknownType_ToOtherCategory()
+    {
+        var input = new[]
+        {
+            CreateNotification("CustomType-42", DateTime.Today, NotificationSeverity.Info)
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var card = Assert.Single(sut.Group(input));
+
+        Assert.Equal(NotificationGroupCategory.Other, card.Category);
+        Assert.False(card.HasActionCta);
+    }
+
+    [Theory]
+    [InlineData("LowBalance-2", NotificationGroupCategory.LowBalance)]
+    [InlineData("LowCredit-7", NotificationGroupCategory.LowCredit)]
+    [InlineData("BudgetThresholdNeeds", NotificationGroupCategory.BudgetThreshold)]
+    [InlineData("AutoExpenseProcessed", NotificationGroupCategory.AutoExpenseProcessed)]
+    public void Group_NonActionableCategories_HaveNoActionCta(string type, NotificationGroupCategory category)
+    {
+        var input = new[]
+        {
+            CreateNotification(type, DateTime.Today, NotificationSeverity.Warning)
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var card = Assert.Single(sut.Group(input));
+
+        Assert.Equal(category, card.Category);
+        Assert.False(card.HasActionCta);
+    }
+
+    private static NotificationVM CreateNotification(
+        string type,
+        DateTime createdOn,
+        NotificationSeverity severity,
+        string? message = null)
+    {
+        return new NotificationVM
+        {
+            Type = type,
+            CreatedOn = createdOn,
+            Severity = severity,
+            Header = $"Header {type}",
+            Message = message ?? $"Message {type}"
+        };
+    }
+}

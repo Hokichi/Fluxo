@@ -1,0 +1,244 @@
+<UserControl
+    x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsSourcesTab"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources">
+    <UserControl.Resources>
+        <DataTemplate x:Key="SettingsSourceItemTemplate">
+            <StackPanel>
+                <Border
+                    x:Name="ItemRoot"
+                    Padding="12"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    PreviewMouseLeftButtonDown="OnItemMouseLeftButtonDown">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center"
+                            IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                            Style="{StaticResource ItemCheckBoxStyle}"
+                            Visibility="{Binding DataContext.IsSpendingSourceChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Name}" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="{Binding TypeDisplayName}" />
+                        </StackPanel>
+                        <TextBlock
+                            Grid.Column="2"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            ToolTip="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}">
+                            <Run Text="{Binding PrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                        </TextBlock>
+                        <StackPanel
+                            Grid.Column="3"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <components:Icon Margin="6" Path="{StaticResource EyeOff}" Color="{StaticResource Brush.Warning}" />
+                            </Border>
+                            <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                                <components:Icon Margin="6" Path="{StaticResource LightningSlashFill}" Color="{StaticResource Brush.Danger}" />
+                            </Border>
+                        </StackPanel>
+                        <StackPanel
+                            x:Name="RowActions"
+                            Grid.Column="4"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False"
+                            Opacity="0"
+                            Orientation="Horizontal"
+                            Visibility="Collapsed">
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource CircleMinusSolid}"
+                                Click="OnRowActionClick"
+                                HoveredBackground="{StaticResource Brush.Danger}"
+                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                                Tag="SpendingSources:Delete"
+                                ToolTip="Delete" />
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource EyeOff}"
+                                Click="OnRowActionClick"
+                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                                Tag="SpendingSources:Hide"
+                                ToolTip="Hide"
+                                Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource Eye}"
+                                Click="OnRowActionClick"
+                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                                Tag="SpendingSources:Unhide"
+                                ToolTip="Unhide"
+                                Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource LightningSlashFill}"
+                                Click="OnRowActionClick"
+                                HoveredBackground="{StaticResource Brush.Warning}"
+                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                                Tag="SpendingSources:Disable"
+                                ToolTip="Disable"
+                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource LightningFill}"
+                                Click="OnRowActionClick"
+                                HoveredBackground="{StaticResource Brush.Mint}"
+                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                                Tag="SpendingSources:Enable"
+                                ToolTip="Enable"
+                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border
+                    Height="1"
+                    Margin="12,8,12,8"
+                    Background="{StaticResource Brush.Border.Subtle}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <Trigger SourceName="ItemRoot" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                    <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+                    <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="RowActions" Property="Opacity" Value="1" />
+                    <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="True" />
+                </Trigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource PanelStyle}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource CircleMinusSolid}"
+                            Click="OnBatchActionClick"
+                            HoveredBackground="{StaticResource Brush.Danger}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:Delete"
+                            ToolTip="Delete selected"
+                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource EyeOff}"
+                            Click="OnBatchActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:Hide"
+                            ToolTip="Hide selected"
+                            Visibility="{Binding ShowSpendingSourceHideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource Eye}"
+                            Click="OnBatchActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:Unhide"
+                            ToolTip="Unhide selected"
+                            Visibility="{Binding ShowSpendingSourceUnhideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource LightningSlashFill}"
+                            Click="OnBatchActionClick"
+                            HoveredBackground="{StaticResource Brush.Warning}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:Disable"
+                            ToolTip="Disable selected"
+                            Visibility="{Binding ShowSpendingSourceDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource LightningFill}"
+                            Click="OnBatchActionClick"
+                            HoveredBackground="{StaticResource Brush.Mint}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:Enable"
+                            ToolTip="Enable selected"
+                            Visibility="{Binding ShowSpendingSourceEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource CheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:CheckAll"
+                            ToolTip="Check all"
+                            Visibility="{Binding ShowSpendingSourceCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource UncheckAll}"
+                            Click="OnSelectionActionClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:UncheckAll"
+                            ToolTip="Uncheck all"
+                            Visibility="{Binding ShowSpendingSourceUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource EnableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:EnableChecks"
+                            ToolTip="Enable selection"
+                            Visibility="{Binding ShowSpendingSourceEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource DisableChecks}"
+                            Click="OnChecksToggleClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="SpendingSources:DisableChecks"
+                            ToolTip="Disable selection"
+                            Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonButton
+                            ButtonIcon="{StaticResource PlusSolid}"
+                            Click="OnAddPlaceholderClick"
+                            HoveredBackground="{StaticResource Brush.Mint}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            Tag="Add New Spending Source"
+                            ToolTip="Add source" />
+            </StackPanel>
+            <ScrollViewer
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        VerticalScrollBarVisibility="Auto">
+                <ItemsControl
+                            ItemTemplate="{StaticResource SettingsSourceItemTemplate}"
+                            ItemsSource="{Binding SpendingSourcesView}"
+                            behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding HasMoreItems}"
+                            behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                            behaviors:ScrollOnDemandBehavior.IsLoading="{Binding IsLoading}"
+                            behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand}" />
+            </ScrollViewer>
+            <TextBlock
+                        Grid.RowSpan="2"
+                        Margin="0,24"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="13"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="No Spending Source Available"
+                        Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+        </Grid>
+    </Border>
+</UserControl>
+
+
+
+

@@ -1,0 +1,177 @@
+<UserControl
+    x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsAboutTab"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
+    <Border Style="{StaticResource PanelStyle}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="16"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="About" />
+                <TextBlock
+                    Margin="0,8,0,16"
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="Manage app startup behavior, version info, and maintenance actions." />
+
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Run with Windows" />
+                            <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    TextWrapping="Wrap">
+                                    <Run Text="Start " />
+                                </TextBlock>
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="flux" />
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Mint.Muted}"
+                                    Text="o" />
+                                <TextBlock
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    TextWrapping="Wrap">
+                                    <Run Text=" in the system tray when Windows signs in." />
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                        <ToggleButton
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            IsChecked="{Binding ShouldRunAtStartup, Mode=TwoWay}"
+                            Style="{StaticResource ToggleSwitchStyle}" />
+                    </Grid>
+                </Border>
+
+                <Border Margin="0,6,0,0" Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="When closing " />
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="flux" />
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Mint}"
+                                Text="o" />
+                        </StackPanel>
+                        <Border
+                            Height="32"
+                            Padding="4"
+                            HorizontalAlignment="Right"
+                            Background="{StaticResource Brush.Background.Surface}"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="14">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    Width="120"
+                                    Command="{Binding SetCloseBehaviorCommand}"
+                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}"
+                                    Content="Minimize to tray"
+                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                    Tag="{Binding IsMinimizeToTrayCloseBehaviorSelected}" />
+                                <Button
+                                    Width="120"
+                                    Margin="4,0,0,0"
+                                    Command="{Binding SetCloseBehaviorCommand}"
+                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.Exit}"
+                                    Content="Exit"
+                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                    Tag="{Binding IsExitCloseBehaviorSelected}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Border Margin="0,12,0,0" Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Current Version" />
+                            <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="Installed version of "
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="flux" />
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Mint.Muted}"
+                                    Text="o" />
+                                <TextBlock
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text=" is available."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding CurrentVersion}" />
+                    </Grid>
+                </Border>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Grid.Column="0"
+                        Click="OnRunSetupWizardClick"
+                        Content="Run Setup Wizard"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                    <Button
+                        Grid.Column="2"
+                        Click="OnResetAllSettingsClick"
+                        Content="Reset All Settings"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                    <Button
+                        Grid.Column="4"
+                        Click="OnDeleteAllDataClick"
+                        Content="Delete All Data"
+                        Foreground="{StaticResource Brush.Danger}"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

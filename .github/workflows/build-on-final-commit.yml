@@ -1,0 +1,139 @@
+name: Build On Final Commit
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.parse.outputs.should_build }}
+      version: ${{ steps.parse.outputs.version }}
+      tag: ${{ steps.parse.outputs.tag }}
+    steps:
+      - name: Parse commit message
+        id: parse
+        shell: bash
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          message="${HEAD_COMMIT_MESSAGE:-}"
+          pattern='^Final commit for build v([0-9]+\.[0-9]+\.[0-9]+)$'
+
+          if [[ "$message" =~ $pattern ]]; then
+            version="${BASH_REMATCH[1]}"
+            tag="v${version}"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "version=${version}" >> "$GITHUB_OUTPUT"
+            echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+            echo "Build requested for ${tag}"
+          else
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "Commit message does not match release pattern."
+          fi
+
+  build_installer:
+    runs-on: windows-latest
+    needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore solution dependencies
+        shell: pwsh
+        run: dotnet restore .\Fluxo.slnx
+
+      - name: Build installer bundle
+        shell: pwsh
+        run: |
+          dotnet build `
+            .\Fluxo.Installer.Bundle\Fluxo.Installer.Bundle.wixproj `
+            --configuration Release `
+            -p:FluxoInstallerVersion=${{ needs.prepare.outputs.version }}
+
+      - name: Locate installer executable
+        id: locate_installer
+        shell: pwsh
+        env:
+          INSTALLER_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          $expectedFileName = "fluxo-$env:INSTALLER_VERSION-Installer.exe"
+
+          $installer = Get-ChildItem `
+            -Path ".\Fluxo.Installer.Bundle\bin" `
+            -Recurse `
+            -File `
+            -Filter $expectedFileName `
+            | Sort-Object LastWriteTime -Descending `
+            | Select-Object -First 1 -ExpandProperty FullName
+
+          if (-not $installer) {
+            throw "Could not find $expectedFileName under Fluxo.Installer.Bundle\\bin."
+          }
+
+          "installer_path=$installer" >> $env:GITHUB_OUTPUT
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-exe
+          path: ${{ steps.locate_installer.outputs.installer_path }}
+          if-no-files-found: error
+
+  create_tag:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build_installer
+    if: needs.prepare.outputs.should_build == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        shell: bash
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          SHA: ${{ github.sha }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists. Skipping."
+            exit 0
+          fi
+
+          git tag "${TAG}" "${SHA}"
+          git push origin "refs/tags/${TAG}"
+
+  create_release:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build_installer
+      - create_tag
+    if: needs.prepare.outputs.should_build == 'true'
+    steps:
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: installer-exe
+          path: dist
+
+      - name: Publish GitHub release with installer
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          files: dist/fluxo-${{ needs.prepare.outputs.version }}-Installer.exe
+          fail_on_unmatched_files: true

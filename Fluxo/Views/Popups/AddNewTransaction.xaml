@@ -1,0 +1,400 @@
+<customControls:BasePopup
+    x:Class="Fluxo.Views.Popups.AddNewTransaction"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
+    IsSaveButtonEnabled="{Binding CanSave}"
+    PopupTitle="Add New Transaction"
+    ShowSaveAndCreateNewButton="True"
+    ShowSaveButton="True"
+    mc:Ignorable="d">
+
+    <customControls:BasePopup.Resources>
+        <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="FontFamily" Value="{DynamicResource Bold}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}" />
+        </Style>
+
+        <Style x:Key="PopupFieldBorderStyle" TargetType="Border">
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+        </Style>
+
+        <Style x:Key="PopupTagListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+        </Style>
+
+        <Style x:Key="PopupTagListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style
+            x:Key="PopupOtherTagListBoxItemStyle"
+            BasedOn="{StaticResource PopupTagListBoxItemStyle}"
+            TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,8,8" />
+        </Style>
+
+        <DataTemplate x:Key="PopupTagTemplate">
+            <ToggleButton
+                Content="{Binding Name}"
+                IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"
+                Style="{StaticResource PopupTagItemToggleStyle}" />
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="PopupVisibleTagsItemsPanelTemplate">
+            <StackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+
+        <ItemsPanelTemplate x:Key="PopupOverflowTagsItemsPanelTemplate">
+            <WrapPanel />
+        </ItemsPanelTemplate>
+    </customControls:BasePopup.Resources>
+
+    <Border Padding="20,4,20,20">
+        <Grid Width="560">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+                <Border
+                    Height="32"
+                    Padding="4"
+                    HorizontalAlignment="Center"
+                    Background="{DynamicResource Brush.Background.Surface}"
+                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="14">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton
+                            x:Name="ExpenseRadioButton"
+                            Content="Expense"
+                            GroupName="TransactionType"
+                            IsChecked="{Binding IsExpense, Mode=TwoWay}"
+                            Style="{StaticResource SegmentedToggleOptionStyle}" />
+                        <RadioButton
+                            x:Name="IncomeRadioButton"
+                            Margin="4,0,0,0"
+                            Content="Income"
+                            GroupName="TransactionType"
+                            IsChecked="{Binding IsIncome, Mode=TwoWay}"
+                            Style="{StaticResource SegmentedToggleOptionStyle}" />
+                        <RadioButton
+                            x:Name="GoalRadioButton"
+                            Margin="4,0,0,0"
+                            Content="Goal Update"
+                            GroupName="TransactionType"
+                            IsChecked="{Binding IsGoal, Mode=TwoWay}"
+                            Style="{StaticResource SegmentedToggleOptionStyle}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <Grid Grid.Row="1" Margin="0,16,0,0">
+                <StackPanel Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
+                        <customControls:MoneyTextBox
+                            x:Name="ExpenseAmountTextBox"
+                            Style="{StaticResource RoundedMoneyTextInputStyle}"
+                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                    </StackPanel>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
+                            <TextBox
+                                x:Name="ExpenseNameTextBox"
+                                Style="{StaticResource RoundedTextInputStyle}"
+                                Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Category" />
+                            <ComboBox
+                                x:Name="ExpenseCategoryComboBox"
+                                DisplayMemberPath="Label"
+                                ItemsSource="{Binding ExpenseCategories}"
+                                SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
+                                SelectedValuePath="Value"
+                                Style="{StaticResource FluxoComboBoxStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
+                            <ComboBox
+                                x:Name="ExpenseSpendingSourceComboBox"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding SpendingSourcesView}"
+                                SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+                                Style="{StaticResource FluxoComboBoxStyle}">
+                                <ComboBox.GroupStyle>
+                                    <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                                </ComboBox.GroupStyle>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding IsIncome, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
+                            <TextBox
+                                x:Name="IncomeNameTextBox"
+                                Style="{StaticResource RoundedTextInputStyle}"
+                                Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
+                            <customControls:MoneyTextBox
+                                x:Name="IncomeAmountTextBox"
+                                Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
+                            <ComboBox
+                                x:Name="IncomeSpendingSourceComboBox"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding SpendingSourcesView}"
+                                SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+                                Style="{StaticResource FluxoComboBoxStyle}">
+                                <ComboBox.GroupStyle>
+                                    <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                                </ComboBox.GroupStyle>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <components:DateSelector x:Name="IncomeTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding IsGoal, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
+                        <customControls:MoneyTextBox
+                            x:Name="GoalAmountTextBox"
+                            Style="{StaticResource RoundedMoneyTextInputStyle}"
+                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                    </StackPanel>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <components:DateSelector x:Name="GoalTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
+                            <ComboBox
+                                x:Name="GoalSpendingSourceComboBox"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding SpendingSourcesView}"
+                                SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+                                Style="{StaticResource FluxoComboBoxStyle}">
+                                <ComboBox.GroupStyle>
+                                    <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                                </ComboBox.GroupStyle>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Margin="0,16,0,0">
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Goal" />
+                        <ComboBox
+                            x:Name="GoalComboBox"
+                            DisplayMemberPath="Name"
+                            ItemsSource="{Binding Goals}"
+                            SelectedItem="{Binding SelectedGoal, Mode=TwoWay}"
+                            Style="{StaticResource FluxoComboBoxStyle}" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel
+                x:Name="TagsPanel"
+                Grid.Row="2"
+                Margin="0,16,0,0"
+                Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
+                <DockPanel
+                    x:Name="TagsDockPanel"
+                    LastChildFill="False">
+                    <Button
+                        x:Name="AddTagButton"
+                        DockPanel.Dock="Left"
+                        Margin="0,0,8,0"
+                        Click="OnAddTagClick"
+                        Content="+ Add Tag"
+                        Style="{StaticResource PopupTagButtonStyle}" />
+
+                    <ListBox
+                        x:Name="VisibleTagsListBox"
+                        DockPanel.Dock="Left"
+                        ItemContainerStyle="{StaticResource PopupTagListBoxItemStyle}"
+                        ItemTemplate="{StaticResource PopupTagTemplate}"
+                        ItemsPanel="{StaticResource PopupVisibleTagsItemsPanelTemplate}"
+                        ItemsSource="{Binding VisibleTags}"
+                        SelectionChanged="OnTagSelectionChanged"
+                        SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
+                        Style="{StaticResource PopupTagListBoxStyle}" />
+
+                    <ToggleButton
+                        x:Name="MoreTagsButton"
+                        Margin="4,0,0,0"
+                        Checked="OnMoreTagsButtonChecked"
+                        Content="More"
+                        IsChecked="{Binding IsMoreTagsOpen, Mode=TwoWay}"
+                        MouseEnter="OnMoreTagsHoverChanged"
+                        MouseLeave="OnMoreTagsHoverChanged"
+                        Style="{StaticResource PopupTagToggleStyle}"
+                        Unchecked="OnMoreTagsButtonUnchecked"
+                        Visibility="{Binding HasMoreTags, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </DockPanel>
+
+                <Popup
+                    x:Name="MoreTagsPopup"
+                    AllowsTransparency="True"
+                    Closed="OnMoreTagsPopupClosed"
+                    Placement="Bottom"
+                    PlacementTarget="{Binding ElementName=MoreTagsButton}"
+                    PopupAnimation="Fade"
+                    StaysOpen="True"
+                    VerticalOffset="8">
+                    <Border
+                        x:Name="MoreTagsPopupContent"
+                        MaxWidth="360"
+                        Padding="12"
+                        Background="{DynamicResource Brush.Background.Elevated}"
+                        BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        MouseEnter="OnMoreTagsHoverChanged"
+                        MouseLeave="OnMoreTagsHoverChanged"
+                        CornerRadius="16">
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0,0,0,10"
+                                FontFamily="{DynamicResource Bold}"
+                                FontSize="12"
+                                Foreground="{DynamicResource Brush.Text.Primary}"
+                                Text="More Tags" />
+                            <ListBox
+                                x:Name="MoreTagsListBox"
+                                ItemContainerStyle="{StaticResource PopupOtherTagListBoxItemStyle}"
+                                ItemTemplate="{StaticResource PopupTagTemplate}"
+                                ItemsPanel="{StaticResource PopupOverflowTagsItemsPanelTemplate}"
+                                ItemsSource="{Binding OverflowTags}"
+                                SelectionChanged="OnTagSelectionChanged"
+                                SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
+                                Style="{StaticResource PopupTagListBoxStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Popup>
+            </StackPanel>
+
+            <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsGoal}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Note" />
+                <Border Style="{StaticResource PopupFieldBorderStyle}">
+                    <RichTextBox
+                        x:Name="NoteRichTextBox"
+                        MinHeight="120"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CaretBrush="{DynamicResource Brush.Text.Primary}"
+                        FontFamily="{DynamicResource Regular}"
+                        FontSize="13"
+                        Foreground="{DynamicResource Brush.Text.Primary}"
+                        TextChanged="OnNoteTextChanged"
+                        VerticalScrollBarVisibility="Auto" />
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Border>
+</customControls:BasePopup>
+
+
+

@@ -1,0 +1,251 @@
+<UserControl
+    x:Class="Fluxo.Resources.Components.IncomeSource"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components"
+    Width="140"
+    Height="80"
+    Visibility="{Binding ShowOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="IncomeSourceAccentStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Checking">
+                    <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Cash">
+                    <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Credit">
+                    <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SpendingSourceType}" Value="BNPL">
+                    <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Saving">
+                    <Setter Property="Background" Value="{StaticResource Brush.Income.Saving}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Border
+            x:Name="SourceCard"
+            BorderThickness="2"
+            CornerRadius="8"
+            MouseLeftButtonDown="OnRootMouseLeftButtonDown"
+            PreviewMouseRightButtonUp="OnRootPreviewMouseRightButtonUp">
+            <Border.Background>
+                <SolidColorBrush Color="{StaticResource Color.Background.Surface}" />
+            </Border.Background>
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                        </DataTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation
+                                            Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                            To="{StaticResource Color.Background.Elevated}"
+                                            Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation
+                                            Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                            To="{StaticResource Color.Background.Surface}"
+                                            Duration="0:0:0.2" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <StackPanel Margin="12" IsHitTestVisible="False">
+                    <TextBlock
+                        VerticalAlignment="Bottom"
+                        FontFamily="{StaticResource Light}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="{Binding Name}" />
+
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="20"
+                        Foreground="{Binding Difference, Converter={StaticResource DifferenceToBrushConverter}}"
+                        Text="{Binding Difference, Converter={StaticResource NumberWithCommasConverter}}"
+                        ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                </StackPanel>
+
+                <StackPanel
+                    Margin="0,0,8,8"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Orientation="Horizontal">
+                    <Border
+                        x:Name="AccentBorder"
+                        Width="6"
+                        Height="6"
+                        CornerRadius="16"
+                        Style="{StaticResource IncomeSourceAccentStyle}" />
+
+                    <TextBlock
+                        Margin="4,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="10"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="{Binding SpendingSourceType}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Popup
+            x:Name="SourceActionsPopup"
+            AllowsTransparency="True"
+            IsOpen="False"
+            Placement="Bottom"
+            PlacementTarget="{Binding ElementName=SourceCard}"
+            PopupAnimation="Fade"
+            StaysOpen="False"
+            VerticalOffset="8">
+            <Border
+                Width="220"
+                Padding="8"
+                Background="{StaticResource Brush.Background.Elevated}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="18">
+                <StackPanel>
+                    <Button Click="OnViewActionClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource Eye}"
+                                Color="{StaticResource Brush.Info}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="View" />
+                        </Grid>
+                    </Button>
+
+                    <Button Click="OnDeleteActionClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource CircleMinusSolid}"
+                                Color="{StaticResource Brush.Danger}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Delete" />
+                        </Grid>
+                    </Button>
+
+                    <Button Click="OnHideActionClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource EyeOff}"
+                                Color="{StaticResource Brush.Warning}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Hide" />
+                        </Grid>
+                    </Button>
+
+                    <Button
+                        Click="OnDisableActionClick"
+                        IsEnabled="{Binding IsEnabled}"
+                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource LightningSlashFill}"
+                                Color="{StaticResource Brush.Warning}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Disable" />
+                        </Grid>
+                    </Button>
+
+                    <Button
+                        Click="OnTransferActionClick"
+                        IsEnabled="{Binding CanTransfer}"
+                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource Exchange}"
+                                Color="{StaticResource Brush.Mint}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Transfer" />
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

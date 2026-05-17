@@ -1,0 +1,102 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardNamePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:controls="clr-namespace:Fluxo.Controls;assembly=Fluxo.Resources">
+    <Border Style="{StaticResource PanelStyle}">
+        <Grid>
+
+            <controls:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
+
+            <StackPanel
+                Width="420"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap">
+                        <Run Text="What should" />
+                        <Run Text="flux" />
+                    </TextBlock>
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="28"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap">
+                        <Run Foreground="{StaticResource Brush.Mint}" Text="o" />
+                        <Run Text="call you?" />
+                    </TextBlock>
+                </StackPanel>
+                <TextBox
+                    Margin="0,28,0,0"
+                    CaretBrush="{StaticResource Brush.Text.Primary}"
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="24"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    SelectionBrush="{StaticResource Brush.Mint.Muted}"
+                    Text="{Binding UsernameText, UpdateSourceTrigger=PropertyChanged}"
+                    TextAlignment="Center">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            <Setter Property="BorderThickness" Value="0,0,0,0.5" />
+                            <Setter Property="Padding" Value="0,0,0,8" />
+                            <Setter Property="HorizontalContentAlignment" Value="Left" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border
+                                            x:Name="InputRoot"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}">
+                                            <ScrollViewer
+                                                x:Name="PART_ContentHost"
+                                                Margin="{TemplateBinding Padding}"
+                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="InputRoot" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                            </Trigger>
+                                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                <Setter TargetName="InputRoot" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                                <Setter TargetName="InputRoot" Property="BorderThickness" Value="0,0,0,1" />
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                <Button
+                    Margin="0,30,0,0"
+                    HorizontalAlignment="Center"
+                    Click="OnContinueClick"
+                    Style="{StaticResource WizardCircleActionButtonStyle}"
+                    Visibility="{Binding HasUsernameInput, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <components:Icon
+                        Width="16"
+                        Height="16"
+                        Path="{StaticResource AngleRight}"
+                        Color="{StaticResource Brush.Background.Surface}" />
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

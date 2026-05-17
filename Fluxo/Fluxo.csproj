@@ -1,0 +1,102 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <UseWPF>true</UseWPF>
+	  <StartupObject>Fluxo.App</StartupObject>
+	  <EnableDefaultItems>true</EnableDefaultItems>
+	  <ApplicationIcon>..\Fluxo.Resources\Resources\fluxo.ico</ApplicationIcon>
+	  <Version>1.0.0</Version>
+	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	  <AssemblyTitle>fluxo</AssemblyTitle>
+	  <AssemblyName>fluxo</AssemblyName>
+	  <RootNamespace>Fluxo</RootNamespace>
+	  <LegacyPrimaryArtifactsToDelete>'Fluxo.exe', 'Fluxo.dll', 'Fluxo.deps.json', 'Fluxo.runtimeconfig.json', 'Fluxo.pdb'</LegacyPrimaryArtifactsToDelete>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fluxo.Core\Fluxo.Core.csproj" />
+    <ProjectReference Include="..\Fluxo.Data\Fluxo.Data.csproj" />
+    <ProjectReference Include="..\Fluxo.Services\Fluxo.Services.csproj" />
+    <ProjectReference Include="..\Fluxo.Resources\Fluxo.Resources.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+  </ItemGroup>
+
+  <Target Name="CleanupLegacyPrimaryArtifactsBeforeBuild" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$ErrorActionPreference = 'Stop'; $cleanupDir = $env:FLUXO_LEGACY_CLEANUP_DIR; $legacyNames = @($(LegacyPrimaryArtifactsToDelete)); Get-ChildItem -LiteralPath $cleanupDir -File | Where-Object { $legacyNames -ccontains $_.Name } | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }&quot;"
+          EnvironmentVariables="FLUXO_LEGACY_CLEANUP_DIR=$(TargetDir)"
+          Condition="Exists('$(TargetDir)')" />
+  </Target>
+
+  <Target Name="CleanupLegacyPrimaryArtifactsBeforePublish" BeforeTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$ErrorActionPreference = 'Stop'; $cleanupDir = $env:FLUXO_LEGACY_CLEANUP_DIR; $legacyNames = @($(LegacyPrimaryArtifactsToDelete)); Get-ChildItem -LiteralPath $cleanupDir -File | Where-Object { $legacyNames -ccontains $_.Name } | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }&quot;"
+          EnvironmentVariables="FLUXO_LEGACY_CLEANUP_DIR=$(PublishDir)"
+          Condition="Exists('$(PublishDir)')" />
+  </Target>
+
+  <Target Name="OrganizeOutputAfterBuild" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <OrganizeOutputDir>$(TargetDir)</OrganizeOutputDir>
+    </PropertyGroup>
+
+    <ItemGroup Condition="Exists('$(OrganizeOutputDir)')">
+      <FirstPartyDlls Include="$(OrganizeOutputDir)Fluxo*.dll" />
+      <VendorDlls Include="$(OrganizeOutputDir)*.dll" Exclude="@(FirstPartyDlls)" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(OrganizeOutputDir)libs" Condition="Exists('$(OrganizeOutputDir)') and '@(FirstPartyDlls)' != ''" />
+    <MakeDir Directories="$(OrganizeOutputDir)vendor" Condition="Exists('$(OrganizeOutputDir)') and '@(VendorDlls)' != ''" />
+
+    <Move SourceFiles="@(FirstPartyDlls)" DestinationFolder="$(OrganizeOutputDir)libs" Condition="'@(FirstPartyDlls)' != ''" />
+
+    <Move SourceFiles="@(VendorDlls)" DestinationFolder="$(OrganizeOutputDir)vendor" Condition="'@(VendorDlls)' != ''" />
+
+    <!-- Keep a root path for project-reference copy steps without duplicating the file. -->
+    <Exec Command="cmd /c mklink /H &quot;$(OrganizeOutputDir)$(TargetFileName)&quot; &quot;$(OrganizeOutputDir)libs\$(TargetFileName)&quot;" Condition="Exists('$(OrganizeOutputDir)libs\\$(TargetFileName)') and !Exists('$(OrganizeOutputDir)$(TargetFileName)')" />
+  </Target>
+
+  <Target Name="OrganizeOutputAfterPublish" AfterTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <OrganizeOutputDir>$(PublishDir)</OrganizeOutputDir>
+    </PropertyGroup>
+
+    <ItemGroup Condition="Exists('$(OrganizeOutputDir)')">
+      <FirstPartyDlls Include="$(OrganizeOutputDir)Fluxo*.dll" />
+      <VendorDlls Include="$(OrganizeOutputDir)*.dll" Exclude="@(FirstPartyDlls)" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(OrganizeOutputDir)libs" Condition="Exists('$(OrganizeOutputDir)') and '@(FirstPartyDlls)' != ''" />
+    <MakeDir Directories="$(OrganizeOutputDir)vendor" Condition="Exists('$(OrganizeOutputDir)') and '@(VendorDlls)' != ''" />
+
+    <Move SourceFiles="@(FirstPartyDlls)" DestinationFolder="$(OrganizeOutputDir)libs" Condition="'@(FirstPartyDlls)' != ''" />
+
+    <Move SourceFiles="@(VendorDlls)" DestinationFolder="$(OrganizeOutputDir)vendor" Condition="'@(VendorDlls)' != ''" />
+  </Target>
+
+  <Target Name="CleanupOutputAfterBuild" AfterTargets="OrganizeOutputAfterBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <ItemGroup Condition="Exists('$(TargetDir)')">
+      <BuildArtifactsToDelete Include="$(TargetDir)*.pdb" />
+    </ItemGroup>
+
+    <Delete Files="@(BuildArtifactsToDelete)" />
+  </Target>
+
+</Project>

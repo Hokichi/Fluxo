@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\fluxo.ico" />
+    <Resource Include="Resources\Fonts\Commissioner-Black.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-Bold.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-ExtraBold.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-ExtraLight.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-Light.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-Medium.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-Regular.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-SemiBold.ttf" />
+    <Resource Include="Resources\Fonts\Commissioner-Thin.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Components\ExpensesList.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Components\IncomeSource.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="CustomControls\BalloonBorder.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fluxo.Core\Fluxo.Core.csproj" />
+    <ProjectReference Include="..\Fluxo.Services\Fluxo.Services.csproj" />
+  </ItemGroup>
+</Project>
+
+

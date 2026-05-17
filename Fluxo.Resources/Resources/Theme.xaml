@@ -1,0 +1,111 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  =============================  -->
+    <!--  BASE BACKGROUND COLORS  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Background.Main">#121417</Color>
+    <Color x:Key="Color.Background.Surface">#1A1D21</Color>
+    <Color x:Key="Color.Background.Elevated">#20242A</Color>
+    <Color x:Key="Color.Background.Hover">#232830</Color>
+
+    <SolidColorBrush x:Key="Brush.Background.Main" Color="{StaticResource Color.Background.Main}" />
+    <SolidColorBrush x:Key="Brush.Background.Surface" Color="{StaticResource Color.Background.Surface}" />
+    <SolidColorBrush x:Key="Brush.Background.Elevated" Color="{StaticResource Color.Background.Elevated}" />
+    <SolidColorBrush x:Key="Brush.Background.Hover" Color="{StaticResource Color.Background.Hover}" />
+    <SolidColorBrush x:Key="Brush.Background.Hovered" Color="{StaticResource Color.Background.Hover}" />
+
+    <!--  =============================  -->
+    <!--  PRIMARY ACCENT (MIDNIGHT BLUE)  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Primary">#0B1F3B</Color>
+    <Color x:Key="Color.Primary.Hover">#132A52</Color>
+    <Color x:Key="Color.Primary.Pressed">#08162B</Color>
+
+    <SolidColorBrush x:Key="Brush.Primary" Color="{StaticResource Color.Primary}" />
+    <SolidColorBrush x:Key="Brush.Primary.Hover" Color="{StaticResource Color.Primary.Hover}" />
+    <SolidColorBrush x:Key="Brush.Primary.Pressed" Color="{StaticResource Color.Primary.Pressed}" />
+
+    <!--  =============================  -->
+    <!--  SECONDARY ACCENT (MINT GREEN)  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Mint">#3FE0A1</Color>
+    <Color x:Key="Color.Mint.Muted">#2BBE89</Color>
+
+    <SolidColorBrush x:Key="Brush.Mint" Color="{StaticResource Color.Mint}" />
+    <SolidColorBrush x:Key="Brush.Mint.Muted" Color="{StaticResource Color.Mint.Muted}" />
+
+    <!--  =============================  -->
+    <!--  TEXT COLORS  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Text.Primary">#E6EAF0</Color>
+    <Color x:Key="Color.Text.Secondary">#9BA3AE</Color>
+    <Color x:Key="Color.Text.Muted">#6B7280</Color>
+
+    <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Primary}" />
+    <SolidColorBrush x:Key="Brush.Text.Secondary" Color="{StaticResource Color.Text.Secondary}" />
+    <SolidColorBrush x:Key="Brush.Text.Muted" Color="{StaticResource Color.Text.Muted}" />
+
+    <!--  =============================  -->
+    <!--  BORDER COLORS  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Border.Subtle">#2A2F36</Color>
+
+    <SolidColorBrush x:Key="Brush.Border.Subtle" Color="{StaticResource Color.Border.Subtle}" />
+
+    <!--  =============================  -->
+    <!--  STATE COLORS  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Success">#3FE0A1</Color>
+    <Color x:Key="Color.Warning">#FFB020</Color>
+    <Color x:Key="Color.Danger">#FF5C5C</Color>
+    <Color x:Key="Color.Info">#4DA3FF</Color>
+
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />
+    <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
+    <SolidColorBrush x:Key="Brush.Info" Color="{StaticResource Color.Info}" />
+
+    <!--  =============================  -->
+    <!--  CATEGORY COLORS  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Category.Needs">#E6EAF0</Color>
+    <Color x:Key="Color.Category.Wants">#FFB86C</Color>
+    <Color x:Key="Color.Category.Investments">#3FE0A1</Color>
+
+    <SolidColorBrush x:Key="Brush.Category.Needs" Color="{StaticResource Color.Category.Needs}" />
+    <SolidColorBrush x:Key="Brush.Category.Wants" Color="{StaticResource Color.Category.Wants}" />
+    <SolidColorBrush x:Key="Brush.Category.Investments" Color="{StaticResource Color.Category.Investments}" />
+
+    <!--  =============================  -->
+    <!--  BNPL / RESERVED  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Reserved">#7C8796</Color>
+    <SolidColorBrush x:Key="Brush.Reserved" Color="{StaticResource Color.Reserved}" />
+
+    <!--  =============================  -->
+    <!--  OVERLAY  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Overlay">#99000000</Color>
+    <SolidColorBrush x:Key="Brush.Overlay" Color="{StaticResource Color.Overlay}" />
+
+    <!--  =============================  -->
+    <!--  INCOME SOURCES  -->
+    <!--  =============================  -->
+
+    <Color x:Key="Color.Income.Checking.Cash">#1f79b9</Color>
+    <Color x:Key="Color.Income.Credit.BNPL">#755d99</Color>
+    <Color x:Key="Color.Income.Saving">#a96e26</Color>
+
+    <SolidColorBrush x:Key="Brush.Income.Checking.Cash" Color="{StaticResource Color.Income.Checking.Cash}" />
+    <SolidColorBrush x:Key="Brush.Income.Credit.BNPL" Color="{StaticResource Color.Income.Credit.BNPL}" />
+    <SolidColorBrush x:Key="Brush.Income.Saving" Color="{StaticResource Color.Income.Saving}" />
+</ResourceDictionary>
