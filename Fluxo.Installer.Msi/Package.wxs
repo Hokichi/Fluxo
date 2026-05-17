@@ -5,6 +5,8 @@
     <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 
 
+    <MediaTemplate EmbedCab="yes" />
+
 
     <Feature Id="MainFeature" Title="fluxo" Level="1">
 

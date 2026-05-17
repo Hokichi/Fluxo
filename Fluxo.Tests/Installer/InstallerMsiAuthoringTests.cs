@@ -53,6 +53,17 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
+    public void Package_EmbedsCabinetPayloadsInsideMsi()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Msi",
+            "Package.wxs"));
+
+        Assert.Contains("<MediaTemplate EmbedCab=\"yes\" />", wxs);
+    }
+
+    [Fact]
     public void Package_SchedulesDeferredRegistryCleanupOnUninstall()
     {
         var wxs = File.ReadAllText(Path.Combine(
@@ -101,6 +112,17 @@ public sealed class InstallerMsiAuthoringTests
             "Bundle.wxs"));
 
         Assert.Contains("ForcePerMachine=\"yes\"", wxs);
+    }
+
+    [Fact]
+    public void Bundle_KeepsMsiPackageCachedForMaintenance()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Bundle",
+            "Bundle.wxs"));
+
+        Assert.Contains("Cache=\"keep\"", wxs);
     }
 
     [Fact]
