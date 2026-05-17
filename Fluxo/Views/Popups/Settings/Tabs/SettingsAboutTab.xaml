@@ -137,12 +137,23 @@
                                     TextWrapping="Wrap" />
                             </StackPanel>
                         </StackPanel>
-                        <TextBlock
+                        <StackPanel
                             Grid.Column="1"
                             VerticalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding CurrentVersion}" />
+                            Orientation="Horizontal">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding CurrentVersion}" />
+                            <Button
+                                x:Name="CheckForUpdatesButton"
+                                MinWidth="128"
+                                Margin="12,0,0,0"
+                                Click="OnCheckForUpdatesClick"
+                                Content="Check for updates"
+                                Style="{StaticResource PopupTextButtonStyle}" />
+                        </StackPanel>
                     </Grid>
                 </Border>
 

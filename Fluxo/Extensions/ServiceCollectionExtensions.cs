@@ -13,6 +13,7 @@ using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
 using Fluxo.Views.Popups.Planning;
@@ -62,6 +63,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILogService, FluxoLogService>();
         services.AddSingleton<IUiSettleAwaiter, UiSettleAwaiter>();
         services.AddSingleton<IStartupRegistrationService, StartupRegistrationService>();
+        services.AddSingleton<IAppUpdateService, AppUpdateService>();
 
         services.AddSingleton<MainVM>();
         services.AddSingleton<DaySpinnerVM>();

@@ -57,10 +57,11 @@ public static class InstallerElevationRelaunch
                 StringComparison.OrdinalIgnoreCase);
     }
 
-    public static ProcessStartInfo CreateStartInfo(string originalBundlePath)
+    public static ProcessStartInfo CreateStartInfo(string originalBundlePath, string? arguments = null)
     {
         return new ProcessStartInfo(originalBundlePath)
         {
+            Arguments = arguments ?? string.Empty,
             UseShellExecute = true,
             Verb = "runas",
         };

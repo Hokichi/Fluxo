@@ -95,7 +95,8 @@ public partial class InstallerViewModel : ObservableObject
         InstallerOperationMode operationMode = InstallerOperationMode.Install,
         string? bundleExecutablePath = null,
         Action<string, string, bool>? copyFile = null,
-        Action? closeInstallerAction = null)
+        Action? closeInstallerAction = null,
+        string? requestedInstallFolder = null)
     {
         this.dotNetRuntimeDetector = dotNetRuntimeDetector ?? new DotNetRuntimeDetector();
         this.setInstallFolderVariable = setInstallFolderVariable ?? (_ => { });
@@ -134,6 +135,11 @@ public partial class InstallerViewModel : ObservableObject
         this.copyFile = copyFile ?? ((source, destination, overwrite) => File.Copy(source, destination, overwrite));
         hasConstructorCloseInstallerAction = closeInstallerAction is not null;
         this.closeInstallerAction = closeInstallerAction ?? (() => { });
+        if (IsValidInstallFolder(requestedInstallFolder))
+        {
+            InstallFolder = requestedInstallFolder!;
+        }
+
         ChecklistSteps = new ObservableCollection<InstallerChecklistStep>(
         [
             prerequisitesChecklistStep,

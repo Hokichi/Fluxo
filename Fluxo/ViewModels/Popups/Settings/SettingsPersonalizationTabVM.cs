@@ -10,6 +10,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Updates;
 
 namespace Fluxo.ViewModels.Popups.Settings;
 
@@ -18,6 +19,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private readonly IMessenger _messenger;
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
     private readonly IAppDataService _appData;
+    private readonly IAppUpdateService _appUpdateService;
     private string _savedPreferredAppName = string.Empty;
     private bool _savedShouldRunAtStartup;
     private AppCloseBehavior _savedCloseBehavior = AppCloseBehavior.Exit;
@@ -25,10 +27,15 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     [ObservableProperty] private string _preferredAppName = string.Empty;
     [ObservableProperty] private bool _shouldRunAtStartup;
     [ObservableProperty] private AppCloseBehavior _closeBehavior = AppCloseBehavior.Exit;
+    [ObservableProperty] private bool _isCheckingForUpdates;
 
-    public SettingsPersonalizationTabVM(IAppDataService appData, IMessenger? messenger = null)
+    public SettingsPersonalizationTabVM(
+        IAppDataService appData,
+        IMessenger? messenger = null,
+        IAppUpdateService? appUpdateService = null)
     {
         _appData = appData;
+        _appUpdateService = appUpdateService ?? new AppUpdateService();
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -75,6 +82,38 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     public void RequestClosePopup()
     {
         _messenger.Send(new SettingsPopupCloseRequestedMessage(new SettingsPopupCloseRequest()));
+    }
+
+    public async Task<AppUpdateCheckResult> CheckForUpdatesAsync()
+    {
+        IsCheckingForUpdates = true;
+        try
+        {
+            return await _appUpdateService.CheckForUpdatesAsync(CurrentVersion);
+        }
+        finally
+        {
+            IsCheckingForUpdates = false;
+        }
+    }
+
+    public Task<string> DownloadUpdateInstallerAsync(AppUpdateCheckResult update)
+    {
+        if (update.Status != AppUpdateCheckStatus.UpdateAvailable
+            || string.IsNullOrWhiteSpace(update.InstallerDownloadUrl)
+            || string.IsNullOrWhiteSpace(update.InstallerAssetName))
+        {
+            throw new InvalidOperationException("No Fluxo update installer is available to download.");
+        }
+
+        return _appUpdateService.DownloadInstallerAsync(
+            update.InstallerDownloadUrl,
+            update.InstallerAssetName);
+    }
+
+    public void DeleteDownloadedInstaller(string installerPath)
+    {
+        _appUpdateService.DeleteInstaller(installerPath);
     }
 
     public async Task<(

@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using Fluxo.Resources.Resources.Messages;
+using Fluxo.Services.Logging;
+using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.Popups;
 
@@ -14,6 +16,101 @@ public partial class SettingsAboutTab : UserControl
     }
 
     private SettingsPersonalizationTabVM? _viewModel => DataContext as SettingsPersonalizationTabVM;
+
+    private async void OnCheckForUpdatesClick(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel is null)
+            return;
+
+        CheckForUpdatesButton.IsEnabled = false;
+        try
+        {
+            var update = await RunWithOptionalToastAsync(
+                "Checking for updates",
+                () => _viewModel.CheckForUpdatesAsync());
+
+            switch (update.Status)
+            {
+                case AppUpdateCheckStatus.UpToDate:
+                    FluxoMessageBox.Show(
+                        Window.GetWindow(this),
+                        "Fluxo is up to date.",
+                        "Check for Updates",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+
+                case AppUpdateCheckStatus.Error:
+                    FluxoMessageBox.Show(
+                        Window.GetWindow(this),
+                        update.ErrorMessage ?? "Unable to check for updates.",
+                        "Check for Updates",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+            }
+
+            if (FluxoMessageBox.Show(
+                    Window.GetWindow(this),
+                    $"Fluxo {update.LatestVersion} is available. Download and install it?",
+                    "Update Available",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            string installerPath;
+            try
+            {
+                installerPath = await RunWithOptionalToastAsync(
+                    "Downloading update",
+                    () => _viewModel.DownloadUpdateInstallerAsync(update));
+            }
+            catch (Exception exception)
+            {
+                FluxoLogManager.LogFailureForProcess(exception, "download Fluxo update");
+                FluxoMessageBox.Show(
+                    Window.GetWindow(this),
+                    FluxoLogManager.CreateFailureMessage("download Fluxo update"),
+                    "Check for Updates",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            if (FluxoMessageBox.Show(
+                    Window.GetWindow(this),
+                    "The update installer has been downloaded. Close Fluxo and start the installer now?",
+                    "Install Update",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                _viewModel.DeleteDownloadedInstaller(installerPath);
+                return;
+            }
+
+            try
+            {
+                ((App)Application.Current).LaunchUpdateInstallerAndShutdown(installerPath);
+            }
+            catch (Exception exception)
+            {
+                FluxoLogManager.LogFailureForProcess(exception, "start Fluxo update installer");
+                FluxoMessageBox.Show(
+                    Window.GetWindow(this),
+                    FluxoLogManager.CreateFailureMessage("start Fluxo update installer"),
+                    "Install Update",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+        finally
+        {
+            if (Application.Current is not null)
+                CheckForUpdatesButton.IsEnabled = true;
+        }
+    }
 
     private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
     {
@@ -102,5 +199,22 @@ public partial class SettingsAboutTab : UserControl
             _viewModel.RequestClosePopup();
             await ((App)Application.Current).RunSetupWizardAsync();
         }
+    }
+
+    private async Task<T> RunWithOptionalToastAsync<T>(string message, Func<Task<T>> work)
+    {
+        var ownerPopup = Window.GetWindow(this) as SettingsPopup;
+        if (ownerPopup is null)
+        {
+            return await work();
+        }
+
+        T? result = default;
+        await ownerPopup.ShowToastWhileAsync(message, async () =>
+        {
+            result = await work();
+        });
+
+        return result!;
     }
 }

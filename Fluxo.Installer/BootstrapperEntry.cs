@@ -19,6 +19,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
     private const int FailureExitCode = 1;
     private const string InstalledExecutableName = "fluxo.exe";
     private const string DefaultInstallFolderName = "fluxo";
+    private const string InstallFolderArgument = "--install-folder";
 
     private static readonly string DiagnosticLogPath = Path.Combine(
         Path.GetTempPath(),
@@ -90,7 +91,9 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         try
         {
             releaseSingleInstanceMutex();
-            _ = Process.Start(InstallerElevationRelaunch.CreateStartInfo(bundlePath!));
+            _ = Process.Start(InstallerElevationRelaunch.CreateStartInfo(
+                bundlePath!,
+                BuildElevationRelaunchArguments()));
             return true;
         }
         catch (Win32Exception)
@@ -258,6 +261,7 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
                 requestRollback: () => _lastApplyFailed,
                 operationMode: GetOperationMode(),
                 bundleExecutablePath: GetBundleExecutablePathForViewModel(),
+                requestedInstallFolder: GetRequestedInstallFolder(),
                 closeInstallerAction: () =>
                 {
                     if (window.Dispatcher.CheckAccess())
@@ -490,6 +494,85 @@ internal sealed class InstallerBootstrapperApplication : BootstrapperApplication
         catch
         {
             return null;
+        }
+    }
+
+    private string? GetRequestedInstallFolder()
+    {
+        var commandLine = _command?.CommandLine;
+        if (string.IsNullOrWhiteSpace(commandLine))
+        {
+            return null;
+        }
+
+        var args = SplitCommandLine(commandLine);
+        for (var index = 0; index < args.Count; index++)
+        {
+            var arg = args[index];
+            if (string.Equals(arg, InstallFolderArgument, StringComparison.OrdinalIgnoreCase))
+            {
+                return index + 1 < args.Count ? args[index + 1] : null;
+            }
+
+            var prefix = $"{InstallFolderArgument}=";
+            if (arg.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return arg[prefix.Length..];
+            }
+        }
+
+        return null;
+    }
+
+    private string BuildElevationRelaunchArguments()
+    {
+        var requestedInstallFolder = GetRequestedInstallFolder();
+        if (string.IsNullOrWhiteSpace(requestedInstallFolder))
+        {
+            return string.Empty;
+        }
+
+        return $"{InstallFolderArgument} {QuoteCommandLineArgument(requestedInstallFolder)}";
+    }
+
+    private static string QuoteCommandLineArgument(string value) =>
+        $"\"{value.Replace("\"", "\\\"", StringComparison.Ordinal)}\"";
+
+    private static IReadOnlyList<string> SplitCommandLine(string commandLine)
+    {
+        var args = new List<string>();
+        var current = new System.Text.StringBuilder();
+        var inQuotes = false;
+
+        foreach (var character in commandLine)
+        {
+            if (character == '"')
+            {
+                inQuotes = !inQuotes;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(character) && !inQuotes)
+            {
+                AddCurrent();
+                continue;
+            }
+
+            current.Append(character);
+        }
+
+        AddCurrent();
+        return args;
+
+        void AddCurrent()
+        {
+            if (current.Length == 0)
+            {
+                return;
+            }
+
+            args.Add(current.ToString());
+            current.Clear();
         }
     }
 

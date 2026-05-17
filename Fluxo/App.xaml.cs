@@ -10,6 +10,7 @@ using Fluxo.Services.Logging;
 using Fluxo.Services.Notifications;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Ui;
+using Fluxo.Services.Updates;
 using Fluxo.Infrastructure.SingleInstance;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Shell;
@@ -259,6 +260,21 @@ public partial class App : Application
         }
     }
 
+    public void LaunchUpdateInstallerAndShutdown(string installerPath)
+    {
+        var installFolder = ResolveCurrentInstallFolder();
+        var startInfo = AppUpdateInstallerLauncher.CreateStartInfo(installerPath, installFolder);
+        var process = Process.Start(startInfo);
+        if (process is null)
+        {
+            throw new InvalidOperationException("The update installer did not start.");
+        }
+
+        _isForcedShutdownRequested = true;
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        Shutdown(0);
+    }
+
     internal async Task<bool> TryHandleMainWindowClosingToTrayAsync(MainWindow mainWindow)
     {
         if (_isForcedShutdownRequested)
@@ -291,6 +307,21 @@ public partial class App : Application
                 "Unable to resolve close behavior from user settings. Falling back to default exit behavior.");
             return false;
         }
+    }
+
+    private static string ResolveCurrentInstallFolder()
+    {
+        var processPath = Environment.ProcessPath;
+        if (!string.IsNullOrWhiteSpace(processPath))
+        {
+            var directory = Path.GetDirectoryName(processPath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                return directory;
+            }
+        }
+
+        return AppContext.BaseDirectory;
     }
 
     private static bool IsTrayLaunchMode(string[] args)

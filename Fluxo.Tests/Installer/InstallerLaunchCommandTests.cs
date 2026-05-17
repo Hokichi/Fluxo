@@ -93,6 +93,28 @@ public sealed class InstallerLaunchCommandTests
     }
 
     [Fact]
+    public void Constructor_UsesRequestedInstallFolder_WhenPathIsValid()
+    {
+        var vm = new InstallerViewModel(
+            requestedInstallFolder: WindowsPathFixtures.AppsFluxoFolder,
+            bundleExecutablePath: WindowsPathFixtures.DefaultInstaller);
+
+        Assert.Equal(WindowsPathFixtures.AppsFluxoFolder, vm.InstallFolder);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("relative\\fluxo")]
+    public void Constructor_IgnoresRequestedInstallFolder_WhenPathIsInvalid(string requestedInstallFolder)
+    {
+        var vm = new InstallerViewModel(
+            requestedInstallFolder: requestedInstallFolder,
+            bundleExecutablePath: WindowsPathFixtures.DefaultInstaller);
+
+        Assert.Equal(WindowsPathFixtures.ProgramFilesFluxoFolder, vm.InstallFolder);
+    }
+
+    [Fact]
     public void LaunchApp_DoesNotCloseInstaller_WhenExecutableCannotBeFound()
     {
         var closeCalls = 0;
