@@ -42,6 +42,7 @@ public partial class App : Application
     private readonly IExpenseLogService _expenseLogService;
     private readonly MainVM _mainVM;
     private readonly IStartupRegistrationService _startupRegistrationService;
+    private readonly IStartupUpdateNotificationService _startupUpdateNotificationService;
     private readonly IStartupNotificationSummaryService _startupNotificationSummaryService;
     private readonly StartupTrayPopupDisplayPolicy _startupTrayPopupDisplayPolicy = new();
     private readonly IUiSettleAwaiter _uiSettleAwaiter;
@@ -73,6 +74,7 @@ public partial class App : Application
         _dataOperationRunner = _serviceProvider.GetRequiredService<IDataOperationRunner>();
         _expenseLogService = _serviceProvider.GetRequiredService<IExpenseLogService>();
         _startupRegistrationService = _serviceProvider.GetRequiredService<IStartupRegistrationService>();
+        _startupUpdateNotificationService = _serviceProvider.GetRequiredService<IStartupUpdateNotificationService>();
         _startupNotificationSummaryService = _serviceProvider.GetRequiredService<IStartupNotificationSummaryService>();
         _uiSettleAwaiter = _serviceProvider.GetRequiredService<IUiSettleAwaiter>();
 
@@ -135,6 +137,8 @@ public partial class App : Application
                 await _expenseLogService.PostTerminationCleanupAsync();
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 await SyncRunAtStartupRegistrationAsync();
+                await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                await _startupUpdateNotificationService.CheckAndSyncAsync();
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
 
                 if (!isFirstRun)

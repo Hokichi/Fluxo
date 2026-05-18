@@ -64,6 +64,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IUiSettleAwaiter, UiSettleAwaiter>();
         services.AddSingleton<IStartupRegistrationService, StartupRegistrationService>();
         services.AddSingleton<IAppUpdateService, AppUpdateService>();
+        services.AddSingleton<IStartupUpdateNotificationService, StartupUpdateNotificationService>();
 
         services.AddSingleton<MainVM>();
         services.AddSingleton<DaySpinnerVM>();
