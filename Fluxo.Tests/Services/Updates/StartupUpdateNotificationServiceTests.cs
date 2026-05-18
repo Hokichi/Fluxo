@@ -49,6 +49,38 @@ public sealed class StartupUpdateNotificationServiceTests
         var exception = await Record.ExceptionAsync(() => sut.CheckAndSyncAsync());
 
         Assert.Null(exception);
+        await dataOperationRunner
+            .Received(1)
+            .RunAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<IDataOperationScope, CancellationToken, Task>>(),
+                Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CheckAndSyncAsync_PropagatesCancellation_FromDataSync()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        var appUpdateService = Substitute.For<IAppUpdateService>();
+        appUpdateService
+            .CheckForUpdatesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(AppUpdateCheckResult.UpToDate("1.2.3"));
+        var dataOperationRunner = Substitute.For<IDataOperationRunner>();
+        dataOperationRunner
+            .RunAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<IDataOperationScope, CancellationToken, Task>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromCanceled(callInfo.ArgAt<CancellationToken>(2)));
+
+        var sut = new StartupUpdateNotificationService(appUpdateService, dataOperationRunner);
+
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            sut.CheckAndSyncAsync(cancellationTokenSource.Token));
+
+        Assert.Equal(cancellationTokenSource.Token, exception.CancellationToken);
     }
 
     [Fact]
