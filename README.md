@@ -6,7 +6,7 @@
 
 Fluxo is a Windows personal finance app for keeping everyday money decisions visible. It helps you track spending, manage money sources, plan around recurring expenses, monitor saving goals, and stay aware of upcoming payments or budget pressure from one desktop dashboard.
 
-![Fluxo dashboard screenshot placeholder](docs/images/fluxo-dashboard.png)
+![Fluxo dashboard screenshot placeholder](docs/images/fluxo-dashboard-overview.png)
 
 ## Why Use Fluxo?
 
