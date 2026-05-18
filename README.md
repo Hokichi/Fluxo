@@ -39,8 +39,6 @@ When Fluxo opens for the first time, it guides you through setup so the dashboar
 
 You can change these choices later from Settings.
 
-![Fluxo dashboard overview screenshot placeholder](docs/images/fluxo-dashboard-overview.png)
-
 ## Dashboard Overview
 
 The dashboard is the main workspace in Fluxo. It combines your budget, spending activity, money sources, notifications, and goals into one view.
