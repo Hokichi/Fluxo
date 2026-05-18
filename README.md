@@ -167,6 +167,8 @@ Settings areas include:
 
 ## Tray and Startup Behavior
 
+![Fluxo tray screenshot placeholder](docs/images/fluxo-tray.png)
+
 Fluxo can run from the Windows system tray so it stays nearby without taking space on the taskbar.
 
 Depending on your settings, Fluxo can:
