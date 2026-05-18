@@ -14,9 +14,11 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Notifications;
+using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
+using System.Text;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
@@ -30,6 +32,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly INotificationGroupingService _notificationGroupingService;
     private readonly INotificationActionService _notificationActionService;
+    private readonly IAppUpdateInteractionService? _appUpdateInteractionService;
     private readonly IDialogService? _dialogService;
     private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
@@ -68,7 +71,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
         INotificationGroupingService? notificationGroupingService = null,
         INotificationActionService? notificationActionService = null,
         IDialogService? dialogService = null,
-        IMessenger? messenger = null)
+        IMessenger? messenger = null,
+        IAppUpdateInteractionService? appUpdateInteractionService = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseService = expenseService;
@@ -77,6 +81,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
         _notificationActionService = notificationActionService ?? new NotificationActionService(dataOperationRunner);
+        _appUpdateInteractionService = appUpdateInteractionService;
         _dialogService = dialogService;
         _notificationGroupingService = notificationGroupingService ?? new NotificationGroupingService();
 
@@ -200,6 +205,10 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
             case NotificationGroupCategory.GoalDeadline:
                 await OpenGoalDeadlineActionAsync(card);
+                break;
+
+            case NotificationGroupCategory.AppUpdate:
+                await OpenAppUpdateNotificationActionAsync(card);
                 break;
         }
     }
@@ -991,6 +1000,83 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         if (await _notificationActionService.ExecuteGoalActionAsync(card, viewModel.SelectedAction))
             await RefreshNotificationsAsync();
+    }
+
+    private async Task OpenAppUpdateNotificationActionAsync(NotificationItemVM card)
+    {
+        if (_appUpdateInteractionService is null || card.Notifications.Count == 0)
+            return;
+
+        var newestNotification = card.Notifications
+            .OrderByDescending(notification => notification.CreatedOn)
+            .FirstOrDefault();
+        if (newestNotification is null
+            || !TryParseAppUpdateCheckResult(newestNotification.Type, out var parsedUpdate))
+        {
+            return;
+        }
+
+        await _appUpdateInteractionService.HandleAvailableUpdateAsync(parsedUpdate, owner: null);
+    }
+
+    private static bool TryParseAppUpdateCheckResult(string notificationType, out AppUpdateCheckResult update)
+    {
+        update = AppUpdateCheckResult.Error("Unable to parse app update notification payload.");
+
+        const string appUpdatePrefix = "AppUpdate-";
+        if (string.IsNullOrWhiteSpace(notificationType)
+            || !notificationType.StartsWith(appUpdatePrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var payload = notificationType[appUpdatePrefix.Length..];
+        var parts = payload.Split('.', StringSplitOptions.None);
+        if (parts.Length != 3)
+            return false;
+
+        if (!TryDecodeToken(parts[0], out var latestVersion)
+            || !TryDecodeToken(parts[1], out var installerAssetName)
+            || !TryDecodeToken(parts[2], out var installerDownloadUrl)
+            || string.IsNullOrWhiteSpace(latestVersion)
+            || string.IsNullOrWhiteSpace(installerAssetName)
+            || string.IsNullOrWhiteSpace(installerDownloadUrl))
+        {
+            return false;
+        }
+
+        update = AppUpdateCheckResult.UpdateAvailable(
+            latestVersion,
+            installerAssetName,
+            installerDownloadUrl);
+        return true;
+    }
+
+    private static bool TryDecodeToken(string encodedToken, out string value)
+    {
+        value = string.Empty;
+        if (string.IsNullOrWhiteSpace(encodedToken))
+            return false;
+
+        try
+        {
+            var base64 = encodedToken
+                .Replace('-', '+')
+                .Replace('_', '/');
+            var padding = base64.Length % 4;
+            if (padding > 0)
+            {
+                base64 = base64.PadRight(base64.Length + (4 - padding), '=');
+            }
+
+            var bytes = Convert.FromBase64String(base64);
+            value = Encoding.UTF8.GetString(bytes);
+            return true;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 
     private void ReplaceNotifications(IEnumerable<NotificationVM> notifications)

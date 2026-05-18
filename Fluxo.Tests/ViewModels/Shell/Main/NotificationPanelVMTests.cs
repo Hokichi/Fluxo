@@ -8,12 +8,14 @@ using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Notifications;
+using Fluxo.Services.Updates;
 using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
 using NSubstitute;
+using System.Text;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Shell.Main;
@@ -351,6 +353,47 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task OpenNotificationActionAsync_AppUpdate_ParsesPayloadAndForwardsToInteractionService()
+    {
+        var interactionService = Substitute.For<IAppUpdateInteractionService>();
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications,
+            appUpdateInteractionService: interactionService);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = BuildAppUpdateType(
+                "3.4.5",
+                "fluxo-3.4.5-Installer.exe",
+                "https://example.test/fluxo-3.4.5-Installer.exe"),
+            Header = "New Update Found",
+            Message = "Version 3.4.5 is available for download",
+            CreatedOn = DateTime.Today,
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.AppUpdate));
+
+        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
+
+        await interactionService.Received(1).HandleAvailableUpdateAsync(
+            Arg.Is<AppUpdateCheckResult>(update =>
+                update.Status == AppUpdateCheckStatus.UpdateAvailable
+                && update.LatestVersion == "3.4.5"
+                && update.InstallerAssetName == "fluxo-3.4.5-Installer.exe"
+                && update.InstallerDownloadUrl == "https://example.test/fluxo-3.4.5-Installer.exe"),
+            null);
+    }
+
+    [Fact]
     public async Task ClearAllNotificationsAsync_WithGroupedItems_ClearsAllPersistedActiveRows()
     {
         var vm = CreateVm(
@@ -525,7 +568,8 @@ public class NotificationPanelVMTests
         IReadOnlyList<SpendingSourceVM> spendingSources,
         out List<Notification> persistedNotifications,
         INotificationActionService? notificationActionService = null,
-        IDialogService? dialogService = null)
+        IDialogService? dialogService = null,
+        IAppUpdateInteractionService? appUpdateInteractionService = null)
     {
         var expenseService = Substitute.For<IExpenseService>();
         expenseService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -607,6 +651,21 @@ public class NotificationPanelVMTests
             mapper,
             new NotificationGroupingService(),
             notificationActionService,
-            dialogService);
+            dialogService,
+            appUpdateInteractionService: appUpdateInteractionService);
+    }
+
+    private static string BuildAppUpdateType(string version, string installerAssetName, string installerDownloadUrl)
+    {
+        return $"AppUpdate-{EncodeToken(version)}.{EncodeToken(installerAssetName)}.{EncodeToken(installerDownloadUrl)}";
+    }
+
+    private static string EncodeToken(string value)
+    {
+        var bytes = Encoding.UTF8.GetBytes(value);
+        return Convert.ToBase64String(bytes)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
     }
 }

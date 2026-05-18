@@ -2,6 +2,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Services.Updates;
 using NSubstitute;
+using System.Text;
 using Xunit;
 
 namespace Fluxo.Tests.Services.Updates;
@@ -115,7 +116,9 @@ public sealed class StartupUpdateNotificationServiceTests
 
         var notification = StartupUpdateNotificationService.BuildNotificationForUpdate(update, createdOn);
 
-        Assert.Equal("AppUpdate-1.2.3", notification.Type);
+        Assert.Equal(
+            $"AppUpdate-{EncodeToken("1.2.3")}.{EncodeToken("fluxo-1.2.3-Installer.exe")}.{EncodeToken("https://example.test/fluxo-1.2.3-Installer.exe")}",
+            notification.Type);
         Assert.Equal("New Update Found", notification.Header);
         Assert.Equal("Version 1.2.3 is available for download", notification.Message);
         Assert.Equal(createdOn, notification.CreatedOn);
@@ -147,5 +150,14 @@ public sealed class StartupUpdateNotificationServiceTests
         var isUpdateNotification = StartupUpdateNotificationService.IsAppUpdateNotification(notification);
 
         Assert.False(isUpdateNotification);
+    }
+
+    private static string EncodeToken(string value)
+    {
+        var bytes = Encoding.UTF8.GetBytes(value);
+        return Convert.ToBase64String(bytes)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
     }
 }

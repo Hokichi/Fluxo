@@ -1,6 +1,7 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Services.Logging;
+using System.Text;
 
 namespace Fluxo.Services.Updates;
 
@@ -75,12 +76,18 @@ public sealed class StartupUpdateNotificationService(
 
         if (string.IsNullOrWhiteSpace(update.LatestVersion))
             throw new ArgumentException("Latest version is required.", nameof(update));
+        if (string.IsNullOrWhiteSpace(update.InstallerAssetName))
+            throw new ArgumentException("Installer asset name is required.", nameof(update));
+        if (string.IsNullOrWhiteSpace(update.InstallerDownloadUrl))
+            throw new ArgumentException("Installer download URL is required.", nameof(update));
 
         var versionToken = update.LatestVersion.Trim();
+        var installerAssetName = update.InstallerAssetName.Trim();
+        var installerDownloadUrl = update.InstallerDownloadUrl.Trim();
 
         return new Notification
         {
-            Type = $"{AppUpdatePrefix}{versionToken}",
+            Type = BuildTypePayload(versionToken, installerAssetName, installerDownloadUrl),
             Header = UpdateHeader,
             Message = $"Version {versionToken} is available for download",
             CreatedOn = createdOn,
@@ -92,6 +99,20 @@ public sealed class StartupUpdateNotificationService(
     internal static bool IsAppUpdateNotification(Notification notification)
     {
         return notification.Type.StartsWith(AppUpdatePrefix, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildTypePayload(string version, string installerAssetName, string installerDownloadUrl)
+    {
+        return $"{AppUpdatePrefix}{EncodeToken(version)}.{EncodeToken(installerAssetName)}.{EncodeToken(installerDownloadUrl)}";
+    }
+
+    private static string EncodeToken(string value)
+    {
+        var bytes = Encoding.UTF8.GetBytes(value);
+        return Convert.ToBase64String(bytes)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
     }
 
     private async Task UpsertUpdateNotificationAsync(
