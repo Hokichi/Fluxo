@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -45,7 +44,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     public bool IsExitCloseBehaviorSelected => CloseBehavior == AppCloseBehavior.Exit;
 
-    public string CurrentVersion { get; } = ResolveCurrentVersion();
+    public string CurrentVersion { get; } = AppVersionResolver.ResolveCurrentVersion();
 
     public bool HasPendingChanges =>
         !string.Equals((PreferredAppName ?? string.Empty).Trim(), _savedPreferredAppName, StringComparison.Ordinal) ||
@@ -187,29 +186,6 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private void SetCloseBehavior(AppCloseBehavior closeBehavior)
     {
         CloseBehavior = closeBehavior;
-    }
-
-    private static string ResolveCurrentVersion()
-    {
-        var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-        var informationalVersion = assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion;
-
-        if (!string.IsNullOrWhiteSpace(informationalVersion))
-        {
-            var metadataIndex = informationalVersion.IndexOf('+');
-            return metadataIndex > 0
-                ? informationalVersion[..metadataIndex]
-                : informationalVersion;
-        }
-
-        var version = assembly.GetName().Version;
-        if (version is null)
-            return "Unknown";
-
-        var build = version.Build >= 0 ? version.Build : 0;
-        return $"{version.Major}.{version.Minor}.{build}";
     }
 
     private void LoadNotificationSettings(IReadOnlyDictionary<string, string> settingsByName)
