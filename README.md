@@ -246,3 +246,11 @@ If you report a problem, include:
 - Whether the app was running normally, from startup, from the tray, or during an update.
 
 Project releases and issue tracking may be available from the Fluxo GitHub repository.
+
+## Change Log
+
+### v1.0.0:
+Initial Release
+
+### v1.0.1:
+`Check for updates` implemented
