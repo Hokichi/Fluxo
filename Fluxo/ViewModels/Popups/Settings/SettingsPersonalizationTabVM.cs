@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -19,6 +20,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
     private readonly IAppDataService _appData;
     private readonly IAppUpdateService _appUpdateService;
+    private readonly IAppUpdateInteractionService? _appUpdateInteractionService;
     private string _savedPreferredAppName = string.Empty;
     private bool _savedShouldRunAtStartup;
     private AppCloseBehavior _savedCloseBehavior = AppCloseBehavior.Exit;
@@ -31,10 +33,12 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     public SettingsPersonalizationTabVM(
         IAppDataService appData,
         IMessenger? messenger = null,
-        IAppUpdateService? appUpdateService = null)
+        IAppUpdateService? appUpdateService = null,
+        IAppUpdateInteractionService? appUpdateInteractionService = null)
     {
         _appData = appData;
         _appUpdateService = appUpdateService ?? new AppUpdateService();
+        _appUpdateInteractionService = appUpdateInteractionService;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
@@ -113,6 +117,14 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     public void DeleteDownloadedInstaller(string installerPath)
     {
         _appUpdateService.DeleteInstaller(installerPath);
+    }
+
+    public Task HandleAvailableUpdateAsync(AppUpdateCheckResult update, Window? owner)
+    {
+        if (_appUpdateInteractionService is null)
+            return Task.CompletedTask;
+
+        return _appUpdateInteractionService.HandleAvailableUpdateAsync(update, owner);
     }
 
     public async Task<(

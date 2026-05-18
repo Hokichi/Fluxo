@@ -1,11 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using Fluxo.Resources.Resources.Messages;
-using Fluxo.Services.Logging;
 using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.Popups;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 
@@ -50,21 +48,7 @@ public partial class SettingsAboutTab : UserControl
                         MessageBoxImage.Error);
                     return;
                 case AppUpdateCheckStatus.UpdateAvailable:
-                    var app = Application.Current as App;
-                    var interactionService = app?.Services.GetService<IAppUpdateInteractionService>();
-                    if (interactionService is null)
-                    {
-                        FluxoLogManager.LogInformation("Unable to resolve app update interaction service.");
-                        FluxoMessageBox.Show(
-                            Window.GetWindow(this),
-                            "Unable to continue update setup.",
-                            "Check for Updates",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
-                        return;
-                    }
-
-                    await interactionService.HandleAvailableUpdateAsync(update, Window.GetWindow(this));
+                    await _viewModel.HandleAvailableUpdateAsync(update, Window.GetWindow(this));
                     return;
             }
         }

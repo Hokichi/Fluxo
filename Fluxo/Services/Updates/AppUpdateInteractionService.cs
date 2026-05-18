@@ -6,7 +6,8 @@ namespace Fluxo.Services.Updates;
 
 public sealed class AppUpdateInteractionService(
     IDialogService dialogService,
-    IAppUpdateService appUpdateService)
+    IAppUpdateService appUpdateService,
+    IAppUpdateLifecycleService appUpdateLifecycleService)
     : IAppUpdateInteractionService
 {
     public async Task HandleAvailableUpdateAsync(AppUpdateCheckResult update, Window? owner)
@@ -49,10 +50,7 @@ public sealed class AppUpdateInteractionService(
 
         try
         {
-            if (Application.Current is not App app)
-                throw new InvalidOperationException("The Fluxo application instance is unavailable.");
-
-            app.LaunchUpdateInstallerAndShutdown(installerPath);
+            appUpdateLifecycleService.LaunchUpdateInstallerAndShutdown(installerPath);
         }
         catch (Exception exception)
         {
