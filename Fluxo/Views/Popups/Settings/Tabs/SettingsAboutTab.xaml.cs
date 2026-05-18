@@ -5,6 +5,7 @@ using Fluxo.Services.Logging;
 using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.Popups;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 
@@ -48,61 +49,23 @@ public partial class SettingsAboutTab : UserControl
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                     return;
-            }
+                case AppUpdateCheckStatus.UpdateAvailable:
+                    var app = Application.Current as App;
+                    var interactionService = app?.Services.GetService<IAppUpdateInteractionService>();
+                    if (interactionService is null)
+                    {
+                        FluxoLogManager.LogInformation("Unable to resolve app update interaction service.");
+                        FluxoMessageBox.Show(
+                            Window.GetWindow(this),
+                            "Unable to continue update setup.",
+                            "Check for Updates",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                        return;
+                    }
 
-            if (FluxoMessageBox.Show(
-                    Window.GetWindow(this),
-                    $"Fluxo {update.LatestVersion} is available. Download and install it?",
-                    "Update Available",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question) != MessageBoxResult.Yes)
-            {
-                return;
-            }
-
-            string installerPath;
-            try
-            {
-                installerPath = await RunWithOptionalToastAsync(
-                    "Downloading update",
-                    () => _viewModel.DownloadUpdateInstallerAsync(update));
-            }
-            catch (Exception exception)
-            {
-                FluxoLogManager.LogFailureForProcess(exception, "download Fluxo update");
-                FluxoMessageBox.Show(
-                    Window.GetWindow(this),
-                    FluxoLogManager.CreateFailureMessage("download Fluxo update"),
-                    "Check for Updates",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
-
-            if (FluxoMessageBox.Show(
-                    Window.GetWindow(this),
-                    "The update installer has been downloaded. Close Fluxo and start the installer now?",
-                    "Install Update",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question) != MessageBoxResult.Yes)
-            {
-                _viewModel.DeleteDownloadedInstaller(installerPath);
-                return;
-            }
-
-            try
-            {
-                ((App)Application.Current).LaunchUpdateInstallerAndShutdown(installerPath);
-            }
-            catch (Exception exception)
-            {
-                FluxoLogManager.LogFailureForProcess(exception, "start Fluxo update installer");
-                FluxoMessageBox.Show(
-                    Window.GetWindow(this),
-                    FluxoLogManager.CreateFailureMessage("start Fluxo update installer"),
-                    "Install Update",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    await interactionService.HandleAvailableUpdateAsync(update, Window.GetWindow(this));
+                    return;
             }
         }
         finally

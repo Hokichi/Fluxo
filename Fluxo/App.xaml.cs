@@ -82,6 +82,8 @@ public partial class App : Application
         _trayLeftClickTimer.Tick += OnTrayLeftClickTimerTick;
     }
 
+    public IServiceProvider Services => _serviceProvider;
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         _singleInstanceCoordinator ??= new SingleInstanceCoordinator();
