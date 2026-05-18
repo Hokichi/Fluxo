@@ -112,6 +112,29 @@ public sealed class AppUpdateInteractionServiceTests
     }
 
     [Fact]
+    public async Task HandleAvailableUpdateAsync_WhenBothPromptsAccepted_LaunchesInstallerOnce_AndDoesNotDeleteInstaller()
+    {
+        const string installerPath = "C:\\temp\\fluxo-installer.exe";
+        var update = CreateAvailableUpdate();
+        var dialogService = Substitute.For<IDialogService>();
+        dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
+            .Returns(MessageBoxResult.Yes, MessageBoxResult.Yes);
+        ConfigureToastToRunWork(dialogService);
+
+        var appUpdateService = Substitute.For<IAppUpdateService>();
+        appUpdateService
+            .DownloadInstallerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(installerPath);
+        var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
+        var sut = new AppUpdateInteractionService(dialogService, appUpdateService, lifecycleService);
+
+        await sut.HandleAvailableUpdateAsync(update, owner: null);
+
+        lifecycleService.Received(1).LaunchUpdateInstallerAndShutdown(installerPath);
+        appUpdateService.DidNotReceive().DeleteInstaller(Arg.Any<string>());
+    }
+
+    [Fact]
     public void BuildAvailableUpdatePrompt_UsesLatestVersion()
     {
         var update = AppUpdateCheckResult.UpdateAvailable(
