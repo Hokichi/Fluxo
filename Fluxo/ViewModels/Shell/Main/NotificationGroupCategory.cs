@@ -10,5 +10,6 @@ public enum NotificationGroupCategory
     LowBalance = 5,
     LowCredit = 6,
     BudgetThreshold = 7,
-    AutoExpenseProcessed = 8
+    AutoExpenseProcessed = 8,
+    AppUpdate = 9
 }

@@ -34,7 +34,8 @@ public sealed class NotificationGroupingService : INotificationGroupingService
                     LatestCreatedOn = orderedNotifications[0].CreatedOn
                 };
             })
-            .OrderByDescending(card => card.LatestCreatedOn)
+            .OrderByDescending(card => card.Category == NotificationGroupCategory.AppUpdate)
+            .ThenByDescending(card => card.LatestCreatedOn)
             .ToList();
     }
 
@@ -66,6 +67,9 @@ public sealed class NotificationGroupingService : INotificationGroupingService
         if (typeToken.StartsWith("AutoExpenseProcessed", StringComparison.OrdinalIgnoreCase))
             return NotificationGroupCategory.AutoExpenseProcessed;
 
+        if (typeToken.StartsWith("AppUpdate", StringComparison.OrdinalIgnoreCase))
+            return NotificationGroupCategory.AppUpdate;
+
         return NotificationGroupCategory.Other;
     }
 
@@ -74,7 +78,8 @@ public sealed class NotificationGroupingService : INotificationGroupingService
         return category is NotificationGroupCategory.FixedExpenseDue
             or NotificationGroupCategory.UpcomingPayment
             or NotificationGroupCategory.LatePayment
-            or NotificationGroupCategory.GoalDeadline;
+            or NotificationGroupCategory.GoalDeadline
+            or NotificationGroupCategory.AppUpdate;
     }
 
     private static NotificationSeverity ResolveSeverity(IEnumerable<NotificationSeverity> severities)
@@ -116,8 +121,12 @@ public sealed class NotificationGroupingService : INotificationGroupingService
             NotificationGroupCategory.LowCredit => "Low Credit",
             NotificationGroupCategory.BudgetThreshold => "Budget Threshold",
             NotificationGroupCategory.AutoExpenseProcessed => "Auto Expense Processed",
+            NotificationGroupCategory.AppUpdate => "New Update Found",
             _ => "Notification"
         };
+
+        if (category == NotificationGroupCategory.AppUpdate)
+            return label;
 
         return count == 1 ? label : $"{label} ({count})";
     }
@@ -133,6 +142,7 @@ public sealed class NotificationGroupingService : INotificationGroupingService
 
         return category switch
         {
+            NotificationGroupCategory.AppUpdate => newest.Message,
             NotificationGroupCategory.FixedExpenseDue => $"{suffix}: {newest.Message}",
             NotificationGroupCategory.UpcomingPayment => $"{suffix}: {newest.Message}",
             NotificationGroupCategory.LatePayment => $"{suffix}: {newest.Message}",

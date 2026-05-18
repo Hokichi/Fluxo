@@ -127,6 +127,60 @@ public sealed class NotificationGroupingServiceTests
         Assert.False(card.HasActionCta);
     }
 
+    [Fact]
+    public void Group_AppUpdate_MapsCategory_IsActionable_AndPreservesHeaderAndMessage()
+    {
+        const string persistedHeader = "New Update Found";
+        const string persistedMessage = "Version 9.9.9 is available for download";
+        var input = new[]
+        {
+            new NotificationVM
+            {
+                Type = "AppUpdate-9.9.9",
+                CreatedOn = DateTime.Today,
+                Severity = NotificationSeverity.Info,
+                Header = persistedHeader,
+                Message = persistedMessage
+            }
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var card = Assert.Single(sut.Group(input));
+
+        Assert.Equal(NotificationGroupCategory.AppUpdate, card.Category);
+        Assert.True(card.HasActionCta);
+        Assert.Equal(persistedHeader, card.Header);
+        Assert.Equal(persistedMessage, card.Message);
+    }
+
+    [Fact]
+    public void Group_AppUpdate_IsOrderedBeforeNewerNonUpdateCard()
+    {
+        var now = DateTime.Now;
+        var input = new[]
+        {
+            CreateNotification(
+                "AppUpdate-1.2.3",
+                now.AddMinutes(-10),
+                NotificationSeverity.Info,
+                message: "Version 1.2.3 is available for download"),
+            CreateNotification(
+                "LowCredit-7",
+                now,
+                NotificationSeverity.Warning,
+                message: "Credit warning")
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var cards = sut.Group(input);
+
+        Assert.Equal(2, cards.Count);
+        Assert.Equal(NotificationGroupCategory.AppUpdate, cards[0].Category);
+        Assert.Equal(NotificationGroupCategory.LowCredit, cards[1].Category);
+    }
+
     private static NotificationVM CreateNotification(
         string type,
         DateTime createdOn,
