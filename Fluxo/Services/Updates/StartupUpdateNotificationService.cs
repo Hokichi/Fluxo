@@ -38,16 +38,34 @@ public sealed class StartupUpdateNotificationService(
                 if (string.IsNullOrWhiteSpace(updateCheckResult.LatestVersion))
                     return;
 
-                await UpsertUpdateNotificationAsync(updateCheckResult, cancellationToken);
-                return;
+                break;
 
             case AppUpdateCheckStatus.UpToDate:
-                await ClearAppUpdateNotificationsAsync(cancellationToken);
-                return;
+                break;
 
             case AppUpdateCheckStatus.Error:
             default:
                 return;
+        }
+
+        try
+        {
+            if (updateCheckResult.Status == AppUpdateCheckStatus.UpdateAvailable)
+            {
+                await UpsertUpdateNotificationAsync(updateCheckResult, cancellationToken);
+            }
+            else
+            {
+                await ClearAppUpdateNotificationsAsync(cancellationToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogWarning(exception, "Unable to sync startup update notifications.");
         }
     }
 

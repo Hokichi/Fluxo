@@ -1,11 +1,77 @@
 using Fluxo.Core.Entities;
+using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Services.Updates;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.Services.Updates;
 
 public sealed class StartupUpdateNotificationServiceTests
 {
+    [Fact]
+    public async Task CheckAndSyncAsync_DoesNotRunDataSync_WhenUpdateCheckReturnsError()
+    {
+        var appUpdateService = Substitute.For<IAppUpdateService>();
+        appUpdateService
+            .CheckForUpdatesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(AppUpdateCheckResult.Error("network unavailable"));
+        var dataOperationRunner = Substitute.For<IDataOperationRunner>();
+
+        var sut = new StartupUpdateNotificationService(appUpdateService, dataOperationRunner);
+
+        await sut.CheckAndSyncAsync();
+
+        await dataOperationRunner
+            .DidNotReceive()
+            .RunAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<IDataOperationScope, CancellationToken, Task>>(),
+                Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CheckAndSyncAsync_SuppressesNonCancellationExceptions_FromDataSync()
+    {
+        var appUpdateService = Substitute.For<IAppUpdateService>();
+        appUpdateService
+            .CheckForUpdatesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(AppUpdateCheckResult.UpToDate("1.2.3"));
+        var dataOperationRunner = Substitute.For<IDataOperationRunner>();
+        dataOperationRunner
+            .RunAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<IDataOperationScope, CancellationToken, Task>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(_ => throw new InvalidOperationException("db sync failed"));
+
+        var sut = new StartupUpdateNotificationService(appUpdateService, dataOperationRunner);
+
+        var exception = await Record.ExceptionAsync(() => sut.CheckAndSyncAsync());
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public async Task CheckAndSyncAsync_PropagatesCancellation_FromUpdateCheck()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        var appUpdateService = Substitute.For<IAppUpdateService>();
+        appUpdateService
+            .CheckForUpdatesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+                Task.FromCanceled<AppUpdateCheckResult>(callInfo.ArgAt<CancellationToken>(1)));
+        var dataOperationRunner = Substitute.For<IDataOperationRunner>();
+
+        var sut = new StartupUpdateNotificationService(appUpdateService, dataOperationRunner);
+
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            sut.CheckAndSyncAsync(cancellationTokenSource.Token));
+
+        Assert.Equal(cancellationTokenSource.Token, exception.CancellationToken);
+    }
+
     [Fact]
     public void BuildNotificationForUpdate_CreatesExpectedNotification()
     {
