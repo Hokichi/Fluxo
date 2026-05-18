@@ -27,7 +27,7 @@ public sealed class NotificationGroupingService : INotificationGroupingService
                     Category = category,
                     Notifications = new ObservableCollection<NotificationVM>(orderedNotifications),
                     Count = count,
-                    Header = BuildHeader(category, count),
+                    Header = BuildHeader(category, count, orderedNotifications),
                     Message = BuildMessage(category, orderedNotifications),
                     Severity = ResolveSeverity(orderedNotifications.Select(notification => notification.Severity)),
                     HasActionCta = IsActionable(category),
@@ -109,8 +109,14 @@ public sealed class NotificationGroupingService : INotificationGroupingService
         };
     }
 
-    private static string BuildHeader(NotificationGroupCategory category, int count)
+    private static string BuildHeader(
+        NotificationGroupCategory category,
+        int count,
+        IReadOnlyList<NotificationVM> notifications)
     {
+        if (category == NotificationGroupCategory.AppUpdate)
+            return notifications[0].Header;
+
         var label = category switch
         {
             NotificationGroupCategory.FixedExpenseDue => "Fixed Expense Due",
@@ -121,12 +127,8 @@ public sealed class NotificationGroupingService : INotificationGroupingService
             NotificationGroupCategory.LowCredit => "Low Credit",
             NotificationGroupCategory.BudgetThreshold => "Budget Threshold",
             NotificationGroupCategory.AutoExpenseProcessed => "Auto Expense Processed",
-            NotificationGroupCategory.AppUpdate => "New Update Found",
             _ => "Notification"
         };
-
-        if (category == NotificationGroupCategory.AppUpdate)
-            return label;
 
         return count == 1 ? label : $"{label} ({count})";
     }

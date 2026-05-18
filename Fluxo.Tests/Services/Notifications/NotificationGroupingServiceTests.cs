@@ -130,7 +130,7 @@ public sealed class NotificationGroupingServiceTests
     [Fact]
     public void Group_AppUpdate_MapsCategory_IsActionable_AndPreservesHeaderAndMessage()
     {
-        const string persistedHeader = "New Update Found";
+        const string persistedHeader = "Update Ready - Install Recommended";
         const string persistedMessage = "Version 9.9.9 is available for download";
         var input = new[]
         {
