@@ -1,12 +1,12 @@
 # Fluxo
 
 <p align="center">
-  <img src="docs/images/fluxo-logo-placeholder.png" alt="Fluxo logo placeholder" width="160">
+  <img src="docs/images/fluxo-logo.png" alt="Fluxo logo placeholder" width="160">
 </p>
 
 Fluxo is a Windows personal finance app for keeping everyday money decisions visible. It helps you track spending, manage money sources, plan around recurring expenses, monitor saving goals, and stay aware of upcoming payments or budget pressure from one desktop dashboard.
 
-![Fluxo dashboard screenshot placeholder](docs/images/fluxo-dashboard-placeholder.png)
+![Fluxo dashboard screenshot placeholder](docs/images/fluxo-dashboard.png)
 
 ## Why Use Fluxo?
 
@@ -26,7 +26,7 @@ With Fluxo, you can:
 
 When Fluxo opens for the first time, it guides you through setup so the dashboard has enough information to be useful right away.
 
-![Fluxo setup wizard screenshot placeholder](docs/images/fluxo-setup-wizard-placeholder.png)
+![Fluxo setup wizard screenshot placeholder](docs/images/fluxo-setup-wizard.png)
 
 1. Install and open Fluxo.
 2. Enter the display name you want Fluxo to use.
@@ -39,11 +39,11 @@ When Fluxo opens for the first time, it guides you through setup so the dashboar
 
 You can change these choices later from Settings.
 
+![Fluxo dashboard overview screenshot placeholder](docs/images/fluxo-dashboard-overview.png)
+
 ## Dashboard Overview
 
 The dashboard is the main workspace in Fluxo. It combines your budget, spending activity, money sources, notifications, and goals into one view.
-
-![Fluxo dashboard overview screenshot placeholder](docs/images/fluxo-dashboard-overview-placeholder.png)
 
 The dashboard includes:
 
@@ -61,7 +61,7 @@ The dashboard includes:
 
 Use Quick Add when you want to record something immediately.
 
-![Fluxo quick add screenshot placeholder](docs/images/fluxo-quick-add-placeholder.png)
+![Fluxo quick add screenshot placeholder](docs/images/fluxo-quick-add.png)
 
 Quick Add supports three common entries:
 
@@ -74,8 +74,6 @@ For each entry, Fluxo lets you choose the source, amount, date, category, tag, g
 ## Managing Spending Sources
 
 Spending sources are the accounts or money pools Fluxo uses to calculate your budget and transaction impact.
-
-![Fluxo spending sources screenshot placeholder](docs/images/fluxo-spending-sources-placeholder.png)
 
 Fluxo supports:
 
@@ -90,8 +88,6 @@ Sources can have balances, account limits, spent amounts, due dates, visibility 
 ## Budgeting With Needs, Wants, and Savings
 
 Fluxo organizes spending into three budget categories:
-
-![Fluxo budget allocation screenshot placeholder](docs/images/fluxo-budget-placeholder.png)
 
 - **Needs**: essential spending such as groceries, bills, transport, rent, or utilities.
 - **Wants**: optional spending such as entertainment, dining out, hobbies, or shopping.
@@ -110,8 +106,6 @@ Filters help you review spending by:
 
 Saving goals help you track progress toward a target amount.
 
-![Fluxo saving goals screenshot placeholder](docs/images/fluxo-saving-goals-placeholder.png)
-
 A goal can include:
 
 - Name.
@@ -125,8 +119,6 @@ When you add a goal contribution, Fluxo records the transaction, updates the goa
 ## Notifications and Reminders
 
 Fluxo evaluates your current data and settings to show financial reminders.
-
-![Fluxo notifications screenshot placeholder](docs/images/fluxo-notifications-placeholder.png)
 
 Notifications can include:
 
@@ -145,7 +137,7 @@ Some notifications include action popups. For example, payment-related reminders
 
 Analytics gives you a more detailed view of money movement over a selected period.
 
-![Fluxo analytics screenshot placeholder](docs/images/fluxo-analytics-placeholder.png)
+![Fluxo analytics screenshot placeholder](docs/images/fluxo-analytics.png)
 
 Fluxo can summarize:
 
@@ -162,7 +154,7 @@ Use analytics when you want to understand patterns instead of only entering tran
 
 Settings lets you adjust Fluxo after setup.
 
-![Fluxo settings screenshot placeholder](docs/images/fluxo-settings-placeholder.png)
+![Fluxo settings screenshot placeholder](docs/images/fluxo-settings.png)
 
 Settings areas include:
 
@@ -192,8 +184,6 @@ If Fluxo appears to close but the tray icon remains, it may be using the minimiz
 ## Updates
 
 Fluxo can check for newer releases from the project's GitHub releases.
-
-![Fluxo update flow screenshot placeholder](docs/images/fluxo-update-placeholder.png)
 
 When an update is available, Fluxo can download the installer and launch it. The app may close during the update process so the installer can replace the existing files.
 
