@@ -152,6 +152,42 @@ public sealed class StartupUpdateNotificationServiceTests
         Assert.False(isUpdateNotification);
     }
 
+    [Fact]
+    public void BuildNotificationForUpdate_Throws_WhenLatestVersionMissing()
+    {
+        var update = AppUpdateCheckResult.UpdateAvailable(
+            " ",
+            "fluxo-1.2.3-Installer.exe",
+            "https://example.test/fluxo-1.2.3-Installer.exe");
+
+        Assert.Throws<ArgumentException>(() =>
+            StartupUpdateNotificationService.BuildNotificationForUpdate(update, DateTime.UtcNow));
+    }
+
+    [Fact]
+    public void BuildNotificationForUpdate_Throws_WhenInstallerAssetMissing()
+    {
+        var update = AppUpdateCheckResult.UpdateAvailable(
+            "1.2.3",
+            " ",
+            "https://example.test/fluxo-1.2.3-Installer.exe");
+
+        Assert.Throws<ArgumentException>(() =>
+            StartupUpdateNotificationService.BuildNotificationForUpdate(update, DateTime.UtcNow));
+    }
+
+    [Fact]
+    public void BuildNotificationForUpdate_Throws_WhenInstallerUrlMissing()
+    {
+        var update = AppUpdateCheckResult.UpdateAvailable(
+            "1.2.3",
+            "fluxo-1.2.3-Installer.exe",
+            " ");
+
+        Assert.Throws<ArgumentException>(() =>
+            StartupUpdateNotificationService.BuildNotificationForUpdate(update, DateTime.UtcNow));
+    }
+
     private static string EncodeToken(string value)
     {
         var bytes = Encoding.UTF8.GetBytes(value);

@@ -1030,7 +1030,27 @@ public partial class NotificationPanelVM : ObservableRecipient,
             return false;
         }
 
-        var payload = notificationType[appUpdatePrefix.Length..];
+        var payload = notificationType[appUpdatePrefix.Length..].Trim();
+        if (string.IsNullOrWhiteSpace(payload))
+            return false;
+
+        if (TryParseMetadataPayload(payload, out update))
+            return true;
+
+        if (!Version.TryParse(payload, out _))
+            return false;
+
+        update = AppUpdateCheckResult.UpdateAvailable(
+            payload,
+            string.Empty,
+            string.Empty);
+        return true;
+    }
+
+    private static bool TryParseMetadataPayload(string payload, out AppUpdateCheckResult update)
+    {
+        update = AppUpdateCheckResult.Error("Unable to parse app update notification metadata payload.");
+
         var parts = payload.Split('.', StringSplitOptions.None);
         if (parts.Length != 3)
             return false;
@@ -1040,15 +1060,16 @@ public partial class NotificationPanelVM : ObservableRecipient,
             || !TryDecodeToken(parts[2], out var installerDownloadUrl)
             || string.IsNullOrWhiteSpace(latestVersion)
             || string.IsNullOrWhiteSpace(installerAssetName)
-            || string.IsNullOrWhiteSpace(installerDownloadUrl))
+            || string.IsNullOrWhiteSpace(installerDownloadUrl)
+            || !Uri.TryCreate(installerDownloadUrl.Trim(), UriKind.Absolute, out _))
         {
             return false;
         }
 
         update = AppUpdateCheckResult.UpdateAvailable(
-            latestVersion,
-            installerAssetName,
-            installerDownloadUrl);
+            latestVersion.Trim(),
+            installerAssetName.Trim(),
+            installerDownloadUrl.Trim());
         return true;
     }
 

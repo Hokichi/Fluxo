@@ -394,6 +394,112 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task OpenNotificationActionAsync_AppUpdate_WithLegacyPayload_ForwardsToInteractionService()
+    {
+        var interactionService = Substitute.For<IAppUpdateInteractionService>();
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications,
+            appUpdateInteractionService: interactionService);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = "AppUpdate-2.9.1",
+            Header = "New Update Found",
+            Message = "Version 2.9.1 is available for download",
+            CreatedOn = DateTime.Today,
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.AppUpdate));
+
+        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
+
+        await interactionService.Received(1).HandleAvailableUpdateAsync(
+            Arg.Is<AppUpdateCheckResult>(update =>
+                update.Status == AppUpdateCheckStatus.UpdateAvailable
+                && update.LatestVersion == "2.9.1"
+                && update.InstallerAssetName == string.Empty
+                && update.InstallerDownloadUrl == string.Empty),
+            null);
+    }
+
+    [Fact]
+    public async Task OpenNotificationActionAsync_AppUpdate_WithMalformedPayload_DoesNotDispatch()
+    {
+        var interactionService = Substitute.For<IAppUpdateInteractionService>();
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications,
+            appUpdateInteractionService: interactionService);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = "AppUpdate-invalid.invalid.invalid",
+            Header = "New Update Found",
+            Message = "Version invalid is available for download",
+            CreatedOn = DateTime.Today,
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.AppUpdate));
+
+        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
+
+        await interactionService
+            .DidNotReceive()
+            .HandleAvailableUpdateAsync(Arg.Any<AppUpdateCheckResult>(), Arg.Any<System.Windows.Window?>());
+    }
+
+    [Fact]
+    public async Task OpenNotificationActionAsync_AppUpdate_WithBadMetadataTokenCount_DoesNotDispatch()
+    {
+        var interactionService = Substitute.For<IAppUpdateInteractionService>();
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications,
+            appUpdateInteractionService: interactionService);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = "AppUpdate-bad.token-count",
+            Header = "New Update Found",
+            Message = "Version bad is available for download",
+            CreatedOn = DateTime.Today,
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.AppUpdate));
+
+        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
+
+        await interactionService
+            .DidNotReceive()
+            .HandleAvailableUpdateAsync(Arg.Any<AppUpdateCheckResult>(), Arg.Any<System.Windows.Window?>());
+    }
+
+    [Fact]
     public async Task ClearAllNotificationsAsync_WithGroupedItems_ClearsAllPersistedActiveRows()
     {
         var vm = CreateVm(

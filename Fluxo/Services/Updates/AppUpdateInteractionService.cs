@@ -21,12 +21,14 @@ public sealed class AppUpdateInteractionService(
         if (dialogService.ShowQuestion(prompt, "Update Available", owner) != MessageBoxResult.Yes)
             return;
 
+        var downloadCandidate = await ResolveDownloadCandidateAsync(update);
+
         string installerPath;
         try
         {
             installerPath = await RunWithToastAsync(
                 "Downloading update",
-                () => DownloadInstallerAsync(update),
+                () => DownloadInstallerAsync(downloadCandidate),
                 owner);
         }
         catch (Exception exception)
@@ -70,6 +72,40 @@ public sealed class AppUpdateInteractionService(
             ? "Unknown"
             : update.LatestVersion.Trim();
         return $"Fluxo {version} is available. Download and install it?";
+    }
+
+    private async Task<AppUpdateCheckResult> ResolveDownloadCandidateAsync(AppUpdateCheckResult update)
+    {
+        if (HasInstallerMetadata(update))
+            return update;
+
+        try
+        {
+            var hydratedUpdate = await appUpdateService.CheckForUpdatesAsync(AppVersionResolver.ResolveCurrentVersion());
+            if (hydratedUpdate.Status != AppUpdateCheckStatus.UpdateAvailable || !HasInstallerMetadata(hydratedUpdate))
+                return update;
+
+            var version = string.IsNullOrWhiteSpace(update.LatestVersion)
+                ? hydratedUpdate.LatestVersion ?? string.Empty
+                : update.LatestVersion.Trim();
+
+            return AppUpdateCheckResult.UpdateAvailable(
+                version,
+                hydratedUpdate.InstallerAssetName!.Trim(),
+                hydratedUpdate.InstallerDownloadUrl!.Trim());
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogWarning(exception, "Unable to hydrate Fluxo update metadata before download.");
+            return update;
+        }
+    }
+
+    private static bool HasInstallerMetadata(AppUpdateCheckResult update)
+    {
+        return !string.IsNullOrWhiteSpace(update.InstallerAssetName)
+            && !string.IsNullOrWhiteSpace(update.InstallerDownloadUrl)
+            && Uri.TryCreate(update.InstallerDownloadUrl.Trim(), UriKind.Absolute, out _);
     }
 
     private async Task<string> DownloadInstallerAsync(AppUpdateCheckResult update)

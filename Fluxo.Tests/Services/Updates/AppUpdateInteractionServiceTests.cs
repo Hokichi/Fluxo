@@ -135,6 +135,46 @@ public sealed class AppUpdateInteractionServiceTests
     }
 
     [Fact]
+    public async Task HandleAvailableUpdateAsync_WhenMetadataMissing_HydratesAndLaunchesInstaller()
+    {
+        const string installerPath = "C:\\temp\\fluxo-installer.exe";
+        var update = AppUpdateCheckResult.UpdateAvailable("2.5.0", string.Empty, string.Empty);
+        var hydratedUpdate = AppUpdateCheckResult.UpdateAvailable(
+            "2.5.1",
+            "fluxo-2.5.1-Installer.exe",
+            "https://example.test/fluxo-2.5.1-Installer.exe");
+        var dialogService = Substitute.For<IDialogService>();
+        dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
+            .Returns(MessageBoxResult.Yes, MessageBoxResult.Yes);
+        ConfigureToastToRunWork(dialogService);
+
+        var appUpdateService = Substitute.For<IAppUpdateService>();
+        appUpdateService
+            .CheckForUpdatesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(hydratedUpdate);
+        appUpdateService
+            .DownloadInstallerAsync(
+                hydratedUpdate.InstallerDownloadUrl!,
+                hydratedUpdate.InstallerAssetName!,
+                Arg.Any<CancellationToken>())
+            .Returns(installerPath);
+        var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
+        var sut = new AppUpdateInteractionService(dialogService, appUpdateService, lifecycleService);
+
+        await sut.HandleAvailableUpdateAsync(update, owner: null);
+
+        await appUpdateService.Received(1).CheckForUpdatesAsync(
+            AppVersionResolver.ResolveCurrentVersion(),
+            Arg.Any<CancellationToken>());
+        await appUpdateService.Received(1).DownloadInstallerAsync(
+            hydratedUpdate.InstallerDownloadUrl!,
+            hydratedUpdate.InstallerAssetName!,
+            Arg.Any<CancellationToken>());
+        lifecycleService.Received(1).LaunchUpdateInstallerAndShutdown(installerPath);
+        appUpdateService.DidNotReceive().DeleteInstaller(Arg.Any<string>());
+    }
+
+    [Fact]
     public void BuildAvailableUpdatePrompt_UsesLatestVersion()
     {
         var update = AppUpdateCheckResult.UpdateAvailable(
