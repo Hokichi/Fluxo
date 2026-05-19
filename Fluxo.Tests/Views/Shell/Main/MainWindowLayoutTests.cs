@@ -49,6 +49,93 @@ public sealed class MainWindowLayoutTests
         Assert.Equal("OnAnalyticsDrawerTabClick", (string?)analyticsDrawerTabButton!.Attribute("Click"));
     }
 
+    [Fact]
+    public void SpendingAmountGate_HideMarkers_ArePresent()
+    {
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        AssertElementHasNameAndStyle(xamlDocument, "Grid", "HeaderSearchRegion", "HideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderQuickAddButton", "HeaderButtonHideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "SourcesMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "UndoMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "RedoMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "ViewAllSpendingSourcesButton", "TextOnlyButtonHideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "AddSpendingSourceButton", "SpendingSourceAddButtonHideWhenDashboardSpendingAmountGateLockedStyle");
+
+        var analyticsTabHost = xamlDocument
+            .Descendants(PresentationNamespace + "Border")
+            .SingleOrDefault(border => (string?)border.Attribute(XamlNamespace + "Name") == "AnalyticsDrawerTabHost");
+
+        Assert.NotNull(analyticsTabHost);
+        Assert.Contains(
+            "Binding=\"{Binding IsDashboardSpendingAmountGateLocked}\" Value=\"True\"",
+            analyticsTabHost!.ToString(SaveOptions.DisableFormatting));
+    }
+
+    [Fact]
+    public void SpendingAmountGate_DashboardOverlay_UsesRequiredMessageAndWordmark()
+    {
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        var overlay = xamlDocument
+            .Descendants(PresentationNamespace + "Grid")
+            .SingleOrDefault(grid => (string?)grid.Attribute(XamlNamespace + "Name") == "DashboardSpendingAmountGateOverlay");
+
+        Assert.NotNull(overlay);
+
+        var textBlock = overlay!
+            .Descendants(PresentationNamespace + "TextBlock")
+            .Single();
+
+        var runs = textBlock
+            .Descendants(PresentationNamespace + "Run")
+            .ToList();
+
+        Assert.Equal(3, runs.Count);
+        Assert.Equal("Add a spending amount to start using ", (string?)runs[0].Attribute("Text"));
+        Assert.Equal("flux", (string?)runs[1].Attribute("Text"));
+        Assert.Equal("o", (string?)runs[2].Attribute("Text"));
+        Assert.Equal("{StaticResource Brush.Mint}", (string?)runs[2].Attribute("Foreground"));
+    }
+
+    [Fact]
+    public void SpendingAmountGate_DashboardContent_UsesBlurAndHitTestLockStyle()
+    {
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        var gatedContent = xamlDocument
+            .Descendants(PresentationNamespace + "Grid")
+            .SingleOrDefault(grid => (string?)grid.Attribute(XamlNamespace + "Name") == "DashboardSpendingAmountGateContent");
+
+        Assert.NotNull(gatedContent);
+        Assert.Equal("{StaticResource DashboardSpendingAmountGateLockedContentStyle}", (string?)gatedContent!.Attribute("Style"));
+
+        var lockStyle = xamlDocument
+            .Descendants(PresentationNamespace + "Style")
+            .SingleOrDefault(style => (string?)style.Attribute(XamlNamespace + "Key") == "DashboardSpendingAmountGateLockedContentStyle");
+
+        Assert.NotNull(lockStyle);
+        Assert.Contains("BlurEffect Radius=\"8\"", lockStyle!.ToString(SaveOptions.DisableFormatting));
+        Assert.Contains("IsHitTestVisible\" Value=\"False", lockStyle.ToString(SaveOptions.DisableFormatting));
+    }
+
+    private static void AssertElementHasNameAndStyle(XDocument xamlDocument, string elementName, string xName, string styleKey)
+    {
+        var localName = elementName.Contains(':')
+            ? elementName[(elementName.IndexOf(':') + 1)..]
+            : elementName;
+
+        var element = xamlDocument
+            .Descendants()
+            .SingleOrDefault(node =>
+                node.Name.LocalName == localName &&
+                (string?)node.Attribute(XamlNamespace + "Name") == xName);
+
+        Assert.NotNull(element);
+        Assert.Equal($"{{StaticResource {styleKey}}}", (string?)element!.Attribute("Style"));
+    }
+
     private static string LoadMainWindowXaml()
     {
         var mainWindowXamlPath = ResolveMainWindowXamlPath();

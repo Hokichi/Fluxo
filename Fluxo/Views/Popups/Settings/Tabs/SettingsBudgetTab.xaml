@@ -228,7 +228,7 @@
                 FontFamily="{StaticResource Bold}"
                 FontSize="13"
                 Foreground="{StaticResource Brush.Text.Secondary}"
-                Text="Add An Income Source To Adjust Allocation"
+                Text="{Binding BudgetBlockedStateText}"
                 Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
         </Grid>
     </Border>

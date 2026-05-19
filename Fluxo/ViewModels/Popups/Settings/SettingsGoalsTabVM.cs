@@ -19,6 +19,7 @@ namespace Fluxo.ViewModels.Popups.Settings;
 public partial class SettingsGoalsTabVM : ObservableObject
 {
     private const int PageSize = 25;
+    private const string SpendingAmountGateLockedMessage = "Add a spending amount to start using fluxo";
 
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
@@ -27,6 +28,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
     private int _visibleSavingGoalCount = PageSize;
 
     [ObservableProperty] private bool _isGoalChecksEnabled;
+    [ObservableProperty] private bool _isDashboardSpendingAmountGateLocked;
     [ObservableProperty] private bool _hasMoreItems;
     [ObservableProperty] private bool _isLoading;
 
@@ -54,6 +56,9 @@ public partial class SettingsGoalsTabVM : ObservableObject
     public bool ShowGoalCheckAllButton => IsGoalChecksEnabled && !AreAllGoalsChecked;
     public bool ShowGoalUncheckAllButton => IsGoalChecksEnabled && AreAllGoalsChecked;
     public bool ShowGoalEnableChecksButton => !IsGoalChecksEnabled && HasSavingGoals;
+    public string GoalsEmptyStateText => IsDashboardSpendingAmountGateLocked
+        ? SpendingAmountGateLockedMessage
+        : "No Goals Available";
 
     public async Task LoadAsync()
     {
@@ -243,6 +248,11 @@ public partial class SettingsGoalsTabVM : ObservableObject
     partial void OnHasMoreItemsChanged(bool value)
     {
         LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsDashboardSpendingAmountGateLockedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(GoalsEmptyStateText));
     }
 
     partial void OnIsLoadingChanged(bool value)

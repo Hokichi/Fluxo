@@ -608,6 +608,12 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))
         {
+            if (IsDashboardSpendingAmountGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             OpenQuickAddPopup();
             e.Handled = true;
             return;
@@ -615,6 +621,12 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))
         {
+            if (IsDashboardSpendingAmountGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             ExpandHeaderSearch();
             e.Handled = true;
             return;
@@ -629,6 +641,12 @@ public partial class MainWindow : Window, IPopupHost
 
         if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)
         {
+            if (IsDashboardSpendingAmountGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             OpenSpendingSourcesListPopup();
             e.Handled = true;
             return;
@@ -650,6 +668,12 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))
         {
+            if (IsDashboardSpendingAmountGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             _ = OpenAnalyticsPopupAsync();
             e.Handled = true;
             return;
@@ -658,6 +682,12 @@ public partial class MainWindow : Window, IPopupHost
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused() &&
             _logMemoryManager.CanUndo)
         {
+            if (IsDashboardSpendingAmountGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             _ = UndoLogMemoryAsync();
             e.Handled = true;
             return;
@@ -666,6 +696,12 @@ public partial class MainWindow : Window, IPopupHost
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused() &&
             _logMemoryManager.CanRedo)
         {
+            if (IsDashboardSpendingAmountGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             _ = RedoLogMemoryAsync();
             e.Handled = true;
         }
@@ -685,11 +721,17 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderSearchButtonClick(object sender, RoutedEventArgs e)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         ExpandHeaderSearch();
     }
 
     private void OnHeaderQuickAddButtonClick(object sender, RoutedEventArgs e)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         OpenAddNewTransactionPopup();
     }
 
@@ -789,6 +831,9 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         CloseHeaderMenu();
         OpenQuickAddPopup();
     }
@@ -825,6 +870,9 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         CloseHeaderMenu();
         OpenSpendingSourcesListPopup();
     }
@@ -855,6 +903,9 @@ public partial class MainWindow : Window, IPopupHost
 
     private async void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         CloseHeaderMenu();
 
         if (_isAnalyticsDrawerOpen)
@@ -873,11 +924,17 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         OpenAddSpendingSourcePopup();
     }
 
     public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         if (draft is { } popupDraft)
         {
             OpenAddNewTransactionPopup(popupDraft);
@@ -902,6 +959,9 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
         var popupViewModel = new QuickAddVM(_mainVM, appData);
@@ -921,11 +981,17 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenSpendingSourcesListPopup()
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         _dialogService.ShowSpendingSourcesList(this);
     }
 
     public void OpenAddSpendingSourcePopup()
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         _dialogService.ShowAddSpendingSource(this);
     }
 
@@ -951,11 +1017,17 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAnalyticsPopup()
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         _ = OpenAnalyticsPopupAsync();
     }
 
     private async Task OpenAnalyticsPopupAsync()
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         if (_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive || _isPreparingAnalyticsOpen)
             return;
 
@@ -1468,6 +1540,11 @@ public partial class MainWindow : Window, IPopupHost
     private static bool IsTextInputElementFocused()
     {
         return Keyboard.FocusedElement is TextBoxBase or PasswordBox or ComboBox;
+    }
+
+    private bool IsDashboardSpendingAmountGateLocked()
+    {
+        return _mainVM.IsDashboardSpendingAmountGateLocked;
     }
 
     private void OnHistoryManagerStateChanged(object? sender, EventArgs e)

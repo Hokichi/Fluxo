@@ -96,6 +96,74 @@
                 </Style.Triggers>
             </Style>
 
+            <Style x:Key="HideWhenDashboardSpendingAmountGateLockedStyle" TargetType="FrameworkElement">
+                <Setter Property="Visibility" Value="Visible" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="DashboardSpendingAmountGateLockedContentStyle" TargetType="Grid">
+                <Setter Property="IsHitTestVisible" Value="True" />
+                <Setter Property="Effect" Value="{x:Null}" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                        <Setter Property="IsHitTestVisible" Value="False" />
+                        <Setter Property="Effect">
+                            <Setter.Value>
+                                <BlurEffect Radius="8" />
+                            </Setter.Value>
+                        </Setter>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style
+                x:Key="HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle"
+                BasedOn="{StaticResource HeaderMenuActionButtonStyle}"
+                TargetType="Button">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style
+                x:Key="HeaderButtonHideWhenDashboardSpendingAmountGateLockedStyle"
+                BasedOn="{StaticResource HeaderButtonStyle}"
+                TargetType="customControls:BalloonButton">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style
+                x:Key="TextOnlyButtonHideWhenDashboardSpendingAmountGateLockedStyle"
+                BasedOn="{StaticResource TextOnlyButtonStyle}"
+                TargetType="Button">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style
+                x:Key="SpendingSourceAddButtonHideWhenDashboardSpendingAmountGateLockedStyle"
+                BasedOn="{StaticResource SpendingSourceAddButtonStyle}"
+                TargetType="Button">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
             <DataTemplate x:Key="HeaderSearchResultItemTemplate">
                 <Border MouseLeftButtonUp="OnHeaderSearchResultItemClick" Style="{StaticResource HeaderSearchResultItemStyle}">
                     <Grid>
@@ -260,7 +328,8 @@
                             x:Name="HeaderSearchRegion"
                             VerticalAlignment="Top"
                             Panel.ZIndex="10"
-                            PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus">
+                            PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus"
+                            Style="{StaticResource HideWhenDashboardSpendingAmountGateLockedStyle}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -357,7 +426,7 @@
                             x:Name="HeaderQuickAddButton"
                             ButtonIcon="{StaticResource PlusSolid}"
                             Click="OnHeaderQuickAddButtonClick"
-                            Style="{StaticResource HeaderButtonStyle}" />
+                            Style="{StaticResource HeaderButtonHideWhenDashboardSpendingAmountGateLockedStyle}" />
 
                         <customControls:BalloonButton
                             x:Name="HeaderMenuButton"
@@ -405,7 +474,10 @@
                                     </Style>
                                 </Border.Resources>
                                 <StackPanel>
-                                    <Button Click="OnQuickAddButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button
+                                        x:Name="QuickAddMenuButton"
+                                        Click="OnQuickAddButtonClick"
+                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -432,7 +504,10 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnSpendingSourcesButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button
+                                        x:Name="SourcesMenuButton"
+                                        Click="OnSpendingSourcesButtonClick"
+                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -490,7 +565,7 @@
                                         x:Name="UndoMenuButton"
                                         Click="OnUndoButtonClick"
                                         IsEnabled="False"
-                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -521,7 +596,7 @@
                                         x:Name="RedoMenuButton"
                                         Click="OnRedoButtonClick"
                                         IsEnabled="False"
-                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -618,105 +693,152 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="18"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Overview" />
-
-                        <Button
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Click="OnSpendingSourcesButtonClick"
-                            Content="View All Spending Sources"
-                            Style="{StaticResource TextOnlyButtonStyle}" />
-                    </Grid>
-
-                    <Grid Grid.Row="1" Margin="0,20,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <sections:SpentAllowancePanel
-                            x:Name="SpentAllowancePanelHost"
-                            Height="120"
-                            VerticalAlignment="Top"
-                            DataContext="{Binding SpentAllowancePanel}" />
-
-                        <Border
-                            Grid.Column="1"
-                            Width="1"
-                            Height="64"
-                            Margin="12,0,0,0"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Background="{StaticResource Brush.Border.Subtle}"
-                            SnapsToDevicePixels="True" />
-
-                        <customControls:FadingScrollViewer
-                            Grid.Column="2"
-                            HorizontalAlignment="Stretch"
-                            CanContentScroll="False"
-                            HorizontalScrollBarVisibility="Hidden"
-                            VerticalScrollBarVisibility="Disabled">
-                            <StackPanel Orientation="Horizontal">
-                                <Button
-                                    x:Name="AddSpendingSourceButton"
-                                    Margin="0,0,8,0"
-                                    Click="OnAddSpendingSourceButtonClick"
-                                    Content="Add"
-                                    Style="{StaticResource SpendingSourceAddButtonStyle}" />
-
-                                <ListView
-                                    HorizontalAlignment="Left"
-                                    Background="Transparent"
-                                    BorderBrush="Transparent"
-                                    BorderThickness="0"
-                                    ItemContainerStyle="{StaticResource IncomeSources}"
-                                    ItemTemplate="{StaticResource MainWindowSpendingSourceItemTemplate}"
-                                    ItemsPanel="{StaticResource MainWindowSpendingSourcesItemsPanelTemplate}"
-                                    ItemsSource="{Binding SpendingSources}"
-                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
-                            </StackPanel>
-                        </customControls:FadingScrollViewer>
-                    </Grid>
-
-                    <Grid Grid.Row="2" Margin="0,8,0,0">
+                    <Grid
+                        x:Name="DashboardSpendingAmountGateContent"
+                        Grid.RowSpan="3"
+                        Style="{StaticResource DashboardSpendingAmountGateLockedContentStyle}">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="160" />
                         </Grid.RowDefinitions>
-
-                        <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
-
-                        <Grid Grid.Row="1">
+                        <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.5*" />
-                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="18"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Overview" />
+
+                            <Button
+                                x:Name="ViewAllSpendingSourcesButton"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Click="OnSpendingSourcesButtonClick"
+                                Content="View All Spending Sources"
+                                Style="{StaticResource TextOnlyButtonHideWhenDashboardSpendingAmountGateLockedStyle}" />
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="0,20,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <sections:SavingGoalsPanel
-                                x:Name="SavingGoalsPanelHost"
-                                Grid.Column="0"
-                                DataContext="{Binding SavingGoalsPanel}" />
+                            <sections:SpentAllowancePanel
+                                x:Name="SpentAllowancePanelHost"
+                                Height="120"
+                                VerticalAlignment="Top"
+                                DataContext="{Binding SpentAllowancePanel}" />
 
-                            <sections:NotificationPanel
-                                x:Name="NotificationPanelHost"
+                            <Border
+                                Grid.Column="1"
+                                Width="1"
+                                Height="64"
+                                Margin="12,0,0,0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource Brush.Border.Subtle}"
+                                SnapsToDevicePixels="True" />
+
+                            <customControls:FadingScrollViewer
                                 Grid.Column="2"
-                                DataContext="{Binding NotificationPanel}" />
+                                HorizontalAlignment="Stretch"
+                                CanContentScroll="False"
+                                HorizontalScrollBarVisibility="Hidden"
+                                VerticalScrollBarVisibility="Disabled">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        x:Name="AddSpendingSourceButton"
+                                        Margin="0,0,8,0"
+                                        Click="OnAddSpendingSourceButtonClick"
+                                        Content="Add"
+                                        Style="{StaticResource SpendingSourceAddButtonHideWhenDashboardSpendingAmountGateLockedStyle}" />
+
+                                    <ListView
+                                        HorizontalAlignment="Left"
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        BorderThickness="0"
+                                        ItemContainerStyle="{StaticResource IncomeSources}"
+                                        ItemTemplate="{StaticResource MainWindowSpendingSourceItemTemplate}"
+                                        ItemsPanel="{StaticResource MainWindowSpendingSourcesItemsPanelTemplate}"
+                                        ItemsSource="{Binding SpendingSources}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                        ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                                </StackPanel>
+                            </customControls:FadingScrollViewer>
                         </Grid>
+
+                        <Grid Grid.Row="2" Margin="0,8,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="160" />
+                            </Grid.RowDefinitions>
+
+                            <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
+
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.5*" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <sections:SavingGoalsPanel
+                                    x:Name="SavingGoalsPanelHost"
+                                    Grid.Column="0"
+                                    DataContext="{Binding SavingGoalsPanel}" />
+
+                                <sections:NotificationPanel
+                                    x:Name="NotificationPanelHost"
+                                    Grid.Column="2"
+                                    DataContext="{Binding NotificationPanel}" />
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    <Grid
+                        x:Name="DashboardSpendingAmountGateOverlay"
+                        Grid.RowSpan="3"
+                        Panel.ZIndex="10"
+                        Background="#16000000"
+                        Visibility="Collapsed">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="18"
+                            TextAlignment="Center">
+                            <Run
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Add a spending amount to start using " />
+                            <Run
+                                FontFamily="{StaticResource Black}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="flux" />
+                            <Run
+                                FontFamily="{StaticResource Black}"
+                                Foreground="{StaticResource Brush.Mint}"
+                                Text="o" />
+                        </TextBlock>
                     </Grid>
                 </Grid>
             </Grid>
@@ -737,6 +859,9 @@
                         <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
                         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
                         <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsMouseOver, ElementName=AnalyticsDrawerTabButton}" Value="True">
                                 <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
                                 <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />

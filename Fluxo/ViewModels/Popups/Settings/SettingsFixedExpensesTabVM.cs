@@ -17,6 +17,7 @@ namespace Fluxo.ViewModels.Popups.Settings;
 public partial class SettingsFixedExpensesTabVM : ObservableObject
 {
     private const int PageSize = 25;
+    private const string SpendingAmountGateLockedMessage = "Add a spending amount to start using fluxo";
 
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
@@ -25,6 +26,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
     private int _visibleFixedExpenseCount = PageSize;
 
     [ObservableProperty] private bool _isFixedExpenseChecksEnabled;
+    [ObservableProperty] private bool _isDashboardSpendingAmountGateLocked;
     [ObservableProperty] private bool _hasMoreItems;
     [ObservableProperty] private bool _isLoading;
 
@@ -50,6 +52,9 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
     public bool ShowFixedExpenseCheckAllButton => IsFixedExpenseChecksEnabled && !AreAllFixedExpensesChecked;
     public bool ShowFixedExpenseUncheckAllButton => IsFixedExpenseChecksEnabled && AreAllFixedExpensesChecked;
     public bool ShowFixedExpenseEnableChecksButton => !IsFixedExpenseChecksEnabled && HasFixedExpenses;
+    public string FixedExpensesEmptyStateText => IsDashboardSpendingAmountGateLocked
+        ? SpendingAmountGateLockedMessage
+        : "No Recurring Transactions Available";
 
     public async Task LoadAsync()
     {
@@ -216,6 +221,11 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
     partial void OnHasMoreItemsChanged(bool value)
     {
         LoadMoreCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsDashboardSpendingAmountGateLockedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(FixedExpensesEmptyStateText));
     }
 
     partial void OnIsLoadingChanged(bool value)

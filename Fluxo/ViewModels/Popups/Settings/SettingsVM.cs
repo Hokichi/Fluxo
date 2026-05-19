@@ -71,6 +71,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     public SettingsGoalsTabVM GoalsTab { get; }
     public SettingsTagsTabVM TagsTab { get; }
     public SettingsPersonalizationTabVM PersonalizationTab { get; }
+    public bool IsDashboardSpendingAmountGateLocked => _mainViewModel.IsDashboardSpendingAmountGateLocked;
 
     public bool HasPendingConfigurationChanges => _isBudgetPending || _isPersonalizationPending;
 
@@ -119,6 +120,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         await GoalsTab.LoadAsync();
         await TagsTab.LoadAsync();
         await PersonalizationTab.LoadAsync();
+        ApplyDashboardSpendingAmountGateState();
 
         OnPropertyChanged(nameof(IsSpendingSourceChecksEnabled));
         OnPropertyChanged(nameof(IsFixedExpenseChecksEnabled));
@@ -602,5 +604,14 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
 
         return actions;
+    }
+
+    private void ApplyDashboardSpendingAmountGateState()
+    {
+        var isLocked = IsDashboardSpendingAmountGateLocked;
+        BudgetTab.IsDashboardSpendingAmountGateLocked = isLocked;
+        FixedExpensesTab.IsDashboardSpendingAmountGateLocked = isLocked;
+        GoalsTab.IsDashboardSpendingAmountGateLocked = isLocked;
+        OnPropertyChanged(nameof(IsDashboardSpendingAmountGateLocked));
     }
 }

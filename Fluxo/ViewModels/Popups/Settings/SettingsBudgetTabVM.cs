@@ -13,12 +13,15 @@ namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsBudgetTabVM : ObservableObject
 {
+    private const string SpendingAmountGateLockedMessage = "Add a spending amount to start using fluxo";
+    private const string DefaultBudgetBlockedStateMessage = "Add An Income Source To Adjust Allocation";
     private readonly Func<decimal> _totalBudgetAmountProvider;
     private readonly IMessenger _messenger;
     private readonly IAppDataService _appData;
     private BudgetAllocationSnapshot _savedBudgetAllocation = new(50, 30, 20);
 
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
+    [ObservableProperty] private bool _isDashboardSpendingAmountGateLocked;
     [ObservableProperty] private int _investAllocationPercentage;
     [ObservableProperty] private int _needsAllocationPercentage;
     [ObservableProperty] private int _wantsAllocationPercentage;
@@ -44,6 +47,9 @@ public partial class SettingsBudgetTabVM : ObservableObject
         NeedsAllocationPercentage != _savedBudgetAllocation.Needs ||
         WantsAllocationPercentage != _savedBudgetAllocation.Wants ||
         InvestAllocationPercentage != _savedBudgetAllocation.Invest;
+    public string BudgetBlockedStateText => IsDashboardSpendingAmountGateLocked
+        ? SpendingAmountGateLockedMessage
+        : DefaultBudgetBlockedStateMessage;
 
     public string NeedsAllocationAmountText => BuildAllocationAmountText(NeedsAllocationPercentage);
     public string WantsAllocationAmountText => BuildAllocationAmountText(WantsAllocationPercentage);
@@ -156,6 +162,11 @@ public partial class SettingsBudgetTabVM : ObservableObject
     partial void OnInvestAllocationPercentageChanged(int value)
     {
         OnAllocationChanged();
+    }
+
+    partial void OnIsDashboardSpendingAmountGateLockedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(BudgetBlockedStateText));
     }
 
     private string BuildAllocationAmountText(int percentage)

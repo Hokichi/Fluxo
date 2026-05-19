@@ -210,7 +210,7 @@ xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
                         FontFamily="{StaticResource Bold}"
                         FontSize="13"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="No Recurring Transaction Available"
+                        Text="{Binding FixedExpensesEmptyStateText}"
                         Visibility="{Binding HasFixedExpenses, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </Grid>
             </Border>

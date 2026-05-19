@@ -210,7 +210,7 @@ xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
                         FontFamily="{StaticResource Bold}"
                         FontSize="13"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="No Goal Available"
+                        Text="{Binding GoalsEmptyStateText}"
                         Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </Grid>
             </Border>
