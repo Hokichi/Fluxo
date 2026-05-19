@@ -222,13 +222,14 @@
                     Text="{Binding BudgetAllocationErrorMessage}"
                     Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
-            <TextBlock
+            <Button
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
+                Click="OnSpendingAmountGateActionClick"
+                Content="{Binding BudgetBlockedStateText}"
                 FontFamily="{StaticResource Bold}"
                 FontSize="13"
-                Foreground="{StaticResource Brush.Text.Secondary}"
-                Text="{Binding BudgetBlockedStateText}"
+                Style="{StaticResource TextOnlyButtonStyle}"
                 Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
         </Grid>
     </Border>

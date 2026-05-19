@@ -930,6 +930,11 @@ public partial class MainWindow : Window, IPopupHost
         OpenAddSpendingSourcePopup();
     }
 
+    private void OnDashboardSpendingAmountGateActionClick(object sender, RoutedEventArgs e)
+    {
+        _dialogService.ShowAddSpendingSource(this);
+    }
+
     public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
         if (IsDashboardSpendingAmountGateLocked())

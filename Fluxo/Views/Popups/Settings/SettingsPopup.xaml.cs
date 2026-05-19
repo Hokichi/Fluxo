@@ -100,6 +100,10 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         var request = message.Value;
         switch (request.RequestType)
         {
+            case SettingsDialogRequestType.AddSpendingSource when request.Payload is null:
+                _dialogService.ShowAddSpendingSource(_viewModel.CreateAddSpendingSourceViewModel(), this);
+                break;
+
             case SettingsDialogRequestType.AddSpendingSource when request.Payload is AddSpendingSourceVM addSpendingSource:
                 _dialogService.ShowAddSpendingSource(addSpendingSource, this);
                 break;

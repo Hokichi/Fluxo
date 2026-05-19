@@ -17,6 +17,11 @@ public partial class SettingsGoalsTab : UserControl
 
     private SettingsGoalsTabVM? _viewModel => DataContext as SettingsGoalsTabVM;
 
+    private void OnSpendingAmountGateActionClick(object sender, RoutedEventArgs e)
+    {
+        _viewModel?.OpenAddSpendingSource();
+    }
+
     private async void OnBatchActionClick(object sender, RoutedEventArgs e)
     {
         if (_viewModel is null || !TryParseBatchAction(sender, out var action))

@@ -103,6 +103,12 @@ public partial class SettingsBudgetTabVM : ObservableObject
         PublishPendingState();
     }
 
+    public void OpenAddSpendingSource()
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(SettingsDialogRequestType.AddSpendingSource)));
+    }
+
     public void RevertChanges()
     {
         NeedsAllocationPercentage = _savedBudgetAllocation.Needs;

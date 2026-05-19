@@ -10,24 +10,27 @@ public sealed class SettingsSpendingAmountGateTextTests
     private static readonly XNamespace PresentationNamespace = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
 
     [Fact]
-    public void FixedExpensesEmptyStateText_IsBoundFromViewModel()
+    public void FixedExpensesEmptyStateText_IsBoundToButtonFromViewModel()
     {
         var xaml = ReadXaml("SettingsFixedExpensesTab.xaml");
-        Assert.Contains("Text=\"{Binding FixedExpensesEmptyStateText}\"", xaml);
+        Assert.Contains("Content=\"{Binding FixedExpensesEmptyStateText}\"", xaml);
+        Assert.Contains("Click=\"OnSpendingAmountGateActionClick\"", xaml);
     }
 
     [Fact]
-    public void GoalsEmptyStateText_IsBoundFromViewModel()
+    public void GoalsEmptyStateText_IsBoundToButtonFromViewModel()
     {
         var xaml = ReadXaml("SettingsGoalsTab.xaml");
-        Assert.Contains("Text=\"{Binding GoalsEmptyStateText}\"", xaml);
+        Assert.Contains("Content=\"{Binding GoalsEmptyStateText}\"", xaml);
+        Assert.Contains("Click=\"OnSpendingAmountGateActionClick\"", xaml);
     }
 
     [Fact]
-    public void BudgetBlockedStateText_IsBoundFromViewModel()
+    public void BudgetBlockedStateText_IsBoundToButtonFromViewModel()
     {
         var xaml = ReadXaml("SettingsBudgetTab.xaml");
-        Assert.Contains("Text=\"{Binding BudgetBlockedStateText}\"", xaml);
+        Assert.Contains("Content=\"{Binding BudgetBlockedStateText}\"", xaml);
+        Assert.Contains("Click=\"OnSpendingAmountGateActionClick\"", xaml);
     }
 
     private static string ReadXaml(string fileName)

@@ -85,6 +85,12 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         await RefreshFixedExpensesAsync(resetPagination: false);
     }
 
+    public void OpenAddSpendingSource()
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(SettingsDialogRequestType.AddSpendingSource)));
+    }
+
     public async Task OpenEditFixedExpenseAsync(int fixedExpenseId)
     {
         var viewModel = await CreateEditFixedExpenseViewModelAsync(fixedExpenseId);

@@ -1109,20 +1109,20 @@
                                 Height="24"
                                 Margin="0,0,0,8"
                                 HorizontalAlignment="Center"
-                                Color="{TemplateBinding Foreground}"
-                                Path="{StaticResource CircleWithPlus}" />
+                                Path="{StaticResource CircleWithPlus}"
+                                Color="{TemplateBinding Foreground}" />
 
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="12"
-                            Foreground="{TemplateBinding Foreground}"
-                            Text="{TemplateBinding Content}"
-                            TextAlignment="Center"
-                            TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                </Grid>
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{TemplateBinding Foreground}"
+                                Text="{TemplateBinding Content}"
+                                TextAlignment="Center"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />

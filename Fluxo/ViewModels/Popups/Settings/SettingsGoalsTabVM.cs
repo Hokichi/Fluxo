@@ -96,6 +96,12 @@ public partial class SettingsGoalsTabVM : ObservableObject
         await RefreshSavingGoalsAsync(resetPagination: false);
     }
 
+    public void OpenAddSpendingSource()
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(SettingsDialogRequestType.AddSpendingSource)));
+    }
+
     public async Task OpenEditSavingGoalAsync(int savingGoalId)
     {
         var viewModel = await CreateEditSavingGoalViewModelAsync(savingGoalId);

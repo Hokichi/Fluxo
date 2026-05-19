@@ -25,6 +25,11 @@ public partial class SettingsBudgetTab : UserControl
 
     private SettingsBudgetTabVM? _viewModel => DataContext as SettingsBudgetTabVM;
 
+    private void OnSpendingAmountGateActionClick(object sender, RoutedEventArgs e)
+    {
+        _viewModel?.OpenAddSpendingSource();
+    }
+
     private void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)
     {
         if (_viewModel is null ||

@@ -74,7 +74,7 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void SpendingAmountGate_DashboardOverlay_UsesRequiredMessageAndWordmark()
+    public void SpendingAmountGate_DashboardOverlay_UsesTextButtonWithRequiredMessageAndWordmark()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
 
@@ -84,11 +84,15 @@ public sealed class MainWindowLayoutTests
 
         Assert.NotNull(overlay);
 
-        var textBlock = overlay!
-            .Descendants(PresentationNamespace + "TextBlock")
+        var button = overlay!
+            .Descendants(PresentationNamespace + "Button")
             .Single();
 
-        var runs = textBlock
+        Assert.Equal("DashboardSpendingAmountGateActionButton", (string?)button.Attribute(XamlNamespace + "Name"));
+        Assert.Equal("OnDashboardSpendingAmountGateActionClick", (string?)button.Attribute("Click"));
+        Assert.Equal("{StaticResource TextOnlyButtonStyle}", (string?)button.Attribute("Style"));
+
+        var runs = button
             .Descendants(PresentationNamespace + "Run")
             .ToList();
 
