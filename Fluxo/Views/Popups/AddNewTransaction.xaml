@@ -2,9 +2,8 @@
     x:Class="Fluxo.Views.Popups.AddNewTransaction"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    
-    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
@@ -117,6 +116,57 @@
                             Style="{StaticResource SegmentedToggleOptionStyle}" />
                     </StackPanel>
                 </Border>
+
+                <Border
+                    Width="400"
+                    Height="32"
+                    Margin="0,12,0,0"
+                    Background="{StaticResource Brush.Background.Surface}"
+                    CornerRadius="16">
+                    <CheckBox
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                        IsEnabled="{Binding CanToggleRecurring}">
+                        <CheckBox.Template>
+                            <ControlTemplate TargetType="CheckBox">
+                                <Grid>
+                                    <Border
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="16"
+                                        Opacity="{TemplateBinding Opacity}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        Text="Set as recurring" />
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Mint.Muted}" />
+                                        <Setter Property="Opacity" Value="0.6" />
+                                    </Trigger>
+                                    <Trigger Property="IsChecked" Value="True">
+                                        <Setter Property="BorderThickness" Value="2" />
+                                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Opacity" Value="1" />
+                                    </Trigger>
+                                    <Trigger Property="IsChecked" Value="False">
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Opacity" Value="1" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </CheckBox.Template>
+                    </CheckBox>
+                </Border>
             </StackPanel>
 
             <Grid Grid.Row="1" Margin="0,16,0,0">
@@ -145,15 +195,13 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <CheckBox
-                                Content="Recurring"
-                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                                IsEnabled="{Binding CanToggleRecurring}" />
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <components:DateSelector
+                                x:Name="ExpenseTransactionDateSelector"
+                                SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                                Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <TextBox
                                 DataObject.Pasting="OnRecurringDatePasting"
-                                Margin="0,6,0,0"
                                 PreviewKeyDown="OnRecurringDatePreviewKeyDown"
                                 PreviewTextInput="OnRecurringDatePreviewTextInput"
                                 Style="{StaticResource RoundedTextInputStyle}"
@@ -243,15 +291,13 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <CheckBox
-                                Content="Recurring"
-                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                                IsEnabled="{Binding CanToggleRecurring}" />
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <components:DateSelector x:Name="IncomeTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <components:DateSelector
+                                x:Name="IncomeTransactionDateSelector"
+                                SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                                Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <TextBox
                                 DataObject.Pasting="OnRecurringDatePasting"
-                                Margin="0,6,0,0"
                                 PreviewKeyDown="OnRecurringDatePreviewKeyDown"
                                 PreviewTextInput="OnRecurringDatePreviewTextInput"
                                 Style="{StaticResource RoundedTextInputStyle}"
@@ -278,15 +324,13 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <CheckBox
-                                Content="Recurring"
-                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                                IsEnabled="{Binding CanToggleRecurring}" />
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <components:DateSelector x:Name="GoalTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <components:DateSelector
+                                x:Name="GoalTransactionDateSelector"
+                                SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                                Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <TextBox
                                 DataObject.Pasting="OnRecurringDatePasting"
-                                Margin="0,6,0,0"
                                 PreviewKeyDown="OnRecurringDatePreviewKeyDown"
                                 PreviewTextInput="OnRecurringDatePreviewTextInput"
                                 Style="{StaticResource RoundedTextInputStyle}"
@@ -327,15 +371,13 @@
                 Margin="0,16,0,0"
                 Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
-                <DockPanel
-                    x:Name="TagsDockPanel"
-                    LastChildFill="False">
+                <DockPanel x:Name="TagsDockPanel" LastChildFill="False">
                     <Button
                         x:Name="AddTagButton"
-                        DockPanel.Dock="Left"
                         Margin="0,0,8,0"
                         Click="OnAddTagClick"
                         Content="+ Add Tag"
+                        DockPanel.Dock="Left"
                         Style="{StaticResource PopupTagButtonStyle}" />
 
                     <ListBox
@@ -345,8 +387,8 @@
                         ItemTemplate="{StaticResource PopupTagTemplate}"
                         ItemsPanel="{StaticResource PopupVisibleTagsItemsPanelTemplate}"
                         ItemsSource="{Binding VisibleTags}"
-                        SelectionChanged="OnTagSelectionChanged"
                         SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
+                        SelectionChanged="OnTagSelectionChanged"
                         Style="{StaticResource PopupTagListBoxStyle}" />
 
                     <ToggleButton
@@ -378,9 +420,9 @@
                         Background="{DynamicResource Brush.Background.Elevated}"
                         BorderBrush="{DynamicResource Brush.Border.Subtle}"
                         BorderThickness="1"
+                        CornerRadius="16"
                         MouseEnter="OnMoreTagsHoverChanged"
-                        MouseLeave="OnMoreTagsHoverChanged"
-                        CornerRadius="16">
+                        MouseLeave="OnMoreTagsHoverChanged">
                         <StackPanel>
                             <TextBlock
                                 Margin="0,0,0,10"
@@ -394,8 +436,8 @@
                                 ItemTemplate="{StaticResource PopupTagTemplate}"
                                 ItemsPanel="{StaticResource PopupOverflowTagsItemsPanelTemplate}"
                                 ItemsSource="{Binding OverflowTags}"
-                                SelectionChanged="OnTagSelectionChanged"
                                 SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
+                                SelectionChanged="OnTagSelectionChanged"
                                 Style="{StaticResource PopupTagListBoxStyle}" />
                         </StackPanel>
                     </Border>
@@ -431,6 +473,3 @@
         </Grid>
     </Border>
 </customControls:BasePopup>
-
-
-

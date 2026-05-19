@@ -2,12 +2,11 @@
     x:Class="Fluxo.Views.Shell.Wizard.Pages.QuickSetupWizardGreetingPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
-    xmlns:controls="clr-namespace:Fluxo.Controls;assembly=Fluxo.Resources">
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources">
     <Border Style="{StaticResource PanelStyle}">
         <Grid>
 
-            <controls:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
+            <components:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
 
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Border

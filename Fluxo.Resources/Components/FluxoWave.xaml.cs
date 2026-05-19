@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace Fluxo.Controls
+namespace Fluxo.Resources.Components
 {
     /// <summary>
     /// Infinitely looping layered sine wave lines, centred on the middle of the

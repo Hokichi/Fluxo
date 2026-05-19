@@ -2,7 +2,6 @@
     x:Class="Fluxo.Installer.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:Fluxo.Controls;assembly=Fluxo.Resources"
     xmlns:models="clr-namespace:Fluxo.Installer.Models"
     xmlns:pages="clr-namespace:Fluxo.Installer.Views.Pages"
     Title="Fluxo Installer"

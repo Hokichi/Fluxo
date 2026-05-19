@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 
-namespace Fluxo.Controls
+namespace Fluxo.Resources.Components
 {
     /// <summary>
     /// A lightweight FrameworkElement that renders an animated rising-particle
