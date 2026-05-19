@@ -417,14 +417,16 @@
 
             <Grid Grid.Row="2">
                 <StackPanel
+                    Panel.ZIndex="1"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Visibility="{Binding IsListEmpty, Converter={StaticResource BoolToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}">
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="14"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="No entry found" />
+                    <Button
+                        Width="184"
+                        Height="80"
+                        Click="OnEmptyActionButtonClick"
+                        Content="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        Style="{StaticResource SpendingSourceAddButtonStyle}" />
                 </StackPanel>
 
                 <customControls:FadingScrollViewer

@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using Fluxo.Core.Enums;
+using Fluxo.Resources.Components;
 
 namespace Fluxo.Views.Shell.Main.Sections;
 
@@ -35,6 +37,17 @@ public partial class BudgetAllocationPanel : UserControl
             return;
 
         MoreTagsButton.IsChecked = false;
+    }
+
+    private void OnEmptyExpenseActionClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ExpensesList { EmptyActionParameter: ExpenseCategory category })
+            return;
+
+        if (Window.GetWindow(this) is not MainWindow mainWindow)
+            return;
+
+        mainWindow.OpenAddNewTransactionPopupForCategory(category);
     }
 
     private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject

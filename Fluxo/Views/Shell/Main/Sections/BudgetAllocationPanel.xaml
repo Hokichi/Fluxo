@@ -2,7 +2,8 @@
     x:Class="Fluxo.Views.Shell.Main.Sections.BudgetAllocationPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources">
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
     <UserControl.Resources>
         <ItemsPanelTemplate x:Key="BudgetAllocationTagItemsPanelTemplate">
             <StackPanel Orientation="Horizontal" />
@@ -170,6 +171,9 @@
                 Allocation="{Binding NeedsAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Needs}"
+                EmptyActionClick="OnEmptyExpenseActionClick"
+                EmptyActionParameter="{x:Static enums:ExpenseCategory.Needs}"
+                EmptyActionText="Log a Need"
                 HasMoreItems="{Binding NeedsHasMoreItems}"
                 IsListEmpty="{Binding IsNeedsEmpty}"
                 IsLoading="{Binding IsNeedsLoading}"
@@ -186,6 +190,9 @@
                 Allocation="{Binding WantsAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Wants}"
+                EmptyActionClick="OnEmptyExpenseActionClick"
+                EmptyActionParameter="{x:Static enums:ExpenseCategory.Wants}"
+                EmptyActionText="Log a Want"
                 HasMoreItems="{Binding WantsHasMoreItems}"
                 IsListEmpty="{Binding IsWantsEmpty}"
                 IsLoading="{Binding IsWantsLoading}"
@@ -202,6 +209,9 @@
                 Allocation="{Binding InvestAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Investments}"
+                EmptyActionClick="OnEmptyExpenseActionClick"
+                EmptyActionParameter="{x:Static enums:ExpenseCategory.Savings}"
+                EmptyActionText="Log an Investment/Saving"
                 HasMoreItems="{Binding InvestHasMoreItems}"
                 IsListEmpty="{Binding IsInvestEmpty}"
                 IsLoading="{Binding IsInvestLoading}"

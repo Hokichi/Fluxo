@@ -1,0 +1,52 @@
+using System.IO;
+using Xunit;
+
+namespace Fluxo.Tests.Views.Components;
+
+public sealed class ExpensesListEmptyActionTests
+{
+    [Fact]
+    public void ExpensesList_ReplacesEmptyTextWithDashedActionButton()
+    {
+        var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
+
+        Assert.DoesNotContain("No entry found", xaml);
+        Assert.Contains("Content=\"{Binding EmptyActionText", xaml);
+        Assert.Contains("Click=\"OnEmptyActionButtonClick\"", xaml);
+        Assert.Contains("Style=\"{StaticResource SpendingSourceAddButtonStyle}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding IsListEmpty", xaml);
+        Assert.Contains("Panel.ZIndex=\"1\"", xaml);
+    }
+
+    [Fact]
+    public void ExpensesListCodeBehind_ExposesEmptyActionContract()
+    {
+        var source = File.ReadAllText(ResolveExpensesListCodeBehindPath());
+
+        Assert.Contains("EmptyActionTextProperty", source);
+        Assert.Contains("EmptyActionParameterProperty", source);
+        Assert.Contains("public event RoutedEventHandler? EmptyActionClick;", source);
+        Assert.Contains("private void OnEmptyActionButtonClick(object sender, RoutedEventArgs e)", source);
+    }
+
+    private static string ResolveExpensesListXamlPath() =>
+        ResolveRepositoryFile("Fluxo.Resources", "Components", "ExpensesList.xaml");
+
+    private static string ResolveExpensesListCodeBehindPath() =>
+        ResolveRepositoryFile("Fluxo.Resources", "Components", "ExpensesList.xaml.cs");
+
+    private static string ResolveRepositoryFile(params string[] relativeSegments)
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (currentDirectory is not null)
+        {
+            if (File.Exists(Path.Combine(currentDirectory.FullName, "Fluxo.slnx")))
+                return Path.Combine(currentDirectory.FullName, Path.Combine(relativeSegments));
+
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate repository root containing 'Fluxo.slnx'.");
+    }
+}

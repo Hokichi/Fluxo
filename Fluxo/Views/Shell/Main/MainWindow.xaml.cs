@@ -887,6 +887,19 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowQuickAdd(this);
     }
 
+    public void OpenAddNewTransactionPopupForCategory(ExpenseCategory category)
+    {
+        OpenAddNewTransactionPopup(new QuickAddVM.QuickAddDraft(
+            true,
+            string.Empty,
+            0m,
+            null,
+            DateTime.Today,
+            string.Empty,
+            category,
+            null));
+    }
+
     public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
         using var scope = _serviceProvider.CreateScope();

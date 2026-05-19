@@ -38,6 +38,12 @@ public partial class ExpensesList : UserControl
     public static readonly DependencyProperty IsListEmptyProperty = DependencyProperty.Register(
         nameof(IsListEmpty), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
 
+    public static readonly DependencyProperty EmptyActionTextProperty = DependencyProperty.Register(
+        nameof(EmptyActionText), typeof(string), typeof(ExpensesList), new PropertyMetadata("Add"));
+
+    public static readonly DependencyProperty EmptyActionParameterProperty = DependencyProperty.Register(
+        nameof(EmptyActionParameter), typeof(object), typeof(ExpensesList), new PropertyMetadata(default(object)));
+
     public static readonly DependencyProperty DotColorProperty = DependencyProperty.Register(
         nameof(DotColor), typeof(Brush), typeof(ExpensesList), new PropertyMetadata(null));
 
@@ -57,6 +63,8 @@ public partial class ExpensesList : UserControl
     {
         InitializeComponent();
     }
+
+    public event RoutedEventHandler? EmptyActionClick;
 
     public string Title
     {
@@ -107,6 +115,18 @@ public partial class ExpensesList : UserControl
         set => SetValue(IsListEmptyProperty, value);
     }
 
+    public string EmptyActionText
+    {
+        get => (string)GetValue(EmptyActionTextProperty);
+        set => SetValue(EmptyActionTextProperty, value);
+    }
+
+    public object? EmptyActionParameter
+    {
+        get => GetValue(EmptyActionParameterProperty);
+        set => SetValue(EmptyActionParameterProperty, value);
+    }
+
     public Brush DotColor
     {
         get => (Brush)GetValue(DotColorProperty);
@@ -147,6 +167,11 @@ public partial class ExpensesList : UserControl
             container.ResetSwipe();
 
         WindowMethodInvoker.TryInvoke(this, "OpenExpenseDetailPopup", expenseLog);
+    }
+
+    private void OnEmptyActionButtonClick(object sender, RoutedEventArgs e)
+    {
+        EmptyActionClick?.Invoke(this, e);
     }
 
     private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)

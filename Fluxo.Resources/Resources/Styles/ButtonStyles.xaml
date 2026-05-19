@@ -1112,15 +1112,17 @@
                                 Color="{TemplateBinding Foreground}"
                                 Path="{StaticResource CircleWithPlus}" />
 
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="12"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="Add" />
-                        </StackPanel>
-                    </Grid>
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{TemplateBinding Foreground}"
+                            Text="{TemplateBinding Content}"
+                            TextAlignment="Center"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
