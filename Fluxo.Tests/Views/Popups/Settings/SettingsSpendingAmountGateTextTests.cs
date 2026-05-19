@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 using Xunit;
 
@@ -10,27 +11,122 @@ public sealed class SettingsSpendingAmountGateTextTests
     private static readonly XNamespace PresentationNamespace = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
 
     [Fact]
-    public void FixedExpensesEmptyStateText_IsBoundToButtonFromViewModel()
+    public void FixedExpensesEmptyState_DoesNotShowSpendingAmountGateAction()
     {
         var xaml = ReadXaml("SettingsFixedExpensesTab.xaml");
-        Assert.Contains("Content=\"{Binding FixedExpensesEmptyStateText}\"", xaml);
-        Assert.Contains("Click=\"OnSpendingAmountGateActionClick\"", xaml);
+        Assert.DoesNotContain("Add a spending amount to start using fluxo", xaml);
+        Assert.DoesNotContain("Content=\"{Binding FixedExpensesEmptyStateText}\"", xaml);
     }
 
     [Fact]
-    public void GoalsEmptyStateText_IsBoundToButtonFromViewModel()
+    public void GoalsEmptyState_DoesNotShowSpendingAmountGateAction()
     {
         var xaml = ReadXaml("SettingsGoalsTab.xaml");
-        Assert.Contains("Content=\"{Binding GoalsEmptyStateText}\"", xaml);
-        Assert.Contains("Click=\"OnSpendingAmountGateActionClick\"", xaml);
+        Assert.DoesNotContain("Add a spending amount to start using fluxo", xaml);
+        Assert.DoesNotContain("Content=\"{Binding GoalsEmptyStateText}\"", xaml);
     }
 
     [Fact]
-    public void BudgetBlockedStateText_IsBoundToButtonFromViewModel()
+    public void BudgetEmptyState_DoesNotShowSpendingAmountGateAction()
     {
         var xaml = ReadXaml("SettingsBudgetTab.xaml");
-        Assert.Contains("Content=\"{Binding BudgetBlockedStateText}\"", xaml);
-        Assert.Contains("Click=\"OnSpendingAmountGateActionClick\"", xaml);
+        Assert.DoesNotContain("Add a spending amount to start using fluxo", xaml);
+        Assert.DoesNotContain("Content=\"{Binding BudgetBlockedStateText}\"", xaml);
+    }
+
+    [Fact]
+    public void SettingsPopup_PutsSpendingSourcesBeforeBudgetAllocation()
+    {
+        var document = XDocument.Parse(File.ReadAllText(GetRepositoryFilePath(
+            "Fluxo",
+            "Views",
+            "Popups",
+            "Settings",
+            "SettingsPopup.xaml")));
+
+        var tabNames = document
+            .Descendants(PresentationNamespace + "RadioButton")
+            .Select(element => (string?)element.Attribute("Tag"))
+            .Where(tag => !string.IsNullOrWhiteSpace(tag))
+            .Select(tag => tag!)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                "Spending Sources",
+                "Budget Allocation",
+                "Recurring Transactions",
+                "Goals",
+                "Tags",
+                "Personalization",
+                "About"
+            ],
+            tabNames);
+    }
+
+    [Fact]
+    public void SettingsPopup_HidesFooterSaveAndRevertButtons()
+    {
+        var xaml = File.ReadAllText(GetRepositoryFilePath(
+            "Fluxo",
+            "Views",
+            "Popups",
+            "Settings",
+            "SettingsPopup.xaml"));
+
+        Assert.Contains("ShowSaveButton=\"False\"", xaml);
+        Assert.Contains("ShowRevertButton=\"False\"", xaml);
+        Assert.DoesNotContain("IsSaveButtonEnabled=\"{Binding HasPendingConfigurationChanges}\"", xaml);
+        Assert.DoesNotContain("IsRevertButtonEnabled=\"{Binding HasPendingConfigurationChanges}\"", xaml);
+    }
+
+    [Fact]
+    public void SettingsPopup_TabButtonsUseBudgetNavigationGuard()
+    {
+        var xaml = File.ReadAllText(GetRepositoryFilePath(
+            "Fluxo",
+            "Views",
+            "Popups",
+            "Settings",
+            "SettingsPopup.xaml"));
+
+        var tabButtonCount = xaml.Split("<RadioButton", StringSplitOptions.None).Length - 1;
+        var guardedTabButtonCount = xaml.Split(
+            "PreviewMouseLeftButtonDown=\"OnSettingsTabPreviewMouseLeftButtonDown\"",
+            StringSplitOptions.None).Length - 1;
+
+        Assert.Equal(7, tabButtonCount);
+        Assert.Equal(tabButtonCount, guardedTabButtonCount);
+    }
+
+    [Theory]
+    [InlineData("BudgetTabButton")]
+    [InlineData("FixedExpensesTabButton")]
+    [InlineData("GoalsTabButton")]
+    public void SettingsPopup_GatedTabsUseLockedTabStyle(string buttonName)
+    {
+        var xaml = File.ReadAllText(GetRepositoryFilePath(
+            "Fluxo",
+            "Views",
+            "Popups",
+            "Settings",
+            "SettingsPopup.xaml"));
+
+        Assert.Contains("x:Key=\"LockedSettingsTabButtonStyle\"", xaml);
+        Assert.Contains("Binding=\"{Binding IsDashboardSpendingAmountGateLocked}\"", xaml);
+        Assert.Contains("Property=\"IsHitTestVisible\" Value=\"False\"", xaml);
+        Assert.Contains("Property=\"Opacity\" Value=\"0.45\"", xaml);
+
+        var expectedButton = $"x:Name=\"{buttonName}\"";
+        var buttonIndex = xaml.IndexOf(expectedButton, StringComparison.Ordinal);
+        Assert.True(buttonIndex >= 0, $"Could not find {buttonName}.");
+
+        var nextButtonIndex = xaml.IndexOf("<RadioButton", buttonIndex + expectedButton.Length, StringComparison.Ordinal);
+        var buttonMarkup = nextButtonIndex >= 0
+            ? xaml[buttonIndex..nextButtonIndex]
+            : xaml[buttonIndex..];
+
+        Assert.Contains("Style=\"{StaticResource LockedSettingsTabButtonStyle}\"", buttonMarkup);
     }
 
     private static string ReadXaml(string fileName)
@@ -49,21 +145,37 @@ public sealed class SettingsSpendingAmountGateTextTests
         return xaml;
     }
 
-    private static string GetRepositoryRootPath()
+    private static string GetRepositoryFilePath(params string[] relativeSegments)
     {
-        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+        return Path.Combine(GetRepositoryRootPath(), Path.Combine(relativeSegments));
+    }
 
-        while (currentDirectory is not null)
+    private static string GetRepositoryRootPath([CallerFilePath] string sourceFilePath = "")
+    {
+        foreach (var startingPath in new[]
+                 {
+                     Path.GetDirectoryName(sourceFilePath),
+                     Directory.GetCurrentDirectory(),
+                     AppContext.BaseDirectory
+                 })
         {
-            var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
-            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
-            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
-                return currentDirectory.FullName;
+            if (string.IsNullOrWhiteSpace(startingPath))
+                continue;
 
-            currentDirectory = currentDirectory.Parent;
+            var currentDirectory = new DirectoryInfo(startingPath);
+
+            while (currentDirectory is not null)
+            {
+                var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
+                var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
+                if (File.Exists(solutionPath) || File.Exists(solutionXPath))
+                    return currentDirectory.FullName;
+
+                currentDirectory = currentDirectory.Parent;
+            }
         }
 
         throw new DirectoryNotFoundException(
-            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
+            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{Directory.GetCurrentDirectory()}' or '{AppContext.BaseDirectory}'.");
     }
 }

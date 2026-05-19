@@ -226,7 +226,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Click="OnSpendingAmountGateActionClick"
-                Content="{Binding BudgetBlockedStateText}"
+                Content="Add An Income Source To Adjust Allocation"
                 FontFamily="{StaticResource Bold}"
                 FontSize="13"
                 Style="{StaticResource TextOnlyButtonStyle}"

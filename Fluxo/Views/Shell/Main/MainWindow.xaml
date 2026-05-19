@@ -807,6 +807,49 @@
                 </Grid>
             </Grid>
 
+            <Grid
+                x:Name="DashboardSpendingAmountGateOverlay"
+                Grid.RowSpan="3"
+                Panel.ZIndex="10">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Button
+                    x:Name="DashboardSpendingAmountGateActionButton"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Click="OnDashboardSpendingAmountGateActionClick"
+                    Style="{StaticResource TextOnlyButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontSize="18" TextAlignment="Center">
+                            <Run
+                                FontFamily="{StaticResource Medium}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Add a spending amount to start using " />
+                        </TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                FontFamily="{StaticResource Black}"
+                                FontSize="18"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="flux" />
+                            <TextBlock
+                                FontFamily="{StaticResource Black}"
+                                FontSize="18"
+                                Foreground="{StaticResource Brush.Mint}"
+                                Text="o" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
             <Border
                 x:Name="AnalyticsDrawerTabHost"
                 Width="170"
@@ -933,50 +976,6 @@
                 IsHitTestVisible="False"
                 Opacity="0"
                 Visibility="Collapsed" />
-
-            <Grid
-                x:Name="DashboardSpendingAmountGateOverlay"
-                Grid.RowSpan="3"
-                Panel.ZIndex="10"
-                Background="#16000000">
-                <Grid.Style>
-                    <Style TargetType="Grid">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
-                <Button
-                    x:Name="DashboardSpendingAmountGateActionButton"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Click="OnDashboardSpendingAmountGateActionClick"
-                    Style="{StaticResource TextOnlyButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18" TextAlignment="Center">
-                            <Run
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Add a spending amount to start using " />
-                        </TextBlock>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock
-                                FontFamily="{StaticResource Black}"
-                                FontSize="18"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="flux" />
-                            <TextBlock
-                                FontFamily="{StaticResource Black}"
-                                FontSize="18"
-                                Foreground="{StaticResource Brush.Mint}"
-                                Text="o" />
-                        </StackPanel>
-                    </StackPanel>
-                </Button>
-            </Grid>
         </Grid>
     </Border>
 </Window>

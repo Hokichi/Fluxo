@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.Resources.Messages;
@@ -11,13 +13,16 @@ using Fluxo.ViewModels.Popups.Settings;
 namespace Fluxo.Views.Popups.Settings;
 
 public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequestedMessage>,
-    IRecipient<SettingsPopupCloseRequestedMessage>
+    IRecipient<SettingsPopupCloseRequestedMessage>, IRecipient<SettingsPendingChangesChangedMessage>
 {
     private readonly IDialogService _dialogService;
     private readonly IMessenger _messenger;
     private readonly SettingsVM _viewModel;
     private bool _allowClose;
+    private bool _isLoaded;
     private bool _isHandlingCloseRequest;
+    private bool _isSavingConfiguration;
+    private bool _isSelectingTab;
 
     public SettingsPopup(SettingsVM viewModel, IDialogService dialogService, IMessenger messenger)
     {
@@ -34,23 +39,12 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         _messenger.RegisterAll(this);
     }
 
-    protected override async void OnSaveButtonClick()
-    {
-        var result = await _viewModel.ApplyConfigurationAsync();
-        if (!result.IsSuccess)
-            ShowMessage(result.ErrorMessage, "Settings");
-    }
-
-    protected override void OnRevertButtonClick()
-    {
-        _viewModel.RevertConfigurationChanges();
-    }
-
     private async void OnLoadedAsync(object sender, RoutedEventArgs e)
     {
         try
         {
             await _viewModel.LoadAsync();
+            _isLoaded = true;
         }
         catch (Exception exception)
         {
@@ -63,36 +57,77 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
 
     private async void OnPopupClosing(object? sender, CancelEventArgs e)
     {
-        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasPendingConfigurationChanges)
+        if (_allowClose || _isHandlingCloseRequest)
             return;
 
         e.Cancel = true;
         _isHandlingCloseRequest = true;
-        var shouldClose = false;
 
         try
         {
-            if (FluxoMessageBox.Show(this, "Apply pending settings before closing?", "Settings",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (!await CanLeaveCurrentSettingsTabAsync())
+                return;
+
+            if (_viewModel.HasPendingPersonalizationConfigurationChanges &&
+                !(await SaveConfigurationChangesAsync()).IsSuccess)
             {
-                var result = await _viewModel.ApplyConfigurationAsync();
-                if (!result.IsSuccess)
-                {
-                    ShowMessage(result.ErrorMessage, "Settings");
-                    return;
-                }
+                return;
             }
 
             _allowClose = true;
-            shouldClose = true;
+            await Dispatcher.BeginInvoke(Close, DispatcherPriority.Background);
         }
         finally
         {
             _isHandlingCloseRequest = false;
         }
+    }
 
-        if (shouldClose)
-            await Dispatcher.BeginInvoke(Close, DispatcherPriority.Background);
+    private async void OnSettingsTabPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_isSelectingTab ||
+            sender is not RadioButton targetTab ||
+            targetTab.IsChecked.GetValueOrDefault())
+            return;
+
+        e.Handled = true;
+        if (!await CanLeaveCurrentSettingsTabAsync())
+            return;
+
+        _isSelectingTab = true;
+        try
+        {
+            targetTab.IsChecked = true;
+        }
+        finally
+        {
+            _isSelectingTab = false;
+        }
+    }
+
+    private async Task<bool> CanLeaveCurrentSettingsTabAsync()
+    {
+        if (!BudgetTabButton.IsChecked.GetValueOrDefault() ||
+            !_viewModel.HasPendingBudgetConfigurationChanges)
+        {
+            return true;
+        }
+
+        if (_viewModel.CanSaveBudgetConfiguration)
+            return (await SaveConfigurationChangesAsync()).IsSuccess;
+
+        var message = string.IsNullOrWhiteSpace(_viewModel.BudgetConfigurationErrorMessage)
+            ? "Budget Allocation is not valid."
+            : _viewModel.BudgetConfigurationErrorMessage;
+
+        if (FluxoMessageBox.Show(this, $"{message}\n\nDo you want to adjust it?", "Budget Allocation",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+        {
+            return false;
+        }
+
+        _viewModel.DiscardBudgetConfigurationChanges();
+        return true;
     }
 
     public void Receive(SettingsDialogRequestedMessage message)
@@ -144,6 +179,27 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         Close();
     }
 
+    public void Receive(SettingsPendingChangesChangedMessage message)
+    {
+        if (!_isLoaded ||
+            message.Value.TabKey != SettingsTabKey.Personalization ||
+            !message.Value.HasPendingChanges ||
+            IsPersonalizationTextInputFocused())
+        {
+            return;
+        }
+
+        RequestPersonalizationAutosave();
+    }
+
+    internal void RequestPersonalizationAutosave()
+    {
+        if (!_isLoaded || !_viewModel.HasPendingPersonalizationConfigurationChanges)
+            return;
+
+        _ = SaveConfigurationChangesAsync();
+    }
+
     internal Task ShowToastWhileAsync(string message, Func<Task> work)
     {
         return _dialogService.ShowToastWhileAsync(message, work, this);
@@ -152,6 +208,32 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
     private void OnPopupClosed(object? sender, EventArgs e)
     {
         _messenger.UnregisterAll(this);
+    }
+
+    private async Task<SettingsOperationResult> SaveConfigurationChangesAsync()
+    {
+        if (_isSavingConfiguration)
+            return SettingsOperationResult.Success();
+
+        _isSavingConfiguration = true;
+        try
+        {
+            var result = await _viewModel.SaveConfigurationChangesAsync();
+            if (!result.IsSuccess)
+                ShowMessage(result.ErrorMessage, "Settings");
+
+            return result;
+        }
+        finally
+        {
+            _isSavingConfiguration = false;
+        }
+    }
+
+    private bool IsPersonalizationTextInputFocused()
+    {
+        return Keyboard.FocusedElement is TextBox textBox &&
+               ReferenceEquals(textBox.DataContext, _viewModel.PersonalizationTab);
     }
 
     private void ShowMessage(string? message, string title)

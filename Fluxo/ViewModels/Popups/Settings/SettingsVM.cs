@@ -73,6 +73,14 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     public SettingsPersonalizationTabVM PersonalizationTab { get; }
     public bool IsDashboardSpendingAmountGateLocked => _mainViewModel.IsDashboardSpendingAmountGateLocked;
 
+    public bool HasPendingBudgetConfigurationChanges => _isBudgetPending;
+
+    public bool HasPendingPersonalizationConfigurationChanges => _isPersonalizationPending;
+
+    public bool CanSaveBudgetConfiguration => BudgetTab.CanSaveConfiguration;
+
+    public string BudgetConfigurationErrorMessage => BudgetTab.ConfigurationErrorMessage;
+
     public bool HasPendingConfigurationChanges => _isBudgetPending || _isPersonalizationPending;
 
     public void Receive(SettingsPendingChangesChangedMessage message)
@@ -81,10 +89,12 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         {
             case SettingsTabKey.Budget:
                 _isBudgetPending = message.Value.HasPendingChanges;
+                OnPropertyChanged(nameof(HasPendingBudgetConfigurationChanges));
                 break;
 
             case SettingsTabKey.Personalization:
                 _isPersonalizationPending = message.Value.HasPendingChanges;
+                OnPropertyChanged(nameof(HasPendingPersonalizationConfigurationChanges));
                 break;
 
             default:
@@ -125,6 +135,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         OnPropertyChanged(nameof(IsSpendingSourceChecksEnabled));
         OnPropertyChanged(nameof(IsFixedExpenseChecksEnabled));
         OnPropertyChanged(nameof(IsGoalChecksEnabled));
+        OnPropertyChanged(nameof(HasPendingBudgetConfigurationChanges));
+        OnPropertyChanged(nameof(HasPendingPersonalizationConfigurationChanges));
         OnPropertyChanged(nameof(HasPendingConfigurationChanges));
     }
 
@@ -176,6 +188,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
             BudgetTab.CommitSavedState();
             PersonalizationTab.CommitSavedState();
+            OnPropertyChanged(nameof(HasPendingBudgetConfigurationChanges));
+            OnPropertyChanged(nameof(HasPendingPersonalizationConfigurationChanges));
             OnPropertyChanged(nameof(HasPendingConfigurationChanges));
 
             return SettingsOperationResult.Success();
@@ -188,10 +202,24 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
     }
 
+    public Task<SettingsOperationResult> SaveConfigurationChangesAsync()
+    {
+        return ApplyConfigurationAsync();
+    }
+
+    public void DiscardBudgetConfigurationChanges()
+    {
+        BudgetTab.RevertChanges();
+        OnPropertyChanged(nameof(HasPendingBudgetConfigurationChanges));
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
+    }
+
     public void RevertConfigurationChanges()
     {
         BudgetTab.RevertChanges();
         PersonalizationTab.RevertChanges();
+        OnPropertyChanged(nameof(HasPendingBudgetConfigurationChanges));
+        OnPropertyChanged(nameof(HasPendingPersonalizationConfigurationChanges));
         OnPropertyChanged(nameof(HasPendingConfigurationChanges));
     }
 
@@ -609,7 +637,6 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     private void ApplyDashboardSpendingAmountGateState()
     {
         var isLocked = IsDashboardSpendingAmountGateLocked;
-        BudgetTab.IsDashboardSpendingAmountGateLocked = isLocked;
         FixedExpensesTab.IsDashboardSpendingAmountGateLocked = isLocked;
         GoalsTab.IsDashboardSpendingAmountGateLocked = isLocked;
         OnPropertyChanged(nameof(IsDashboardSpendingAmountGateLocked));

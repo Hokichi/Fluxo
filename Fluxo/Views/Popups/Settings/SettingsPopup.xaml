@@ -6,17 +6,27 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
     xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
-    IsRevertButtonEnabled="{Binding HasPendingConfigurationChanges}"
-    IsSaveButtonEnabled="{Binding HasPendingConfigurationChanges}"
     PopupTitle="Settings"
-    ShowRevertButton="True"
-    ShowSaveButton="True">
+    ShowRevertButton="False"
+    ShowSaveButton="False">
 
     <customControls:BasePopup.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Fluxo.Resources;component/Resources/Styles/SettingsStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <Style
+                x:Key="LockedSettingsTabButtonStyle"
+                BasedOn="{StaticResource TabButtonStyle}"
+                TargetType="RadioButton">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                        <Setter Property="Opacity" Value="0.45" />
+                        <Setter Property="IsHitTestVisible" Value="False" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
         </ResourceDictionary>
     </customControls:BasePopup.Resources>
 
@@ -33,20 +43,10 @@
         <Border Style="{StaticResource PanelStyle}">
             <StackPanel>
                 <RadioButton
-                    x:Name="BudgetTabButton"
-                    GroupName="SettingsTabs"
-                    IsChecked="True"
-                    Style="{StaticResource TabButtonStyle}"
-                    Tag="Budget Allocation">
-                    <components:Icon
-                        Width="12"
-                        Path="{StaticResource AccountBalanceWalletRound}"
-                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
-                </RadioButton>
-
-                <RadioButton
                     x:Name="SourcesTabButton"
                     GroupName="SettingsTabs"
+                    IsChecked="True"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Spending Sources">
                     <components:Icon
@@ -56,9 +56,22 @@
                 </RadioButton>
 
                 <RadioButton
+                    x:Name="BudgetTabButton"
+                    GroupName="SettingsTabs"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
+                    Style="{StaticResource LockedSettingsTabButtonStyle}"
+                    Tag="Budget Allocation">
+                    <components:Icon
+                        Width="12"
+                        Path="{StaticResource AccountBalanceWalletRound}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
+                </RadioButton>
+
+                <RadioButton
                     x:Name="FixedExpensesTabButton"
                     GroupName="SettingsTabs"
-                    Style="{StaticResource TabButtonStyle}"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
+                    Style="{StaticResource LockedSettingsTabButtonStyle}"
                     Tag="Recurring Transactions">
                     <components:Icon
                         Width="12"
@@ -69,7 +82,8 @@
                 <RadioButton
                     x:Name="GoalsTabButton"
                     GroupName="SettingsTabs"
-                    Style="{StaticResource TabButtonStyle}"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
+                    Style="{StaticResource LockedSettingsTabButtonStyle}"
                     Tag="Goals">
                     <components:Icon
                         Width="12"
@@ -80,6 +94,7 @@
                 <RadioButton
                     x:Name="TagsTabButton"
                     GroupName="SettingsTabs"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Tags">
                     <components:Icon
@@ -91,6 +106,7 @@
                 <RadioButton
                     x:Name="PersonalizationTabButton"
                     GroupName="SettingsTabs"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="Personalization">
                     <components:Icon
@@ -102,6 +118,7 @@
                 <RadioButton
                     x:Name="AboutTabButton"
                     GroupName="SettingsTabs"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource TabButtonStyle}"
                     Tag="About">
                     <components:Icon

@@ -211,19 +211,11 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                <Button
-                    Click="OnSpendingAmountGateActionClick"
-                    Content="{Binding GoalsEmptyStateText}"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="13"
-                    Style="{StaticResource TextOnlyButtonStyle}"
-                    Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <TextBlock
                     FontFamily="{StaticResource Bold}"
                     FontSize="13"
                     Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="No Goals Available"
-                    Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                    Text="No Goals Available" />
             </StackPanel>
         </Grid>
     </Border>

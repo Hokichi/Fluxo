@@ -29,6 +29,39 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
+    public void BudgetTab_InvalidAllocation_BlocksConfigurationSave()
+    {
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()));
+
+        vm.NeedsAllocationPercentage = 60;
+        vm.WantsAllocationPercentage = 30;
+        vm.InvestAllocationPercentage = 20;
+
+        Assert.False(vm.CanSaveConfiguration);
+        Assert.Equal(
+            "Needs, Wants, and Invest must add up to 100%. Current total: 110%",
+            vm.ConfigurationErrorMessage);
+    }
+
+    [Fact]
+    public void BudgetTab_RevertChanges_RestoresLastSavedAllocation()
+    {
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()));
+
+        vm.NeedsAllocationPercentage = 60;
+        vm.WantsAllocationPercentage = 20;
+        vm.InvestAllocationPercentage = 20;
+
+        vm.RevertChanges();
+
+        Assert.Equal(50, vm.NeedsAllocationPercentage);
+        Assert.Equal(30, vm.WantsAllocationPercentage);
+        Assert.Equal(20, vm.InvestAllocationPercentage);
+        Assert.False(vm.HasPendingChanges);
+        Assert.True(vm.CanSaveConfiguration);
+    }
+
+    [Fact]
     public void PersonalizationTab_ChangingStartupToggle_PublishesPendingState()
     {
         var messenger = new WeakReferenceMessenger();

@@ -53,9 +53,12 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Username" />
                     <TextBox
+                        x:Name="UsernameTextBox"
                         Margin="0,8,0,0"
                         Background="{StaticResource Brush.Background.Surface}"
+                        LostFocus="OnUsernameTextBoxLostFocus"
                         Style="{StaticResource RoundedTextInputStyle}"
+                        TextChanged="OnUsernameTextBoxTextChanged"
                         Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
 
