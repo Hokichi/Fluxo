@@ -98,15 +98,12 @@ IsSaveButtonEnabled="{Binding CanSave}"
                             Margin="0,14,0,8"
                             Style="{StaticResource FieldLabelStyle}"
                             Text="Recurring Date" />
-                        <TextBox
-                            x:Name="RecurringDateTextBox"
-                            DataObject.Pasting="OnRecurringDatePasting"
-                            MaxLength="2"
-                            PreviewKeyDown="OnRecurringDatePreviewKeyDown"
-                            PreviewTextInput="OnRecurringDatePreviewTextInput"
-                            Style="{StaticResource RoundedTextInputStyle}"
-                            Text="{Binding RecurringDateText, UpdateSourceTrigger=PropertyChanged}"
-                            ToolTip="Enter a day between 1 and 28" />
+                        <customControls:NumericUpDown
+                            LowerLimit="0"
+                            Step="1"
+                            ToolTip="Enter a day between 0 and 28"
+                            UpperLimit="28"
+                            Value="{Binding RecurringDateText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
                             Margin="0,14,0,8"

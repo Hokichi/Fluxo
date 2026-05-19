@@ -154,11 +154,14 @@
                                 Background="Transparent"
                                 BorderThickness="0"
                                 CaretBrush="{DynamicResource Brush.Text.Primary}"
-                                Foreground="{TemplateBinding Foreground}"
                                 FontFamily="{TemplateBinding FontFamily}"
-                                FontSize="{TemplateBinding FontSize}" />
+                                FontSize="{TemplateBinding FontSize}"
+                                Foreground="{TemplateBinding Foreground}" />
 
-                            <Grid Grid.Column="1" Margin="0,0,2,0">
+                            <Grid
+                                Grid.Column="1"
+                                Height="24"
+                                Margin="0,0,0,6">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />
@@ -167,29 +170,29 @@
                                 <RepeatButton
                                     x:Name="PART_UpButton"
                                     Grid.Row="0"
-                                    Delay="350"
+                                    Delay="200"
                                     Interval="70"
                                     Style="{StaticResource NumericUpDownArrowButtonStyle}">
                                     <components:Icon
                                         x:Name="UpIcon"
-                                        Width="14"
-                                        Height="14"
-                                        Color="{DynamicResource Brush.Text.Secondary}"
-                                        Path="{StaticResource AngleUp}" />
+                                        Width="8"
+                                        Height="8"
+                                        Path="{StaticResource AngleUp}"
+                                        Color="{DynamicResource Brush.Text.Secondary}" />
                                 </RepeatButton>
 
                                 <RepeatButton
                                     x:Name="PART_DownButton"
                                     Grid.Row="1"
-                                    Delay="350"
+                                    Delay="200"
                                     Interval="70"
                                     Style="{StaticResource NumericUpDownArrowButtonStyle}">
                                     <components:Icon
                                         x:Name="DownIcon"
-                                        Width="14"
-                                        Height="14"
-                                        Color="{DynamicResource Brush.Text.Secondary}"
-                                        Path="{StaticResource AngleDown}" />
+                                        Width="8"
+                                        Height="8"
+                                        Path="{StaticResource AngleDown}"
+                                        Color="{DynamicResource Brush.Text.Secondary}" />
                                 </RepeatButton>
                             </Grid>
                         </Grid>

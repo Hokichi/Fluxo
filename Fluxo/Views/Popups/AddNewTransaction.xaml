@@ -200,12 +200,11 @@
                                 x:Name="ExpenseTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
                                 Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <TextBox
-                                DataObject.Pasting="OnRecurringDatePasting"
-                                PreviewKeyDown="OnRecurringDatePreviewKeyDown"
-                                PreviewTextInput="OnRecurringDatePreviewTextInput"
-                                Style="{StaticResource RoundedTextInputStyle}"
-                                Text="{Binding RecurringDayText, UpdateSourceTrigger=PropertyChanged}"
+                            <customControls:NumericUpDown
+                                LowerLimit="0"
+                                Step="1"
+                                UpperLimit="28"
+                                Value="{Binding RecurringDayText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </StackPanel>
                     </Grid>
@@ -296,12 +295,11 @@
                                 x:Name="IncomeTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
                                 Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <TextBox
-                                DataObject.Pasting="OnRecurringDatePasting"
-                                PreviewKeyDown="OnRecurringDatePreviewKeyDown"
-                                PreviewTextInput="OnRecurringDatePreviewTextInput"
-                                Style="{StaticResource RoundedTextInputStyle}"
-                                Text="{Binding RecurringDayText, UpdateSourceTrigger=PropertyChanged}"
+                            <customControls:NumericUpDown
+                                LowerLimit="0"
+                                Step="1"
+                                UpperLimit="28"
+                                Value="{Binding RecurringDayText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </StackPanel>
                     </Grid>
@@ -329,12 +327,11 @@
                                 x:Name="GoalTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
                                 Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <TextBox
-                                DataObject.Pasting="OnRecurringDatePasting"
-                                PreviewKeyDown="OnRecurringDatePreviewKeyDown"
-                                PreviewTextInput="OnRecurringDatePreviewTextInput"
-                                Style="{StaticResource RoundedTextInputStyle}"
-                                Text="{Binding RecurringDayText, UpdateSourceTrigger=PropertyChanged}"
+                            <customControls:NumericUpDown
+                                LowerLimit="0"
+                                Step="1"
+                                UpperLimit="28"
+                                Value="{Binding RecurringDayText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </StackPanel>
 

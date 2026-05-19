@@ -3,10 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Popups;
-using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Popups.Settings;
 
 namespace Fluxo.Views.Popups;
@@ -114,54 +112,4 @@ public partial class AddFixedExpensePopup : BasePopup
             _viewModel.SelectedTag = newTag;
     }
 
-    private void OnRecurringDatePreviewKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Space)
-            e.Handled = true;
-    }
-
-    private void OnRecurringDatePreviewTextInput(object sender, TextCompositionEventArgs e)
-    {
-        if (sender is TextBox textBox)
-            e.Handled = !WouldResultInValidRecurringDate(textBox, e.Text);
-    }
-
-    private void OnRecurringDatePasting(object sender, DataObjectPastingEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
-
-        if (!e.SourceDataObject.GetDataPresent(DataFormats.Text))
-        {
-            e.CancelCommand();
-            return;
-        }
-
-        var pastedText = e.SourceDataObject.GetData(DataFormats.Text) as string ?? string.Empty;
-        if (!WouldResultInValidRecurringDate(textBox, pastedText))
-            e.CancelCommand();
-    }
-
-    private static bool WouldResultInValidRecurringDate(TextBox textBox, string incomingText)
-    {
-        if (string.IsNullOrEmpty(incomingText))
-            return true;
-
-        foreach (var character in incomingText)
-            if (!char.IsDigit(character))
-                return false;
-
-        var currentText = textBox.Text ?? string.Empty;
-        var nextText = currentText
-            .Remove(textBox.SelectionStart, textBox.SelectionLength)
-            .Insert(textBox.SelectionStart, incomingText);
-
-        if (nextText.Length == 0)
-            return true;
-
-        if (!int.TryParse(nextText, out var recurringDate))
-            return false;
-
-        return recurringDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
-    }
 }

@@ -11,7 +11,6 @@ using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
-using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.Views.Popups;
 
@@ -416,54 +415,6 @@ public partial class AddNewTransaction : BasePopup
         }
 
         return visibleCount;
-    }
-
-    private void OnRecurringDatePreviewKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Space)
-            e.Handled = true;
-    }
-
-    private void OnRecurringDatePreviewTextInput(object sender, TextCompositionEventArgs e)
-    {
-        if (sender is TextBox textBox)
-            e.Handled = !WouldResultInValidRecurringDate(textBox, e.Text);
-    }
-
-    private void OnRecurringDatePasting(object sender, DataObjectPastingEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
-
-        if (!e.SourceDataObject.GetDataPresent(DataFormats.UnicodeText, true))
-        {
-            e.CancelCommand();
-            return;
-        }
-
-        var pastedText = e.SourceDataObject.GetData(DataFormats.UnicodeText) as string ?? string.Empty;
-        if (!WouldResultInValidRecurringDate(textBox, pastedText))
-            e.CancelCommand();
-    }
-
-    private static bool WouldResultInValidRecurringDate(TextBox textBox, string incomingText)
-    {
-        var candidateText = BuildCandidateText(textBox, incomingText);
-        if (string.IsNullOrWhiteSpace(candidateText))
-            return true;
-
-        if (!int.TryParse(candidateText, out var value))
-            return false;
-
-        return value is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
-    }
-
-    private static string BuildCandidateText(TextBox textBox, string incomingText)
-    {
-        var currentText = textBox.Text ?? string.Empty;
-        var selectionStart = textBox.SelectionStart;
-        var selectionLength = textBox.SelectionLength;
-        return currentText.Remove(selectionStart, selectionLength).Insert(selectionStart, incomingText);
     }
 
 }
