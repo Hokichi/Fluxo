@@ -30,6 +30,7 @@ public partial class QuickAddVM : ObservableObject
     private readonly IAppDataService _appData;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
+    private int _transactionNameSuggestionRequestVersion;
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isExpense = true;
@@ -74,8 +75,10 @@ public partial class QuickAddVM : ObservableObject
     public ObservableCollection<SavingGoalVM> Goals { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
+    public ObservableCollection<QuickAddTransactionSuggestion> TransactionNameSuggestions { get; } = [];
     public bool CanSave => !IsSaving && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+    public bool HasTransactionNameSuggestions => TransactionNameSuggestions.Count > 0;
     public bool ShowRecurringDayInput => IsRecurring;
     public bool ShowDateSelector => !IsRecurring;
     public bool CanToggleRecurring => !IsRecurringModeLocked;
@@ -151,7 +154,11 @@ public partial class QuickAddVM : ObservableObject
     partial void OnIsRecurringModeLockedChanged(bool value) => OnPropertyChanged(nameof(CanToggleRecurring));
     partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
-    partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnNameTextChanged(string value)
+    {
+        NotifyFormStateChanged();
+        _ = RefreshTransactionNameSuggestionsAsync();
+    }
     partial void OnNoteTextChanged(string value) => NotifyFormStateChanged();
     partial void OnSelectedDateChanged(DateTime value) => NotifyFormStateChanged();
     partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
@@ -193,6 +200,7 @@ public partial class QuickAddVM : ObservableObject
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
+        _ = RefreshTransactionNameSuggestionsAsync();
         NotifyFormStateChanged();
     }
 
@@ -207,6 +215,27 @@ public partial class QuickAddVM : ObservableObject
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
+        _ = RefreshTransactionNameSuggestionsAsync();
+        NotifyFormStateChanged();
+    }
+
+    public void ApplyTransactionNameSuggestion(QuickAddTransactionSuggestion suggestion)
+    {
+        NameText = suggestion.Name;
+        AmountText = suggestion.Amount;
+        NoteText = suggestion.Note;
+        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == suggestion.SpendingSourceId) ??
+                                 SelectedSpendingSource;
+
+        if (IsExpense)
+        {
+            SelectedExpenseCategory = suggestion.Category ?? SelectedExpenseCategory;
+            SelectedTag = suggestion.TagId is int tagId
+                ? _orderedTags.FirstOrDefault(tag => tag.Id == tagId) ?? SelectedTag
+                : SelectedTag;
+        }
+
+        ClearTransactionNameSuggestions();
         NotifyFormStateChanged();
     }
 
@@ -386,9 +415,10 @@ public partial class QuickAddVM : ObservableObject
             {
                 var incomeLog = new IncomeLog
                 {
+                    Name = input.Name,
                     Amount = input.Amount,
                     AddedOn = input.Date,
-                    Notes = BuildIncomeNote(input.Name, input.Note),
+                    Notes = input.Note,
                     SpendingSourceId = spendingSource.Id
                 };
 
@@ -402,6 +432,7 @@ public partial class QuickAddVM : ObservableObject
                     new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
                         incomeLog.Id,
                         spendingSource.Id,
+                        incomeLog.Name,
                         incomeLog.Amount,
                         incomeLog.AddedOn,
                         incomeLog.Notes))));
@@ -455,6 +486,7 @@ public partial class QuickAddVM : ObservableObject
         SelectedTag = _orderedTags.FirstOrDefault();
         SelectedGoal = Goals.FirstOrDefault();
         IsMoreTagsOpen = false;
+        ClearTransactionNameSuggestions();
     }
 
     public void SetVisibleTagSlots(int visibleTagSlots)
@@ -616,18 +648,111 @@ public partial class QuickAddVM : ObservableObject
             : $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {trimmedGoalName}";
     }
 
-    private static string BuildIncomeNote(string name, string note)
+    private async Task RefreshTransactionNameSuggestionsAsync()
     {
-        var trimmedName = name.Trim();
-        var trimmedNote = note.Trim();
+        var requestVersion = ++_transactionNameSuggestionRequestVersion;
+        var query = NameText?.Trim() ?? string.Empty;
+        if (query.Length < 3 || IsGoal)
+        {
+            ClearTransactionNameSuggestions();
+            return;
+        }
 
-        if (string.IsNullOrWhiteSpace(trimmedName))
-            return trimmedNote;
+        try
+        {
+            var expenseLogsTask = IsExpense
+                ? _appData.GetExpenseLogsAsync()
+                : Task.FromResult<IReadOnlyList<ExpenseLog>>([]);
+            var incomeLogsTask = IsIncome
+                ? _appData.GetIncomeLogsAsync()
+                : Task.FromResult<IReadOnlyList<IncomeLog>>([]);
 
-        if (string.IsNullOrWhiteSpace(trimmedNote))
-            return trimmedName;
+            await Task.WhenAll(expenseLogsTask, incomeLogsTask);
 
-        return $"{trimmedName}\n{trimmedNote}";
+            if (requestVersion != _transactionNameSuggestionRequestVersion)
+                return;
+
+            var suggestions = BuildTransactionNameSuggestions(
+                expenseLogsTask.Result,
+                incomeLogsTask.Result,
+                IsExpense,
+                query);
+            ReplaceCollection(TransactionNameSuggestions, suggestions);
+            OnPropertyChanged(nameof(HasTransactionNameSuggestions));
+        }
+        catch
+        {
+            if (requestVersion == _transactionNameSuggestionRequestVersion)
+                ClearTransactionNameSuggestions();
+        }
+    }
+
+    private void ClearTransactionNameSuggestions()
+    {
+        _transactionNameSuggestionRequestVersion++;
+
+        if (TransactionNameSuggestions.Count == 0)
+        {
+            OnPropertyChanged(nameof(HasTransactionNameSuggestions));
+            return;
+        }
+
+        TransactionNameSuggestions.Clear();
+        OnPropertyChanged(nameof(HasTransactionNameSuggestions));
+    }
+
+    internal static IEnumerable<QuickAddTransactionSuggestion> BuildTransactionNameSuggestions(
+        IEnumerable<ExpenseLog> expenseLogs,
+        IEnumerable<IncomeLog> incomeLogs,
+        bool isExpense,
+        string query)
+    {
+        var normalizedQuery = query.Trim();
+        if (normalizedQuery.Length < 3)
+            return [];
+
+        return isExpense
+            ? BuildExpenseTransactionNameSuggestions(expenseLogs, normalizedQuery)
+            : BuildIncomeTransactionNameSuggestions(incomeLogs, normalizedQuery);
+    }
+
+    private static IEnumerable<QuickAddTransactionSuggestion> BuildExpenseTransactionNameSuggestions(
+        IEnumerable<ExpenseLog> expenseLogs,
+        string query)
+    {
+        return expenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => !string.IsNullOrWhiteSpace(log.Expense?.Name))
+            .Where(log => log.Expense.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(log => log.DeductedOn)
+            .Select(log => new QuickAddTransactionSuggestion(
+                log.Expense.Name,
+                log.Amount,
+                log.SpendingSourceId,
+                log.SpendingSource?.Name ?? log.Expense.SpendingSource?.Name ?? string.Empty,
+                log.Notes,
+                log.Expense.ExpenseCategory,
+                log.Expense.ExpenseTagId,
+                null));
+    }
+
+    private static IEnumerable<QuickAddTransactionSuggestion> BuildIncomeTransactionNameSuggestions(
+        IEnumerable<IncomeLog> incomeLogs,
+        string query)
+    {
+        return incomeLogs
+            .Where(log => !string.IsNullOrWhiteSpace(log.Name))
+            .Where(log => log.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(log => log.AddedOn)
+            .Select(log => new QuickAddTransactionSuggestion(
+                log.Name,
+                log.Amount,
+                log.SpendingSourceId,
+                log.SpendingSource?.Name ?? string.Empty,
+                log.Notes,
+                null,
+                null,
+                null));
     }
 
     private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
@@ -771,6 +896,16 @@ public partial class QuickAddVM : ObservableObject
     }
 
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
+
+    public sealed record QuickAddTransactionSuggestion(
+        string Name,
+        decimal Amount,
+        int SpendingSourceId,
+        string SpendingSourceName,
+        string Note,
+        ExpenseCategory? Category,
+        int? TagId,
+        DateTime? Date);
 
     public readonly record struct QuickAddSubmissionResult(bool IsSuccess, string? ErrorMessage)
     {

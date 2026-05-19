@@ -77,6 +77,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(log => log.Id).ValueGeneratedOnAdd();
         entity.HasKey(log => log.Id);
 
+        entity.Property(log => log.Name).IsRequired();
         entity.Property(log => log.Amount).HasColumnType("NUMERIC");
         entity.Property(log => log.Notes).IsRequired();
 

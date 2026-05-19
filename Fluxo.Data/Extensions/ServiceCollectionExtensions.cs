@@ -22,7 +22,7 @@ public static class ServiceCollectionExtensions
 
             optionsBuilder.UseSqlite(
                 FluxoDbContextFactory.BuildConnectionString(),
-                sqliteOptions => sqliteOptions.MigrationsAssembly("Fluxo"));
+                sqliteOptions => sqliteOptions.MigrationsAssembly("fluxo"));
 
             if (logService is not null)
             {

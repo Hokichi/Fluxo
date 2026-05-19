@@ -103,9 +103,10 @@ public partial class TransferFundsVM : ObservableObject
 
             var incomeLog = new IncomeLog
             {
+                Name = BuildIncomeName(source.Name),
                 Amount = input.Amount,
                 AddedOn = input.Date,
-                Notes = BuildIncomeNote(source.Name, input.Note),
+                Notes = input.Note,
                 SpendingSourceId = target.Id
             };
 
@@ -139,6 +140,7 @@ public partial class TransferFundsVM : ObservableObject
                         new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
                             incomeLog.Id,
                             target.Id,
+                            incomeLog.Name,
                             incomeLog.Amount,
                             incomeLog.AddedOn,
                             incomeLog.Notes))
@@ -204,12 +206,9 @@ public partial class TransferFundsVM : ObservableObject
             : $"{transferLine}\n{note.Trim()}";
     }
 
-    private static string BuildIncomeNote(string sourceName, string note)
+    private static string BuildIncomeName(string sourceName)
     {
-        var transferLine = $"Transfer from {sourceName}";
-        return string.IsNullOrWhiteSpace(note)
-            ? transferLine
-            : $"{transferLine}\n{note.Trim()}";
+        return $"Transfer from {sourceName}";
     }
 
     private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)

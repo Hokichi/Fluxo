@@ -483,6 +483,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                 .Select(log => new IncomeLogVM
                 {
                     Id = log.Id,
+                    Name = log.Name,
                     Amount = log.Amount,
                     AddedOn = log.AddedOn,
                     Notes = log.Notes,
@@ -1106,6 +1107,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         return new IncomeLogVM
         {
             Id = snapshot.IncomeLogId,
+            Name = snapshot.Name,
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,

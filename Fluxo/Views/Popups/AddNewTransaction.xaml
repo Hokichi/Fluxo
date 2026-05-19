@@ -73,6 +73,76 @@
         <ItemsPanelTemplate x:Key="PopupOverflowTagsItemsPanelTemplate">
             <WrapPanel />
         </ItemsPanelTemplate>
+
+        <Style x:Key="TransactionNameSuggestionListBoxStyle" TargetType="ListBox">
+            <Setter Property="MinWidth" Value="260" />
+            <Setter Property="MaxHeight" Value="220" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        </Style>
+
+        <Style x:Key="TransactionNameSuggestionListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="ItemBackground"
+                            Padding="8,6"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="TransactionNameSuggestionTemplate">
+            <Grid Margin="0,0,0,2" Width="320">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock
+                        FontFamily="{DynamicResource Bold}"
+                        FontSize="13"
+                        Foreground="{DynamicResource Brush.Text.Primary}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontFamily="{DynamicResource Regular}"
+                        FontSize="11"
+                        Foreground="{DynamicResource Brush.Text.Muted}"
+                        Text="{Binding SpendingSourceName}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="12"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="{Binding Amount, StringFormat={}{0:N2}}" />
+            </Grid>
+        </DataTemplate>
     </customControls:BasePopup.Resources>
 
     <Border Padding="20,4,20,20">
@@ -172,11 +242,27 @@
             <Grid Grid.Row="1" Margin="0,16,0,0">
                 <StackPanel Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
-                        <customControls:MoneyTextBox
-                            x:Name="ExpenseAmountTextBox"
-                            Style="{StaticResource RoundedMoneyTextInputStyle}"
-                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
+                        <TextBox
+                            x:Name="ExpenseNameTextBox"
+                            Style="{StaticResource RoundedTextInputStyle}"
+                            Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Popup
+                            x:Name="ExpenseNameSuggestionsPopup"
+                            AllowsTransparency="True"
+                            Placement="Bottom"
+                            PlacementTarget="{Binding ElementName=ExpenseNameTextBox}"
+                            PopupAnimation="Fade"
+                            StaysOpen="False"
+                            VerticalOffset="6">
+                            <ListBox
+                                x:Name="ExpenseNameSuggestionsListBox"
+                                ItemContainerStyle="{StaticResource TransactionNameSuggestionListBoxItemStyle}"
+                                ItemTemplate="{StaticResource TransactionNameSuggestionTemplate}"
+                                ItemsSource="{Binding TransactionNameSuggestions}"
+                                SelectionChanged="OnTransactionNameSuggestionSelectionChanged"
+                                Style="{StaticResource TransactionNameSuggestionListBoxStyle}" />
+                        </Popup>
                     </StackPanel>
 
                     <Grid Margin="0,16,0,0">
@@ -187,11 +273,11 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
-                            <TextBox
-                                x:Name="ExpenseNameTextBox"
-                                Style="{StaticResource RoundedTextInputStyle}"
-                                Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
+                            <customControls:MoneyTextBox
+                                x:Name="ExpenseAmountTextBox"
+                                Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
@@ -257,6 +343,22 @@
                                 x:Name="IncomeNameTextBox"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Popup
+                                x:Name="IncomeNameSuggestionsPopup"
+                                AllowsTransparency="True"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding ElementName=IncomeNameTextBox}"
+                                PopupAnimation="Fade"
+                                StaysOpen="False"
+                                VerticalOffset="6">
+                                <ListBox
+                                    x:Name="IncomeNameSuggestionsListBox"
+                                    ItemContainerStyle="{StaticResource TransactionNameSuggestionListBoxItemStyle}"
+                                    ItemTemplate="{StaticResource TransactionNameSuggestionTemplate}"
+                                    ItemsSource="{Binding TransactionNameSuggestions}"
+                                    SelectionChanged="OnTransactionNameSuggestionSelectionChanged"
+                                    Style="{StaticResource TransactionNameSuggestionListBoxStyle}" />
+                            </Popup>
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">

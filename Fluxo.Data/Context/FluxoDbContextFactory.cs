@@ -11,7 +11,7 @@ public sealed class FluxoDbContextFactory : IDesignTimeDbContextFactory<FluxoDbC
         var optionsBuilder = new DbContextOptionsBuilder<FluxoDbContext>();
         optionsBuilder.UseSqlite(
             BuildConnectionString(),
-            sqliteOptions => sqliteOptions.MigrationsAssembly("Fluxo"));
+            sqliteOptions => sqliteOptions.MigrationsAssembly("fluxo"));
 
         return new FluxoDbContext(optionsBuilder.Options);
     }

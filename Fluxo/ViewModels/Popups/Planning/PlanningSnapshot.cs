@@ -66,6 +66,7 @@ public sealed class PlanningSnapshot
         return new IncomeLogVM
         {
             Id = source.Id,
+            Name = source.Name,
             Amount = source.Amount,
             AddedOn = source.AddedOn,
             Notes = source.Notes,

@@ -267,9 +267,10 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         var incomeLog = new IncomeLog
         {
             SpendingSourceId = targetSource.Id,
+            Name = $"Payment from {deductingSource.Name}",
             Amount = amount,
             AddedOn = processedOn,
-            Notes = $"Payment from {deductingSource.Name}"
+            Notes = string.Empty
         };
         await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
 
@@ -371,9 +372,10 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         await unitOfWork.IncomeLogs.AddAsync(new IncomeLog
         {
             SpendingSourceId = source.Id,
+            Name = recurring.Name,
             Amount = amount,
             AddedOn = DateTime.Now,
-            Notes = recurring.Name
+            Notes = string.Empty
         }, cancellationToken);
         ApplyIncomeToSpendingSource(source, amount);
         unitOfWork.SpendingSources.Update(source);

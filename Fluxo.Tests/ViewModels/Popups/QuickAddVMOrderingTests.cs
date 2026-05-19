@@ -61,4 +61,127 @@ public class QuickAddVMOrderingTests
 
         Assert.Equal([2, 1, 4, 3, 6, 5, 8, 7, 10, 9], ordered);
     }
+
+    [Fact]
+    public void BuildTransactionNameSuggestions_MatchesExpenseNamesAnywhere_AndLoadsExpenseData()
+    {
+        var checking = new SpendingSource { Id = 3, Name = "Checking", IsEnabled = true };
+        var groceries = new ExpenseTag { Id = 7, Name = "Groceries", HexCode = "#22C55E" };
+        var logs = new[]
+        {
+            new ExpenseLog
+            {
+                Id = 20,
+                Amount = 42.50m,
+                DeductedOn = new DateTime(2026, 5, 1),
+                Notes = "weekly",
+                SpendingSourceId = checking.Id,
+                SpendingSource = checking,
+                Expense = new Expense
+                {
+                    Id = 10,
+                    Name = "Market Groceries",
+                    Amount = 42.50m,
+                    ExpenseCategory = ExpenseCategory.Needs,
+                    SpendingSourceId = checking.Id,
+                    SpendingSource = checking,
+                    ExpenseTagId = groceries.Id,
+                    ExpenseTag = groceries
+                }
+            },
+            new ExpenseLog
+            {
+                Id = 21,
+                Amount = 12m,
+                DeductedOn = new DateTime(2026, 5, 2),
+                Notes = "coffee",
+                SpendingSourceId = checking.Id,
+                SpendingSource = checking,
+                Expense = new Expense
+                {
+                    Id = 11,
+                    Name = "Coffee",
+                    Amount = 12m,
+                    ExpenseCategory = ExpenseCategory.Wants,
+                    SpendingSourceId = checking.Id,
+                    SpendingSource = checking,
+                    ExpenseTagId = groceries.Id,
+                    ExpenseTag = groceries
+                }
+            }
+        };
+
+        var suggestions = QuickAddVM.BuildTransactionNameSuggestions(logs, [], isExpense: true, query: "gro").ToList();
+
+        var suggestion = Assert.Single(suggestions);
+        Assert.Equal("Market Groceries", suggestion.Name);
+        Assert.Equal(42.50m, suggestion.Amount);
+        Assert.Equal(3, suggestion.SpendingSourceId);
+        Assert.Equal(ExpenseCategory.Needs, suggestion.Category);
+        Assert.Equal(7, suggestion.TagId);
+        Assert.Equal("weekly", suggestion.Note);
+        Assert.Null(suggestion.Date);
+    }
+
+    [Fact]
+    public void BuildTransactionNameSuggestions_MatchesIncomeNamesAnywhere_AndLoadsIncomeData()
+    {
+        var checking = new SpendingSource { Id = 5, Name = "Checking", IsEnabled = true };
+        var logs = new[]
+        {
+            new IncomeLog
+            {
+                Id = 30,
+                Name = "Monthly Salary",
+                Amount = 3000m,
+                AddedOn = new DateTime(2026, 5, 3),
+                Notes = "May payroll",
+                SpendingSourceId = checking.Id,
+                SpendingSource = checking
+            },
+            new IncomeLog
+            {
+                Id = 31,
+                Name = "Refund",
+                Amount = 14m,
+                AddedOn = new DateTime(2026, 5, 4),
+                Notes = "store",
+                SpendingSourceId = checking.Id,
+                SpendingSource = checking
+            }
+        };
+
+        var suggestions = QuickAddVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sal").ToList();
+
+        var suggestion = Assert.Single(suggestions);
+        Assert.Equal("Monthly Salary", suggestion.Name);
+        Assert.Equal(3000m, suggestion.Amount);
+        Assert.Equal(5, suggestion.SpendingSourceId);
+        Assert.Null(suggestion.Category);
+        Assert.Null(suggestion.TagId);
+        Assert.Equal("May payroll", suggestion.Note);
+        Assert.Null(suggestion.Date);
+    }
+
+    [Fact]
+    public void BuildTransactionNameSuggestions_RequiresAtLeastThreeCharacters()
+    {
+        var logs = new[]
+        {
+            new IncomeLog
+            {
+                Id = 30,
+                Name = "Monthly Salary",
+                Amount = 3000m,
+                AddedOn = new DateTime(2026, 5, 3),
+                Notes = "May payroll",
+                SpendingSourceId = 5,
+                SpendingSource = new SpendingSource { Id = 5, Name = "Checking" }
+            }
+        };
+
+        var suggestions = QuickAddVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sa");
+
+        Assert.Empty(suggestions);
+    }
 }

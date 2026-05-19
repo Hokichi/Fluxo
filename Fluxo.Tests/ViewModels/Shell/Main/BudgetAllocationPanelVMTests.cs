@@ -234,6 +234,7 @@ public class BudgetAllocationPanelVMTests
                 new IncomeLogMemorySnapshot(
                     999,
                     source.Id,
+                    "Bonus",
                     15m,
                     new DateTime(2026, 4, 12),
                     "bonus"))));
@@ -312,6 +313,7 @@ public class BudgetAllocationPanelVMTests
                 (incomeLogs ?? []).Select(log => new IncomeLog
                 {
                     Id = log.Id,
+                    Name = log.Name,
                     Amount = log.Amount,
                     AddedOn = log.AddedOn,
                     Notes = log.Notes,
@@ -433,6 +435,7 @@ public class BudgetAllocationPanelVMTests
             new IncomeLogVM
             {
                 Id = 10,
+                Name = "Refund",
                 Amount = 20m,
                 AddedOn = new DateTime(2026, 4, 12),
                 Notes = "refund",

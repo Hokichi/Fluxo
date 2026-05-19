@@ -58,7 +58,7 @@ public sealed class AppDatabaseMigrationTests
         {
             optionsBuilder.UseSqlite(
                 $"Data Source={databasePath}",
-                sqliteOptions => sqliteOptions.MigrationsAssembly("Fluxo"));
+                sqliteOptions => sqliteOptions.MigrationsAssembly("fluxo"));
         });
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();

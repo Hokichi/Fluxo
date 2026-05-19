@@ -157,6 +157,7 @@ public sealed record ExpenseLogMemorySnapshot(
 public sealed record IncomeLogMemorySnapshot(
     int IncomeLogId,
     int SpendingSourceId,
+    string Name,
     decimal Amount,
     DateTime AddedOn,
     string Notes)
@@ -169,6 +170,7 @@ public sealed record IncomeLogMemorySnapshot(
         return new IncomeLogMemorySnapshot(
             incomeLog.Id,
             incomeLog.SpendingSource.Id,
+            incomeLog.Name,
             incomeLog.Amount,
             incomeLog.AddedOn,
             incomeLog.Notes);
@@ -292,6 +294,7 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
         var incomeLog = new IncomeLog
         {
             Id = snapshot.IncomeLogId,
+            Name = snapshot.Name,
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,

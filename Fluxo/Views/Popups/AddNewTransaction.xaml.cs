@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -55,11 +56,14 @@ public partial class AddNewTransaction : BasePopup
             await _viewModel.EnsureTagsLoadedAsync();
             RecalculateTagLayout();
             SyncMoreTagsPopupState();
+            SyncNameSuggestionsPopupState();
             SyncNoteDocumentFromViewModel();
             _viewModel.BeginChangeTracking();
             FocusPrimaryInput();
         };
 
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        Unloaded += (_, _) => _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         TagsDockPanel.SizeChanged += (_, _) => RecalculateTagLayout();
         PreviewMouseDown += OnPopupPreviewMouseDown;
     }
@@ -144,11 +148,11 @@ public partial class AddNewTransaction : BasePopup
 
         if (_viewModel.IsExpense)
         {
-            ExpenseAmountTextBox.Focus();
+            ExpenseNameTextBox.Focus();
             return;
         }
 
-        IncomeAmountTextBox.Focus();
+        IncomeNameTextBox.Focus();
     }
 
     private void SyncNoteDocumentFromViewModel()
@@ -208,6 +212,29 @@ public partial class AddNewTransaction : BasePopup
         }));
     }
 
+    private void OnTransactionNameSuggestionSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ListBox listBox)
+            return;
+
+        if (listBox.SelectedItem is not QuickAddVM.QuickAddTransactionSuggestion suggestion)
+            return;
+
+        _viewModel.ApplyTransactionNameSuggestion(suggestion);
+        SyncNoteDocumentFromViewModel();
+        listBox.SelectedItem = null;
+        SyncNameSuggestionsPopupState();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(QuickAddVM.HasTransactionNameSuggestions) or
+            nameof(QuickAddVM.IsExpense) or
+            nameof(QuickAddVM.IsGoal) or
+            nameof(QuickAddVM.IsIncome))
+            SyncNameSuggestionsPopupState();
+    }
+
     private void OnMoreTagsButtonChecked(object sender, RoutedEventArgs e) => TryOpenMoreTagsPopup();
 
     private void OnMoreTagsButtonUnchecked(object sender, RoutedEventArgs e) => TryCloseMoreTagsPopup();
@@ -250,6 +277,8 @@ public partial class AddNewTransaction : BasePopup
 
     private void OnPopupPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
+        SyncNameSuggestionsPopupState();
+
         if (!_viewModel.IsMoreTagsOpen || _moreTagsPopupState is not MoreTagsPopupLifecycleState.Open)
             return;
 
@@ -261,6 +290,13 @@ public partial class AddNewTransaction : BasePopup
 
         _viewModel.IsMoreTagsOpen = false;
         TryCloseMoreTagsPopup();
+    }
+
+    private void SyncNameSuggestionsPopupState()
+    {
+        var shouldShow = IsLoaded && _viewModel.HasTransactionNameSuggestions && !_viewModel.IsGoal;
+        ExpenseNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsExpense && ExpenseNameTextBox.IsKeyboardFocusWithin;
+        IncomeNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsIncome && IncomeNameTextBox.IsKeyboardFocusWithin;
     }
 
     private void RecalculateTagLayout()
