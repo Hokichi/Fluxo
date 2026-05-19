@@ -45,6 +45,19 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void RoundedMoneyTextInputStyle_ShowsContentHostWhenFocused_ForEmptyAndZeroStates()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedMoneyTextInputStyle\"", "</Style>");
+
+        Assert.Contains("<Condition Property=\"IsKeyboardFocused\" Value=\"True\" />", styleSection);
+        Assert.Contains("<Condition Property=\"Text\" Value=\"\" />", styleSection);
+        Assert.Contains("<Condition Property=\"IsZeroAmount\" Value=\"True\" />", styleSection);
+        Assert.Contains("TargetName=\"PART_ContentHost\" Property=\"Visibility\" Value=\"Visible\"", styleSection);
+        Assert.Contains("Property=\"Foreground\" Value=\"Transparent\"", styleSection);
+    }
+
+    [Fact]
     public void NumericUpDownStyle_UsesRoundedInputSurface_AndMintHoveredArrowIcons()
     {
         var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));

@@ -87,6 +87,23 @@
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Hidden" />
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True" />
+                                <Condition Property="Text" Value="" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Visible" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True" />
+                                <Condition Property="IsZeroAmount" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="Transparent" />
+                        </MultiTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
                         </Trigger>
