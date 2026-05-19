@@ -310,7 +310,10 @@
                                         TextChanged="OnHeaderSearchTextChanged">
                                         <TextBox.Template>
                                             <ControlTemplate TargetType="TextBox">
-                                                <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                                                <ScrollViewer
+                                                    x:Name="PART_ContentHost"
+                                                    Margin="0"
+                                                    VerticalAlignment="Stretch" />
                                             </ControlTemplate>
                                         </TextBox.Template>
                                     </TextBox>

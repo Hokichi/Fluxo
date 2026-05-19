@@ -5,7 +5,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls">
     <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
         <Setter Property="Height" Value="40" />
-        <Setter Property="Padding" Value="4,6" />
+        <Setter Property="Padding" Value="4,0" />
         <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
@@ -26,7 +26,7 @@
                         <ScrollViewer
                             x:Name="PART_ContentHost"
                             Margin="{TemplateBinding Padding}"
-                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            VerticalAlignment="Stretch" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
@@ -51,6 +51,7 @@
         x:Key="RoundedMoneyTextInputStyle"
         BasedOn="{StaticResource RoundedTextInputStyle}"
         TargetType="{x:Type customControls:MoneyTextBox}">
+        <Setter Property="Padding" Value="4,0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type customControls:MoneyTextBox}">
@@ -64,7 +65,7 @@
                             <TextBlock
                                 x:Name="PlaceholderText"
                                 Margin="12,0,0,0"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                VerticalAlignment="Center"
                                 Foreground="{DynamicResource Brush.Text.Muted}"
                                 IsHitTestVisible="False"
                                 Text="0"
@@ -72,7 +73,7 @@
                             <ScrollViewer
                                 x:Name="PART_ContentHost"
                                 Margin="{TemplateBinding Padding}"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                VerticalAlignment="Stretch" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -166,7 +167,7 @@
                             <TextBox
                                 x:Name="PART_TextBox"
                                 Margin="4,0,0,0"
-                                Padding="4,6"
+                                Padding="4,0"
                                 VerticalContentAlignment="Center"
                                 Background="Transparent"
                                 BorderThickness="0"

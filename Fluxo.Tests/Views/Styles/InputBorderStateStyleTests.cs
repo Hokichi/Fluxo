@@ -58,6 +58,62 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void RoundedTextInputStyle_UsesZeroVerticalPadding_ForCenteredText()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedTextInputStyle\"", "x:Key=\"RoundedMoneyTextInputStyle\"");
+
+        Assert.Contains("<Setter Property=\"Padding\" Value=\"4,0\" />", styleSection);
+        Assert.Contains("VerticalAlignment=\"Stretch\"", styleSection);
+        Assert.DoesNotContain("VerticalAlignment=\"{TemplateBinding VerticalContentAlignment}\"", styleSection);
+    }
+
+    [Fact]
+    public void RoundedMoneyTextInputStyle_UsesZeroVerticalPadding_ForCenteredTextAndPlaceholder()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedMoneyTextInputStyle\"", "x:Key=\"NumericUpDownArrowButtonStyle\"");
+
+        Assert.Contains("<Setter Property=\"Padding\" Value=\"4,0\" />", styleSection);
+        Assert.Contains("VerticalAlignment=\"Stretch\"", styleSection);
+        Assert.Contains("Margin=\"12,0,0,0\"", styleSection);
+        Assert.DoesNotContain("VerticalAlignment=\"{TemplateBinding VerticalContentAlignment}\"", styleSection);
+    }
+
+    [Fact]
+    public void HeaderSearchTextBoxTemplate_StretchesContentHost_ForCenteredText()
+    {
+        var mainWindowXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml"));
+        var textBoxSection = ExtractSection(mainWindowXaml, "x:Name=\"HeaderSearchBox\"", "</TextBox>");
+
+        Assert.Contains("VerticalContentAlignment=\"Center\"", textBoxSection);
+        Assert.Contains("VerticalAlignment=\"Stretch\"", textBoxSection);
+        Assert.DoesNotContain("<ScrollViewer x:Name=\"PART_ContentHost\" Margin=\"0\" />", textBoxSection);
+    }
+
+    [Fact]
+    public void SpendingSourceDetailInlineTextBoxTemplate_StretchesContentHost_ForCenteredText()
+    {
+        var popupXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml"));
+        var styleSection = ExtractSection(popupXaml, "x:Key=\"InlineHeaderTextBoxBaseStyle\"", "x:Key=\"InlineDetailValueTextBoxStyle\"");
+
+        Assert.Contains("<Setter Property=\"VerticalContentAlignment\" Value=\"Center\" />", styleSection);
+        Assert.Contains("VerticalAlignment=\"Stretch\"", styleSection);
+        Assert.DoesNotContain("<ScrollViewer x:Name=\"PART_ContentHost\" Margin=\"0\" />", styleSection);
+    }
+
+    [Fact]
+    public void NumericUpDownInnerTextBox_UsesZeroVerticalPadding_ForCenteredText()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"NumericUpDownStyle\"", "</Style>");
+
+        Assert.Contains("Padding=\"4,0\"", styleSection);
+        Assert.Contains("VerticalContentAlignment=\"Center\"", styleSection);
+        Assert.DoesNotContain("Padding=\"4,6\"", styleSection);
+    }
+
+    [Fact]
     public void NumericUpDownStyle_UsesRoundedInputSurface_AndMintHoveredArrowIcons()
     {
         var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));

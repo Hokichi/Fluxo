@@ -35,7 +35,10 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                        <ScrollViewer
+                            x:Name="PART_ContentHost"
+                            Margin="0"
+                            VerticalAlignment="Stretch" />
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
