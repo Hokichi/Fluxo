@@ -184,7 +184,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             Messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();
-            await LoadAsync();
+            ApplyDashboardSpendingAmountGateState();
 
             BudgetTab.CommitSavedState();
             PersonalizationTab.CommitSavedState();
