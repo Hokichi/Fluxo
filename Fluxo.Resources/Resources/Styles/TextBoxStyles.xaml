@@ -1,6 +1,7 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls">
     <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
         <Setter Property="Height" Value="40" />
@@ -103,4 +104,120 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style x:Key="NumericUpDownArrowButtonStyle" TargetType="RepeatButton">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NumericUpDownStyle" TargetType="{x:Type customControls:NumericUpDown}">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+        <Setter Property="FontFamily" Value="{DynamicResource Medium}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type customControls:NumericUpDown}">
+                    <Border
+                        x:Name="InputRoot"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="28" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox
+                                x:Name="PART_TextBox"
+                                Margin="4,0,0,0"
+                                Padding="4,6"
+                                VerticalContentAlignment="Center"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                CaretBrush="{DynamicResource Brush.Text.Primary}"
+                                Foreground="{TemplateBinding Foreground}"
+                                FontFamily="{TemplateBinding FontFamily}"
+                                FontSize="{TemplateBinding FontSize}" />
+
+                            <Grid Grid.Column="1" Margin="0,0,2,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <RepeatButton
+                                    x:Name="PART_UpButton"
+                                    Grid.Row="0"
+                                    Delay="350"
+                                    Interval="70"
+                                    Style="{StaticResource NumericUpDownArrowButtonStyle}">
+                                    <components:Icon
+                                        x:Name="UpIcon"
+                                        Width="14"
+                                        Height="14"
+                                        Color="{DynamicResource Brush.Text.Secondary}"
+                                        Path="{StaticResource AngleUp}" />
+                                </RepeatButton>
+
+                                <RepeatButton
+                                    x:Name="PART_DownButton"
+                                    Grid.Row="1"
+                                    Delay="350"
+                                    Interval="70"
+                                    Style="{StaticResource NumericUpDownArrowButtonStyle}">
+                                    <components:Icon
+                                        x:Name="DownIcon"
+                                        Width="14"
+                                        Height="14"
+                                        Color="{DynamicResource Brush.Text.Secondary}"
+                                        Path="{StaticResource AngleDown}" />
+                                </RepeatButton>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
+                        </Trigger>
+                        <Trigger Property="Validation.HasError" Value="True">
+                            <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
+                        </Trigger>
+                        <Trigger SourceName="PART_UpButton" Property="IsMouseOver" Value="True">
+                            <Setter TargetName="UpIcon" Property="Color" Value="{StaticResource Brush.Mint}" />
+                        </Trigger>
+                        <Trigger SourceName="PART_DownButton" Property="IsMouseOver" Value="True">
+                            <Setter TargetName="DownIcon" Property="Color" Value="{StaticResource Brush.Mint}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style BasedOn="{StaticResource NumericUpDownStyle}" TargetType="{x:Type customControls:NumericUpDown}" />
 </ResourceDictionary>

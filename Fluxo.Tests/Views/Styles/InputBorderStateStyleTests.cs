@@ -45,6 +45,21 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void NumericUpDownStyle_UsesRoundedInputSurface_AndMintHoveredArrowIcons()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"NumericUpDownStyle\"", "</Style>");
+
+        Assert.Contains("CornerRadius=\"8\"", styleSection);
+        Assert.Contains("Brush.Background.Surface", styleSection);
+        Assert.Contains("Brush.Border.Subtle", styleSection);
+        Assert.Contains("Path=\"{StaticResource AngleUp}\"", styleSection);
+        Assert.Contains("Path=\"{StaticResource AngleDown}\"", styleSection);
+        Assert.Contains("Property=\"IsMouseOver\" Value=\"True\"", styleSection);
+        Assert.Contains("Value=\"{StaticResource Brush.Mint}\"", styleSection);
+    }
+
+    [Fact]
     public void FluxoComboBoxStyle_UsesMintOnFocusWithin_AndDangerOnValidationError()
     {
         var globalStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "GlobalStyles.xaml"));
