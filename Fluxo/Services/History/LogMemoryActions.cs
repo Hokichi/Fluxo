@@ -45,10 +45,7 @@ public sealed record ExpenseMemorySnapshot(
     int TagId,
     string Name,
     decimal Amount,
-    ExpenseKind ExpenseKind,
-    ExpenseCategory ExpenseCategory,
-    int? RecurringDate,
-    bool IsActive)
+    ExpenseCategory ExpenseCategory)
 {
     public static ExpenseMemorySnapshot Create(Expense expense)
     {
@@ -60,10 +57,7 @@ public sealed record ExpenseMemorySnapshot(
             expense.ExpenseTagId,
             expense.Name,
             expense.Amount,
-            expense.ExpenseKind,
-            expense.ExpenseCategory,
-            expense.RecurringDate,
-            expense.IsActive);
+            expense.ExpenseCategory);
     }
 }
 
@@ -132,10 +126,7 @@ public sealed record ExpenseLogMemorySnapshot(
     int ExpenseLogId,
     string ExpenseName,
     decimal Amount,
-    ExpenseKind ExpenseKind,
     ExpenseCategory ExpenseCategory,
-    int? RecurringDate,
-    bool IsActive,
     int SpendingSourceId,
     int TagId,
     DateTime DeductedOn,
@@ -154,10 +145,7 @@ public sealed record ExpenseLogMemorySnapshot(
             expenseLog.Id,
             expenseLog.Expense.Name,
             expenseLog.Amount,
-            expenseLog.Expense.ExpenseKind,
             expenseLog.Expense.ExpenseCategory,
-            expenseLog.Expense.RecurringDate,
-            expenseLog.Expense.IsActive,
             expenseLog.SpendingSource.Id,
             expenseLog.Expense.ExpenseTag.Id,
             expenseLog.DeductedOn,
@@ -241,10 +229,7 @@ public sealed class AddExpenseLogMemoryAction(
             Id = snapshot.ExpenseId,
             Name = snapshot.ExpenseName,
             Amount = snapshot.Amount,
-            ExpenseKind = snapshot.ExpenseKind,
             ExpenseCategory = snapshot.ExpenseCategory,
-            RecurringDate = snapshot.RecurringDate,
-            IsActive = snapshot.IsActive,
             SpendingSourceId = snapshot.SpendingSourceId,
             ExpenseTagId = snapshot.TagId
         };
@@ -379,10 +364,7 @@ public sealed class EditExpenseLogMemoryAction(
 
         expenseLog.Expense.Name = snapshot.ExpenseName;
         expenseLog.Expense.Amount = snapshot.Amount;
-        expenseLog.Expense.ExpenseKind = snapshot.ExpenseKind;
         expenseLog.Expense.ExpenseCategory = snapshot.ExpenseCategory;
-        expenseLog.Expense.RecurringDate = snapshot.RecurringDate;
-        expenseLog.Expense.IsActive = snapshot.IsActive;
         expenseLog.Expense.SpendingSource = targetSpendingSource;
         expenseLog.Expense.ExpenseTag = expenseTag;
 
@@ -569,7 +551,7 @@ public sealed class EditExpenseMemoryAction(
     ExpenseMemorySnapshot before,
     ExpenseMemorySnapshot after) : ILogMemoryAction
 {
-    public string Description => "Edit fixed expense";
+    public string Description => "Edit recurring transaction";
 
     public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -590,10 +572,7 @@ public sealed class EditExpenseMemoryAction(
 
         expense.Name = snapshot.Name;
         expense.Amount = snapshot.Amount;
-        expense.ExpenseKind = snapshot.ExpenseKind;
         expense.ExpenseCategory = snapshot.ExpenseCategory;
-        expense.RecurringDate = snapshot.RecurringDate;
-        expense.IsActive = snapshot.IsActive;
         expense.SpendingSourceId = snapshot.SpendingSourceId;
         expense.ExpenseTagId = snapshot.TagId;
 
@@ -604,7 +583,7 @@ public sealed class EditExpenseMemoryAction(
 
 public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : ILogMemoryAction
 {
-    public string Description => "Delete fixed expense";
+    public string Description => "Delete recurring transaction";
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -622,10 +601,7 @@ public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : 
             Id = snapshot.ExpenseId,
             Name = snapshot.Name,
             Amount = snapshot.Amount,
-            ExpenseKind = snapshot.ExpenseKind,
             ExpenseCategory = snapshot.ExpenseCategory,
-            RecurringDate = snapshot.RecurringDate,
-            IsActive = snapshot.IsActive,
             SpendingSourceId = snapshot.SpendingSourceId,
             ExpenseTagId = snapshot.TagId,
             SpendingSource = spendingSource,

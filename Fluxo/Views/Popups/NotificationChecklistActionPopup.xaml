@@ -56,15 +56,47 @@ Width="500"
                     </StackPanel>
                 </Border>
 
-                <ComboBox
+                <Grid
                     Grid.Row="1"
-                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
                     Margin="0,8,0,0"
-                    DisplayMemberPath="Name"
-                    ItemsSource="{Binding AvailableSources}"
-                    SelectedValue="{Binding SelectedSourceId, Mode=TwoWay}"
-                    SelectedValuePath="Id"
-                    Visibility="{Binding ShowSourceSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    IsEnabled="{Binding AreRecurringFieldsEnabled}"
+                    Visibility="{Binding IsRecurringTransaction, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <customControls:MoneyTextBox
+                        Grid.Column="0"
+                        Style="{StaticResource RoundedMoneyTextInputStyle}"
+                        Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                    <ComboBox
+                        Grid.Column="2"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding AvailableSources}"
+                        SelectedValue="{Binding SelectedSourceId, Mode=TwoWay}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource FluxoComboBoxStyle}" />
+                    <ComboBox
+                        Grid.Column="4"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding AvailableTags}"
+                        SelectedValue="{Binding SelectedTagId, Mode=TwoWay}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource FluxoComboBoxStyle}"
+                        Visibility="{Binding IsRecurringExpense, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <ComboBox
+                        Grid.Column="4"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding AvailableGoals}"
+                        SelectedValue="{Binding SelectedGoalId, Mode=TwoWay}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource FluxoComboBoxStyle}"
+                        Visibility="{Binding IsRecurringGoalUpdate, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </Grid>
             </Grid>
         </DataTemplate>
     </customControls:BasePopup.Resources>

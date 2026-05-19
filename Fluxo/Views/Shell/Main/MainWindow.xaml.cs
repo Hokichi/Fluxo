@@ -916,11 +916,6 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowAddSpendingSource(this);
     }
 
-    public void OpenAddFixedExpensePopup()
-    {
-        _dialogService.ShowAddFixedExpense(this);
-    }
-
     public void OpenAddSavingGoalPopup()
     {
         _dialogService.ShowAddSavingGoal(this);

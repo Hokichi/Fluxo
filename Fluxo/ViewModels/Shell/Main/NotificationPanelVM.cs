@@ -19,6 +19,7 @@ using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
 using System.Text;
+using System.Windows;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
@@ -46,7 +47,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private int _deadlineReminderDays = 7;
     private bool _isBudgetThresholdNotifEnabled = true;
     private bool _isCreditDeadlineNotifEnabled = true;
-    private bool _isFixedExpensesDeductionNotifEnabled;
+    private bool _isRecurringTransactionNotifEnabled;
     private bool _isGoalDeadlineNotifEnabled = true;
     private bool _isLatePaymentNotifEnabled = true;
     private bool _isLowAccountBalanceNotifEnabled;
@@ -57,7 +58,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private decimal _creditUsageWarningPercentage = 0.30m;
     private decimal _investThreshold = 0.2m;
     private decimal _wantsThreshold = 0.3m;
-    private IReadOnlyList<ExpenseVM> _expenses = [];
+    private IReadOnlyList<RecurringTransactionVM> _recurringTransactions = [];
     private IReadOnlyList<ExpenseLogVM> _expenseLogs = [];
     private IReadOnlyList<SpendingSourceVM> _spendingSources = [];
     private IReadOnlyList<SavingGoalVM> _savingGoals = [];
@@ -197,7 +198,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         switch (card.Category)
         {
-            case NotificationGroupCategory.FixedExpenseDue:
+            case NotificationGroupCategory.RecurringTransactionDue:
             case NotificationGroupCategory.UpcomingPayment:
             case NotificationGroupCategory.LatePayment:
                 await OpenChecklistNotificationActionAsync(card);
@@ -249,8 +250,10 @@ public partial class NotificationPanelVM : ObservableRecipient,
     {
         await LoadUserSettingsAsync(cancellationToken);
 
-        _expenses = _mapper.Map<IReadOnlyList<ExpenseVM>>(
-            await _expenseService.GetAllAsync(cancellationToken));
+        _recurringTransactions = _mapper.Map<IReadOnlyList<RecurringTransactionVM>>(
+            _mapper.Map<IReadOnlyList<RecurringTransactionDto>>(
+                await _dataOperationRunner.RunAsync(async (scope, ct) =>
+                    await scope.UnitOfWork.RecurringTransactions.GetAllAsync(ct), cancellationToken)));
         _expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken))
             .Where(log => !log.IsForDeletion).ToList();
@@ -290,7 +293,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         var notifications = new List<NotificationCandidate>();
 
         notifications.AddRange(GetUpcomingCreditDeadlineNotifications());
-        notifications.AddRange(GetUpcomingRecurringPaymentNotifications());
+        notifications.AddRange(GetRecurringTransactionDueNotifications());
         notifications.AddRange(GetGoalDeadlineNotifications());
         notifications.AddRange(GetLatePaymentNotifications());
         notifications.AddRange(GetAutoExpenseNotifications());
@@ -327,29 +330,25 @@ public partial class NotificationPanelVM : ObservableRecipient,
         }
     }
 
-    private IEnumerable<NotificationCandidate> GetUpcomingRecurringPaymentNotifications()
+    private IEnumerable<NotificationCandidate> GetRecurringTransactionDueNotifications()
     {
-        if (!_isFixedExpensesDeductionNotifEnabled)
+        if (!_isRecurringTransactionNotifEnabled)
             yield break;
 
-        foreach (var expense in _expenses.Where(expense =>
-                     expense.IsActive &&
-                     !_hiddenFixedExpenseIds.Contains(expense.Id) &&
-                     expense.ExpenseKind == ExpenseKind.Fixed &&
-                     expense.RecurringDate.HasValue))
+        foreach (var transaction in _recurringTransactions.Where(transaction => transaction.IsEnabled))
         {
-            var recurringDate = MonthlyDueDateHelper.ResolveUpcomingDate(expense.RecurringDate, DateTime.Today);
-            if (!recurringDate.HasValue)
+            var dueDate = MonthlyDueDateHelper.ResolveUpcomingDate(transaction.RecurringDate, DateTime.Today);
+            if (!dueDate.HasValue)
                 continue;
 
-            var upcomingRecurringDate = recurringDate.Value.Date;
-            if ((upcomingRecurringDate - DateTime.Today).Days != _deadlineReminderDays)
+            var upcomingDate = dueDate.Value.Date;
+            if ((upcomingDate - DateTime.Today).Days != _deadlineReminderDays)
                 continue;
 
             yield return new NotificationCandidate(
-                Type: BuildNotificationType($"UpcomingDeduction-{expense.Id}"),
-                Header: $"Upcoming Deduction - {expense.Name}",
-                Message: $"{expense.Name} is scheduled for {upcomingRecurringDate:MMM d}.",
+                Type: BuildNotificationType($"RecurringTransactionDue-{transaction.Id}", upcomingDate),
+                Header: $"Recurring Transaction Due - {transaction.Name}",
+                Message: $"{transaction.Name} is scheduled for {upcomingDate:MMM d}.",
                 Severity: NotificationSeverity.Warning);
         }
     }
@@ -402,31 +401,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private IEnumerable<NotificationCandidate> GetAutoExpenseNotifications()
     {
-        if (!_isFixedExpensesDeductionNotifEnabled)
-            yield break;
-
-        var autoExpensesDueToday = _expenses
-            .Where(expense =>
-                expense.IsActive &&
-                !_hiddenFixedExpenseIds.Contains(expense.Id) &&
-                expense.ExpenseKind == ExpenseKind.Fixed &&
-                MonthlyDueDateHelper.ResolveUpcomingDate(expense.RecurringDate, DateTime.Today)?.Date == DateTime.Today)
-            .Select(expense => expense.Name)
-            .ToList();
-
-        if (autoExpensesDueToday.Count == 0)
-            yield break;
-
-        var expenseSummary = autoExpensesDueToday.Count == 1
-            ? autoExpensesDueToday[0]
-            : $"{autoExpensesDueToday.Count} recurring expenses";
-        var verb = autoExpensesDueToday.Count == 1 ? "its" : "their";
-
-        yield return new NotificationCandidate(
-            Type: BuildNotificationType("AutoExpenseProcessed"),
-            Header: "Auto Expense Processed - Scheduled Expenses",
-            Message: $"{expenseSummary} reached {verb} scheduled date today.",
-            Severity: NotificationSeverity.Success);
+        yield break;
     }
 
     private IEnumerable<NotificationCandidate> GetBudgetThresholdNotifications()
@@ -717,8 +692,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (typeToken.StartsWith("LatePayment", StringComparison.OrdinalIgnoreCase))
             return NotificationCategory.LatePayment;
 
-        if (typeToken.StartsWith("UpcomingDeduction", StringComparison.OrdinalIgnoreCase))
-            return NotificationCategory.UpcomingDeduction;
+        if (typeToken.StartsWith("RecurringTransactionDue", StringComparison.OrdinalIgnoreCase) ||
+            typeToken.StartsWith("UpcomingDeduction", StringComparison.OrdinalIgnoreCase))
+            return NotificationCategory.RecurringTransactionDue;
 
         if (typeToken.StartsWith("LowBalance", StringComparison.OrdinalIgnoreCase))
             return NotificationCategory.LowBalance;
@@ -741,7 +717,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         {
             NotificationCategory.AutoExpenseProcessed => NotificationSeverity.Success,
             NotificationCategory.LatePayment or NotificationCategory.LowBalance => NotificationSeverity.Danger,
-            NotificationCategory.UpcomingPayment or NotificationCategory.UpcomingDeduction or NotificationCategory.GoalDeadline or
+            NotificationCategory.UpcomingPayment or NotificationCategory.RecurringTransactionDue or NotificationCategory.GoalDeadline or
                 NotificationCategory.LowCredit or NotificationCategory.BudgetThreshold => NotificationSeverity.Warning,
             _ => NotificationSeverity.Info
         };
@@ -791,7 +767,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             ParseDecimal(settingsByName, UserSettingNames.CreditUsageWarningPercentage, 0.30m);
         _lowAccountBalancePercentage =
             ParseDecimal(settingsByName, UserSettingNames.LowAccountBalancePercentage, 0.20m);
-        _isFixedExpensesDeductionNotifEnabled =
+        _isRecurringTransactionNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false);
         _isCreditDeadlineNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true);
@@ -805,8 +781,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _isLatePaymentNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsLatePaymentNotifEnabled, true);
 
-        _hiddenFixedExpenseIds.Clear();
-        _hiddenFixedExpenseIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenFixedExpenseIds));
         _hiddenSavingGoalIds.Clear();
         _hiddenSavingGoalIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds));
         _disabledSavingGoalIds.Clear();
@@ -882,7 +856,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         var prefix = card.Category switch
         {
-            NotificationGroupCategory.FixedExpenseDue => "UpcomingDeduction-",
+            NotificationGroupCategory.RecurringTransactionDue => "RecurringTransactionDue-",
             NotificationGroupCategory.UpcomingPayment => "UpcomingPayment-",
             NotificationGroupCategory.LatePayment => "LatePayment-",
             _ => string.Empty
@@ -891,17 +865,16 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (prefix.Length == 0)
             return;
 
-        var isFixedExpenseDue = card.Category == NotificationGroupCategory.FixedExpenseDue;
-        var availableSources = isFixedExpenseDue
-            ? _spendingSources
-                .Where(source => source.IsEnabled)
-                .OrderBy(source => source.SpendingSourceType)
-                .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList()
-            : [];
-        var availableSourceIds = isFixedExpenseDue
-            ? availableSources.Select(source => source.Id).ToHashSet()
-            : new HashSet<int>();
+        var isRecurringDue = card.Category == NotificationGroupCategory.RecurringTransactionDue;
+        var availableSources = _spendingSources
+            .Where(source => source.IsEnabled)
+            .OrderBy(source => source.SpendingSourceType)
+            .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var tagVm = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
+            _mapper.Map<IReadOnlyList<ExpenseTagDto>>(
+                await _dataOperationRunner.RunAsync(async (scope, ct) =>
+                    await scope.UnitOfWork.ExpenseTags.GetAllAsync(ct))));
 
         var items = card.Notifications
             .Select(notification => new
@@ -920,21 +893,23 @@ public partial class NotificationPanelVM : ObservableRecipient,
                     Label = item.Notification.Header
                 };
 
-                if (!isFixedExpenseDue)
+                if (!isRecurringDue)
                     return checklistItem;
 
                 checklistItem.RequiresSourceSelection = true;
+                var recurring = _recurringTransactions.FirstOrDefault(transaction => transaction.Id == item.EntityId);
+                checklistItem.RecurringTransactionType = recurring?.Type;
+                checklistItem.Amount = recurring?.Amount ?? 0m;
+                checklistItem.OriginalAmount = checklistItem.Amount;
                 foreach (var source in availableSources)
                     checklistItem.AvailableSources.Add(source);
-
-                var expenseSourceId = _expenses
-                    .FirstOrDefault(expense => expense.Id == item.EntityId)?
-                    .SpendingSource?.Id;
-                checklistItem.SelectedSourceId = expenseSourceId.HasValue &&
-                                                 expenseSourceId.Value > 0 &&
-                                                 availableSourceIds.Contains(expenseSourceId.Value)
-                    ? expenseSourceId.Value
-                    : availableSources.FirstOrDefault()?.Id;
+                foreach (var tag in tagVm)
+                    checklistItem.AvailableTags.Add(tag);
+                foreach (var goal in _savingGoals)
+                    checklistItem.AvailableGoals.Add(goal);
+                checklistItem.SelectedSourceId = recurring?.Source?.Id ?? availableSources.FirstOrDefault()?.Id;
+                checklistItem.SelectedTagId = recurring?.Tag?.Id;
+                checklistItem.SelectedGoalId = recurring?.Goal?.Id;
 
                 return checklistItem;
             })
@@ -948,6 +923,14 @@ public partial class NotificationPanelVM : ObservableRecipient,
         var dialogResult = _dialogService.ShowNotificationChecklistAction(viewModel);
         if (dialogResult != true && !viewModel.DidProceed)
             return;
+
+        foreach (var item in viewModel.Items.Where(item => item.ShouldAskToUpdateAmount))
+        {
+            var choice = _dialogService.ShowQuestion(
+                $"Update the saved recurring amount for {item.Label} to {item.Amount:N2}?",
+                "Update Recurring Amount");
+            item.UpdateRecurringAmount = choice == MessageBoxResult.Yes;
+        }
 
         var decisions = viewModel.ActionDecisions
             .Distinct()
@@ -1204,7 +1187,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         UpcomingPayment = 1,
         GoalDeadline = 2,
         LatePayment = 3,
-        UpcomingDeduction = 4,
+        RecurringTransactionDue = 4,
         LowBalance = 5,
         LowCredit = 6,
         BudgetThreshold = 7,

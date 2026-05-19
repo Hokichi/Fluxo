@@ -245,6 +245,27 @@ public partial class AddSpendingSourceVM : ObservableObject
             }
 
             await _appData.SaveChangesAsync();
+
+            if (!EditingId.HasValue &&
+                spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
+                spendingSource.MonthlyDueDate.HasValue &&
+                spendingSource.DeductSource.HasValue)
+            {
+                var paymentTag = await ResolvePaymentOrTransferTagAsync(_appData);
+                await _appData.AddRecurringTransactionAsync(new RecurringTransaction
+                {
+                    Name = $"Payment to {spendingSource.Name}",
+                    Amount = Math.Max(spendingSource.SpentAmount, 0m),
+                    RecurringDate = spendingSource.MonthlyDueDate.Value,
+                    Type = RecurringTransactionType.Expense,
+                    SourceId = spendingSource.DeductSource.Value,
+                    TagId = paymentTag?.Id,
+                    GoalId = null,
+                    IsEnabled = true
+                });
+                await _appData.SaveChangesAsync();
+            }
+
             var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
             var autoTransactionSnapshot = await TryCreateBalanceUpdateTransactionAsync(
                 _appData,
@@ -320,6 +341,16 @@ public partial class AddSpendingSourceVM : ObservableObject
         return balanceUpdateTag;
     }
 
+    private static async Task<ExpenseTag?> ResolvePaymentOrTransferTagAsync(IAppDataService appData)
+    {
+        var tags = await appData.GetExpenseTagsAsync();
+        return tags
+            .OrderByDescending(tag => string.Equals(tag.Name, "Payment", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(tag => string.Equals(tag.Name, "Transfer", StringComparison.OrdinalIgnoreCase))
+            .ThenBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+    }
+
     private static async Task<ExpenseLogMemorySnapshot?> TryCreateBalanceUpdateTransactionAsync(
         IAppDataService appData,
         SpendingSource spendingSource,
@@ -340,10 +371,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         {
             Name = $"Balance Update",
             Amount = triggerAmount,
-            ExpenseKind = ExpenseKind.Manual,
             ExpenseCategory = ExpenseCategory.Needs,
-            RecurringDate = DateTime.Today.Day,
-            IsActive = false,
             SpendingSourceId = spendingSource.Id,
             ExpenseTagId = balanceUpdateTag.Id
         };
@@ -368,10 +396,7 @@ public partial class AddSpendingSourceVM : ObservableObject
             expenseLog.Id,
             expense.Name,
             expense.Amount,
-            expense.ExpenseKind,
             expense.ExpenseCategory,
-            expense.RecurringDate,
-            expense.IsActive,
             spendingSource.Id,
             balanceUpdateTag.Id,
             expenseLog.DeductedOn,

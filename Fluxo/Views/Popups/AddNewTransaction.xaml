@@ -145,8 +145,20 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
-                            <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                            <CheckBox
+                                Content="Recurring"
+                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                IsEnabled="{Binding CanToggleRecurring}" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBox
+                                DataObject.Pasting="OnRecurringDatePasting"
+                                Margin="0,6,0,0"
+                                PreviewKeyDown="OnRecurringDatePreviewKeyDown"
+                                PreviewTextInput="OnRecurringDatePreviewTextInput"
+                                Style="{StaticResource RoundedTextInputStyle}"
+                                Text="{Binding RecurringDayText, UpdateSourceTrigger=PropertyChanged}"
+                                Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </StackPanel>
                     </Grid>
 
@@ -231,8 +243,20 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
-                            <components:DateSelector x:Name="IncomeTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                            <CheckBox
+                                Content="Recurring"
+                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                IsEnabled="{Binding CanToggleRecurring}" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <components:DateSelector x:Name="IncomeTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBox
+                                DataObject.Pasting="OnRecurringDatePasting"
+                                Margin="0,6,0,0"
+                                PreviewKeyDown="OnRecurringDatePreviewKeyDown"
+                                PreviewTextInput="OnRecurringDatePreviewTextInput"
+                                Style="{StaticResource RoundedTextInputStyle}"
+                                Text="{Binding RecurringDayText, UpdateSourceTrigger=PropertyChanged}"
+                                Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>
@@ -254,8 +278,20 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
-                            <components:DateSelector x:Name="GoalTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                            <CheckBox
+                                Content="Recurring"
+                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                IsEnabled="{Binding CanToggleRecurring}" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <components:DateSelector x:Name="GoalTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBox
+                                DataObject.Pasting="OnRecurringDatePasting"
+                                Margin="0,6,0,0"
+                                PreviewKeyDown="OnRecurringDatePreviewKeyDown"
+                                PreviewTextInput="OnRecurringDatePreviewTextInput"
+                                Style="{StaticResource RoundedTextInputStyle}"
+                                Text="{Binding RecurringDayText, UpdateSourceTrigger=PropertyChanged}"
+                                Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">

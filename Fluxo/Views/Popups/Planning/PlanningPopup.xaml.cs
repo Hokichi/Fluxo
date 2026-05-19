@@ -73,9 +73,7 @@ public partial class PlanningPopup : BasePopup
     {
         _viewModel.Expenses.Add(new ExpenseVM
         {
-            ExpenseCategory = ExpenseCategory.Needs,
-            ExpenseKind = ExpenseKind.Manual,
-            IsActive = true
+            ExpenseCategory = ExpenseCategory.Needs
         });
     }
 
@@ -98,8 +96,8 @@ public partial class PlanningPopup : BasePopup
         }
         catch (Exception ex)
         {
-            FluxoLogManager.LogError(ex, "Unable to import fixed expenses in planning popup.");
-            FluxoMessageBox.Show(this, FluxoLogManager.CreateFailureMessage("import fixed expenses"), "Planning",
+            FluxoLogManager.LogError(ex, "Unable to import recurring expenses in planning popup.");
+            FluxoMessageBox.Show(this, FluxoLogManager.CreateFailureMessage("import recurring expenses"), "Planning",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         finally

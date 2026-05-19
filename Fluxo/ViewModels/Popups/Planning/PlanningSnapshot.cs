@@ -80,10 +80,7 @@ public sealed class PlanningSnapshot
             Id = source.Id,
             Name = source.Name,
             Amount = source.Amount,
-            ExpenseKind = source.ExpenseKind,
             ExpenseCategory = source.ExpenseCategory,
-            RecurringDate = source.RecurringDate,
-            IsActive = source.IsActive,
             ExpenseTag = CopyExpenseTag(source.ExpenseTag),
             SpendingSource = CopySpendingSource(source.SpendingSource)
         };

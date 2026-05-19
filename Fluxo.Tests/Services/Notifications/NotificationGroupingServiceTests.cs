@@ -9,11 +9,11 @@ namespace Fluxo.Tests.Services.Notifications;
 public sealed class NotificationGroupingServiceTests
 {
     [Fact]
-    public void Group_MapsUpcomingDeduction_ToFixedExpenseDue_WithActionCta()
+    public void Group_MapsRecurringTransactionDue_WithActionCta()
     {
         var input = new[]
         {
-            CreateNotification("UpcomingDeduction-1", DateTime.Today, NotificationSeverity.Warning)
+            CreateNotification("RecurringTransactionDue-1", DateTime.Today, NotificationSeverity.Warning)
         };
 
         var sut = new NotificationGroupingService();
@@ -21,7 +21,7 @@ public sealed class NotificationGroupingServiceTests
         var cards = sut.Group(input);
 
         var card = Assert.Single(cards);
-        Assert.Equal(NotificationGroupCategory.FixedExpenseDue, card.Category);
+        Assert.Equal(NotificationGroupCategory.RecurringTransactionDue, card.Category);
         Assert.True(card.HasActionCta);
         Assert.Equal(1, card.Count);
     }

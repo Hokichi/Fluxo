@@ -26,13 +26,19 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         if (prefix.Length == 0)
             return Task.FromResult(false);
 
-        var notificationTypesByEntityId = card.Notifications
-            .Where(notification => TryExtractNotificationEntityId(notification, prefix, out _))
-            .GroupBy(notification => ExtractNotificationEntityId(notification, prefix))
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(notification => notification.Type)
-                    .ToHashSet(StringComparer.Ordinal));
+        var notificationTypesByEntityId = card.Category == NotificationGroupCategory.RecurringTransactionDue
+            ? card.Notifications
+                .Where(notification => TryExtractRecurringEntityId(notification.Type, out _))
+                .GroupBy(notification => ExtractRecurringEntityId(notification.Type))
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(notification => notification.Type).ToHashSet(StringComparer.Ordinal))
+            : card.Notifications
+                .Where(notification => TryExtractNotificationEntityId(notification, prefix, out _))
+                .GroupBy(notification => ExtractNotificationEntityId(notification, prefix))
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(notification => notification.Type).ToHashSet(StringComparer.Ordinal));
 
         var actionableDecisions = decisions
             .Where(decision =>
@@ -65,8 +71,8 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
                         {
                             NotificationGroupCategory.UpcomingPayment or NotificationGroupCategory.LatePayment =>
                                 await ProcessPaymentAsync(unitOfWork, decision.EntityId, ct),
-                            NotificationGroupCategory.FixedExpenseDue =>
-                                await ProcessFixedExpenseAsync(unitOfWork, decision, ct),
+                            NotificationGroupCategory.RecurringTransactionDue =>
+                                await ProcessRecurringTransactionAsync(unitOfWork, decision, ct),
                             _ => false
                         };
 
@@ -159,7 +165,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
     {
         return category switch
         {
-            NotificationGroupCategory.FixedExpenseDue => "UpcomingDeduction-",
+            NotificationGroupCategory.RecurringTransactionDue => "RecurringTransactionDue-",
             NotificationGroupCategory.UpcomingPayment => "UpcomingPayment-",
             NotificationGroupCategory.LatePayment => "LatePayment-",
             _ => string.Empty
@@ -240,10 +246,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         {
             Name = $"Payment to {targetSource.Name}",
             Amount = amount,
-            ExpenseKind = ExpenseKind.Manual,
             ExpenseCategory = ExpenseCategory.Savings,
-            RecurringDate = processedOn.Day,
-            IsActive = false,
             SpendingSourceId = deductingSource.Id,
             ExpenseTagId = paymentTag.Id
         };
@@ -278,37 +281,146 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         return true;
     }
 
-    private static async Task<bool> ProcessFixedExpenseAsync(
+    private static async Task<bool> ProcessRecurringTransactionAsync(
         IUnitOfWork unitOfWork,
         NotificationChecklistActionDecision decision,
         CancellationToken cancellationToken)
     {
-        if (decision.SelectedSourceId is not > 0)
+        var recurring = await unitOfWork.RecurringTransactions.GetByIdAsync(decision.EntityId, cancellationToken);
+        if (recurring is null || decision.Amount is not > 0m || decision.SelectedSourceId is not > 0)
             return false;
 
-        var expense = await unitOfWork.Expenses.GetByExpenseIdAsync(decision.EntityId, cancellationToken);
-        if (expense is null || expense.Amount <= 0m)
+        if (decision.UpdateRecurringAmount)
+        {
+            recurring.Amount = decision.Amount.Value;
+            unitOfWork.RecurringTransactions.Update(recurring);
+        }
+
+        var source = await unitOfWork.SpendingSources.GetByIdAsync(decision.SelectedSourceId.Value, cancellationToken);
+        if (source is null)
             return false;
 
-        var payingSource = await unitOfWork.SpendingSources.GetByIdAsync(decision.SelectedSourceId.Value, cancellationToken);
-        if (payingSource is null)
+        var amount = decision.Amount.Value;
+        return recurring.Type switch
+        {
+            RecurringTransactionType.Expense => await AddRecurringExpenseLogAsync(unitOfWork, recurring, source, amount, decision.SelectedTagId, cancellationToken),
+            RecurringTransactionType.Income => await AddRecurringIncomeLogAsync(unitOfWork, recurring, source, amount, cancellationToken),
+            RecurringTransactionType.GoalUpdate => await AddRecurringGoalUpdateAsync(unitOfWork, recurring, source, amount, decision.SelectedGoalId, cancellationToken),
+            _ => false
+        };
+    }
+
+    private static bool TryExtractRecurringEntityId(string notificationType, out int entityId)
+    {
+        return TryExtractNotificationEntityId(notificationType, "RecurringTransactionDue-", out entityId) ||
+               TryExtractNotificationEntityId(notificationType, "UpcomingDeduction-", out entityId);
+    }
+
+    private static int ExtractRecurringEntityId(string notificationType)
+    {
+        if (TryExtractNotificationEntityId(notificationType, "RecurringTransactionDue-", out var entityId))
+            return entityId;
+        return TryExtractNotificationEntityId(notificationType, "UpcomingDeduction-", out entityId) ? entityId : 0;
+    }
+
+    private static async Task<bool> AddRecurringExpenseLogAsync(
+        IUnitOfWork unitOfWork,
+        RecurringTransaction recurring,
+        SpendingSource source,
+        decimal amount,
+        int? selectedTagId,
+        CancellationToken cancellationToken)
+    {
+        if (selectedTagId is not > 0)
             return false;
 
-        var expenseLog = new ExpenseLog
+        var tag = await unitOfWork.ExpenseTags.GetByIdAsync(selectedTagId.Value, cancellationToken);
+        if (tag is null)
+            return false;
+
+        var expense = new Expense
+        {
+            Name = recurring.Name,
+            Amount = amount,
+            ExpenseCategory = ExpenseCategory.Needs,
+            SpendingSourceId = source.Id,
+            ExpenseTagId = tag.Id
+        };
+        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
+        await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
         {
             Expense = expense,
-            SpendingSourceId = payingSource.Id,
-            Amount = expense.Amount,
+            SpendingSourceId = source.Id,
+            Amount = amount,
             DeductedOn = DateTime.Now,
-            Notes = expense.Name,
+            Notes = recurring.Name,
             IsForDeletion = false
+        }, cancellationToken);
+        ApplyExpenseToSpendingSource(source, amount);
+        unitOfWork.SpendingSources.Update(source);
+        return true;
+    }
+
+    private static async Task<bool> AddRecurringIncomeLogAsync(
+        IUnitOfWork unitOfWork,
+        RecurringTransaction recurring,
+        SpendingSource source,
+        decimal amount,
+        CancellationToken cancellationToken)
+    {
+        await unitOfWork.IncomeLogs.AddAsync(new IncomeLog
+        {
+            SpendingSourceId = source.Id,
+            Amount = amount,
+            AddedOn = DateTime.Now,
+            Notes = recurring.Name
+        }, cancellationToken);
+        ApplyIncomeToSpendingSource(source, amount);
+        unitOfWork.SpendingSources.Update(source);
+        return true;
+    }
+
+    private static async Task<bool> AddRecurringGoalUpdateAsync(
+        IUnitOfWork unitOfWork,
+        RecurringTransaction recurring,
+        SpendingSource source,
+        decimal amount,
+        int? selectedGoalId,
+        CancellationToken cancellationToken)
+    {
+        if (selectedGoalId is not > 0)
+            return false;
+
+        var goal = await unitOfWork.SavingGoals.GetByIdAsync(selectedGoalId.Value, cancellationToken);
+        if (goal is null)
+            return false;
+
+        var goalUpdateTag = await ResolvePaymentTagAsync(unitOfWork, cancellationToken);
+        if (goalUpdateTag is null)
+            return false;
+
+        var expense = new Expense
+        {
+            Name = recurring.Name,
+            Amount = amount,
+            ExpenseCategory = ExpenseCategory.Savings,
+            SpendingSourceId = source.Id,
+            ExpenseTagId = goalUpdateTag.Id
         };
-
-        await unitOfWork.ExpenseLogs.AddAsync(expenseLog, cancellationToken);
-
-        ApplyExpenseToSpendingSource(payingSource, expense.Amount);
-        unitOfWork.SpendingSources.Update(payingSource);
-
+        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
+        await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
+        {
+            Expense = expense,
+            SpendingSourceId = source.Id,
+            Amount = amount,
+            DeductedOn = DateTime.Now,
+            Notes = recurring.Name,
+            IsForDeletion = false
+        }, cancellationToken);
+        goal.CurrentAmount += amount;
+        unitOfWork.SavingGoals.Update(goal);
+        ApplyExpenseToSpendingSource(source, amount);
+        unitOfWork.SpendingSources.Update(source);
         return true;
     }
 

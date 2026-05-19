@@ -127,7 +127,7 @@
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="12"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="Fixed Expenses">
+                                Text="Recurring Transactions">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />

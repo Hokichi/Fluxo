@@ -104,8 +104,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
                 _dialogService.ShowAddSpendingSource(addSpendingSource, this);
                 break;
 
-            case SettingsDialogRequestType.AddFixedExpense when request.Payload is AddFixedExpenseVM addFixedExpense:
-                _dialogService.ShowAddFixedExpense(addFixedExpense, this);
+            case SettingsDialogRequestType.AddRecurringTransaction when request.Payload is QuickAddVM quickAdd:
+                _dialogService.ShowAddNewTransaction(quickAdd, this);
                 break;
 
             case SettingsDialogRequestType.AddSavingGoal when request.Payload is AddSavingGoalVM addSavingGoal:

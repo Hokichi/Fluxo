@@ -48,55 +48,17 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         _spendingSources = spendingSources;
     }
 
-    public AddFixedExpenseVM CreateAddViewModel()
+    public QuickAddVM CreateAddViewModel()
     {
-        var spendingSourcesVm = GetSpendingSourcesOrThrow();
-        return new AddFixedExpenseVM(
-            _mainViewModel,
-            _appData,
-            spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
-            saveDraftAsync: input => SaveDraftExpenseAsync(input, null),
-            loadDraftTagsAsync: _ => Task.FromResult<IReadOnlyList<ExpenseTagVM>>(BuildTagOptions()),
-            createDraftTagAsync: CreateDraftTagAsync);
+        var vm = new QuickAddVM(_mainViewModel, _appData);
+        vm.InitializeRecurringMode(isLocked: true);
+        return vm;
     }
 
-    public async Task<AddFixedExpenseVM> CreateEditViewModelAsync(int id)
+    public async Task<QuickAddVM> CreateEditViewModelAsync(int id)
     {
-        var spendingSourcesVm = GetSpendingSourcesOrThrow();
-
-        if (!_isLoaded)
-            await LoadDraftExpensesAsync();
-
-        if (!_draftExpenses.TryGetValue(id, out var expense))
-            return CreateAddViewModel();
-
-        var vm = new AddFixedExpenseVM(
-            _mainViewModel,
-            _appData,
-            spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
-            saveDraftAsync: input => SaveDraftExpenseAsync(input, expense.Id),
-            loadDraftTagsAsync: _ => Task.FromResult<IReadOnlyList<ExpenseTagVM>>(BuildTagOptions()),
-            createDraftTagAsync: CreateDraftTagAsync)
-        {
-            EditingId = expense.Id
-        };
-        vm.NameText = expense.Name;
-        vm.AmountText = expense.Amount;
-        vm.SelectedCategory = expense.Category;
-        vm.RecurringDateText = MonthlyDueDateHelper.Normalize(expense.RecurringDate)?.ToString(CultureInfo.InvariantCulture) ??
-                               MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
-                               MonthlyDueDateHelper.MinMonthlyDay.ToString(CultureInfo.InvariantCulture);
-        vm.IsActive = expense.IsActive;
-
-        if (expense.SpendingSourceId > 0)
-        {
-            var matchingSource = vm.SpendingSources.FirstOrDefault(s => s.Id == expense.SpendingSourceId);
-            if (matchingSource is not null)
-                vm.SelectedSpendingSource = matchingSource;
-        }
-
-        vm.TagNameText = expense.TagName;
-
+        var vm = new QuickAddVM(_mainViewModel, _appData);
+        await vm.InitializeFromRecurringTransactionAsync(id);
         return vm;
     }
 
@@ -120,8 +82,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
     public async Task ApplyAsync(IAppDataService appData, IReadOnlyDictionary<int, int> sourceIdMap)
     {
-        var existingExpenses = (await appData.GetExpensesAsync())
-            .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
+        var existingRecurring = (await appData.GetRecurringTransactionsAsync())
             .ToDictionary(expense => expense.Id);
 
         foreach (var draft in _draftExpenses.Values.OrderBy(expense => expense.Id))
@@ -134,37 +95,33 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
             var tagId = await ResolveTagIdAsync(appData, draft);
 
-            if (draft.Id > 0 && existingExpenses.TryGetValue(draft.Id, out var persisted))
+            if (draft.Id > 0 && existingRecurring.TryGetValue(draft.Id, out var persisted))
             {
                 persisted.Name = draft.Name;
                 persisted.Amount = draft.Amount;
-                persisted.ExpenseCategory = draft.Category;
-                persisted.RecurringDate = draft.RecurringDate;
-                persisted.SpendingSourceId = mappedSourceId;
-                persisted.ExpenseTagId = tagId;
-                persisted.IsActive = draft.IsActive;
-                appData.UpdateExpense(persisted);
+                persisted.SourceId = mappedSourceId;
+                persisted.TagId = tagId;
+                appData.UpdateRecurringTransaction(persisted);
             }
             else
             {
-                await appData.AddExpenseAsync(new Expense
+                await appData.AddRecurringTransactionAsync(new RecurringTransaction
                 {
                     Name = draft.Name,
                     Amount = draft.Amount,
-                    ExpenseKind = ExpenseKind.Fixed,
-                    ExpenseCategory = draft.Category,
                     RecurringDate = draft.RecurringDate,
-                    SpendingSourceId = mappedSourceId,
-                    ExpenseTagId = tagId,
-                    IsActive = draft.IsActive
+                    Type = RecurringTransactionType.Expense,
+                    SourceId = mappedSourceId,
+                    TagId = tagId,
+                    IsEnabled = true
                 });
             }
         }
 
         foreach (var removedId in _removedPersistedIds)
         {
-            if (existingExpenses.TryGetValue(removedId, out var existing))
-                appData.RemoveExpense(existing);
+            if (existingRecurring.TryGetValue(removedId, out var existing))
+                appData.RemoveRecurringTransaction(existing);
         }
     }
 
@@ -192,26 +149,24 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         }
 
         var tagNamesById = _tagCatalog.Values.ToDictionary(tag => tag.Id, tag => tag.Name);
-        var persistedExpenses = await _appData.GetExpensesAsync();
+        var persistedExpenses = await _appData.GetRecurringTransactionsAsync();
 
         _draftExpenses.Clear();
 
-        foreach (var expense in persistedExpenses.Where(expense => expense.ExpenseKind == ExpenseKind.Fixed))
+        foreach (var expense in persistedExpenses.Where(item => item.Type == RecurringTransactionType.Expense))
         {
             _draftExpenses[expense.Id] = new QuickSetupWizardDraftFixedExpense(
                 expense.Id,
                 expense.Name,
                 expense.Amount,
-                expense.ExpenseCategory,
-                expense.SpendingSourceId,
-                MonthlyDueDateHelper.Normalize(expense.RecurringDate) ??
-                MonthlyDueDateHelper.Normalize(DateTime.Today.Day) ??
-                MonthlyDueDateHelper.MinMonthlyDay,
-                expense.ExpenseTagId,
-                tagNamesById.TryGetValue(expense.ExpenseTagId, out var tagName)
+                ExpenseCategory.Needs,
+                expense.SourceId,
+                expense.RecurringDate,
+                expense.TagId ?? 0,
+                expense.TagId.HasValue && tagNamesById.TryGetValue(expense.TagId.Value, out var tagName)
                     ? tagName
                     : "General",
-                expense.IsActive);
+                expense.IsEnabled);
         }
 
         _removedPersistedIds.Clear();

@@ -1,0 +1,19 @@
+using Fluxo.Core.Enums;
+
+namespace Fluxo.Core.DTO;
+
+public sealed class RecurringTransactionDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public int RecurringDate { get; set; }
+    public RecurringTransactionType Type { get; set; }
+    public int SourceId { get; set; }
+    public int? TagId { get; set; }
+    public int? GoalId { get; set; }
+    public bool IsEnabled { get; set; }
+    public SpendingSourceDto Source { get; set; } = new();
+    public ExpenseTagDto? Tag { get; set; }
+    public SavingGoalDto? Goal { get; set; }
+}

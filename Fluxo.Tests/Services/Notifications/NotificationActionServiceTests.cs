@@ -115,20 +115,13 @@ public sealed class NotificationActionServiceTests
     }
 
     [Fact]
-    public async Task ExecuteChecklistActionAsync_ProcessFixedExpense_UsesSelectedSource_AndClearsNotifications()
+    public async Task ExecuteChecklistActionAsync_ProcessRecurringExpense_UsesSelectedSource_AndClearsNotifications()
     {
         var persistedNotifications = new List<Notification>
         {
-            new() { Id = 1, Type = "UpcomingDeduction-77_20260501", Message = "Rent due", IsCleared = false }
+            new() { Id = 1, Type = "RecurringTransactionDue-77_20260501", Message = "Rent due", IsCleared = false }
         };
-        var expenses = new List<Expense>
-        {
-            new()
-            {
-                Id = 77, Name = "Rent", Amount = 25m, SpendingSourceId = 4, ExpenseTagId = 5,
-                ExpenseKind = ExpenseKind.Manual, ExpenseCategory = ExpenseCategory.Needs, IsActive = true
-            }
-        };
+        var recurring = new List<RecurringTransaction> { new() { Id = 77, Name = "Rent", Amount = 25m, SourceId = 4, TagId = 5, Type = RecurringTransactionType.Expense, IsEnabled = true, RecurringDate = 10 } };
         var spendingSources = new List<SpendingSource>
         {
             new()
@@ -141,23 +134,23 @@ public sealed class NotificationActionServiceTests
             }
         };
         var expenseLogs = new List<ExpenseLog>();
-        var card = BuildChecklistCard(NotificationGroupCategory.FixedExpenseDue, "UpcomingDeduction-77_20260501");
+        var card = BuildChecklistCard(NotificationGroupCategory.RecurringTransactionDue, "RecurringTransactionDue-77_20260501");
 
         var sut = CreateSut(
             persistedNotifications,
             spendingSources: spendingSources,
-            expenses: expenses,
+            recurringTransactions: recurring,
             expenseLogs: expenseLogs,
             expenseTags: [new ExpenseTag { Id = 5, Name = "Needs", HexCode = "#111111" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
             card,
-            [new NotificationChecklistActionDecision(77, NotificationChecklistItemActionType.Process, 8)]);
+            [new NotificationChecklistActionDecision(77, NotificationChecklistItemActionType.Process, 8, 25m, 5)]);
 
         Assert.True(succeeded);
         Assert.Equal(75m, spendingSources.Single(source => source.Id == 8).Balance);
         Assert.Single(expenseLogs);
-        Assert.Equal(77, expenseLogs[0].Expense.Id);
+        Assert.Equal("Rent", expenseLogs[0].Expense.Name);
         Assert.Equal(8, expenseLogs[0].SpendingSourceId);
         Assert.Equal(25m, expenseLogs[0].Amount);
         Assert.True(persistedNotifications[0].IsCleared);
@@ -326,6 +319,7 @@ public sealed class NotificationActionServiceTests
         List<SavingGoal>? persistedGoals = null,
         List<SpendingSource>? spendingSources = null,
         List<Expense>? expenses = null,
+        List<RecurringTransaction>? recurringTransactions = null,
         List<ExpenseLog>? expenseLogs = null,
         List<IncomeLog>? incomeLogs = null,
         List<ExpenseTag>? expenseTags = null)
@@ -333,6 +327,7 @@ public sealed class NotificationActionServiceTests
         persistedGoals ??= [];
         spendingSources ??= [];
         expenses ??= [];
+        recurringTransactions ??= [];
         expenseLogs ??= [];
         incomeLogs ??= [];
         expenseTags ??= [];
@@ -492,6 +487,33 @@ public sealed class NotificationActionServiceTests
                 return Task.FromResult<ExpenseTag?>(expenseTags.FirstOrDefault(tag => tag.Id == id));
             });
 
+        var recurringRepository = Substitute.For<IRecurringTransactionRepository>();
+        recurringRepository.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var id = call.Arg<int>();
+                return Task.FromResult<RecurringTransaction?>(recurringTransactions.FirstOrDefault(item => item.Id == id));
+            });
+        recurringRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IReadOnlyList<RecurringTransaction>>(recurringTransactions.ToList()));
+        recurringRepository
+            .When(repository => repository.Update(Arg.Any<RecurringTransaction>()))
+            .Do(call =>
+            {
+                var updated = call.Arg<RecurringTransaction>();
+                var existing = recurringTransactions.FirstOrDefault(item => item.Id == updated.Id);
+                if (existing is null)
+                {
+                    recurringTransactions.Add(updated);
+                    return;
+                }
+
+                existing.Amount = updated.Amount;
+                existing.SourceId = updated.SourceId;
+                existing.TagId = updated.TagId;
+                existing.GoalId = updated.GoalId;
+            });
+
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.Notifications.Returns(notificationRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);
@@ -500,6 +522,7 @@ public sealed class NotificationActionServiceTests
         unitOfWork.ExpenseLogs.Returns(expenseLogRepository);
         unitOfWork.IncomeLogs.Returns(incomeLogRepository);
         unitOfWork.ExpenseTags.Returns(expenseTagRepository);
+        unitOfWork.RecurringTransactions.Returns(recurringRepository);
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(1));
 

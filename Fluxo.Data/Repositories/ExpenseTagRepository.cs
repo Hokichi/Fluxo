@@ -28,9 +28,7 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
     public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
         CancellationToken cancellationToken = default)
     {
-        var todayDay = DateTime.Today.Day;
         var countsByTagId = await DbContext.Expenses
-            .Where(expense => expense.RecurringDate == todayDay)
             .GroupBy(expense => EF.Property<int>(expense, "ExpenseTagId"))
             .Select(group => new { TagId = group.Key, Count = group.Count() })
             .ToDictionaryAsync(item => item.TagId, item => item.Count, cancellationToken);

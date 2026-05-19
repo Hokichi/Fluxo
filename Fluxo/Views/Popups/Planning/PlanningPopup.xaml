@@ -281,7 +281,7 @@
                                 x:Name="FixedExpenseImportCB"
                                 Margin="0,12,0,14"
                                 Checked="OnImportFixedExpensesChanged"
-                                Content="Import Fixed Expenses"
+                                Content="Import Recurring Expense Templates"
                                 Style="{StaticResource ItemCheckBoxWithContentStyle}"
                                 Unchecked="OnImportFixedExpensesChanged" />
                             <Grid Visibility="{Binding ElementName=FixedExpenseImportCB, Path=IsChecked, Converter={StaticResource BoolToVisibilityConverter}}">

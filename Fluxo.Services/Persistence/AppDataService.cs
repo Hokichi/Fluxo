@@ -183,6 +183,31 @@ public sealed class AppDataService(IUnitOfWork unitOfWork) : IAppDataService
         unitOfWork.SpendingSources.Remove(entity);
     }
 
+    public Task<IReadOnlyList<RecurringTransaction>> GetRecurringTransactionsAsync(CancellationToken cancellationToken = default)
+    {
+        return unitOfWork.RecurringTransactions.GetAllAsync(cancellationToken);
+    }
+
+    public Task<RecurringTransaction?> GetRecurringTransactionByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return unitOfWork.RecurringTransactions.GetByIdAsync(id, cancellationToken);
+    }
+
+    public Task AddRecurringTransactionAsync(RecurringTransaction entity, CancellationToken cancellationToken = default)
+    {
+        return unitOfWork.RecurringTransactions.AddAsync(entity, cancellationToken);
+    }
+
+    public void UpdateRecurringTransaction(RecurringTransaction entity)
+    {
+        unitOfWork.RecurringTransactions.Update(entity);
+    }
+
+    public void RemoveRecurringTransaction(RecurringTransaction entity)
+    {
+        unitOfWork.RecurringTransactions.Remove(entity);
+    }
+
     public Task<IReadOnlyList<Notification>> GetNotificationsAsync(CancellationToken cancellationToken = default)
     {
         return unitOfWork.Notifications.GetAllAsync(cancellationToken);

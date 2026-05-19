@@ -24,7 +24,7 @@ public sealed record QuickSetupWizardFixedExpenseItemVM(
             _ => "Invest"
         },
         expense.SpendingSource?.Name ?? "No source",
-        expense.RecurringDate)
+        null)
     {
     }
 

@@ -11,6 +11,7 @@ using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
+using System.Globalization;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups;
@@ -40,6 +41,9 @@ public partial class QuickAddVM : ObservableObject
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
+    [ObservableProperty] private bool _isRecurring;
+    [ObservableProperty] private string _recurringDayText = string.Empty;
+    [ObservableProperty] private bool _isRecurringModeLocked;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
     [ObservableProperty] private SavingGoalVM? _selectedGoal;
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
@@ -72,6 +76,9 @@ public partial class QuickAddVM : ObservableObject
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
     public bool CanSave => !IsSaving && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+    public bool ShowRecurringDayInput => IsRecurring;
+    public bool ShowDateSelector => !IsRecurring;
+    public bool CanToggleRecurring => !IsRecurringModeLocked;
 
     public void BeginChangeTracking()
     {
@@ -131,6 +138,17 @@ public partial class QuickAddVM : ObservableObject
     public bool HasMoreTags => OverflowTags.Count > 0;
 
     partial void OnAmountTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnIsRecurringChanged(bool value)
+    {
+        if (value && string.IsNullOrWhiteSpace(RecurringDayText))
+            RecurringDayText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ?? "1";
+
+        OnPropertyChanged(nameof(ShowRecurringDayInput));
+        OnPropertyChanged(nameof(ShowDateSelector));
+        NotifyFormStateChanged();
+    }
+    partial void OnRecurringDayTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnIsRecurringModeLockedChanged(bool value) => OnPropertyChanged(nameof(CanToggleRecurring));
     partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
@@ -223,7 +241,46 @@ public partial class QuickAddVM : ObservableObject
 
             var invalidationScope = DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications;
 
-            if (input.IsGoal)
+            if (input.IsRecurring)
+            {
+                if (!TryParseRecurringDay(input.RecurringDayText, out var recurringDay))
+                    return QuickAddSubmissionResult.Failure("Recurring day must be between 1 and 28.");
+
+                var recurringType = input.IsGoal
+                    ? RecurringTransactionType.GoalUpdate
+                    : input.IsExpense
+                        ? RecurringTransactionType.Expense
+                        : RecurringTransactionType.Income;
+
+                RecurringTransaction recurring;
+                if (input.EditingRecurringTransactionId is > 0)
+                {
+                    recurring = await _appData.GetRecurringTransactionByIdAsync(input.EditingRecurringTransactionId.Value) ?? new RecurringTransaction();
+                }
+                else
+                {
+                    recurring = new RecurringTransaction();
+                }
+
+                recurring.Name = input.IsGoal && input.GoalId is not null
+                    ? BuildGoalUpdateName((await _appData.GetSavingGoalByIdAsync(input.GoalId.Value))?.Name ?? string.Empty)
+                    : BuildExpenseName(input.Name, input.Note, input.IsExpense ? "Recurring Expense" : "Recurring Income");
+                recurring.Amount = input.Amount;
+                recurring.RecurringDate = recurringDay;
+                recurring.Type = recurringType;
+                recurring.SourceId = input.SpendingSourceId;
+                recurring.TagId = input.IsExpense ? input.TagId : null;
+                recurring.GoalId = input.IsGoal ? input.GoalId : null;
+                recurring.IsEnabled = true;
+
+                if (input.EditingRecurringTransactionId is > 0)
+                    _appData.UpdateRecurringTransaction(recurring);
+                else
+                    await _appData.AddRecurringTransactionAsync(recurring);
+
+                await _appData.SaveChangesAsync();
+            }
+            else if (input.IsGoal)
             {
                 if (input.GoalId is null)
                     return QuickAddSubmissionResult.Failure("Please choose a goal.");
@@ -240,10 +297,7 @@ public partial class QuickAddVM : ObservableObject
                 {
                     Name = BuildGoalUpdateName(goal.Name),
                     Amount = input.Amount,
-                    ExpenseKind = ExpenseKind.Manual,
                     ExpenseCategory = ExpenseCategory.Savings,
-                    RecurringDate = input.Date.Day,
-                    IsActive = false,
                     SpendingSourceId = spendingSource.Id,
                     ExpenseTagId = goalUpdateTag.Id
                 };
@@ -274,10 +328,7 @@ public partial class QuickAddVM : ObservableObject
                         expenseLog.Id,
                         expense.Name,
                         expenseLog.Amount,
-                        expense.ExpenseKind,
                         expense.ExpenseCategory,
-                        expense.RecurringDate,
-                        expense.IsActive,
                         spendingSource.Id,
                         goalUpdateTag.Id,
                         expenseLog.DeductedOn,
@@ -296,10 +347,7 @@ public partial class QuickAddVM : ObservableObject
                 {
                     Name = BuildExpenseName(input.Name, input.Note, expenseTag.Name),
                     Amount = input.Amount,
-                    ExpenseKind = ExpenseKind.Manual,
                     ExpenseCategory = input.Category!.Value,
-                    RecurringDate = input.Date.Day,
-                    IsActive = false,
                     SpendingSourceId = spendingSource.Id,
                     ExpenseTagId = expenseTag.Id
                 };
@@ -327,10 +375,7 @@ public partial class QuickAddVM : ObservableObject
                         expenseLog.Id,
                         expense.Name,
                         expenseLog.Amount,
-                        expense.ExpenseKind,
                         expense.ExpenseCategory,
-                        expense.RecurringDate,
-                        expense.IsActive,
                         spendingSource.Id,
                         expenseTag.Id,
                         expenseLog.DeductedOn,
@@ -402,6 +447,9 @@ public partial class QuickAddVM : ObservableObject
         NameText = string.Empty;
         NoteText = string.Empty;
         SelectedDate = DateTime.Today;
+        IsRecurring = false;
+        IsRecurringModeLocked = false;
+        RecurringDayText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ?? "1";
         SelectedExpenseCategory = ExpenseCategory.Needs;
         SelectedSpendingSource = SpendingSources.FirstOrDefault();
         SelectedTag = _orderedTags.FirstOrDefault();
@@ -465,10 +513,13 @@ public partial class QuickAddVM : ObservableObject
         input = new QuickTransactionInput(
             IsExpense,
             IsGoal,
+            IsRecurring,
+            _editingRecurringTransactionId,
             NameText.Trim(),
             AmountText,
             SelectedSpendingSource.Id,
             SelectedDate.Date,
+            RecurringDayText.Trim(),
             NoteText.Trim(),
             category,
             tagId,
@@ -634,8 +685,10 @@ public partial class QuickAddVM : ObservableObject
         return new FormState(
             IsExpense,
             IsGoal,
+            IsRecurring,
             NameText ?? string.Empty,
             AmountText,
+            RecurringDayText ?? string.Empty,
             NoteText ?? string.Empty,
             SelectedDate.Date,
             SelectedExpenseCategory,
@@ -747,10 +800,13 @@ public partial class QuickAddVM : ObservableObject
     private readonly record struct QuickTransactionInput(
         bool IsExpense,
         bool IsGoal,
+        bool IsRecurring,
+        int? EditingRecurringTransactionId,
         string Name,
         decimal Amount,
         int SpendingSourceId,
         DateTime Date,
+        string RecurringDayText,
         string Note,
         ExpenseCategory? Category,
         int? TagId,
@@ -759,12 +815,55 @@ public partial class QuickAddVM : ObservableObject
     private readonly record struct FormState(
         bool IsExpense,
         bool IsGoal,
+        bool IsRecurring,
         string NameText,
         decimal AmountText,
+        string RecurringDayText,
         string NoteText,
         DateTime SelectedDate,
         ExpenseCategory SelectedExpenseCategory,
         int SelectedSpendingSourceId,
         int SelectedTagId,
         int SelectedGoalId);
+
+    private int? _editingRecurringTransactionId;
+
+    public void InitializeRecurringMode(bool isLocked)
+    {
+        IsRecurringModeLocked = isLocked;
+        IsRecurring = true;
+    }
+
+    public async Task<bool> InitializeFromRecurringTransactionAsync(int recurringTransactionId, CancellationToken cancellationToken = default)
+    {
+        var recurring = await _appData.GetRecurringTransactionByIdAsync(recurringTransactionId, cancellationToken);
+        if (recurring is null)
+            return false;
+
+        _editingRecurringTransactionId = recurring.Id;
+        IsRecurringModeLocked = true;
+        IsRecurring = true;
+        IsExpense = recurring.Type == RecurringTransactionType.Expense;
+        IsGoal = recurring.Type == RecurringTransactionType.GoalUpdate;
+        NameText = recurring.Name;
+        AmountText = recurring.Amount;
+        RecurringDayText = recurring.RecurringDate.ToString(CultureInfo.InvariantCulture);
+        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == recurring.SourceId) ?? SpendingSources.FirstOrDefault();
+        SelectedTag = recurring.TagId is > 0 ? _orderedTags.FirstOrDefault(tag => tag.Id == recurring.TagId.Value) : _orderedTags.FirstOrDefault();
+        SelectedGoal = recurring.GoalId is > 0 ? Goals.FirstOrDefault(goal => goal.Id == recurring.GoalId.Value) : Goals.FirstOrDefault();
+        return true;
+    }
+
+    private static bool TryParseRecurringDay(string text, out int day)
+    {
+        day = 0;
+        if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+            return false;
+
+        if (parsed < MonthlyDueDateHelper.MinMonthlyDay || parsed > MonthlyDueDateHelper.MaxMonthlyDay)
+            return false;
+
+        day = parsed;
+        return true;
+    }
 }

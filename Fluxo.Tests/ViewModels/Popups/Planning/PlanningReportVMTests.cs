@@ -195,10 +195,7 @@ public class PlanningReportVMTests
             Id = id,
             Name = name,
             Amount = amount ?? id * 100m,
-            ExpenseKind = ExpenseKind.Fixed,
             ExpenseCategory = category,
-            RecurringDate = id,
-            IsActive = true,
             ExpenseTag = new ExpenseTagVM
             {
                 Id = id,

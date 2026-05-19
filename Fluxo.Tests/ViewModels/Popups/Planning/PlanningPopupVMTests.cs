@@ -47,9 +47,9 @@ public class PlanningPopupVMTests
         var appData = Substitute.For<IAppDataService>();
         appData.GetExpensesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Expense>>([
-                CreateExpense(1, ExpenseKind.Fixed, "Rent"),
-                CreateExpense(2, ExpenseKind.Fixed, "Internet"),
-                CreateExpense(3, ExpenseKind.Manual, "Lunch")
+                CreateExpense(1, "Rent"),
+                CreateExpense(2, "Internet"),
+                CreateExpense(3, "Lunch")
             ]));
 
         var vm = CreateVm([], appData);
@@ -57,15 +57,13 @@ public class PlanningPopupVMTests
         {
             Id = 99,
             Name = "One-off",
-            ExpenseKind = ExpenseKind.Manual,
             ExpenseCategory = ExpenseCategory.Wants
         });
 
         await vm.SetImportFixedExpensesAsync(true);
         await vm.SetImportFixedExpensesAsync(true);
 
-        Assert.Equal(3, vm.Expenses.Count);
-        Assert.Equal(2, vm.Expenses.Count(expense => expense.ExpenseKind == ExpenseKind.Fixed));
+        Assert.Equal(4, vm.Expenses.Count);
 
         await vm.SetImportFixedExpensesAsync(false);
 
@@ -74,8 +72,7 @@ public class PlanningPopupVMTests
 
         await vm.SetImportFixedExpensesAsync(true);
 
-        Assert.Equal(3, vm.Expenses.Count);
-        Assert.Equal(2, vm.Expenses.Count(expense => expense.ExpenseKind == ExpenseKind.Fixed));
+        Assert.Equal(4, vm.Expenses.Count);
         await appData.Received(1).GetExpensesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -115,13 +112,13 @@ public class PlanningPopupVMTests
     {
         var snapshot = new PlanningSnapshot(
             [CreateIncome(1, 125m)],
-            [CreateExpenseVm(2, ExpenseKind.Fixed, "Rent")],
+            [CreateExpenseVm(2, "Rent")],
             needsPercent: 40,
             wantsPercent: 30,
             investPercent: 30,
             cachedFixedExpenses: new Dictionary<int, ExpenseVM>
             {
-                [2] = CreateExpenseVm(2, ExpenseKind.Fixed, "Rent")
+                [2] = CreateExpenseVm(2, "Rent")
             },
             importedFixedExpenseIds: [2]);
 
@@ -151,7 +148,7 @@ public class PlanningPopupVMTests
                     throw new InvalidOperationException("Restored VM should reuse cached fixed expenses.");
 
                 return Task.FromResult<IReadOnlyList<Expense>>([
-                    CreateExpense(1, ExpenseKind.Fixed, "Rent")
+                    CreateExpense(1, "Rent")
                 ]);
             });
 
@@ -232,17 +229,14 @@ public class PlanningPopupVMTests
         };
     }
 
-    private static Expense CreateExpense(int id, ExpenseKind kind, string name)
+    private static Expense CreateExpense(int id, string name)
     {
         return new Expense
         {
             Id = id,
             Name = name,
             Amount = id * 100m,
-            ExpenseKind = kind,
             ExpenseCategory = ExpenseCategory.Needs,
-            RecurringDate = id,
-            IsActive = true,
             ExpenseTag = new ExpenseTag
             {
                 Id = id,
@@ -262,17 +256,14 @@ public class PlanningPopupVMTests
         };
     }
 
-    private static ExpenseVM CreateExpenseVm(int id, ExpenseKind kind, string name)
+    private static ExpenseVM CreateExpenseVm(int id, string name)
     {
         return new ExpenseVM
         {
             Id = id,
             Name = name,
             Amount = id * 100m,
-            ExpenseKind = kind,
             ExpenseCategory = ExpenseCategory.Needs,
-            RecurringDate = id,
-            IsActive = true,
             ExpenseTag = new ExpenseTagVM
             {
                 Id = id,

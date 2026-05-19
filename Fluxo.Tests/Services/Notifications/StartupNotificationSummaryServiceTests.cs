@@ -49,11 +49,11 @@ public sealed class StartupNotificationSummaryServiceTests
     }
 
     [Fact]
-    public async Task BuildAsync_FixedExpenseDueSingular_UsesExpenseName()
+    public async Task BuildAsync_RecurringTransactionDueSingular_UsesExpenseName()
     {
         var notifications = new[]
         {
-            CreateNotification("UpcomingDeduction-7_20260501", "Upcoming Deduction - Rent")
+            CreateNotification("RecurringTransactionDue-7_20260501", "Recurring Transaction Due - Rent")
         };
         var sut = CreateSut(notifications);
 
@@ -61,26 +61,26 @@ public sealed class StartupNotificationSummaryServiceTests
 
         Assert.NotNull(summary);
         Assert.Equal("Rent is due", summary!.Message);
-        Assert.Equal(NotificationGroupCategory.FixedExpenseDue, summary.PrimaryGroupCategory);
+        Assert.Equal(NotificationGroupCategory.RecurringTransactionDue, summary.PrimaryGroupCategory);
         Assert.Equal(1, summary.PrimaryGroupItemCount);
-        Assert.Equal("Upcoming Deduction - Rent", summary.PrimaryHeader);
+        Assert.Equal("Recurring Transaction Due - Rent", summary.PrimaryHeader);
         Assert.Equal("Rent", summary.PrimaryEntityName);
     }
 
     [Fact]
-    public async Task BuildAsync_FixedExpenseDuePlural_UsesFixedExpenseMessage()
+    public async Task BuildAsync_RecurringTransactionDuePlural_UsesRecurringMessage()
     {
         var notifications = new[]
         {
-            CreateNotification("UpcomingDeduction-7_20260501", "Upcoming Deduction - Rent"),
-            CreateNotification("UpcomingDeduction-8_20260501", "Upcoming Deduction - Utilities")
+            CreateNotification("RecurringTransactionDue-7_20260501", "Recurring Transaction Due - Rent"),
+            CreateNotification("RecurringTransactionDue-8_20260501", "Recurring Transaction Due - Utilities")
         };
         var sut = CreateSut(notifications);
 
         var summary = await sut.BuildAsync();
 
         Assert.NotNull(summary);
-        Assert.Equal("There are 2 fixed expenses due", summary!.Message);
+        Assert.Equal("There are 2 recurring transactions due", summary!.Message);
     }
 
     [Fact]

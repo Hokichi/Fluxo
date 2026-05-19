@@ -208,8 +208,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         SettingsShared.ReplaceCollection(NotificationSettings,
         [
             new SettingsNotificationOptionVM(
-                "Upcoming fixed expense reminders",
-                "Warn before recurring fixed expenses are due.",
+                "Upcoming recurring transaction reminders",
+                "Warn before recurring transactions are due.",
                 UserSettingNames.IsFixedExpensesDeductionNotifEnabled,
                 SettingsShared.ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false)),
             new SettingsNotificationOptionVM(

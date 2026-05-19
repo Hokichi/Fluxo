@@ -89,8 +89,8 @@ public partial class AddFixedExpenseVM : ObservableObject
     public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
     public ObservableCollection<TagOption> TagOptions { get; } = [];
     public bool IsEditMode => EditingId.HasValue;
-    public string PopupTitle => IsEditMode ? "Edit Fixed Expense" : "Add Fixed Expense";
-    public string HeaderTitle => IsEditMode ? "Edit Fixed Expense" : "Add Fixed Expense";
+    public string PopupTitle => IsEditMode ? "Edit Recurring Transaction" : "Add Recurring Transaction";
+    public string HeaderTitle => IsEditMode ? "Edit Recurring Transaction" : "Add Recurring Transaction";
 
     public string HeaderDescription => IsEditMode
         ? "Update this recurring expense and save the changes."
@@ -241,7 +241,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     public async Task<AddFixedExpenseResult> SaveAsync()
     {
         if (IsBusy)
-            return AddFixedExpenseResult.Failure("A fixed expense is already being saved.");
+            return AddFixedExpenseResult.Failure("A recurring transaction is already being saved.");
 
         if (!TryBuildInput(out var input, out var validationMessage))
             return AddFixedExpenseResult.Failure(validationMessage);
@@ -276,15 +276,13 @@ public partial class AddFixedExpenseVM : ObservableObject
             {
                 var existing = await _appData.GetExpenseByIdAsync(EditingId.Value);
                 if (existing is null)
-                    return AddFixedExpenseResult.Failure("Fixed expense not found.");
+                    return AddFixedExpenseResult.Failure("Recurring transaction not found.");
 
                 existing.Name = input.Name;
                 existing.Amount = input.Amount;
                 existing.ExpenseCategory = input.Category;
-                existing.RecurringDate = input.RecurringDate;
                 existing.SpendingSourceId = spendingSource.Id;
                 existing.ExpenseTagId = tag.Id;
-                existing.IsActive = input.IsActive;
                 _appData.UpdateExpense(existing);
             }
             else
@@ -293,12 +291,9 @@ public partial class AddFixedExpenseVM : ObservableObject
                 {
                     Name = input.Name,
                     Amount = input.Amount,
-                    ExpenseKind = ExpenseKind.Fixed,
                     ExpenseCategory = input.Category,
-                    RecurringDate = input.RecurringDate,
                     SpendingSourceId = spendingSource.Id,
-                    ExpenseTagId = tag.Id,
-                    IsActive = input.IsActive
+                    ExpenseTagId = tag.Id
                 };
                 await _appData.AddExpenseAsync(expense);
             }
@@ -311,8 +306,8 @@ public partial class AddFixedExpenseVM : ObservableObject
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to create this fixed expense.");
-            return AddFixedExpenseResult.Failure(FluxoLogManager.CreateFailureMessage("create fixed expense"));
+            FluxoLogManager.LogError(exception, "Unable to create this recurring transaction.");
+            return AddFixedExpenseResult.Failure(FluxoLogManager.CreateFailureMessage("create recurring transaction"));
         }
         finally
         {

@@ -83,9 +83,9 @@ public sealed class StartupNotificationSummaryService(
     {
         return category switch
         {
-            NotificationGroupCategory.FixedExpenseDue => count == 1
+            NotificationGroupCategory.RecurringTransactionDue => count == 1
                 ? $"{primaryName} is due"
-                : $"There are {count} fixed expenses due",
+                : $"There are {count} recurring transactions due",
             NotificationGroupCategory.UpcomingPayment => count == 1
                 ? $"{primaryName} is due"
                 : $"There are {count} credit cards due",

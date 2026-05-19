@@ -59,7 +59,7 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
         if (!_fixedExpensesLoaded)
         {
             var expenses = await _appData.GetExpensesAsync();
-            foreach (var expense in expenses.Where(expense => expense.ExpenseKind == ExpenseKind.Fixed))
+            foreach (var expense in expenses)
                 _cachedFixedExpenses[expense.Id] = MapExpense(expense);
 
             _fixedExpensesLoaded = true;
@@ -139,10 +139,7 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
             Id = expense.Id,
             Name = expense.Name,
             Amount = expense.Amount,
-            ExpenseKind = expense.ExpenseKind,
             ExpenseCategory = expense.ExpenseCategory,
-            RecurringDate = expense.RecurringDate,
-            IsActive = expense.IsActive,
             ExpenseTag = expense.ExpenseTag is null ? new ExpenseTagVM() : MapExpenseTag(expense.ExpenseTag),
             SpendingSource = expense.SpendingSource is null ? new SpendingSourceVM() : MapSpendingSource(expense.SpendingSource)
         };
@@ -238,7 +235,7 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
         for (var index = Expenses.Count - 1; index >= 0; index--)
         {
             var expense = Expenses[index];
-            if (_importedFixedExpenseIds.Contains(expense.Id) && expense.ExpenseKind == ExpenseKind.Fixed)
+            if (_importedFixedExpenseIds.Contains(expense.Id))
                 Expenses.RemoveAt(index);
         }
 

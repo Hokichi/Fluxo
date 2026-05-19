@@ -43,8 +43,11 @@ public sealed class NotificationGroupingService : INotificationGroupingService
     {
         var typeToken = type.Split('_')[0];
 
+        if (typeToken.StartsWith("RecurringTransactionDue", StringComparison.OrdinalIgnoreCase))
+            return NotificationGroupCategory.RecurringTransactionDue;
+
         if (typeToken.StartsWith("UpcomingDeduction", StringComparison.OrdinalIgnoreCase))
-            return NotificationGroupCategory.FixedExpenseDue;
+            return NotificationGroupCategory.RecurringTransactionDue;
 
         if (typeToken.StartsWith("UpcomingPayment", StringComparison.OrdinalIgnoreCase))
             return NotificationGroupCategory.UpcomingPayment;
@@ -75,7 +78,7 @@ public sealed class NotificationGroupingService : INotificationGroupingService
 
     private static bool IsActionable(NotificationGroupCategory category)
     {
-        return category is NotificationGroupCategory.FixedExpenseDue
+        return category is NotificationGroupCategory.RecurringTransactionDue
             or NotificationGroupCategory.UpcomingPayment
             or NotificationGroupCategory.LatePayment
             or NotificationGroupCategory.GoalDeadline
@@ -119,7 +122,7 @@ public sealed class NotificationGroupingService : INotificationGroupingService
 
         var label = category switch
         {
-            NotificationGroupCategory.FixedExpenseDue => "Fixed Expense Due",
+            NotificationGroupCategory.RecurringTransactionDue => "Recurring Transaction Due",
             NotificationGroupCategory.UpcomingPayment => "Upcoming Payment",
             NotificationGroupCategory.LatePayment => "Late Payment",
             NotificationGroupCategory.GoalDeadline => "Goal Deadline",
@@ -145,7 +148,7 @@ public sealed class NotificationGroupingService : INotificationGroupingService
         return category switch
         {
             NotificationGroupCategory.AppUpdate => newest.Message,
-            NotificationGroupCategory.FixedExpenseDue => $"{suffix}: {newest.Message}",
+            NotificationGroupCategory.RecurringTransactionDue => $"{suffix}: {newest.Message}",
             NotificationGroupCategory.UpcomingPayment => $"{suffix}: {newest.Message}",
             NotificationGroupCategory.LatePayment => $"{suffix}: {newest.Message}",
             NotificationGroupCategory.GoalDeadline => $"{suffix}: {newest.Message}",

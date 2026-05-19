@@ -67,17 +67,33 @@ public sealed class NotificationChecklistActionPopupLayoutTests
     }
 
     [Fact]
-    public void ProcessActionSourceSelector_UsesExpectedBindings()
+    public void RecurringActionFields_UseExpectedBindings()
     {
         var document = LoadPopupXaml();
         var template = GetChecklistItemTemplate(document);
-        var comboBox = Assert.Single(template.Descendants().Where(element => element.Name.LocalName == "ComboBox"));
+        var recurringGrid = Assert.Single(template.Descendants().Where(element =>
+            element.Name.LocalName == "Grid" &&
+            (string?)element.Attribute("IsEnabled") == "{Binding AreRecurringFieldsEnabled}"));
 
-        Assert.Equal("{Binding AvailableSources}", (string?)comboBox.Attribute("ItemsSource"));
-        Assert.Equal("{Binding SelectedSourceId, Mode=TwoWay}", (string?)comboBox.Attribute("SelectedValue"));
-        Assert.Equal("Id", (string?)comboBox.Attribute("SelectedValuePath"));
-        Assert.Equal("Name", (string?)comboBox.Attribute("DisplayMemberPath"));
-        Assert.Equal("{Binding ShowSourceSelector, Converter={StaticResource BoolToVisibilityConverter}}", (string?)comboBox.Attribute("Visibility"));
+        Assert.Equal(
+            "{Binding IsRecurringTransaction, Converter={StaticResource BoolToVisibilityConverter}}",
+            (string?)recurringGrid.Attribute("Visibility"));
+
+        var comboBoxes = recurringGrid.Descendants().Where(element => element.Name.LocalName == "ComboBox").ToList();
+        Assert.Equal(3, comboBoxes.Count);
+
+        var sourceCombo = Assert.Single(comboBoxes.Where(element => (string?)element.Attribute("ItemsSource") == "{Binding AvailableSources}"));
+        Assert.Equal("{Binding SelectedSourceId, Mode=TwoWay}", (string?)sourceCombo.Attribute("SelectedValue"));
+        Assert.Equal("Id", (string?)sourceCombo.Attribute("SelectedValuePath"));
+        Assert.Equal("Name", (string?)sourceCombo.Attribute("DisplayMemberPath"));
+
+        var tagCombo = Assert.Single(comboBoxes.Where(element => (string?)element.Attribute("ItemsSource") == "{Binding AvailableTags}"));
+        Assert.Equal("{Binding SelectedTagId, Mode=TwoWay}", (string?)tagCombo.Attribute("SelectedValue"));
+        Assert.Equal("{Binding IsRecurringExpense, Converter={StaticResource BoolToVisibilityConverter}}", (string?)tagCombo.Attribute("Visibility"));
+
+        var goalCombo = Assert.Single(comboBoxes.Where(element => (string?)element.Attribute("ItemsSource") == "{Binding AvailableGoals}"));
+        Assert.Equal("{Binding SelectedGoalId, Mode=TwoWay}", (string?)goalCombo.Attribute("SelectedValue"));
+        Assert.Equal("{Binding IsRecurringGoalUpdate, Converter={StaticResource BoolToVisibilityConverter}}", (string?)goalCombo.Attribute("Visibility"));
     }
 
     [Fact]

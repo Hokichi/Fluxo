@@ -25,11 +25,6 @@ public partial class QuickAddPopup : BasePopup
         OpenSelectedPopup(mainWindow => mainWindow.OpenAddSavingGoalPopup());
     }
 
-    private void OnNewFixedExpenseClick(object sender, RoutedEventArgs e)
-    {
-        OpenSelectedPopup(mainWindow => mainWindow.OpenAddFixedExpensePopup());
-    }
-
     private void OpenSelectedPopup(Action<MainWindow> openPopupAction)
     {
         if (Owner is not MainWindow ownerWindow)

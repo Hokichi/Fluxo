@@ -85,7 +85,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<UserSettingsVM>();
         services.AddTransient<QuickAddVM>();
         services.AddTransient<AddSpendingSourceVM>();
-        services.AddTransient<AddFixedExpenseVM>();
         services.AddTransient<AddSavingGoalVM>();
         services.AddTransient<NotificationChecklistActionVM>();
         services.AddTransient<GoalDeadlineActionVM>();
@@ -115,7 +114,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<QuickAddPopup>();
         services.AddTransient<SpendingSourcesListPopup>();
         services.AddTransient<AddSpendingSourcePopup>();
-        services.AddTransient<AddFixedExpensePopup>();
         services.AddTransient<AddSavingGoalPopup>();
         services.AddTransient<NotificationChecklistActionPopup>();
         services.AddTransient<GoalDeadlineActionPopup>();

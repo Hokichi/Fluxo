@@ -12,6 +12,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<ExpenseTag> ExpenseTags => Set<ExpenseTag>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<SpendingSource> SpendingSources => Set<SpendingSource>();
+    public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
@@ -23,6 +24,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureExpenseTag(modelBuilder.Entity<ExpenseTag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
         ConfigureSpendingSource(modelBuilder.Entity<SpendingSource>());
+        ConfigureRecurringTransaction(modelBuilder.Entity<RecurringTransaction>());
         ConfigureNotification(modelBuilder.Entity<Notification>());
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
         ConfigureReferenceAutoIncludes(modelBuilder);
@@ -136,6 +138,34 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(notification => notification.CreatedOn);
         entity.Property(notification => notification.IsCleared);
         entity.Property(notification => notification.IsForDeletion);
+    }
+
+    private static void ConfigureRecurringTransaction(EntityTypeBuilder<RecurringTransaction> entity)
+    {
+        entity.ToTable("RecurringTransactions");
+        entity.Property(transaction => transaction.Id).ValueGeneratedOnAdd();
+        entity.HasKey(transaction => transaction.Id);
+
+        entity.Property(transaction => transaction.Name).IsRequired();
+        entity.Property(transaction => transaction.Amount).HasColumnType("NUMERIC");
+        entity.Property(transaction => transaction.RecurringDate);
+        entity.Property(transaction => transaction.Type);
+        entity.Property(transaction => transaction.IsEnabled);
+
+        entity.HasOne(transaction => transaction.Source)
+            .WithMany()
+            .HasForeignKey(transaction => transaction.SourceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(transaction => transaction.Tag)
+            .WithMany()
+            .HasForeignKey(transaction => transaction.TagId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(transaction => transaction.Goal)
+            .WithMany()
+            .HasForeignKey(transaction => transaction.GoalId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 
     private static void ConfigureUserSettings(EntityTypeBuilder<UserSettings> entity)

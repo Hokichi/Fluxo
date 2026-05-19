@@ -125,8 +125,6 @@
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="16" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <Button Grid.Row="0" Grid.Column="0" Click="OnNewSpendingSourceClick" Style="{StaticResource QuickAddTileButtonStyle}">
@@ -175,7 +173,7 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Row="2" Grid.Column="0" Click="OnNewSavingGoalClick" Style="{StaticResource QuickAddTileButtonStyle}">
+                <Button Grid.Row="0" Grid.Column="0" Margin="0,136,0,0" Click="OnNewSavingGoalClick" Style="{StaticResource QuickAddTileButtonStyle}">
                     <StackPanel VerticalAlignment="Center">
                         <components:Icon Width="24" Height="24" HorizontalAlignment="Center" Path="{StaticResource BullseyeSolid}" Color="{DynamicResource Brush.Mint}" />
                         <TextBlock
@@ -198,28 +196,6 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Row="2" Grid.Column="2" Click="OnNewFixedExpenseClick" Style="{StaticResource QuickAddTileButtonStyle}">
-                    <StackPanel VerticalAlignment="Center">
-                        <components:Icon Width="24" Height="24" HorizontalAlignment="Center" Path="{StaticResource Calendar}" Color="{DynamicResource Brush.Mint}" />
-                        <TextBlock
-                            Margin="0,12,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{DynamicResource Bold}"
-                            FontSize="13"
-                            Foreground="{DynamicResource Brush.Text.Primary}"
-                            Text="New Fixed Expenses"
-                            TextAlignment="Center" />
-                        <TextBlock
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{DynamicResource Medium}"
-                            FontSize="11"
-                            Foreground="{DynamicResource Brush.Text.Secondary}"
-                            Text="Create recurring bills and dues."
-                            TextAlignment="Center"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Button>
             </Grid>
         </Grid>
     </Border>

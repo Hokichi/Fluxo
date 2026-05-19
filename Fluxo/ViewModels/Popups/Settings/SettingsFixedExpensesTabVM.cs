@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,7 +7,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
-using Fluxo.Services.History;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
@@ -59,44 +57,25 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         IsFixedExpenseChecksEnabled = false;
     }
 
-    public AddFixedExpenseVM CreateAddFixedExpenseViewModel()
+    public QuickAddVM CreateAddFixedExpenseViewModel()
     {
-        return new AddFixedExpenseVM(_mainViewModel, _appData);
+        var viewModel = new QuickAddVM(_mainViewModel, _appData);
+        viewModel.InitializeRecurringMode(isLocked: true);
+        return viewModel;
     }
 
-    public async Task<AddFixedExpenseVM?> CreateEditFixedExpenseViewModelAsync(int fixedExpenseId)
+    public async Task<QuickAddVM?> CreateEditFixedExpenseViewModelAsync(int fixedExpenseId)
     {
-        var expense = await _appData.GetExpenseByIdAsync(fixedExpenseId);
-        if (expense is null)
-            return null;
-
-        var viewModel = new AddFixedExpenseVM(_mainViewModel, _appData, forceIncludeSpendingSourceId: expense.SpendingSourceId)
-        {
-            EditingId = expense.Id,
-            NameText = expense.Name,
-            AmountText = expense.Amount,
-            SelectedCategory = expense.ExpenseCategory,
-            RecurringDateText = expense.RecurringDate?.ToString(CultureInfo.InvariantCulture) ??
-                                string.Empty,
-            IsActive = expense.IsActive,
-            TagNameText = expense.ExpenseTag?.Name ?? "General"
-        };
-
-        if (expense.SpendingSourceId > 0)
-        {
-            var matchingSource = viewModel.SpendingSources.FirstOrDefault(source => source.Id == expense.SpendingSourceId);
-            if (matchingSource is not null)
-                viewModel.SelectedSpendingSource = matchingSource;
-        }
-
-        return viewModel;
+        var viewModel = new QuickAddVM(_mainViewModel, _appData);
+        await viewModel.EnsureTagsLoadedAsync();
+        return await viewModel.InitializeFromRecurringTransactionAsync(fixedExpenseId) ? viewModel : null;
     }
 
     public async Task OpenAddFixedExpenseAsync()
     {
         _messenger.Send(new SettingsDialogRequestedMessage(
             new SettingsDialogRequest(
-                SettingsDialogRequestType.AddFixedExpense,
+                SettingsDialogRequestType.AddRecurringTransaction,
                 CreateAddFixedExpenseViewModel())));
         await RefreshFixedExpensesAsync(resetPagination: false);
     }
@@ -109,7 +88,7 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
 
         _messenger.Send(new SettingsDialogRequestedMessage(
             new SettingsDialogRequest(
-                SettingsDialogRequestType.AddFixedExpense,
+                SettingsDialogRequestType.AddRecurringTransaction,
                 viewModel)));
 
         await RefreshFixedExpensesAsync(resetPagination: false);
@@ -145,30 +124,20 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         var selectedItemIds = selectedIds.ToHashSet();
         var selectedItems = FixedExpenses.Where(item => selectedItemIds.Contains(item.Id)).ToArray();
         if (selectedItems.Length == 0)
-            return SettingsOperationResult.Failure("Select at least one fixed expense first.");
-
-        var actions = new List<ILogMemoryAction>();
+            return SettingsOperationResult.Failure("Select at least one recurring transaction first.");
 
         try
         {
             switch (action)
             {
                 case SettingsBatchAction.Delete:
-                    var expenseLogs = await _appData.GetExpenseLogsAsync();
-
                     foreach (var selectedItem in selectedItems)
                     {
-                        if (expenseLogs.Any(log => log.ExpenseId == selectedItem.Id && !log.IsForDeletion))
-                            return SettingsOperationResult.Failure(
-                                $"{selectedItem.Name} still has logged activity, so it can't be deleted yet.");
-
-                        var expense = await _appData.GetExpenseByIdAsync(selectedItem.Id);
-                        if (expense is null)
+                        var recurring = await _appData.GetRecurringTransactionByIdAsync(selectedItem.Id);
+                        if (recurring is null)
                             continue;
 
-                        var snapshot = ExpenseMemorySnapshot.Create(expense);
-                        _appData.RemoveExpense(expense);
-                        actions.Add(new DeleteExpenseMemoryAction(snapshot));
+                        _appData.RemoveRecurringTransaction(recurring);
                     }
 
                     break;
@@ -177,45 +146,21 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
                 case SettingsBatchAction.Enable:
                     foreach (var selectedItem in selectedItems)
                     {
-                        var expense = await _appData.GetExpenseByIdAsync(selectedItem.Id);
-                        if (expense is null)
+                        var recurring = await _appData.GetRecurringTransactionByIdAsync(selectedItem.Id);
+                        if (recurring is null)
                             continue;
-
-                        var beforeSnapshot = ExpenseMemorySnapshot.Create(expense);
-                        var updated = false;
-
-                        if (action == SettingsBatchAction.Disable && expense.IsActive)
-                        {
-                            expense.IsActive = false;
-                            updated = true;
-                        }
-                        else if (action == SettingsBatchAction.Enable && !expense.IsActive)
-                        {
-                            expense.IsActive = true;
-                            updated = true;
-                        }
-
-                        if (!updated)
-                            continue;
-
-                        _appData.UpdateExpense(expense);
-                        var afterSnapshot = ExpenseMemorySnapshot.Create(expense);
-                        actions.Add(new EditExpenseMemoryAction(beforeSnapshot, afterSnapshot));
+                        recurring.IsEnabled = action == SettingsBatchAction.Enable;
+                        _appData.UpdateRecurringTransaction(recurring);
                     }
-
                     break;
 
                 case SettingsBatchAction.Hide:
                 case SettingsBatchAction.Unhide:
                     return SettingsOperationResult.Failure(
-                        "Hide and unhide are no longer supported for fixed expenses.");
+                        "Hide and unhide are no longer supported for recurring transactions.");
             }
 
-            if (actions.Count == 0)
-                return SettingsOperationResult.Failure("Nothing changed for the selected fixed expenses.");
-
             await _appData.SaveChangesAsync();
-            SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.FixedExpenses));
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
@@ -226,9 +171,9 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to update selected fixed expenses from settings.");
+            FluxoLogManager.LogError(exception, "Unable to update selected recurring transactions from settings.");
             return SettingsOperationResult.Failure(
-                FluxoLogManager.CreateFailureMessage("update selected fixed expenses"));
+                FluxoLogManager.CreateFailureMessage("update selected recurring transactions"));
         }
     }
 
@@ -248,10 +193,9 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
 
     public async Task RefreshFixedExpensesAsync(bool resetPagination = true)
     {
-        SettingsShared.ReplaceCollection(FixedExpenses, (await _appData.GetExpensesAsync())
-            .Where(expense => expense.ExpenseKind == ExpenseKind.Fixed)
-            .OrderBy(expense => expense.Name)
-            .Select(expense => new SettingsFixedExpenseItemVM(expense)));
+        SettingsShared.ReplaceCollection(FixedExpenses, (await _appData.GetRecurringTransactionsAsync())
+            .OrderBy(transaction => transaction.Name)
+            .Select(transaction => new SettingsFixedExpenseItemVM(transaction)));
 
         AttachSelectableItemHandlers(FixedExpenses);
         if (resetPagination)

@@ -3,7 +3,7 @@ namespace Fluxo.ViewModels.Shell.Main;
 public enum NotificationGroupCategory
 {
     Other = 0,
-    FixedExpenseDue = 1,
+    RecurringTransactionDue = 1,
     UpcomingPayment = 2,
     LatePayment = 3,
     GoalDeadline = 4,

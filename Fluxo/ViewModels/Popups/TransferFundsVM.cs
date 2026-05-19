@@ -86,10 +86,7 @@ public partial class TransferFundsVM : ObservableObject
             {
                 Name = $"Transfer to {target.Name}",
                 Amount = input.Amount,
-                ExpenseKind = ExpenseKind.Manual,
                 ExpenseCategory = ExpenseCategory.Savings,
-                RecurringDate = input.Date.Day,
-                IsActive = false,
                 SpendingSourceId = source.Id,
                 ExpenseTagId = expenseTag.Id
             };
@@ -133,10 +130,7 @@ public partial class TransferFundsVM : ObservableObject
                             expenseLog.Id,
                             expense.Name,
                             expenseLog.Amount,
-                            expense.ExpenseKind,
                             expense.ExpenseCategory,
-                            expense.RecurringDate,
-                            expense.IsActive,
                             source.Id,
                             expenseTag.Id,
                             expenseLog.DeductedOn,

@@ -34,10 +34,6 @@ public interface IDialogService
 
     bool? ShowAddSpendingSource(AddSpendingSourceVM viewModel, Window? owner = null);
 
-    bool? ShowAddFixedExpense(Window? owner = null);
-
-    bool? ShowAddFixedExpense(AddFixedExpenseVM viewModel, Window? owner = null);
-
     bool? ShowAddSavingGoal(Window? owner = null);
 
     bool? ShowAddSavingGoal(AddSavingGoalVM viewModel, Window? owner = null);

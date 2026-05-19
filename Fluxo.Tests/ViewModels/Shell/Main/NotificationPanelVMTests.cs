@@ -27,7 +27,7 @@ public class NotificationPanelVMTests
     {
         var card = new NotificationItemVM
         {
-            Category = NotificationGroupCategory.FixedExpenseDue,
+            Category = NotificationGroupCategory.RecurringTransactionDue,
             Notifications = [],
             Header = "Header",
             Message = "Message",

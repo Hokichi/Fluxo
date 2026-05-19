@@ -31,23 +31,8 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
         if (!string.IsNullOrWhiteSpace(filter.Name))
             query = query.Where(e => e.Name.Contains(filter.Name));
 
-        if (filter.StartDate.HasValue)
-        {
-            var startDay = Math.Clamp(filter.StartDate.Value.Day, 1, 28);
-            query = query.Where(e => e.RecurringDate >= startDay);
-        }
-
-        if (filter.EndDate.HasValue)
-        {
-            var endDay = Math.Clamp(filter.EndDate.Value.Day, 1, 28);
-            query = query.Where(e => e.RecurringDate <= endDay);
-        }
-
         if (filter.Category.HasValue)
             query = query.Where(e => e.ExpenseCategory == filter.Category);
-
-        if (filter.Kind.HasValue)
-            query = query.Where(e => e.ExpenseKind == filter.Kind);
 
         if (filter.TagId.HasValue)
             query = query.Where(e => e.ExpenseTagId == filter.TagId);

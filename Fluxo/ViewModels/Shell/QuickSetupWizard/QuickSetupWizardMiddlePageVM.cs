@@ -64,7 +64,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     public string CurrentStepTitle => _currentStepIndex switch
     {
         2 => "Add spending sources",
-        3 => "Add fixed expenses",
+        3 => "Add recurring transactions",
         4 => "Add savings goals",
         5 => "Budget allocation",
         6 => "Preferences",
@@ -74,7 +74,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     public string CurrentStepDescription => _currentStepIndex switch
     {
         2 => "Add the accounts and sources you spend from most often.",
-        3 => "Add recurring fixed expenses so fluxo can account for them upfront.",
+        3 => "Add recurring transactions so fluxo can account for them upfront.",
         4 => "Add a few goals to start tracking progress right away.",
         5 => "Split your budget into Needs, Wants, and Invest.",
         6 => "Choose which reminders and alerts fluxo should show.",

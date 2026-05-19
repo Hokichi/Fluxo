@@ -13,6 +13,7 @@ public sealed class EntityDtoProfile : Profile
         CreateMap<ExpenseTag, ExpenseTagDto>().ReverseMap();
         CreateMap<IncomeLog, IncomeLogDto>().ReverseMap();
         CreateMap<SavingGoal, SavingGoalDto>().ReverseMap();
+        CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap();
         CreateMap<UserSettings, UserSettingsDto>().ReverseMap();
 
         // SpendingSource: ignore computed fields when mapping Entity→DTO,

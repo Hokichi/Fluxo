@@ -2,8 +2,10 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
+using Fluxo.Services.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -26,6 +28,7 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IExpenseTagRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<ISavingGoalRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<ISpendingSourceRepository>(services, ServiceLifetime.Scoped);
+        AssertLifetime<IRecurringTransactionRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<INotificationRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IUserSettingsRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<Expense>>(services, ServiceLifetime.Scoped);
@@ -34,9 +37,19 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IRepository<ExpenseTag>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<SavingGoal>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<SpendingSource>>(services, ServiceLifetime.Scoped);
+        AssertLifetime<IRepository<RecurringTransaction>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<Notification>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IDataOperationScopeFactory>(services, ServiceLifetime.Singleton);
         AssertLifetime<IDataOperationRunner>(services, ServiceLifetime.Singleton);
+
+        services.AddScoped<IAppDataService, AppDataService>();
+        using var provider = services.BuildServiceProvider();
+
+        var recurringRepository = provider.GetService<IRecurringTransactionRepository>();
+        Assert.NotNull(recurringRepository);
+
+        var appData = provider.GetRequiredService<IAppDataService>();
+        Assert.NotNull(appData.GetRecurringTransactionsAsync());
     }
 
     private static void AssertLifetime<TService>(

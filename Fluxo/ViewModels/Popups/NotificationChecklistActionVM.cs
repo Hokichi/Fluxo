@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Fluxo.Core.Enums;
 
 namespace Fluxo.ViewModels.Popups;
 
@@ -34,7 +35,11 @@ public partial class NotificationChecklistActionVM : ObservableObject
             .Select(item => new NotificationChecklistActionDecision(
                 item.EntityId,
                 item.SelectedAction,
-                item.SelectedSourceId))
+                item.SelectedSourceId,
+                item.IsRecurringTransaction ? item.Amount : null,
+                item.IsRecurringExpense ? item.SelectedTagId : null,
+                item.IsRecurringGoalUpdate ? item.SelectedGoalId : null,
+                item.UpdateRecurringAmount))
             .ToList();
 
     public bool CanProceed => Items.Any(IsActionExecutable);
@@ -82,7 +87,10 @@ public partial class NotificationChecklistActionVM : ObservableObject
     {
         if (!string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedAction), StringComparison.Ordinal) &&
             !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedSourceId), StringComparison.Ordinal) &&
-            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.RequiresSourceSelection), StringComparison.Ordinal))
+            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.RequiresSourceSelection), StringComparison.Ordinal) &&
+            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.Amount), StringComparison.Ordinal) &&
+            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedTagId), StringComparison.Ordinal) &&
+            !string.Equals(e.PropertyName, nameof(NotificationChecklistActionItemVM.SelectedGoalId), StringComparison.Ordinal))
             return;
 
         OnPropertyChanged(nameof(CanProceed));
@@ -96,11 +104,24 @@ public partial class NotificationChecklistActionVM : ObservableObject
         if (item.SelectedAction == NotificationChecklistItemActionType.Ignore)
             return false;
 
-        if (item.SelectedAction == NotificationChecklistItemActionType.Process &&
-            item.RequiresSourceSelection &&
-            item.SelectedSourceId is null)
+        if (item.SelectedAction != NotificationChecklistItemActionType.Process)
+            return true;
+
+        if ((item.RequiresSourceSelection || item.IsRecurringTransaction) && item.SelectedSourceId is null)
             return false;
 
-        return true;
+        if (!item.IsRecurringTransaction)
+            return true;
+
+        if (item.Amount <= 0m)
+            return false;
+
+        return item.RecurringTransactionType switch
+        {
+            RecurringTransactionType.Expense => item.SelectedTagId.HasValue,
+            RecurringTransactionType.Income => true,
+            RecurringTransactionType.GoalUpdate => item.SelectedGoalId.HasValue,
+            _ => !item.RequiresSourceSelection || item.SelectedSourceId.HasValue
+        };
     }
 }

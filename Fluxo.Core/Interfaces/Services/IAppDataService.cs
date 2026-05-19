@@ -47,6 +47,12 @@ public interface IAppDataService
     void UpdateSpendingSource(SpendingSource entity);
     void RemoveSpendingSource(SpendingSource entity);
 
+    Task<IReadOnlyList<RecurringTransaction>> GetRecurringTransactionsAsync(CancellationToken cancellationToken = default);
+    Task<RecurringTransaction?> GetRecurringTransactionByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task AddRecurringTransactionAsync(RecurringTransaction entity, CancellationToken cancellationToken = default);
+    void UpdateRecurringTransaction(RecurringTransaction entity);
+    void RemoveRecurringTransaction(RecurringTransaction entity);
+
     Task<IReadOnlyList<Notification>> GetNotificationsAsync(CancellationToken cancellationToken = default);
     Task<Notification?> GetNotificationByIdAsync(int id, CancellationToken cancellationToken = default);
     Task AddNotificationAsync(Notification entity, CancellationToken cancellationToken = default);

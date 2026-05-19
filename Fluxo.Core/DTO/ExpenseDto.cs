@@ -11,8 +11,5 @@ public class ExpenseDto
     public ExpenseTagDto ExpenseTag { get; set; } = new();
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
-    public ExpenseKind ExpenseKind { get; set; }
     public ExpenseCategory ExpenseCategory { get; set; }
-    public int? RecurringDate { get; set; }
-    public bool IsActive { get; set; }
 }

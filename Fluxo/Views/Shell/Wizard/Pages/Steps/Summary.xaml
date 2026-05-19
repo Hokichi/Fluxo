@@ -21,7 +21,7 @@
             </StackPanel>
         </Border>
 
-        <!--  Spending Sources / Fixed Expenses / Savings Goals  -->
+        <!--  Spending Sources / Recurring Transactions / Savings Goals  -->
         <Grid Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -71,7 +71,7 @@
                         FontFamily="{StaticResource Medium}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Fixed Expenses" />
+                        Text="Recurring Transactions" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"

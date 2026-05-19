@@ -55,7 +55,7 @@ xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=Pres
         </DataTemplate>
     </UserControl.Resources>
 
-    <!--  Step 3: Fixed Expenses  -->
+    <!--  Step 3: Recurring Transactions  -->
     <StackPanel Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}">
         <ItemsControl
             ItemContainerStyle="{StaticResource WizardFixedExpensesItemContainerStyle}"

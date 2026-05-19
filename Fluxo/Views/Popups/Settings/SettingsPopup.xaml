@@ -59,7 +59,7 @@
                     x:Name="FixedExpensesTabButton"
                     GroupName="SettingsTabs"
                     Style="{StaticResource TabButtonStyle}"
-                    Tag="Fixed Expenses">
+                    Tag="Recurring Transactions">
                     <components:Icon
                         Width="12"
                         Path="{StaticResource InvoiceLight}"

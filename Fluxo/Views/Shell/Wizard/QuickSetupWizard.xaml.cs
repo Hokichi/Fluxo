@@ -197,7 +197,7 @@ public partial class QuickSetupWizard : BasePopup
 
     public async void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddFixedExpense(_viewModel.MiddlePage.FixedExpenses.CreateAddViewModel(), this);
+        _dialogService.ShowAddNewTransaction(_viewModel.MiddlePage.FixedExpenses.CreateAddViewModel(), this);
         await _viewModel.MiddlePage.FixedExpenses.RefreshAsync();
     }
 
@@ -236,7 +236,7 @@ public partial class QuickSetupWizard : BasePopup
             return;
 
         var vm = await _viewModel.MiddlePage.FixedExpenses.CreateEditViewModelAsync(id);
-        _dialogService.ShowAddFixedExpense(vm, this);
+        _dialogService.ShowAddNewTransaction(vm, this);
         await _viewModel.MiddlePage.FixedExpenses.RefreshAsync();
     }
 
@@ -246,8 +246,8 @@ public partial class QuickSetupWizard : BasePopup
             return;
 
         var result = FluxoMessageBox.Show(this,
-            "Are you sure you want to delete this fixed expense?",
-            "Delete Fixed Expense", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            "Are you sure you want to delete this recurring transaction?",
+            "Delete Recurring Transaction", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)
             await _viewModel.MiddlePage.FixedExpenses.DeleteAsync(id);

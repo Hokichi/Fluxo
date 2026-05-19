@@ -47,10 +47,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
                 ExpenseTagId = dto.ExpenseTagId,
                 Name = dto.Name,
                 Amount = dto.Amount,
-                ExpenseKind = dto.ExpenseKind,
-                ExpenseCategory = dto.ExpenseCategory,
-                RecurringDate = dto.RecurringDate,
-                IsActive = dto.IsActive
+                ExpenseCategory = dto.ExpenseCategory
             };
             await unitOfWork.Expenses.AddAsync(expense, ct);
 

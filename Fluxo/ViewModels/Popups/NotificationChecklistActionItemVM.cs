@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Popups;
@@ -11,8 +12,23 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
     [ObservableProperty] private NotificationChecklistItemActionType _selectedAction = NotificationChecklistItemActionType.Ignore;
     [ObservableProperty] private int? _selectedSourceId;
     [ObservableProperty] private bool _requiresSourceSelection;
+    [ObservableProperty] private RecurringTransactionType? _recurringTransactionType;
+    [ObservableProperty] private decimal _amount;
+    [ObservableProperty] private decimal _originalAmount;
+    [ObservableProperty] private int? _selectedTagId;
+    [ObservableProperty] private int? _selectedGoalId;
+    [ObservableProperty] private bool _updateRecurringAmount;
 
     public ObservableCollection<SpendingSourceVM> AvailableSources { get; } = [];
+    public ObservableCollection<ExpenseTagVM> AvailableTags { get; } = [];
+    public ObservableCollection<SavingGoalVM> AvailableGoals { get; } = [];
+
+    public bool IsRecurringTransaction => RecurringTransactionType.HasValue;
+    public bool IsRecurringExpense => RecurringTransactionType == Core.Enums.RecurringTransactionType.Expense;
+    public bool IsRecurringIncome => RecurringTransactionType == Core.Enums.RecurringTransactionType.Income;
+    public bool IsRecurringGoalUpdate => RecurringTransactionType == Core.Enums.RecurringTransactionType.GoalUpdate;
+    public bool AreRecurringFieldsEnabled => SelectedAction == NotificationChecklistItemActionType.Process;
+    public bool ShouldAskToUpdateAmount => AreRecurringFieldsEnabled && Amount != OriginalAmount;
 
     public bool IsIgnoreSelected
     {
@@ -45,7 +61,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
     }
 
     public bool ShowSourceSelector =>
-        RequiresSourceSelection && SelectedAction != NotificationChecklistItemActionType.Ignore;
+        (RequiresSourceSelection && SelectedAction != NotificationChecklistItemActionType.Ignore) || IsRecurringTransaction;
 
     public bool IsSelected
     {
@@ -62,10 +78,24 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
         OnPropertyChanged(nameof(IsProcessSelected));
         OnPropertyChanged(nameof(ShowSourceSelector));
         OnPropertyChanged(nameof(IsSelected));
+        OnPropertyChanged(nameof(AreRecurringFieldsEnabled));
+        OnPropertyChanged(nameof(ShouldAskToUpdateAmount));
     }
 
     partial void OnRequiresSourceSelectionChanged(bool value)
     {
         OnPropertyChanged(nameof(ShowSourceSelector));
     }
+
+    partial void OnRecurringTransactionTypeChanged(RecurringTransactionType? value)
+    {
+        OnPropertyChanged(nameof(IsRecurringTransaction));
+        OnPropertyChanged(nameof(IsRecurringExpense));
+        OnPropertyChanged(nameof(IsRecurringIncome));
+        OnPropertyChanged(nameof(IsRecurringGoalUpdate));
+        OnPropertyChanged(nameof(ShowSourceSelector));
+    }
+
+    partial void OnAmountChanged(decimal value) => OnPropertyChanged(nameof(ShouldAskToUpdateAmount));
+    partial void OnOriginalAmountChanged(decimal value) => OnPropertyChanged(nameof(ShouldAskToUpdateAmount));
 }

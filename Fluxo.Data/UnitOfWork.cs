@@ -12,6 +12,7 @@ public sealed class UnitOfWork(
     IExpenseTagRepository expenseTags,
     ISavingGoalRepository savingGoals,
     ISpendingSourceRepository spendingSources,
+    IRecurringTransactionRepository recurringTransactions,
     INotificationRepository notifications,
     IUserSettingsRepository userSettings) : IUnitOfWork
 {
@@ -23,6 +24,7 @@ public sealed class UnitOfWork(
     public IExpenseTagRepository ExpenseTags { get; } = expenseTags;
     public ISavingGoalRepository SavingGoals { get; } = savingGoals;
     public ISpendingSourceRepository SpendingSources { get; } = spendingSources;
+    public IRecurringTransactionRepository RecurringTransactions { get; } = recurringTransactions;
     public INotificationRepository Notifications { get; } = notifications;
     public IUserSettingsRepository UserSettings { get; } = userSettings;
 

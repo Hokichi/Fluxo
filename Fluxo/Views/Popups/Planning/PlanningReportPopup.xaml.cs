@@ -327,9 +327,7 @@ public partial class PlanningReportPopup : BasePopup
     {
         _viewModel.AddExpense(new ExpenseVM
         {
-            ExpenseCategory = ExpenseCategory.Needs,
-            ExpenseKind = ExpenseKind.Manual,
-            IsActive = true
+            ExpenseCategory = ExpenseCategory.Needs
         });
 
         QueueScrollToBottom(ExpenseScrollViewer);

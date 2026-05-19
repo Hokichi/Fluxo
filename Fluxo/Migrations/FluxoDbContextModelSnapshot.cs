@@ -29,21 +29,12 @@ namespace Fluxo.Migrations
                     b.Property<int>("ExpenseCategory")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ExpenseKind")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("ExpenseTagId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("RecurringDate")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("SpendingSourceId")
                         .HasColumnType("INTEGER");
@@ -171,6 +162,48 @@ namespace Fluxo.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("Fluxo.Core.Entities.RecurringTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("NUMERIC");
+
+                    b.Property<int?>("GoalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RecurringDate")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TagId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoalId");
+
+                    b.HasIndex("SourceId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("RecurringTransactions", (string)null);
                 });
 
             modelBuilder.Entity("Fluxo.Core.Entities.SavingGoal", b =>
@@ -306,6 +339,31 @@ namespace Fluxo.Migrations
                         .IsRequired();
 
                     b.Navigation("SpendingSource");
+                });
+
+            modelBuilder.Entity("Fluxo.Core.Entities.RecurringTransaction", b =>
+                {
+                    b.HasOne("Fluxo.Core.Entities.SavingGoal", "Goal")
+                        .WithMany()
+                        .HasForeignKey("GoalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Fluxo.Core.Entities.SpendingSource", "Source")
+                        .WithMany()
+                        .HasForeignKey("SourceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Fluxo.Core.Entities.ExpenseTag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Goal");
+
+                    b.Navigation("Source");
+
+                    b.Navigation("Tag");
                 });
 #pragma warning restore 612, 618
         }
