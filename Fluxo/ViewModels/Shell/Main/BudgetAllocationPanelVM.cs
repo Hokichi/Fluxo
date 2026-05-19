@@ -857,13 +857,13 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (direction == LogMemoryApplyDirection.Redo)
         {
             RemoveExpenseLog(snapshot.ExpenseLogId);
-            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
+            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
             RefreshExpenseBucketsFromTrackedLogs();
             return;
         }
 
         UpsertExpenseLog(snapshot);
-        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
+        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
     }
 

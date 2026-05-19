@@ -1000,6 +1000,46 @@
         </Setter>
     </Style>
 
+    <Style
+        x:Key="PopupTagItemRadioStyle"
+        BasedOn="{StaticResource PopupTagToggleStyle}"
+        TargetType="RadioButton">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border
+                        Padding="{TemplateBinding Padding}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="14">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse
+                                x:Name="ColorDot"
+                                Width="6"
+                                Height="6"
+                                VerticalAlignment="Center"
+                                Fill="{Binding HexCode}" />
+                            <TextBlock
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                FontFamily="{TemplateBinding FontFamily}"
+                                FontSize="{TemplateBinding FontSize}"
+                                Foreground="{TemplateBinding Foreground}"
+                                Text="{TemplateBinding Content}" />
+                        </StackPanel>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="ColorDot" Property="Fill" Value="{StaticResource Brush.Background.Surface}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <SolidColorBrush
         x:Key="MainContentViewToggleSelectedBackgroundBrush"
         Opacity="0.16"

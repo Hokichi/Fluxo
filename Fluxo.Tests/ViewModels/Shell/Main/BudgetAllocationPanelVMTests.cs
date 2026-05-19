@@ -205,11 +205,18 @@ public class BudgetAllocationPanelVMTests
             var messenger = new WeakReferenceMessenger();
             var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
             vm.LoadAsync().GetAwaiter().GetResult();
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 10),
+                new DateTime(2026, 4, 18)));
             var targetLog = vm.GetAllExpenseLogs().Single(log => log.Id == 1);
+            var source = vm.SpendingSources.Single();
+
+            Assert.Equal(-175m, source.Difference);
 
             vm.DeleteExpenseLogCommand.ExecuteAsync(targetLog).GetAwaiter().GetResult();
 
             Assert.Equal(2000m, vm.TotalIncomeAmount);
+            Assert.Equal(-130m, source.Difference);
             Assert.DoesNotContain(vm.GetAllExpenseLogs(), log => log.Id == targetLog.Id);
         });
     }

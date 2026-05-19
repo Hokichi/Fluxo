@@ -60,10 +60,11 @@
         </Style>
 
         <DataTemplate x:Key="PopupTagTemplate">
-            <ToggleButton
+            <RadioButton
                 Content="{Binding Name}"
-                IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"
-                Style="{StaticResource PopupTagItemToggleStyle}" />
+                GroupName="AddNewTransactionTags"
+                IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected, Mode=TwoWay}"
+                Style="{StaticResource PopupTagItemRadioStyle}" />
         </DataTemplate>
 
         <ItemsPanelTemplate x:Key="PopupVisibleTagsItemsPanelTemplate">
@@ -245,6 +246,8 @@
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
                         <TextBox
                             x:Name="ExpenseNameTextBox"
+                            GotKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
+                            LostKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
                             Style="{StaticResource RoundedTextInputStyle}"
                             Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <Popup
@@ -341,6 +344,8 @@
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
                             <TextBox
                                 x:Name="IncomeNameTextBox"
+                                GotKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
+                                LostKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <Popup

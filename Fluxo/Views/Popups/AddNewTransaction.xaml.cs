@@ -277,8 +277,6 @@ public partial class AddNewTransaction : BasePopup
 
     private void OnPopupPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        SyncNameSuggestionsPopupState();
-
         if (!_viewModel.IsMoreTagsOpen || _moreTagsPopupState is not MoreTagsPopupLifecycleState.Open)
             return;
 
@@ -295,8 +293,18 @@ public partial class AddNewTransaction : BasePopup
     private void SyncNameSuggestionsPopupState()
     {
         var shouldShow = IsLoaded && _viewModel.HasTransactionNameSuggestions && !_viewModel.IsGoal;
-        ExpenseNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsExpense && ExpenseNameTextBox.IsKeyboardFocusWithin;
-        IncomeNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsIncome && IncomeNameTextBox.IsKeyboardFocusWithin;
+        var isExpenseNameSuggestionFocused =
+            ExpenseNameTextBox.IsKeyboardFocusWithin || ExpenseNameSuggestionsListBox.IsKeyboardFocusWithin;
+        var isIncomeNameSuggestionFocused =
+            IncomeNameTextBox.IsKeyboardFocusWithin || IncomeNameSuggestionsListBox.IsKeyboardFocusWithin;
+
+        ExpenseNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsExpense && isExpenseNameSuggestionFocused;
+        IncomeNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsIncome && isIncomeNameSuggestionFocused;
+    }
+
+    private void OnTransactionNameTextBoxFocusChanged(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(SyncNameSuggestionsPopupState));
     }
 
     private void RecalculateTagLayout()
@@ -400,11 +408,11 @@ public partial class AddNewTransaction : BasePopup
 
     private double MeasureTagWidth(ExpenseTagVM tag)
     {
-        var tagChip = new ToggleButton
+        var tagChip = new RadioButton
         {
             Content = tag.Name,
             DataContext = tag,
-            Style = (Style)FindResource("PopupTagItemToggleStyle")
+            Style = (Style)FindResource("PopupTagItemRadioStyle")
         };
 
         tagChip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
