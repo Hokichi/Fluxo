@@ -59,7 +59,7 @@
                                 <Setter TargetName="InfinityIcon" Property="Fill" Value="{StaticResource Brush.Mint}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="RootBorder" Property="Opacity" Value="0.45" />
+                                <Setter TargetName="RootBorder" Property="Opacity" Value="0.4" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

@@ -80,7 +80,7 @@
                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="AddRowButtonBorder" Property="Opacity" Value="0.45" />
+                                <Setter TargetName="AddRowButtonBorder" Property="Opacity" Value="0.4" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

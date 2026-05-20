@@ -39,7 +39,7 @@
                             <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
+                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.4" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -115,7 +115,7 @@
                             <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
+                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.4" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -232,7 +232,7 @@
                             <Setter TargetName="DownIcon" Property="Color" Value="{StaticResource Brush.Mint}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.6" />
+                            <Setter TargetName="InputRoot" Property="Opacity" Value="0.4" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
