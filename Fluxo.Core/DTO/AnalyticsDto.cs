@@ -30,4 +30,4 @@ public sealed record AnalyticsGoalItem(
     decimal CurrentAmount,
     decimal TargetAmount,
     DateTime CreatedOn,
-    DateTime SavingEndDate);
+    DateTime? SavingEndDate);

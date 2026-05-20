@@ -58,7 +58,9 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
             NameText = goal.Name,
             TargetAmountText = goal.TargetAmount,
             CurrentAmountText = goal.CurrentAmount,
-            EndDate = goal.SavingEndDate
+            EndDate = goal.SavingEndDate,
+            HasDefiniteEndDate = goal.SavingEndDate.HasValue,
+            RecurringPeriod = goal.RecurringPeriod
         };
     }
 
@@ -93,6 +95,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
                 persisted.TargetAmount = draft.TargetAmount;
                 persisted.CurrentAmount = draft.CurrentAmount;
                 persisted.SavingEndDate = draft.SavingEndDate;
+                persisted.RecurringPeriod = draft.RecurringPeriod;
                 appData.UpdateSavingGoal(persisted);
             }
             else
@@ -103,6 +106,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
                     TargetAmount = draft.TargetAmount,
                     CurrentAmount = draft.CurrentAmount,
                     SavingEndDate = draft.SavingEndDate,
+                    RecurringPeriod = draft.RecurringPeriod,
                     CreatedOn = DateTime.UtcNow
                 });
             }
@@ -133,7 +137,8 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
                 goal.Name,
                 goal.TargetAmount,
                 goal.CurrentAmount,
-                goal.SavingEndDate);
+                goal.SavingEndDate,
+                goal.RecurringPeriod);
         }
 
         _removedPersistedIds.Clear();
@@ -151,7 +156,8 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
             input.Name,
             input.TargetAmount,
             input.CurrentAmount,
-            input.EndDate);
+            input.EndDate,
+            input.RecurringPeriod);
 
         if (id > 0)
             _removedPersistedIds.Remove(id);
@@ -165,7 +171,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
         QuickSetupWizardShared.ReplaceCollection(
             SavingGoals,
             _draftGoals.Values
-                .OrderBy(goal => goal.SavingEndDate)
+                .OrderBy(goal => goal.SavingEndDate ?? DateTime.MaxValue)
                 .ThenBy(goal => goal.Name)
                 .Select(goal => new QuickSetupWizardSavingGoalItemVM(goal)));
 

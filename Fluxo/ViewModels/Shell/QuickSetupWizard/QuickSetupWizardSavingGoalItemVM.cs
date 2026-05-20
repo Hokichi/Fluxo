@@ -1,4 +1,5 @@
 using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
@@ -7,14 +8,16 @@ public sealed record QuickSetupWizardSavingGoalItemVM(
     string Name,
     decimal CurrentAmount,
     decimal TargetAmount,
-    DateTime SavingEndDate)
+    DateTime? SavingEndDate,
+    RecurringPeriod RecurringPeriod)
 {
     public QuickSetupWizardSavingGoalItemVM(SavingGoal goal) : this(
         goal.Id,
         goal.Name,
         goal.CurrentAmount,
         goal.TargetAmount,
-        goal.SavingEndDate)
+        goal.SavingEndDate,
+        goal.RecurringPeriod)
     {
     }
 
@@ -23,7 +26,8 @@ public sealed record QuickSetupWizardSavingGoalItemVM(
         goal.Name,
         goal.CurrentAmount,
         goal.TargetAmount,
-        goal.SavingEndDate)
+        goal.SavingEndDate,
+        goal.RecurringPeriod)
     {
     }
 }

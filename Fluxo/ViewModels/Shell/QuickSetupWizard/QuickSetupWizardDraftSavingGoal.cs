@@ -1,3 +1,5 @@
+using Fluxo.Core.Enums;
+
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
 public sealed record QuickSetupWizardDraftSavingGoal(
@@ -5,4 +7,5 @@ public sealed record QuickSetupWizardDraftSavingGoal(
     string Name,
     decimal TargetAmount,
     decimal CurrentAmount,
-    DateTime SavingEndDate);
+    DateTime? SavingEndDate,
+    RecurringPeriod RecurringPeriod);

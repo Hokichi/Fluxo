@@ -8,6 +8,8 @@ public class SpendingSourceDto
     public string Name { get; set; } = string.Empty;
     public SpendingSourceType SpendingSourceType { get; set; }
     public decimal AccountLimit { get; set; }
+    public decimal MaximumSpending { get; set; }
+    public decimal? MinimumPayment { get; set; }
     public decimal SpentAmount { get; set; }
     public decimal Balance { get; set; }
     public int? MonthlyDueDate { get; set; }

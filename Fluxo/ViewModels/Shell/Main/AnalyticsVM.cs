@@ -485,7 +485,7 @@ public sealed record AnalyticsGoalCardItem(
     decimal CurrentAmount,
     decimal TargetAmount,
     DateTime CreatedOn,
-    DateTime SavingEndDate)
+    DateTime? SavingEndDate)
 {
     public double ProgressPercent =>
         TargetAmount <= 0m ? 0d : Math.Clamp((double)(CurrentAmount / TargetAmount * 100m), 0d, 100d);

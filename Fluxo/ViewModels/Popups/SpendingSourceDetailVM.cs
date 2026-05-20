@@ -24,6 +24,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isEnabled = true;
+    [ObservableProperty] private decimal _maximumSpendingText;
+    [ObservableProperty] private decimal _minimumPaymentText;
     [ObservableProperty] private string _monthlyDueDateText = string.Empty;
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;
@@ -134,6 +136,9 @@ public partial class SpendingSourceDetailVM : ObservableObject
             MonthlyDueDateText = string.Empty;
             SelectedDeductSource = null;
         }
+
+        if (value != SpendingSourceType.Credit)
+            MinimumPaymentText = 0m;
     }
 
     partial void OnPrimaryAmountTextChanged(decimal value)
@@ -410,6 +415,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
         PrimaryAmountText = state.PrimaryAmount;
         SpentAmountText = state.SpentAmount;
         AccountLimitText = state.AccountLimit;
+        MaximumSpendingText = state.MaximumSpending;
+        MinimumPaymentText = state.MinimumPayment ?? 0m;
         ApyText = state.InterestRate ?? 0m;
         MonthlyDueDateText = state.MonthlyDueDate?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         SelectedDeductSource = state.DeductSource;
@@ -432,9 +439,12 @@ public partial class SpendingSourceDetailVM : ObservableObject
         var primaryAmount = PrimaryAmountText;
         var spentAmount = SpentAmountText;
         var accountLimit = AccountLimitText;
+        var maximumSpending = MaximumSpendingText;
+        var minimumPayment = SpendingSourceType == SpendingSourceType.Credit ? MinimumPaymentText : 0m;
         decimal? interestRate = IsSaving ? ApyText : null;
 
         if (primaryAmount < 0m || spentAmount < 0m || accountLimit < 0m ||
+            maximumSpending < 0m || minimumPayment < 0m ||
             (interestRate.HasValue && interestRate.Value < 0m))
         {
             validationMessage = "Values must be zero or greater.";
@@ -473,6 +483,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
             SpendingSourceType,
             primaryAmount,
             accountLimit,
+            maximumSpending,
+            SpendingSourceType == SpendingSourceType.Credit ? minimumPayment : null,
             spentAmount,
             monthlyDueDate,
             deductSource,
@@ -487,6 +499,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
     {
         spendingSource.Name = input.Name;
         spendingSource.AccountLimit = input.AccountLimit;
+        spendingSource.MaximumSpending = input.MaximumSpending;
+        spendingSource.MinimumPayment = input.MinimumPayment;
         spendingSource.SpentAmount = input.SpentAmount;
         spendingSource.MonthlyDueDate = input.MonthlyDueDate;
         spendingSource.DeductSource = input.DeductSource;
@@ -503,6 +517,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.MonthlyDueDate = null;
         spendingSource.DeductSource = null;
         spendingSource.AccountLimit = 0m;
+        spendingSource.MinimumPayment = null;
         spendingSource.Balance = input.PrimaryAmount;
     }
 
@@ -515,6 +530,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
                 ? spendingSource.SpentAmount
                 : spendingSource.Balance,
             spendingSource.AccountLimit,
+            spendingSource.MaximumSpending,
+            spendingSource.MinimumPayment,
             spendingSource.SpentAmount,
             MonthlyDueDateHelper.Normalize(spendingSource.MonthlyDueDate),
             spendingSource.DeductSource,
@@ -645,6 +662,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
         SpendingSourceType SpendingSourceType,
         decimal PrimaryAmount,
         decimal AccountLimit,
+        decimal MaximumSpending,
+        decimal? MinimumPayment,
         decimal SpentAmount,
         int? MonthlyDueDate,
         int? DeductSource,
@@ -657,6 +676,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
             SpendingSourceType.Checking,
             0m,
             0m,
+            0m,
+            null,
             0m,
             null,
             null,

@@ -8,7 +8,9 @@ public sealed record QuickSetupWizardSpendingSourceItemVM(
     string Name,
     string TypeLabel,
     decimal PrimaryAmount,
-    string PrimaryAmountLabel)
+    string PrimaryAmountLabel,
+    decimal MaximumSpending,
+    decimal? MinimumPayment)
 {
     public QuickSetupWizardSpendingSourceItemVM(SpendingSource spendingSource) : this(
         spendingSource.Id,
@@ -27,7 +29,9 @@ public sealed record QuickSetupWizardSpendingSourceItemVM(
             : spendingSource.Balance,
         spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
             ? "Spent"
-            : "Balance")
+            : "Balance",
+        spendingSource.MaximumSpending,
+        spendingSource.MinimumPayment)
     {
     }
 
@@ -48,7 +52,9 @@ public sealed record QuickSetupWizardSpendingSourceItemVM(
             : spendingSource.Balance,
         spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
             ? "Spent"
-            : "Balance")
+            : "Balance",
+        spendingSource.MaximumSpending,
+        spendingSource.MinimumPayment)
     {
     }
 }

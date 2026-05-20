@@ -11,6 +11,8 @@ public partial class SpendingSourceVM : ObservableObject
     [ObservableProperty] private int _id;
     [ObservableProperty] private decimal? _interestRate;
     [ObservableProperty] private bool _isEnabled;
+    [ObservableProperty] private decimal _maximumSpending;
+    [ObservableProperty] private decimal? _minimumPayment;
     [ObservableProperty] private int? _monthlyDueDate;
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;

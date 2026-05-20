@@ -106,6 +106,8 @@ public sealed class PlanningSnapshot
             Name = source.Name,
             SpendingSourceType = source.SpendingSourceType,
             AccountLimit = source.AccountLimit,
+            MaximumSpending = source.MaximumSpending,
+            MinimumPayment = source.MinimumPayment,
             SpentAmount = source.SpentAmount,
             Balance = source.Balance,
             MonthlyDueDate = source.MonthlyDueDate,

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Core.Enums;
 
 namespace Fluxo.ViewModels.Entities;
 
@@ -9,7 +10,8 @@ public partial class SavingGoalVM : ObservableObject
     [ObservableProperty] private decimal _remainingAmount;
     [ObservableProperty] private int _id;
     [ObservableProperty] private string _name = string.Empty;
-    [ObservableProperty] private DateTime _savingEndDate;
+    [ObservableProperty] private RecurringPeriod _recurringPeriod;
+    [ObservableProperty] private DateTime? _savingEndDate;
     [ObservableProperty] private decimal _targetAmount;
 
     partial void OnCurrentAmountChanged(decimal oldValue, decimal newValue)

@@ -9,6 +9,8 @@ public sealed record QuickSetupWizardDraftSpendingSource(
     decimal Balance,
     decimal SpentAmount,
     decimal AccountLimit,
+    decimal MaximumSpending,
+    decimal? MinimumPayment,
     int? MonthlyDueDate,
     int? DeductSource,
     decimal? InterestRate,

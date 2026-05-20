@@ -2,6 +2,8 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Core.Constants;
+using Fluxo.Core.Enums;
 using Fluxo.Data;
 using Fluxo.Data.Context;
 using Fluxo.Data.Operations;
@@ -38,7 +40,10 @@ public sealed class AppDatabaseMigrationTests
             Assert.True(File.Exists(databasePath));
             Assert.Equal(migrations.Count, appliedMigrations.Count);
             Assert.Empty(await dbContext.SpendingSources.ToListAsync());
-            Assert.Empty(await dbContext.UserSettings.ToListAsync());
+
+            var allocationPeriod = await dbContext.UserSettings.SingleAsync(
+                setting => setting.Name == UserSettingNames.AllocationPeriod);
+            Assert.Equal(AllocationPeriod.Monthly.ToString(), allocationPeriod.Value);
         }
         finally
         {

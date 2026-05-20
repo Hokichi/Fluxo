@@ -12,6 +12,8 @@ public sealed record SpendingSourceMemorySnapshot(
     string Name,
     SpendingSourceType SpendingSourceType,
     decimal AccountLimit,
+    decimal MaximumSpending,
+    decimal? MinimumPayment,
     decimal SpentAmount,
     decimal Balance,
     int? MonthlyDueDate,
@@ -29,6 +31,8 @@ public sealed record SpendingSourceMemorySnapshot(
             spendingSource.Name,
             spendingSource.SpendingSourceType,
             spendingSource.AccountLimit,
+            spendingSource.MaximumSpending,
+            spendingSource.MinimumPayment,
             spendingSource.SpentAmount,
             spendingSource.Balance,
             spendingSource.MonthlyDueDate,
@@ -82,7 +86,8 @@ public sealed record SavingGoalMemorySnapshot(
     string Name,
     decimal TargetAmount,
     decimal CurrentAmount,
-    DateTime SavingEndDate,
+    DateTime? SavingEndDate,
+    RecurringPeriod RecurringPeriod,
     DateTime CreatedOn)
 {
     public static SavingGoalMemorySnapshot Create(SavingGoal savingGoal)
@@ -95,6 +100,7 @@ public sealed record SavingGoalMemorySnapshot(
             savingGoal.TargetAmount,
             savingGoal.CurrentAmount,
             savingGoal.SavingEndDate,
+            savingGoal.RecurringPeriod,
             savingGoal.CreatedOn);
     }
 }
@@ -457,6 +463,8 @@ public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot s
             Name = snapshot.Name,
             SpendingSourceType = snapshot.SpendingSourceType,
             AccountLimit = snapshot.AccountLimit,
+            MaximumSpending = snapshot.MaximumSpending,
+            MinimumPayment = snapshot.MinimumPayment,
             SpentAmount = snapshot.SpentAmount,
             Balance = snapshot.Balance,
             MonthlyDueDate = snapshot.MonthlyDueDate,
@@ -497,6 +505,8 @@ public sealed class EditSpendingSourceMemoryAction(
         spendingSource.Name = snapshot.Name;
         spendingSource.SpendingSourceType = snapshot.SpendingSourceType;
         spendingSource.AccountLimit = snapshot.AccountLimit;
+        spendingSource.MaximumSpending = snapshot.MaximumSpending;
+        spendingSource.MinimumPayment = snapshot.MinimumPayment;
         spendingSource.SpentAmount = snapshot.SpentAmount;
         spendingSource.Balance = snapshot.Balance;
         spendingSource.MonthlyDueDate = snapshot.MonthlyDueDate;
@@ -525,6 +535,8 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
             Name = snapshot.Name,
             SpendingSourceType = snapshot.SpendingSourceType,
             AccountLimit = snapshot.AccountLimit,
+            MaximumSpending = snapshot.MaximumSpending,
+            MinimumPayment = snapshot.MinimumPayment,
             SpentAmount = snapshot.SpentAmount,
             Balance = snapshot.Balance,
             MonthlyDueDate = snapshot.MonthlyDueDate,
@@ -703,6 +715,7 @@ public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapsh
             TargetAmount = snapshot.TargetAmount,
             CurrentAmount = snapshot.CurrentAmount,
             SavingEndDate = snapshot.SavingEndDate,
+            RecurringPeriod = snapshot.RecurringPeriod,
             CreatedOn = snapshot.CreatedOn
         };
 

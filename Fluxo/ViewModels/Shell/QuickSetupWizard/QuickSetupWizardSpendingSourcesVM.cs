@@ -69,6 +69,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 Balance = source.Balance,
                 SpentAmount = source.SpentAmount,
                 AccountLimit = source.AccountLimit,
+                MaximumSpending = source.MaximumSpending,
+                MinimumPayment = source.MinimumPayment,
                 MonthlyDueDate = source.MonthlyDueDate,
                 DeductSource = source.DeductSource,
                 InterestRate = source.InterestRate,
@@ -117,6 +119,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
             vm.PrimaryAmountText = source.SpentAmount;
             vm.SpentAmountText = source.SpentAmount;
             vm.AccountLimitText = source.AccountLimit;
+            vm.MaximumSpendingText = source.MaximumSpending;
+            vm.MinimumPaymentText = source.MinimumPayment ?? 0m;
             vm.MonthlyDueDateText = MonthlyDueDateHelper.Normalize(source.MonthlyDueDate)?.ToString(CultureInfo.InvariantCulture) ??
                                     string.Empty;
             vm.SelectedDeductSource = source.DeductSource;
@@ -125,6 +129,9 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         {
             vm.PrimaryAmountText = source.Balance;
         }
+
+        if (source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
+            vm.MaximumSpendingText = source.MaximumSpending;
 
         if (source.SpendingSourceType == SpendingSourceType.Saving && source.InterestRate.HasValue)
             vm.ApyText = source.InterestRate.Value;
@@ -171,6 +178,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 persisted.Balance = draft.Balance;
                 persisted.SpentAmount = draft.SpentAmount;
                 persisted.AccountLimit = draft.AccountLimit;
+                persisted.MaximumSpending = draft.MaximumSpending;
+                persisted.MinimumPayment = draft.MinimumPayment;
                 persisted.MonthlyDueDate = draft.MonthlyDueDate;
                 persisted.DeductSource = null;
                 persisted.InterestRate = draft.InterestRate;
@@ -188,6 +197,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                     Balance = draft.Balance,
                     SpentAmount = draft.SpentAmount,
                     AccountLimit = draft.AccountLimit,
+                    MaximumSpending = draft.MaximumSpending,
+                    MinimumPayment = draft.MinimumPayment,
                     MonthlyDueDate = draft.MonthlyDueDate,
                     DeductSource = null,
                     InterestRate = draft.InterestRate,
@@ -249,6 +260,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 source.Balance,
                 source.SpentAmount,
                 source.AccountLimit,
+                source.MaximumSpending,
+                source.MinimumPayment,
                 source.MonthlyDueDate,
                 source.DeductSource,
                 source.InterestRate,
@@ -282,6 +295,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
             input.Balance,
             input.SpentAmount,
             input.AccountLimit,
+            input.MaximumSpending,
+            input.MinimumPayment,
             input.MonthlyDueDate,
             input.DeductSource,
             input.InterestRate,

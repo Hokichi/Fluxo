@@ -28,6 +28,8 @@ public partial class SettingsSpendingSourceItemVM : ObservableObject
         PrimaryAmountLabel = spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
             ? "Spent"
             : "Balance";
+        MaximumSpending = spendingSource.MaximumSpending;
+        MinimumPayment = spendingSource.MinimumPayment;
         IsEnabled = spendingSource.IsEnabled;
         IsHidden = !spendingSource.ShowOnUI;
     }
@@ -37,6 +39,8 @@ public partial class SettingsSpendingSourceItemVM : ObservableObject
     public string TypeDisplayName { get; }
     public decimal PrimaryAmount { get; }
     public string PrimaryAmountLabel { get; }
+    public decimal MaximumSpending { get; }
+    public decimal? MinimumPayment { get; }
     public bool IsEnabled { get; }
     public bool IsHidden { get; }
 }

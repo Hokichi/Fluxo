@@ -678,10 +678,23 @@ public partial class App : Application
     {
         await dbContext.Database.EnsureDeletedAsync(cancellationToken);
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
+        await SeedCurrentSchemaDataAsync(dbContext, cancellationToken);
         await EnsureMigrationHistoryTableAsync(dbContext, cancellationToken);
 
         if (allMigrations.Count > 0)
             await SeedMigrationHistoryAsync(dbContext, allMigrations, allMigrations[^1], cancellationToken);
+    }
+
+    private static async Task SeedCurrentSchemaDataAsync(
+        FluxoDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            INSERT OR IGNORE INTO "UserSettings" ("Name", "Value")
+            VALUES ('AllocationPeriod', 'Monthly');
+            """,
+            cancellationToken);
     }
 
     private static async Task<List<string>> TryGetAppliedMigrationsAsync(

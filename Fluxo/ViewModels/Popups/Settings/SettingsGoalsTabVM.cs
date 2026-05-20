@@ -79,7 +79,9 @@ public partial class SettingsGoalsTabVM : ObservableObject
             NameText = goal.Name,
             TargetAmountText = goal.TargetAmount,
             CurrentAmountText = goal.CurrentAmount,
-            EndDate = goal.SavingEndDate
+            EndDate = goal.SavingEndDate,
+            HasDefiniteEndDate = goal.SavingEndDate.HasValue,
+            RecurringPeriod = goal.RecurringPeriod
         };
     }
 
@@ -219,7 +221,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
             UserSettingNames.DisabledSavingGoalIds);
 
         SettingsShared.ReplaceCollection(SavingGoals, (await _appData.GetSavingGoalsAsync())
-            .OrderBy(goal => goal.SavingEndDate)
+            .OrderBy(goal => goal.SavingEndDate ?? DateTime.MaxValue)
             .ThenBy(goal => goal.Name)
             .Select(goal => new SettingsSavingGoalItemVM(
                 goal,

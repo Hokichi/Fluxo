@@ -364,7 +364,10 @@ public partial class NotificationPanelVM : ObservableRecipient,
                      !_hiddenSavingGoalIds.Contains(goal.Id) &&
                      !_disabledSavingGoalIds.Contains(goal.Id)))
         {
-            var savingEndDate = goal.SavingEndDate.Date;
+            if (goal.SavingEndDate is not { } goalEndDate)
+                continue;
+
+            var savingEndDate = goalEndDate.Date;
             var daysUntilDeadline = (savingEndDate - DateTime.Today).Days;
             if (daysUntilDeadline < 0 || daysUntilDeadline > _deadlineReminderDays)
                 continue;

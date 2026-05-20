@@ -27,7 +27,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             [UserSettingNames.IsLowCreditNotifEnabled] = bool.FalseString,
             [UserSettingNames.IsLowAccountBalanceNotifEnabled] = bool.FalseString,
             [UserSettingNames.ShouldRunAtStartup] = bool.FalseString,
-            [UserSettingNames.CloseBehavior] = AppCloseBehavior.Exit.ToString()
+            [UserSettingNames.CloseBehavior] = AppCloseBehavior.Exit.ToString(),
+            [UserSettingNames.AllocationPeriod] = AllocationPeriod.Monthly.ToString()
         };
 
     private readonly MainVM _mainViewModel;
