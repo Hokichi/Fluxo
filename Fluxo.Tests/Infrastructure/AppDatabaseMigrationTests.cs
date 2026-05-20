@@ -18,6 +18,8 @@ namespace Fluxo.Tests.Infrastructure;
 
 public sealed class AppDatabaseMigrationTests
 {
+    private const string MoveRecurringPeriodMigrationId = "20260520090000_MoveRecurringPeriodToRecurringTransactions";
+
     [Fact]
     public async Task MigrateDatabaseAsync_WhenDatabaseFileDoesNotExist_CreatesCurrentSchemaAndSeedsMigrationHistory()
     {
@@ -54,6 +56,41 @@ public sealed class AppDatabaseMigrationTests
         }
     }
 
+    [Fact]
+    public async Task MigrateDatabaseAsync_WhenDatabaseHasPreviousRecurringSchema_AppliesRecurringPeriodMove()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(tempDirectory, "fluxo.db");
+
+        try
+        {
+            Directory.CreateDirectory(tempDirectory);
+            using var serviceProvider = CreateServiceProvider(databasePath);
+            await CreatePreviousRecurringSchemaDatabaseAsync(databasePath, serviceProvider);
+            var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
+
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+
+            await using var connection = new SqliteConnection($"Data Source={databasePath}");
+            await connection.OpenAsync();
+
+            Assert.False(await ColumnExistsAsync(connection, "SavingGoals", "RecurringPeriod"));
+            Assert.False(await ColumnExistsAsync(connection, "RecurringTransactions", "RecurringDate"));
+            Assert.True(await ColumnExistsAsync(connection, "RecurringTransactions", "RecurringTime"));
+            Assert.True(await ColumnExistsAsync(connection, "RecurringTransactions", "RecurringPeriod"));
+            Assert.Contains(
+                MoveRecurringPeriodMigrationId,
+                await ReadMigrationHistoryAsync(connection));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static ServiceProvider CreateServiceProvider(string databasePath)
     {
         var services = new ServiceCollection();
@@ -73,11 +110,122 @@ public sealed class AppDatabaseMigrationTests
         services.AddScoped<IExpenseTagRepository, ExpenseTagRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<ISpendingSourceRepository, SpendingSourceRepository>();
+        services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
         services.AddSingleton<IDataOperationScopeFactory, DataOperationScopeFactory>();
         services.AddSingleton<IDataOperationRunner, DataOperationRunner>();
 
         return services.BuildServiceProvider();
+    }
+
+    private static async Task CreatePreviousRecurringSchemaDatabaseAsync(
+        string databasePath,
+        IServiceProvider serviceProvider)
+    {
+        await using var connection = new SqliteConnection($"Data Source={databasePath}");
+        await connection.OpenAsync();
+
+        await ExecuteNonQueryAsync(
+            connection,
+            """
+            CREATE TABLE "SavingGoals" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_SavingGoals" PRIMARY KEY AUTOINCREMENT,
+                "CreatedOn" TEXT NOT NULL,
+                "CurrentAmount" NUMERIC NOT NULL,
+                "Name" TEXT NOT NULL,
+                "RecurringPeriod" INTEGER NOT NULL,
+                "SavingEndDate" TEXT NULL,
+                "TargetAmount" NUMERIC NOT NULL
+            );
+
+            CREATE TABLE "RecurringTransactions" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_RecurringTransactions" PRIMARY KEY AUTOINCREMENT,
+                "Name" TEXT NOT NULL,
+                "Amount" NUMERIC NOT NULL,
+                "RecurringDate" INTEGER NOT NULL,
+                "Type" INTEGER NOT NULL,
+                "SourceId" INTEGER NOT NULL,
+                "TagId" INTEGER NULL,
+                "GoalId" INTEGER NULL,
+                "IsEnabled" INTEGER NOT NULL
+            );
+
+            CREATE TABLE "__EFMigrationsHistory" (
+                "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+                "ProductVersion" TEXT NOT NULL
+            );
+            """);
+
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+        var migrationsToSeed = dbContext.Database.GetMigrations()
+            .Where(migrationId => !string.Equals(
+                migrationId,
+                MoveRecurringPeriodMigrationId,
+                StringComparison.Ordinal))
+            .ToList();
+
+        foreach (var migrationId in migrationsToSeed)
+        {
+            await ExecuteNonQueryAsync(
+                connection,
+                """
+                INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                VALUES ($migrationId, '10.0.5');
+                """,
+                ("$migrationId", migrationId));
+        }
+    }
+
+    private static async Task<bool> ColumnExistsAsync(
+        SqliteConnection connection,
+        string tableName,
+        string columnName)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info(\"{tableName}\");";
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var name = reader.GetString(1);
+            if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static async Task<IReadOnlyList<string>> ReadMigrationHistoryAsync(SqliteConnection connection)
+    {
+        var migrations = new List<string>();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+                              SELECT "MigrationId"
+                              FROM "__EFMigrationsHistory"
+                              ORDER BY "MigrationId";
+                              """;
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            migrations.Add(reader.GetString(0));
+
+        return migrations;
+    }
+
+    private static async Task ExecuteNonQueryAsync(
+        SqliteConnection connection,
+        string commandText,
+        (string Name, object Value)? parameter = null)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+
+        if (parameter is { } value)
+            command.Parameters.AddWithValue(value.Name, value.Value);
+
+        await command.ExecuteNonQueryAsync();
     }
 }
