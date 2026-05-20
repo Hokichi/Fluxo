@@ -903,6 +903,7 @@
                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                     BorderThickness="1"
                     CornerRadius="18 18 0 0"
+                    Focusable="True"
                     Visibility="Collapsed">
                     <Border.Effect>
                         <DropShadowEffect

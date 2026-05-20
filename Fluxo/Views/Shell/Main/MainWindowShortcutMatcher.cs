@@ -19,6 +19,11 @@ public static class MainWindowShortcutMatcher
         return key == Key.A && modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
     }
 
+    public static bool IsCloseAnalyticsShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.Escape && modifiers == ModifierKeys.None;
+    }
+
     public static bool IsOpenSearchShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.F && modifiers == ModifierKeys.Control;

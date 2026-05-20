@@ -599,7 +599,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        if (_isAnalyticsDrawerOpen && e.Key == Key.Escape)
+        if (_isAnalyticsDrawerOpen && MainWindowShortcutMatcher.IsCloseAnalyticsShortcut(e.Key, Keyboard.Modifiers))
         {
             CloseAnalyticsDrawer();
             e.Handled = true;
@@ -1179,6 +1179,7 @@ public partial class MainWindow : Window, IPopupHost
                 AnalyticsDrawerPanel.Visibility = Visibility.Visible;
                 AnalyticsDrawerPanel.IsHitTestVisible = true;
                 AnalyticsDrawerTabButton.IsEnabled = false;
+                FocusAnalyticsDrawerForShortcuts();
             }
             else
             {
@@ -1218,10 +1219,17 @@ public partial class MainWindow : Window, IPopupHost
             else
             {
                 AnalyticsDrawerTabButton.IsEnabled = false;
+                FocusAnalyticsDrawerForShortcuts();
             }
         };
 
         AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, animation);
+    }
+
+    private void FocusAnalyticsDrawerForShortcuts()
+    {
+        AnalyticsDrawerPanel.Focus();
+        Keyboard.Focus(AnalyticsDrawerPanel);
     }
 
     private void SetAnalyticsDrawerTabVisibility(bool visible, bool animate, Action? onCompleted = null)

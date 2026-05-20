@@ -16,6 +16,30 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
+    public void EscapeShortcut_ClosesAnalyticsDrawerWhenOpen()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (_isAnalyticsDrawerOpen && MainWindowShortcutMatcher.IsCloseAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("CloseAnalyticsDrawer();", source);
+        Assert.Contains("e.Handled = true;", source);
+    }
+
+    [Fact]
+    public void AnalyticsDrawer_TakesKeyboardFocusAfterOpening()
+    {
+        var source = ReadMainWindowSource();
+        var xaml = ReadMainWindowXaml();
+
+        Assert.Contains("x:Name=\"AnalyticsDrawerPanel\"", xaml);
+        Assert.Contains("Focusable=\"True\"", xaml);
+        Assert.Contains("private void FocusAnalyticsDrawerForShortcuts()", source);
+        Assert.Contains("AnalyticsDrawerPanel.Focus();", source);
+        Assert.Contains("Keyboard.Focus(AnalyticsDrawerPanel);", source);
+        Assert.Contains("FocusAnalyticsDrawerForShortcuts();", source);
+    }
+
+    [Fact]
     public void SpendingAmountGateHelper_IsDeclared()
     {
         var source = ReadMainWindowSource();
@@ -69,6 +93,12 @@ public sealed class MainWindowShortcutRoutingTests
     private static string ReadMainWindowSource()
     {
         var filePath = Path.Combine(GetRepositoryRootPath(), "Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs");
+        return File.ReadAllText(filePath);
+    }
+
+    private static string ReadMainWindowXaml()
+    {
+        var filePath = Path.Combine(GetRepositoryRootPath(), "Fluxo", "Views", "Shell", "Main", "MainWindow.xaml");
         return File.ReadAllText(filePath);
     }
 
