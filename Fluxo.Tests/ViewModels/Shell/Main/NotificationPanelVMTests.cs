@@ -632,6 +632,50 @@ public class NotificationPanelVMTests
         Assert.True(persistedNotifications[0].IsForDeletion);
     }
 
+    [Fact]
+    public void ResolveRecurringTransactionDueDate_None_ReturnsNull()
+    {
+        var transaction = new RecurringTransactionVM
+        {
+            RecurringPeriod = RecurringPeriod.None,
+            RecurringTime = 0
+        };
+
+        var dueDate = NotificationPanelVM.ResolveRecurringTransactionDueDate(transaction, new DateTime(2026, 5, 18));
+
+        Assert.Null(dueDate);
+    }
+
+    [Theory]
+    [InlineData(RecurringPeriod.Weekly)]
+    [InlineData(RecurringPeriod.Biweekly)]
+    public void ResolveRecurringTransactionDueDate_WeeklyPeriods_UseSelectedWeekday(RecurringPeriod period)
+    {
+        var transaction = new RecurringTransactionVM
+        {
+            RecurringPeriod = period,
+            RecurringTime = 5
+        };
+
+        var dueDate = NotificationPanelVM.ResolveRecurringTransactionDueDate(transaction, new DateTime(2026, 5, 18));
+
+        Assert.Equal(new DateTime(2026, 5, 22), dueDate);
+    }
+
+    [Fact]
+    public void ResolveRecurringTransactionDueDate_Monthly_UsesMonthlyDay()
+    {
+        var transaction = new RecurringTransactionVM
+        {
+            RecurringPeriod = RecurringPeriod.Monthly,
+            RecurringTime = 28
+        };
+
+        var dueDate = NotificationPanelVM.ResolveRecurringTransactionDueDate(transaction, new DateTime(2026, 5, 18));
+
+        Assert.Equal(new DateTime(2026, 5, 28), dueDate);
+    }
+
     private static void AssertGroupedCardShape(NotificationItemVM card)
     {
         Assert.NotEqual(NotificationGroupCategory.Other, card.Category);

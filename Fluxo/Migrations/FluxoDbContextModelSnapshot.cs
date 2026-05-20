@@ -187,7 +187,10 @@ namespace Fluxo.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("RecurringDate")
+                    b.Property<int>("RecurringPeriod")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RecurringTime")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("SourceId")
@@ -225,9 +228,6 @@ namespace Fluxo.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("RecurringPeriod")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("SavingEndDate")
                         .HasColumnType("TEXT");

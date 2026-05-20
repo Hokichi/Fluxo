@@ -289,12 +289,33 @@
                                 x:Name="ExpenseTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
                                 Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <customControls:NumericUpDown
-                                LowerLimit="0"
-                                Step="1"
-                                UpperLimit="28"
-                                Value="{Binding RecurringDayText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ComboBox
+                                    ItemsSource="{Binding RecurringPeriods}"
+                                    SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
+                                    Style="{StaticResource FluxoComboBoxStyle}" />
+                                <TextBox
+                                    Margin="0,8,0,0"
+                                    IsEnabled="False"
+                                    Style="{StaticResource RoundedTextInputStyle}"
+                                    Text=""
+                                    Visibility="{Binding ShowRecurringNoneInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ComboBox
+                                    Margin="0,8,0,0"
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding WeekdayOptions}"
+                                    SelectedValue="{Binding RecurringTimeText, Mode=TwoWay}"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding ShowRecurringWeekdayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <customControls:NumericUpDown
+                                    Margin="0,8,0,0"
+                                    LowerLimit="1"
+                                    Step="1"
+                                    UpperLimit="28"
+                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
 
@@ -402,12 +423,33 @@
                                 x:Name="IncomeTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
                                 Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <customControls:NumericUpDown
-                                LowerLimit="0"
-                                Step="1"
-                                UpperLimit="28"
-                                Value="{Binding RecurringDayText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ComboBox
+                                    ItemsSource="{Binding RecurringPeriods}"
+                                    SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
+                                    Style="{StaticResource FluxoComboBoxStyle}" />
+                                <TextBox
+                                    Margin="0,8,0,0"
+                                    IsEnabled="False"
+                                    Style="{StaticResource RoundedTextInputStyle}"
+                                    Text=""
+                                    Visibility="{Binding ShowRecurringNoneInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ComboBox
+                                    Margin="0,8,0,0"
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding WeekdayOptions}"
+                                    SelectedValue="{Binding RecurringTimeText, Mode=TwoWay}"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding ShowRecurringWeekdayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <customControls:NumericUpDown
+                                    Margin="0,8,0,0"
+                                    LowerLimit="1"
+                                    Step="1"
+                                    UpperLimit="28"
+                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
@@ -434,12 +476,33 @@
                                 x:Name="GoalTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
                                 Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <customControls:NumericUpDown
-                                LowerLimit="0"
-                                Step="1"
-                                UpperLimit="28"
-                                Value="{Binding RecurringDayText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <StackPanel Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ComboBox
+                                    ItemsSource="{Binding RecurringPeriods}"
+                                    SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
+                                    Style="{StaticResource FluxoComboBoxStyle}" />
+                                <TextBox
+                                    Margin="0,8,0,0"
+                                    IsEnabled="False"
+                                    Style="{StaticResource RoundedTextInputStyle}"
+                                    Text=""
+                                    Visibility="{Binding ShowRecurringNoneInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ComboBox
+                                    Margin="0,8,0,0"
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding WeekdayOptions}"
+                                    SelectedValue="{Binding RecurringTimeText, Mode=TwoWay}"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding ShowRecurringWeekdayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <customControls:NumericUpDown
+                                    Margin="0,8,0,0"
+                                    LowerLimit="1"
+                                    Step="1"
+                                    UpperLimit="28"
+                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </StackPanel>
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">

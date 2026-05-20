@@ -7,7 +7,8 @@ public sealed class RecurringTransaction
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
-    public int RecurringDate { get; set; }
+    public RecurringPeriod RecurringPeriod { get; set; } = RecurringPeriod.Monthly;
+    public int RecurringTime { get; set; }
     public RecurringTransactionType Type { get; set; }
     public int SourceId { get; set; }
     public int? TagId { get; set; }

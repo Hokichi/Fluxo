@@ -269,7 +269,8 @@ public partial class AddSpendingSourceVM : ObservableObject
                 {
                     Name = $"Payment to {spendingSource.Name}",
                     Amount = Math.Max(spendingSource.SpentAmount, 0m),
-                    RecurringDate = spendingSource.MonthlyDueDate.Value,
+                    RecurringPeriod = RecurringPeriod.Monthly,
+                    RecurringTime = spendingSource.MonthlyDueDate.Value,
                     Type = RecurringTransactionType.Expense,
                     SourceId = spendingSource.DeductSource.Value,
                     TagId = paymentTag?.Id,

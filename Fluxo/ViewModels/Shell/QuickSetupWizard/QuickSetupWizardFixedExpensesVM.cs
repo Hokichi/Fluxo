@@ -101,6 +101,8 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 persisted.Amount = draft.Amount;
                 persisted.SourceId = mappedSourceId;
                 persisted.TagId = tagId;
+                persisted.RecurringPeriod = draft.RecurringPeriod;
+                persisted.RecurringTime = draft.RecurringTime;
                 appData.UpdateRecurringTransaction(persisted);
             }
             else
@@ -109,7 +111,8 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 {
                     Name = draft.Name,
                     Amount = draft.Amount,
-                    RecurringDate = draft.RecurringDate,
+                    RecurringPeriod = draft.RecurringPeriod,
+                    RecurringTime = draft.RecurringTime,
                     Type = RecurringTransactionType.Expense,
                     SourceId = mappedSourceId,
                     TagId = tagId,
@@ -161,7 +164,8 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 expense.Amount,
                 ExpenseCategory.Needs,
                 expense.SourceId,
-                expense.RecurringDate,
+                expense.RecurringPeriod,
+                expense.RecurringTime,
                 expense.TagId ?? 0,
                 expense.TagId.HasValue && tagNamesById.TryGetValue(expense.TagId.Value, out var tagName)
                     ? tagName
@@ -186,7 +190,8 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             input.Amount,
             input.Category,
             input.SpendingSourceId,
-            input.RecurringDate,
+            RecurringPeriod.Monthly,
+            input.RecurringTime,
             input.TagId,
             input.TagName,
             input.IsActive);

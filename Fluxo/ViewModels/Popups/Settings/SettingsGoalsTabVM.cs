@@ -80,8 +80,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
             TargetAmountText = goal.TargetAmount,
             CurrentAmountText = goal.CurrentAmount,
             EndDate = goal.SavingEndDate,
-            HasDefiniteEndDate = goal.SavingEndDate.HasValue,
-            RecurringPeriod = goal.RecurringPeriod
+            HasDefiniteEndDate = goal.SavingEndDate.HasValue
         };
     }
 

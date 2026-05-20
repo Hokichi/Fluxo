@@ -16,7 +16,8 @@ public partial class SettingsFixedExpenseItemVM : ObservableObject
         Amount = recurringTransaction.Amount;
         TagName = recurringTransaction.Tag?.Name ?? "Untagged";
         SpendingSourceName = recurringTransaction.Source?.Name ?? "No source";
-        RecurringDate = recurringTransaction.RecurringDate;
+        RecurringPeriod = recurringTransaction.RecurringPeriod;
+        RecurringTime = recurringTransaction.RecurringTime;
         IsEnabled = recurringTransaction.IsEnabled;
         IsHidden = false;
         Type = recurringTransaction.Type;
@@ -27,7 +28,8 @@ public partial class SettingsFixedExpenseItemVM : ObservableObject
     public decimal Amount { get; }
     public string TagName { get; }
     public string SpendingSourceName { get; }
-    public int? RecurringDate { get; }
+    public RecurringPeriod RecurringPeriod { get; }
+    public int RecurringTime { get; }
     public bool IsEnabled { get; }
     public bool IsHidden { get; }
     public RecurringTransactionType Type { get; }

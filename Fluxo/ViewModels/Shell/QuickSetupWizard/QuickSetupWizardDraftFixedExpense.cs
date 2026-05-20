@@ -8,7 +8,8 @@ public sealed record QuickSetupWizardDraftFixedExpense(
     decimal Amount,
     ExpenseCategory Category,
     int SpendingSourceId,
-    int RecurringDate,
+    RecurringPeriod RecurringPeriod,
+    int RecurringTime,
     int ExpenseTagId,
     string TagName,
     bool IsActive);

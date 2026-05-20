@@ -35,7 +35,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     [ObservableProperty] private bool _isActive = true;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _nameText = string.Empty;
-    [ObservableProperty] private string _recurringDateText = string.Empty;
+    [ObservableProperty] private string _recurringTimeText = string.Empty;
     [ObservableProperty] private ExpenseCategory _selectedCategory = ExpenseCategory.Needs;
     [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
@@ -78,7 +78,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         foreach (var spendingSource in sourceList)
             SpendingSources.Add(spendingSource);
 
-        RecurringDateText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
+        RecurringTimeText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
                             MonthlyDueDateHelper.MinMonthlyDay.ToString(CultureInfo.InvariantCulture);
         SelectedSpendingSource = SpendingSources.FirstOrDefault();
         _initialState = CaptureState();
@@ -125,7 +125,7 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
 
-    partial void OnRecurringDateTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnRecurringTimeTextChanged(string value) => NotifyFormStateChanged();
 
     partial void OnSelectedCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
 
@@ -352,9 +352,9 @@ public partial class AddFixedExpenseVM : ObservableObject
             return false;
         }
 
-        if (!TryParseRecurringDate(RecurringDateText, out var recurringDate))
+        if (!TryParseRecurringTime(RecurringTimeText, out var recurringTime))
         {
-            validationMessage = "Recurring date must be a number between 1 and 28.";
+            validationMessage = "Recurring time must be a number between 1 and 28.";
             return false;
         }
 
@@ -363,7 +363,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             AmountText,
             SelectedCategory,
             SelectedSpendingSource.Id,
-            recurringDate,
+            recurringTime,
             SelectedTag.Id,
             tagName,
             IsActive);
@@ -371,18 +371,18 @@ public partial class AddFixedExpenseVM : ObservableObject
         return true;
     }
 
-    private static bool TryParseRecurringDate(string text, out int recurringDate)
+    private static bool TryParseRecurringTime(string text, out int recurringTime)
     {
-        recurringDate = 0;
-        return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out recurringDate) &&
-               recurringDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
+        recurringTime = 0;
+        return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out recurringTime) &&
+               recurringTime is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
     }
 
     private bool AreRequiredFieldsFilled()
     {
         return !string.IsNullOrWhiteSpace(NameText) &&
                AmountText > 0m &&
-               TryParseRecurringDate(RecurringDateText, out _) &&
+               TryParseRecurringTime(RecurringTimeText, out _) &&
                SelectedTag is not null &&
                SelectedSpendingSource is not null;
     }
@@ -394,7 +394,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             AmountText,
             SelectedCategory,
             SelectedSpendingSource?.Id ?? NoSpendingSourceId,
-            RecurringDateText ?? string.Empty,
+            RecurringTimeText ?? string.Empty,
             SelectedTag?.Id ?? NoTagId,
             IsActive);
     }
@@ -426,7 +426,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         decimal Amount,
         ExpenseCategory Category,
         int SpendingSourceId,
-        int RecurringDate,
+        int RecurringTime,
         int TagId,
         string TagName,
         bool IsActive);
@@ -436,7 +436,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         decimal AmountText,
         ExpenseCategory SelectedCategory,
         int SelectedSpendingSourceId,
-        string RecurringDateText,
+        string RecurringTimeText,
         int SelectedTagId,
         bool IsActive);
 }

@@ -103,7 +103,7 @@ IsSaveButtonEnabled="{Binding CanSave}"
                             Step="1"
                             ToolTip="Enter a day between 0 and 28"
                             UpperLimit="28"
-                            Value="{Binding RecurringDateText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock
                             Margin="0,14,0,8"

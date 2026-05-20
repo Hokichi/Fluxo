@@ -1,5 +1,3 @@
-using Fluxo.Core.Enums;
-
 namespace Fluxo.Core.Entities;
 
 public sealed class SavingGoal
@@ -9,6 +7,5 @@ public sealed class SavingGoal
     public decimal TargetAmount { get; set; }
     public decimal CurrentAmount { get; set; }
     public DateTime? SavingEndDate { get; set; }
-    public RecurringPeriod RecurringPeriod { get; set; }
     public DateTime CreatedOn { get; set; }
 }

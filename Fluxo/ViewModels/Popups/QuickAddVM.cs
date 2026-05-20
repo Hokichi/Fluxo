@@ -43,7 +43,8 @@ public partial class QuickAddVM : ObservableObject
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private bool _isRecurring;
-    [ObservableProperty] private string _recurringDayText = string.Empty;
+    [ObservableProperty] private RecurringPeriod _selectedRecurringPeriod = RecurringPeriod.Monthly;
+    [ObservableProperty] private string _recurringTimeText = string.Empty;
     [ObservableProperty] private bool _isRecurringModeLocked;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
     [ObservableProperty] private SavingGoalVM? _selectedGoal;
@@ -76,10 +77,30 @@ public partial class QuickAddVM : ObservableObject
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
     public ObservableCollection<QuickAddTransactionSuggestion> TransactionNameSuggestions { get; } = [];
+    public IReadOnlyList<RecurringPeriod> RecurringPeriods { get; } =
+    [
+        RecurringPeriod.None,
+        RecurringPeriod.Weekly,
+        RecurringPeriod.Biweekly,
+        RecurringPeriod.Monthly
+    ];
+    public IReadOnlyList<RecurringTimeOption> WeekdayOptions { get; } =
+    [
+        new("Monday", "1"),
+        new("Tuesday", "2"),
+        new("Wednesday", "3"),
+        new("Thursday", "4"),
+        new("Friday", "5"),
+        new("Saturday", "6"),
+        new("Sunday", "7")
+    ];
     public bool CanSave => !IsSaving && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool HasTransactionNameSuggestions => TransactionNameSuggestions.Count > 0;
     public bool ShowRecurringDayInput => IsRecurring;
+    public bool ShowRecurringNoneInput => IsRecurring && SelectedRecurringPeriod == RecurringPeriod.None;
+    public bool ShowRecurringWeekdayInput => IsRecurring && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
+    public bool ShowRecurringMonthlyInput => IsRecurring && SelectedRecurringPeriod == RecurringPeriod.Monthly;
     public bool ShowDateSelector => !IsRecurring;
     public bool CanToggleRecurring => !IsRecurringModeLocked;
 
@@ -143,14 +164,25 @@ public partial class QuickAddVM : ObservableObject
     partial void OnAmountTextChanged(decimal value) => NotifyFormStateChanged();
     partial void OnIsRecurringChanged(bool value)
     {
-        if (value && string.IsNullOrWhiteSpace(RecurringDayText))
-            RecurringDayText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ?? "1";
+        if (value && string.IsNullOrWhiteSpace(RecurringTimeText))
+            RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
 
         OnPropertyChanged(nameof(ShowRecurringDayInput));
+        OnPropertyChanged(nameof(ShowRecurringNoneInput));
+        OnPropertyChanged(nameof(ShowRecurringWeekdayInput));
+        OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
         OnPropertyChanged(nameof(ShowDateSelector));
         NotifyFormStateChanged();
     }
-    partial void OnRecurringDayTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnSelectedRecurringPeriodChanged(RecurringPeriod value)
+    {
+        RecurringTimeText = GetDefaultRecurringTimeText(value);
+        OnPropertyChanged(nameof(ShowRecurringNoneInput));
+        OnPropertyChanged(nameof(ShowRecurringWeekdayInput));
+        OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
+        NotifyFormStateChanged();
+    }
+    partial void OnRecurringTimeTextChanged(string value) => NotifyFormStateChanged();
     partial void OnIsRecurringModeLockedChanged(bool value) => OnPropertyChanged(nameof(CanToggleRecurring));
     partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
@@ -272,8 +304,8 @@ public partial class QuickAddVM : ObservableObject
 
             if (input.IsRecurring)
             {
-                if (!TryParseRecurringDay(input.RecurringDayText, out var recurringDay))
-                    return QuickAddSubmissionResult.Failure("Recurring day must be between 1 and 28.");
+                if (!TryNormalizeRecurringTime(input.RecurringPeriod, input.RecurringTimeText, out var recurringTime))
+                    return QuickAddSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
 
                 var recurringType = input.IsGoal
                     ? RecurringTransactionType.GoalUpdate
@@ -295,7 +327,8 @@ public partial class QuickAddVM : ObservableObject
                     ? BuildGoalUpdateName((await _appData.GetSavingGoalByIdAsync(input.GoalId.Value))?.Name ?? string.Empty)
                     : BuildExpenseName(input.Name, input.Note, input.IsExpense ? "Recurring Expense" : "Recurring Income");
                 recurring.Amount = input.Amount;
-                recurring.RecurringDate = recurringDay;
+                recurring.RecurringPeriod = input.RecurringPeriod;
+                recurring.RecurringTime = recurringTime;
                 recurring.Type = recurringType;
                 recurring.SourceId = input.SpendingSourceId;
                 recurring.TagId = input.IsExpense ? input.TagId : null;
@@ -480,7 +513,8 @@ public partial class QuickAddVM : ObservableObject
         SelectedDate = DateTime.Today;
         IsRecurring = false;
         IsRecurringModeLocked = false;
-        RecurringDayText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ?? "1";
+        SelectedRecurringPeriod = RecurringPeriod.Monthly;
+        RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
         SelectedExpenseCategory = ExpenseCategory.Needs;
         SelectedSpendingSource = SpendingSources.FirstOrDefault();
         SelectedTag = _orderedTags.FirstOrDefault();
@@ -547,11 +581,12 @@ public partial class QuickAddVM : ObservableObject
             IsGoal,
             IsRecurring,
             _editingRecurringTransactionId,
+            SelectedRecurringPeriod,
             NameText.Trim(),
             AmountText,
             SelectedSpendingSource.Id,
             SelectedDate.Date,
-            RecurringDayText.Trim(),
+            RecurringTimeText.Trim(),
             NoteText.Trim(),
             category,
             tagId,
@@ -811,9 +846,10 @@ public partial class QuickAddVM : ObservableObject
             IsExpense,
             IsGoal,
             IsRecurring,
+            SelectedRecurringPeriod,
             NameText ?? string.Empty,
             AmountText,
-            RecurringDayText ?? string.Empty,
+            RecurringTimeText ?? string.Empty,
             NoteText ?? string.Empty,
             SelectedDate.Date,
             SelectedExpenseCategory,
@@ -937,11 +973,12 @@ public partial class QuickAddVM : ObservableObject
         bool IsGoal,
         bool IsRecurring,
         int? EditingRecurringTransactionId,
+        RecurringPeriod RecurringPeriod,
         string Name,
         decimal Amount,
         int SpendingSourceId,
         DateTime Date,
-        string RecurringDayText,
+        string RecurringTimeText,
         string Note,
         ExpenseCategory? Category,
         int? TagId,
@@ -951,9 +988,10 @@ public partial class QuickAddVM : ObservableObject
         bool IsExpense,
         bool IsGoal,
         bool IsRecurring,
+        RecurringPeriod SelectedRecurringPeriod,
         string NameText,
         decimal AmountText,
-        string RecurringDayText,
+        string RecurringTimeText,
         string NoteText,
         DateTime SelectedDate,
         ExpenseCategory SelectedExpenseCategory,
@@ -982,23 +1020,58 @@ public partial class QuickAddVM : ObservableObject
         IsGoal = recurring.Type == RecurringTransactionType.GoalUpdate;
         NameText = recurring.Name;
         AmountText = recurring.Amount;
-        RecurringDayText = recurring.RecurringDate.ToString(CultureInfo.InvariantCulture);
+        SelectedRecurringPeriod = recurring.RecurringPeriod;
+        RecurringTimeText = recurring.RecurringPeriod == RecurringPeriod.None
+            ? string.Empty
+            : recurring.RecurringTime.ToString(CultureInfo.InvariantCulture);
         SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == recurring.SourceId) ?? SpendingSources.FirstOrDefault();
         SelectedTag = recurring.TagId is > 0 ? _orderedTags.FirstOrDefault(tag => tag.Id == recurring.TagId.Value) : _orderedTags.FirstOrDefault();
         SelectedGoal = recurring.GoalId is > 0 ? Goals.FirstOrDefault(goal => goal.Id == recurring.GoalId.Value) : Goals.FirstOrDefault();
         return true;
     }
 
-    private static bool TryParseRecurringDay(string text, out int day)
+    internal static bool TryNormalizeRecurringTime(RecurringPeriod period, string text, out int recurringTime)
     {
-        day = 0;
+        recurringTime = 0;
+        if (period == RecurringPeriod.None)
+            return true;
+
         if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
             return false;
 
-        if (parsed < MonthlyDueDateHelper.MinMonthlyDay || parsed > MonthlyDueDateHelper.MaxMonthlyDay)
+        var max = IsWeekdayRecurringPeriod(period) ? 7 : MonthlyDueDateHelper.MaxMonthlyDay;
+        if (parsed < 1 || parsed > max)
             return false;
 
-        day = parsed;
+        recurringTime = parsed;
         return true;
     }
+
+    private static bool IsWeekdayRecurringPeriod(RecurringPeriod period)
+    {
+        return period is RecurringPeriod.Weekly or RecurringPeriod.Biweekly;
+    }
+
+    private static string GetDefaultRecurringTimeText(RecurringPeriod period)
+    {
+        if (period == RecurringPeriod.None)
+            return string.Empty;
+
+        if (IsWeekdayRecurringPeriod(period))
+        {
+            var day = DateTime.Today.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)DateTime.Today.DayOfWeek;
+            return day.ToString(CultureInfo.InvariantCulture);
+        }
+
+        return MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ?? "1";
+    }
+
+    private static string GetRecurringTimeValidationMessage(RecurringPeriod period)
+    {
+        return IsWeekdayRecurringPeriod(period)
+            ? "Recurring weekday must be between Monday and Sunday."
+            : "Recurring day must be between 1 and 28.";
+    }
+
+    public sealed record RecurringTimeOption(string Label, string Value);
 }

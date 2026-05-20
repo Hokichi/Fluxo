@@ -337,7 +337,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         foreach (var transaction in _recurringTransactions.Where(transaction => transaction.IsEnabled))
         {
-            var dueDate = MonthlyDueDateHelper.ResolveUpcomingDate(transaction.RecurringDate, DateTime.Today);
+            var dueDate = ResolveRecurringTransactionDueDate(transaction, DateTime.Today);
             if (!dueDate.HasValue)
                 continue;
 
@@ -351,6 +351,27 @@ public partial class NotificationPanelVM : ObservableRecipient,
                 Message: $"{transaction.Name} is scheduled for {upcomingDate:MMM d}.",
                 Severity: NotificationSeverity.Warning);
         }
+    }
+
+    internal static DateTime? ResolveRecurringTransactionDueDate(RecurringTransactionVM transaction, DateTime today)
+    {
+        return transaction.RecurringPeriod switch
+        {
+            RecurringPeriod.None => null,
+            RecurringPeriod.Weekly or RecurringPeriod.Biweekly => ResolveUpcomingWeekday(transaction.RecurringTime, today),
+            RecurringPeriod.Monthly => MonthlyDueDateHelper.ResolveUpcomingDate(transaction.RecurringTime, today),
+            _ => null
+        };
+    }
+
+    private static DateTime? ResolveUpcomingWeekday(int recurringTime, DateTime today)
+    {
+        if (recurringTime is < 1 or > 7)
+            return null;
+
+        var currentDay = today.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)today.DayOfWeek;
+        var daysUntilDue = (recurringTime - currentDay + 7) % 7;
+        return today.Date.AddDays(daysUntilDue);
     }
 
     private IEnumerable<NotificationCandidate> GetGoalDeadlineNotifications()

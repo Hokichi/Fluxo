@@ -184,4 +184,29 @@ public class QuickAddVMOrderingTests
 
         Assert.Empty(suggestions);
     }
+
+    [Theory]
+    [InlineData(RecurringPeriod.None, "", 0)]
+    [InlineData(RecurringPeriod.Weekly, "7", 7)]
+    [InlineData(RecurringPeriod.Biweekly, "7", 7)]
+    [InlineData(RecurringPeriod.Monthly, "28", 28)]
+    public void TryNormalizeRecurringTime_AcceptsValidValues(RecurringPeriod period, string text, int expected)
+    {
+        var result = QuickAddVM.TryNormalizeRecurringTime(period, text, out var recurringTime);
+
+        Assert.True(result);
+        Assert.Equal(expected, recurringTime);
+    }
+
+    [Theory]
+    [InlineData(RecurringPeriod.Weekly, "8")]
+    [InlineData(RecurringPeriod.Biweekly, "8")]
+    [InlineData(RecurringPeriod.Monthly, "29")]
+    [InlineData(RecurringPeriod.Monthly, "0")]
+    public void TryNormalizeRecurringTime_RejectsInvalidValues(RecurringPeriod period, string text)
+    {
+        var result = QuickAddVM.TryNormalizeRecurringTime(period, text, out _);
+
+        Assert.False(result);
+    }
 }
