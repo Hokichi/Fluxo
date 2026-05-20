@@ -59,8 +59,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
             TargetAmountText = goal.TargetAmount,
             CurrentAmountText = goal.CurrentAmount,
             EndDate = goal.SavingEndDate,
-            HasDefiniteEndDate = goal.SavingEndDate.HasValue,
-            RecurringPeriod = goal.RecurringPeriod
+            HasDefiniteEndDate = goal.SavingEndDate.HasValue
         };
     }
 
@@ -95,7 +94,6 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
                 persisted.TargetAmount = draft.TargetAmount;
                 persisted.CurrentAmount = draft.CurrentAmount;
                 persisted.SavingEndDate = draft.SavingEndDate;
-                persisted.RecurringPeriod = draft.RecurringPeriod;
                 appData.UpdateSavingGoal(persisted);
             }
             else
@@ -106,7 +104,6 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
                     TargetAmount = draft.TargetAmount,
                     CurrentAmount = draft.CurrentAmount,
                     SavingEndDate = draft.SavingEndDate,
-                    RecurringPeriod = draft.RecurringPeriod,
                     CreatedOn = DateTime.UtcNow
                 });
             }
@@ -137,8 +134,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
                 goal.Name,
                 goal.TargetAmount,
                 goal.CurrentAmount,
-                goal.SavingEndDate,
-                goal.RecurringPeriod);
+                goal.SavingEndDate);
         }
 
         _removedPersistedIds.Clear();
@@ -156,8 +152,7 @@ public partial class QuickSetupWizardSavingGoalsVM : ObservableObject
             input.Name,
             input.TargetAmount,
             input.CurrentAmount,
-            input.EndDate,
-            input.RecurringPeriod);
+            input.EndDate);
 
         if (id > 0)
             _removedPersistedIds.Remove(id);

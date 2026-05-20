@@ -87,7 +87,6 @@ public sealed record SavingGoalMemorySnapshot(
     decimal TargetAmount,
     decimal CurrentAmount,
     DateTime? SavingEndDate,
-    RecurringPeriod RecurringPeriod,
     DateTime CreatedOn)
 {
     public static SavingGoalMemorySnapshot Create(SavingGoal savingGoal)
@@ -100,7 +99,6 @@ public sealed record SavingGoalMemorySnapshot(
             savingGoal.TargetAmount,
             savingGoal.CurrentAmount,
             savingGoal.SavingEndDate,
-            savingGoal.RecurringPeriod,
             savingGoal.CreatedOn);
     }
 }
@@ -715,7 +713,6 @@ public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapsh
             TargetAmount = snapshot.TargetAmount,
             CurrentAmount = snapshot.CurrentAmount,
             SavingEndDate = snapshot.SavingEndDate,
-            RecurringPeriod = snapshot.RecurringPeriod,
             CreatedOn = snapshot.CreatedOn
         };
 

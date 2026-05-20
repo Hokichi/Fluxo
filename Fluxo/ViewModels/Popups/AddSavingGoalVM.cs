@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
-using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Logging;
@@ -23,7 +22,6 @@ public partial class AddSavingGoalVM : ObservableObject
     [ObservableProperty] private bool _hasDefiniteEndDate = true;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _nameText = string.Empty;
-    [ObservableProperty] private RecurringPeriod _recurringPeriod;
     [ObservableProperty] private decimal _targetAmountText;
 
     public int? EditingId { get; init; }
@@ -40,13 +38,6 @@ public partial class AddSavingGoalVM : ObservableObject
     }
 
     public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
-    public IReadOnlyList<RecurringPeriod> RecurringPeriods { get; } =
-    [
-        RecurringPeriod.None,
-        RecurringPeriod.Weekly,
-        RecurringPeriod.Biweekly,
-        RecurringPeriod.Monthly
-    ];
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool IsEditMode => EditingId.HasValue;
     public string PopupTitle => IsEditMode ? "Edit Goal" : "Add Goal";
@@ -68,7 +59,6 @@ public partial class AddSavingGoalVM : ObservableObject
     partial void OnHasDefiniteEndDateChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
-    partial void OnRecurringPeriodChanged(RecurringPeriod value) => NotifyFormStateChanged();
     partial void OnTargetAmountTextChanged(decimal value) => NotifyFormStateChanged();
 
     public async Task<AddSavingGoalResult> SaveAsync()
@@ -96,7 +86,6 @@ public partial class AddSavingGoalVM : ObservableObject
                 existing.TargetAmount = input.TargetAmount;
                 existing.CurrentAmount = input.CurrentAmount;
                 existing.SavingEndDate = input.EndDate;
-                existing.RecurringPeriod = input.RecurringPeriod;
                 _appData.UpdateSavingGoal(existing);
             }
             else
@@ -107,7 +96,6 @@ public partial class AddSavingGoalVM : ObservableObject
                     TargetAmount = input.TargetAmount,
                     CurrentAmount = input.CurrentAmount,
                     SavingEndDate = input.EndDate,
-                    RecurringPeriod = input.RecurringPeriod,
                     CreatedOn = DateTime.UtcNow
                 };
                 await _appData.AddSavingGoalAsync(savingGoal);
@@ -158,8 +146,7 @@ public partial class AddSavingGoalVM : ObservableObject
             name,
             TargetAmountText,
             CurrentAmountText,
-            HasDefiniteEndDate ? EndDate?.Date : null,
-            RecurringPeriod);
+            HasDefiniteEndDate ? EndDate?.Date : null);
         return true;
     }
 
@@ -176,8 +163,7 @@ public partial class AddSavingGoalVM : ObservableObject
             TargetAmountText,
             CurrentAmountText,
             HasDefiniteEndDate,
-            HasDefiniteEndDate ? EndDate?.Date : null,
-            RecurringPeriod);
+            HasDefiniteEndDate ? EndDate?.Date : null);
     }
 
     private void NotifyFormStateChanged()
@@ -203,15 +189,13 @@ public partial class AddSavingGoalVM : ObservableObject
         string Name,
         decimal TargetAmount,
         decimal CurrentAmount,
-        DateTime? EndDate,
-        RecurringPeriod RecurringPeriod);
+        DateTime? EndDate);
 
     private readonly record struct FormState(
         string NameText,
         decimal TargetAmountText,
         decimal CurrentAmountText,
         bool HasDefiniteEndDate,
-        DateTime? EndDate,
-        RecurringPeriod RecurringPeriod);
+        DateTime? EndDate);
 }
 

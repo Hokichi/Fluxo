@@ -121,7 +121,7 @@ public sealed class NotificationActionServiceTests
         {
             new() { Id = 1, Type = "RecurringTransactionDue-77_20260501", Message = "Rent due", IsCleared = false }
         };
-        var recurring = new List<RecurringTransaction> { new() { Id = 77, Name = "Rent", Amount = 25m, SourceId = 4, TagId = 5, Type = RecurringTransactionType.Expense, IsEnabled = true, RecurringDate = 10 } };
+        var recurring = new List<RecurringTransaction> { new() { Id = 77, Name = "Rent", Amount = 25m, SourceId = 4, TagId = 5, Type = RecurringTransactionType.Expense, IsEnabled = true, RecurringPeriod = RecurringPeriod.Monthly, RecurringTime = 10 } };
         var spendingSources = new List<SpendingSource>
         {
             new()

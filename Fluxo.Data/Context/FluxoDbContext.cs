@@ -108,7 +108,6 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(goal => goal.TargetAmount).HasColumnType("NUMERIC");
         entity.Property(goal => goal.CurrentAmount).HasColumnType("NUMERIC");
         entity.Property(goal => goal.SavingEndDate);
-        entity.Property(goal => goal.RecurringPeriod);
         entity.Property(goal => goal.CreatedOn);
     }
 
@@ -153,7 +152,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.Property(transaction => transaction.Name).IsRequired();
         entity.Property(transaction => transaction.Amount).HasColumnType("NUMERIC");
-        entity.Property(transaction => transaction.RecurringDate);
+        entity.Property(transaction => transaction.RecurringPeriod);
+        entity.Property(transaction => transaction.RecurringTime);
         entity.Property(transaction => transaction.Type);
         entity.Property(transaction => transaction.IsEnabled);
 

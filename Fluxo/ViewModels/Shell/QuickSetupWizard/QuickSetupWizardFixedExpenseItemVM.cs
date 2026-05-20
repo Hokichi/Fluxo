@@ -9,9 +9,10 @@ public sealed record QuickSetupWizardFixedExpenseItemVM(
     decimal Amount,
     string CategoryLabel,
     string SpendingSourceName,
-    int? DueDate)
+    RecurringPeriod RecurringPeriod,
+    int? DueTime)
 {
-    public string DueDateDisplay => DueDate.HasValue ? $"Due day {DueDate.Value}" : "No due day";
+    public string DueDateDisplay => DueTime.HasValue ? $"Due {RecurringPeriod} {DueTime.Value}" : "No due day";
 
     public QuickSetupWizardFixedExpenseItemVM(Expense expense) : this(
         expense.Id,
@@ -24,6 +25,7 @@ public sealed record QuickSetupWizardFixedExpenseItemVM(
             _ => "Invest"
         },
         expense.SpendingSource?.Name ?? "No source",
+        RecurringPeriod.None,
         null)
     {
     }
@@ -39,7 +41,8 @@ public sealed record QuickSetupWizardFixedExpenseItemVM(
             _ => "Invest"
         },
         spendingSourceName,
-        expense.RecurringDate)
+        expense.RecurringPeriod,
+        expense.RecurringTime)
     {
     }
 }
