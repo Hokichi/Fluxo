@@ -14,7 +14,7 @@ using Fluxo.ViewModels.Shell.Main;
 namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>,
-    IRecipient<SettingsMaintenanceRequestedMessage>, IDisposable
+    IRecipient<SettingsMaintenanceRequestedMessage>, IRecipient<SettingsDataChangedMessage>, IDisposable
 {
     private static readonly IReadOnlyDictionary<string, string> SettingsDefaultsAfterDeletion =
         new Dictionary<string, string>(StringComparer.Ordinal)
@@ -110,6 +110,12 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             return;
 
         _ = HandleMaintenanceRequestAsync(message.Value);
+    }
+
+    public void Receive(SettingsDataChangedMessage message)
+    {
+        if (message.Value.HasFlag(SettingsDataChangedScope.SpendingSources))
+            RefreshDashboardSpendingAmountGateState();
     }
 
     public void Dispose()
@@ -479,6 +485,11 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             GoalsTab.IsGoalChecksEnabled = value;
             OnPropertyChanged();
         }
+    }
+
+    public void RefreshDashboardSpendingAmountGateState()
+    {
+        ApplyDashboardSpendingAmountGateState();
     }
 
     private async Task HandleMaintenanceRequestAsync(SettingsMaintenanceRequest request)

@@ -1,6 +1,17 @@
+using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Interfaces;
+using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Persistence;
+using Fluxo.Services.Ui;
+using Fluxo.Tests.TestDoubles;
+using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.ViewModels.Shell.Main;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups.Settings;
@@ -52,6 +63,126 @@ public sealed class SettingsVMOrchestrationTests
         Assert.Equal(operation, revertRequested.Value);
         Assert.True(dataChanged.Value.HasFlag(SettingsDataChangedScope.SpendingSources));
         Assert.True(dataChanged.Value.HasFlag(SettingsDataChangedScope.Tags));
+    }
+
+    [Fact]
+    public void SpendingSourceDataChanged_RefreshesDashboardSpendingAmountGateState()
+    {
+        RunInSta(() =>
+        {
+            var (settings, mainViewModel) = CreateSettingsViewModel();
+            settings.FixedExpensesTab.IsDashboardSpendingAmountGateLocked = true;
+            settings.GoalsTab.IsDashboardSpendingAmountGateLocked = true;
+
+            var propertyChanges = new List<string?>();
+            settings.PropertyChanged += (_, args) => propertyChanges.Add(args.PropertyName);
+
+            Assert.True(settings.IsDashboardSpendingAmountGateLocked);
+
+            mainViewModel.IsDashboardSpendingAmountGateLocked = false;
+            settings.Receive(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
+
+            Assert.False(settings.IsDashboardSpendingAmountGateLocked);
+            Assert.False(settings.FixedExpensesTab.IsDashboardSpendingAmountGateLocked);
+            Assert.False(settings.GoalsTab.IsDashboardSpendingAmountGateLocked);
+            Assert.Contains(nameof(SettingsVM.IsDashboardSpendingAmountGateLocked), propertyChanges);
+        });
+    }
+
+    private static (SettingsVM Settings, MainVM MainViewModel) CreateSettingsViewModel()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var unitOfWork = CreateUnitOfWork();
+        var appData = new AppDataService(unitOfWork);
+        var mainViewModel = CreateMainViewModel(messenger, unitOfWork);
+        mainViewModel.IsDashboardSpendingAmountGateLocked = true;
+
+        var settings = new SettingsVM(
+            mainViewModel,
+            appData,
+            Substitute.For<IStartupRegistrationService>(),
+            Substitute.For<IUiSettleAwaiter>(),
+            new SettingsBudgetTabVM(() => mainViewModel.BudgetPanel.TotalIncomeAmount, appData, messenger),
+            new SettingsSourcesTabVM(mainViewModel, appData, messenger),
+            new SettingsFixedExpensesTabVM(mainViewModel, appData, messenger),
+            new SettingsGoalsTabVM(mainViewModel, appData, messenger),
+            new SettingsTagsTabVM(mainViewModel, appData, messenger),
+            new SettingsPersonalizationTabVM(appData, messenger),
+            messenger);
+
+        return (settings, mainViewModel);
+    }
+
+    private static MainVM CreateMainViewModel(IMessenger messenger, IUnitOfWork unitOfWork)
+    {
+        var mapper = Substitute.For<IMapper>();
+        var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
+
+        return new MainVM(
+            dataOperationRunner,
+            new NotificationPanelVM(
+                Substitute.For<IExpenseService>(),
+                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ISpendingSourceService>(),
+                dataOperationRunner,
+                mapper,
+                messenger: messenger),
+            new BudgetAllocationPanelVM(
+                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<ITagService>(),
+                dataOperationRunner,
+                mapper,
+                messenger),
+            new SpentAllowancePanelVM(
+                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ISpendingSourceService>(),
+                dataOperationRunner,
+                mapper,
+                messenger),
+            new SavingGoalsPanelVM(dataOperationRunner, mapper, messenger),
+            new DaySpinnerVM(messenger),
+            new MainViewModeToggleVM(messenger));
+    }
+
+    private static IUnitOfWork CreateUnitOfWork()
+    {
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+
+        var userSettings = Substitute.For<IUserSettingsRepository>();
+        userSettings.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.Entities.UserSettings>>([]));
+        unitOfWork.UserSettings.Returns(userSettings);
+
+        var incomeLogs = Substitute.For<IIncomeLogRepository>();
+        incomeLogs.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.Entities.IncomeLog>>([]));
+        unitOfWork.IncomeLogs.Returns(incomeLogs);
+
+        return unitOfWork;
+    }
+
+    private static void RunInSta(Action action)
+    {
+        Exception? exception = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception caught)
+            {
+                exception = caught;
+            }
+        });
+
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        if (exception is not null)
+            throw exception;
     }
 
     private sealed class TestLogMemoryAction(string description) : ILogMemoryAction

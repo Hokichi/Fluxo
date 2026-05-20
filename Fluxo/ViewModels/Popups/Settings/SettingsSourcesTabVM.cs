@@ -79,6 +79,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
                 SettingsDialogRequestType.AddSpendingSource,
                 CreateAddSpendingSourceViewModel())));
         await RefreshSpendingSourcesAsync();
+        _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
     }
 
     public async Task OpenSpendingSourceDetailAsync(int spendingSourceId)
@@ -88,6 +89,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
                 SettingsDialogRequestType.SpendingSourceDetail,
                 CreateSpendingSourceDetailViewModel(spendingSourceId))));
         await RefreshSpendingSourcesAsync(keepVisibleItemId: spendingSourceId);
+        _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
         SelectSingleItem(spendingSourceId);
     }
 
@@ -202,11 +204,11 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
             await _appData.SaveChangesAsync();
             SettingsShared.RecordActions(actions, _messenger);
-            _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _mainViewModel.ReloadCurrentDataAsync();
             await RefreshSpendingSourcesAsync();
+            _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
 
             return SettingsOperationResult.Success();
         }
