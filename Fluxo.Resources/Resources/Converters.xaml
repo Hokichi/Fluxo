@@ -5,6 +5,7 @@
 
     <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     <converters:BoolToVisibilityInvertedConverter x:Key="BoolToVisibilityInvertedConverter" />
+    <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
     <converters:BorderCornerClipConverter x:Key="BorderCornerClipConverter" />
     <converters:BrushToColorConverter x:Key="BrushToColorConverter" />
     <converters:BrushToLighterBrushConverter x:Key="BrushToLighterBrushConverter" />

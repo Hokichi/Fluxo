@@ -19,7 +19,7 @@ public partial class AddSavingGoalVM : ObservableObject
 
     [ObservableProperty] private decimal _currentAmountText;
     [ObservableProperty] private DateTime? _endDate = DateTime.Today.AddMonths(3);
-    [ObservableProperty] private bool _hasDefiniteEndDate = true;
+    [ObservableProperty] private bool _hasDefiniteEndDate;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private decimal _targetAmountText;

@@ -56,8 +56,8 @@
         <ToggleButton
             x:Name="SelectorButton"
             IsChecked="{Binding IsPopupOpen, ElementName=Root, Mode=TwoWay}"
-            Tag="{Binding (Validation.HasError), ElementName=Root}"
-            Style="{StaticResource SelectorButtonStyle}" />
+            Style="{StaticResource SelectorButtonStyle}"
+            Tag="{Binding (Validation.HasError), ElementName=Root}" />
 
         <Popup
             AllowsTransparency="True"
