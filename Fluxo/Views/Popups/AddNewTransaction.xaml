@@ -115,7 +115,7 @@
         </Style>
 
         <DataTemplate x:Key="TransactionNameSuggestionTemplate">
-            <Grid Margin="0,0,0,2" Width="320">
+            <Grid Width="320" Margin="0,0,0,2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -284,7 +284,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding DateOrRecurrenceLabel}" />
                             <components:DateSelector
                                 x:Name="ExpenseTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
@@ -294,12 +294,6 @@
                                     ItemsSource="{Binding RecurringPeriods}"
                                     SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
                                     Style="{StaticResource FluxoComboBoxStyle}" />
-                                <TextBox
-                                    Margin="0,8,0,0"
-                                    IsEnabled="False"
-                                    Style="{StaticResource RoundedTextInputStyle}"
-                                    Text=""
-                                    Visibility="{Binding ShowRecurringNoneInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <ComboBox
                                     Margin="0,8,0,0"
                                     DisplayMemberPath="Label"
@@ -313,8 +307,8 @@
                                     LowerLimit="1"
                                     Step="1"
                                     UpperLimit="28"
-                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -418,7 +412,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding DateOrRecurrenceLabel}" />
                             <components:DateSelector
                                 x:Name="IncomeTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
@@ -428,12 +422,6 @@
                                     ItemsSource="{Binding RecurringPeriods}"
                                     SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
                                     Style="{StaticResource FluxoComboBoxStyle}" />
-                                <TextBox
-                                    Margin="0,8,0,0"
-                                    IsEnabled="False"
-                                    Style="{StaticResource RoundedTextInputStyle}"
-                                    Text=""
-                                    Visibility="{Binding ShowRecurringNoneInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <ComboBox
                                     Margin="0,8,0,0"
                                     DisplayMemberPath="Label"
@@ -447,8 +435,8 @@
                                     LowerLimit="1"
                                     Step="1"
                                     UpperLimit="28"
-                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -471,7 +459,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding DateOrRecurrenceLabel}" />
                             <components:DateSelector
                                 x:Name="GoalTransactionDateSelector"
                                 SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
@@ -481,12 +469,6 @@
                                     ItemsSource="{Binding RecurringPeriods}"
                                     SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
                                     Style="{StaticResource FluxoComboBoxStyle}" />
-                                <TextBox
-                                    Margin="0,8,0,0"
-                                    IsEnabled="False"
-                                    Style="{StaticResource RoundedTextInputStyle}"
-                                    Text=""
-                                    Visibility="{Binding ShowRecurringNoneInput, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <ComboBox
                                     Margin="0,8,0,0"
                                     DisplayMemberPath="Label"
@@ -500,8 +482,8 @@
                                     LowerLimit="1"
                                     Step="1"
                                     UpperLimit="28"
-                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </StackPanel>
 

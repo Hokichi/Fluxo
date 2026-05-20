@@ -102,6 +102,7 @@ public partial class QuickAddVM : ObservableObject
     public bool ShowRecurringWeekdayInput => IsRecurring && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
     public bool ShowRecurringMonthlyInput => IsRecurring && SelectedRecurringPeriod == RecurringPeriod.Monthly;
     public bool ShowDateSelector => !IsRecurring;
+    public string DateOrRecurrenceLabel => IsRecurring ? "Recurrence" : "Date";
     public bool CanToggleRecurring => !IsRecurringModeLocked;
 
     public void BeginChangeTracking()
@@ -172,6 +173,7 @@ public partial class QuickAddVM : ObservableObject
         OnPropertyChanged(nameof(ShowRecurringWeekdayInput));
         OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
         OnPropertyChanged(nameof(ShowDateSelector));
+        OnPropertyChanged(nameof(DateOrRecurrenceLabel));
         NotifyFormStateChanged();
     }
     partial void OnSelectedRecurringPeriodChanged(RecurringPeriod value)
