@@ -4,6 +4,7 @@
     xmlns:components="clr-namespace:Fluxo.Resources.Components"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls">
     <Style x:Key="RoundedTextInputStyle" TargetType="TextBox">
+        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="4,0" />
         <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
@@ -68,7 +69,7 @@
                                 VerticalAlignment="Center"
                                 Foreground="{DynamicResource Brush.Text.Muted}"
                                 IsHitTestVisible="False"
-                                Text="0"
+                                Text="{TemplateBinding PlaceholderText}"
                                 Visibility="Collapsed" />
                             <ScrollViewer
                                 x:Name="PART_ContentHost"
@@ -144,7 +145,7 @@
                                 VerticalAlignment="Center"
                                 Foreground="{DynamicResource Brush.Text.Muted}"
                                 IsHitTestVisible="False"
-                                Text="0"
+                                Text="{TemplateBinding PlaceholderText}"
                                 Visibility="Collapsed" />
                             <ScrollViewer
                                 x:Name="PART_ContentHost"

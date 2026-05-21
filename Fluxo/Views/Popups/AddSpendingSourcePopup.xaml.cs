@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Popups;
 
@@ -26,20 +28,22 @@ public partial class AddSpendingSourcePopup : BasePopup
     protected override async void OnSaveButtonClick()
     {
         var result = await _viewModel.SaveAsync();
-        if (!result.IsSuccess)
-        {
-            if (result.FailurePresentation == AddSpendingSourceVM.AddSpendingSourceFailurePresentation.ToastWarning)
-            {
-                ShowWarningToast(result.ErrorMessage);
-                return;
-            }
-
-            ShowValidationMessage(result.ErrorMessage);
+        if (HandleSaveFailure(result))
             return;
-        }
 
         if (result.ShouldClose)
             Close();
+    }
+
+    protected override async void OnSaveAndCreateNewButtonClick()
+    {
+        var result = await _viewModel.SaveAsync();
+        if (HandleSaveFailure(result))
+            return;
+
+        _viewModel.ResetAfterSaveAndCreateNew();
+        await _viewModel.LoadDeductSourcesAsync();
+        FocusPrimaryInput();
     }
 
     protected override void OnCloseButtonClick()
@@ -57,6 +61,59 @@ public partial class AddSpendingSourcePopup : BasePopup
         }
 
         base.OnCloseButtonClick();
+    }
+
+    private bool HandleSaveFailure(AddSpendingSourceVM.AddSpendingSourceResult result)
+    {
+        if (result.IsSuccess)
+            return false;
+
+        if (result.FailurePresentation == AddSpendingSourceVM.AddSpendingSourceFailurePresentation.ToastWarning)
+        {
+            ShowWarningToast(result.ErrorMessage);
+            return true;
+        }
+
+        ShowValidationMessage(result.ErrorMessage);
+        return true;
+    }
+
+    private void FocusPrimaryInput()
+    {
+        NameTextBox.Focus();
+    }
+
+    private void OnNameTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        _viewModel.ValidateNameField();
+    }
+
+    private void OnMaximumSpendingTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        _viewModel.ValidateMaximumSpendingField();
+    }
+
+    private void OnSpentAmountTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        _viewModel.ValidateSpentAmountField();
+    }
+
+    private void OnMinimumPaymentTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        _viewModel.ValidateMinimumPaymentField();
+    }
+
+    private void OnApyTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        _viewModel.ValidateApyField();
+    }
+
+    private void OnMaximumSpendingTextBoxTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is not FrameworkElement { IsKeyboardFocusWithin: true })
+            return;
+
+        _viewModel.MarkMaximumSpendingModified();
     }
 
     private void ShowValidationMessage(string? message)

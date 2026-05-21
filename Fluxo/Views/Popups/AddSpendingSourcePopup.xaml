@@ -4,8 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
+    IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="{Binding PopupTitle}"
+    ShowSaveAndCreateNewButton="True"
     ShowSaveButton="True">
 
     <customControls:BasePopup.Resources>
@@ -22,6 +24,16 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
+        <Style x:Key="FieldHeaderGridStyle" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="FieldValidationHintStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
     </customControls:BasePopup.Resources>
 
     <Grid Width="640" Margin="24,0,24,24">
@@ -36,9 +48,16 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel>
-                            <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Source Name" />
+                            <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                <TextBlock
+                                    Margin="0"
+                                    Style="{StaticResource FieldLabelStyle}"
+                                    Text="Source Name" />
+                                <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding NameValidationHint}" />
+                            </Grid>
                             <TextBox
                                 x:Name="NameTextBox"
+                                LostKeyboardFocus="OnNameTextBoxLostKeyboardFocus"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, UpdateSourceTrigger=PropertyChanged}" />
 
@@ -61,8 +80,17 @@
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Current Spent" />
-                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                                <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                    <TextBlock
+                                        Margin="0"
+                                        Style="{StaticResource FieldLabelStyle}"
+                                        Text="Current Spent" />
+                                    <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding SpentAmountValidationHint}" />
+                                </Grid>
+                                <customControls:MoneyTextBox
+                                    LostKeyboardFocus="OnSpentAmountTextBoxLostKeyboardFocus"
+                                    Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                    Text="{Binding SpentAmountText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0">
@@ -82,8 +110,19 @@
                                         </Style.Triggers>
                                     </Style>
                                 </StackPanel.Style>
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Maximum Spending" />
-                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding MaximumSpendingText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                                <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                    <TextBlock
+                                        Margin="0"
+                                        Style="{StaticResource FieldLabelStyle}"
+                                        Text="Maximum Spending" />
+                                    <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding MaximumSpendingValidationHint}" />
+                                </Grid>
+                                <customControls:MoneyTextBox
+                                    LostKeyboardFocus="OnMaximumSpendingTextBoxLostKeyboardFocus"
+                                    PlaceholderText="{Binding MaximumSpendingPlaceholderText}"
+                                    Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                    Text="{Binding MaximumSpendingText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
+                                    TextChanged="OnMaximumSpendingTextBoxTextChanged" />
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -92,8 +131,15 @@
                             </StackPanel>
 
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Minimum Payment" />
+                                <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                    <TextBlock
+                                        Margin="0"
+                                        Style="{StaticResource FieldLabelStyle}"
+                                        Text="Minimum Payment" />
+                                    <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding MinimumPaymentValidationHint}" />
+                                </Grid>
                                 <customControls:SuffixTextBox
+                                    LostKeyboardFocus="OnMinimumPaymentTextBoxLostKeyboardFocus"
                                     Style="{StaticResource RoundedSuffixTextInputStyle}"
                                     Suffix="%"
                                     Text="{Binding MinimumPaymentText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
@@ -124,8 +170,15 @@
                             </StackPanel>
 
                             <StackPanel Margin="0,12,0,0" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY" />
+                                <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                    <TextBlock
+                                        Margin="0"
+                                        Style="{StaticResource FieldLabelStyle}"
+                                        Text="APY" />
+                                    <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding ApyValidationHint}" />
+                                </Grid>
                                 <customControls:SuffixTextBox
+                                    LostKeyboardFocus="OnApyTextBoxLostKeyboardFocus"
                                     Style="{StaticResource RoundedSuffixTextInputStyle}"
                                     Suffix="%"
                                     Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />

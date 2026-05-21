@@ -34,7 +34,7 @@ public sealed class AddSpendingSourceVMTests
     }
 
     [Fact]
-    public async Task SaveAsync_WhenCreditMaximumSpendingExceedsAvailableCredit_ReturnsWarningAndDoesNotSave()
+    public async Task SaveAsync_WhenCreditMaximumSpendingExceedsAccountLimit_ReturnsWarningAndDoesNotSave()
     {
         var saveWasCalled = false;
         var sut = CreateSut(_ =>
@@ -46,12 +46,13 @@ public sealed class AddSpendingSourceVMTests
         ConfigureValidCreditFields(sut);
         sut.AccountLimitText = 1000m;
         sut.SpentAmountText = 900m;
-        sut.MaximumSpendingText = 101m;
+        sut.MaximumSpendingText = 1001m;
+        sut.MarkMaximumSpendingModified();
 
         var result = await sut.SaveAsync();
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("Maximum spending cannot exceed the available credit.", result.ErrorMessage);
+        Assert.Equal("Maximum spending cannot exceed the account limit.", result.ErrorMessage);
         Assert.Equal(AddSpendingSourceVM.AddSpendingSourceFailurePresentation.ToastWarning, result.FailurePresentation);
         Assert.False(saveWasCalled);
     }
@@ -98,6 +99,191 @@ public sealed class AddSpendingSourceVMTests
         Assert.Equal("Minimum payment cannot exceed 100%.", result.ErrorMessage);
         Assert.Equal(AddSpendingSourceVM.AddSpendingSourceFailurePresentation.ToastWarning, result.FailurePresentation);
         Assert.False(saveWasCalled);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ValidateNameField_WhenNameIsEmptyOrWhitespace_ShowsRequiredHint(string name)
+    {
+        var sut = CreateSut();
+        sut.NameText = name;
+
+        sut.ValidateNameField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Required", sut.NameValidationHint);
+    }
+
+    [Fact]
+    public void ValidateNameField_WhenNameContainsControlCharacter_ShowsInvalidNameHint()
+    {
+        var sut = CreateSut();
+        sut.NameText = "Bad\u0001Name";
+
+        sut.ValidateNameField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Invalid Name", sut.NameValidationHint);
+    }
+
+    [Fact]
+    public void ValidateNameField_WhenNameExceedsMaximumLength_ShowsTooLongHint()
+    {
+        var sut = CreateSut();
+        sut.NameText = new string('A', 257);
+
+        sut.ValidateNameField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Too Long", sut.NameValidationHint);
+    }
+
+    [Fact]
+    public void ValidateMaximumSpendingField_WhenBalanceLikeMaximumExceedsBalance_ShowsLimitHint()
+    {
+        var sut = CreateSut();
+        sut.NameText = "Checking";
+        sut.SelectedSpendingSourceType = SpendingSourceType.Checking;
+        sut.PrimaryAmountText = 100m;
+        sut.MaximumSpendingText = 101m;
+
+        sut.ValidateMaximumSpendingField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Exceeds Limit", sut.MaximumSpendingValidationHint);
+    }
+
+    [Fact]
+    public void ValidateMaximumSpendingField_WhenCreditMaximumExceedsAccountLimit_ShowsLimitHint()
+    {
+        var sut = CreateSut();
+        ConfigureValidCreditFields(sut);
+        sut.AccountLimitText = 100m;
+        sut.SpentAmountText = 0m;
+        sut.MaximumSpendingText = 101m;
+
+        sut.ValidateMaximumSpendingField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Exceeds Limit", sut.MaximumSpendingValidationHint);
+    }
+
+    [Fact]
+    public void ValidateSpentAmountField_WhenCreditSpentAmountExceedsAccountLimit_ShowsLimitHint()
+    {
+        var sut = CreateSut();
+        ConfigureValidCreditFields(sut);
+        sut.AccountLimitText = 100m;
+        sut.SpentAmountText = 101m;
+
+        sut.ValidateSpentAmountField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Exceeds Limit", sut.SpentAmountValidationHint);
+    }
+
+    [Fact]
+    public void ValidateMinimumPaymentField_WhenCreditMinimumPaymentIsZero_ShowsRequiredHint()
+    {
+        var sut = CreateSut();
+        ConfigureValidCreditFields(sut);
+        sut.MinimumPaymentText = 0m;
+
+        sut.ValidateMinimumPaymentField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Required", sut.MinimumPaymentValidationHint);
+    }
+
+    [Fact]
+    public void ValidateApyField_WhenSavingApyIsZero_ShowsRequiredHint()
+    {
+        var sut = CreateSut();
+        sut.NameText = "Savings";
+        sut.SelectedSpendingSourceType = SpendingSourceType.Saving;
+        sut.PrimaryAmountText = 100m;
+        sut.ApyText = 0m;
+
+        sut.ValidateApyField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Required", sut.ApyValidationHint);
+    }
+
+    [Fact]
+    public void HasChanges_IgnoresDueDateDeductSourceMaximumSpendingAndSourceType()
+    {
+        var sut = CreateSut();
+        sut.DeductSources.Add(new AddSpendingSourceVM.DeductSourceOption(1, "Checking", SpendingSourceType.Checking));
+        sut.BeginChangeTracking();
+
+        sut.MonthlyDueDateText = "12";
+        sut.SelectedDeductSource = 1;
+        sut.MaximumSpendingText = 500m;
+        sut.SelectedSpendingSourceType = SpendingSourceType.Credit;
+
+        Assert.False(sut.HasChanges);
+    }
+
+    [Fact]
+    public void MaximumSpendingPlaceholderText_UsesBalanceForBalanceLikeSources()
+    {
+        var sut = CreateSut();
+        sut.SelectedSpendingSourceType = SpendingSourceType.Checking;
+        sut.PrimaryAmountText = 1250.50m;
+
+        Assert.Equal("1250.50", sut.MaximumSpendingPlaceholderText);
+    }
+
+    [Fact]
+    public void MaximumSpendingPlaceholderText_UsesAccountLimitForCreditSources()
+    {
+        var sut = CreateSut();
+        sut.SelectedSpendingSourceType = SpendingSourceType.Credit;
+        sut.AccountLimitText = 2500m;
+
+        Assert.Equal("2500", sut.MaximumSpendingPlaceholderText);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenMaximumSpendingIsUnmodified_PersistsPlaceholderValue()
+    {
+        AddSpendingSourceVM.AddSpendingSourceInput? savedInput = null;
+        var sut = CreateSut(input =>
+        {
+            savedInput = input;
+            return Task.FromResult(AddSpendingSourceVM.AddSpendingSourceResult.Success());
+        });
+        sut.NameText = "Checking";
+        sut.SelectedSpendingSourceType = SpendingSourceType.Checking;
+        sut.PrimaryAmountText = 750m;
+
+        var result = await sut.SaveAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(750m, savedInput?.MaximumSpending);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenMaximumSpendingIsModified_PersistsEditedValue()
+    {
+        AddSpendingSourceVM.AddSpendingSourceInput? savedInput = null;
+        var sut = CreateSut(input =>
+        {
+            savedInput = input;
+            return Task.FromResult(AddSpendingSourceVM.AddSpendingSourceResult.Success());
+        });
+        sut.NameText = "Checking";
+        sut.SelectedSpendingSourceType = SpendingSourceType.Checking;
+        sut.PrimaryAmountText = 750m;
+        sut.MaximumSpendingText = 100m;
+        sut.MarkMaximumSpendingModified();
+
+        var result = await sut.SaveAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(100m, savedInput?.MaximumSpending);
     }
 
     [Fact]

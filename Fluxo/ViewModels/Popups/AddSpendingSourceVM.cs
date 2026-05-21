@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -15,10 +16,11 @@ using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.ViewModels.Popups;
 
-public partial class AddSpendingSourceVM : ObservableObject
+public partial class AddSpendingSourceVM : ObservableValidator
 {
     private const string BalanceUpdateTagColor = "#e8ca5f";
     private const string BalanceUpdateTagName = "Balance Update";
+    private const int MaxNameLength = 256;
     private const decimal PercentageMaximum = 100m;
 
     private readonly MainVM _mainViewModel;
@@ -27,20 +29,36 @@ public partial class AddSpendingSourceVM : ObservableObject
     private readonly Func<int?, Task<IReadOnlyList<DeductSourceOption>>>? _loadDraftDeductSourcesAsync;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
+    private bool _isApyValidationActive;
+    private bool _isMaximumSpendingModified;
+    private bool _isMaximumSpendingValidationActive;
+    private bool _isMinimumPaymentValidationActive;
+    private bool _isNameValidationActive;
+    private bool _isSpentAmountValidationActive;
 
     [ObservableProperty] private decimal _accountLimitText;
-    [ObservableProperty] private decimal _apyText;
+    [ObservableProperty]
+    [CustomValidation(typeof(AddSpendingSourceVM), nameof(ValidateApyText))]
+    private decimal _apyText;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEnabled = true;
-    [ObservableProperty] private decimal _maximumSpendingText;
-    [ObservableProperty] private decimal _minimumPaymentText;
+    [ObservableProperty]
+    [CustomValidation(typeof(AddSpendingSourceVM), nameof(ValidateMaximumSpendingText))]
+    private decimal _maximumSpendingText;
+    [ObservableProperty]
+    [CustomValidation(typeof(AddSpendingSourceVM), nameof(ValidateMinimumPaymentText))]
+    private decimal _minimumPaymentText;
     [ObservableProperty] private string _monthlyDueDateText = GetDefaultMonthlyDueDateText();
-    [ObservableProperty] private string _nameText = string.Empty;
+    [ObservableProperty]
+    [CustomValidation(typeof(AddSpendingSourceVM), nameof(ValidateNameText))]
+    private string _nameText = string.Empty;
     [ObservableProperty] private decimal _primaryAmountText;
     [ObservableProperty] private int? _selectedDeductSource;
     [ObservableProperty] private SpendingSourceType _selectedSpendingSourceType = SpendingSourceType.Checking;
     [ObservableProperty] private bool _showOnUI = true;
-    [ObservableProperty] private decimal _spentAmountText;
+    [ObservableProperty]
+    [CustomValidation(typeof(AddSpendingSourceVM), nameof(ValidateSpentAmountText))]
+    private decimal _spentAmountText;
 
     public int? EditingId { get; init; }
 
@@ -59,6 +77,25 @@ public partial class AddSpendingSourceVM : ObservableObject
             nameof(DeductSourceOption.TypeDisplayName),
             nameof(DeductSourceOption.SpendingSourceType),
             nameof(DeductSourceOption.Name));
+        ErrorsChanged += (_, e) =>
+        {
+            OnPropertyChanged(nameof(CanSave));
+
+            if (e.PropertyName == nameof(NameText))
+                OnPropertyChanged(nameof(NameValidationHint));
+
+            if (e.PropertyName == nameof(MaximumSpendingText))
+                OnPropertyChanged(nameof(MaximumSpendingValidationHint));
+
+            if (e.PropertyName == nameof(SpentAmountText) || e.PropertyName == nameof(AccountLimitText))
+                OnPropertyChanged(nameof(SpentAmountValidationHint));
+
+            if (e.PropertyName == nameof(MinimumPaymentText))
+                OnPropertyChanged(nameof(MinimumPaymentValidationHint));
+
+            if (e.PropertyName == nameof(ApyText))
+                OnPropertyChanged(nameof(ApyValidationHint));
+        };
         _initialState = CaptureState();
     }
 
@@ -74,7 +111,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     public ObservableCollection<DeductSourceOption> DeductSources { get; } = [];
     public ICollectionView DeductSourcesView { get; }
 
-    public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
+    public bool CanSave => !IsBusy && !HasErrors && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool IsEditMode => EditingId.HasValue;
     public string PopupTitle => IsEditMode ? "Edit Income Source" : "Add New Income Source";
@@ -85,12 +122,71 @@ public partial class AddSpendingSourceVM : ObservableObject
         : "Set up a new source for checking, cash, credit, BNPL, or savings.";
 
     public string ValidationDialogTitle => PopupTitle;
+    public string NameValidationHint => GetValidationHint(nameof(NameText));
+    public string MaximumSpendingValidationHint => GetValidationHint(nameof(MaximumSpendingText));
+    public string SpentAmountValidationHint => GetValidationHint(nameof(SpentAmountText));
+    public string MinimumPaymentValidationHint => GetValidationHint(nameof(MinimumPaymentText));
+    public string ApyValidationHint => GetValidationHint(nameof(ApyText));
+    public string MaximumSpendingPlaceholderText => FormatPlaceholderAmount(GetMaximumSpendingPlaceholderValue());
 
     public void BeginChangeTracking()
     {
         _initialState = CaptureState();
         _isChangeTrackingInitialized = true;
         NotifyFormStateChanged();
+    }
+
+    public void ResetAfterSaveAndCreateNew()
+    {
+        AccountLimitText = 0m;
+        ApyText = 0m;
+        IsEnabled = true;
+        MaximumSpendingText = 0m;
+        MinimumPaymentText = 0m;
+        MonthlyDueDateText = GetDefaultMonthlyDueDateText();
+        NameText = string.Empty;
+        PrimaryAmountText = 0m;
+        SelectedSpendingSourceType = SpendingSourceType.Checking;
+        ShowOnUI = true;
+        SpentAmountText = 0m;
+        SelectedDeductSource = null;
+        ResetValidationState();
+        BeginChangeTracking();
+    }
+
+    public void ValidateNameField()
+    {
+        _isNameValidationActive = true;
+        ValidateProperty(NameText, nameof(NameText));
+    }
+
+    public void ValidateMaximumSpendingField()
+    {
+        _isMaximumSpendingValidationActive = true;
+        ValidateProperty(MaximumSpendingText, nameof(MaximumSpendingText));
+    }
+
+    public void ValidateSpentAmountField()
+    {
+        _isSpentAmountValidationActive = true;
+        ValidateProperty(SpentAmountText, nameof(SpentAmountText));
+    }
+
+    public void ValidateMinimumPaymentField()
+    {
+        _isMinimumPaymentValidationActive = true;
+        ValidateProperty(MinimumPaymentText, nameof(MinimumPaymentText));
+    }
+
+    public void ValidateApyField()
+    {
+        _isApyValidationActive = true;
+        ValidateProperty(ApyText, nameof(ApyText));
+    }
+
+    public void MarkMaximumSpendingModified()
+    {
+        _isMaximumSpendingModified = true;
     }
 
     public bool IsCredit => SelectedSpendingSourceType == SpendingSourceType.Credit;
@@ -101,29 +197,59 @@ public partial class AddSpendingSourceVM : ObservableObject
     public bool IsBalanceLike => IsCashLike || IsSaving;
     public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
 
-    partial void OnAccountLimitTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnAccountLimitTextChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(MaximumSpendingPlaceholderText));
+        RefreshActiveValidation(nameof(MaximumSpendingText), nameof(SpentAmountText));
+        NotifyFormStateChanged();
+    }
 
-    partial void OnApyTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnApyTextChanged(decimal value)
+    {
+        RefreshActiveValidation(nameof(ApyText));
+        NotifyFormStateChanged();
+    }
 
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
 
     partial void OnIsEnabledChanged(bool value) => NotifyFormStateChanged();
 
-    partial void OnMaximumSpendingTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnMaximumSpendingTextChanged(decimal value)
+    {
+        RefreshActiveValidation(nameof(MaximumSpendingText));
+        NotifyFormStateChanged();
+    }
 
-    partial void OnMinimumPaymentTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnMinimumPaymentTextChanged(decimal value)
+    {
+        RefreshActiveValidation(nameof(MinimumPaymentText));
+        NotifyFormStateChanged();
+    }
 
     partial void OnMonthlyDueDateTextChanged(string value) => NotifyFormStateChanged();
 
-    partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
+    partial void OnNameTextChanged(string value)
+    {
+        RefreshActiveValidation(nameof(NameText));
+        NotifyFormStateChanged();
+    }
 
-    partial void OnPrimaryAmountTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnPrimaryAmountTextChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(MaximumSpendingPlaceholderText));
+        RefreshActiveValidation(nameof(MaximumSpendingText));
+        NotifyFormStateChanged();
+    }
 
     partial void OnSelectedDeductSourceChanged(int? value) => NotifyFormStateChanged();
 
     partial void OnShowOnUIChanged(bool value) => NotifyFormStateChanged();
 
-    partial void OnSpentAmountTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnSpentAmountTextChanged(decimal value)
+    {
+        RefreshActiveValidation(nameof(MaximumSpendingText), nameof(SpentAmountText));
+        NotifyFormStateChanged();
+    }
 
     partial void OnSelectedSpendingSourceTypeChanged(SpendingSourceType value)
     {
@@ -134,6 +260,7 @@ public partial class AddSpendingSourceVM : ObservableObject
         OnPropertyChanged(nameof(IsCashLike));
         OnPropertyChanged(nameof(IsBalanceLike));
         OnPropertyChanged(nameof(PrimaryAmountLabel));
+        OnPropertyChanged(nameof(MaximumSpendingPlaceholderText));
 
         if (!IsCreditLike)
         {
@@ -160,6 +287,11 @@ public partial class AddSpendingSourceVM : ObservableObject
         if (!IsSaving)
             ApyText = 0m;
 
+        RefreshActiveValidation(
+            nameof(MaximumSpendingText),
+            nameof(SpentAmountText),
+            nameof(MinimumPaymentText),
+            nameof(ApyText));
         NotifyFormStateChanged();
     }
 
@@ -344,11 +476,6 @@ public partial class AddSpendingSourceVM : ObservableObject
             : currentSpentAmount;
     }
 
-    private static decimal CalculateAvailableCredit(decimal accountLimit, decimal spentAmount)
-    {
-        return Math.Max(accountLimit - spentAmount, 0m);
-    }
-
     private static async Task<ExpenseTag> ResolveBalanceUpdateTagAsync(IAppDataService appData)
     {
         var tags = await appData.GetExpenseTagsAsync();
@@ -447,10 +574,22 @@ public partial class AddSpendingSourceVM : ObservableObject
             return false;
         }
 
+        if (name.Length > MaxNameLength)
+        {
+            validationMessage = $"Source name cannot exceed {MaxNameLength} characters.";
+            return false;
+        }
+
+        if (name.Any(char.IsControl))
+        {
+            validationMessage = "Source name cannot contain control characters.";
+            return false;
+        }
+
         var primaryAmount = PrimaryAmountText;
         var spentAmount = SpentAmountText;
         var accountLimit = AccountLimitText;
-        var maximumSpending = MaximumSpendingText;
+        var maximumSpending = GetEffectiveMaximumSpending();
         var minimumPayment = IsCredit ? MinimumPaymentText : 0m;
         decimal? interestRate = IsSaving ? ApyText : null;
 
@@ -465,6 +604,25 @@ public partial class AddSpendingSourceVM : ObservableObject
         if (SelectedSpendingSourceType == SpendingSourceType.Credit && accountLimit <= 0m)
         {
             validationMessage = "Credit sources require an account limit greater than zero.";
+            return false;
+        }
+
+        if (IsCredit && spentAmount > accountLimit)
+        {
+            validationMessage = "Spent amount cannot exceed the account limit.";
+            failurePresentation = AddSpendingSourceFailurePresentation.ToastWarning;
+            return false;
+        }
+
+        if (IsCredit && minimumPayment <= 0m)
+        {
+            validationMessage = "Minimum payment must be greater than zero.";
+            return false;
+        }
+
+        if (IsSaving && interestRate.HasValue && interestRate.Value <= 0m)
+        {
+            validationMessage = "APY must be greater than zero.";
             return false;
         }
 
@@ -484,13 +642,20 @@ public partial class AddSpendingSourceVM : ObservableObject
 
         if (IsCredit && maximumSpending > 0m)
         {
-            var availableCredit = CalculateAvailableCredit(accountLimit, spentAmount);
-            if (maximumSpending > accountLimit || maximumSpending > availableCredit)
+            if (maximumSpending > accountLimit)
             {
-                validationMessage = "Maximum spending cannot exceed the available credit.";
+                validationMessage = "Maximum spending cannot exceed the account limit.";
                 failurePresentation = AddSpendingSourceFailurePresentation.ToastWarning;
                 return false;
             }
+        }
+
+        if (SelectedSpendingSourceType is SpendingSourceType.Checking or SpendingSourceType.Cash &&
+            maximumSpending > primaryAmount)
+        {
+            validationMessage = "Maximum spending cannot exceed the current balance.";
+            failurePresentation = AddSpendingSourceFailurePresentation.ToastWarning;
+            return false;
         }
 
         int? monthlyDueDate = null;
@@ -564,6 +729,101 @@ public partial class AddSpendingSourceVM : ObservableObject
         return true;
     }
 
+    private void RefreshActiveValidation(params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            if (propertyName == nameof(NameText) && _isNameValidationActive)
+                ValidateProperty(NameText, nameof(NameText));
+
+            if (propertyName == nameof(MaximumSpendingText) && _isMaximumSpendingValidationActive)
+                ValidateProperty(MaximumSpendingText, nameof(MaximumSpendingText));
+
+            if (propertyName == nameof(SpentAmountText) && _isSpentAmountValidationActive)
+                ValidateProperty(SpentAmountText, nameof(SpentAmountText));
+
+            if (propertyName == nameof(MinimumPaymentText) && _isMinimumPaymentValidationActive)
+                ValidateProperty(MinimumPaymentText, nameof(MinimumPaymentText));
+
+            if (propertyName == nameof(ApyText) && _isApyValidationActive)
+                ValidateProperty(ApyText, nameof(ApyText));
+        }
+    }
+
+    private void ResetValidationState()
+    {
+        _isApyValidationActive = false;
+        _isMaximumSpendingModified = false;
+        _isMaximumSpendingValidationActive = false;
+        _isMinimumPaymentValidationActive = false;
+        _isNameValidationActive = false;
+        _isSpentAmountValidationActive = false;
+        ClearErrors();
+        OnPropertyChanged(nameof(NameValidationHint));
+        OnPropertyChanged(nameof(MaximumSpendingValidationHint));
+        OnPropertyChanged(nameof(SpentAmountValidationHint));
+        OnPropertyChanged(nameof(MinimumPaymentValidationHint));
+        OnPropertyChanged(nameof(ApyValidationHint));
+    }
+
+    private string GetValidationHint(string propertyName)
+    {
+        var message = GetErrors(propertyName)
+            .OfType<ValidationResult>()
+            .Select(result => result.ErrorMessage)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
+        if (string.IsNullOrWhiteSpace(message))
+            return string.Empty;
+
+        return propertyName switch
+        {
+            nameof(NameText) => GetNameValidationHint(message),
+            nameof(MaximumSpendingText) => "Exceeds Limit",
+            nameof(SpentAmountText) => "Exceeds Limit",
+            nameof(MinimumPaymentText) => message.Contains("greater than zero", StringComparison.OrdinalIgnoreCase)
+                ? "Required"
+                : "Invalid Rate",
+            nameof(ApyText) => message.Contains("greater than zero", StringComparison.OrdinalIgnoreCase)
+                ? "Required"
+                : "Invalid Rate",
+            _ => string.Empty
+        };
+    }
+
+    private static string GetNameValidationHint(string message)
+    {
+        if (message.Contains("enter a source name", StringComparison.OrdinalIgnoreCase))
+            return "Required";
+
+        if (message.Contains("exceed", StringComparison.OrdinalIgnoreCase))
+            return "Too Long";
+
+        return "Invalid Name";
+    }
+
+    private decimal GetEffectiveMaximumSpending()
+    {
+        return _isMaximumSpendingModified
+            ? MaximumSpendingText
+            : GetMaximumSpendingPlaceholderValue();
+    }
+
+    private decimal GetMaximumSpendingPlaceholderValue()
+    {
+        return SelectedSpendingSourceType switch
+        {
+            SpendingSourceType.Credit => AccountLimitText,
+            SpendingSourceType.Checking or SpendingSourceType.Cash => PrimaryAmountText,
+            _ => 0m
+        };
+    }
+
+    private static string FormatPlaceholderAmount(decimal value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
     private FormState CaptureState()
     {
         return new FormState(
@@ -571,12 +831,8 @@ public partial class AddSpendingSourceVM : ObservableObject
             PrimaryAmountText,
             SpentAmountText,
             AccountLimitText,
-            MaximumSpendingText,
             MinimumPaymentText,
             ApyText,
-            MonthlyDueDateText ?? string.Empty,
-            SelectedDeductSource,
-            SelectedSpendingSourceType,
             ShowOnUI,
             IsEnabled);
     }
@@ -585,6 +841,84 @@ public partial class AddSpendingSourceVM : ObservableObject
     {
         OnPropertyChanged(nameof(CanSave));
         OnPropertyChanged(nameof(HasChanges));
+    }
+
+    public static ValidationResult? ValidateNameText(string value, ValidationContext validationContext)
+    {
+        _ = validationContext;
+        var trimmedName = value?.Trim() ?? string.Empty;
+
+        if (trimmedName.Length == 0)
+            return new ValidationResult("Please enter a source name.");
+
+        if (trimmedName.Length > MaxNameLength)
+            return new ValidationResult($"Source name cannot exceed {MaxNameLength} characters.");
+
+        if (trimmedName.Any(char.IsControl))
+            return new ValidationResult("Source name cannot contain control characters.");
+
+        return ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateMaximumSpendingText(decimal value, ValidationContext validationContext)
+    {
+        var viewModel = (AddSpendingSourceVM)validationContext.ObjectInstance;
+        if (value < 0m)
+            return new ValidationResult("Maximum spending must be zero or greater.");
+
+        if (value == 0m)
+            return ValidationResult.Success;
+
+        if (viewModel.SelectedSpendingSourceType is SpendingSourceType.Checking or SpendingSourceType.Cash &&
+            value > viewModel.PrimaryAmountText)
+            return new ValidationResult("Maximum spending cannot exceed the current balance.");
+
+        if (viewModel.SelectedSpendingSourceType == SpendingSourceType.Credit &&
+            value > viewModel.AccountLimitText)
+            return new ValidationResult("Maximum spending cannot exceed the account limit.");
+
+        return ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateSpentAmountText(decimal value, ValidationContext validationContext)
+    {
+        var viewModel = (AddSpendingSourceVM)validationContext.ObjectInstance;
+        if (value < 0m)
+            return new ValidationResult("Spent amount must be zero or greater.");
+
+        return viewModel.SelectedSpendingSourceType == SpendingSourceType.Credit &&
+               viewModel.AccountLimitText > 0m &&
+               value > viewModel.AccountLimitText
+            ? new ValidationResult("Spent amount cannot exceed the account limit.")
+            : ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateMinimumPaymentText(decimal value, ValidationContext validationContext)
+    {
+        var viewModel = (AddSpendingSourceVM)validationContext.ObjectInstance;
+        if (!viewModel.IsCredit)
+            return ValidationResult.Success;
+
+        if (value <= 0m)
+            return new ValidationResult("Minimum payment must be greater than zero.");
+
+        return value > PercentageMaximum
+            ? new ValidationResult("Minimum payment cannot exceed 100%.")
+            : ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateApyText(decimal value, ValidationContext validationContext)
+    {
+        var viewModel = (AddSpendingSourceVM)validationContext.ObjectInstance;
+        if (!viewModel.IsSaving)
+            return ValidationResult.Success;
+
+        if (value <= 0m)
+            return new ValidationResult("APY must be greater than zero.");
+
+        return value > PercentageMaximum
+            ? new ValidationResult("APY cannot exceed 100%.")
+            : ValidationResult.Success;
     }
 
     public enum AddSpendingSourceFailurePresentation
@@ -633,12 +967,8 @@ public partial class AddSpendingSourceVM : ObservableObject
         decimal PrimaryAmountText,
         decimal SpentAmountText,
         decimal AccountLimitText,
-        decimal MaximumSpendingText,
         decimal MinimumPaymentText,
         decimal ApyText,
-        string MonthlyDueDateText,
-        int? SelectedDeductSource,
-        SpendingSourceType SpendingSourceType,
         bool ShowOnUI,
         bool IsEnabled);
 

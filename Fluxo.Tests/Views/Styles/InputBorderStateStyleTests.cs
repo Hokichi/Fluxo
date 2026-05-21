@@ -12,6 +12,8 @@ public sealed class InputBorderStateStyleTests
         var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
         var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedTextInputStyle\"", "x:Key=\"RoundedMoneyTextInputStyle\"");
 
+        Assert.Contains("Property=\"Validation.ErrorTemplate\" Value=\"{x:Null}\"", styleSection);
+
         var focusTrigger = "Property=\"IsKeyboardFocused\" Value=\"True\"";
         var invalidTrigger = "Property=\"Validation.HasError\" Value=\"True\"";
         var mintSetter = "Value=\"{DynamicResource Brush.Mint}\"";
@@ -55,6 +57,24 @@ public sealed class InputBorderStateStyleTests
         Assert.Contains("<Condition Property=\"IsZeroAmount\" Value=\"True\" />", styleSection);
         Assert.Contains("TargetName=\"PART_ContentHost\" Property=\"Visibility\" Value=\"Visible\"", styleSection);
         Assert.Contains("Property=\"Foreground\" Value=\"Transparent\"", styleSection);
+    }
+
+    [Fact]
+    public void RoundedMoneyTextInputStyle_UsesTemplateBoundPlaceholderText()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedMoneyTextInputStyle\"", "x:Key=\"RoundedSuffixTextInputStyle\"");
+
+        Assert.Contains("Text=\"{TemplateBinding PlaceholderText}\"", styleSection);
+    }
+
+    [Fact]
+    public void RoundedSuffixTextInputStyle_UsesTemplateBoundPlaceholderText()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedSuffixTextInputStyle\"", "x:Key=\"NumericUpDownArrowButtonStyle\"");
+
+        Assert.Contains("Text=\"{TemplateBinding PlaceholderText}\"", styleSection);
     }
 
     [Fact]
@@ -153,6 +173,7 @@ public sealed class InputBorderStateStyleTests
         var globalStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "GlobalStyles.xaml"));
         var styleSection = ExtractSection(globalStylesXaml, "x:Key=\"FluxoComboBoxStyle\"", "x:Key=\"BudgetSliderThumbStyle\"");
 
+        Assert.Contains("Property=\"Validation.ErrorTemplate\" Value=\"{x:Null}\"", styleSection);
         Assert.Contains("Property=\"IsKeyboardFocusWithin\" Value=\"True\"", styleSection);
         Assert.Contains("Property=\"Validation.HasError\" Value=\"True\"", styleSection);
         Assert.Contains("Value=\"{StaticResource Brush.Mint}\"", styleSection);

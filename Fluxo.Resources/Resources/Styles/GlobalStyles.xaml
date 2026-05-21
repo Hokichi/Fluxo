@@ -344,6 +344,7 @@
     </Style>
 
     <Style x:Key="FluxoComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="Height" Value="40" />
         <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />

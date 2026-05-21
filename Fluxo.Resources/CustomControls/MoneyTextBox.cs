@@ -31,6 +31,12 @@ public class MoneyTextBox : TextBox
         typeof(MoneyTextBox),
         new PropertyMetadata(false));
 
+    public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(
+        nameof(PlaceholderText),
+        typeof(string),
+        typeof(MoneyTextBox),
+        new PropertyMetadata("0"));
+
     public static readonly DependencyProperty IsZeroAmountProperty = DependencyProperty.Register(
         nameof(IsZeroAmount),
         typeof(bool),
@@ -66,6 +72,12 @@ public class MoneyTextBox : TextBox
     {
         get => (bool)GetValue(ShouldHighlightWhenInvalidProperty);
         set => SetValue(ShouldHighlightWhenInvalidProperty, value);
+    }
+
+    public string PlaceholderText
+    {
+        get => (string)GetValue(PlaceholderTextProperty);
+        set => SetValue(PlaceholderTextProperty, value);
     }
 
     public bool IsZeroAmount
