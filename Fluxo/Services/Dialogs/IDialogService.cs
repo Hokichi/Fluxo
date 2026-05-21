@@ -4,6 +4,7 @@ using System.Windows;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.Services.Updates;
 using Fluxo.Views.Popups;
 
 namespace Fluxo.Services.Dialogs;
@@ -56,6 +57,11 @@ public interface IDialogService
     Task ShowToastWhileAsync(string message, Func<Task> work, Window? owner = null);
 
     Task ShowToastWhileAsync(string message, Action work, Window? owner = null);
+
+    Task<string?> ShowDownloadUpdateAsync(
+        AppUpdateCheckResult update,
+        Func<IProgress<double>, CancellationToken, Task<string>> downloadInstallerAsync,
+        Window? owner = null);
 
     MessageBoxResult ShowWarning(string message, string title, Window? owner = null,
         MessageBoxButton buttons = MessageBoxButton.OK);

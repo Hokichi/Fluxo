@@ -11,5 +11,11 @@ public interface IAppUpdateService
         string installerAssetName,
         CancellationToken cancellationToken = default);
 
+    Task<string> DownloadInstallerAsync(
+        string installerDownloadUrl,
+        string installerAssetName,
+        IProgress<double>? progress,
+        CancellationToken cancellationToken = default);
+
     void DeleteInstaller(string installerPath);
 }

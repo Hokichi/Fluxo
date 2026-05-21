@@ -15,7 +15,6 @@ public sealed class AppUpdateInteractionServiceTests
         var dialogService = Substitute.For<IDialogService>();
         dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
             .Returns(MessageBoxResult.No);
-        ConfigureToastToRunWork(dialogService);
 
         var appUpdateService = Substitute.For<IAppUpdateService>();
         var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
@@ -26,6 +25,12 @@ public sealed class AppUpdateInteractionServiceTests
         await appUpdateService
             .DidNotReceive()
             .DownloadInstallerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await dialogService
+            .DidNotReceive()
+            .ShowDownloadUpdateAsync(
+                Arg.Any<AppUpdateCheckResult>(),
+                Arg.Any<Func<IProgress<double>, CancellationToken, Task<string>>>(),
+                Arg.Any<Window?>());
         appUpdateService.DidNotReceive().DeleteInstaller(Arg.Any<string>());
         lifecycleService.DidNotReceive().LaunchUpdateInstallerAndShutdown(Arg.Any<string>());
     }
@@ -38,20 +43,18 @@ public sealed class AppUpdateInteractionServiceTests
         var dialogService = Substitute.For<IDialogService>();
         dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
             .Returns(MessageBoxResult.Yes, MessageBoxResult.No);
-        ConfigureToastToRunWork(dialogService);
+        ConfigureDownloadPopupToReturn(dialogService, installerPath);
 
         var appUpdateService = Substitute.For<IAppUpdateService>();
-        appUpdateService
-            .DownloadInstallerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(installerPath);
         var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
         var sut = new AppUpdateInteractionService(dialogService, appUpdateService, lifecycleService);
 
         await sut.HandleAvailableUpdateAsync(update, owner: null);
 
-        await appUpdateService
-            .Received(1)
-            .DownloadInstallerAsync(update.InstallerDownloadUrl!, update.InstallerAssetName!, Arg.Any<CancellationToken>());
+        await dialogService.Received(1).ShowDownloadUpdateAsync(
+            update,
+            Arg.Any<Func<IProgress<double>, CancellationToken, Task<string>>>(),
+            null);
         appUpdateService.Received(1).DeleteInstaller(installerPath);
         lifecycleService.DidNotReceive().LaunchUpdateInstallerAndShutdown(Arg.Any<string>());
     }
@@ -63,12 +66,14 @@ public sealed class AppUpdateInteractionServiceTests
         var dialogService = Substitute.For<IDialogService>();
         dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
             .Returns(MessageBoxResult.Yes);
-        ConfigureToastToRunWork(dialogService);
+        dialogService
+            .ShowDownloadUpdateAsync(
+                Arg.Any<AppUpdateCheckResult>(),
+                Arg.Any<Func<IProgress<double>, CancellationToken, Task<string>>>(),
+                Arg.Any<Window?>())
+            .Returns(Task.FromException<string?>(new InvalidOperationException("download failed")));
 
         var appUpdateService = Substitute.For<IAppUpdateService>();
-        appUpdateService
-            .DownloadInstallerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<string>(new InvalidOperationException("download failed")));
         var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
         var sut = new AppUpdateInteractionService(dialogService, appUpdateService, lifecycleService);
 
@@ -90,12 +95,9 @@ public sealed class AppUpdateInteractionServiceTests
         var dialogService = Substitute.For<IDialogService>();
         dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
             .Returns(MessageBoxResult.Yes, MessageBoxResult.Yes);
-        ConfigureToastToRunWork(dialogService);
+        ConfigureDownloadPopupToReturn(dialogService, installerPath);
 
         var appUpdateService = Substitute.For<IAppUpdateService>();
-        appUpdateService
-            .DownloadInstallerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(installerPath);
         var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
         lifecycleService
             .When(service => service.LaunchUpdateInstallerAndShutdown(installerPath))
@@ -119,12 +121,9 @@ public sealed class AppUpdateInteractionServiceTests
         var dialogService = Substitute.For<IDialogService>();
         dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
             .Returns(MessageBoxResult.Yes, MessageBoxResult.Yes);
-        ConfigureToastToRunWork(dialogService);
+        ConfigureDownloadPopupToReturn(dialogService, installerPath);
 
         var appUpdateService = Substitute.For<IAppUpdateService>();
-        appUpdateService
-            .DownloadInstallerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(installerPath);
         var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
         var sut = new AppUpdateInteractionService(dialogService, appUpdateService, lifecycleService);
 
@@ -146,18 +145,12 @@ public sealed class AppUpdateInteractionServiceTests
         var dialogService = Substitute.For<IDialogService>();
         dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
             .Returns(MessageBoxResult.Yes, MessageBoxResult.Yes);
-        ConfigureToastToRunWork(dialogService);
+        ConfigureDownloadPopupToReturn(dialogService, installerPath);
 
         var appUpdateService = Substitute.For<IAppUpdateService>();
         appUpdateService
             .CheckForUpdatesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(hydratedUpdate);
-        appUpdateService
-            .DownloadInstallerAsync(
-                hydratedUpdate.InstallerDownloadUrl!,
-                hydratedUpdate.InstallerAssetName!,
-                Arg.Any<CancellationToken>())
-            .Returns(installerPath);
         var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
         var sut = new AppUpdateInteractionService(dialogService, appUpdateService, lifecycleService);
 
@@ -166,12 +159,57 @@ public sealed class AppUpdateInteractionServiceTests
         await appUpdateService.Received(1).CheckForUpdatesAsync(
             AppVersionResolver.ResolveCurrentVersion(),
             Arg.Any<CancellationToken>());
-        await appUpdateService.Received(1).DownloadInstallerAsync(
-            hydratedUpdate.InstallerDownloadUrl!,
-            hydratedUpdate.InstallerAssetName!,
-            Arg.Any<CancellationToken>());
+        await dialogService.Received(1).ShowDownloadUpdateAsync(
+            Arg.Is<AppUpdateCheckResult>(candidate =>
+                candidate.LatestVersion == "2.5.0"
+                && candidate.InstallerAssetName == hydratedUpdate.InstallerAssetName
+                && candidate.InstallerDownloadUrl == hydratedUpdate.InstallerDownloadUrl),
+            Arg.Any<Func<IProgress<double>, CancellationToken, Task<string>>>(),
+            null);
         lifecycleService.Received(1).LaunchUpdateInstallerAndShutdown(installerPath);
         appUpdateService.DidNotReceive().DeleteInstaller(Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task HandleAvailableUpdateAsync_WhenDownloadPopupRunsDelegate_DownloadsWithProgressAndCancellationToken()
+    {
+        const string installerPath = "C:\\temp\\fluxo-installer.exe";
+        var update = CreateAvailableUpdate();
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var progress = new Progress<double>();
+        var dialogService = Substitute.For<IDialogService>();
+        dialogService.ShowQuestion(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Window?>(), Arg.Any<MessageBoxButton>())
+            .Returns(MessageBoxResult.Yes, MessageBoxResult.Yes);
+        dialogService
+            .ShowDownloadUpdateAsync(
+                update,
+                Arg.Any<Func<IProgress<double>, CancellationToken, Task<string>>>(),
+                Arg.Any<Window?>())
+            .Returns(callInfo =>
+            {
+                var download = callInfo.ArgAt<Func<IProgress<double>, CancellationToken, Task<string>>>(1);
+                return AwaitNullableAsync(download(progress, cancellationTokenSource.Token));
+            });
+
+        var appUpdateService = Substitute.For<IAppUpdateService>();
+        appUpdateService
+            .DownloadInstallerAsync(
+                update.InstallerDownloadUrl!,
+                update.InstallerAssetName!,
+                progress,
+                cancellationTokenSource.Token)
+            .Returns(installerPath);
+        var lifecycleService = Substitute.For<IAppUpdateLifecycleService>();
+        var sut = new AppUpdateInteractionService(dialogService, appUpdateService, lifecycleService);
+
+        await sut.HandleAvailableUpdateAsync(update, owner: null);
+
+        await appUpdateService.Received(1).DownloadInstallerAsync(
+            update.InstallerDownloadUrl!,
+            update.InstallerAssetName!,
+            progress,
+            cancellationTokenSource.Token);
+        lifecycleService.Received(1).LaunchUpdateInstallerAndShutdown(installerPath);
     }
 
     [Fact]
@@ -200,14 +238,19 @@ public sealed class AppUpdateInteractionServiceTests
         Assert.Equal("Fluxo Unknown is available. Download and install it?", prompt);
     }
 
-    private static void ConfigureToastToRunWork(IDialogService dialogService)
+    private static void ConfigureDownloadPopupToReturn(IDialogService dialogService, string installerPath)
     {
         dialogService
-            .ShowToastWhileAsync(
-                Arg.Any<string>(),
-                Arg.Any<Func<Task>>(),
+            .ShowDownloadUpdateAsync(
+                Arg.Any<AppUpdateCheckResult>(),
+                Arg.Any<Func<IProgress<double>, CancellationToken, Task<string>>>(),
                 Arg.Any<Window?>())
-            .Returns(callInfo => callInfo.ArgAt<Func<Task>>(1)());
+            .Returns(installerPath);
+    }
+
+    private static async Task<string?> AwaitNullableAsync(Task<string> task)
+    {
+        return await task;
     }
 
     private static AppUpdateCheckResult CreateAvailableUpdate()

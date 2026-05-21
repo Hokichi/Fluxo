@@ -26,10 +26,15 @@ public sealed class AppUpdateInteractionService(
         string installerPath;
         try
         {
-            installerPath = await RunWithToastAsync(
-                "Downloading update",
-                () => DownloadInstallerAsync(downloadCandidate),
+            var downloadedInstallerPath = await dialogService.ShowDownloadUpdateAsync(
+                downloadCandidate,
+                (progress, cancellationToken) => DownloadInstallerAsync(downloadCandidate, progress, cancellationToken),
                 owner);
+
+            if (string.IsNullOrWhiteSpace(downloadedInstallerPath))
+                return;
+
+            installerPath = downloadedInstallerPath;
         }
         catch (Exception exception)
         {
@@ -108,7 +113,10 @@ public sealed class AppUpdateInteractionService(
             && Uri.TryCreate(update.InstallerDownloadUrl.Trim(), UriKind.Absolute, out _);
     }
 
-    private async Task<string> DownloadInstallerAsync(AppUpdateCheckResult update)
+    private async Task<string> DownloadInstallerAsync(
+        AppUpdateCheckResult update,
+        IProgress<double> progress,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(update.InstallerDownloadUrl)
             || string.IsNullOrWhiteSpace(update.InstallerAssetName))
@@ -118,17 +126,8 @@ public sealed class AppUpdateInteractionService(
 
         return await appUpdateService.DownloadInstallerAsync(
             update.InstallerDownloadUrl,
-            update.InstallerAssetName);
-    }
-
-    private async Task<T> RunWithToastAsync<T>(string message, Func<Task<T>> work, Window? owner)
-    {
-        T? result = default;
-        await dialogService.ShowToastWhileAsync(message, async () =>
-        {
-            result = await work();
-        }, owner);
-
-        return result!;
+            update.InstallerAssetName,
+            progress,
+            cancellationToken);
     }
 }

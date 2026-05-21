@@ -75,6 +75,13 @@ public sealed partial class AppUpdateService : IAppUpdateService
         string installerDownloadUrl,
         string installerAssetName,
         CancellationToken cancellationToken = default)
+        => await DownloadInstallerAsync(installerDownloadUrl, installerAssetName, null, cancellationToken);
+
+    public async Task<string> DownloadInstallerAsync(
+        string installerDownloadUrl,
+        string installerAssetName,
+        IProgress<double>? progress,
+        CancellationToken cancellationToken = default)
     {
         if (!Uri.TryCreate(installerDownloadUrl, UriKind.Absolute, out _))
         {
@@ -92,17 +99,28 @@ public sealed partial class AppUpdateService : IAppUpdateService
         Directory.CreateDirectory(tempDirectory);
         var destinationPath = Path.Combine(tempDirectory, safeAssetName);
 
-        using var request = CreateGitHubRequest(installerDownloadUrl);
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            using var request = CreateGitHubRequest(installerDownloadUrl);
+            using var response = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+            response.EnsureSuccessStatusCode();
 
-        await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var destination = new FileStream(
-            destinationPath,
-            FileMode.Create,
-            FileAccess.Write,
-            FileShare.None);
-        await source.CopyToAsync(destination, cancellationToken);
+            await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
+            await using var destination = new FileStream(
+                destinationPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None);
+            await CopyToFileWithProgressAsync(source, destination, response.Content.Headers.ContentLength, progress, cancellationToken);
+        }
+        catch
+        {
+            DeleteInstaller(destinationPath);
+            throw;
+        }
 
         return destinationPath;
     }
@@ -191,6 +209,37 @@ public sealed partial class AppUpdateService : IAppUpdateService
         }
 
         return Version.TryParse(normalized, out version!);
+    }
+
+    private static async Task CopyToFileWithProgressAsync(
+        Stream source,
+        Stream destination,
+        long? contentLength,
+        IProgress<double>? progress,
+        CancellationToken cancellationToken)
+    {
+        var buffer = new byte[81920];
+        long totalBytesRead = 0;
+        progress?.Report(0);
+
+        while (true)
+        {
+            var bytesRead = await source.ReadAsync(buffer, cancellationToken);
+            if (bytesRead == 0)
+                break;
+
+            await destination.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+            totalBytesRead += bytesRead;
+
+            var totalBytes = contentLength.GetValueOrDefault();
+            if (totalBytes > 0)
+            {
+                var percentage = Math.Clamp(totalBytesRead * 100d / totalBytes, 0d, 100d);
+                progress?.Report(percentage);
+            }
+        }
+
+        progress?.Report(100);
     }
 
     [GeneratedRegex(@"^fluxo-.+-Installer\.exe$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]

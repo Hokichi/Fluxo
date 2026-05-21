@@ -6,6 +6,7 @@ using System.Windows;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.Services.Updates;
 using Fluxo.Views.Popups;
 using Fluxo.Views.Popups.Planning;
 using Fluxo.Views.Popups.Settings;
@@ -173,6 +174,21 @@ public sealed class DialogService : IDialogService
     {
         ArgumentNullException.ThrowIfNull(work);
         return ShowToastWhileAsync(message, () => Task.Run(work), owner);
+    }
+
+    public Task<string?> ShowDownloadUpdateAsync(
+        AppUpdateCheckResult update,
+        Func<IProgress<double>, CancellationToken, Task<string>> downloadInstallerAsync,
+        Window? owner = null)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+        ArgumentNullException.ThrowIfNull(downloadInstallerAsync);
+
+        var popup = new DownloadUpdatePopup(update, downloadInstallerAsync);
+        ShowDialog(popup, owner);
+
+        popup.RethrowIfFailed();
+        return Task.FromResult(popup.IsCanceled ? null : popup.InstallerPath);
     }
 
     public MessageBoxResult ShowWarning(string message, string title, Window? owner = null,

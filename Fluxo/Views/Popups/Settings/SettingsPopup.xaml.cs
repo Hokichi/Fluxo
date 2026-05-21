@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -309,6 +310,31 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
     internal Task ShowToastWhileAsync(string message, Func<Task> work)
     {
         return _dialogService.ShowToastWhileAsync(message, work, this);
+    }
+
+    internal Task<T> ShowToastWhileAsync<T>(string message, Func<global::Fluxo.Views.Popups.ToastPopup, Task<T>> work)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new ArgumentException("Toast message cannot be empty.", nameof(message));
+
+        ArgumentNullException.ThrowIfNull(work);
+
+        T? result = default;
+        global::Fluxo.Views.Popups.ToastPopup? popup = null;
+        popup = new global::Fluxo.Views.Popups.ToastPopup(message, async () =>
+        {
+            result = await work(popup!).ConfigureAwait(true);
+        })
+        {
+            Owner = this
+        };
+
+        popup.ShowDialog();
+
+        if (popup.ExecutionException is not null)
+            ExceptionDispatchInfo.Capture(popup.ExecutionException).Throw();
+
+        return Task.FromResult(result!);
     }
 
     private void OnPopupClosed(object? sender, EventArgs e)

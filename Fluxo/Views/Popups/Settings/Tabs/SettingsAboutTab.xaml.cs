@@ -24,19 +24,22 @@ public partial class SettingsAboutTab : UserControl
         CheckForUpdatesButton.IsEnabled = false;
         try
         {
-            var update = await RunWithOptionalToastAsync(
-                "Checking for updates",
-                () => _viewModel.CheckForUpdatesAsync());
+            var ownerPopup = Window.GetWindow(this) as SettingsPopup;
+            var update = await CheckForUpdatesWithOptionalToastAsync(ownerPopup);
 
             switch (update.Status)
             {
                 case AppUpdateCheckStatus.UpToDate:
-                    FluxoMessageBox.Show(
-                        Window.GetWindow(this),
-                        "Fluxo is up to date.",
-                        "Check for Updates",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    if (ownerPopup is null)
+                    {
+                        FluxoMessageBox.Show(
+                            Window.GetWindow(this),
+                            "Fluxo is up to date.",
+                            "Check for Updates",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+
                     return;
 
                 case AppUpdateCheckStatus.Error:
@@ -57,6 +60,27 @@ public partial class SettingsAboutTab : UserControl
             if (Application.Current is not null)
                 CheckForUpdatesButton.IsEnabled = true;
         }
+    }
+
+    private async Task<AppUpdateCheckResult> CheckForUpdatesWithOptionalToastAsync(SettingsPopup? ownerPopup)
+    {
+        if (_viewModel is null)
+            return AppUpdateCheckResult.Error("Unable to check for updates.");
+
+        if (ownerPopup is null)
+            return await _viewModel.CheckForUpdatesAsync();
+
+        return await ownerPopup.ShowToastWhileAsync("Checking for updates", async toast =>
+        {
+            var update = await _viewModel.CheckForUpdatesAsync();
+            if (update.Status == AppUpdateCheckStatus.UpToDate)
+            {
+                await toast.UpdateMessageAsync("Fluxo is up to date.");
+                await Task.Delay(TimeSpan.FromSeconds(2));
+            }
+
+            return update;
+        });
     }
 
     private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
@@ -146,22 +170,5 @@ public partial class SettingsAboutTab : UserControl
             _viewModel.RequestClosePopup();
             await ((App)Application.Current).RunSetupWizardAsync();
         }
-    }
-
-    private async Task<T> RunWithOptionalToastAsync<T>(string message, Func<Task<T>> work)
-    {
-        var ownerPopup = Window.GetWindow(this) as SettingsPopup;
-        if (ownerPopup is null)
-        {
-            return await work();
-        }
-
-        T? result = default;
-        await ownerPopup.ShowToastWhileAsync(message, async () =>
-        {
-            result = await work();
-        });
-
-        return result!;
     }
 }

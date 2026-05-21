@@ -109,6 +109,62 @@ public sealed class AppUpdateServiceTests
         }
     }
 
+    [Fact]
+    public async Task DownloadInstallerAsync_WhenContentLengthKnown_ReportsProgressPercentage()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"fluxo-update-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent([1, 2, 3, 4])
+            });
+            var progressValues = new List<double>();
+            var progress = new InlineProgress<double>(progressValues.Add);
+
+            var sut = new AppUpdateService(new HttpClient(handler), () => tempDirectory);
+
+            await sut.DownloadInstallerAsync(
+                "https://example.test/fluxo-1.2.0-Installer.exe",
+                "fluxo-1.2.0-Installer.exe",
+                progress);
+
+            Assert.Contains(100d, progressValues);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadInstallerAsync_WhenStreamCancels_DeletesPartialInstaller()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"fluxo-update-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        var destinationPath = Path.Combine(tempDirectory, "fluxo-1.2.0-Installer.exe");
+        try
+        {
+            var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new CancelAfterFirstReadContent()
+            });
+            var sut = new AppUpdateService(new HttpClient(handler), () => tempDirectory);
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() => sut.DownloadInstallerAsync(
+                "https://example.test/fluxo-1.2.0-Installer.exe",
+                "fluxo-1.2.0-Installer.exe",
+                CancellationToken.None));
+
+            Assert.False(File.Exists(destinationPath));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory)
         : HttpMessageHandler
     {
@@ -118,5 +174,67 @@ public sealed class AppUpdateServiceTests
         {
             return Task.FromResult(responseFactory(request));
         }
+    }
+
+    private sealed class InlineProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value)
+        {
+            report(value);
+        }
+    }
+
+    private sealed class CancelAfterFirstReadContent : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+            => throw new NotSupportedException();
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = 4;
+            return true;
+        }
+
+        protected override Task<Stream> CreateContentReadStreamAsync(CancellationToken cancellationToken)
+            => Task.FromResult<Stream>(new CancelAfterFirstReadStream());
+    }
+
+    private sealed class CancelAfterFirstReadStream : Stream
+    {
+        private bool _hasRead;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => 4;
+        public override long Position { get; set; }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_hasRead)
+                throw new OperationCanceledException();
+
+            _hasRead = true;
+            buffer[offset] = 1;
+            return 1;
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (_hasRead)
+                throw new OperationCanceledException(cancellationToken);
+
+            _hasRead = true;
+            buffer.Span[0] = 1;
+            return ValueTask.FromResult(1);
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 }

@@ -28,6 +28,17 @@ public partial class ToastPopup : BasePopup
 
     public Exception? ExecutionException { get; private set; }
 
+    public Task UpdateMessageAsync(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new ArgumentException("Toast message cannot be empty.", nameof(message));
+
+        return Dispatcher.InvokeAsync(() =>
+        {
+            MessageTextBlock.Text = message;
+        }).Task;
+    }
+
     protected override void OnFadeInCompleted()
     {
         base.OnFadeInCompleted();
