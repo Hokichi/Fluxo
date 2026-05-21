@@ -35,18 +35,51 @@ public sealed class RecurringDateInputControlTests
         Assert.DoesNotContain("OnRecurringDatePreviewTextInput", xaml);
     }
 
+    [Fact]
+    public void AddSpendingSourcePopup_MonthlyDueDateInputUsesBoundedNumericUpDown()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddSpendingSourcePopup.xaml"));
+
+        Assert.Equal(1, CountNumericUpDownsBoundTo(xaml, "MonthlyDueDateText", "1", "28"));
+        Assert.DoesNotContain("OnMonthlyDueDatePasting", xaml);
+        Assert.DoesNotContain("OnMonthlyDueDatePreviewKeyDown", xaml);
+        Assert.DoesNotContain("OnMonthlyDueDatePreviewTextInput", xaml);
+    }
+
+    [Fact]
+    public void AddSpendingSourcePopup_MaximumSpendingShowsForCheckingCashAndCredit()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddSpendingSourcePopup.xaml"));
+
+        Assert.Contains("Binding=\"{Binding SelectedSpendingSourceType}\" Value=\"{x:Static enums:SpendingSourceType.Checking}\"", xaml);
+        Assert.Contains("Binding=\"{Binding SelectedSpendingSourceType}\" Value=\"{x:Static enums:SpendingSourceType.Cash}\"", xaml);
+        Assert.Contains("Binding=\"{Binding SelectedSpendingSourceType}\" Value=\"{x:Static enums:SpendingSourceType.Credit}\"", xaml);
+    }
+
     private static int CountNumericUpDownsBoundTo(string xaml, string propertyName, string lowerLimit, string upperLimit)
     {
-        var pattern = "<customControls:NumericUpDown\\b" +
-                      $"(?=[^>]*\\bValue=\"{{Binding {propertyName},[^\"]*}}\")" +
-                      "(?=[^>]*\\bStep=\"1\")" +
-                      $"(?=[^>]*\\bLowerLimit=\"{lowerLimit}\")" +
-                      $"(?=[^>]*\\bUpperLimit=\"{upperLimit}\")" +
-                      "[^>]*/>";
-
-        return Regex.Matches(
+        var valueBindingCount = Regex.Matches(
             xaml,
-            pattern,
-            RegexOptions.Singleline).Count;
+            $"(?<!Selected)Value=\"\\{{Binding {propertyName},").Count;
+        var lowerLimitCount = CountOccurrences(xaml, $"LowerLimit=\"{lowerLimit}\"");
+        var upperLimitCount = CountOccurrences(xaml, $"UpperLimit=\"{upperLimit}\"");
+        var stepCount = CountOccurrences(xaml, "Step=\"1\"");
+
+        return Math.Min(Math.Min(valueBindingCount, lowerLimitCount), Math.Min(upperLimitCount, stepCount));
+    }
+
+    private static int CountOccurrences(string text, string value)
+    {
+        var count = 0;
+        var startIndex = 0;
+        while (true)
+        {
+            var index = text.IndexOf(value, startIndex, StringComparison.Ordinal);
+            if (index < 0)
+                return count;
+
+            count++;
+            startIndex = index + value.Length;
+        }
     }
 }

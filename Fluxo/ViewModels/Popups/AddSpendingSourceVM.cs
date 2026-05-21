@@ -34,7 +34,7 @@ public partial class AddSpendingSourceVM : ObservableObject
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private decimal _maximumSpendingText;
     [ObservableProperty] private decimal _minimumPaymentText;
-    [ObservableProperty] private string _monthlyDueDateText = string.Empty;
+    [ObservableProperty] private string _monthlyDueDateText = GetDefaultMonthlyDueDateText();
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private decimal _primaryAmountText;
     [ObservableProperty] private int? _selectedDeductSource;
@@ -142,9 +142,13 @@ public partial class AddSpendingSourceVM : ObservableObject
             MonthlyDueDateText = string.Empty;
             SelectedDeductSource = null;
         }
-        else if (!SelectedDeductSource.HasValue && DeductSources.Count > 0)
+        else
         {
-            SelectedDeductSource = DeductSources[0].Id;
+            if (string.IsNullOrWhiteSpace(MonthlyDueDateText))
+                MonthlyDueDateText = GetDefaultMonthlyDueDateText();
+
+            if (!SelectedDeductSource.HasValue && DeductSources.Count > 0)
+                SelectedDeductSource = DeductSources[0].Id;
         }
 
         if (!IsCredit)
@@ -535,6 +539,12 @@ public partial class AddSpendingSourceVM : ObservableObject
         monthlyDueDate = 0;
         return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out monthlyDueDate) &&
                monthlyDueDate is >= MonthlyDueDateHelper.MinMonthlyDay and <= MonthlyDueDateHelper.MaxMonthlyDay;
+    }
+
+    private static string GetDefaultMonthlyDueDateText()
+    {
+        return MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
+               MonthlyDueDateHelper.MinMonthlyDay.ToString(CultureInfo.InvariantCulture);
     }
 
     private bool AreRequiredFieldsFilled()

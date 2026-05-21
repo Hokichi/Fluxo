@@ -1,11 +1,23 @@
+using System.Globalization;
 using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Helpers;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
 
 public sealed class AddSpendingSourceVMTests
 {
+    [Fact]
+    public void Constructor_DefaultsMonthlyDueDateToCurrentDay()
+    {
+        var sut = CreateSut();
+        var expected = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?
+            .ToString(CultureInfo.InvariantCulture);
+
+        Assert.Equal(expected, sut.MonthlyDueDateText);
+    }
+
     [Theory]
     [InlineData(SpendingSourceType.Checking, true)]
     [InlineData(SpendingSourceType.Cash, true)]
