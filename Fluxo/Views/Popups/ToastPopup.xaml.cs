@@ -22,7 +22,6 @@ public partial class ToastPopup : BasePopup
         InitializeComponent();
 
         MessageTextBlock.Text = message;
-        AccentBar.Background = ResolveAccentBrush(severity);
         ShowCloseButton = false;
         _work = work;
     }
@@ -73,18 +72,5 @@ public partial class ToastPopup : BasePopup
             _executionCompleted = true;
             await Dispatcher.InvokeAsync(Close);
         }
-    }
-
-    private Brush ResolveAccentBrush(NotificationSeverity severity)
-    {
-        var resourceKey = severity switch
-        {
-            NotificationSeverity.Success => "Brush.Success",
-            NotificationSeverity.Warning => "Brush.Warning",
-            NotificationSeverity.Danger => "Brush.Danger",
-            _ => "Brush.Info"
-        };
-
-        return (Brush)(TryFindResource(resourceKey) ?? FindResource("Brush.Info"));
     }
 }
