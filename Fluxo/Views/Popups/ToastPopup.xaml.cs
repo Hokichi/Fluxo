@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Media;
+using Fluxo.Core.Enums;
 using Fluxo.Services.Logging;
 
 namespace Fluxo.Views.Popups;
@@ -10,7 +12,7 @@ public partial class ToastPopup : BasePopup
     private bool _executionStarted;
     private bool _executionCompleted;
 
-    public ToastPopup(string message, Func<Task> work)
+    public ToastPopup(string message, Func<Task> work, NotificationSeverity severity = NotificationSeverity.Info)
     {
         if (string.IsNullOrWhiteSpace(message))
             throw new ArgumentException("Toast message cannot be empty.", nameof(message));
@@ -20,6 +22,7 @@ public partial class ToastPopup : BasePopup
         InitializeComponent();
 
         MessageTextBlock.Text = message;
+        AccentBar.Background = ResolveAccentBrush(severity);
         ShowCloseButton = false;
         _work = work;
     }
@@ -70,5 +73,18 @@ public partial class ToastPopup : BasePopup
             _executionCompleted = true;
             await Dispatcher.InvokeAsync(Close);
         }
+    }
+
+    private Brush ResolveAccentBrush(NotificationSeverity severity)
+    {
+        var resourceKey = severity switch
+        {
+            NotificationSeverity.Success => "Brush.Success",
+            NotificationSeverity.Warning => "Brush.Warning",
+            NotificationSeverity.Danger => "Brush.Danger",
+            _ => "Brush.Info"
+        };
+
+        return (Brush)(TryFindResource(resourceKey) ?? FindResource("Brush.Info"));
     }
 }

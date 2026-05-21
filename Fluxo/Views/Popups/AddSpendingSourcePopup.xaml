@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
-Width="620"
+    Width="1120"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="{Binding PopupTitle}"
     ShowSaveButton="True">
@@ -83,6 +83,19 @@ Width="620"
                                 <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding AccountLimitText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </StackPanel>
 
+                            <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Maximum Spending" />
+                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding MaximumSpendingText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Minimum Payment" />
+                                <customControls:SuffixTextBox
+                                    Style="{StaticResource RoundedSuffixTextInputStyle}"
+                                    Suffix="%"
+                                    Text="{Binding MinimumPaymentText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            </StackPanel>
+
                             <StackPanel Margin="0,14,0,0" Visibility="{Binding IsCreditLike, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Due Date" />
                                 <TextBox
@@ -111,8 +124,11 @@ Width="620"
                             </StackPanel>
 
                             <StackPanel Margin="0,12,0,0" Visibility="{Binding IsSaving, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY (%)" />
-                                <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="APY" />
+                                <customControls:SuffixTextBox
+                                    Style="{StaticResource RoundedSuffixTextInputStyle}"
+                                    Suffix="%"
+                                    Text="{Binding ApyText, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>

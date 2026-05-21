@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Helpers;
 
@@ -30,6 +31,12 @@ public partial class AddSpendingSourcePopup : BasePopup
         var result = await _viewModel.SaveAsync();
         if (!result.IsSuccess)
         {
+            if (result.FailurePresentation == AddSpendingSourceVM.AddSpendingSourceFailurePresentation.ToastWarning)
+            {
+                ShowWarningToast(result.ErrorMessage);
+                return;
+            }
+
             ShowValidationMessage(result.ErrorMessage);
             return;
         }
@@ -62,6 +69,22 @@ public partial class AddSpendingSourcePopup : BasePopup
 
         FluxoMessageBox.Show(this, message, _viewModel.ValidationDialogTitle, MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    private void ShowWarningToast(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return;
+
+        var popup = new ToastPopup(
+            message,
+            () => Task.Delay(1800),
+            NotificationSeverity.Warning)
+        {
+            Owner = this
+        };
+
+        popup.Show();
     }
 
     private void OnMonthlyDueDatePreviewKeyDown(object sender, KeyEventArgs e)

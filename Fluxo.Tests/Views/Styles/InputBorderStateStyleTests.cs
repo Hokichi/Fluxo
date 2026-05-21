@@ -58,6 +58,25 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void RoundedSuffixTextInputStyle_Exists_TargetsSuffixTextBox_BindsSuffix_AndKeepsCoreStateTriggers()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedSuffixTextInputStyle\"", "x:Key=\"NumericUpDownArrowButtonStyle\"");
+
+        Assert.Contains("TargetType=\"{x:Type customControls:SuffixTextBox}\"", styleSection);
+        Assert.Contains("Text=\"{TemplateBinding Suffix}\"", styleSection);
+        Assert.Contains("Property=\"IsKeyboardFocused\" Value=\"True\"", styleSection);
+        Assert.Contains("TargetName=\"InputRoot\" Property=\"BorderBrush\" Value=\"{DynamicResource Brush.Mint}\"", styleSection);
+        Assert.Contains("Property=\"Validation.HasError\" Value=\"True\"", styleSection);
+        Assert.Contains("TargetName=\"InputRoot\" Property=\"BorderBrush\" Value=\"{DynamicResource Brush.Danger}\"", styleSection);
+        Assert.Contains("<Trigger Property=\"IsZeroAmount\" Value=\"True\">", styleSection);
+        Assert.Contains("TargetName=\"PlaceholderText\" Property=\"Visibility\" Value=\"Visible\"", styleSection);
+        Assert.Contains("TargetName=\"PART_ContentHost\" Property=\"Visibility\" Value=\"Hidden\"", styleSection);
+        Assert.Contains("<Condition Property=\"IsZeroAmount\" Value=\"True\" />", styleSection);
+        Assert.Contains("Property=\"Foreground\" Value=\"Transparent\"", styleSection);
+    }
+
+    [Fact]
     public void RoundedTextInputStyle_UsesZeroVerticalPadding_ForCenteredText()
     {
         var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));

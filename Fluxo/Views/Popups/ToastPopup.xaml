@@ -4,21 +4,35 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
-Width="360"
+    Width="360"
     ShowHeader="False"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight">
-    <Grid Margin="120,24,120,24">
-        <TextBlock
-            x:Name="MessageTextBlock"
-            MaxWidth="480"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            FontFamily="{DynamicResource Bold}"
-            FontSize="12"
-            Foreground="{DynamicResource Brush.Text.Primary}"
-            TextWrapping="Wrap" />
-    </Grid>
+    <Border
+        Margin="20,20,20,20"
+        Background="{DynamicResource Brush.Background.Surface}"
+        BorderBrush="{DynamicResource Brush.Border.Subtle}"
+        BorderThickness="1"
+        CornerRadius="8">
+        <Grid MinWidth="280">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border
+                x:Name="AccentBar"
+                Grid.Column="0"
+                Background="{DynamicResource Brush.Info}" />
+            <TextBlock
+                x:Name="MessageTextBlock"
+                Grid.Column="1"
+                Margin="12,10,14,10"
+                FontFamily="{DynamicResource Bold}"
+                FontSize="12"
+                Foreground="{DynamicResource Brush.Text.Primary}"
+                TextWrapping="Wrap" />
+        </Grid>
+    </Border>
 </customControls:BasePopup>
 
 

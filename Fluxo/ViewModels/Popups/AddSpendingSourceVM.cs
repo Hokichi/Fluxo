@@ -19,6 +19,7 @@ public partial class AddSpendingSourceVM : ObservableObject
 {
     private const string BalanceUpdateTagColor = "#e8ca5f";
     private const string BalanceUpdateTagName = "Balance Update";
+    private const decimal PercentageMaximum = 100m;
 
     private readonly MainVM _mainViewModel;
     private readonly IAppDataService _appData;
@@ -147,7 +148,10 @@ public partial class AddSpendingSourceVM : ObservableObject
         }
 
         if (!IsCredit)
+        {
+            MaximumSpendingText = 0m;
             MinimumPaymentText = 0m;
+        }
 
         if (!IsSaving)
             ApyText = 0m;
@@ -196,8 +200,8 @@ public partial class AddSpendingSourceVM : ObservableObject
         if (IsBusy)
             return AddSpendingSourceResult.Failure("A source is already being saved.");
 
-        if (!TryBuildInput(out var input, out var validationMessage))
-            return AddSpendingSourceResult.Failure(validationMessage);
+        if (!TryBuildInput(out var input, out var validationMessage, out var failurePresentation))
+            return AddSpendingSourceResult.Failure(validationMessage, failurePresentation);
 
         if (_saveDraftAsync is not null)
             return await _saveDraftAsync(input);
@@ -336,6 +340,11 @@ public partial class AddSpendingSourceVM : ObservableObject
             : currentSpentAmount;
     }
 
+    private static decimal CalculateAvailableCredit(decimal accountLimit, decimal spentAmount)
+    {
+        return Math.Max(accountLimit - spentAmount, 0m);
+    }
+
     private static async Task<ExpenseTag> ResolveBalanceUpdateTagAsync(IAppDataService appData)
     {
         var tags = await appData.GetExpenseTagsAsync();
@@ -418,10 +427,14 @@ public partial class AddSpendingSourceVM : ObservableObject
             expenseLog.IsForDeletion);
     }
 
-    private bool TryBuildInput(out AddSpendingSourceInput input, out string validationMessage)
+    private bool TryBuildInput(
+        out AddSpendingSourceInput input,
+        out string validationMessage,
+        out AddSpendingSourceFailurePresentation failurePresentation)
     {
         input = default;
         validationMessage = string.Empty;
+        failurePresentation = AddSpendingSourceFailurePresentation.Dialog;
 
         var name = (NameText ?? string.Empty).Trim();
         if (name.Length == 0)
@@ -449,6 +462,31 @@ public partial class AddSpendingSourceVM : ObservableObject
         {
             validationMessage = "Credit sources require an account limit greater than zero.";
             return false;
+        }
+
+        if (IsSaving && interestRate.HasValue && interestRate.Value > PercentageMaximum)
+        {
+            validationMessage = "APY cannot exceed 100%.";
+            failurePresentation = AddSpendingSourceFailurePresentation.ToastWarning;
+            return false;
+        }
+
+        if (IsCredit && minimumPayment > PercentageMaximum)
+        {
+            validationMessage = "Minimum payment cannot exceed 100%.";
+            failurePresentation = AddSpendingSourceFailurePresentation.ToastWarning;
+            return false;
+        }
+
+        if (IsCredit && maximumSpending > 0m)
+        {
+            var availableCredit = CalculateAvailableCredit(accountLimit, spentAmount);
+            if (maximumSpending > accountLimit || maximumSpending > availableCredit)
+            {
+                validationMessage = "Maximum spending cannot exceed the available credit.";
+                failurePresentation = AddSpendingSourceFailurePresentation.ToastWarning;
+                return false;
+            }
         }
 
         int? monthlyDueDate = null;
@@ -539,16 +577,28 @@ public partial class AddSpendingSourceVM : ObservableObject
         OnPropertyChanged(nameof(HasChanges));
     }
 
-    public readonly record struct AddSpendingSourceResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
+    public enum AddSpendingSourceFailurePresentation
+    {
+        Dialog,
+        ToastWarning
+    }
+
+    public readonly record struct AddSpendingSourceResult(
+        bool IsSuccess,
+        bool ShouldClose,
+        string? ErrorMessage,
+        AddSpendingSourceFailurePresentation FailurePresentation = AddSpendingSourceFailurePresentation.Dialog)
     {
         public static AddSpendingSourceResult Success(bool shouldClose = false)
         {
             return new AddSpendingSourceResult(true, shouldClose, null);
         }
 
-        public static AddSpendingSourceResult Failure(string? errorMessage)
+        public static AddSpendingSourceResult Failure(
+            string? errorMessage,
+            AddSpendingSourceFailurePresentation failurePresentation = AddSpendingSourceFailurePresentation.Dialog)
         {
-            return new AddSpendingSourceResult(false, false, errorMessage);
+            return new AddSpendingSourceResult(false, false, errorMessage, failurePresentation);
         }
     }
 
