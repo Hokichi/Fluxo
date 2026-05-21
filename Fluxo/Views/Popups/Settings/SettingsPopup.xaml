@@ -130,14 +130,40 @@
         </Border>
 
         <Grid Grid.Column="2">
-            <tabs:SettingsBudgetTab DataContext="{Binding BudgetTab}" Visibility="{Binding IsChecked, ElementName=BudgetTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsSourcesTab DataContext="{Binding SourcesTab}" Visibility="{Binding IsChecked, ElementName=SourcesTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsFixedExpensesTab DataContext="{Binding FixedExpensesTab}" Visibility="{Binding IsChecked, ElementName=FixedExpensesTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsGoalsTab DataContext="{Binding GoalsTab}" Visibility="{Binding IsChecked, ElementName=GoalsTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsTagsTab DataContext="{Binding TagsTab}" Visibility="{Binding IsChecked, ElementName=TagsTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsBudgetTab
+                x:Name="BudgetTabContent"
+                DataContext="{Binding BudgetTab}"
+                Opacity="0"
+                Visibility="Collapsed" />
+            <tabs:SettingsSourcesTab
+                x:Name="SourcesTabContent"
+                DataContext="{Binding SourcesTab}" />
+            <tabs:SettingsFixedExpensesTab
+                x:Name="FixedExpensesTabContent"
+                DataContext="{Binding FixedExpensesTab}"
+                Opacity="0"
+                Visibility="Collapsed" />
+            <tabs:SettingsGoalsTab
+                x:Name="GoalsTabContent"
+                DataContext="{Binding GoalsTab}"
+                Opacity="0"
+                Visibility="Collapsed" />
+            <tabs:SettingsTagsTab
+                x:Name="TagsTabContent"
+                DataContext="{Binding TagsTab}"
+                Opacity="0"
+                Visibility="Collapsed" />
 
-            <tabs:SettingsPersonalizationTab DataContext="{Binding PersonalizationTab}" Visibility="{Binding IsChecked, ElementName=PersonalizationTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <tabs:SettingsAboutTab DataContext="{Binding PersonalizationTab}" Visibility="{Binding IsChecked, ElementName=AboutTabButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <tabs:SettingsPersonalizationTab
+                x:Name="PersonalizationTabContent"
+                DataContext="{Binding PersonalizationTab}"
+                Opacity="0"
+                Visibility="Collapsed" />
+            <tabs:SettingsAboutTab
+                x:Name="AboutTabContent"
+                DataContext="{Binding PersonalizationTab}"
+                Opacity="0"
+                Visibility="Collapsed" />
         </Grid>
     </Grid>
 </customControls:BasePopup>

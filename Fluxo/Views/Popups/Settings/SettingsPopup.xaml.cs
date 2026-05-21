@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.Resources.Messages;
@@ -15,6 +16,8 @@ namespace Fluxo.Views.Popups.Settings;
 public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequestedMessage>,
     IRecipient<SettingsPopupCloseRequestedMessage>, IRecipient<SettingsPendingChangesChangedMessage>
 {
+    private static readonly Duration TabFadeDuration = new(TimeSpan.FromMilliseconds(150));
+
     private readonly IDialogService _dialogService;
     private readonly IMessenger _messenger;
     private readonly SettingsVM _viewModel;
@@ -97,12 +100,115 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         _isSelectingTab = true;
         try
         {
-            targetTab.IsChecked = true;
+            await CrossfadeSettingsTabAsync(targetTab);
         }
         finally
         {
             _isSelectingTab = false;
         }
+    }
+
+    private async Task CrossfadeSettingsTabAsync(RadioButton targetTab)
+    {
+        var currentTab = GetCheckedTabButton();
+        var currentContent = currentTab is null ? null : GetContentForTab(currentTab);
+        var targetContent = GetContentForTab(targetTab);
+
+        if (targetContent is null || ReferenceEquals(currentContent, targetContent))
+        {
+            targetTab.IsChecked = true;
+            return;
+        }
+
+        targetContent.BeginAnimation(OpacityProperty, null);
+        targetContent.Visibility = Visibility.Visible;
+        targetContent.Opacity = 0;
+
+        targetTab.IsChecked = true;
+
+        if (currentContent is null)
+        {
+            await FadeElementAsync(targetContent, 0, 1);
+            return;
+        }
+
+        currentContent.BeginAnimation(OpacityProperty, null);
+        currentContent.Opacity = 1;
+
+        await Task.WhenAll(
+            FadeElementAsync(currentContent, 1, 0),
+            FadeElementAsync(targetContent, 0, 1));
+
+        currentContent.Visibility = Visibility.Collapsed;
+        currentContent.Opacity = 0;
+        targetContent.Opacity = 1;
+    }
+
+    private RadioButton? GetCheckedTabButton()
+    {
+        if (SourcesTabButton.IsChecked.GetValueOrDefault())
+            return SourcesTabButton;
+
+        if (BudgetTabButton.IsChecked.GetValueOrDefault())
+            return BudgetTabButton;
+
+        if (FixedExpensesTabButton.IsChecked.GetValueOrDefault())
+            return FixedExpensesTabButton;
+
+        if (GoalsTabButton.IsChecked.GetValueOrDefault())
+            return GoalsTabButton;
+
+        if (TagsTabButton.IsChecked.GetValueOrDefault())
+            return TagsTabButton;
+
+        if (PersonalizationTabButton.IsChecked.GetValueOrDefault())
+            return PersonalizationTabButton;
+
+        if (AboutTabButton.IsChecked.GetValueOrDefault())
+            return AboutTabButton;
+
+        return null;
+    }
+
+    private FrameworkElement? GetContentForTab(RadioButton tabButton)
+    {
+        if (ReferenceEquals(tabButton, SourcesTabButton))
+            return SourcesTabContent;
+
+        if (ReferenceEquals(tabButton, BudgetTabButton))
+            return BudgetTabContent;
+
+        if (ReferenceEquals(tabButton, FixedExpensesTabButton))
+            return FixedExpensesTabContent;
+
+        if (ReferenceEquals(tabButton, GoalsTabButton))
+            return GoalsTabContent;
+
+        if (ReferenceEquals(tabButton, TagsTabButton))
+            return TagsTabContent;
+
+        if (ReferenceEquals(tabButton, PersonalizationTabButton))
+            return PersonalizationTabContent;
+
+        if (ReferenceEquals(tabButton, AboutTabButton))
+            return AboutTabContent;
+
+        return null;
+    }
+
+    private static Task FadeElementAsync(UIElement element, double from, double to)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        var animation = new DoubleAnimation(from, to, TabFadeDuration)
+        {
+            EasingFunction = new CubicEase { EasingMode = to < from ? EasingMode.EaseIn : EasingMode.EaseOut }
+        };
+
+        animation.Completed += (_, _) => tcs.TrySetResult(true);
+        element.BeginAnimation(OpacityProperty, animation);
+
+        return tcs.Task;
     }
 
     private async Task<bool> CanLeaveCurrentSettingsTabAsync()
