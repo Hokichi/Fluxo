@@ -32,10 +32,11 @@ public partial class QuickAddVM : ObservableValidator
     private readonly IAppDataService _appData;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
+    private bool _isAmountValidationActive;
+    private bool _isNameValidationActive;
     private int _transactionNameSuggestionRequestVersion;
 
     [ObservableProperty]
-    [NotifyDataErrorInfo]
     [CustomValidation(typeof(QuickAddVM), nameof(ValidateAmountText))]
     private decimal _amountText;
     [ObservableProperty] private bool _isExpense = true;
@@ -45,7 +46,6 @@ public partial class QuickAddVM : ObservableValidator
     private bool _isUpdatingTagCollections;
     private int _visibleTagSlots = DefaultVisibleTagSlots;
     [ObservableProperty]
-    [NotifyDataErrorInfo]
     [CustomValidation(typeof(QuickAddVM), nameof(ValidateNameText))]
     private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
@@ -75,14 +75,22 @@ public partial class QuickAddVM : ObservableValidator
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
-        ErrorsChanged += (_, _) => OnPropertyChanged(nameof(CanSave));
+        ErrorsChanged += (_, e) =>
+        {
+            OnPropertyChanged(nameof(CanSave));
+
+            if (e.PropertyName == nameof(NameText))
+                OnPropertyChanged(nameof(NameValidationHint));
+
+            if (e.PropertyName == nameof(AmountText))
+                OnPropertyChanged(nameof(AmountValidationHint));
+        };
         SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByProperty(
             SpendingSources,
             nameof(SpendingSourceVM.TypeDisplayName));
 
         ReloadChoicesFromMainViewModel();
         ResetForm(false);
-        ValidateAllProperties();
         _initialState = CaptureState();
     }
 
@@ -117,7 +125,7 @@ public partial class QuickAddVM : ObservableValidator
         new("Sunday", "7")
     ];
     public bool CanSave => !IsSaving && !HasErrors;
-    public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
+    public bool HasChanges => _isChangeTrackingInitialized && HasPendingTransactionInputChanges();
     public bool HasTransactionNameSuggestions => TransactionNameSuggestions.Count > 0;
     public bool ShowRecurringDayInput => IsRecurring;
     public bool ShowRecurringNoneInput => IsRecurring && SelectedRecurringPeriod == RecurringPeriod.None;
@@ -126,6 +134,8 @@ public partial class QuickAddVM : ObservableValidator
     public bool ShowDateSelector => !IsRecurring;
     public string DateOrRecurrenceLabel => IsRecurring ? "Recurrence" : "Date";
     public bool CanToggleRecurring => !IsRecurringModeLocked;
+    public string NameValidationHint => GetValidationHint(nameof(NameText));
+    public string AmountValidationHint => GetValidationHint(nameof(AmountText));
 
     public void BeginChangeTracking()
     {
@@ -184,7 +194,11 @@ public partial class QuickAddVM : ObservableValidator
 
     public bool HasMoreTags => OverflowTags.Count > 0;
 
-    partial void OnAmountTextChanged(decimal value) => NotifyFormStateChanged();
+    partial void OnAmountTextChanged(decimal value)
+    {
+        RefreshActiveValidation(nameof(AmountText));
+        NotifyFormStateChanged();
+    }
     partial void OnIsRecurringChanged(bool value)
     {
         if (value && string.IsNullOrWhiteSpace(RecurringTimeText))
@@ -212,6 +226,7 @@ public partial class QuickAddVM : ObservableValidator
     partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value)
     {
+        RefreshActiveValidation(nameof(NameText));
         NotifyFormStateChanged();
         _ = RefreshTransactionNameSuggestionsAsync();
     }
@@ -219,7 +234,23 @@ public partial class QuickAddVM : ObservableValidator
     partial void OnSelectedDateChanged(DateTime value) => NotifyFormStateChanged();
     partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
     partial void OnSelectedGoalChanged(SavingGoalVM? value) => NotifyFormStateChanged();
-    partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
+    partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value)
+    {
+        RefreshActiveValidation(nameof(AmountText));
+        NotifyFormStateChanged();
+    }
+
+    public void ValidateNameField()
+    {
+        _isNameValidationActive = true;
+        ValidateProperty(NameText, nameof(NameText));
+    }
+
+    public void ValidateAmountField()
+    {
+        _isAmountValidationActive = true;
+        ValidateProperty(AmountText, nameof(AmountText));
+    }
 
     public void InitializeFromDraft(QuickAddDraft draft)
     {
@@ -256,6 +287,7 @@ public partial class QuickAddVM : ObservableValidator
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
+        RefreshActiveValidation(nameof(NameText), nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
         NotifyFormStateChanged();
     }
@@ -271,6 +303,7 @@ public partial class QuickAddVM : ObservableValidator
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
+        RefreshActiveValidation(nameof(NameText), nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
         NotifyFormStateChanged();
     }
@@ -565,6 +598,8 @@ public partial class QuickAddVM : ObservableValidator
         input = default;
         validationMessage = string.Empty;
 
+        _isNameValidationActive = true;
+        _isAmountValidationActive = true;
         ValidateAllProperties();
         if (HasErrors)
         {
@@ -1019,9 +1054,80 @@ public partial class QuickAddVM : ObservableValidator
 
     private void NotifyFormStateChanged()
     {
-        ValidateAllProperties();
         OnPropertyChanged(nameof(CanSave));
         OnPropertyChanged(nameof(HasChanges));
+    }
+
+    private bool HasPendingTransactionInputChanges()
+    {
+        var initialInput = new PendingTransactionInputState(
+            _initialState.NameText ?? string.Empty,
+            _initialState.AmountText);
+        var currentInput = new PendingTransactionInputState(
+            NameText ?? string.Empty,
+            AmountText);
+
+        return HasPendingTransactionInputValue(currentInput) && !currentInput.Equals(initialInput);
+    }
+
+    private static bool HasPendingTransactionInputValue(PendingTransactionInputState state)
+    {
+        return !string.IsNullOrWhiteSpace(state.NameText) || state.AmountText > 0m;
+    }
+
+    private void RefreshActiveValidation(params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            if (propertyName == nameof(NameText) && _isNameValidationActive)
+                ValidateProperty(NameText, nameof(NameText));
+
+            if (propertyName == nameof(AmountText) && _isAmountValidationActive)
+                ValidateProperty(AmountText, nameof(AmountText));
+        }
+    }
+
+    private string GetValidationHint(string propertyName)
+    {
+        var message = GetErrors(propertyName)
+            .OfType<ValidationResult>()
+            .Select(result => result.ErrorMessage)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
+        if (string.IsNullOrWhiteSpace(message))
+            return string.Empty;
+
+        return propertyName switch
+        {
+            nameof(NameText) => GetNameValidationHint(message),
+            nameof(AmountText) => GetAmountValidationHint(message),
+            _ => string.Empty
+        };
+    }
+
+    private static string GetNameValidationHint(string message)
+    {
+        if (message.Contains("enter a name", StringComparison.OrdinalIgnoreCase))
+            return "Required";
+
+        if (message.Contains("exceed", StringComparison.OrdinalIgnoreCase))
+            return "Too Long";
+
+        return "Invalid Name";
+    }
+
+    private static string GetAmountValidationHint(string message)
+    {
+        if (message.Contains("available balance", StringComparison.OrdinalIgnoreCase))
+            return "Insufficient Balance";
+
+        if (message.Contains("maximum spending", StringComparison.OrdinalIgnoreCase))
+            return "Overflow Balance";
+
+        if (message.Contains("account limit", StringComparison.OrdinalIgnoreCase))
+            return "Account Limit";
+
+        return "Invalid Amount";
     }
 
     private void RefreshSpendingSources()
@@ -1234,6 +1340,10 @@ public partial class QuickAddVM : ObservableValidator
         int SelectedSpendingSourceId,
         int SelectedTagId,
         int SelectedGoalId);
+
+    private readonly record struct PendingTransactionInputState(
+        string NameText,
+        decimal AmountText);
 
     private int? _editingRecurringTransactionId;
 

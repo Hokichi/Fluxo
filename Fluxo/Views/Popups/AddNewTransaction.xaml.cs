@@ -307,6 +307,17 @@ public partial class AddNewTransaction : BasePopup
         Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(SyncNameSuggestionsPopupState));
     }
 
+    private void OnTransactionNameTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        _viewModel.ValidateNameField();
+        OnTransactionNameTextBoxFocusChanged(sender, e);
+    }
+
+    private void OnTransactionAmountTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        _viewModel.ValidateAmountField();
+    }
+
     private void RecalculateTagLayout()
     {
         if (!IsLoaded || !_viewModel.IsExpense)

@@ -28,18 +28,6 @@
         <Border Style="{StaticResource PanelStyle}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="16"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding HeaderTitle}" />
-                    <TextBlock
-                        Margin="0,8,0,18"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding HeaderDescription}" />
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />

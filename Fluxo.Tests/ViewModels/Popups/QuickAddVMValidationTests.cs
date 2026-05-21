@@ -66,6 +66,84 @@ public sealed class QuickAddVMValidationTests
         });
     }
 
+    [Fact]
+    public void Constructor_DoesNotValidateNameOrAmountBeforeFieldsLoseFocus()
+    {
+        RunInSta(() =>
+        {
+            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+
+            Assert.False(vm.HasErrors);
+            Assert.Equal(string.Empty, vm.NameValidationHint);
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
+    public void ValidateAmountField_DoesNotValidateNameField()
+    {
+        RunInSta(() =>
+        {
+            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+
+            vm.ValidateAmountField();
+
+            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.NameText)));
+            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.AmountText)), error => error.ErrorMessage == "Please enter a valid amount greater than zero.");
+            Assert.Equal(string.Empty, vm.NameValidationHint);
+            Assert.Equal("Invalid Amount", vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
+    public void ValidateNameField_DoesNotValidateAmountField()
+    {
+        RunInSta(() =>
+        {
+            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+
+            vm.ValidateNameField();
+
+            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.NameText)), error => error.ErrorMessage == "Please enter a name.");
+            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.AmountText)));
+            Assert.Equal("Required", vm.NameValidationHint);
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
+    public void HasChanges_TracksOnlyNameAndAmountInput()
+    {
+        RunInSta(() =>
+        {
+            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            vm.BeginChangeTracking();
+
+            vm.SelectedDate = vm.SelectedDate.AddDays(1);
+            vm.NoteText = "Ignore for pending updates";
+            vm.IsRecurring = true;
+
+            Assert.False(vm.HasChanges);
+
+            vm.NameText = "Coffee";
+
+            Assert.True(vm.HasChanges);
+        });
+    }
+
+    [Fact]
+    public void AmountValidationHint_MapsSpendingCapacityFailuresToShortText()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 20m), isRecurring: false, amount: 30m);
+
+            vm.ValidateAmountField();
+
+            Assert.Equal("Insufficient Balance", vm.AmountValidationHint);
+        });
+    }
+
     [Theory]
     [InlineData(TransactionKind.Expense)]
     [InlineData(TransactionKind.Income)]
