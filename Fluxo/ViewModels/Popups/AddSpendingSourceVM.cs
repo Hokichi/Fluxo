@@ -200,6 +200,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
     partial void OnAccountLimitTextChanged(decimal value)
     {
         OnPropertyChanged(nameof(MaximumSpendingPlaceholderText));
+        SyncMaximumSpendingToPlaceholder();
         RefreshActiveValidation(nameof(MaximumSpendingText), nameof(SpentAmountText));
         NotifyFormStateChanged();
     }
@@ -237,6 +238,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
     partial void OnPrimaryAmountTextChanged(decimal value)
     {
         OnPropertyChanged(nameof(MaximumSpendingPlaceholderText));
+        SyncMaximumSpendingToPlaceholder();
         RefreshActiveValidation(nameof(MaximumSpendingText));
         NotifyFormStateChanged();
     }
@@ -261,6 +263,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         OnPropertyChanged(nameof(IsBalanceLike));
         OnPropertyChanged(nameof(PrimaryAmountLabel));
         OnPropertyChanged(nameof(MaximumSpendingPlaceholderText));
+        SyncMaximumSpendingToPlaceholder();
 
         if (!IsCreditLike)
         {
@@ -280,7 +283,8 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
         if (!IsCredit)
         {
-            MaximumSpendingText = 0m;
+            _isMaximumSpendingModified = false;
+            SyncMaximumSpendingToPlaceholder();
             MinimumPaymentText = 0m;
         }
 
@@ -804,9 +808,13 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     private decimal GetEffectiveMaximumSpending()
     {
-        return _isMaximumSpendingModified
-            ? MaximumSpendingText
-            : GetMaximumSpendingPlaceholderValue();
+        return MaximumSpendingText;
+    }
+
+    private void SyncMaximumSpendingToPlaceholder()
+    {
+        if (!_isMaximumSpendingModified)
+            MaximumSpendingText = GetMaximumSpendingPlaceholderValue();
     }
 
     private decimal GetMaximumSpendingPlaceholderValue()

@@ -89,6 +89,14 @@ public class MoneyTextBox : TextBox
     protected override void OnTextChanged(TextChangedEventArgs e)
     {
         base.OnTextChanged(e);
+
+        if (string.IsNullOrWhiteSpace(Text))
+        {
+            Text = "0";
+            Select(0, Text.Length);
+            return;
+        }
+
         UpdateIsZeroAmountState();
     }
 
