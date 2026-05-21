@@ -62,6 +62,15 @@ Width="500"
                     Margin="0,8,0,0"
                     IsEnabled="{Binding AreRecurringFieldsEnabled}"
                     Visibility="{Binding IsRecurringTransaction, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.4" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="12" />

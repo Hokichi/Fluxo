@@ -233,6 +233,9 @@
                                         <Setter Property="Background" Value="Transparent" />
                                         <Setter Property="Opacity" Value="1" />
                                     </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.4" />
+                                    </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </CheckBox.Template>

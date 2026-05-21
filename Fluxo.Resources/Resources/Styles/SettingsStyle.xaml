@@ -62,7 +62,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel x:Name="Root" Orientation="Horizontal">
                         <Border
                             x:Name="CheckSurface"
                             Width="20"
@@ -91,6 +91,9 @@
                             <Setter TargetName="CheckSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
                             <Setter TargetName="CheckGlyph" Property="Path" Value="{StaticResource EnableChecks}" />
                             <Setter TargetName="CheckGlyph" Property="Color" Value="{StaticResource Brush.Mint}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.4" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
