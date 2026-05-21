@@ -136,9 +136,20 @@ xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="16"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="Spending Sources" />
+                <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal">
                 <customControls:BalloonButton
                             ButtonIcon="{StaticResource CircleMinusSolid}"
                             Click="OnBatchActionClick"
@@ -212,9 +223,17 @@ xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Tag="Add New Spending Source"
                             ToolTip="Add source" />
-            </StackPanel>
+                </StackPanel>
+            </Grid>
+            <TextBlock
+                Grid.Row="1"
+                Margin="0,8,0,16"
+                FontFamily="{StaticResource Medium}"
+                FontSize="11"
+                Foreground="{StaticResource Brush.Text.Secondary}"
+                Text="Manage where your spending comes from and control visibility and status." />
             <ScrollViewer
-                        Grid.Row="1"
+                        Grid.Row="2"
                         Margin="0,8,0,0"
                         VerticalScrollBarVisibility="Auto">
                 <ItemsControl
@@ -226,7 +245,7 @@ xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
                             behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand}" />
             </ScrollViewer>
             <TextBlock
-                        Grid.RowSpan="2"
+                        Grid.RowSpan="3"
                         Margin="0,24"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
