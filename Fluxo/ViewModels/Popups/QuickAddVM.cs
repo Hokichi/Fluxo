@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Entities;
@@ -16,9 +17,10 @@ using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups;
 
-public partial class QuickAddVM : ObservableObject
+public partial class QuickAddVM : ObservableValidator
 {
     private const int DefaultVisibleTagSlots = 4;
+    private const int MaxNameLength = 256;
     private const int NoSpendingSourceId = -1;
     private const int NoTagId = -1;
     private const int NoSavingGoalId = -1;
@@ -32,35 +34,55 @@ public partial class QuickAddVM : ObservableObject
     private bool _isChangeTrackingInitialized;
     private int _transactionNameSuggestionRequestVersion;
 
-    [ObservableProperty] private decimal _amountText;
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [CustomValidation(typeof(QuickAddVM), nameof(ValidateAmountText))]
+    private decimal _amountText;
     [ObservableProperty] private bool _isExpense = true;
     [ObservableProperty] private bool _isGoal;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
     private bool _isUpdatingTagCollections;
     private int _visibleTagSlots = DefaultVisibleTagSlots;
-    [ObservableProperty] private string _nameText = string.Empty;
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [CustomValidation(typeof(QuickAddVM), nameof(ValidateNameText))]
+    private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private bool _isRecurring;
     [ObservableProperty] private RecurringPeriod _selectedRecurringPeriod = RecurringPeriod.Monthly;
-    [ObservableProperty] private string _recurringTimeText = string.Empty;
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [CustomValidation(typeof(QuickAddVM), nameof(ValidateRecurringTimeText))]
+    private string _recurringTimeText = string.Empty;
     [ObservableProperty] private bool _isRecurringModeLocked;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
-    [ObservableProperty] private SavingGoalVM? _selectedGoal;
-    [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
-    [ObservableProperty] private ExpenseTagVM? _selectedTag;
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [CustomValidation(typeof(QuickAddVM), nameof(ValidateSelectedGoal))]
+    private SavingGoalVM? _selectedGoal;
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [CustomValidation(typeof(QuickAddVM), nameof(ValidateSelectedSpendingSource))]
+    private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [CustomValidation(typeof(QuickAddVM), nameof(ValidateSelectedTag))]
+    private ExpenseTagVM? _selectedTag;
 
     public QuickAddVM(MainVM mainViewModel, IAppDataService appData)
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
+        ErrorsChanged += (_, _) => OnPropertyChanged(nameof(CanSave));
         SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByProperty(
             SpendingSources,
             nameof(SpendingSourceVM.TypeDisplayName));
 
         ReloadChoicesFromMainViewModel();
         ResetForm(false);
+        ValidateAllProperties();
         _initialState = CaptureState();
     }
 
@@ -94,7 +116,7 @@ public partial class QuickAddVM : ObservableObject
         new("Saturday", "6"),
         new("Sunday", "7")
     ];
-    public bool CanSave => !IsSaving && AreRequiredFieldsFilled();
+    public bool CanSave => !IsSaving && !HasErrors;
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool HasTransactionNameSuggestions => TransactionNameSuggestions.Count > 0;
     public bool ShowRecurringDayInput => IsRecurring;
@@ -301,6 +323,9 @@ public partial class QuickAddVM : ObservableObject
             var spendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
             if (spendingSource is null)
                 return QuickAddSubmissionResult.Failure("Please select a valid spending source.");
+
+            if (!TryValidateSpendingAmountAgainstSource(input.IsExpense, input.IsGoal, input.Amount, spendingSource, out var spendingValidationMessage))
+                return QuickAddSubmissionResult.Failure(spendingValidationMessage);
 
             var invalidationScope = DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications;
 
@@ -540,15 +565,10 @@ public partial class QuickAddVM : ObservableObject
         input = default;
         validationMessage = string.Empty;
 
-        if (AmountText <= 0m)
+        ValidateAllProperties();
+        if (HasErrors)
         {
-            validationMessage = "Please enter a valid amount greater than zero.";
-            return false;
-        }
-
-        if (SelectedSpendingSource is null)
-        {
-            validationMessage = "Please choose a spending source.";
+            validationMessage = GetFirstValidationMessage();
             return false;
         }
 
@@ -576,6 +596,12 @@ public partial class QuickAddVM : ObservableObject
 
             category = SelectedExpenseCategory;
             tagId = SelectedTag.Id;
+        }
+
+        if (SelectedSpendingSource is null)
+        {
+            validationMessage = "Please choose a spending source.";
+            return false;
         }
 
         input = new QuickTransactionInput(
@@ -792,6 +818,128 @@ public partial class QuickAddVM : ObservableObject
                 null));
     }
 
+    private static bool TryValidateSpendingAmountAgainstSource(
+        bool isExpense,
+        bool isGoal,
+        decimal amount,
+        SpendingSourceVM source,
+        out string validationMessage)
+    {
+        if (amount <= 0m)
+        {
+            validationMessage = "Please enter a valid amount greater than zero.";
+            return false;
+        }
+
+        if (!isExpense && !isGoal)
+        {
+            validationMessage = string.Empty;
+            return true;
+        }
+
+        if (!TryValidateMaximumSpending(source.MaximumSpending, source.SpendingSourceType, source.SpentAmount, source.MoneyOut, amount, out validationMessage))
+            return false;
+
+        return TryValidateSpendingCapacity(source.SpendingSourceType, source.Balance, source.AccountLimit, source.SpentAmount, amount, out validationMessage);
+    }
+
+    private static bool TryValidateSpendingAmountAgainstSource(
+        bool isExpense,
+        bool isGoal,
+        decimal amount,
+        SpendingSource source,
+        out string validationMessage)
+    {
+        if (amount <= 0m)
+        {
+            validationMessage = "Please enter a valid amount greater than zero.";
+            return false;
+        }
+
+        if (!isExpense && !isGoal)
+        {
+            validationMessage = string.Empty;
+            return true;
+        }
+
+        var persistedMoneyOut = GetPersistedMoneyOut(source);
+        if (!TryValidateMaximumSpending(source.MaximumSpending, source.SpendingSourceType, source.SpentAmount, persistedMoneyOut, amount, out validationMessage))
+            return false;
+
+        return TryValidateSpendingCapacity(source.SpendingSourceType, source.Balance, source.AccountLimit, source.SpentAmount, amount, out validationMessage);
+    }
+
+    private static decimal GetPersistedMoneyOut(SpendingSource source)
+    {
+        var moneyOutProperty = source.GetType().GetProperty("MoneyOut");
+        if (moneyOutProperty is not null)
+        {
+            var rawValue = moneyOutProperty.GetValue(source);
+            if (rawValue is decimal moneyOut)
+                return moneyOut;
+        }
+
+        return source.SpentAmount;
+    }
+
+    private static bool TryValidateMaximumSpending(
+        decimal maximumSpending,
+        SpendingSourceType sourceType,
+        decimal spentAmount,
+        decimal moneyOut,
+        decimal amount,
+        out string validationMessage)
+    {
+        if (maximumSpending <= 0m)
+        {
+            validationMessage = string.Empty;
+            return true;
+        }
+
+        var projectedSpending = sourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
+            ? spentAmount + amount
+            : moneyOut + amount;
+
+        if (projectedSpending <= maximumSpending)
+        {
+            validationMessage = string.Empty;
+            return true;
+        }
+
+        validationMessage = "Amount exceeds this source's maximum spending limit.";
+        return false;
+    }
+
+    private static bool TryValidateSpendingCapacity(
+        SpendingSourceType sourceType,
+        decimal balance,
+        decimal accountLimit,
+        decimal spentAmount,
+        decimal amount,
+        out string validationMessage)
+    {
+        if (sourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            if (spentAmount + amount <= accountLimit)
+            {
+                validationMessage = string.Empty;
+                return true;
+            }
+
+            validationMessage = "Amount exceeds this source's account limit.";
+            return false;
+        }
+
+        if (amount <= balance)
+        {
+            validationMessage = string.Empty;
+            return true;
+        }
+
+        validationMessage = "Amount exceeds this source's available balance.";
+        return false;
+    }
+
     private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
     {
         if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
@@ -822,24 +970,33 @@ public partial class QuickAddVM : ObservableObject
             target.Add(item);
     }
 
-    private bool AreRequiredFieldsFilled()
+    private string GetFirstValidationMessage()
     {
-        if (AmountText <= 0m)
-            return false;
+        foreach (var propertyName in new[]
+                 {
+                     nameof(NameText),
+                     nameof(AmountText),
+                     nameof(SelectedSpendingSource),
+                     nameof(SelectedGoal),
+                     nameof(SelectedTag),
+                     nameof(RecurringTimeText)
+                 })
+        {
+            var propertyMessage = GetErrors(propertyName)
+                .OfType<ValidationResult>()
+                .Select(result => result.ErrorMessage)
+                .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
 
-        if (SelectedSpendingSource is null)
-            return false;
+            if (!string.IsNullOrWhiteSpace(propertyMessage))
+                return propertyMessage;
+        }
 
-        if (IsGoal)
-            return SelectedGoal is not null;
+        var fallbackMessage = GetErrors()
+            .OfType<ValidationResult>()
+            .Select(result => result.ErrorMessage)
+            .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
 
-        if (string.IsNullOrWhiteSpace(NameText))
-            return false;
-
-        if (IsExpense && SelectedTag is null)
-            return false;
-
-        return true;
+        return fallbackMessage ?? "Please fix the highlighted fields.";
     }
 
     private FormState CaptureState()
@@ -862,6 +1019,7 @@ public partial class QuickAddVM : ObservableObject
 
     private void NotifyFormStateChanged()
     {
+        ValidateAllProperties();
         OnPropertyChanged(nameof(CanSave));
         OnPropertyChanged(nameof(HasChanges));
     }
@@ -886,6 +1044,82 @@ public partial class QuickAddVM : ObservableObject
             ? SpendingSources.FirstOrDefault()
             : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ??
               SpendingSources.FirstOrDefault();
+    }
+
+    public static ValidationResult? ValidateNameText(string value, ValidationContext validationContext)
+    {
+        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        if (viewModel.IsGoal)
+            return ValidationResult.Success;
+
+        var trimmedName = value?.Trim() ?? string.Empty;
+
+        if (trimmedName.Length == 0)
+            return new ValidationResult("Please enter a name.");
+
+        if (trimmedName.Length > MaxNameLength)
+            return new ValidationResult($"Name cannot exceed {MaxNameLength} characters.");
+
+        if (trimmedName.Any(char.IsControl))
+            return new ValidationResult("Name cannot contain control characters.");
+
+        return ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateAmountText(decimal value, ValidationContext validationContext)
+    {
+        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        if (value <= 0m)
+            return new ValidationResult("Please enter a valid amount greater than zero.");
+
+        if (viewModel.SelectedSpendingSource is null)
+            return ValidationResult.Success;
+
+        if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense, viewModel.IsGoal, value, viewModel.SelectedSpendingSource, out var validationMessage))
+            return new ValidationResult(validationMessage);
+
+        return ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateSelectedSpendingSource(SpendingSourceVM? value, ValidationContext validationContext)
+    {
+        _ = validationContext;
+        return value is null
+            ? new ValidationResult("Please choose a spending source.")
+            : ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateSelectedTag(ExpenseTagVM? value, ValidationContext validationContext)
+    {
+        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        if (!viewModel.IsExpense)
+            return ValidationResult.Success;
+
+        return value is null
+            ? new ValidationResult("Please choose a tag.")
+            : ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateSelectedGoal(SavingGoalVM? value, ValidationContext validationContext)
+    {
+        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        if (!viewModel.IsGoal)
+            return ValidationResult.Success;
+
+        return value is null
+            ? new ValidationResult("Please choose a goal.")
+            : ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateRecurringTimeText(string value, ValidationContext validationContext)
+    {
+        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        if (!viewModel.IsRecurring || viewModel.SelectedRecurringPeriod == RecurringPeriod.None)
+            return ValidationResult.Success;
+
+        return TryNormalizeRecurringTime(viewModel.SelectedRecurringPeriod, value?.Trim() ?? string.Empty, out _)
+            ? ValidationResult.Success
+            : new ValidationResult(GetRecurringTimeValidationMessage(viewModel.SelectedRecurringPeriod));
     }
 
     internal static IEnumerable<ExpenseTagVM> ProjectNonSystemTags(IEnumerable<ExpenseTag> tags)
