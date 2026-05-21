@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
@@ -69,7 +70,7 @@ public partial class MainVM : ObservableRecipient
         await betweenStagesAsync();
 
         await BudgetPanel.LoadAsync();
-        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources);
+        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources, BudgetPanel.GetAllExpenseLogs());
         await betweenStagesAsync();
 
         await SpentAllowancePanel.LoadAsync();
@@ -89,7 +90,7 @@ public partial class MainVM : ObservableRecipient
     public async Task ReloadCurrentDataAsync()
     {
         await BudgetPanel.LoadAsync();
-        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources);
+        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources, BudgetPanel.GetAllExpenseLogs());
 
         await Task.WhenAll(
             SpentAllowancePanel.LoadAsync(),
@@ -97,9 +98,12 @@ public partial class MainVM : ObservableRecipient
             SavingGoalsPanel.LoadAsync());
     }
 
-    public static bool ShouldLockDashboardForSpendingAmount(IEnumerable<SpendingSourceVM> spendingSources)
+    public static bool ShouldLockDashboardForSpendingAmount(
+        IEnumerable<SpendingSourceVM> spendingSources,
+        IEnumerable<ExpenseLogVM> expenseLogs)
     {
         ArgumentNullException.ThrowIfNull(spendingSources);
+        ArgumentNullException.ThrowIfNull(expenseLogs);
 
         foreach (var source in spendingSources)
         {
@@ -111,7 +115,7 @@ public partial class MainVM : ObservableRecipient
                 return false;
         }
 
-        return true;
+        return !expenseLogs.Any(log => !log.IsForDeletion);
     }
 
     private async Task LoadUserSettingsAsync()

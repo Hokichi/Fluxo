@@ -10,7 +10,7 @@ public class MainVMSpendingAmountGateTests
     [Fact]
     public void ShouldLockDashboardForSpendingAmount_WhenNoSources_ReturnsTrue()
     {
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount([]);
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount([], []);
 
         Assert.True(isLocked);
     }
@@ -25,7 +25,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Saving, Balance = 0m }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources);
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.True(isLocked);
     }
@@ -39,7 +39,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = 25m }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources);
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.False(isLocked);
     }
@@ -53,7 +53,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = -1m }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources);
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.True(isLocked);
     }
@@ -67,8 +67,55 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources);
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockDashboardForSpendingAmount_WhenNoSourcesButHasExpenseLog_ReturnsFalse()
+    {
+        var logs = new[]
+        {
+            new ExpenseLogVM { IsForDeletion = false, Amount = 10m }
+        };
+
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount([], logs);
+
+        Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockDashboardForSpendingAmount_WhenNonCreditSourcesHaveNoPositiveBalanceButHasExpenseLog_ReturnsFalse()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m }
+        };
+        var logs = new[]
+        {
+            new ExpenseLogVM { IsForDeletion = false, Amount = 50m }
+        };
+
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, logs);
+
+        Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockDashboardForSpendingAmount_WhenHasExpenseLogMarkedForDeletion_ReturnsTrue()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m }
+        };
+        var logs = new[]
+        {
+            new ExpenseLogVM { IsForDeletion = true, Amount = 50m }
+        };
+
+        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, logs);
+
+        Assert.True(isLocked);
     }
 }
