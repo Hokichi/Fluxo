@@ -1,4 +1,9 @@
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Services;
+using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
@@ -82,6 +87,47 @@ public sealed class NotificationChecklistActionVMTests
         Assert.True(vm.ProceedCommand.CanExecute(null));
         var decision = Assert.Single(vm.ActionDecisions);
         Assert.Equal(new NotificationChecklistActionDecision(1, NotificationChecklistItemActionType.Paid, null), decision);
+    }
+
+    [Fact]
+    public void ShowRecurringFields_OnlyTrue_ForRecurringProcessRows()
+    {
+        var item = new NotificationChecklistActionItemVM
+        {
+            RecurringTransactionType = RecurringTransactionType.Expense,
+            SelectedAction = NotificationChecklistItemActionType.Ignore
+        };
+
+        Assert.False(item.ShowRecurringFields);
+
+        item.SelectedAction = NotificationChecklistItemActionType.Paid;
+        Assert.False(item.ShowRecurringFields);
+
+        item.SelectedAction = NotificationChecklistItemActionType.Process;
+        Assert.True(item.ShowRecurringFields);
+
+        item.RecurringTransactionType = null;
+        Assert.False(item.ShowRecurringFields);
+    }
+
+    [Fact]
+    public async Task RefreshAvailableTagsAsync_UpdatesItems_AndPreservesSelectedTag()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>()).Returns(
+        [
+            new ExpenseTag { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
+            new ExpenseTag { Id = 2, Name = "Transport", HexCode = "#38BDF8" }
+        ]);
+
+        var item = new NotificationChecklistActionItemVM { SelectedTagId = 1 };
+        item.AvailableTags.Add(new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" });
+        var vm = new NotificationChecklistActionVM(appData, [item]);
+
+        await vm.RefreshAvailableTagsAsync();
+
+        Assert.Equal(1, item.SelectedTagId);
+        Assert.Equal(new[] { 1, 2 }, item.AvailableTags.Select(tag => tag.Id).ToArray());
     }
 
     [Fact]

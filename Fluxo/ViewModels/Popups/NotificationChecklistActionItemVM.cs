@@ -28,6 +28,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
     public bool IsRecurringIncome => RecurringTransactionType == Core.Enums.RecurringTransactionType.Income;
     public bool IsRecurringGoalUpdate => RecurringTransactionType == Core.Enums.RecurringTransactionType.GoalUpdate;
     public bool AreRecurringFieldsEnabled => SelectedAction == NotificationChecklistItemActionType.Process;
+    public bool ShowRecurringFields => IsRecurringTransaction && SelectedAction == NotificationChecklistItemActionType.Process;
     public bool ShouldAskToUpdateAmount => AreRecurringFieldsEnabled && Amount != OriginalAmount;
 
     public bool IsIgnoreSelected
@@ -79,6 +80,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
         OnPropertyChanged(nameof(ShowSourceSelector));
         OnPropertyChanged(nameof(IsSelected));
         OnPropertyChanged(nameof(AreRecurringFieldsEnabled));
+        OnPropertyChanged(nameof(ShowRecurringFields));
         OnPropertyChanged(nameof(ShouldAskToUpdateAmount));
     }
 
@@ -94,6 +96,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
         OnPropertyChanged(nameof(IsRecurringIncome));
         OnPropertyChanged(nameof(IsRecurringGoalUpdate));
         OnPropertyChanged(nameof(ShowSourceSelector));
+        OnPropertyChanged(nameof(ShowRecurringFields));
     }
 
     partial void OnAmountChanged(decimal value) => OnPropertyChanged(nameof(ShouldAskToUpdateAmount));

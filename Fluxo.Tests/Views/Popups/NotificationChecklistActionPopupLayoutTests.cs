@@ -73,10 +73,10 @@ public sealed class NotificationChecklistActionPopupLayoutTests
         var template = GetChecklistItemTemplate(document);
         var recurringGrid = Assert.Single(template.Descendants().Where(element =>
             element.Name.LocalName == "Grid" &&
-            (string?)element.Attribute("IsEnabled") == "{Binding AreRecurringFieldsEnabled}"));
+            (string?)element.Attribute("Visibility") == "{Binding ShowRecurringFields, Converter={StaticResource BoolToVisibilityConverter}}"));
 
         Assert.Equal(
-            "{Binding IsRecurringTransaction, Converter={StaticResource BoolToVisibilityConverter}}",
+            "{Binding ShowRecurringFields, Converter={StaticResource BoolToVisibilityConverter}}",
             (string?)recurringGrid.Attribute("Visibility"));
 
         var comboBoxes = recurringGrid.Descendants().Where(element => element.Name.LocalName == "ComboBox").ToList();
@@ -89,11 +89,54 @@ public sealed class NotificationChecklistActionPopupLayoutTests
 
         var tagCombo = Assert.Single(comboBoxes.Where(element => (string?)element.Attribute("ItemsSource") == "{Binding AvailableTags}"));
         Assert.Equal("{Binding SelectedTagId, Mode=TwoWay}", (string?)tagCombo.Attribute("SelectedValue"));
+        Assert.Equal("{StaticResource NotificationChecklistTagItemTemplate}", (string?)tagCombo.Attribute("ItemTemplate"));
+        Assert.Equal("{StaticResource NotificationChecklistTagsComboBoxStyle}", (string?)tagCombo.Attribute("Style"));
         Assert.Equal("{Binding IsRecurringExpense, Converter={StaticResource BoolToVisibilityConverter}}", (string?)tagCombo.Attribute("Visibility"));
 
         var goalCombo = Assert.Single(comboBoxes.Where(element => (string?)element.Attribute("ItemsSource") == "{Binding AvailableGoals}"));
         Assert.Equal("{Binding SelectedGoalId, Mode=TwoWay}", (string?)goalCombo.Attribute("SelectedValue"));
         Assert.Equal("{Binding IsRecurringGoalUpdate, Converter={StaticResource BoolToVisibilityConverter}}", (string?)goalCombo.Attribute("Visibility"));
+    }
+
+    [Fact]
+    public void TagsComboBox_RendersColorDotBeforeTagName()
+    {
+        var document = LoadPopupXaml();
+        var tagTemplate = Assert.Single(document.Descendants().Where(element =>
+            element.Name.LocalName == "DataTemplate" &&
+            (string?)element.Attribute(XamlNamespace + "Key") == "NotificationChecklistTagItemTemplate"));
+
+        var ellipse = Assert.Single(tagTemplate.Descendants().Where(element => element.Name.LocalName == "Ellipse"));
+        Assert.Equal("{Binding HexCode}", (string?)ellipse.Attribute("Fill"));
+        Assert.Equal("10", (string?)ellipse.Attribute("Width"));
+        Assert.Equal("10", (string?)ellipse.Attribute("Height"));
+
+        var nameText = Assert.Single(tagTemplate.Descendants().Where(element =>
+            element.Name.LocalName == "TextBlock" &&
+            (string?)element.Attribute("Text") == "{Binding Name}"));
+        Assert.Equal("8,0,0,0", (string?)nameText.Attribute("Margin"));
+    }
+
+    [Fact]
+    public void TagsComboBox_DropDownHasStaticAddTagButtonAboveScrollableItems()
+    {
+        var document = LoadPopupXaml();
+        var tagsComboStyle = Assert.Single(document.Descendants().Where(element =>
+            element.Name.LocalName == "Style" &&
+            (string?)element.Attribute(XamlNamespace + "Key") == "NotificationChecklistTagsComboBoxStyle"));
+
+        var addButton = Assert.Single(tagsComboStyle.Descendants().Where(element =>
+            element.Name.LocalName == "Button" &&
+            (string?)element.Attribute("Content") == "+ Add Tag"));
+        Assert.Equal("OnAddTagClick", (string?)addButton.Attribute("Click"));
+
+        var addButtonRow = int.Parse((string?)addButton.Attribute("Grid.Row") ?? "0");
+        var scrollViewer = Assert.Single(tagsComboStyle.Descendants().Where(element =>
+            element.Name.LocalName == "ScrollViewer" &&
+            element.Descendants().Any(descendant => descendant.Name.LocalName == "ItemsPresenter")));
+        var scrollViewerRow = int.Parse((string?)scrollViewer.Attribute("Grid.Row") ?? "0");
+
+        Assert.True(addButtonRow < scrollViewerRow);
     }
 
     [Fact]

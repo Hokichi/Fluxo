@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Windows;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
@@ -111,7 +112,10 @@ public sealed class DialogService : IDialogService
 
     public bool? ShowNotificationChecklistAction(NotificationChecklistActionVM viewModel, Window? owner = null)
     {
-        return ShowDialog(new NotificationChecklistActionPopup(viewModel), owner);
+        using var scope = _serviceProvider.CreateScope();
+        viewModel.AttachAppDataService(scope.ServiceProvider.GetRequiredService<IAppDataService>());
+        var popup = ActivatorUtilities.CreateInstance<NotificationChecklistActionPopup>(scope.ServiceProvider, viewModel);
+        return ShowDialog(popup, owner);
     }
 
     public bool? ShowGoalDeadlineAction(GoalDeadlineActionVM viewModel, Window? owner = null)

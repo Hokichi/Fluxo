@@ -4,15 +4,34 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Services;
+using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Popups;
 
 public partial class NotificationChecklistActionVM : ObservableObject
 {
+    private IAppDataService? _appData;
     private readonly HashSet<NotificationChecklistActionItemVM> _trackedItems = [];
 
-    public NotificationChecklistActionVM(IEnumerable<NotificationChecklistActionItemVM>? items = null)
+    public NotificationChecklistActionVM()
+        : this(null, null)
     {
+    }
+
+    public NotificationChecklistActionVM(IEnumerable<NotificationChecklistActionItemVM>? items = null)
+        : this(null, items)
+    {
+    }
+
+    public NotificationChecklistActionVM(IAppDataService appData)
+        : this(appData, null)
+    {
+    }
+
+    public NotificationChecklistActionVM(IAppDataService? appData, IEnumerable<NotificationChecklistActionItemVM>? items)
+    {
+        _appData = appData;
         Items.CollectionChanged += OnItemsCollectionChanged;
 
         if (items is null)
@@ -44,10 +63,52 @@ public partial class NotificationChecklistActionVM : ObservableObject
 
     public bool CanProceed => Items.Any(IsActionExecutable);
 
+    public void AttachAppDataService(IAppDataService appData)
+    {
+        _appData ??= appData;
+    }
+
     [RelayCommand(CanExecute = nameof(CanProceed))]
     private void Proceed()
     {
         DidProceed = true;
+    }
+
+    public async Task RefreshAvailableTagsAsync(CancellationToken cancellationToken = default)
+    {
+        if (_appData is null)
+            return;
+
+        var tags = (await _appData.GetExpenseTagsAsync(cancellationToken))
+            .Where(tag => !tag.IsSystemTag)
+            .OrderBy(tag => tag.Name)
+            .Select(tag => new ExpenseTagVM
+            {
+                Id = tag.Id,
+                Name = tag.Name,
+                HexCode = tag.HexCode,
+                IsSystemTag = tag.IsSystemTag
+            })
+            .ToList();
+
+        foreach (var item in Items)
+        {
+            var selectedTagId = item.SelectedTagId;
+            item.AvailableTags.Clear();
+            foreach (var tag in tags)
+            {
+                item.AvailableTags.Add(new ExpenseTagVM
+                {
+                    Id = tag.Id,
+                    Name = tag.Name,
+                    HexCode = tag.HexCode,
+                    IsSystemTag = tag.IsSystemTag
+                });
+            }
+
+            if (selectedTagId.HasValue && tags.Any(tag => tag.Id == selectedTagId.Value))
+                item.SelectedTagId = selectedTagId;
+        }
     }
 
     private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
