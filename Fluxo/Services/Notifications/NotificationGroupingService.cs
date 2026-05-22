@@ -143,20 +143,12 @@ public sealed class NotificationGroupingService : INotificationGroupingService
             return string.Empty;
 
         var newest = notifications[0];
-        var suffix = count == 1 ? "1 item" : $"{count} items";
+        var suffix = count == 1 ? "1 pending item" : $"{count} pending items";
 
         return category switch
         {
             NotificationGroupCategory.AppUpdate => newest.Message,
-            NotificationGroupCategory.RecurringTransactionDue => $"{suffix}: {newest.Message}",
-            NotificationGroupCategory.UpcomingPayment => $"{suffix}: {newest.Message}",
-            NotificationGroupCategory.LatePayment => $"{suffix}: {newest.Message}",
-            NotificationGroupCategory.GoalDeadline => $"{suffix}: {newest.Message}",
-            NotificationGroupCategory.LowBalance => $"{suffix}: {newest.Message}",
-            NotificationGroupCategory.LowCredit => $"{suffix}: {newest.Message}",
-            NotificationGroupCategory.BudgetThreshold => $"{suffix}: {newest.Message}",
-            NotificationGroupCategory.AutoExpenseProcessed => $"{suffix}: {newest.Message}",
-            _ => $"{suffix}: {newest.Message}"
+            _ => suffix
         };
     }
 }

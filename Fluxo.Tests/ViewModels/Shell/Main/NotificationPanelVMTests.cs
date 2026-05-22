@@ -39,7 +39,7 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
-    public async Task LoadAsync_WhenCalledTwice_DoesNotDuplicateSystemNotifications()
+    public async Task LoadAsync_CreditDueDate_DoesNotCreateUpcomingPaymentNotification()
     {
         var dueDate = DateTime.Today.AddDays(7);
         var spendingSources = new List<SpendingSourceVM>
@@ -62,34 +62,29 @@ public class NotificationPanelVMTests
             out _);
 
         await vm.LoadAsync();
-        await vm.LoadAsync();
 
-        Assert.Equal(1, vm.NotificationCount);
-        Assert.Equal(1, vm.Notifications.Select(n => n.Type).Distinct().Count());
+        Assert.DoesNotContain(vm.Notifications, notification =>
+            notification.Type.StartsWith("UpcomingPayment-", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task ClearAllNotificationsAsync_SetsIsCleared_ForUpcomingPaymentNotifications()
+    public async Task ClearAllNotificationsAsync_SetsIsCleared_ForActiveNotifications()
     {
-        var dueDate = DateTime.Today.AddDays(7);
-        var spendingSources = new List<SpendingSourceVM>
-        {
-            new()
-            {
-                Id = 1,
-                Name = "Visa",
-                SpendingSourceType = SpendingSourceType.Credit,
-                MonthlyDueDate = dueDate.Day,
-                AccountLimit = 1000m,
-                SpentAmount = 0m
-            }
-        };
-
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: spendingSources,
+            spendingSources: [],
             out var persistedNotifications);
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"GoalDeadline-1_{DateTime.Today.AddDays(7):yyyyMMdd}",
+            Header = "Goal Deadline - Vacation",
+            Message = "Vacation is due soon.",
+            CreatedOn = DateTime.Today,
+            IsCleared = false,
+            IsForDeletion = false
+        });
 
         await vm.LoadAsync();
         await vm.ClearAllNotificationsCommand.ExecuteAsync(null);
@@ -125,32 +120,32 @@ public class NotificationPanelVMTests
     [Fact]
     public async Task LoadAsync_GroupsNotificationsIntoCards()
     {
-        var dueDate = DateTime.Today.AddDays(7);
+        var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
+            ? 7
+            : (int)DateTime.Today.DayOfWeek;
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources:
+            spendingSources: [],
+            out _,
+            recurringTransactions:
             [
-                new SpendingSourceVM
+                new RecurringTransaction
                 {
                     Id = 1,
-                    Name = "Visa",
-                    SpendingSourceType = SpendingSourceType.Credit,
-                    MonthlyDueDate = dueDate.Day,
-                    AccountLimit = 1000m,
-                    SpentAmount = 250m
-                },
-                new SpendingSourceVM
-                {
-                    Id = 2,
-                    Name = "MasterCard",
-                    SpendingSourceType = SpendingSourceType.Credit,
-                    MonthlyDueDate = dueDate.Day,
-                    AccountLimit = 1200m,
-                    SpentAmount = 300m
+                    Name = "Rent",
+                    Amount = 1200m,
+                    SourceId = 1,
+                    RecurringPeriod = RecurringPeriod.Weekly,
+                    RecurringTime = currentWeekday,
+                    Type = RecurringTransactionType.Income,
+                    IsEnabled = true
                 }
             ],
-            out _);
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+            ]);
 
         await vm.LoadAsync();
 
@@ -315,7 +310,7 @@ public class NotificationPanelVMTests
         await vm.LoadAsync();
 
         var cardToClear = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.UpcomingPayment));
+            item.Category == NotificationGroupCategory.GoalDeadline));
 
         await vm.ClearNotificationGroupCommand.ExecuteAsync(cardToClear);
 
@@ -350,15 +345,22 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
-    public async Task OpenNotificationActionAsync_UpcomingPayment_ForwardsActionDecisionsToService()
+    public async Task OpenNotificationActionAsync_RecurringTransactionDue_ForwardsActionDecisionsToService()
     {
-        var dueDate = DateTime.Today.AddDays(7);
+        var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
+            ? 7
+            : (int)DateTime.Today.DayOfWeek;
         var actionService = Substitute.For<INotificationActionService>();
+        IReadOnlyCollection<NotificationChecklistActionDecision>? capturedDecisions = null;
         actionService.ExecuteChecklistActionAsync(
                 Arg.Any<NotificationItemVM>(),
                 Arg.Any<IReadOnlyCollection<NotificationChecklistActionDecision>>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(false));
+            .Returns(call =>
+            {
+                capturedDecisions = call.ArgAt<IReadOnlyCollection<NotificationChecklistActionDecision>>(1);
+                return Task.FromResult(false);
+            });
 
         var dialogService = Substitute.For<IDialogService>();
         dialogService.ShowNotificationChecklistAction(
@@ -367,7 +369,7 @@ public class NotificationPanelVMTests
             .Returns(call =>
             {
                 var checklistVm = call.ArgAt<NotificationChecklistActionVM>(0);
-                checklistVm.Items[0].SelectedAction = NotificationChecklistItemActionType.Paid;
+                checklistVm.Items[0].SelectedAction = NotificationChecklistItemActionType.Process;
                 checklistVm.ProceedCommand.Execute(null);
                 return true;
             });
@@ -380,32 +382,49 @@ public class NotificationPanelVMTests
                 new SpendingSourceVM
                 {
                     Id = 1,
-                    Name = "Visa",
-                    SpendingSourceType = SpendingSourceType.Credit,
-                    MonthlyDueDate = dueDate.Day,
-                    AccountLimit = 1000m,
-                    SpentAmount = 0m
+                    Name = "Checking",
+                    SpendingSourceType = SpendingSourceType.Checking,
+                    Balance = 1000m,
+                    IsEnabled = true
                 }
             ],
             out _,
             actionService,
-            dialogService);
+            dialogService,
+            recurringTransactions:
+            [
+                new RecurringTransaction
+                {
+                    Id = 10,
+                    Name = "Rent",
+                    Amount = 1200m,
+                    SourceId = 1,
+                    RecurringPeriod = RecurringPeriod.Weekly,
+                    RecurringTime = currentWeekday,
+                    Type = RecurringTransactionType.Income,
+                    IsEnabled = true
+                }
+            ],
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+            ]);
 
         await vm.LoadAsync();
 
-        var upcomingPaymentCard = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.UpcomingPayment));
+        var recurringDueCard = Assert.Single(vm.NotificationItems.Where(item =>
+            item.Category == NotificationGroupCategory.RecurringTransactionDue));
 
-        await vm.OpenNotificationActionCommand.ExecuteAsync(upcomingPaymentCard);
+        await vm.OpenNotificationActionCommand.ExecuteAsync(recurringDueCard);
 
         await actionService.Received(1).ExecuteChecklistActionAsync(
-            Arg.Is<NotificationItemVM>(card => card.Category == NotificationGroupCategory.UpcomingPayment),
-            Arg.Is<IReadOnlyCollection<NotificationChecklistActionDecision>>(decisions =>
-                decisions.Count == 1 &&
-                decisions.First().EntityId == 1 &&
-                decisions.First().Action == NotificationChecklistItemActionType.Paid &&
-                decisions.First().SelectedSourceId == null),
+            Arg.Is<NotificationItemVM>(card => card.Category == NotificationGroupCategory.RecurringTransactionDue),
+            Arg.Any<IReadOnlyCollection<NotificationChecklistActionDecision>>(),
             Arg.Any<CancellationToken>());
+        var decision = Assert.Single(capturedDecisions!);
+        Assert.Equal(10, decision.EntityId);
+        Assert.Equal(NotificationChecklistItemActionType.Process, decision.Action);
+        Assert.Equal(1, decision.SelectedSourceId);
     }
 
     [Fact]
@@ -598,6 +617,33 @@ public class NotificationPanelVMTests
         await vm.LoadAsync();
 
         Assert.True(persistedNotifications[0].IsForDeletion);
+    }
+
+    [Fact]
+    public async Task LoadAsync_MarksUpcomingPaymentNotificationForDeletion_WhenDueDateIsStillUpcoming()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"UpcomingPayment-1_{DateTime.Today.AddDays(7):yyyyMMdd}",
+            Header = "Upcoming Payment - Visa",
+            Message = "Visa is due soon.",
+            CreatedOn = DateTime.Today.AddDays(-1),
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.True(persistedNotifications[0].IsForDeletion);
+        Assert.DoesNotContain(vm.Notifications, notification =>
+            notification.Type.StartsWith("UpcomingPayment-", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -824,9 +870,9 @@ public class NotificationPanelVMTests
             new Notification
             {
                 Id = 1,
-                Type = $"UpcomingPayment-1_{DateTime.Today.AddDays(7):yyyyMMdd}",
-                Header = "Upcoming Payment - Visa",
-                Message = "Visa is due soon.",
+                Type = $"GoalDeadline-1_{DateTime.Today.AddDays(7):yyyyMMdd}",
+                Header = "Goal Deadline - Vacation",
+                Message = "Vacation is due soon.",
                 CreatedOn = DateTime.Today.AddMinutes(-1),
                 IsCleared = false,
                 IsForDeletion = false
@@ -919,11 +965,15 @@ public class NotificationPanelVMTests
         var savingGoalRepository = Substitute.For<ISavingGoalRepository>();
         savingGoalRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<SavingGoal>>([]));
+        var expenseTagRepository = Substitute.For<IExpenseTagRepository>();
+        expenseTagRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>([]));
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.UserSettings.Returns(userSettingsRepository);
         unitOfWork.RecurringTransactions.Returns(recurringTransactionRepository);
         unitOfWork.Notifications.Returns(notificationRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);
+        unitOfWork.ExpenseTags.Returns(expenseTagRepository);
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
@@ -948,6 +998,7 @@ public class NotificationPanelVMTests
                 RecurringPeriod = transaction.RecurringPeriod,
                 RecurringTime = transaction.RecurringTime,
                 Type = transaction.Type,
+                Source = spendingSources.FirstOrDefault(source => source.Id == transaction.SourceId) ?? new SpendingSourceVM(),
                 IsEnabled = transaction.IsEnabled
             })
             .ToList();
@@ -956,6 +1007,8 @@ public class NotificationPanelVMTests
         mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
         mapper.Map<IReadOnlyList<RecurringTransactionDto>>(Arg.Any<object>()).Returns(recurringDtos);
         mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns(recurringVms);
+        mapper.Map<IReadOnlyList<ExpenseTagDto>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<SavingGoalDto>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns([]);
 

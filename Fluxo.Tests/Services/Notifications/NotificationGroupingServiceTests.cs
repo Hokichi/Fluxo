@@ -69,7 +69,22 @@ public sealed class NotificationGroupingServiceTests
         Assert.Equal(2, second.Count);
         Assert.Equal(now.AddMinutes(-10), second.LatestCreatedOn);
         Assert.Contains("2", second.Header);
-        Assert.Contains("2 items", second.Message);
+        Assert.Equal("2 pending items", second.Message);
+    }
+
+    [Fact]
+    public void Group_SingleNotification_UsesSingularPendingItemMessage()
+    {
+        var input = new[]
+        {
+            CreateNotification("LowCredit-7", DateTime.Today, NotificationSeverity.Warning, message: "Credit")
+        };
+
+        var sut = new NotificationGroupingService();
+
+        var card = Assert.Single(sut.Group(input));
+
+        Assert.Equal("1 pending item", card.Message);
     }
 
     [Fact]

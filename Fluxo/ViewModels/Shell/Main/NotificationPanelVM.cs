@@ -46,7 +46,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private decimal _budgetUsageWarningPercentage = 0.90m;
     private int _deadlineReminderDays = 7;
     private bool _isBudgetThresholdNotifEnabled = true;
-    private bool _isCreditDeadlineNotifEnabled = true;
     private bool _isRecurringTransactionNotifEnabled;
     private bool _isGoalDeadlineNotifEnabled = true;
     private bool _isLatePaymentNotifEnabled = true;
@@ -292,7 +291,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
     {
         var notifications = new List<NotificationCandidate>();
 
-        notifications.AddRange(GetUpcomingCreditDeadlineNotifications());
         notifications.AddRange(GetRecurringTransactionDueNotifications());
         notifications.AddRange(GetGoalDeadlineNotifications());
         notifications.AddRange(GetLatePaymentNotifications());
@@ -302,32 +300,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         notifications.AddRange(GetLowAccountNotifications());
 
         return notifications;
-    }
-
-    private IEnumerable<NotificationCandidate> GetUpcomingCreditDeadlineNotifications()
-    {
-        if (!_isCreditDeadlineNotifEnabled)
-            yield break;
-
-        foreach (var source in _spendingSources.Where(source =>
-                     source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
-                     source.MonthlyDueDate.HasValue))
-        {
-            var dueDate = MonthlyDueDateHelper.ResolveUpcomingDate(source.MonthlyDueDate, DateTime.Today);
-            if (!dueDate.HasValue)
-                continue;
-
-            var upcomingDueDate = dueDate.Value.Date;
-            var daysUntilDueDate = (upcomingDueDate - DateTime.Today).Days;
-            if (daysUntilDueDate < 0 || daysUntilDueDate > _deadlineReminderDays)
-                continue;
-
-            yield return new NotificationCandidate(
-                Type: BuildNotificationType($"UpcomingPayment-{source.Id}", upcomingDueDate),
-                Header: $"Upcoming Payment - {source.Name}",
-                Message: $"{source.Name} is due on {upcomingDueDate:MMM d}.",
-                Severity: NotificationSeverity.Warning);
-        }
     }
 
     private IEnumerable<NotificationCandidate> GetRecurringTransactionDueNotifications()
@@ -638,9 +610,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
         return category switch
         {
-            NotificationCategory.UpcomingPayment =>
-                IsDeadlinePassed(notification.Type) ||
-                (!TryExtractNotificationDate(notification.Type, out _) && !isActiveCondition),
+            NotificationCategory.UpcomingPayment => true,
             NotificationCategory.GoalDeadline =>
                 IsDeadlinePassed(notification.Type) ||
                 (!TryExtractNotificationDate(notification.Type, out _) && !isActiveCondition),
@@ -804,8 +774,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
             ParseDecimal(settingsByName, UserSettingNames.LowAccountBalancePercentage, 0.20m);
         _isRecurringTransactionNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false);
-        _isCreditDeadlineNotifEnabled =
-            ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true);
         _isBudgetThresholdNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsBudgetThresholdNotifEnabled, true);
         _isLowCreditNotifEnabled = ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false);
