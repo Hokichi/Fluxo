@@ -198,7 +198,7 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
-    public void DeleteExpenseLogCommand_RemovesExpenseLogWithoutMutatingSourceTotalsInUi()
+    public void DeleteExpenseLogCommand_RestoresSourceTotalsAndBudgetMetricsInUi()
     {
         RunInSta(() =>
         {
@@ -215,7 +215,10 @@ public class BudgetAllocationPanelVMTests
 
             vm.DeleteExpenseLogCommand.ExecuteAsync(targetLog).GetAwaiter().GetResult();
 
-            Assert.Equal(2000m, vm.TotalIncomeAmount);
+            Assert.Equal(2045m, vm.TotalIncomeAmount);
+            Assert.Equal(1022.50m, vm.NeedsAvailable);
+            Assert.Equal(0m, vm.NeedsSpent);
+            Assert.Equal(1022.50m, vm.NeedsRemaining);
             Assert.Equal(-130m, source.Difference);
             Assert.DoesNotContain(vm.GetAllExpenseLogs(), log => log.Id == targetLog.Id);
         });

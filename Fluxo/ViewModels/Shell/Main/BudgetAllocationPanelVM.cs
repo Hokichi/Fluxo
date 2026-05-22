@@ -857,14 +857,46 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (direction == LogMemoryApplyDirection.Redo)
         {
             RemoveExpenseLog(snapshot.ExpenseLogId);
+            RestoreExpenseFromTrackedSource(snapshot);
             AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
             RefreshExpenseBucketsFromTrackedLogs();
             return;
         }
 
         UpsertExpenseLog(snapshot);
+        ApplyExpenseToTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
+    }
+
+    private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
+    {
+        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        if (source is null)
+            return;
+
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount += snapshot.Amount;
+            return;
+        }
+
+        source.Balance -= snapshot.Amount;
+    }
+
+    private void RestoreExpenseFromTrackedSource(ExpenseLogMemorySnapshot snapshot)
+    {
+        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        if (source is null)
+            return;
+
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
+            return;
+        }
+
+        source.Balance += snapshot.Amount;
     }
 
     private void AdjustSourceDifference(int sourceId, DateTime occurredOn, decimal deltaDifference)
