@@ -112,6 +112,53 @@ public sealed class QuickAddVMValidationTests
     }
 
     [Fact]
+    public void TransactionModeChange_ClearsNameValidation()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
+            vm.NameText = " ";
+            vm.ValidateNameField();
+
+            Assert.True(vm.HasErrors);
+            Assert.Equal("Required", vm.NameValidationHint);
+
+            vm.IsIncome = true;
+
+            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.NameText)));
+            Assert.Equal(string.Empty, vm.NameValidationHint);
+        });
+    }
+
+    [Fact]
+    public void AmountValidation_WhenActive_RevalidatesWhenSpendingSourceChanges()
+    {
+        RunInSta(() =>
+        {
+            var lowBalance = CreateCheckingSource(balance: 20m);
+            var highBalance = new SpendingSourceVM
+            {
+                Id = 2,
+                Name = "Checking 2",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 100m,
+                IsEnabled = true
+            };
+            var vm = new QuickAddVM(CreateMainViewModel([lowBalance, highBalance]), CreateAppData());
+            vm.SelectedSpendingSource = lowBalance;
+            vm.AmountText = 30m;
+            vm.ValidateAmountField();
+
+            Assert.Equal("Insufficient Balance", vm.AmountValidationHint);
+
+            vm.SelectedSpendingSource = highBalance;
+
+            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.AmountText)));
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
     public void HasChanges_TracksOnlyNameAndAmountInput()
     {
         RunInSta(() =>

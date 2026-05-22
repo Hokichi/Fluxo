@@ -287,7 +287,8 @@ public partial class QuickAddVM : ObservableValidator
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
-        RefreshActiveValidation(nameof(NameText), nameof(AmountText));
+        ClearNameValidation();
+        RefreshActiveValidation(nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
         NotifyFormStateChanged();
     }
@@ -303,7 +304,8 @@ public partial class QuickAddVM : ObservableValidator
             IsMoreTagsOpen = false;
 
         RefreshSpendingSources();
-        RefreshActiveValidation(nameof(NameText), nameof(AmountText));
+        ClearNameValidation();
+        RefreshActiveValidation(nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
         NotifyFormStateChanged();
     }
@@ -1085,6 +1087,14 @@ public partial class QuickAddVM : ObservableValidator
             if (propertyName == nameof(AmountText) && _isAmountValidationActive)
                 ValidateProperty(AmountText, nameof(AmountText));
         }
+    }
+
+    private void ClearNameValidation()
+    {
+        _isNameValidationActive = false;
+        ClearErrors(nameof(NameText));
+        OnPropertyChanged(nameof(NameValidationHint));
+        OnPropertyChanged(nameof(CanSave));
     }
 
     private string GetValidationHint(string propertyName)
