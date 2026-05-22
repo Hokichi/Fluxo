@@ -12,6 +12,22 @@
         <ItemsPanelTemplate x:Key="BudgetAllocationPopupTagItemsPanelTemplate">
             <WrapPanel />
         </ItemsPanelTemplate>
+
+        <Style x:Key="BudgetAllocationVisibleTagListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -23,6 +39,7 @@
 
         <StackPanel
             Grid.Row="1"
+            Height="32"
             Margin="0,0,0,16"
             Orientation="Horizontal">
             <Grid Margin="16,0,0,0" VerticalAlignment="Center">
@@ -85,11 +102,10 @@
             </Grid>
 
             <ListView
-                Margin="0,12,0,0"
                 VerticalAlignment="Center"
                 Background="Transparent"
                 BorderThickness="0"
-                ItemContainerStyle="{StaticResource ListViewItemStyle}"
+                ItemContainerStyle="{StaticResource BudgetAllocationVisibleTagListViewItemStyle}"
                 ItemTemplate="{StaticResource Tags}"
                 ItemsPanel="{StaticResource BudgetAllocationTagItemsPanelTemplate}"
                 ItemsSource="{Binding Tags}"

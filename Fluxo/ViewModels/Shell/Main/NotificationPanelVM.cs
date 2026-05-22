@@ -342,7 +342,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
                 continue;
 
             var upcomingDate = dueDate.Value.Date;
-            if ((upcomingDate - DateTime.Today).Days != _deadlineReminderDays)
+            var daysUntilDueDate = (upcomingDate - DateTime.Today).Days;
+            if (daysUntilDueDate < 0 || daysUntilDueDate > _deadlineReminderDays)
                 continue;
 
             yield return new NotificationCandidate(
@@ -644,8 +645,18 @@ public partial class NotificationPanelVM : ObservableRecipient,
                 IsDeadlinePassed(notification.Type) ||
                 (!TryExtractNotificationDate(notification.Type, out _) && !isActiveCondition),
             NotificationCategory.LatePayment => IsLatePaymentProcessed(notification.Type),
+            NotificationCategory.RecurringTransactionDue => IsRecurringTransactionNotificationStale(notification.Type),
             _ => notification.IsCleared
         };
+    }
+
+    private bool IsRecurringTransactionNotificationStale(string notificationType)
+    {
+        if (!TryExtractNotificationEntityId(notificationType, "RecurringTransactionDue-", out var recurringTransactionId))
+            return true;
+
+        var recurringTransaction = _recurringTransactions.FirstOrDefault(transaction => transaction.Id == recurringTransactionId);
+        return recurringTransaction is null || !recurringTransaction.IsEnabled;
     }
 
     private bool IsLatePaymentProcessed(string notificationType)

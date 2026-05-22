@@ -29,6 +29,20 @@ public sealed class BudgetAllocationPanelEmptyActionTests
         Assert.Contains("OpenAddNewTransactionPopupForCategory", source);
     }
 
+    [Fact]
+    public void BudgetAllocationPanel_TagStripUsesStableFixedHeightLayout()
+    {
+        var xaml = File.ReadAllText(ResolveBudgetAllocationPanelXamlPath());
+
+        Assert.Contains("x:Key=\"BudgetAllocationVisibleTagListViewItemStyle\"", xaml);
+        Assert.Contains("<Setter Property=\"Margin\" Value=\"0\" />", xaml);
+        Assert.Contains("Height=\"32\"", xaml);
+        Assert.Contains("ItemContainerStyle=\"{StaticResource BudgetAllocationVisibleTagListViewItemStyle}\"", xaml);
+        Assert.DoesNotContain(
+            "ItemContainerStyle=\"{StaticResource ListViewItemStyle}\"\r\n                ItemTemplate=\"{StaticResource Tags}\"",
+            xaml);
+    }
+
     private static int CountOccurrences(string text, string value)
     {
         var count = 0;

@@ -1,5 +1,6 @@
 using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Entities;
@@ -156,6 +157,61 @@ public class NotificationPanelVMTests
         Assert.True(vm.HasNotifications);
         Assert.NotNull(vm.CurrentNotificationItem);
         Assert.True(vm.NotificationItems.Count >= 1);
+    }
+
+    [Fact]
+    public async Task LoadAsync_CreatesNotificationForEachRecurringTransactionDueWithinReminderWindow()
+    {
+        var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
+            ? 7
+            : (int)DateTime.Today.DayOfWeek;
+        var useMonthlyDueDate = DateTime.Today.Day <= 28;
+        var recurringPeriod = useMonthlyDueDate ? RecurringPeriod.Monthly : RecurringPeriod.Weekly;
+        var recurringTime = useMonthlyDueDate ? DateTime.Today.Day : currentWeekday;
+        var recurringTransactions = new[]
+        {
+            new RecurringTransaction
+            {
+                Id = 1,
+                Name = "Rent",
+                Amount = 1200m,
+                RecurringPeriod = recurringPeriod,
+                RecurringTime = recurringTime,
+                Type = RecurringTransactionType.Expense,
+                IsEnabled = true
+            },
+            new RecurringTransaction
+            {
+                Id = 2,
+                Name = "Utilities",
+                Amount = 150m,
+                RecurringPeriod = recurringPeriod,
+                RecurringTime = recurringTime,
+                Type = RecurringTransactionType.Expense,
+                IsEnabled = true
+            }
+        };
+        var userSettings = new[]
+        {
+            new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" },
+            new UserSettings { Name = UserSettingNames.DeadlineReminderDays, Value = "7" }
+        };
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out _,
+            recurringTransactions: recurringTransactions,
+            userSettings: userSettings);
+
+        await vm.LoadAsync();
+
+        var recurringNotifications = vm.Notifications
+            .Where(notification => notification.Type.StartsWith("RecurringTransactionDue-", StringComparison.Ordinal))
+            .ToList();
+        Assert.Equal(2, recurringNotifications.Count);
+        Assert.Contains(recurringNotifications, notification => notification.Header == "Recurring Transaction Due - Rent");
+        Assert.Contains(recurringNotifications, notification => notification.Header == "Recurring Transaction Due - Utilities");
     }
 
     [Fact]
@@ -608,6 +664,82 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task LoadAsync_MarksRecurringTransactionNotificationForDeletion_WhenTransactionNoLongerExists()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications,
+            recurringTransactions: [],
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+            ]);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"RecurringTransactionDue-42_{DateTime.Today:yyyyMMdd}",
+            Header = "Recurring Transaction Due - Removed",
+            Message = "Removed is scheduled today.",
+            CreatedOn = DateTime.Today,
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.True(persistedNotifications[0].IsForDeletion);
+        Assert.DoesNotContain(vm.Notifications, notification =>
+            notification.Type.StartsWith("RecurringTransactionDue-42_", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task LoadAsync_MarksRecurringTransactionNotificationForDeletion_WhenTransactionIsDisabled()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            spendingSources: [],
+            out var persistedNotifications,
+            recurringTransactions:
+            [
+                new RecurringTransaction
+                {
+                    Id = 42,
+                    Name = "Disabled Subscription",
+                    Amount = 9.99m,
+                    RecurringPeriod = RecurringPeriod.Monthly,
+                    RecurringTime = Math.Min(DateTime.Today.Day, 28),
+                    Type = RecurringTransactionType.Expense,
+                    IsEnabled = false
+                }
+            ],
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+            ]);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"RecurringTransactionDue-42_{DateTime.Today:yyyyMMdd}",
+            Header = "Recurring Transaction Due - Disabled Subscription",
+            Message = "Disabled Subscription is scheduled today.",
+            CreatedOn = DateTime.Today,
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.True(persistedNotifications[0].IsForDeletion);
+        Assert.DoesNotContain(vm.Notifications, notification =>
+            notification.Type.StartsWith("RecurringTransactionDue-42_", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task LoadAsync_MarksClearedNotificationForDeletion_ForNonSpecialTypes()
     {
         var vm = CreateVm(
@@ -719,7 +851,9 @@ public class NotificationPanelVMTests
         out List<Notification> persistedNotifications,
         INotificationActionService? notificationActionService = null,
         IDialogService? dialogService = null,
-        IAppUpdateInteractionService? appUpdateInteractionService = null)
+        IAppUpdateInteractionService? appUpdateInteractionService = null,
+        IReadOnlyList<RecurringTransaction>? recurringTransactions = null,
+        IReadOnlyList<UserSettings>? userSettings = null)
     {
         var expenseService = Substitute.For<IExpenseService>();
         expenseService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -735,7 +869,12 @@ public class NotificationPanelVMTests
 
         var userSettingsRepository = Substitute.For<IUserSettingsRepository>();
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<UserSettings>>([]));
+            .Returns(Task.FromResult(userSettings ?? []));
+
+        var recurringTransactionStore = recurringTransactions?.ToList() ?? [];
+        var recurringTransactionRepository = Substitute.For<IRecurringTransactionRepository>();
+        recurringTransactionRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<RecurringTransaction>>(recurringTransactionStore.ToList()));
 
         var notificationStore = new List<Notification>();
         persistedNotifications = notificationStore;
@@ -782,14 +921,41 @@ public class NotificationPanelVMTests
             .Returns(Task.FromResult<IReadOnlyList<SavingGoal>>([]));
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.UserSettings.Returns(userSettingsRepository);
+        unitOfWork.RecurringTransactions.Returns(recurringTransactionRepository);
         unitOfWork.Notifications.Returns(notificationRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
+        var recurringDtos = recurringTransactionStore
+            .Select(transaction => new RecurringTransactionDto
+            {
+                Id = transaction.Id,
+                Name = transaction.Name,
+                Amount = transaction.Amount,
+                RecurringPeriod = transaction.RecurringPeriod,
+                RecurringTime = transaction.RecurringTime,
+                Type = transaction.Type,
+                IsEnabled = transaction.IsEnabled
+            })
+            .ToList();
+        var recurringVms = recurringTransactionStore
+            .Select(transaction => new RecurringTransactionVM
+            {
+                Id = transaction.Id,
+                Name = transaction.Name,
+                Amount = transaction.Amount,
+                RecurringPeriod = transaction.RecurringPeriod,
+                RecurringTime = transaction.RecurringTime,
+                Type = transaction.Type,
+                IsEnabled = transaction.IsEnabled
+            })
+            .ToList();
         mapper.Map<IReadOnlyList<ExpenseVM>>(Arg.Any<object>()).Returns(expenses);
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
         mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
+        mapper.Map<IReadOnlyList<RecurringTransactionDto>>(Arg.Any<object>()).Returns(recurringDtos);
+        mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns(recurringVms);
         mapper.Map<IReadOnlyList<SavingGoalDto>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns([]);
 
