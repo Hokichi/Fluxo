@@ -291,11 +291,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         if (!IsSaving)
             ApyText = 0m;
 
-        RefreshActiveValidation(
-            nameof(MaximumSpendingText),
-            nameof(SpentAmountText),
-            nameof(MinimumPaymentText),
-            nameof(ApyText));
+        ClearValidationState();
         NotifyFormStateChanged();
     }
 
@@ -718,7 +714,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     private bool AreRequiredFieldsFilled()
     {
-        if (string.IsNullOrWhiteSpace(NameText))
+        if (!HasValidNameValue(NameText))
             return false;
 
         if (IsCredit && AccountLimitText <= 0m)
@@ -731,6 +727,14 @@ public partial class AddSpendingSourceVM : ObservableValidator
             return false;
 
         return true;
+    }
+
+    private static bool HasValidNameValue(string? value)
+    {
+        var trimmedName = value?.Trim() ?? string.Empty;
+        return trimmedName.Length > 0 &&
+               trimmedName.Length <= MaxNameLength &&
+               !trimmedName.Any(char.IsControl);
     }
 
     private void RefreshActiveValidation(params string[] propertyNames)
@@ -756,8 +760,13 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     private void ResetValidationState()
     {
-        _isApyValidationActive = false;
         _isMaximumSpendingModified = false;
+        ClearValidationState();
+    }
+
+    private void ClearValidationState()
+    {
+        _isApyValidationActive = false;
         _isMaximumSpendingValidationActive = false;
         _isMinimumPaymentValidationActive = false;
         _isNameValidationActive = false;
@@ -768,6 +777,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         OnPropertyChanged(nameof(SpentAmountValidationHint));
         OnPropertyChanged(nameof(MinimumPaymentValidationHint));
         OnPropertyChanged(nameof(ApyValidationHint));
+        OnPropertyChanged(nameof(CanSave));
     }
 
     private string GetValidationHint(string propertyName)

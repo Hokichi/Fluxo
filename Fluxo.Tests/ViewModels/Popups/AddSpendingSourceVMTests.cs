@@ -212,6 +212,57 @@ public sealed class AddSpendingSourceVMTests
     }
 
     [Fact]
+    public void SelectedSpendingSourceTypeChanged_ClearsNameValidation()
+    {
+        var sut = CreateSut();
+        sut.NameText = " ";
+        sut.ValidateNameField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Required", sut.NameValidationHint);
+
+        sut.SelectedSpendingSourceType = SpendingSourceType.Credit;
+
+        Assert.Empty(sut.GetErrors(nameof(AddSpendingSourceVM.NameText)));
+        Assert.Equal(string.Empty, sut.NameValidationHint);
+    }
+
+    [Fact]
+    public void SelectedSpendingSourceTypeChanged_ClearsMaximumSpendingValidation()
+    {
+        var sut = CreateSut();
+        ConfigureValidCreditFields(sut);
+        sut.AccountLimitText = 100m;
+        sut.MaximumSpendingText = 101m;
+        sut.ValidateMaximumSpendingField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Exceeds Limit", sut.MaximumSpendingValidationHint);
+
+        sut.SelectedSpendingSourceType = SpendingSourceType.BNPL;
+
+        Assert.Empty(sut.GetErrors(nameof(AddSpendingSourceVM.MaximumSpendingText)));
+        Assert.Equal(string.Empty, sut.MaximumSpendingValidationHint);
+    }
+
+    [Fact]
+    public void SelectedSpendingSourceTypeChanged_ClearsInvalidNameValidationButKeepsSaveDisabled()
+    {
+        var sut = CreateSut();
+        sut.NameText = new string('A', 257);
+        sut.ValidateNameField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Too Long", sut.NameValidationHint);
+
+        sut.SelectedSpendingSourceType = SpendingSourceType.Cash;
+
+        Assert.Empty(sut.GetErrors(nameof(AddSpendingSourceVM.NameText)));
+        Assert.Equal(string.Empty, sut.NameValidationHint);
+        Assert.False(sut.CanSave);
+    }
+
+    [Fact]
     public void HasChanges_IgnoresDueDateDeductSourceMaximumSpendingAndSourceType()
     {
         var sut = CreateSut();
