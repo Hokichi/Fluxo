@@ -194,7 +194,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public ObservableCollection<SpendingSourceVM> SpendingSources => _spendingSources;
 
-    public decimal TotalIncomeAmount => _spendingSources.Sum(source => source.Balance);
+    public decimal TotalIncomeAmount => CalculateBudgetAvailableBase();
 
     public IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs() => _allExpenseLogs.ToList();
 
@@ -518,7 +518,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void RefreshBudgetMetrics()
     {
-        var totalIncomeAmount = _spendingSources.Sum(source => source.Balance);
+        var totalIncomeAmount = CalculateBudgetAvailableBase();
 
         NeedsAvailable = decimal.Round(totalIncomeAmount * NeedsThreshold, 2);
         WantsAvailable = decimal.Round(totalIncomeAmount * WantsThreshold, 2);
@@ -544,6 +544,26 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         WantsPercentage = CalculatePercentage(WantsSpent, WantsAvailable);
         InvestPercentage = CalculatePercentage(InvestSpent, InvestAvailable);
         DailyAllowance = CalculateDailyAllowance(totalIncomeAmount);
+    }
+
+    private decimal CalculateBudgetAvailableBase()
+    {
+        var balanceBackedSourceIds = _spendingSources
+            .Where(IsBalanceBackedSource)
+            .Select(source => source.Id)
+            .ToHashSet();
+
+        var balanceBackedExpenseAmount = _allExpenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.SpendingSource is { } source && balanceBackedSourceIds.Contains(source.Id))
+            .Sum(log => log.Amount);
+
+        return _spendingSources.Sum(source => source.Balance) + balanceBackedExpenseAmount;
+    }
+
+    private static bool IsBalanceBackedSource(SpendingSourceVM source)
+    {
+        return source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL);
     }
 
     private int CalculateDailyAllowance(decimal totalIncomeAmount)
@@ -815,12 +835,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (direction == LogMemoryApplyDirection.Redo)
         {
             UpsertExpenseLog(snapshot);
+            ApplyExpenseToTrackedSource(snapshot);
             AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
             RefreshExpenseBucketsFromTrackedLogs();
             return;
         }
 
         RemoveExpenseLog(snapshot.ExpenseLogId);
+        RestoreExpenseFromTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
     }
@@ -830,12 +852,16 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (direction == LogMemoryApplyDirection.Redo)
         {
             UpsertIncomeLog(snapshot);
+            ApplyIncomeToTrackedSource(snapshot);
             AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, -snapshot.Amount);
+            RefreshBudgetMetrics();
             return;
         }
 
         RemoveIncomeLog(snapshot.IncomeLogId);
+        RestoreIncomeFromTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, snapshot.Amount);
+        RefreshBudgetMetrics();
     }
 
     private void ApplyEditedExpenseAction(EditExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
@@ -844,6 +870,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         var target = direction == LogMemoryApplyDirection.Redo ? action.After : action.Before;
 
         UpsertExpenseLog(target);
+        RestoreExpenseFromTrackedSource(previous);
+        ApplyExpenseToTrackedSource(target);
         AdjustSourceDifference(previous.SpendingSourceId, previous.DeductedOn, -previous.Amount);
         AdjustSourceDifference(target.SpendingSourceId, target.DeductedOn, target.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
@@ -897,6 +925,36 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }
 
         source.Balance += snapshot.Amount;
+    }
+
+    private void ApplyIncomeToTrackedSource(IncomeLogMemorySnapshot snapshot)
+    {
+        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        if (source is null)
+            return;
+
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
+            return;
+        }
+
+        source.Balance += snapshot.Amount;
+    }
+
+    private void RestoreIncomeFromTrackedSource(IncomeLogMemorySnapshot snapshot)
+    {
+        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        if (source is null)
+            return;
+
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            source.SpentAmount += snapshot.Amount;
+            return;
+        }
+
+        source.Balance -= snapshot.Amount;
     }
 
     private void AdjustSourceDifference(int sourceId, DateTime occurredOn, decimal deltaDifference)

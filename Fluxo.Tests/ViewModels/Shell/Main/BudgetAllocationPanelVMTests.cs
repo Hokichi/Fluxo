@@ -198,6 +198,130 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
+    public void LoadAsync_KeepsAvailableValuesStableWhenBalanceReflectsLoggedExpenses()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var source = new SpendingSourceVM
+            {
+                Id = 1,
+                Name = "Checking",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 1825m,
+                IsEnabled = true,
+                ShowOnUI = true
+            };
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), [source]);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(2000m, vm.TotalIncomeAmount);
+            Assert.Equal(1000m, vm.NeedsAvailable);
+            Assert.Equal(600m, vm.WantsAvailable);
+            Assert.Equal(400m, vm.InvestAvailable);
+        });
+    }
+
+    [Fact]
+    public void RecordLogMemoryMessage_AddExpenseKeepsAvailableValuesStableWithoutReload()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var source = new SpendingSourceVM
+            {
+                Id = 1,
+                Name = "Checking",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 2000m,
+                IsEnabled = true,
+                ShowOnUI = true
+            };
+            var vm = CreateVm(messenger, [], CreateTags(), [source]);
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            messenger.Send(new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(
+                new ExpenseLogMemorySnapshot(
+                    ExpenseId: 99,
+                    ExpenseLogId: 999,
+                    ExpenseName: "Groceries",
+                    Amount: 45m,
+                    ExpenseCategory: ExpenseCategory.Needs,
+                    SpendingSourceId: 1,
+                    TagId: 1,
+                    DeductedOn: new DateTime(2026, 4, 10),
+                    Notes: string.Empty,
+                    IsForDeletion: false))));
+
+            Assert.Equal(2000m, vm.TotalIncomeAmount);
+            Assert.Equal(1000m, vm.NeedsAvailable);
+            Assert.Equal(45m, vm.NeedsSpent);
+            Assert.Equal(955m, vm.NeedsRemaining);
+        });
+    }
+
+    [Fact]
+    public void LoadAsync_UpdatesAvailableValuesWhenIncomeIncreasesBalance()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var source = new SpendingSourceVM
+            {
+                Id = 1,
+                Name = "Checking",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 2100m,
+                IsEnabled = true,
+                ShowOnUI = true
+            };
+            var vm = CreateVm(messenger, [], CreateTags(), [source]);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(2100m, vm.TotalIncomeAmount);
+            Assert.Equal(1050m, vm.NeedsAvailable);
+            Assert.Equal(630m, vm.WantsAvailable);
+            Assert.Equal(420m, vm.InvestAvailable);
+        });
+    }
+
+    [Fact]
+    public void RecordLogMemoryMessage_AddIncomeUpdatesAvailableValuesWithoutReload()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var source = new SpendingSourceVM
+            {
+                Id = 1,
+                Name = "Checking",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 2000m,
+                IsEnabled = true,
+                ShowOnUI = true
+            };
+            var vm = CreateVm(messenger, [], CreateTags(), [source]);
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            messenger.Send(new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(
+                new IncomeLogMemorySnapshot(
+                    IncomeLogId: 10,
+                    SpendingSourceId: 1,
+                    Name: "Paycheck",
+                    Amount: 100m,
+                    AddedOn: new DateTime(2026, 4, 10),
+                    Notes: string.Empty))));
+
+            Assert.Equal(2100m, vm.TotalIncomeAmount);
+            Assert.Equal(1050m, vm.NeedsAvailable);
+            Assert.Equal(630m, vm.WantsAvailable);
+            Assert.Equal(420m, vm.InvestAvailable);
+        });
+    }
+
+    [Fact]
     public void DeleteExpenseLogCommand_RestoresSourceTotalsAndBudgetMetricsInUi()
     {
         RunInSta(() =>
@@ -215,10 +339,10 @@ public class BudgetAllocationPanelVMTests
 
             vm.DeleteExpenseLogCommand.ExecuteAsync(targetLog).GetAwaiter().GetResult();
 
-            Assert.Equal(2045m, vm.TotalIncomeAmount);
-            Assert.Equal(1022.50m, vm.NeedsAvailable);
+            Assert.Equal(2000m, vm.TotalIncomeAmount);
+            Assert.Equal(1000m, vm.NeedsAvailable);
             Assert.Equal(0m, vm.NeedsSpent);
-            Assert.Equal(1022.50m, vm.NeedsRemaining);
+            Assert.Equal(1000m, vm.NeedsRemaining);
             Assert.Equal(-130m, source.Difference);
             Assert.DoesNotContain(vm.GetAllExpenseLogs(), log => log.Id == targetLog.Id);
         });
@@ -431,7 +555,7 @@ public class BudgetAllocationPanelVMTests
                 Id = 1,
                 Name = "Checking",
                 SpendingSourceType = SpendingSourceType.Checking,
-                Balance = 2000m,
+                Balance = 1825m,
                 IsEnabled = true,
                 ShowOnUI = true
             }
