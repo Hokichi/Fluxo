@@ -53,14 +53,29 @@ public sealed class AddNewTransactionSuggestionStyleTests
     }
 
     [Fact]
-    public void NameAndAmountFields_ValidateOnlyOnLostKeyboardFocus()
+    public void NameFieldsValidateOnLostFocus_AmountFieldsValidateOnTextChangedAndLostFocus()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
         var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml.cs"));
 
         Assert.Equal(2, xaml.Split("LostKeyboardFocus=\"OnTransactionNameTextBoxLostKeyboardFocus\"").Length - 1);
         Assert.Equal(3, xaml.Split("LostKeyboardFocus=\"OnTransactionAmountTextBoxLostKeyboardFocus\"").Length - 1);
+        Assert.Equal(3, xaml.Split("TextChanged=\"OnTransactionAmountTextBoxTextChanged\"").Length - 1);
         Assert.Contains("_viewModel.ValidateNameField();", codeBehind);
         Assert.Contains("_viewModel.ValidateAmountField();", codeBehind);
+        Assert.Contains("OnTransactionAmountTextBoxTextChanged", codeBehind);
+        Assert.Contains("GetBindingExpression(TextBox.TextProperty)?.UpdateSource()", codeBehind);
+        Assert.Contains("_viewModel.ActivateAmountValidation();", codeBehind);
+        Assert.Contains("IsKeyboardFocusWithin: true", codeBehind);
+
+        var updateSourceIndex = codeBehind.IndexOf(
+            "GetBindingExpression(TextBox.TextProperty)?.UpdateSource()",
+            StringComparison.Ordinal);
+        var activateValidationIndex = codeBehind.IndexOf(
+            "_viewModel.ActivateAmountValidation();",
+            StringComparison.Ordinal);
+        Assert.True(updateSourceIndex >= 0);
+        Assert.True(activateValidationIndex >= 0);
+        Assert.True(updateSourceIndex < activateValidationIndex);
     }
 }

@@ -318,6 +318,15 @@ public partial class AddNewTransaction : BasePopup
         _viewModel.ValidateAmountField();
     }
 
+    private void OnTransactionAmountTextBoxTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is not TextBox { IsKeyboardFocusWithin: true } textBox)
+            return;
+
+        textBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+        _viewModel.ActivateAmountValidation();
+    }
+
     private void RecalculateTagLayout()
     {
         if (!IsLoaded || !_viewModel.IsExpense)

@@ -311,6 +311,7 @@
                             <customControls:MoneyTextBox
                                 x:Name="ExpenseAmountTextBox"
                                 LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
+                                TextChanged="OnTransactionAmountTextBoxTextChanged"
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
                                 Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                         </StackPanel>
@@ -434,6 +435,7 @@
                             <customControls:MoneyTextBox
                                 x:Name="IncomeAmountTextBox"
                                 LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
+                                TextChanged="OnTransactionAmountTextBoxTextChanged"
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
                                 Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                         </StackPanel>
@@ -505,6 +507,7 @@
                         <customControls:MoneyTextBox
                             x:Name="GoalAmountTextBox"
                             LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
+                            TextChanged="OnTransactionAmountTextBoxTextChanged"
                             Style="{StaticResource RoundedMoneyTextInputStyle}"
                             Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </StackPanel>

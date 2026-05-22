@@ -252,6 +252,14 @@ public partial class QuickAddVM : ObservableValidator
         ValidateProperty(AmountText, nameof(AmountText));
     }
 
+    public void ActivateAmountValidation()
+    {
+        if (_isAmountValidationActive)
+            return;
+
+        ValidateAmountField();
+    }
+
     public void InitializeFromDraft(QuickAddDraft draft)
     {
         ReloadChoicesFromMainViewModel();

@@ -96,6 +96,35 @@ public sealed class QuickAddVMValidationTests
     }
 
     [Fact]
+    public void ActivateAmountValidation_ActivatesOnceAndAmountChangesRevalidate()
+    {
+        RunInSta(() =>
+        {
+            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            var amountErrorsChangedCount = 0;
+            vm.ErrorsChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(QuickAddVM.AmountText))
+                    amountErrorsChangedCount++;
+            };
+
+            vm.ActivateAmountValidation();
+            var countAfterActivation = amountErrorsChangedCount;
+
+            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.AmountText)), error => error.ErrorMessage == "Please enter a valid amount greater than zero.");
+            Assert.Equal("Invalid Amount", vm.AmountValidationHint);
+
+            vm.ActivateAmountValidation();
+            Assert.Equal(countAfterActivation, amountErrorsChangedCount);
+
+            vm.AmountText = 10m;
+
+            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.AmountText)));
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
     public void ValidateNameField_DoesNotValidateAmountField()
     {
         RunInSta(() =>
