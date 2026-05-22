@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
-    PopupTitle="Review Notification Actions">
+    PopupTitle="Pending Transactions">
     <customControls:BasePopup.Resources>
         <DataTemplate x:Key="NotificationChecklistTagItemTemplate">
             <StackPanel Orientation="Horizontal">
