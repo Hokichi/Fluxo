@@ -923,27 +923,31 @@ public partial class NotificationPanelVM : ObservableRecipient,
             return;
 
         var viewModel = new NotificationChecklistActionVM(items);
-        var dialogResult = _dialogService.ShowNotificationChecklistAction(viewModel);
-        if (dialogResult != true && !viewModel.DidProceed)
-            return;
-
-        foreach (var item in viewModel.Items.Where(item => item.ShouldAskToUpdateAmount))
+        viewModel.ProcessAsyncCallback = async () =>
         {
-            var choice = _dialogService.ShowQuestion(
-                $"Update the saved recurring amount for {item.Label} to {item.Amount:N2}?",
-                "Update Recurring Amount");
-            item.UpdateRecurringAmount = choice == MessageBoxResult.Yes;
-        }
+            foreach (var item in viewModel.Items.Where(item => item.ShouldAskToUpdateAmount))
+            {
+                var choice = _dialogService.ShowQuestion(
+                    $"Update the saved recurring amount for {item.Label} to {item.Amount:N2}?",
+                    "Update Recurring Amount");
+                item.UpdateRecurringAmount = choice == MessageBoxResult.Yes;
+            }
 
-        var decisions = viewModel.ActionDecisions
-            .Distinct()
-            .ToArray();
+            var decisions = viewModel.ActionDecisions
+                .Distinct()
+                .ToArray();
 
-        if (decisions.Length == 0)
-            return;
+            if (decisions.Length == 0)
+                return false;
 
-        if (await _notificationActionService.ExecuteChecklistActionAsync(card, decisions))
+            if (!await _notificationActionService.ExecuteChecklistActionAsync(card, decisions))
+                return false;
+
             await RefreshNotificationsAsync();
+            return true;
+        };
+
+        _dialogService.ShowNotificationChecklistAction(viewModel);
     }
 
     private async Task OpenGoalDeadlineActionAsync(NotificationItemVM card)

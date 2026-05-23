@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
-    PopupTitle="Pending Transactions">
+    PopupTitle="Review Notification Actions">
     <customControls:BasePopup.Resources>
         <DataTemplate x:Key="NotificationChecklistTagItemTemplate">
             <StackPanel Orientation="Horizontal">
@@ -264,6 +264,12 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <TextBlock
+            Grid.Row="0"
+            FontFamily="{StaticResource Medium}"
+            Foreground="{StaticResource Brush.Text.Secondary}"
+            Text="Choose Ignore, Paid, or Process for each notification" />
+
         <Border
             Grid.Row="2"
             Padding="12,0"
@@ -279,8 +285,9 @@
         <Button
             Grid.Row="4"
             Height="36"
-            Command="{Binding ProceedCommand}"
+            Click="OnProceedClick"
             Content="Proceed"
+            IsEnabled="{Binding CanProceed}"
             Style="{StaticResource ActionTextButtonStyle}" />
     </Grid>
 </customControls:BasePopup>

@@ -140,6 +140,21 @@ public sealed class NotificationChecklistActionPopupLayoutTests
     }
 
     [Fact]
+    public void CodeBehind_ProceedShowsProcessingToastThenProcessedDelay()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Popups",
+            "NotificationChecklistActionPopup.xaml.cs"));
+
+        Assert.Contains("ToastPopup", source);
+        Assert.Contains("\"Processing...\"", source);
+        Assert.Contains("\"Processed\"", source);
+        Assert.Contains("TimeSpan.FromSeconds(2)", source);
+    }
+
+    [Fact]
     public void PopupUsesActionOrientedTitleAndInstructionCopy()
     {
         var document = LoadPopupXaml();

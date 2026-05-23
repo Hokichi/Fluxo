@@ -370,8 +370,7 @@ public class NotificationPanelVMTests
             {
                 var checklistVm = call.ArgAt<NotificationChecklistActionVM>(0);
                 checklistVm.Items[0].SelectedAction = NotificationChecklistItemActionType.Process;
-                checklistVm.ProceedCommand.Execute(null);
-                return true;
+                return checklistVm.ProcessAsync().GetAwaiter().GetResult();
             });
 
         var vm = CreateVm(

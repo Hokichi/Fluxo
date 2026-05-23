@@ -45,6 +45,8 @@ public partial class NotificationChecklistActionVM : ObservableObject
 
     public ObservableCollection<NotificationChecklistActionItemVM> Items { get; } = [];
 
+    public Func<Task<bool>>? ProcessAsyncCallback { get; set; }
+
     public IReadOnlyList<NotificationChecklistActionItemVM> SelectedItems =>
         Items.Where(item => item.SelectedAction != NotificationChecklistItemActionType.Ignore).ToList();
 
@@ -66,6 +68,13 @@ public partial class NotificationChecklistActionVM : ObservableObject
     public void AttachAppDataService(IAppDataService appData)
     {
         _appData ??= appData;
+    }
+
+    public Task<bool> ProcessAsync()
+    {
+        return ProcessAsyncCallback is null
+            ? Task.FromResult(false)
+            : ProcessAsyncCallback();
     }
 
     [RelayCommand(CanExecute = nameof(CanProceed))]

@@ -131,6 +131,49 @@ public sealed class NotificationChecklistActionVMTests
     }
 
     [Fact]
+    public async Task ProcessAsync_ReturnsFalse_WhenNoProcessorAssigned()
+    {
+        var vm = new NotificationChecklistActionVM(
+        [
+            new NotificationChecklistActionItemVM
+            {
+                EntityId = 1,
+                Label = "Rent",
+                SelectedAction = NotificationChecklistItemActionType.Paid
+            }
+        ]);
+
+        Assert.False(await vm.ProcessAsync());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_InvokesAssignedProcessor()
+    {
+        var invoked = false;
+        var vm = new NotificationChecklistActionVM(
+        [
+            new NotificationChecklistActionItemVM
+            {
+                EntityId = 1,
+                Label = "Rent",
+                SelectedAction = NotificationChecklistItemActionType.Paid
+            }
+        ])
+        {
+            ProcessAsyncCallback = () =>
+            {
+                invoked = true;
+                return Task.FromResult(true);
+            }
+        };
+
+        var result = await vm.ProcessAsync();
+
+        Assert.True(result);
+        Assert.True(invoked);
+    }
+
+    [Fact]
     public void ProceedCommand_SetsDidProceed_AndCapturesActionDecisions()
     {
         var vm = new NotificationChecklistActionVM(
