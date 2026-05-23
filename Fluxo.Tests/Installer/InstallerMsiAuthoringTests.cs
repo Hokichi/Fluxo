@@ -64,13 +64,14 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
-    public void Package_DoesNotUseMsiMajorUpgradeRemoval()
+    public void Package_DisablesMsiMajorUpgradeRemoval()
     {
         var wxs = File.ReadAllText(Path.Combine(
             GetRepositoryRoot(),
             "Fluxo.Installer.Msi",
             "Package.wxs"));
 
+        Assert.Contains("UpgradeStrategy=\"none\"", wxs);
         Assert.DoesNotContain("<MajorUpgrade", wxs);
     }
 
