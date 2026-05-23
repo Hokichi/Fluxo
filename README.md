@@ -1,5 +1,3 @@
-# Fluxo
-
 <p align="center">
   <img src="docs/images/fluxo-logo.png" alt="Fluxo logo placeholder" width="160">
 </p>
@@ -256,6 +254,6 @@ Initial Release
 `Check for updates` implemented
 
 ### v1.0.2:
-- Recurring transaction data model introduced as a first-class schema for recurring planning and tracking.
-- Spending and saving data schema expanded to support richer financial records.
+- Recurring transaction introduced for recurring planning and tracking.
+- Spending and saving expanded to support richer financial records.
 - Notification checklist now supports direct action flow for handling reminders from within the app.
