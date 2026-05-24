@@ -184,7 +184,8 @@ public sealed class InstallerMsiAuthoringTests
         Assert.Contains("<GeneratedBootstrapperPayloadsWxs>$(IntermediateOutputPath)GeneratedBootstrapperPayloads.wxs</GeneratedBootstrapperPayloadsWxs>", project);
         Assert.Contains("<Compile Include=\"$(GeneratedBootstrapperPayloadsWxs)\" />", project);
         Assert.Contains("Name=\"GenerateManagedBootstrapperPayloads\"", project);
-        Assert.Contains("ManagedBootstrapperPayloadFiles Include=\"$(ManagedBootstrapperOutputDir)**\\*\"", project);
+        Assert.Contains("ManagedBootstrapperPayloadFiles", project);
+        Assert.Contains("Include=\"$(ManagedBootstrapperOutputDir)**\\*\"", project);
         Assert.Contains("Exclude=\"$(ManagedBootstrapperExe)\"", project);
         Assert.Contains("PayloadGroup Id=\"ManagedBootstrapperPayloads\"", project);
     }
