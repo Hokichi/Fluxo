@@ -107,6 +107,34 @@ public sealed class ExecutableNamingTests
     }
 
     [Fact]
+    public void AppProject_OrganizesSelfContainedPublishOutputAndRemovesInstallerOnlyArtifacts()
+    {
+        var project = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo",
+            "Fluxo.csproj"));
+
+        var publishOrganizeTarget = GetTarget(project, "OrganizeOutputAfterPublish");
+
+        Assert.Contains("AfterTargets=\"Publish\"", publishOrganizeTarget);
+        Assert.Contains("Condition=\"'$(DesignTimeBuild)' != 'true'\"", publishOrganizeTarget);
+        Assert.DoesNotContain("'$(SelfContained)' != 'true'", publishOrganizeTarget);
+        Assert.DoesNotContain("'$(PublishSelfContained)' != 'true'", publishOrganizeTarget);
+
+        Assert.Contains("createdump.exe", publishOrganizeTarget);
+        Assert.Contains("*.pdb", publishOrganizeTarget);
+        Assert.Contains("$(ProjectDepsFileName)", publishOrganizeTarget);
+        Assert.Contains("ConvertFrom-Json", publishOrganizeTarget);
+        Assert.Contains("Select-Object -Last 1", publishOrganizeTarget);
+        Assert.Contains("runtimepack", publishOrganizeTarget);
+        Assert.Contains("Where-Object { $_.Name -eq $library.Name }", publishOrganizeTarget);
+        Assert.Contains("[Reflection.AssemblyName]::GetAssemblyName", publishOrganizeTarget);
+        Assert.Contains("-clike 'Fluxo*.dll'", publishOrganizeTarget);
+        Assert.Contains("libs", publishOrganizeTarget);
+        Assert.Contains("vendor", publishOrganizeTarget);
+    }
+
+    [Fact]
     public void Dockerfile_UsesLowercaseExecutableEntrypoint()
     {
         var dockerfile = File.ReadAllText(Path.Combine(

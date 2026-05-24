@@ -426,8 +426,17 @@
                     </StackPanel>
                     <ScrollViewer
                         Grid.Row="2"
-                        Margin="0,12,0,0"
-                        VerticalScrollBarVisibility="Auto">
+                        Margin="0,12,0,0">
+                        <ScrollViewer.Style>
+                            <Style TargetType="ScrollViewer">
+                                <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStep5Active}" Value="True">
+                                        <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ScrollViewer.Style>
                         <Grid>
                             <steps:SpendingSources DataContext="{Binding SpendingSources}" />
                             <steps:FixedExpenses DataContext="{Binding FixedExpenses}" />

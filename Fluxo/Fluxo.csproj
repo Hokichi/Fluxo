@@ -73,22 +73,10 @@
     <Exec Command="cmd /c mklink /H &quot;$(OrganizeOutputDir)$(TargetFileName)&quot; &quot;$(OrganizeOutputDir)libs\$(TargetFileName)&quot;" Condition="Exists('$(OrganizeOutputDir)libs\\$(TargetFileName)') and !Exists('$(OrganizeOutputDir)$(TargetFileName)')" />
   </Target>
 
-  <Target Name="OrganizeOutputAfterPublish" AfterTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true' and '$(SelfContained)' != 'true' and '$(PublishSelfContained)' != 'true'">
-    <PropertyGroup>
-      <OrganizeOutputDir>$(PublishDir)</OrganizeOutputDir>
-    </PropertyGroup>
-
-    <ItemGroup Condition="Exists('$(OrganizeOutputDir)')">
-      <FirstPartyDlls Include="$(OrganizeOutputDir)Fluxo*.dll" />
-      <VendorDlls Include="$(OrganizeOutputDir)*.dll" Exclude="@(FirstPartyDlls)" />
-    </ItemGroup>
-
-    <MakeDir Directories="$(OrganizeOutputDir)libs" Condition="Exists('$(OrganizeOutputDir)') and '@(FirstPartyDlls)' != ''" />
-    <MakeDir Directories="$(OrganizeOutputDir)vendor" Condition="Exists('$(OrganizeOutputDir)') and '@(VendorDlls)' != ''" />
-
-    <Move SourceFiles="@(FirstPartyDlls)" DestinationFolder="$(OrganizeOutputDir)libs" Condition="'@(FirstPartyDlls)' != ''" />
-
-    <Move SourceFiles="@(VendorDlls)" DestinationFolder="$(OrganizeOutputDir)vendor" Condition="'@(VendorDlls)' != ''" />
+  <Target Name="OrganizeOutputAfterPublish" AfterTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$ErrorActionPreference = 'Stop'; $publishDir = $env:FLUXO_PUBLISH_DIR; if ([string]::IsNullOrWhiteSpace($publishDir) -or !(Test-Path -LiteralPath $publishDir)) { return }; $libsDir = Join-Path $publishDir 'libs'; $vendorDir = Join-Path $publishDir 'vendor'; @($libsDir, $vendorDir) | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object { Remove-Item -LiteralPath $_ -Recurse -Force }; Get-ChildItem -LiteralPath $publishDir -Recurse -File -Filter '*.pdb' | Remove-Item -Force; $createdumpPath = Join-Path $publishDir 'createdump.exe'; if (Test-Path -LiteralPath $createdumpPath) { Remove-Item -LiteralPath $createdumpPath -Force }; $runtimePackDlls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase); $depsFile = if ([string]::IsNullOrWhiteSpace($env:FLUXO_DEPS_FILE)) { [IO.Path]::ChangeExtension($env:FLUXO_TARGET_FILE_NAME, '.deps.json') } else { $env:FLUXO_DEPS_FILE }; $depsPath = Join-Path $publishDir $depsFile; if (Test-Path -LiteralPath $depsPath) { $deps = Get-Content -LiteralPath $depsPath -Raw | ConvertFrom-Json; $target = ($deps.targets.PSObject.Properties | Select-Object -Last 1).Value; foreach ($library in $deps.libraries.PSObject.Properties) { if ($library.Value.type -eq 'runtimepack') { $targetLibrary = $target.PSObject.Properties | Where-Object { $_.Name -eq $library.Name } | Select-Object -First 1; if ($null -ne $targetLibrary -and $null -ne $targetLibrary.Value.runtime) { foreach ($runtimeAsset in $targetLibrary.Value.runtime.PSObject.Properties) { if ([IO.Path]::GetExtension($runtimeAsset.Name) -eq '.dll') { [void]$runtimePackDlls.Add([IO.Path]::GetFileName($runtimeAsset.Name)) } } } } } }; Get-ChildItem -LiteralPath $publishDir -File -Filter '*.dll' | ForEach-Object { $isManaged = $true; try { [void][Reflection.AssemblyName]::GetAssemblyName($_.FullName) } catch { $isManaged = $false }; if ($isManaged -and !$runtimePackDlls.Contains($_.Name)) { $destinationDir = if ($_.Name -clike 'Fluxo*.dll') { $libsDir } elseif ($_.Name -ne $env:FLUXO_TARGET_FILE_NAME) { $vendorDir } else { $null }; if ($null -ne $destinationDir) { New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null; Move-Item -LiteralPath $_.FullName -Destination $destinationDir -Force } } }&quot;"
+          EnvironmentVariables="FLUXO_PUBLISH_DIR=$(PublishDir);FLUXO_TARGET_FILE_NAME=$(TargetFileName);FLUXO_DEPS_FILE=$(ProjectDepsFileName)"
+          Condition="Exists('$(PublishDir)')" />
   </Target>
 
   <Target Name="CleanupOutputAfterBuild" AfterTargets="OrganizeOutputAfterBuild" Condition="'$(DesignTimeBuild)' != 'true'">
