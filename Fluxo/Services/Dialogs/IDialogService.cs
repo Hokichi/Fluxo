@@ -27,6 +27,8 @@ public interface IDialogService
 
     bool? ShowExpenseDetail(ExpenseDetailVM viewModel, Window? owner = null);
 
+    bool? ShowIncomeDetail(IncomeDetailVM viewModel, Window? owner = null);
+
     bool? ShowSpendingSourceDetail(SpendingSourceDetailVM viewModel, Window? owner = null);
 
     bool? ShowTransferFunds(TransferFundsVM viewModel, Window? owner = null);

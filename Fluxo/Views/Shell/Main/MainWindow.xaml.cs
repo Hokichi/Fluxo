@@ -765,11 +765,13 @@ public partial class MainWindow : Window, IPopupHost
         if (sender is not FrameworkElement { DataContext: HeaderQuickSearchResult result })
             return;
 
-        if (result.ExpenseLog is null)
-            return;
-
         CollapseHeaderSearch();
-        OpenExpenseDetailPopup(result.ExpenseLog);
+
+        if (result.ExpenseLog is not null)
+            OpenExpenseDetailPopup(result.ExpenseLog);
+        else if (result.IncomeLog is not null)
+            OpenIncomeDetailPopup(result.IncomeLog);
+
         e.Handled = true;
     }
 
@@ -988,6 +990,14 @@ public partial class MainWindow : Window, IPopupHost
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
         var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, appData);
         _dialogService.ShowExpenseDetail(popupViewModel, this);
+    }
+
+    public void OpenIncomeDetailPopup(IncomeLogVM incomeLog)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popupViewModel = new IncomeDetailVM(_mainVM, incomeLog, appData);
+        _dialogService.ShowIncomeDetail(popupViewModel, this);
     }
 
     public void OpenSpendingSourcesListPopup()
