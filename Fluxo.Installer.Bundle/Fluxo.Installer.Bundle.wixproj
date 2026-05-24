@@ -6,7 +6,7 @@
     <AcceptEula>wix7</AcceptEula>
     <ManagedBootstrapperExe>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\publish\Fluxo.Installer.exe</ManagedBootstrapperExe>
     <ManagedBootstrapperOutputDir>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\publish\</ManagedBootstrapperOutputDir>
-    <GeneratedBootstrapperPayloadsWxs>$(IntermediateOutputPath)GeneratedBootstrapperPayloads.wxs</GeneratedBootstrapperPayloadsWxs>
+    <GeneratedBootstrapperPayloadsWxs>$(MSBuildProjectDirectory)\obj\$(Configuration)\GeneratedBootstrapperPayloads.wxs</GeneratedBootstrapperPayloadsWxs>
     <OfflineMsiPath>$(MSBuildThisFileDirectory)..\Fluxo.Installer.Msi\bin\$(Configuration)\en-US\Fluxo.Installer.msi</OfflineMsiPath>
     <DefineConstants>$(DefineConstants);FluxoInstallerVersion=$(FluxoInstallerVersion);ManagedBootstrapperExe=$(ManagedBootstrapperExe);ManagedBootstrapperOutputDir=$(ManagedBootstrapperOutputDir);OfflineMsiPath=$(OfflineMsiPath)</DefineConstants>
   </PropertyGroup>
@@ -31,8 +31,8 @@
     <ItemGroup>
       <ManagedBootstrapperPayloadFiles Include="$(ManagedBootstrapperOutputDir)**\*" Exclude="$(ManagedBootstrapperExe)" />
       <ManagedBootstrapperPayloadFiles Update="@(ManagedBootstrapperPayloadFiles)">
-        <EscapedSourceFile>$([System.Security.SecurityElement]::Escape('%(Identity)'))</EscapedSourceFile>
-        <EscapedName>$([System.Security.SecurityElement]::Escape('%(Filename)%(Extension)'))</EscapedName>
+        <EscapedSourceFile>$([System.String]::Copy('%(Identity)').Replace('&amp;','&amp;amp;').Replace('&lt;','&amp;lt;').Replace('&gt;','&amp;gt;'))</EscapedSourceFile>
+        <EscapedName>$([System.String]::Copy('%(RecursiveDir)%(Filename)%(Extension)').Replace('&amp;','&amp;amp;').Replace('&lt;','&amp;lt;').Replace('&gt;','&amp;gt;'))</EscapedName>
       </ManagedBootstrapperPayloadFiles>
       <GeneratedBootstrapperPayloadHeader Include="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
       <GeneratedBootstrapperPayloadHeader Include="&lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/v4/wxs&quot;&gt;" />

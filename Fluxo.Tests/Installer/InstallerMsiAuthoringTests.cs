@@ -181,7 +181,7 @@ public sealed class InstallerMsiAuthoringTests
             "Fluxo.Installer.Bundle",
             "Fluxo.Installer.Bundle.wixproj"));
 
-        Assert.Contains("<GeneratedBootstrapperPayloadsWxs>$(IntermediateOutputPath)GeneratedBootstrapperPayloads.wxs</GeneratedBootstrapperPayloadsWxs>", project);
+        Assert.Contains("<GeneratedBootstrapperPayloadsWxs>$(MSBuildProjectDirectory)\\obj\\$(Configuration)\\GeneratedBootstrapperPayloads.wxs</GeneratedBootstrapperPayloadsWxs>", project);
         Assert.Contains("<Compile Include=\"$(GeneratedBootstrapperPayloadsWxs)\" />", project);
         Assert.Contains("Name=\"GenerateManagedBootstrapperPayloads\"", project);
         Assert.Contains("ManagedBootstrapperPayloadFiles", project);

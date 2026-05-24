@@ -52,7 +52,7 @@
           Condition="Exists('$(PublishDir)')" />
   </Target>
 
-  <Target Name="OrganizeOutputAfterBuild" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+  <Target Name="OrganizeOutputAfterBuild" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true' and '$(PublishDir)' == ''">
     <PropertyGroup>
       <OrganizeOutputDir>$(TargetDir)</OrganizeOutputDir>
     </PropertyGroup>
@@ -73,7 +73,7 @@
     <Exec Command="cmd /c mklink /H &quot;$(OrganizeOutputDir)$(TargetFileName)&quot; &quot;$(OrganizeOutputDir)libs\$(TargetFileName)&quot;" Condition="Exists('$(OrganizeOutputDir)libs\\$(TargetFileName)') and !Exists('$(OrganizeOutputDir)$(TargetFileName)')" />
   </Target>
 
-  <Target Name="OrganizeOutputAfterPublish" AfterTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true'">
+  <Target Name="OrganizeOutputAfterPublish" AfterTargets="Publish" Condition="'$(DesignTimeBuild)' != 'true' and '$(SelfContained)' != 'true' and '$(PublishSelfContained)' != 'true'">
     <PropertyGroup>
       <OrganizeOutputDir>$(PublishDir)</OrganizeOutputDir>
     </PropertyGroup>
