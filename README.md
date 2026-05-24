@@ -253,6 +253,10 @@ Initial Release
 ### v1.0.1:
 `Check for updates` implemented
 
+### v1.0.3:
+- Version bump to 1.0.3.
+- Added changelog entry to the README.
+
 ### v1.0.2:
 - Recurring transaction introduced for recurring planning and tracking.
 - Spending and saving expanded to support richer financial records.
