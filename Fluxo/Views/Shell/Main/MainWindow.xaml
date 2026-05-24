@@ -168,16 +168,44 @@
                 <Border MouseLeftButtonUp="OnHeaderSearchResultItemClick" Style="{StaticResource HeaderSearchResultItemStyle}">
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Margin="0,0,8,0">
+                        <Border
+                            Width="32"
+                            Height="32"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Background="{StaticResource Brush.Background.Surface}"
+                            CornerRadius="16">
+                            <components:Icon
+                                Width="15"
+                                Height="15"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <components:Icon.Style>
+                                    <Style TargetType="components:Icon">
+                                        <Setter Property="Path" Value="{StaticResource BanknoteArrowDown}" />
+                                        <Setter Property="Color" Value="{StaticResource Brush.Danger}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsIncome}" Value="True">
+                                                <Setter Property="Path" Value="{StaticResource BanknoteArrowUp}" />
+                                                <Setter Property="Color" Value="{StaticResource Brush.Success}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </components:Icon.Style>
+                            </components:Icon>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
                             <TextBlock
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="13"
                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="{Binding Expense.Name}"
+                                Text="{Binding Name}"
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="NoWrap" />
                             <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
@@ -185,13 +213,26 @@
                                     FontFamily="{StaticResource Regular}"
                                     FontSize="10"
                                     Foreground="{StaticResource Brush.Text.Muted}"
-                                    Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                                    Text="{Binding Date, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
 
                                 <Border
                                     Margin="8,0,0,0"
                                     Padding="5,2"
                                     VerticalAlignment="Center"
-                                    Background="{Binding Expense.ExpenseTag.HexCode}">
+                                    Background="{Binding ExpenseTagBrush}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ExpenseTagName}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ExpenseTagName}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <Border.CornerRadius>
                                         <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
                                             <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
@@ -202,14 +243,14 @@
                                         VerticalAlignment="Center"
                                         FontFamily="{StaticResource Medium}"
                                         FontSize="10"
-                                        Foreground="{Binding Expense.ExpenseTag.HexCode, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                        Text="{Binding Expense.ExpenseTag.Name}" />
+                                        Foreground="{Binding ExpenseTagBrush, Converter={StaticResource BrushToLighterBrushConverter}}"
+                                        Text="{Binding ExpenseTagName}" />
                                 </Border>
                             </StackPanel>
                         </StackPanel>
 
                         <StackPanel
-                            Grid.Column="1"
+                            Grid.Column="2"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
                             <TextBlock
@@ -226,7 +267,7 @@
                                 FontFamily="{StaticResource Regular}"
                                 FontSize="10"
                                 Foreground="{StaticResource Brush.Text.Muted}"
-                                Text="{Binding SpendingSource.Name}"
+                                Text="{Binding SpendingSourceName}"
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="NoWrap" />
                         </StackPanel>
@@ -414,7 +455,7 @@
                                             FontFamily="{StaticResource Medium}"
                                             FontSize="14"
                                             Foreground="{StaticResource Brush.Text.Muted}"
-                                            Text="No expense found"
+                                            Text="No transaction found"
                                             Visibility="Collapsed" />
                                         <ItemsControl x:Name="HeaderSearchResultsList" ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
                                     </Grid>

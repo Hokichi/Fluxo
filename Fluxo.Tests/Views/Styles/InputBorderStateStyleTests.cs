@@ -131,6 +131,20 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void HeaderSearchResultTemplate_UsesTransactionDirectionIconCircle()
+    {
+        var mainWindowXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml"));
+        var templateSection = ExtractSection(mainWindowXaml, "x:Key=\"HeaderSearchResultItemTemplate\"", "</DataTemplate>");
+
+        Assert.Contains("Brush.Background.Surface", templateSection);
+        Assert.Contains("BanknoteArrowUp", templateSection);
+        Assert.Contains("BanknoteArrowDown", templateSection);
+        Assert.Contains("Brush.Success", templateSection);
+        Assert.Contains("Brush.Danger", templateSection);
+        Assert.Contains("No transaction found", mainWindowXaml);
+    }
+
+    [Fact]
     public void SpendingSourceDetailInlineTextBoxTemplate_StretchesContentHost_ForCenteredText()
     {
         var popupXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml"));

@@ -44,7 +44,7 @@ public partial class MainWindow : Window, IPopupHost
     private readonly IDialogService _dialogService;
     private readonly IServiceProvider _serviceProvider;
     private readonly PopupOverlayHandoffState _popupOverlayHandoffState = new();
-    private readonly ObservableCollection<ExpenseLogVM> _headerSearchResults = [];
+    private readonly ObservableCollection<HeaderQuickSearchResult> _headerSearchResults = [];
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _hasInitializedDashboardPanels;
@@ -762,11 +762,14 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderSearchResultItemClick(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not FrameworkElement { DataContext: ExpenseLogVM log })
+        if (sender is not FrameworkElement { DataContext: HeaderQuickSearchResult result })
+            return;
+
+        if (result.ExpenseLog is null)
             return;
 
         CollapseHeaderSearch();
-        OpenExpenseDetailPopup(log);
+        OpenExpenseDetailPopup(result.ExpenseLog);
         e.Handled = true;
     }
 
@@ -804,7 +807,10 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         var query = HeaderSearchBox.Text;
-        var matches = HeaderQuickSearchEngine.Search(_mainVM.BudgetPanel.GetAllExpenseLogs(), query).ToList();
+        var matches = HeaderQuickSearchEngine.Search(
+            _mainVM.BudgetPanel.GetAllExpenseLogs(),
+            _mainVM.BudgetPanel.GetAllIncomeLogs(),
+            query).ToList();
 
         _headerSearchResults.Clear();
 

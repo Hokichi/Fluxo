@@ -198,6 +198,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs() => _allExpenseLogs.ToList();
 
+    public IReadOnlyList<IncomeLogVM> GetAllIncomeLogs() => _allIncomeLogs.ToList();
+
     public void Receive(DateRangeSelectionChangedMessage message)
     {
         _selectedRange = message.Value;
