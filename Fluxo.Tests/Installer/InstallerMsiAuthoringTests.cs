@@ -138,6 +138,71 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
+    public void MsiProject_PublishesSelfContainedAppOutput()
+    {
+        var project = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Msi",
+            "Fluxo.Installer.Msi.wixproj"));
+
+        Assert.Contains(@"<FluxoAppOutputDir>$(MSBuildThisFileDirectory)..\Fluxo\bin\$(Configuration)\net10.0-windows\win-x64\publish\</FluxoAppOutputDir>", project);
+        Assert.Contains("Name=\"PublishFluxoApplicationForInstaller\"", project);
+        Assert.Contains("Targets=\"Restore;Publish\"", project);
+        Assert.Contains("RuntimeIdentifier=win-x64", project);
+        Assert.Contains("SelfContained=true", project);
+        Assert.Contains("PublishSelfContained=true", project);
+        Assert.Contains("PublishSingleFile=false", project);
+        Assert.DoesNotContain("Targets=\"Restore;Build\"", project);
+    }
+
+    [Fact]
+    public void BundleProject_PublishesSelfContainedManagedBootstrapperOutput()
+    {
+        var project = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Bundle",
+            "Fluxo.Installer.Bundle.wixproj"));
+
+        Assert.Contains(@"<ManagedBootstrapperExe>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\publish\Fluxo.Installer.exe</ManagedBootstrapperExe>", project);
+        Assert.Contains(@"<ManagedBootstrapperOutputDir>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\publish\</ManagedBootstrapperOutputDir>", project);
+        Assert.Contains("Name=\"PublishManagedBootstrapperForBundle\"", project);
+        Assert.Contains("Targets=\"Restore;Publish\"", project);
+        Assert.Contains("RuntimeIdentifier=win-x64", project);
+        Assert.Contains("SelfContained=true", project);
+        Assert.Contains("PublishSelfContained=true", project);
+        Assert.Contains("PublishSingleFile=false", project);
+    }
+
+    [Fact]
+    public void BundleProject_GeneratesManagedBootstrapperPayloadGroup()
+    {
+        var project = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Bundle",
+            "Fluxo.Installer.Bundle.wixproj"));
+
+        Assert.Contains("<GeneratedBootstrapperPayloadsWxs>$(IntermediateOutputPath)GeneratedBootstrapperPayloads.wxs</GeneratedBootstrapperPayloadsWxs>", project);
+        Assert.Contains("<Compile Include=\"$(GeneratedBootstrapperPayloadsWxs)\" />", project);
+        Assert.Contains("Name=\"GenerateManagedBootstrapperPayloads\"", project);
+        Assert.Contains("ManagedBootstrapperPayloadFiles", project);
+        Assert.Contains("Include=\"$(ManagedBootstrapperOutputDir)**\\*\"", project);
+        Assert.Contains("Exclude=\"$(ManagedBootstrapperExe)\"", project);
+        Assert.Contains("PayloadGroup Id=&quot;ManagedBootstrapperPayloads&quot;", project);
+    }
+
+    [Fact]
+    public void Bundle_ReferencesGeneratedManagedBootstrapperPayloadGroup()
+    {
+        var wxs = File.ReadAllText(Path.Combine(
+            GetRepositoryRoot(),
+            "Fluxo.Installer.Bundle",
+            "Bundle.wxs"));
+
+        Assert.Contains("<PayloadGroupRef Id=\"ManagedBootstrapperPayloads\" />", wxs);
+        Assert.DoesNotContain("<Payload SourceFile=\"$(var.ManagedBootstrapperOutputDir)", wxs);
+    }
+
+    [Fact]
     public void BundleProject_DoesNotRewriteFinalBundleManifestAfterBuild()
     {
         var repositoryRoot = GetRepositoryRoot();
