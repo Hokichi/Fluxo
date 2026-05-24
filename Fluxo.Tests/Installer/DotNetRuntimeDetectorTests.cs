@@ -35,14 +35,15 @@ public sealed class DotNetRuntimeDetectorTests
     [Fact]
     public void InstallCommand_Continues_When_MachineWideRuntimeMissing()
     {
-        var detectCalled = false;
+        var detectCalls = 0;
         var vm = new InstallerViewModel(
             dotNetRuntimeDetector: new FixedRuntimeDetector(false),
-            requestDetect: () => detectCalled = true);
+            requestDetect: () => detectCalls++);
 
         vm.InstallCommand.Execute(null);
 
-        Assert.True(detectCalled);
+        Assert.Equal(1, detectCalls);
+        Assert.Equal(InstallerScreen.Progress, vm.Screen);
         Assert.Equal(InstallerState.Installing, vm.State);
         Assert.Equal("Detecting installation state...", vm.StatusMessage);
     }
