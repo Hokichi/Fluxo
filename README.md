@@ -6,6 +6,33 @@ Fluxo is a Windows personal finance app for keeping everyday money decisions vis
 
 ![Fluxo dashboard screenshot placeholder](docs/images/fluxo-dashboard-overview.png)
 
+---
+
+- [Why Use Fluxo?](#why-use-fluxo)
+- [Getting Started](#getting-started)
+- [Dashboard Overview](#dashboard-overview)
+- [Adding Transactions](#adding-transactions)
+- [Managing Spending Sources](#managing-spending-sources)
+- [Budgeting With Needs, Wants, and Savings](#budgeting-with-needs-wants-and-savings)
+- [Saving Goals](#saving-goals)
+- [Notifications and Reminders](#notifications-and-reminders)
+- [Analytics](#analytics)
+- [Settings](#settings)
+- [Tray and Startup Behavior](#tray-and-startup-behavior)
+- [Updates](#updates)
+- [Your Data and Privacy](#your-data-and-privacy)
+- [Troubleshooting](#troubleshooting)
+- [Fluxo opens in the tray](#fluxo-opens-in-the-tray)
+- [Fluxo does not open](#fluxo-does-not-open)
+- [Update check fails](#update-check-fails)
+- [Installer says Fluxo is already installed](#installer-says-fluxo-is-already-installed)
+- [Data looks missing after reinstall](#data-looks-missing-after-reinstall)
+- [Notifications do not appear](#notifications-do-not-appear)
+- [Support](#support)
+- [Change Log](#change-log)
+
+---
+
 ## Why Use Fluxo?
 
 Fluxo is built for people who want a practical view of where their money is going without turning budgeting into a spreadsheet project. The app centers your finances around spending sources, quick transaction entry, budget categories, reminders, and local-first storage.
@@ -253,11 +280,11 @@ Initial Release
 ### v1.0.1:
 `Check for updates` implemented
 
-### v1.0.3:
-- Version bump to 1.0.3.
-- Added changelog entry to the README.
-
 ### v1.0.2:
 - Recurring transaction introduced for recurring planning and tracking.
 - Spending and saving expanded to support richer financial records.
 - Notification checklist now supports direct action flow for handling reminders from within the app.
+
+### v1.0.3:
+- Hotfix: Installer not running when .NET 10 is not installed
+- Included incomes in search
