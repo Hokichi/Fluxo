@@ -33,15 +33,18 @@ public sealed class DotNetRuntimeDetectorTests
     }
 
     [Fact]
-    public void InstallCommand_FailFast_When_RuntimeMissing()
+    public void InstallCommand_Continues_When_MachineWideRuntimeMissing()
     {
-        var vm = new InstallerViewModel(new FixedRuntimeDetector(false));
+        var detectCalled = false;
+        var vm = new InstallerViewModel(
+            dotNetRuntimeDetector: new FixedRuntimeDetector(false),
+            requestDetect: () => detectCalled = true);
 
         vm.InstallCommand.Execute(null);
 
-        Assert.Equal(InstallerState.FinishedFailed, vm.State);
-        Assert.Equal(".NET Runtime is required. Install it, then run setup again.", vm.StatusMessage);
-        Assert.Equal("Installation failed", vm.FinishedTitle);
+        Assert.True(detectCalled);
+        Assert.Equal(InstallerState.Installing, vm.State);
+        Assert.Equal("Detecting installation state...", vm.StatusMessage);
     }
 
     [Fact]

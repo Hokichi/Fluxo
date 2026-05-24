@@ -31,7 +31,6 @@ public partial class InstallerViewModel : ObservableObject
     private const int CancelExitCode = 1602;
     private const int FailureExitCode = 1;
 
-    private readonly IDotNetRuntimeDetector dotNetRuntimeDetector;
     private readonly Action<string> setInstallFolderVariable;
     private readonly Action requestDetect;
     private readonly Action requestPlan;
@@ -98,7 +97,7 @@ public partial class InstallerViewModel : ObservableObject
         Action? closeInstallerAction = null,
         string? requestedInstallFolder = null)
     {
-        this.dotNetRuntimeDetector = dotNetRuntimeDetector ?? new DotNetRuntimeDetector();
+        _ = dotNetRuntimeDetector;
         this.setInstallFolderVariable = setInstallFolderVariable ?? (_ => { });
         this.requestDetect = requestDetect ?? (() => { });
         this.requestPlan = requestPlan ?? (() => { });
@@ -307,14 +306,6 @@ public partial class InstallerViewModel : ObservableObject
         {
             prerequisitesChecklistStep.State = ChecklistStepState.Failed;
             TransitionToPrerequisitesFailure("A valid install folder is required.");
-            return;
-        }
-
-        if (!dotNetRuntimeDetector.IsRequiredRuntimeInstalled())
-        {
-            prerequisitesChecklistStep.State = ChecklistStepState.Failed;
-            ShowPrerequisitesFailureMessage();
-            TransitionToPrerequisitesFailure(".NET Runtime is required. Install it, then run setup again.");
             return;
         }
 
@@ -813,20 +804,6 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         closeInstallerAction = closeAction ?? (() => { });
-    }
-
-    private static void ShowPrerequisitesFailureMessage()
-    {
-        if (Application.Current is null)
-        {
-            return;
-        }
-
-        _ = MessageBox.Show(
-            ".NET Runtime is missing. Please install all required prerequisites, then run this installer again.",
-            "Missing prerequisites",
-            MessageBoxButton.OK,
-            MessageBoxImage.Warning);
     }
 
     private static bool IsValidInstallFolder(string? path)
