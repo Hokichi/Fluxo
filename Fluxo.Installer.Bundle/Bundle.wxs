@@ -1,49 +1,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 	<Bundle Id="FluxoInstallerBundle" Name="fluxo" Manufacturer="fluxo" Version="$(var.FluxoInstallerVersion)" UpgradeCode="{A388A981-8C98-40B9-8B25-3A638D0BDA84}">
 		<BootstrapperApplication SourceFile="$(var.ManagedBootstrapperExe)">
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)AutoMapper.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)CommunityToolkit.Mvvm.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)e_sqlite3.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)FluentValidation.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Core.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Core.pdb" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Data.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Data.pdb" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Installer.deps.json" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Installer.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Installer.pdb" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Installer.runtimeconfig.json" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Resources.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Resources.pdb" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Services.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Fluxo.Services.pdb" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)mbanative.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Data.Sqlite.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.EntityFrameworkCore.Abstractions.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.EntityFrameworkCore.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.EntityFrameworkCore.Relational.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.EntityFrameworkCore.Sqlite.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.Caching.Abstractions.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.Caching.Memory.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.Configuration.Abstractions.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.DependencyInjection.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.DependencyModel.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.Logging.Abstractions.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.Logging.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.Options.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Extensions.Primitives.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.IdentityModel.Abstractions.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.IdentityModel.JsonWebTokens.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.IdentityModel.Logging.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.IdentityModel.Tokens.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Microsoft.Toolkit.Uwp.Notifications.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Serilog.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)Serilog.Sinks.File.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)SQLitePCLRaw.batteries_v2.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)SQLitePCLRaw.core.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)SQLitePCLRaw.provider.e_sqlite3.dll" />
-			<Payload SourceFile="$(var.ManagedBootstrapperOutputDir)WixToolset.BootstrapperApplicationApi.dll" />
+			<PayloadGroupRef Id="ManagedBootstrapperPayloads" />
 		</BootstrapperApplication>
 
 		<Variable Name="InstallFolder" Type="string" Value="C:\Program Files\fluxo" />
