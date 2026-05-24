@@ -273,7 +273,7 @@ public partial class IncomeDetailVM : ObservableObject
             return;
         }
 
-        spendingSource.Balance = Math.Max(0m, spendingSource.Balance - amount);
+        spendingSource.Balance -= amount;
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> items)

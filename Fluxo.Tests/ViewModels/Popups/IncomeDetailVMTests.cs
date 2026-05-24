@@ -62,16 +62,36 @@ public sealed class IncomeDetailVMTests
         });
     }
 
-    private static (IncomeDetailVM Vm, IAppDataService AppData) CreateVm()
+    [Fact]
+    public async Task SaveAsync_ReversesOldNormalSourceIncomeWithoutClampingBalance()
     {
-        var sourceVm = CreateCheckingSource();
+        await RunInStaAsync(async () =>
+        {
+            var (vm, appData) = CreateVm(sourceBalance: 20m, incomeAmount: 100m);
+            await vm.BeginEditingAsync();
+            vm.AmountText = 50m;
+
+            var result = await vm.SaveAsync();
+
+            Assert.True(result.IsSuccess);
+            appData.Received().UpdateSpendingSource(Arg.Is<SpendingSource>(source =>
+                source.Id == 1 &&
+                source.Balance == -30m));
+        });
+    }
+
+    private static (IncomeDetailVM Vm, IAppDataService AppData) CreateVm(
+        decimal sourceBalance = 1_000m,
+        decimal incomeAmount = 100m)
+    {
+        var sourceVm = CreateCheckingSource(sourceBalance);
         var main = CreateMainViewModel([sourceVm]);
-        var appData = CreateAppData();
+        var appData = CreateAppData(sourceBalance, incomeAmount);
         var incomeLog = new IncomeLogVM
         {
             Id = 1,
             Name = "Salary",
-            Amount = 100m,
+            Amount = incomeAmount,
             AddedOn = new DateTime(2026, 5, 1),
             Notes = "Monthly salary",
             SpendingSource = sourceVm
@@ -80,21 +100,21 @@ public sealed class IncomeDetailVMTests
         return (new IncomeDetailVM(main, incomeLog, appData), appData);
     }
 
-    private static IAppDataService CreateAppData()
+    private static IAppDataService CreateAppData(decimal sourceBalance, decimal incomeAmount)
     {
         var persistedSource = new SpendingSource
         {
             Id = 1,
             Name = "Checking",
             SpendingSourceType = SpendingSourceType.Checking,
-            Balance = 1_000m,
+            Balance = sourceBalance,
             IsEnabled = true
         };
         var persistedIncome = new IncomeLog
         {
             Id = 1,
             Name = "Salary",
-            Amount = 100m,
+            Amount = incomeAmount,
             AddedOn = new DateTime(2026, 5, 1),
             Notes = "Monthly salary",
             SpendingSourceId = persistedSource.Id,
@@ -166,14 +186,14 @@ public sealed class IncomeDetailVMTests
         return unitOfWork;
     }
 
-    private static SpendingSourceVM CreateCheckingSource()
+    private static SpendingSourceVM CreateCheckingSource(decimal balance)
     {
         return new SpendingSourceVM
         {
             Id = 1,
             Name = "Checking",
             SpendingSourceType = SpendingSourceType.Checking,
-            Balance = 1_000m,
+            Balance = balance,
             IsEnabled = true
         };
     }
