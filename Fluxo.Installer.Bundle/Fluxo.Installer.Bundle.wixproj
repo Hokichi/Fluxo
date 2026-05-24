@@ -30,6 +30,10 @@
     <!-- PayloadGroup Id="ManagedBootstrapperPayloads" -->
     <ItemGroup>
       <ManagedBootstrapperPayloadFiles Include="$(ManagedBootstrapperOutputDir)**\*" Exclude="$(ManagedBootstrapperExe)" />
+      <ManagedBootstrapperPayloadFiles Update="@(ManagedBootstrapperPayloadFiles)">
+        <EscapedSourceFile>$([System.Security.SecurityElement]::Escape('%(Identity)'))</EscapedSourceFile>
+        <EscapedName>$([System.Security.SecurityElement]::Escape('%(Filename)%(Extension)'))</EscapedName>
+      </ManagedBootstrapperPayloadFiles>
       <GeneratedBootstrapperPayloadHeader Include="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
       <GeneratedBootstrapperPayloadHeader Include="&lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/v4/wxs&quot;&gt;" />
       <GeneratedBootstrapperPayloadHeader Include="  &lt;Fragment&gt;" />
@@ -42,7 +46,7 @@
     <WriteLinesToFile
       File="$(GeneratedBootstrapperPayloadsWxs)"
       Overwrite="false"
-      Lines="@(ManagedBootstrapperPayloadFiles -> '      &lt;Payload SourceFile=&quot;%(Identity)&quot; /&gt;')" />
+      Lines="@(ManagedBootstrapperPayloadFiles -> '      &lt;Payload Name=&quot;%(EscapedName)&quot; SourceFile=&quot;%(EscapedSourceFile)&quot; /&gt;')" />
     <WriteLinesToFile File="$(GeneratedBootstrapperPayloadsWxs)" Overwrite="false" Lines="@(GeneratedBootstrapperPayloadFooter)" />
   </Target>
 
