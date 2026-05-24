@@ -80,43 +80,89 @@ public sealed class IncomeDetailVMTests
         });
     }
 
+    [Fact]
+    public async Task Constructor_AllowsNullNameAndNotes()
+    {
+        await RunInStaAsync(() =>
+        {
+            var exception = Record.Exception(() => CreateVm(name: null!, notes: null!));
+
+            Assert.Null(exception);
+            return Task.CompletedTask;
+        });
+    }
+
+    [Fact]
+    public async Task SaveAsync_DoesNotCreateCreditSpentAmount_WhenEditingAlreadyZeroSpentIncomeDown()
+    {
+        await RunInStaAsync(async () =>
+        {
+            var (vm, appData) = CreateVm(
+                sourceType: SpendingSourceType.Credit,
+                sourceBalance: 0m,
+                spentAmount: 0m,
+                incomeAmount: 100m);
+            await vm.BeginEditingAsync();
+            vm.AmountText = 80m;
+
+            var result = await vm.SaveAsync();
+
+            Assert.True(result.IsSuccess);
+            appData.Received().UpdateSpendingSource(Arg.Is<SpendingSource>(source =>
+                source.Id == 1 &&
+                source.SpendingSourceType == SpendingSourceType.Credit &&
+                source.SpentAmount == 0m));
+        });
+    }
+
     private static (IncomeDetailVM Vm, IAppDataService AppData) CreateVm(
         decimal sourceBalance = 1_000m,
-        decimal incomeAmount = 100m)
+        decimal incomeAmount = 100m,
+        SpendingSourceType sourceType = SpendingSourceType.Checking,
+        decimal spentAmount = 0m,
+        string? name = "Salary",
+        string? notes = "Monthly salary")
     {
-        var sourceVm = CreateCheckingSource(sourceBalance);
+        var sourceVm = CreateSpendingSource(sourceType, sourceBalance, spentAmount);
         var main = CreateMainViewModel([sourceVm]);
-        var appData = CreateAppData(sourceBalance, incomeAmount);
+        var appData = CreateAppData(sourceType, sourceBalance, spentAmount, incomeAmount, name, notes);
         var incomeLog = new IncomeLogVM
         {
             Id = 1,
-            Name = "Salary",
+            Name = name!,
             Amount = incomeAmount,
             AddedOn = new DateTime(2026, 5, 1),
-            Notes = "Monthly salary",
+            Notes = notes!,
             SpendingSource = sourceVm
         };
 
         return (new IncomeDetailVM(main, incomeLog, appData), appData);
     }
 
-    private static IAppDataService CreateAppData(decimal sourceBalance, decimal incomeAmount)
+    private static IAppDataService CreateAppData(
+        SpendingSourceType sourceType,
+        decimal sourceBalance,
+        decimal spentAmount,
+        decimal incomeAmount,
+        string? name,
+        string? notes)
     {
         var persistedSource = new SpendingSource
         {
             Id = 1,
-            Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            Name = "Source",
+            SpendingSourceType = sourceType,
             Balance = sourceBalance,
+            SpentAmount = spentAmount,
             IsEnabled = true
         };
         var persistedIncome = new IncomeLog
         {
             Id = 1,
-            Name = "Salary",
+            Name = name!,
             Amount = incomeAmount,
             AddedOn = new DateTime(2026, 5, 1),
-            Notes = "Monthly salary",
+            Notes = notes!,
             SpendingSourceId = persistedSource.Id,
             SpendingSource = persistedSource
         };
@@ -186,14 +232,18 @@ public sealed class IncomeDetailVMTests
         return unitOfWork;
     }
 
-    private static SpendingSourceVM CreateCheckingSource(decimal balance)
+    private static SpendingSourceVM CreateSpendingSource(
+        SpendingSourceType sourceType,
+        decimal balance,
+        decimal spentAmount)
     {
         return new SpendingSourceVM
         {
             Id = 1,
-            Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            Name = "Source",
+            SpendingSourceType = sourceType,
             Balance = balance,
+            SpentAmount = spentAmount,
             IsEnabled = true
         };
     }

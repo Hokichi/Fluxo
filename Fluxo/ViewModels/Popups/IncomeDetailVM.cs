@@ -269,6 +269,9 @@ public partial class IncomeDetailVM : ObservableObject
     {
         if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
         {
+            if (spendingSource.SpentAmount == 0m)
+                return;
+
             spendingSource.SpentAmount += amount;
             return;
         }
@@ -287,9 +290,9 @@ public partial class IncomeDetailVM : ObservableObject
     private static IncomeDetailSavedState CreateSavedState(IncomeLogVM incomeLog)
     {
         return new IncomeDetailSavedState(
-            incomeLog.Name.Trim(),
+            incomeLog.Name?.Trim() ?? string.Empty,
             incomeLog.Amount,
-            incomeLog.Notes.Trim(),
+            incomeLog.Notes?.Trim() ?? string.Empty,
             incomeLog.AddedOn == default ? DateTime.Today : incomeLog.AddedOn.Date,
             incomeLog.SpendingSource?.Id ?? 0);
     }
