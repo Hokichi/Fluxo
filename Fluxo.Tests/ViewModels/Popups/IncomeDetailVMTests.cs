@@ -93,7 +93,7 @@ public sealed class IncomeDetailVMTests
     }
 
     [Fact]
-    public async Task SaveAsync_DoesNotCreateCreditSpentAmount_WhenEditingAlreadyZeroSpentIncomeDown()
+    public async Task SaveAsync_RestoresCreditSpentAmountBeforeApplyingEditedIncome()
     {
         await RunInStaAsync(async () =>
         {
@@ -111,7 +111,61 @@ public sealed class IncomeDetailVMTests
             appData.Received().UpdateSpendingSource(Arg.Is<SpendingSource>(source =>
                 source.Id == 1 &&
                 source.SpendingSourceType == SpendingSourceType.Credit &&
-                source.SpentAmount == 0m));
+                source.SpentAmount == 20m));
+        });
+    }
+
+    [Fact]
+    public async Task SaveAsync_PreservesDisabledCurrentSource_WhenSavingNameAndNoteEdit()
+    {
+        await RunInStaAsync(async () =>
+        {
+            var disabledSource = CreateSpendingSource(
+                SpendingSourceType.Checking,
+                balance: 1_000m,
+                spentAmount: 0m,
+                id: 1,
+                isEnabled: false);
+            var enabledSource = CreateSpendingSource(
+                SpendingSourceType.Checking,
+                balance: 500m,
+                spentAmount: 0m,
+                id: 2,
+                name: "Enabled source");
+            var main = CreateMainViewModel([disabledSource, enabledSource]);
+            var appData = CreateAppData(
+                [
+                    CreatePersistedSource(disabledSource),
+                    CreatePersistedSource(enabledSource)
+                ],
+                incomeSourceId: disabledSource.Id,
+                incomeAmount: 100m,
+                name: "Salary",
+                notes: "Monthly salary");
+            var incomeLog = new IncomeLogVM
+            {
+                Id = 1,
+                Name = "Salary",
+                Amount = 100m,
+                AddedOn = new DateTime(2026, 5, 1),
+                Notes = "Monthly salary",
+                SpendingSource = disabledSource
+            };
+            var vm = new IncomeDetailVM(main, incomeLog, appData);
+
+            await vm.BeginEditingAsync();
+            vm.NameText = "Updated salary";
+            vm.NoteText = "Updated note";
+
+            var result = await vm.SaveAsync();
+
+            Assert.True(result.IsSuccess);
+            appData.Received().UpdateIncomeLog(Arg.Is<IncomeLog>(log =>
+                log.Name == "Updated salary" &&
+                log.Notes == "Updated note" &&
+                log.SpendingSourceId == disabledSource.Id &&
+                log.SpendingSource!.Id == disabledSource.Id));
+            appData.DidNotReceive().UpdateSpendingSource(Arg.Is<SpendingSource>(source => source.Id == enabledSource.Id));
         });
     }
 
@@ -156,6 +210,17 @@ public sealed class IncomeDetailVMTests
             SpentAmount = spentAmount,
             IsEnabled = true
         };
+        return CreateAppData([persistedSource], persistedSource.Id, incomeAmount, name, notes);
+    }
+
+    private static IAppDataService CreateAppData(
+        IReadOnlyList<SpendingSource> persistedSources,
+        int incomeSourceId,
+        decimal incomeAmount,
+        string? name,
+        string? notes)
+    {
+        var persistedSource = persistedSources.Single(source => source.Id == incomeSourceId);
         var persistedIncome = new IncomeLog
         {
             Id = 1,
@@ -170,10 +235,28 @@ public sealed class IncomeDetailVMTests
         var appData = Substitute.For<IAppDataService>();
         appData.GetIncomeLogByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IncomeLog?>(persistedIncome));
-        appData.GetSpendingSourceByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<SpendingSource?>(persistedSource));
+
+        foreach (var source in persistedSources)
+        {
+            appData.GetSpendingSourceByIdAsync(source.Id, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<SpendingSource?>(source));
+        }
+
         appData.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
         return appData;
+    }
+
+    private static SpendingSource CreatePersistedSource(SpendingSourceVM source)
+    {
+        return new SpendingSource
+        {
+            Id = source.Id,
+            Name = source.Name,
+            SpendingSourceType = source.SpendingSourceType,
+            Balance = source.Balance,
+            SpentAmount = source.SpentAmount,
+            IsEnabled = source.IsEnabled
+        };
     }
 
     private static MainVM CreateMainViewModel(IReadOnlyList<SpendingSourceVM> spendingSources)
@@ -235,16 +318,19 @@ public sealed class IncomeDetailVMTests
     private static SpendingSourceVM CreateSpendingSource(
         SpendingSourceType sourceType,
         decimal balance,
-        decimal spentAmount)
+        decimal spentAmount,
+        int id = 1,
+        bool isEnabled = true,
+        string name = "Source")
     {
         return new SpendingSourceVM
         {
-            Id = 1,
-            Name = "Source",
+            Id = id,
+            Name = name,
             SpendingSourceType = sourceType,
             Balance = balance,
             SpentAmount = spentAmount,
-            IsEnabled = true
+            IsEnabled = isEnabled
         };
     }
 

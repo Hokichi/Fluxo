@@ -220,6 +220,11 @@ public partial class IncomeDetailVM : ObservableObject
     {
         _availableSpendingSources.Clear();
         _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources.Where(source => source.IsEnabled));
+
+        var currentSource = _incomeLog.SpendingSource;
+        if (currentSource is not null && _availableSpendingSources.All(source => source.Id != currentSource.Id))
+            _availableSpendingSources.Add(currentSource);
+
         RefreshSpendingSources();
     }
 
@@ -269,9 +274,6 @@ public partial class IncomeDetailVM : ObservableObject
     {
         if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
         {
-            if (spendingSource.SpentAmount == 0m)
-                return;
-
             spendingSource.SpentAmount += amount;
             return;
         }
