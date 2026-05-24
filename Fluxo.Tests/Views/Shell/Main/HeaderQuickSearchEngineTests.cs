@@ -14,87 +14,123 @@ public class HeaderQuickSearchEngineTests
     [InlineData("  abc  ")]
     public void Search_ReturnsEmpty_WhenQueryIsNullEmptyOrTooShort(string? query)
     {
-        var logs = new[]
-        {
-            CreateLog(1, "Groceries"),
-            CreateLog(2, "Transport")
-        };
-
-        var result = HeaderQuickSearchEngine.Search(logs, query);
+        var result = HeaderQuickSearchEngine.Search(
+            [CreateExpenseLog(1, "Groceries", DateTime.Today)],
+            [CreateIncomeLog(2, "Salary", DateTime.Today)],
+            query);
 
         Assert.Empty(result);
     }
 
     [Fact]
-    public void Search_FiltersByExpenseName_UsingCaseInsensitiveContains()
+    public void Search_FiltersExpensesAndIncomes_ByNameUsingCaseInsensitiveContains()
     {
-        var logs = new[]
+        var expenses = new[]
         {
-            CreateLog(1, "Monthly Grocery Run"),
-            CreateLog(2, "Electric Bill"),
-            CreateLog(3, "gRoCeRy Delivery")
+            CreateExpenseLog(1, "Monthly Grocery Run", DateTime.Today.AddDays(-1)),
+            CreateExpenseLog(2, "Electric Bill", DateTime.Today)
+        };
+        var incomes = new[]
+        {
+            CreateIncomeLog(3, "gRoCeRy Reimbursement", DateTime.Today),
+            CreateIncomeLog(4, "Salary", DateTime.Today)
         };
 
-        var result = HeaderQuickSearchEngine.Search(logs, "gRoCeR").ToList();
+        var result = HeaderQuickSearchEngine.Search(expenses, incomes, "gRoCeR").ToList();
 
-        Assert.Equal([1, 3], result.Select(log => log.Id).ToArray());
+        Assert.Equal([3, 1], result.Select(item => item.Id).ToArray());
+        Assert.Equal(
+            [HeaderQuickSearchResultKind.Income, HeaderQuickSearchResultKind.Expense],
+            result.Select(item => item.Kind).ToArray());
     }
 
     [Fact]
     public void Search_UsesTrimmedQuery_WhenEffectiveLengthIsFour()
     {
-        var logs = new[]
+        var expenses = new[]
         {
-            CreateLog(1, "Apartment rent"),
-            CreateLog(2, "Utilities"),
-            CreateLog(3, "RENT insurance")
+            CreateExpenseLog(1, "Apartment rent", DateTime.Today.AddDays(-2))
+        };
+        var incomes = new[]
+        {
+            CreateIncomeLog(2, "Rent refund", DateTime.Today)
         };
 
-        var result = HeaderQuickSearchEngine.Search(logs, "  rent  ").ToList();
+        var result = HeaderQuickSearchEngine.Search(expenses, incomes, "  rent  ").ToList();
 
-        Assert.Equal([1, 3], result.Select(log => log.Id).ToArray());
+        Assert.Equal([2, 1], result.Select(item => item.Id).ToArray());
     }
 
     [Fact]
-    public void Search_LimitsResultsToFirstFiveMatches()
+    public void Search_LimitsResultsToFiveTotalMatches()
     {
-        var logs = Enumerable
-            .Range(1, 7)
-            .Select(index => CreateLog(index, $"Coffee expense {index}"))
+        var expenses = Enumerable
+            .Range(1, 4)
+            .Select(index => CreateExpenseLog(index, $"Coffee expense {index}", DateTime.Today.AddDays(-index)))
+            .ToList();
+        var incomes = Enumerable
+            .Range(5, 4)
+            .Select(index => CreateIncomeLog(index, $"Coffee income {index}", DateTime.Today.AddDays(-index)))
             .ToList();
 
-        var result = HeaderQuickSearchEngine.Search(logs, "coffee").ToList();
+        var result = HeaderQuickSearchEngine.Search(expenses, incomes, "coffee").ToList();
 
         Assert.Equal(5, result.Count);
-        Assert.Equal([1, 2, 3, 4, 5], result.Select(log => log.Id).ToArray());
+        Assert.Equal([1, 2, 3, 4, 5], result.Select(item => item.Id).ToArray());
     }
 
     [Fact]
-    public void Search_IgnoresNullNestedExpenseFields_WithoutThrowing()
+    public void Search_IgnoresNullNestedFields_WithoutThrowing()
     {
-        var logs = new[]
+        var expenses = new[]
         {
             new ExpenseLogVM { Id = 1, Expense = null! },
             new ExpenseLogVM { Id = 2, Expense = new ExpenseVM { Name = null! } },
-            CreateLog(3, "Rent payment")
+            CreateExpenseLog(3, "Rent payment", DateTime.Today.AddDays(-1))
+        };
+        var incomes = new[]
+        {
+            new IncomeLogVM { Id = 4, Name = null! },
+            CreateIncomeLog(5, "Rent refund", DateTime.Today)
         };
 
-        var exception = Record.Exception(() => HeaderQuickSearchEngine.Search(logs, "rent").ToList());
+        var exception = Record.Exception(() => HeaderQuickSearchEngine.Search(expenses, incomes, "rent").ToList());
 
         Assert.Null(exception);
-        var result = HeaderQuickSearchEngine.Search(logs, "rent").ToList();
-        Assert.Equal([3], result.Select(log => log.Id).ToArray());
+        var result = HeaderQuickSearchEngine.Search(expenses, incomes, "rent").ToList();
+        Assert.Equal([5, 3], result.Select(item => item.Id).ToArray());
     }
 
-    private static ExpenseLogVM CreateLog(int id, string expenseName)
+    private static ExpenseLogVM CreateExpenseLog(int id, string expenseName, DateTime deductedOn)
     {
         return new ExpenseLogVM
         {
             Id = id,
+            Amount = id * 10m,
+            DeductedOn = deductedOn,
             Expense = new ExpenseVM
             {
-                Name = expenseName
-            }
+                Name = expenseName,
+                ExpenseTag = new ExpenseTagVM
+                {
+                    Id = 10 + id,
+                    Name = "Tag",
+                    HexCode = "#FFAA00"
+                }
+            },
+            SpendingSource = new SpendingSourceVM { Id = 20 + id, Name = "Wallet" }
+        };
+    }
+
+    private static IncomeLogVM CreateIncomeLog(int id, string incomeName, DateTime addedOn)
+    {
+        return new IncomeLogVM
+        {
+            Id = id,
+            Name = incomeName,
+            Amount = id * 100m,
+            AddedOn = addedOn,
+            SpendingSource = new SpendingSourceVM { Id = 30 + id, Name = "Checking" }
         };
     }
 }
