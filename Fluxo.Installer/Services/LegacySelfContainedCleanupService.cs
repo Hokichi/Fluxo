@@ -51,17 +51,20 @@ public sealed class LegacySelfContainedCleanupService : ILegacySelfContainedClea
     private readonly Func<string, bool> fileExists;
     private readonly Func<string, string, IEnumerable<string>> enumerateFiles;
     private readonly Action<string> deleteFile;
+    private readonly Action<string> deleteDirectory;
 
     public LegacySelfContainedCleanupService(
         Func<string, bool>? directoryExists = null,
         Func<string, bool>? fileExists = null,
         Func<string, string, IEnumerable<string>>? enumerateFiles = null,
-        Action<string>? deleteFile = null)
+        Action<string>? deleteFile = null,
+        Action<string>? deleteDirectory = null)
     {
         this.directoryExists = directoryExists ?? Directory.Exists;
         this.fileExists = fileExists ?? File.Exists;
         this.enumerateFiles = enumerateFiles ?? ((path, pattern) => Directory.EnumerateFiles(path, pattern));
         this.deleteFile = deleteFile ?? File.Delete;
+        this.deleteDirectory = deleteDirectory ?? (path => Directory.Delete(path, recursive: true));
     }
 
     public LegacyCleanupResult Cleanup(string installFolder)
@@ -90,7 +93,14 @@ public sealed class LegacySelfContainedCleanupService : ILegacySelfContainedClea
                 deletedCount++;
             }
 
-            return new LegacyCleanupResult(true, $"Removed {deletedCount} legacy application file(s).");
+            var publishFolder = Path.Combine(installFolder, "publish");
+            if (directoryExists(publishFolder))
+            {
+                deleteDirectory(publishFolder);
+                deletedCount++;
+            }
+
+            return new LegacyCleanupResult(true, $"Removed {deletedCount} legacy application item(s).");
         }
         catch (Exception ex)
         {
@@ -109,6 +119,11 @@ public sealed class LegacySelfContainedCleanupService : ILegacySelfContainedClea
         if (string.Equals(Path.GetExtension(fileName), ".log", StringComparison.OrdinalIgnoreCase))
         {
             return false;
+        }
+
+        if (string.Equals(Path.GetExtension(fileName), ".pdb", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
         }
 
         if (LegacyRuntimeFiles.Contains(fileName))

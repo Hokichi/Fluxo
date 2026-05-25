@@ -100,6 +100,44 @@ public sealed class LegacySelfContainedCleanupServiceTests
     }
 
     [Fact]
+    public void Cleanup_RemovesRootPdbFiles()
+    {
+        var deleted = new List<string>();
+        var service = CreateService(
+            files:
+            [
+                @"C:\Fluxo\fluxo.pdb",
+                @"C:\Fluxo\Fluxo.Core.pdb",
+            ],
+            deleted: deleted);
+
+        var result = service.Cleanup(@"C:\Fluxo");
+
+        Assert.True(result.Success);
+        Assert.Equal(
+            [
+                @"C:\Fluxo\fluxo.pdb",
+                @"C:\Fluxo\Fluxo.Core.pdb",
+            ],
+            deleted);
+    }
+
+    [Fact]
+    public void Cleanup_RemovesLegacyPublishFolder()
+    {
+        var deletedDirectories = new List<string>();
+        var service = CreateService(
+            files: [],
+            existingDirectories: [@"C:\Fluxo\publish"],
+            deletedDirectories: deletedDirectories);
+
+        var result = service.Cleanup(@"C:\Fluxo");
+
+        Assert.True(result.Success);
+        Assert.Equal([@"C:\Fluxo\publish"], deletedDirectories);
+    }
+
+    [Fact]
     public void Cleanup_ReturnsFailure_WhenDeleteFails()
     {
         var service = new LegacySelfContainedCleanupService(
@@ -116,13 +154,18 @@ public sealed class LegacySelfContainedCleanupServiceTests
     private static LegacySelfContainedCleanupService CreateService(
         IReadOnlyCollection<string> files,
         IReadOnlyCollection<string>? existingFiles = null,
-        List<string>? deleted = null)
+        IReadOnlyCollection<string>? existingDirectories = null,
+        List<string>? deleted = null,
+        List<string>? deletedDirectories = null)
     {
         var existingFileSet = new HashSet<string>(existingFiles ?? [], StringComparer.OrdinalIgnoreCase);
+        var existingDirectorySet = new HashSet<string>(existingDirectories ?? [], StringComparer.OrdinalIgnoreCase);
         return new LegacySelfContainedCleanupService(
-            directoryExists: _ => true,
+            directoryExists: path => string.Equals(path, @"C:\Fluxo", StringComparison.OrdinalIgnoreCase)
+                                     || existingDirectorySet.Contains(path),
             fileExists: existingFileSet.Contains,
             enumerateFiles: (_, _) => files,
-            deleteFile: file => deleted?.Add(file));
+            deleteFile: file => deleted?.Add(file),
+            deleteDirectory: directory => deletedDirectories?.Add(directory));
     }
 }
