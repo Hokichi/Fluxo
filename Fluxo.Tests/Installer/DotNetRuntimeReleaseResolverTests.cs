@@ -79,6 +79,59 @@ public sealed class DotNetRuntimeReleaseResolverTests
     }
 
     [Fact]
+    public void ResolveLatestWindowsDesktopRuntimeInstaller_SkipsIncompleteNonTargetFiles()
+    {
+        const string indexJson = """
+        {
+          "releases-index": [
+            {
+              "channel-version": "10.0",
+              "latest-release": "10.0.8",
+              "releases.json": "https://example.test/10/releases.json"
+            }
+          ]
+        }
+        """;
+        const string releasesJson = """
+        {
+          "releases": [
+            {
+              "release-version": "10.0.8",
+              "windowsdesktop": {
+                "files": [
+                  {
+                    "name": "windowsdesktop-runtime-10.0.8-win-x86.exe",
+                    "rid": "win-x86"
+                  },
+                  {
+                    "name": "windowsdesktop-runtime-10.0.8-win-x64.zip",
+                    "rid": "win-x64"
+                  },
+                  {
+                    "name": "windowsdesktop-runtime-10.0.8-win-x64.exe",
+                    "rid": "win-x64",
+                    "url": "https://example.test/windowsdesktop-runtime-10.0.8-win-x64.exe",
+                    "hash": "abc123"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+        """;
+
+        var result = DotNetRuntimeReleaseResolver.ResolveLatestWindowsDesktopRuntimeInstaller(
+            indexJson,
+            releasesJson,
+            channelVersion: "10.0",
+            rid: "win-x64");
+
+        Assert.Equal("windowsdesktop-runtime-10.0.8-win-x64.exe", result.FileName);
+        Assert.Equal("https://example.test/windowsdesktop-runtime-10.0.8-win-x64.exe", result.Url);
+        Assert.Equal("abc123", result.Hash);
+    }
+
+    [Fact]
     public void ResolveReleasesJsonUrl_ReturnsUrlForChannel()
     {
         const string indexJson = """

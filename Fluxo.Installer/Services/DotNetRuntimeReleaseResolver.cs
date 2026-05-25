@@ -79,6 +79,12 @@ public static class DotNetRuntimeReleaseResolver
                     file,
                     "rid",
                     $"The .NET {channelVersion} release {latestRelease} windowsdesktop file rid must be a string.");
+                if (!string.Equals(fileRid, rid, StringComparison.OrdinalIgnoreCase)
+                    || !name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 var url = GetRequiredString(
                     file,
                     "url",
@@ -87,11 +93,6 @@ public static class DotNetRuntimeReleaseResolver
                     file,
                     "hash",
                     $"Runtime installer hash must be a string for {name}.");
-                if (!string.Equals(fileRid, rid, StringComparison.OrdinalIgnoreCase)
-                    || !name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
 
                 return new DotNetRuntimeInstallerInfo(
                     latestRelease,
