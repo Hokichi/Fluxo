@@ -466,6 +466,80 @@ public sealed class QuickAddVMValidationTests
         });
     }
 
+    [Fact]
+    public void Constructor_UsesSpendingSourcesOverride_WhenProvided()
+    {
+        RunInSta(() =>
+        {
+            var persistedSource = CreateCheckingSource(balance: 500m);
+            var temporarySource = new SpendingSourceVM
+            {
+                Id = -11,
+                Name = "Wizard Temporary",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 250m,
+                IsEnabled = true
+            };
+
+            var vm = new QuickAddVM(
+                CreateMainViewModel([persistedSource]),
+                CreateAppData(),
+                spendingSourcesOverride: [temporarySource]);
+
+            Assert.Single(vm.SpendingSources);
+            Assert.Equal(-11, vm.SpendingSources.Single().Id);
+            Assert.Equal("Wizard Temporary", vm.SpendingSources.Single().Name);
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_RecurringDraftMode_UsesDraftCallback_ForTemporarySource()
+    {
+        RunInSta(() =>
+        {
+            var temporarySource = new SpendingSourceVM
+            {
+                Id = -7,
+                Name = "Wizard Temporary",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 500m,
+                IsEnabled = true
+            };
+
+            var appData = CreateAppData();
+            appData.GetSpendingSourceByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<SpendingSource?>(null));
+
+            QuickAddVM.RecurringDraftSaveInput? captured = null;
+            var vm = new QuickAddVM(
+                CreateMainViewModel([CreateCheckingSource(balance: 100m)]),
+                appData,
+                spendingSourcesOverride: [temporarySource],
+                saveRecurringDraftAsync: input =>
+                {
+                    captured = input;
+                    return Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Success());
+                });
+
+            vm.IsExpense = true;
+            vm.IsRecurring = true;
+            vm.NameText = "Rent";
+            vm.AmountText = 50m;
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "10";
+            vm.SelectedSpendingSource = vm.SpendingSources.Single(source => source.Id == -7);
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            Assert.True(captured.HasValue);
+            Assert.Equal(RecurringTransactionType.Expense, captured.Value.Type);
+            Assert.Equal(-7, captured.Value.SpendingSourceId);
+            Assert.Equal(50m, captured.Value.Amount);
+            appData.DidNotReceiveWithAnyArgs().GetSpendingSourceByIdAsync(default, default);
+        });
+    }
+
     private static QuickAddVM CreateVm(
         TransactionKind kind,
         SpendingSourceVM source,

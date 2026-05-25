@@ -26,6 +26,8 @@ public partial class QuickAddVM : ObservableValidator
     private const int NoSavingGoalId = -1;
 
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
+    private readonly IReadOnlyList<SpendingSourceVM>? _spendingSourcesOverride;
+    private readonly Func<RecurringDraftSaveInput, Task<QuickAddSubmissionResult>>? _saveRecurringDraftAsync;
     private readonly List<SavingGoalVM> _orderedGoals = [];
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
@@ -71,10 +73,16 @@ public partial class QuickAddVM : ObservableValidator
     [CustomValidation(typeof(QuickAddVM), nameof(ValidateSelectedTag))]
     private ExpenseTagVM? _selectedTag;
 
-    public QuickAddVM(MainVM mainViewModel, IAppDataService appData)
+    public QuickAddVM(
+        MainVM mainViewModel,
+        IAppDataService appData,
+        IReadOnlyList<SpendingSourceVM>? spendingSourcesOverride = null,
+        Func<RecurringDraftSaveInput, Task<QuickAddSubmissionResult>>? saveRecurringDraftAsync = null)
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
+        _spendingSourcesOverride = spendingSourcesOverride;
+        _saveRecurringDraftAsync = saveRecurringDraftAsync;
         ErrorsChanged += (_, e) =>
         {
             OnPropertyChanged(nameof(CanSave));
@@ -363,6 +371,43 @@ public partial class QuickAddVM : ObservableValidator
 
         try
         {
+            if (input.IsRecurring && _saveRecurringDraftAsync is not null)
+            {
+                if (!TryNormalizeRecurringTime(input.RecurringPeriod, input.RecurringTimeText, out var recurringTime))
+                    return QuickAddSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
+
+                var recurringType = input.IsGoal
+                    ? RecurringTransactionType.GoalUpdate
+                    : input.IsExpense
+                        ? RecurringTransactionType.Expense
+                        : RecurringTransactionType.Income;
+
+                var recurringName = input.IsGoal && input.GoalId is not null
+                    ? BuildGoalUpdateName((await _appData.GetSavingGoalByIdAsync(input.GoalId.Value))?.Name ?? string.Empty)
+                    : BuildExpenseName(input.Name, input.Note, input.IsExpense ? "Recurring Expense" : "Recurring Income");
+
+                var draftSaveResult = await _saveRecurringDraftAsync(new RecurringDraftSaveInput(
+                    input.EditingRecurringTransactionId,
+                    recurringType,
+                    recurringName,
+                    input.Amount,
+                    input.RecurringPeriod,
+                    recurringTime,
+                    input.SpendingSourceId,
+                    input.TagId,
+                    input.GoalId));
+                if (!draftSaveResult.IsSuccess)
+                    return draftSaveResult;
+
+                if (resetAfterSave)
+                {
+                    ReloadChoicesFromMainViewModel();
+                    ResetForm(true);
+                }
+
+                return QuickAddSubmissionResult.Success();
+            }
+
             var spendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
             if (spendingSource is null)
                 return QuickAddSubmissionResult.Failure("Please select a valid spending source.");
@@ -671,7 +716,8 @@ public partial class QuickAddVM : ObservableValidator
     private void ReloadChoicesFromMainViewModel()
     {
         _availableSpendingSources.Clear();
-        _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources.Where(source => source.IsEnabled));
+        var sourceCatalog = _spendingSourcesOverride ?? _mainViewModel.BudgetPanel.SpendingSources;
+        _availableSpendingSources.AddRange(sourceCatalog.Where(source => source.IsEnabled));
 
         _orderedTags.Clear();
         _orderedTags.AddRange(OrderNonSystemTags(_mainViewModel.BudgetPanel.Tags
@@ -1328,6 +1374,28 @@ public partial class QuickAddVM : ObservableValidator
         bool IsGoal = false,
         int? GoalId = null);
 
+    public readonly record struct RecurringDraftSaveInput(
+        int? EditingRecurringTransactionId,
+        RecurringTransactionType Type,
+        string Name,
+        decimal Amount,
+        RecurringPeriod RecurringPeriod,
+        int RecurringTime,
+        int SpendingSourceId,
+        int? TagId,
+        int? GoalId);
+
+    public readonly record struct RecurringDraftSnapshot(
+        int? EditingRecurringTransactionId,
+        RecurringTransactionType Type,
+        string Name,
+        decimal Amount,
+        RecurringPeriod RecurringPeriod,
+        int RecurringTime,
+        int SpendingSourceId,
+        int? TagId,
+        int? GoalId);
+
     private readonly record struct QuickTransactionInput(
         bool IsExpense,
         bool IsGoal,
@@ -1392,6 +1460,24 @@ public partial class QuickAddVM : ObservableValidator
         SelectedTag = recurring.TagId is > 0 ? _orderedTags.FirstOrDefault(tag => tag.Id == recurring.TagId.Value) : _orderedTags.FirstOrDefault();
         SelectedGoal = recurring.GoalId is > 0 ? Goals.FirstOrDefault(goal => goal.Id == recurring.GoalId.Value) : Goals.FirstOrDefault();
         return true;
+    }
+
+    public void InitializeFromRecurringDraft(RecurringDraftSnapshot draft)
+    {
+        _editingRecurringTransactionId = draft.EditingRecurringTransactionId;
+        IsRecurringModeLocked = true;
+        IsRecurring = true;
+        IsExpense = draft.Type == RecurringTransactionType.Expense;
+        IsGoal = draft.Type == RecurringTransactionType.GoalUpdate;
+        NameText = draft.Name;
+        AmountText = draft.Amount;
+        SelectedRecurringPeriod = draft.RecurringPeriod;
+        RecurringTimeText = draft.RecurringPeriod == RecurringPeriod.None
+            ? string.Empty
+            : draft.RecurringTime.ToString(CultureInfo.InvariantCulture);
+        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == draft.SpendingSourceId) ?? SpendingSources.FirstOrDefault();
+        SelectedTag = draft.TagId is > 0 ? _orderedTags.FirstOrDefault(tag => tag.Id == draft.TagId.Value) : _orderedTags.FirstOrDefault();
+        SelectedGoal = draft.GoalId is > 0 ? Goals.FirstOrDefault(goal => goal.Id == draft.GoalId.Value) : Goals.FirstOrDefault();
     }
 
     internal static bool TryNormalizeRecurringTime(RecurringPeriod period, string text, out int recurringTime)
