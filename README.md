@@ -30,10 +30,6 @@ Fluxo is a Windows personal finance app for keeping everyday money decisions vis
 	- [Notifications do not appear](#notifications-do-not-appear)
 - [Support](#support)
 - [Change Log](#change-log)
-	- [v1.0.0](#v1.0.0:)
-	- [v1.0.1](#v1.0.1:)
-	- [v1.0.2](#v1.0.2:)
-	- [v1.0.3](#v1.0.3:)
 
 ---
 
