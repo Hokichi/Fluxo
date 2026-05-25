@@ -64,15 +64,16 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
-    public void Package_DisablesMsiMajorUpgradeRemoval()
+    public void Package_EnablesMsiMajorUpgradeRemoval()
     {
         var wxs = File.ReadAllText(Path.Combine(
             GetRepositoryRoot(),
             "Fluxo.Installer.Msi",
             "Package.wxs"));
 
-        Assert.Contains("UpgradeStrategy=\"none\"", wxs);
-        Assert.DoesNotContain("<MajorUpgrade", wxs);
+        Assert.Contains("UpgradeStrategy=\"majorUpgrade\"", wxs);
+        Assert.Contains("UpgradeCode=\"{66DCBC7E-8077-4078-81C9-5618245C0435}\"", wxs);
+        Assert.DoesNotContain("UpgradeStrategy=\"none\"", wxs);
     }
 
     [Fact]
@@ -86,6 +87,7 @@ public sealed class InstallerMsiAuthoringTests
         Assert.Contains("RemoveFluxoInstalledVersionRegistryKey", wxs);
         Assert.Contains("Execute=\"deferred\"", wxs);
         Assert.Contains("Impersonate=\"no\"", wxs);
+        Assert.Contains("Condition=\"REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE\"", wxs);
         Assert.Contains(@"reg.exe delete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\fluxo /f", wxs);
     }
 

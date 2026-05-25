@@ -1,6 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-  <Package Id="FluxoInstallerMsi" Name="fluxo" Manufacturer="fluxo" Version="$(FluxoMsiVersion)" Scope="perMachine" UpgradeCode="{66DCBC7E-8077-4078-81C9-5618245C0435}" UpgradeStrategy="none">
+  <Package Id="FluxoInstallerMsi" Name="fluxo" Manufacturer="fluxo" Version="$(FluxoMsiVersion)" Scope="perMachine" UpgradeCode="{66DCBC7E-8077-4078-81C9-5618245C0435}" UpgradeStrategy="majorUpgrade">
 
     <MediaTemplate EmbedCab="yes" />
 
@@ -25,7 +25,7 @@
 
     <InstallExecuteSequence>
 
-      <Custom Action="RemoveFluxoInstalledVersionRegistryKey" After="RemoveRegistryValues" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="RemoveFluxoInstalledVersionRegistryKey" After="RemoveRegistryValues" Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
 
     </InstallExecuteSequence>
 
