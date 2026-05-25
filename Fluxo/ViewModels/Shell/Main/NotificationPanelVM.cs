@@ -943,6 +943,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             if (!await _notificationActionService.ExecuteChecklistActionAsync(card, decisions))
                 return false;
 
+            Messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
             await RefreshNotificationsAsync();
             return true;
         };

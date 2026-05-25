@@ -25,6 +25,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     private readonly MainVM _mainViewModel;
     private readonly IAppDataService _appData;
+    private readonly HashSet<string> _knownSpendingSourceNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly Func<AddSpendingSourceInput, Task<AddSpendingSourceResult>>? _saveDraftAsync;
     private readonly Func<int?, Task<IReadOnlyList<DeductSourceOption>>>? _loadDraftDeductSourcesAsync;
     private FormState _initialState;
@@ -114,6 +115,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
     public bool CanSave => !IsBusy && !HasErrors && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool IsEditMode => EditingId.HasValue;
+    public bool IsSourceTypeSelectionEnabled => !IsEditMode;
     public string PopupTitle => IsEditMode ? "Edit Spending Source" : "Add New Income Source";
     public string HeaderTitle => PopupTitle;
 
@@ -166,6 +168,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         if (source.SpendingSourceType == SpendingSourceType.Saving && source.InterestRate.HasValue)
             ApyText = source.InterestRate.Value;
 
+        OnPropertyChanged(nameof(IsSourceTypeSelectionEnabled));
         ResetValidationState();
     }
 
@@ -246,7 +249,13 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     partial void OnIsBusyChanged(bool value) => NotifyFormStateChanged();
 
-    partial void OnIsEnabledChanged(bool value) => NotifyFormStateChanged();
+    partial void OnIsEnabledChanged(bool value)
+    {
+        if (ShowOnUI != value)
+            ShowOnUI = value;
+
+        NotifyFormStateChanged();
+    }
 
     partial void OnMaximumSpendingTextChanged(decimal value)
     {
@@ -264,6 +273,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     partial void OnNameTextChanged(string value)
     {
+        _isNameValidationActive = true;
         RefreshActiveValidation(nameof(NameText));
         NotifyFormStateChanged();
     }
@@ -330,6 +340,9 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     public async Task LoadDeductSourcesAsync(CancellationToken cancellationToken = default)
     {
+        if (_loadDraftDeductSourcesAsync is null)
+            await LoadKnownSpendingSourceNamesAsync(cancellationToken);
+
         IReadOnlyList<DeductSourceOption> options;
         if (_loadDraftDeductSourcesAsync is not null)
         {
@@ -379,10 +392,9 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
         try
         {
+            await LoadKnownSpendingSourceNamesAsync(CancellationToken.None);
             var existingSources = await _appData.GetSpendingSourcesAsync();
-            if (existingSources.Any(source =>
-                    source.Id != (EditingId ?? -1) &&
-                    string.Equals(source.Name, input.Name, StringComparison.OrdinalIgnoreCase)))
+            if (HasDuplicateSourceName(input.Name))
                 return AddSpendingSourceResult.Failure(
                     $"A spending source named \"{input.Name}\" already exists.");
 
@@ -406,7 +418,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
                 spendingSource.MonthlyDueDate = input.MonthlyDueDate;
                 spendingSource.DeductSource = input.DeductSource;
                 spendingSource.InterestRate = input.InterestRate;
-                spendingSource.ShowOnUI = input.ShowOnUI;
+                spendingSource.ShowOnUI = ResolveShowOnUiFromEnabledState(spendingSource.IsEnabled, input.IsEnabled, input.ShowOnUI);
                 spendingSource.IsEnabled = input.IsEnabled;
                 _appData.UpdateSpendingSource(spendingSource);
             }
@@ -424,7 +436,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
                     MonthlyDueDate = input.MonthlyDueDate,
                     DeductSource = input.DeductSource,
                     InterestRate = input.InterestRate,
-                    ShowOnUI = input.ShowOnUI,
+                    ShowOnUI = ResolveShowOnUiForCreation(input.IsEnabled, input.ShowOnUI),
                     IsEnabled = input.IsEnabled
                 };
                 await _appData.AddSpendingSourceAsync(spendingSource);
@@ -745,6 +757,49 @@ public partial class AddSpendingSourceVM : ObservableValidator
                MonthlyDueDateHelper.MinMonthlyDay.ToString(CultureInfo.InvariantCulture);
     }
 
+    private async Task LoadKnownSpendingSourceNamesAsync(CancellationToken cancellationToken)
+    {
+        _knownSpendingSourceNames.Clear();
+
+        var existingSources = await _appData.GetSpendingSourcesAsync(cancellationToken);
+        foreach (var source in existingSources)
+        {
+            if (source.Id == (EditingId ?? int.MinValue))
+                continue;
+
+            var normalizedName = NormalizeSourceName(source.Name);
+            if (normalizedName.Length > 0)
+                _knownSpendingSourceNames.Add(normalizedName);
+        }
+    }
+
+    private bool HasDuplicateSourceName(string name)
+    {
+        var normalizedName = NormalizeSourceName(name);
+        return normalizedName.Length > 0 && _knownSpendingSourceNames.Contains(normalizedName);
+    }
+
+    private static string NormalizeSourceName(string? value)
+    {
+        return (value ?? string.Empty).Trim();
+    }
+
+    private static bool ResolveShowOnUiForCreation(bool isEnabled, bool requestedShowOnUi)
+    {
+        return isEnabled && requestedShowOnUi;
+    }
+
+    private static bool ResolveShowOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedShowOnUi)
+    {
+        if (!nextIsEnabled)
+            return false;
+
+        if (previousIsEnabled == nextIsEnabled)
+            return requestedShowOnUi;
+
+        return true;
+    }
+
     private bool AreRequiredFieldsFilled()
     {
         if (!HasValidNameValue(NameText))
@@ -896,7 +951,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     public static ValidationResult? ValidateNameText(string value, ValidationContext validationContext)
     {
-        _ = validationContext;
+        var viewModel = (AddSpendingSourceVM)validationContext.ObjectInstance;
         var trimmedName = value?.Trim() ?? string.Empty;
 
         if (trimmedName.Length == 0)
@@ -907,6 +962,9 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
         if (trimmedName.Any(char.IsControl))
             return new ValidationResult("Source name cannot contain control characters.");
+
+        if (viewModel.HasDuplicateSourceName(trimmedName))
+            return new ValidationResult($"A spending source named \"{trimmedName}\" already exists.");
 
         return ValidationResult.Success;
     }

@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -12,8 +11,6 @@ namespace Fluxo.Views.Popups;
 public partial class IncomeDetailPopup : BasePopup
 {
     private readonly IncomeDetailVM _viewModel;
-    private bool _allowClose;
-    private bool _isHandlingCloseRequest;
     private bool _isSyncingNoteDocument;
 
     public IncomeDetailPopup(IncomeDetailVM viewModel)
@@ -27,51 +24,22 @@ public partial class IncomeDetailPopup : BasePopup
         {
             if (e.PropertyName == nameof(IncomeDetailVM.PopupTitle))
                 PopupTitle = _viewModel.PopupTitle;
-
-            if (e.PropertyName == nameof(IncomeDetailVM.IsEditing))
-                UpdateButtonStates();
         };
 
         Loaded += (_, _) =>
         {
             SyncNoteDocumentFromViewModel();
-            UpdateButtonStates();
         };
-        Closing += OnPopupClosing;
     }
 
-    protected override async void OnEditButtonClick()
+    protected override void OnEditButtonClick()
     {
-        await _viewModel.BeginEditingAsync();
-        IncomeNameTextBox.Focus();
-    }
-
-    protected override async void OnSaveButtonClick()
-    {
-        var result = await _viewModel.SaveAsync();
-        if (!result.IsSuccess)
-        {
-            ShowValidationMessage(result.ErrorMessage);
-            return;
-        }
-
-        SyncNoteDocumentFromViewModel();
+        OpenEditorPopupAndClose();
     }
 
     protected override void OnCloneButtonClick()
     {
-        var draft = _viewModel.CreateQuickAddDraft();
-        var ownerWindow = Owner as MainWindow;
-
-        CloseForPopupHandoff();
-
-        ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenAddNewTransactionPopup(draft)));
-    }
-
-    protected override void OnCancelButtonClick()
-    {
-        _viewModel.CancelEditing();
-        SyncNoteDocumentFromViewModel();
+        OpenEditorPopupAndClose();
     }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -80,44 +48,6 @@ public partial class IncomeDetailPopup : BasePopup
             return;
 
         base.OnPreviewKeyDown(e);
-    }
-
-    private async void OnPopupClosing(object? sender, CancelEventArgs e)
-    {
-        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasValidChangesToPersistOnClose())
-            return;
-
-        e.Cancel = true;
-        _isHandlingCloseRequest = true;
-
-        try
-        {
-            var confirmation = FluxoMessageBox.Show(
-                this,
-                "Save your changes before closing?",
-                "Income Detail",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (confirmation == MessageBoxResult.Yes)
-            {
-                var result = await _viewModel.SaveAsync();
-                if (!result.IsSuccess)
-                {
-                    ShowValidationMessage(result.ErrorMessage);
-                    return;
-                }
-
-                SyncNoteDocumentFromViewModel();
-            }
-
-            _allowClose = true;
-            _ = Dispatcher.BeginInvoke(new Action(Close));
-        }
-        finally
-        {
-            _isHandlingCloseRequest = false;
-        }
     }
 
     private void OnNoteTextChanged(object sender, TextChangedEventArgs e)
@@ -130,20 +60,15 @@ public partial class IncomeDetailPopup : BasePopup
             .Trim();
     }
 
-    private void UpdateButtonStates()
+    private void OpenEditorPopupAndClose()
     {
-        ShowEditButton = !_viewModel.IsEditing;
-        ShowSaveButton = _viewModel.IsEditing;
-        ShowCloneButton = !_viewModel.IsEditing;
-        ShowCancelButton = _viewModel.IsEditing;
-    }
-
-    private void ShowValidationMessage(string? message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
+        var ownerWindow = Owner as MainWindow;
+        if (ownerWindow is null)
             return;
 
-        FluxoMessageBox.Show(this, message, "Income Detail", MessageBoxButton.OK, MessageBoxImage.Information);
+        var draft = _viewModel.CreateQuickAddDraft();
+        CloseForPopupHandoff();
+        ownerWindow.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenAddNewTransactionPopup(draft)));
     }
 
     private void SyncNoteDocumentFromViewModel()

@@ -287,8 +287,31 @@ public partial class App : Application
         if (!await IsCloseBehaviorMinimizeToTrayAsync())
             return false;
 
+        if (!TryCloseOwnedWindows(mainWindow))
+            return true;
+
         EnsureTrayIconInitialized();
         HideMainWindowToTray(mainWindow);
+        return true;
+    }
+
+    private static bool TryCloseOwnedWindows(Window ownerWindow)
+    {
+        var ownedWindows = ownerWindow.OwnedWindows
+            .Cast<Window>()
+            .Where(window => window.IsVisible)
+            .ToList();
+
+        foreach (var ownedWindow in ownedWindows)
+        {
+            if (!TryCloseOwnedWindows(ownedWindow))
+                return false;
+
+            ownedWindow.Close();
+            if (ownedWindow.IsVisible)
+                return false;
+        }
+
         return true;
     }
 

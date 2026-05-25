@@ -195,16 +195,18 @@ public partial class SettingsSourcesTabVM : ObservableObject
                                 spendingSource.ShowOnUI = false;
                                 updated = true;
                                 break;
-                            case SettingsBatchAction.Unhide when !spendingSource.ShowOnUI:
+                            case SettingsBatchAction.Unhide when !spendingSource.ShowOnUI && spendingSource.IsEnabled:
                                 spendingSource.ShowOnUI = true;
                                 updated = true;
                                 break;
                             case SettingsBatchAction.Disable when spendingSource.IsEnabled:
                                 spendingSource.IsEnabled = false;
+                                spendingSource.ShowOnUI = false;
                                 updated = true;
                                 break;
                             case SettingsBatchAction.Enable when !spendingSource.IsEnabled:
                                 spendingSource.IsEnabled = true;
+                                spendingSource.ShowOnUI = true;
                                 updated = true;
                                 break;
                         }

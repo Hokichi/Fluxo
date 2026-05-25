@@ -47,7 +47,7 @@
                     <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
                     <TextBox
                         x:Name="IncomeNameTextBox"
-                        IsReadOnly="{Binding AreFieldsReadOnly}"
+                        IsReadOnly="True"
                         Style="{StaticResource RoundedTextInputStyle}"
                         Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
@@ -56,7 +56,7 @@
                     <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
                     <customControls:MoneyTextBox
                         x:Name="IncomeAmountTextBox"
-                        IsReadOnly="{Binding AreFieldsReadOnly}"
+                        IsReadOnly="True"
                         Style="{StaticResource RoundedMoneyTextInputStyle}"
                         Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                 </StackPanel>
@@ -73,7 +73,7 @@
                     <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
                     <components:DateSelector
                         x:Name="IncomeTransactionDateSelector"
-                        IsEnabled="{Binding CanEditFields}"
+                        IsEnabled="False"
                         SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
                 </StackPanel>
 
@@ -82,7 +82,7 @@
                     <ComboBox
                         x:Name="IncomeSpendingSourceComboBox"
                         DisplayMemberPath="Name"
-                        IsEnabled="{Binding CanEditFields}"
+                        IsEnabled="False"
                         ItemsSource="{Binding SpendingSourcesView}"
                         SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
                         Style="{StaticResource FluxoComboBoxStyle}">
@@ -105,7 +105,7 @@
                         FontFamily="{DynamicResource Regular}"
                         FontSize="13"
                         Foreground="{DynamicResource Brush.Text.Primary}"
-                        IsReadOnly="{Binding AreFieldsReadOnly}"
+                        IsReadOnly="True"
                         TextChanged="OnNoteTextChanged"
                         VerticalScrollBarVisibility="Auto" />
                 </Border>

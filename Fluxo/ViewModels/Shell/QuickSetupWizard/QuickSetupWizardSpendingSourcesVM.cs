@@ -189,6 +189,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         {
             if (draft.Id > 0 && existingSources.TryGetValue(draft.Id, out var persisted))
             {
+                var previousIsEnabled = persisted.IsEnabled;
                 persisted.Name = draft.Name;
                 persisted.SpendingSourceType = draft.SpendingSourceType;
                 persisted.Balance = draft.Balance;
@@ -199,8 +200,8 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 persisted.MonthlyDueDate = draft.MonthlyDueDate;
                 persisted.DeductSource = null;
                 persisted.InterestRate = draft.InterestRate;
-                persisted.ShowOnUI = draft.ShowOnUi;
                 persisted.IsEnabled = draft.IsEnabled;
+                persisted.ShowOnUI = ResolveShowOnUiFromEnabledState(previousIsEnabled, draft.IsEnabled, draft.ShowOnUi);
                 appData.UpdateSpendingSource(persisted);
                 idMap[draft.Id] = persisted.Id;
             }
@@ -319,6 +320,10 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         }
 
         var id = editingId ?? GetNextTemporaryId();
+        var previousIsEnabled = _draftSources.TryGetValue(id, out var existingDraft)
+            ? existingDraft.IsEnabled
+            : input.IsEnabled;
+        var resolvedShowOnUi = ResolveShowOnUiFromEnabledState(previousIsEnabled, input.IsEnabled, input.ShowOnUI);
         _draftSources[id] = new QuickSetupWizardDraftSpendingSource(
             id,
             input.Name,
@@ -331,7 +336,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
             input.MonthlyDueDate,
             input.DeductSource,
             input.InterestRate,
-            input.ShowOnUI,
+            resolvedShowOnUi,
             input.IsEnabled);
 
         if (id > 0)
@@ -362,6 +367,17 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         OnPropertyChanged(nameof(HasSpendingSources));
         OnPropertyChanged(nameof(TotalBudgetAmount));
         PublishSnapshot();
+    }
+
+    private static bool ResolveShowOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedShowOnUi)
+    {
+        if (!nextIsEnabled)
+            return false;
+
+        if (previousIsEnabled == nextIsEnabled)
+            return requestedShowOnUi;
+
+        return true;
     }
 }
 

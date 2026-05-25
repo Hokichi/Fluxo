@@ -67,6 +67,7 @@
                                 Text="Source Type" />
                             <ComboBox
                                 DisplayMemberPath="Label"
+                                IsEnabled="{Binding IsSourceTypeSelectionEnabled}"
                                 ItemsSource="{Binding SpendingSourceTypes}"
                                 SelectedValue="{Binding SelectedSpendingSourceType, Mode=TwoWay}"
                                 SelectedValuePath="Value"

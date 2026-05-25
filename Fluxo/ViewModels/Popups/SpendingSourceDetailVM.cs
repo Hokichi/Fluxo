@@ -331,6 +331,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
             spendingSource.IsEnabled = !spendingSource.IsEnabled;
+            spendingSource.ShowOnUI = spendingSource.IsEnabled;
             _appData.UpdateSpendingSource(spendingSource);
             await _appData.SaveChangesAsync();
 
@@ -531,6 +532,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     private static void ApplyInput(SpendingSource spendingSource, SpendingSourceDetailState input)
     {
+        var previousIsEnabled = spendingSource.IsEnabled;
         spendingSource.Name = input.Name;
         spendingSource.AccountLimit = input.AccountLimit;
         spendingSource.MaximumSpending = input.MaximumSpending;
@@ -540,7 +542,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.DeductSource = input.DeductSource;
         spendingSource.InterestRate = input.InterestRate;
         spendingSource.IsEnabled = input.IsEnabled;
-        spendingSource.ShowOnUI = input.ShowOnUI;
+        spendingSource.ShowOnUI = ResolveShowOnUiFromEnabledState(previousIsEnabled, input.IsEnabled, input.ShowOnUI);
 
         if (input.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
         {
@@ -678,6 +680,17 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         foreach (var item in items)
             target.Add(item);
+    }
+
+    private static bool ResolveShowOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedShowOnUi)
+    {
+        if (!nextIsEnabled)
+            return false;
+
+        if (previousIsEnabled == nextIsEnabled)
+            return requestedShowOnUi;
+
+        return true;
     }
 
     public readonly record struct SpendingSourceDetailResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
