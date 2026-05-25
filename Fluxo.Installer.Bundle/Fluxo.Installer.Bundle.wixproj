@@ -4,8 +4,8 @@
     <FluxoInstallerVersion Condition="'$(FluxoInstallerVersion)' == ''">1.0.4</FluxoInstallerVersion>
     <OutputName>fluxo-$(FluxoInstallerVersion)-Installer</OutputName>
     <AcceptEula>wix7</AcceptEula>
-    <ManagedBootstrapperExe>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\Fluxo.Installer.exe</ManagedBootstrapperExe>
-    <ManagedBootstrapperOutputDir>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\</ManagedBootstrapperOutputDir>
+    <ManagedBootstrapperExe>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\publish\Fluxo.Installer.exe</ManagedBootstrapperExe>
+    <ManagedBootstrapperOutputDir>$(MSBuildThisFileDirectory)..\Fluxo.Installer\bin\$(Configuration)\net10.0-windows\win-x64\publish\</ManagedBootstrapperOutputDir>
     <GeneratedBootstrapperPayloadsWxs>$(MSBuildProjectDirectory)\obj\$(Configuration)\GeneratedBootstrapperPayloads.wxs</GeneratedBootstrapperPayloadsWxs>
     <OfflineMsiPath>$(MSBuildThisFileDirectory)..\Fluxo.Installer.Msi\bin\$(Configuration)\en-US\Fluxo.Installer.msi</OfflineMsiPath>
     <DefineConstants>$(DefineConstants);FluxoInstallerVersion=$(FluxoInstallerVersion);ManagedBootstrapperExe=$(ManagedBootstrapperExe);ManagedBootstrapperOutputDir=$(ManagedBootstrapperOutputDir);OfflineMsiPath=$(OfflineMsiPath)</DefineConstants>
@@ -20,13 +20,13 @@
     <ProjectReference Include="..\Fluxo.Installer\Fluxo.Installer.csproj" />
     <ProjectReference Include="..\Fluxo.Installer.Msi\Fluxo.Installer.Msi.wixproj" />
   </ItemGroup>
-  <Target Name="BuildManagedBootstrapperForBundle" BeforeTargets="BeforeBuild">
+  <Target Name="PublishManagedBootstrapperForBundle" BeforeTargets="BeforeBuild">
     <MSBuild
       Projects="$(MSBuildThisFileDirectory)..\Fluxo.Installer\Fluxo.Installer.csproj"
-      Targets="Restore;Build"
-      Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true" />
+      Targets="Restore;Publish"
+      Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSelfContained=true;PublishSingleFile=false" />
   </Target>
-  <Target Name="GenerateManagedBootstrapperPayloads" BeforeTargets="BeforeBuild" DependsOnTargets="BuildManagedBootstrapperForBundle">
+  <Target Name="GenerateManagedBootstrapperPayloads" BeforeTargets="BeforeBuild" DependsOnTargets="PublishManagedBootstrapperForBundle">
     <!-- PayloadGroup Id="ManagedBootstrapperPayloads" -->
     <ItemGroup>
       <ManagedBootstrapperPayloadFiles Include="$(ManagedBootstrapperOutputDir)**\*" Exclude="$(ManagedBootstrapperExe)" />
