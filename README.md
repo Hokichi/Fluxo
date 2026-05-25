@@ -290,7 +290,9 @@ Initial Release
 - Included incomes in search
 
 ### v1.0.4:
-- Hotfix: Cleaned up redundant files created by build 1.0.3
-- The installer now supports runtime installation
-- UI improvements
-- Included incomes in search
+- Hotfix: Cleaned up redundant files created by build 1.0.3.
+- The installer now supports runtime installation.
+- Improvement in Quick Setup, Spending Source, and Dashboard for better user experience.
+- Incorrect behavior during Quick Setup (Spending Sources not found) has been addressed.
+- UI improvements.
+- Included incomes in search.
