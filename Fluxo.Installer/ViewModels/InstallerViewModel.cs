@@ -54,6 +54,8 @@ public partial class InstallerViewModel : ObservableObject
     private readonly Func<InstallerRequestedOperation, bool> requestTerminateRunningAppConfirmation;
     private readonly Action<string> launchInstalledApp;
     private readonly Action<string, string, bool> copyFile;
+    private readonly IDotNetRuntimeInstaller runtimeInstaller;
+    private readonly ILegacySelfContainedCleanupService legacyCleanupService;
     private readonly InstallerOperationMode operationMode;
     private readonly string bundleExecutablePath;
     private readonly bool hasConstructorCloseInstallerAction;
@@ -70,6 +72,8 @@ public partial class InstallerViewModel : ObservableObject
 
     public InstallerViewModel(
         IDotNetRuntimeDetector? dotNetRuntimeDetector = null,
+        IDotNetRuntimeInstaller? runtimeInstaller = null,
+        ILegacySelfContainedCleanupService? legacyCleanupService = null,
         Action<string>? setInstallFolderVariable = null,
         Action? requestDetect = null,
         Action? requestPlan = null,
@@ -97,7 +101,9 @@ public partial class InstallerViewModel : ObservableObject
         Action? closeInstallerAction = null,
         string? requestedInstallFolder = null)
     {
-        _ = dotNetRuntimeDetector;
+        this.runtimeInstaller = runtimeInstaller
+            ?? new DotNetRuntimeInstaller(dotNetRuntimeDetector ?? new DotNetRuntimeDetector());
+        this.legacyCleanupService = legacyCleanupService ?? new LegacySelfContainedCleanupService();
         this.setInstallFolderVariable = setInstallFolderVariable ?? (_ => { });
         this.requestDetect = requestDetect ?? (() => { });
         this.requestPlan = requestPlan ?? (() => { });
@@ -284,7 +290,7 @@ public partial class InstallerViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanInstall))]
-    private void Install()
+    private async Task Install()
     {
         if (IsMaintenanceMode || IsUninstallMode)
         {
@@ -320,6 +326,15 @@ public partial class InstallerViewModel : ObservableObject
         installFolderForCurrentRun = InstallFolder;
         installStarted = true;
         setInstallFolderVariable(GetInstallFolderForCurrentRun());
+
+        StatusMessage = "Checking .NET Desktop Runtime...";
+        var runtimeResult = await runtimeInstaller.EnsureInstalledAsync(CancellationToken.None).ConfigureAwait(true);
+        if (runtimeResult.Status is DotNetRuntimeInstallStatus.Failed or DotNetRuntimeInstallStatus.Cancelled)
+        {
+            HandlePostStartFailure($"Runtime installation failed: {runtimeResult.Message}");
+            return;
+        }
+
         StatusMessage = "Detecting installation state...";
         requestDetect();
     }
@@ -424,6 +439,23 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         State = InstallerState.Verifying;
+        StatusMessage = "Cleaning up...";
+        CleanUpAfterSuccessfulInstallOrRepair();
+    }
+
+    private void CleanUpAfterSuccessfulInstallOrRepair()
+    {
+        cleanUpChecklistStep.State = ChecklistStepState.Running;
+        var cleanupResult = legacyCleanupService.Cleanup(GetInstallFolderForCurrentRun());
+        runtimeInstaller.CleanupDownloadedInstaller();
+        if (!cleanupResult.Success)
+        {
+            cleanUpChecklistStep.State = ChecklistStepState.Failed;
+            TransitionToFailure($"Cleanup failed: {cleanupResult.Message}");
+            return;
+        }
+
+        cleanUpChecklistStep.State = ChecklistStepState.Success;
         StatusMessage = "Verifying installation...";
         VerifyInstallation();
     }
@@ -698,6 +730,7 @@ public partial class InstallerViewModel : ObservableObject
         SetRollbackOnlyChecklist();
         rollbackChecklistStep.State = ChecklistStepState.Running;
         StatusMessage = "Cancelling installation. Starting rollback...";
+        runtimeInstaller.RequestCancellation();
 
         var rollbackFailures = ExecuteRollbackAndCleanup();
         if (rollbackFailures.Count == 0)
@@ -763,6 +796,15 @@ public partial class InstallerViewModel : ObservableObject
             {
                 rollbackFailures.Add($"Rollback failed: {ex.Message}");
             }
+        }
+
+        try
+        {
+            runtimeInstaller.RollbackRuntimeInstalledByFluxoAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            rollbackFailures.Add($"Runtime rollback failed: {ex.Message}");
         }
 
         if (!ShouldDeleteInstallFolder())
@@ -1043,6 +1085,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         prerequisitesChecklistStep.State = ChecklistStepState.Success;
         installingChecklistStep.State = ChecklistStepState.Success;
+        cleanUpChecklistStep.State = ChecklistStepState.Running;
         if (!TryDeleteInstallFolderAfterUninstall(out var cleanupError)
             || !TryDeleteResidualStateAfterUninstall(out cleanupError))
         {
@@ -1050,6 +1093,18 @@ public partial class InstallerViewModel : ObservableObject
             Screen = InstallerScreen.Finished;
             State = InstallerState.FinishedFailed;
             StatusMessage = $"Uninstallation failed: {cleanupError}";
+            return;
+        }
+
+        var runtimeUninstallResult = runtimeInstaller.UninstallOwnedRuntimeAsync(CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+        if (runtimeUninstallResult.Status == DotNetRuntimeUninstallStatus.Failed)
+        {
+            cleanUpChecklistStep.State = ChecklistStepState.Failed;
+            Screen = InstallerScreen.Finished;
+            State = InstallerState.FinishedFailed;
+            StatusMessage = $"Uninstallation cleanup failed: {runtimeUninstallResult.Message}";
             return;
         }
 

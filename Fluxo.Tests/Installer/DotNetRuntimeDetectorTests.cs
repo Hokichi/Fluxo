@@ -45,14 +45,18 @@ public sealed class DotNetRuntimeDetectorTests
     }
 
     [Fact]
-    public void InstallCommand_Continues_When_MachineWideRuntimeMissing()
+    public async Task InstallCommand_Continues_When_MachineWideRuntimeMissing()
     {
         var detectCalls = 0;
         var vm = new InstallerViewModel(
             dotNetRuntimeDetector: new FixedRuntimeDetector(false),
+            runtimeInstaller: new DelegateRuntimeInstaller(
+                ensureInstalledAsync: _ => Task.FromResult(new DotNetRuntimeInstallResult(
+                    DotNetRuntimeInstallStatus.InstalledByFluxo,
+                    "installed"))),
             requestDetect: () => detectCalls++);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
 
         Assert.Equal(1, detectCalls);
         Assert.Equal(InstallerScreen.Progress, vm.Screen);
@@ -87,5 +91,31 @@ public sealed class DotNetRuntimeDetectorTests
     private sealed class FixedRuntimeDetector(bool isInstalled) : IDotNetRuntimeDetector
     {
         public bool IsRequiredRuntimeInstalled() => isInstalled;
+    }
+
+    private sealed class DelegateRuntimeInstaller(
+        Func<CancellationToken, Task<DotNetRuntimeInstallResult>>? ensureInstalledAsync = null)
+        : IDotNetRuntimeInstaller
+    {
+        public Task<DotNetRuntimeInstallResult> EnsureInstalledAsync(CancellationToken cancellationToken) =>
+            ensureInstalledAsync?.Invoke(cancellationToken)
+            ?? Task.FromResult(new DotNetRuntimeInstallResult(
+                DotNetRuntimeInstallStatus.AlreadyInstalled,
+                "already installed"));
+
+        public Task RollbackRuntimeInstalledByFluxoAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task<DotNetRuntimeUninstallResult> UninstallOwnedRuntimeAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(new DotNetRuntimeUninstallResult(
+                DotNetRuntimeUninstallStatus.Skipped,
+                "skipped"));
+
+        public void RequestCancellation()
+        {
+        }
+
+        public void CleanupDownloadedInstaller()
+        {
+        }
     }
 }

@@ -14,14 +14,14 @@ namespace Fluxo.Tests.Installer;
 public sealed class InstallerFlowStateTests
 {
     [Fact]
-    public void InstallCommand_TriggersDetect_AndMovesToInstalling()
+    public async Task InstallCommand_TriggersDetect_AndMovesToInstalling()
     {
         var detectCalls = 0;
         var vm = CreateViewModel(
             requestDetect: () => detectCalls++,
             fileExists: static _ => true);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
 
         Assert.Equal(InstallerState.Installing, vm.State);
         Assert.Equal("Detecting installation state...", vm.StatusMessage);
@@ -29,7 +29,7 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void InstallCommand_SetsInstallFolderBeforeDetect()
+    public async Task InstallCommand_SetsInstallFolderBeforeDetect()
     {
         var folderVariableValues = new List<string>();
         var vm = CreateViewModel(
@@ -38,10 +38,58 @@ public sealed class InstallerFlowStateTests
             fileExists: static _ => true);
         vm.InstallFolder = WindowsPathFixtures.AppsFluxoFolder;
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
 
         Assert.Single(folderVariableValues);
         Assert.Equal(WindowsPathFixtures.AppsFluxoFolder, folderVariableValues[0]);
+    }
+
+    [Fact]
+    public async Task InstallCommand_InstallsRuntimeInsideInstallingStep_BeforeDetect()
+    {
+        var events = new List<string>();
+        var vm = CreateViewModel(
+            runtimeInstaller: new DelegateRuntimeInstaller(
+                ensureInstalledAsync: _ =>
+                {
+                    events.Add("runtime");
+                    return Task.FromResult(new DotNetRuntimeInstallResult(
+                        DotNetRuntimeInstallStatus.InstalledByFluxo,
+                        "installed"));
+                }),
+            requestDetect: () => events.Add("detect"),
+            fileExists: static _ => true);
+
+        await vm.InstallCommand.ExecuteAsync(null);
+
+        Assert.Equal(["runtime", "detect"], events);
+        Assert.Equal(InstallerState.Installing, vm.State);
+        Assert.Equal("Detecting installation state...", vm.StatusMessage);
+    }
+
+    [Fact]
+    public async Task InstallCommand_RollsBackAppInstallation_WhenRuntimeInstallFails()
+    {
+        var rollbackCalls = 0;
+        var vm = CreateViewModel(
+            runtimeInstaller: new DelegateRuntimeInstaller(
+                ensureInstalledAsync: _ => Task.FromResult(new DotNetRuntimeInstallResult(
+                    DotNetRuntimeInstallStatus.Failed,
+                    "download failed"))),
+            requestRollback: () =>
+            {
+                rollbackCalls++;
+                return true;
+            },
+            requestDetect: static () => throw new InvalidOperationException("Detect should not run."),
+            fileExists: static _ => true);
+
+        await vm.InstallCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, rollbackCalls);
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(InstallerScreen.Finished, vm.Screen);
+        Assert.Equal("Runtime installation failed: download failed Rollback completed.", vm.StatusMessage);
     }
 
     [Fact]
@@ -64,7 +112,7 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void DetectComplete_Success_RequestsPlan_AndKeepsInstallingState()
+    public async Task DetectComplete_Success_RequestsPlan_AndKeepsInstallingState()
     {
         var detectCalls = 0;
         var planCalls = 0;
@@ -75,7 +123,7 @@ public sealed class InstallerFlowStateTests
             requestPlan: () => planCalls++,
             fileExists: static _ => true);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
         vm.OnDetectComplete(0);
 
         Assert.Equal(InstallerState.Installing, vm.State);
@@ -139,23 +187,34 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void CloseInstaller_DuringInstall_ConfirmCancellation_RunsRollback_AndShowsRollbackChecklistOnly()
+    public async Task CloseInstaller_DuringInstall_ConfirmCancellation_RunsRollback_AndShowsRollbackChecklistOnly()
     {
         var rollbackCalls = 0;
+        var runtimeCancellationCalls = 0;
+        var runtimeRollbackCalls = 0;
         var vm = CreateViewModel(
             requestRollback: () =>
             {
                 rollbackCalls++;
                 return true;
             },
+            runtimeInstaller: new DelegateRuntimeInstaller(
+                requestCancellation: () => runtimeCancellationCalls++,
+                rollbackRuntimeInstalledByFluxoAsync: _ =>
+                {
+                    runtimeRollbackCalls++;
+                    return Task.CompletedTask;
+                }),
             requestCancelConfirmation: () => true,
             requestDetect: static () => { },
             fileExists: static _ => true);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
         vm.CloseInstallerCommand.Execute(null);
 
         Assert.Equal(1, rollbackCalls);
+        Assert.Equal(1, runtimeCancellationCalls);
+        Assert.Equal(1, runtimeRollbackCalls);
         Assert.Equal(InstallerState.FinishedCancelled, vm.State);
         Assert.Equal(InstallerScreen.Finished, vm.Screen);
         Assert.Single(vm.ChecklistSteps);
@@ -165,7 +224,7 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void DetectComplete_Failure_AfterInstallStart_ContinuesToPlanning()
+    public async Task DetectComplete_Failure_AfterInstallStart_ContinuesToPlanning()
     {
         var planCalls = 0;
         var vm = CreateViewModel(
@@ -173,7 +232,7 @@ public sealed class InstallerFlowStateTests
             requestDetect: static () => { },
             fileExists: static _ => true);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
         vm.OnDetectComplete(1);
 
         Assert.Equal(1, planCalls);
@@ -212,7 +271,18 @@ public sealed class InstallerFlowStateTests
     public void ApplyComplete_Success_TransitionsToVerifying_ThenSuccess()
     {
         var observedStates = new List<InstallerState>();
-        var vm = CreateViewModel(fileExists: static _ => true);
+        var cleanupCalls = 0;
+        InstallerViewModel? vm = null;
+        vm = CreateViewModel(
+            legacyCleanupService: new DelegateLegacyCleanupService(_ =>
+            {
+                cleanupCalls++;
+                Assert.NotNull(vm);
+                Assert.Equal(InstallerState.Verifying, vm!.State);
+                Assert.Equal("Cleaning up...", vm.StatusMessage);
+                return new LegacyCleanupResult(true, "cleaned");
+            }),
+            fileExists: static _ => true);
         vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(InstallerViewModel.State))
@@ -224,9 +294,27 @@ public sealed class InstallerFlowStateTests
         vm.OnApplyComplete(0);
 
         Assert.Contains(InstallerState.Verifying, observedStates);
+        Assert.Equal(1, cleanupCalls);
         Assert.Equal(InstallerState.FinishedSuccess, vm.State);
         Assert.Equal("Installation complete.", vm.StatusMessage);
         Assert.Equal(0, vm.ExitCode);
+    }
+
+    [Fact]
+    public async Task ApplyComplete_CleanupFailure_TransitionsToFailed()
+    {
+        var vm = CreateViewModel(
+            requestRollback: static () => true,
+            requestDetect: static () => { },
+            legacyCleanupService: new DelegateLegacyCleanupService(
+                _ => new LegacyCleanupResult(false, "access denied")),
+            fileExists: static _ => true);
+
+        await vm.InstallCommand.ExecuteAsync(null);
+        vm.OnApplyComplete(0);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal("Cleanup failed: access denied Rollback completed.", vm.StatusMessage);
     }
 
     [Fact]
@@ -380,7 +468,7 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void Install_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeDetect()
+    public async Task Install_WhenFluxoRunningAndUserDeclinesTermination_BlocksBeforeDetect()
     {
         var detectCalls = 0;
         var vm = CreateViewModel(
@@ -389,7 +477,7 @@ public sealed class InstallerFlowStateTests
             requestTerminateRunningAppConfirmation: _ => false,
             fileExists: static _ => true);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
 
         Assert.Equal(InstallerState.FinishedFailed, vm.State);
         Assert.Equal(InstallerScreen.Finished, vm.Screen);
@@ -429,7 +517,7 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void Install_WhenFluxoRunning_RequestsInstallSpecificTerminationConfirmation()
+    public async Task Install_WhenFluxoRunning_RequestsInstallSpecificTerminationConfirmation()
     {
         InstallerRequestedOperation? requestedOperation = null;
         var vm = CreateViewModel(
@@ -441,7 +529,7 @@ public sealed class InstallerFlowStateTests
             },
             fileExists: static _ => true);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
 
         Assert.Equal(InstallerRequestedOperation.Install, requestedOperation);
     }
@@ -498,7 +586,7 @@ public sealed class InstallerFlowStateTests
     }
 
     [Fact]
-    public void Install_WhenTerminationFails_BlocksBeforeDetect()
+    public async Task Install_WhenTerminationFails_BlocksBeforeDetect()
     {
         var detectCalls = 0;
         var terminateCalls = 0;
@@ -513,7 +601,7 @@ public sealed class InstallerFlowStateTests
             },
             fileExists: static _ => true);
 
-        vm.InstallCommand.Execute(null);
+        await vm.InstallCommand.ExecuteAsync(null);
 
         Assert.Equal(InstallerState.FinishedFailed, vm.State);
         Assert.Equal(InstallerScreen.Finished, vm.Screen);
@@ -665,6 +753,7 @@ public sealed class InstallerFlowStateTests
         ProcessStartInfo? deferredCleanupStartInfo = null;
         string? writtenScriptPath = null;
         string? writtenScriptContents = null;
+        var runtimeUninstallCalls = 0;
         var installFolder = WindowsPathFixtures.ProgramFilesFluxoFolder;
         var localAppDataFolder = WindowsPathFixtures.LocalAppDataFluxoFolder;
         var staleFilePath = Path.Combine(installFolder, "fluxo.exe");
@@ -694,7 +783,15 @@ public sealed class InstallerFlowStateTests
             {
                 startProcessCalls++;
                 deferredCleanupStartInfo = startInfo;
-            });
+            },
+            runtimeInstaller: new DelegateRuntimeInstaller(
+                uninstallOwnedRuntimeAsync: _ =>
+                {
+                    runtimeUninstallCalls++;
+                    return Task.FromResult(new DotNetRuntimeUninstallResult(
+                        DotNetRuntimeUninstallStatus.Uninstalled,
+                        "removed"));
+                }));
 
         vm.Begin();
         vm.OnApplyComplete(0);
@@ -718,11 +815,32 @@ public sealed class InstallerFlowStateTests
         Assert.NotNull(writtenScriptContents);
         Assert.Contains("cd /d \"%TEMP%\"", writtenScriptContents, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("fluxo.Repairer.exe", writtenScriptContents, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(1, runtimeUninstallCalls);
         Assert.Equal(InstallerState.FinishedUninstalled, vm.State);
         Assert.Equal(InstallerScreen.Finished, vm.Screen);
         Assert.Equal("fluxo", vm.FinishedTitle);
         Assert.Equal("Thank you for letting fluxo help", vm.FinishedSubtitle);
         Assert.Equal("Uninstallation complete.", vm.StatusMessage);
+    }
+
+    [Fact]
+    public void ApplyComplete_Success_UninstallMode_Fails_WhenOwnedRuntimeUninstallFails()
+    {
+        var vm = CreateViewModel(
+            operationMode: InstallerOperationMode.Uninstall,
+            directoryExists: static _ => false,
+            runtimeInstaller: new DelegateRuntimeInstaller(
+                uninstallOwnedRuntimeAsync: _ => Task.FromResult(new DotNetRuntimeUninstallResult(
+                    DotNetRuntimeUninstallStatus.Failed,
+                    "uninstaller exited with code 123"))));
+
+        vm.Begin();
+        vm.OnApplyComplete(0);
+
+        Assert.Equal(InstallerState.FinishedFailed, vm.State);
+        Assert.Equal(
+            "Uninstallation cleanup failed: uninstaller exited with code 123",
+            vm.StatusMessage);
     }
 
     [Fact]
@@ -906,6 +1024,8 @@ public sealed class InstallerFlowStateTests
         Action? requestDetect = null,
         Action? requestPlan = null,
         Action? requestApply = null,
+        IDotNetRuntimeInstaller? runtimeInstaller = null,
+        ILegacySelfContainedCleanupService? legacyCleanupService = null,
         Func<string, bool>? fileExists = null,
         Func<bool>? requestRollback = null,
         Func<bool>? requestCancelConfirmation = null,
@@ -927,6 +1047,8 @@ public sealed class InstallerFlowStateTests
     {
         return new InstallerViewModel(
             dotNetRuntimeDetector: new FixedRuntimeDetector(true),
+            runtimeInstaller: runtimeInstaller,
+            legacyCleanupService: legacyCleanupService,
             setInstallFolderVariable: setInstallFolderVariable,
             requestDetect: requestDetect,
             requestPlan: requestPlan,
@@ -956,5 +1078,39 @@ public sealed class InstallerFlowStateTests
     private sealed class FixedRuntimeDetector(bool isInstalled) : IDotNetRuntimeDetector
     {
         public bool IsRequiredRuntimeInstalled() => isInstalled;
+    }
+
+    private sealed class DelegateRuntimeInstaller(
+        Func<CancellationToken, Task<DotNetRuntimeInstallResult>>? ensureInstalledAsync = null,
+        Func<CancellationToken, Task>? rollbackRuntimeInstalledByFluxoAsync = null,
+        Func<CancellationToken, Task<DotNetRuntimeUninstallResult>>? uninstallOwnedRuntimeAsync = null,
+        Action? requestCancellation = null,
+        Action? cleanupDownloadedInstaller = null)
+        : IDotNetRuntimeInstaller
+    {
+        public Task<DotNetRuntimeInstallResult> EnsureInstalledAsync(CancellationToken cancellationToken) =>
+            ensureInstalledAsync?.Invoke(cancellationToken)
+            ?? Task.FromResult(new DotNetRuntimeInstallResult(
+                DotNetRuntimeInstallStatus.AlreadyInstalled,
+                "already installed"));
+
+        public Task RollbackRuntimeInstalledByFluxoAsync(CancellationToken cancellationToken) =>
+            rollbackRuntimeInstalledByFluxoAsync?.Invoke(cancellationToken) ?? Task.CompletedTask;
+
+        public Task<DotNetRuntimeUninstallResult> UninstallOwnedRuntimeAsync(CancellationToken cancellationToken) =>
+            uninstallOwnedRuntimeAsync?.Invoke(cancellationToken)
+            ?? Task.FromResult(new DotNetRuntimeUninstallResult(
+                DotNetRuntimeUninstallStatus.Skipped,
+                "skipped"));
+
+        public void RequestCancellation() => requestCancellation?.Invoke();
+
+        public void CleanupDownloadedInstaller() => cleanupDownloadedInstaller?.Invoke();
+    }
+
+    private sealed class DelegateLegacyCleanupService(Func<string, LegacyCleanupResult> cleanup)
+        : ILegacySelfContainedCleanupService
+    {
+        public LegacyCleanupResult Cleanup(string installFolder) => cleanup(installFolder);
     }
 }
