@@ -364,7 +364,7 @@ MigrationBackup/
 .claude/
 .codex/
 .idea/
-docs/superpowers/
+docs/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
