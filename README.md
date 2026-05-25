@@ -288,6 +288,7 @@ Initial Release
 ### v1.0.3:
 - Hotfix: Installer not running when .NET 10 is not installed
 - Included incomes in search
+- Added a UI and features lock when there's insufficient funds.
 
 ### v1.0.4:
 - Hotfix: Cleaned up redundant files created by build 1.0.3.
@@ -295,4 +296,3 @@ Initial Release
 - Improvement in Quick Setup, Spending Source, and Dashboard for better user experience.
 - Incorrect behavior during Quick Setup (Spending Sources not found) has been addressed.
 - UI improvements.
-- Included incomes in search.
