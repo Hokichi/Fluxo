@@ -48,20 +48,5 @@
                     ClipToBounds="True" />
             </Grid>
         </Border>
-
-        <Button
-            x:Name="CloseButton"
-            Width="28"
-            Height="28"
-            Margin="0,12,12,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Background="Transparent"
-            BorderThickness="0"
-            Click="OnCloseClick"
-            Content="x"
-            FontFamily="{StaticResource Bold}"
-            FontSize="14"
-            Foreground="{StaticResource Brush.Text.Secondary}" />
     </Grid>
 </customControls:BasePopup>
