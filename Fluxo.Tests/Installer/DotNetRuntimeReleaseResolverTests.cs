@@ -27,9 +27,9 @@ public sealed class DotNetRuntimeReleaseResolverTests
               "windowsdesktop": {
                 "files": [
                   {
-                    "name": "windowsdesktop-runtime-10.0.7-win-x64.exe",
+                    "name": "windowsdesktop-runtime-win-x64.exe",
                     "rid": "win-x64",
-                    "url": "https://example.test/windowsdesktop-runtime-10.0.7-win-x64.exe",
+                    "url": "https://example.test/10.0.7/windowsdesktop-runtime-win-x64.exe",
                     "hash": "older"
                   }
                 ]
@@ -40,21 +40,21 @@ public sealed class DotNetRuntimeReleaseResolverTests
               "windowsdesktop": {
                 "files": [
                   {
-                    "name": "windowsdesktop-runtime-10.0.8-win-x64.exe",
+                    "name": "windowsdesktop-runtime-win-x64.exe",
                     "rid": "win-x64",
-                    "url": "https://example.test/windowsdesktop-runtime-10.0.8-win-x64.exe",
+                    "url": "https://example.test/10.0.8/windowsdesktop-runtime-win-x64.exe",
                     "hash": "abc123"
                   },
                   {
-                    "name": "windowsdesktop-runtime-10.0.8-win-x86.exe",
+                    "name": "windowsdesktop-runtime-win-x86.exe",
                     "rid": "win-x86",
-                    "url": "https://example.test/windowsdesktop-runtime-10.0.8-win-x86.exe",
+                    "url": "https://example.test/10.0.8/windowsdesktop-runtime-win-x86.exe",
                     "hash": "def456"
                   },
                   {
-                    "name": "windowsdesktop-runtime-10.0.8-win-x64.zip",
+                    "name": "windowsdesktop-runtime-win-x64.zip",
                     "rid": "win-x64",
-                    "url": "https://example.test/windowsdesktop-runtime-10.0.8-win-x64.zip",
+                    "url": "https://example.test/10.0.8/windowsdesktop-runtime-win-x64.zip",
                     "hash": "zip789"
                   }
                 ]
@@ -72,8 +72,8 @@ public sealed class DotNetRuntimeReleaseResolverTests
 
         Assert.Equal("10.0.8", result.Version);
         Assert.Equal("win-x64", result.Rid);
-        Assert.Equal("windowsdesktop-runtime-10.0.8-win-x64.exe", result.FileName);
-        Assert.Equal("https://example.test/windowsdesktop-runtime-10.0.8-win-x64.exe", result.Url);
+        Assert.Equal("windowsdesktop-runtime-win-x64.exe", result.FileName);
+        Assert.Equal("https://example.test/10.0.8/windowsdesktop-runtime-win-x64.exe", result.Url);
         Assert.Equal("abc123", result.Hash);
         Assert.Equal("https://example.test/10/releases.json", result.ReleasesJsonUrl);
     }
@@ -126,6 +126,93 @@ public sealed class DotNetRuntimeReleaseResolverTests
                 rid: "win-x64"));
 
         Assert.Contains("10.0", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ResolveReleasesJsonUrl_ThrowsDomainError_WhenReleaseIndexJsonMalformed()
+    {
+        const string indexJson = """{ "releases-index": [ """;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            DotNetRuntimeReleaseResolver.ResolveReleasesJsonUrl(indexJson, channelVersion: "10.0"));
+
+        Assert.Contains("release index JSON", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("invalid", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ResolveLatestWindowsDesktopRuntimeInstaller_ThrowsDomainError_WhenReleasesJsonMalformed()
+    {
+        const string indexJson = """
+        {
+          "releases-index": [
+            {
+              "channel-version": "10.0",
+              "latest-release": "10.0.8",
+              "releases.json": "https://example.test/10/releases.json"
+            }
+          ]
+        }
+        """;
+        const string releasesJson = """{ "releases": [ """;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            DotNetRuntimeReleaseResolver.ResolveLatestWindowsDesktopRuntimeInstaller(
+                indexJson,
+                releasesJson,
+                channelVersion: "10.0",
+                rid: "win-x64"));
+
+        Assert.Contains("releases JSON", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("invalid", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ResolveReleasesJsonUrl_ThrowsDomainError_WhenReleasesIndexIsNotArray()
+    {
+        const string indexJson = """{ "releases-index": {} }""";
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            DotNetRuntimeReleaseResolver.ResolveReleasesJsonUrl(indexJson, channelVersion: "10.0"));
+
+        Assert.Contains("releases-index", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("array", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ResolveLatestWindowsDesktopRuntimeInstaller_ThrowsDomainError_WhenWindowsDesktopFilesIsNotArray()
+    {
+        const string indexJson = """
+        {
+          "releases-index": [
+            {
+              "channel-version": "10.0",
+              "latest-release": "10.0.8",
+              "releases.json": "https://example.test/10/releases.json"
+            }
+          ]
+        }
+        """;
+        const string releasesJson = """
+        {
+          "releases": [
+            {
+              "release-version": "10.0.8",
+              "windowsdesktop": { "files": {} }
+            }
+          ]
+        }
+        """;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            DotNetRuntimeReleaseResolver.ResolveLatestWindowsDesktopRuntimeInstaller(
+                indexJson,
+                releasesJson,
+                channelVersion: "10.0",
+                rid: "win-x64"));
+
+        Assert.Contains("windowsdesktop files", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("array", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

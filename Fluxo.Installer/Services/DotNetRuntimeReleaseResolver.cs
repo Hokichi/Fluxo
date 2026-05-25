@@ -18,17 +18,41 @@ public static class DotNetRuntimeReleaseResolver
         string channelVersion = "10.0",
         string rid = "win-x64")
     {
-        using var indexDocument = JsonDocument.Parse(releasesIndexJson);
+        using var indexDocument = ParseJsonDocument(
+            releasesIndexJson,
+            "The .NET release index JSON is invalid.");
         var channel = FindChannel(indexDocument.RootElement, channelVersion);
-        var latestRelease = GetRequiredString(channel, "latest-release", $"The .NET {channelVersion} release index did not include latest-release.");
-        var releasesJsonUrl = GetRequiredString(channel, "releases.json", $"The .NET {channelVersion} release index did not include releases.json.");
+        var latestRelease = GetRequiredString(
+            channel,
+            "latest-release",
+            $"The .NET {channelVersion} release index latest-release must be a string.");
+        var releasesJsonUrl = GetRequiredString(
+            channel,
+            "releases.json",
+            $"The .NET {channelVersion} release index releases.json must be a string.");
 
-        using var releasesDocument = JsonDocument.Parse(releasesJson);
-        var releases = GetRequiredArray(releasesDocument.RootElement, "releases", $"The .NET {channelVersion} release metadata did not include releases.");
+        using var releasesDocument = ParseJsonDocument(
+            releasesJson,
+            $"The .NET {channelVersion} releases JSON is invalid.");
+        EnsureValueKind(
+            releasesDocument.RootElement,
+            JsonValueKind.Object,
+            $"The .NET {channelVersion} releases JSON root must be an object.");
+        var releases = GetRequiredArray(
+            releasesDocument.RootElement,
+            "releases",
+            $"The .NET {channelVersion} release metadata releases must be an array.");
         foreach (var release in releases.EnumerateArray())
         {
-            if (!release.TryGetProperty("release-version", out var releaseVersionElement)
-                || !string.Equals(releaseVersionElement.GetString(), latestRelease, StringComparison.OrdinalIgnoreCase))
+            EnsureValueKind(
+                release,
+                JsonValueKind.Object,
+                $"The .NET {channelVersion} release metadata entry must be an object.");
+            var releaseVersion = GetRequiredString(
+                release,
+                "release-version",
+                $"The .NET {channelVersion} release metadata release-version must be a string.");
+            if (!string.Equals(releaseVersion, latestRelease, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -36,15 +60,33 @@ public static class DotNetRuntimeReleaseResolver
             var windowsDesktop = GetRequiredObject(
                 release,
                 "windowsdesktop",
-                $"The .NET {channelVersion} release {latestRelease} did not include windowsdesktop metadata.");
+                $"The .NET {channelVersion} release {latestRelease} windowsdesktop metadata must be an object.");
             var files = GetRequiredArray(
                 windowsDesktop,
                 "files",
-                $"The .NET {channelVersion} release {latestRelease} did not include windowsdesktop files metadata.");
+                $"The .NET {channelVersion} release {latestRelease} windowsdesktop files metadata must be an array.");
             foreach (var file in files.EnumerateArray())
             {
-                var name = file.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty;
-                var fileRid = file.TryGetProperty("rid", out var ridElement) ? ridElement.GetString() ?? string.Empty : string.Empty;
+                EnsureValueKind(
+                    file,
+                    JsonValueKind.Object,
+                    $"The .NET {channelVersion} release {latestRelease} windowsdesktop file metadata entry must be an object.");
+                var name = GetRequiredString(
+                    file,
+                    "name",
+                    $"The .NET {channelVersion} release {latestRelease} windowsdesktop file name must be a string.");
+                var fileRid = GetRequiredString(
+                    file,
+                    "rid",
+                    $"The .NET {channelVersion} release {latestRelease} windowsdesktop file rid must be a string.");
+                var url = GetRequiredString(
+                    file,
+                    "url",
+                    $"Runtime installer URL must be a string for {name}.");
+                var hash = GetRequiredString(
+                    file,
+                    "hash",
+                    $"Runtime installer hash must be a string for {name}.");
                 if (!string.Equals(fileRid, rid, StringComparison.OrdinalIgnoreCase)
                     || !name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                 {
@@ -55,8 +97,8 @@ public static class DotNetRuntimeReleaseResolver
                     latestRelease,
                     fileRid,
                     name,
-                    GetRequiredString(file, "url", $"Runtime installer URL was missing for {name}."),
-                    GetRequiredString(file, "hash", $"Runtime installer hash was missing for {name}."),
+                    url,
+                    hash,
                     releasesJsonUrl);
             }
 
@@ -68,20 +110,36 @@ public static class DotNetRuntimeReleaseResolver
 
     public static string ResolveReleasesJsonUrl(string releasesIndexJson, string channelVersion = "10.0")
     {
-        using var indexDocument = JsonDocument.Parse(releasesIndexJson);
+        using var indexDocument = ParseJsonDocument(
+            releasesIndexJson,
+            "The .NET release index JSON is invalid.");
         return GetRequiredString(
             FindChannel(indexDocument.RootElement, channelVersion),
             "releases.json",
-            $"The .NET {channelVersion} release index did not include releases.json.");
+            $"The .NET {channelVersion} release index releases.json must be a string.");
     }
 
     private static JsonElement FindChannel(JsonElement root, string channelVersion)
     {
-        var releasesIndex = GetRequiredArray(root, "releases-index", "The .NET release index did not include releases-index.");
+        EnsureValueKind(
+            root,
+            JsonValueKind.Object,
+            "The .NET release index JSON root must be an object.");
+        var releasesIndex = GetRequiredArray(
+            root,
+            "releases-index",
+            "The .NET release index releases-index must be an array.");
         foreach (var channel in releasesIndex.EnumerateArray())
         {
-            if (channel.TryGetProperty("channel-version", out var channelVersionElement)
-                && string.Equals(channelVersionElement.GetString(), channelVersion, StringComparison.OrdinalIgnoreCase))
+            EnsureValueKind(
+                channel,
+                JsonValueKind.Object,
+                "The .NET release index channel entry must be an object.");
+            var currentChannelVersion = GetRequiredString(
+                channel,
+                "channel-version",
+                "The .NET release index channel-version must be a string.");
+            if (string.Equals(currentChannelVersion, channelVersion, StringComparison.OrdinalIgnoreCase))
             {
                 return channel;
             }
@@ -90,8 +148,22 @@ public static class DotNetRuntimeReleaseResolver
         throw new InvalidOperationException($"Could not find .NET release channel {channelVersion}.");
     }
 
+    private static JsonDocument ParseJsonDocument(string json, string errorMessage)
+    {
+        try
+        {
+            return JsonDocument.Parse(json);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(errorMessage, ex);
+        }
+    }
+
     private static JsonElement GetRequiredObject(JsonElement element, string propertyName, string errorMessage)
     {
+        EnsureValueKind(element, JsonValueKind.Object, errorMessage);
+
         if (element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.Object)
         {
             return property;
@@ -102,6 +174,8 @@ public static class DotNetRuntimeReleaseResolver
 
     private static JsonElement GetRequiredArray(JsonElement element, string propertyName, string errorMessage)
     {
+        EnsureValueKind(element, JsonValueKind.Object, errorMessage);
+
         if (element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.Array)
         {
             return property;
@@ -112,6 +186,8 @@ public static class DotNetRuntimeReleaseResolver
 
     private static string GetRequiredString(JsonElement element, string propertyName, string errorMessage)
     {
+        EnsureValueKind(element, JsonValueKind.Object, errorMessage);
+
         if (element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String)
         {
             var value = property.GetString();
@@ -122,5 +198,13 @@ public static class DotNetRuntimeReleaseResolver
         }
 
         throw new InvalidOperationException(errorMessage);
+    }
+
+    private static void EnsureValueKind(JsonElement element, JsonValueKind expectedKind, string errorMessage)
+    {
+        if (element.ValueKind != expectedKind)
+        {
+            throw new InvalidOperationException(errorMessage);
+        }
     }
 }
