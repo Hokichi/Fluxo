@@ -5,7 +5,7 @@
     <InstallerPlatform>x64</InstallerPlatform>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <OutputName>Fluxo.Installer</OutputName>
-    <FluxoMsiVersion Condition="'$(FluxoMsiVersion)' == ''">1.0.3</FluxoMsiVersion>
+    <FluxoMsiVersion Condition="'$(FluxoMsiVersion)' == ''">1.0.4</FluxoMsiVersion>
     <FluxoAppOutputDir>$(MSBuildThisFileDirectory)..\Fluxo\bin\$(Configuration)\net10.0-windows\win-x64\</FluxoAppOutputDir>
     <DefineConstants>$(DefineConstants);FluxoMsiVersion=$(FluxoMsiVersion);FluxoAppOutputDir=$(FluxoAppOutputDir)</DefineConstants>
   </PropertyGroup>

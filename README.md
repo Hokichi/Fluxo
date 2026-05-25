@@ -288,3 +288,9 @@ Initial Release
 ### v1.0.3:
 - Hotfix: Installer not running when .NET 10 is not installed
 - Included incomes in search
+
+### v1.0.4:
+- Hotfix: Cleaned up redundant files created by build 1.0.3
+- The installer now supports runtime installation
+- UI improvements
+- Included incomes in search
