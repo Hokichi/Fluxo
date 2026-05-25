@@ -873,7 +873,7 @@
                             <Run
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Add a spending amount to start using " />
+                                Text="Insufficient fund. Please include a spending source with sufficient funds to start using " />
                         </TextBlock>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
