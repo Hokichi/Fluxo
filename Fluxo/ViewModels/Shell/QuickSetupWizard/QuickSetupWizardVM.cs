@@ -128,7 +128,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
             return;
         }
 
-        if (CurrentStepIndex == 5 && !HasSpendingSources)
+        if (CurrentStepIndex == 6 && !HasSpendingSources)
         {
             CurrentStepIndex = 2;
             return;

@@ -6,6 +6,7 @@ using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Services.Persistence;
+using Fluxo.Tests.TestSupport;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.QuickSetupWizard;
 using NSubstitute;
@@ -80,6 +81,53 @@ public sealed class QuickSetupWizardVMTests
         Assert.Equal(QuickSetupWizardLoadingOutcome.Abandoned, outcome);
         Assert.Equal(5, attempts);
         Assert.Equal(1, prompts);
+    }
+
+    [Fact]
+    public void GoBack_FromPreferencesWithoutSpendingSources_ReturnsToSpendingSources()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.CurrentStepIndex = 6;
+        viewModel.HasSpendingSources = false;
+
+        viewModel.GoBack();
+
+        Assert.Equal(2, viewModel.CurrentStepIndex);
+    }
+
+    [Fact]
+    public void MiddlePageSidebar_HidesBudgetAllocationWhenThereAreNoSpendingSources()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Shell",
+            "Wizard",
+            "Pages",
+            "StartupWizardMiddlePage.xaml"));
+        var budgetAllocationIndex = xaml.IndexOf("Text=\"Budget Allocation\"", StringComparison.Ordinal);
+
+        Assert.NotEqual(-1, budgetAllocationIndex);
+        var budgetAllocationSidebarBlock = xaml[..budgetAllocationIndex];
+        budgetAllocationSidebarBlock = budgetAllocationSidebarBlock[
+            budgetAllocationSidebarBlock.LastIndexOf("<!--  Step 4  -->", StringComparison.Ordinal)..];
+        Assert.Contains(
+            "Visibility=\"{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}\"",
+            budgetAllocationSidebarBlock);
+    }
+
+    [Fact]
+    public void WizardNextClick_SkipsToPreferencesWhenThereAreNoSpendingSources()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Shell",
+            "Wizard",
+            "QuickSetupWizard.xaml.cs"));
+
+        Assert.Contains("_viewModel.NavigateToStep(6);", source);
+        Assert.Contains("Recurring transactions, Saving goals, and Budget allocation setup will be skipped.", source);
     }
 
     private static QuickSetupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)

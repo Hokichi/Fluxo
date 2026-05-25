@@ -214,7 +214,7 @@
                 </Border>
 
                 <!--  Step 4  -->
-                <Border>
+                <Border Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Border.Style>
                         <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
                             <Style.Triggers>

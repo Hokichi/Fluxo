@@ -869,12 +869,12 @@
                     Click="OnDashboardSpendingAmountGateActionClick"
                     Style="{StaticResource TextOnlyButtonStyle}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="18" TextAlignment="Center">
-                            <Run
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Insufficient fund. Please include a spending source with sufficient funds to start using " />
-                        </TextBlock>
+                        <TextBlock
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Insufficient fund. Please include a spending source with sufficient funds to start using "
+                            TextAlignment="Center" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
                                 FontFamily="{StaticResource Black}"

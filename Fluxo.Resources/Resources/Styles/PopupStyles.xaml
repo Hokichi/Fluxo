@@ -21,7 +21,10 @@
                             </Grid.RowDefinitions>
 
                             <!--  Header  -->
-                            <Grid x:Name="HeaderHost" Grid.Row="0" Margin="24,0">
+                            <Grid
+                                x:Name="HeaderHost"
+                                Grid.Row="0"
+                                Margin="24,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />

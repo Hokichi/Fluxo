@@ -111,7 +111,7 @@ public partial class QuickSetupWizard : BasePopup
         if (_viewModel.IsStep2Active && !_viewModel.HasSpendingSources)
         {
             var dialogResult = FluxoMessageBox.Show(this,
-                "A spending source is required to calculate and if there are no available sources, Fixed expenses and Saving goals setup will be skipped. Do you want to continue without adding a source?",
+                "A spending source is required to calculate budgets and linked transactions. If there are no available sources, Recurring transactions, Saving goals, and Budget allocation setup will be skipped. Do you want to continue without adding a source?",
                 "Startup Wizard",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -120,7 +120,7 @@ public partial class QuickSetupWizard : BasePopup
             {
                 await AnimateStepTransitionAsync(() =>
                 {
-                    _viewModel.NavigateToStep(5);
+                    _viewModel.NavigateToStep(6);
                 });
                 return;
             }
