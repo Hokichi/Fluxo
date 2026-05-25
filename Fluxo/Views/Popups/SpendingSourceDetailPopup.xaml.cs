@@ -15,8 +15,6 @@ public partial class SpendingSourceDetailPopup : BasePopup
 {
     private readonly IDialogService _dialogService;
     private readonly SpendingSourceDetailVM _viewModel;
-    private bool _allowClose;
-    private bool _isHandlingCloseRequest;
     private bool _reopenSourcesOnClose;
 
     public SpendingSourceDetailPopup(SpendingSourceDetailVM viewModel, IDialogService dialogService)
@@ -25,7 +23,6 @@ public partial class SpendingSourceDetailPopup : BasePopup
         _dialogService = dialogService;
         _viewModel = viewModel;
         DataContext = viewModel;
-        Closing += OnPopupClosing;
         Closed += OnPopupClosed;
         Loaded += OnLoadedAsync;
     }
@@ -36,7 +33,6 @@ public partial class SpendingSourceDetailPopup : BasePopup
         {
             FluxoMessageBox.Show(this, "This spending source could not be loaded.", "Income Detail",
                 MessageBoxButton.OK, MessageBoxImage.Information);
-            _allowClose = true;
             _ = Dispatcher.BeginInvoke(new System.Action(Close));
             return;
         }
@@ -57,59 +53,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
         _ = _viewModel.LoadAsync();
     }
 
-    private void OnHeaderNameTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount < 2 || _viewModel.IsEditing)
-            return;
 
-        BeginInlineHeaderEditing(NameTextBox);
-        e.Handled = true;
-    }
-
-    private void OnHeaderAmountTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount < 2 || _viewModel.IsEditing)
-            return;
-
-        BeginInlineHeaderEditing(PrimaryAmountTextBox);
-        e.Handled = true;
-    }
-
-    private void OnCreditSpentTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount < 2 || _viewModel.IsEditing)
-            return;
-
-        BeginInlineHeaderEditing(CreditSpentAmountTextBox);
-        e.Handled = true;
-    }
-
-    private void OnCreditLimitTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount < 2 || _viewModel.IsEditing)
-            return;
-
-        BeginInlineHeaderEditing(CreditLimitTextBox);
-        e.Handled = true;
-    }
-
-    private void OnBnplSpentTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount < 2 || _viewModel.IsEditing)
-            return;
-
-        BeginInlineHeaderEditing(BnplSpentAmountTextBox);
-        e.Handled = true;
-    }
-
-    private void OnSavingApyTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount < 2 || _viewModel.IsEditing)
-            return;
-
-        BeginInlineHeaderEditing(SavingApyTextBox);
-        e.Handled = true;
-    }
 
     private async void OnDisableButtonClick(object sender, RoutedEventArgs e)
     {
@@ -177,40 +121,11 @@ public partial class SpendingSourceDetailPopup : BasePopup
 
         if (result.ShouldClose)
         {
-            _allowClose = true;
             _ = Dispatcher.BeginInvoke(new System.Action(Close));
         }
     }
 
-    private async void OnPopupClosing(object? sender, CancelEventArgs e)
-    {
-        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasValidChangesToPersistOnClose())
-            return;
 
-        e.Cancel = true;
-        _isHandlingCloseRequest = true;
-
-        try
-        {
-            if (FluxoMessageBox.Show(this, "Save your changes before closing?", "Income Detail",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-            {
-                var result = await _viewModel.SaveAsync();
-                if (!result.IsSuccess)
-                {
-                    ShowValidationMessage(result.ErrorMessage);
-                    return;
-                }
-            }
-
-            _allowClose = true;
-            _ = Dispatcher.BeginInvoke(new System.Action(Close));
-        }
-        finally
-        {
-            _isHandlingCloseRequest = false;
-        }
-    }
 
     private void ShowValidationMessage(string? message)
     {
@@ -227,15 +142,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
         ownerWindow.Dispatcher.BeginInvoke(new Action(ownerWindow.OpenSpendingSourcesListPopup));
     }
 
-    private void BeginInlineHeaderEditing(TextBox targetTextBox)
-    {
-        if (!_viewModel.IsEditing)
-            _viewModel.BeginEditing();
 
-        targetTextBox.Focus();
-        targetTextBox.CaretIndex = targetTextBox.Text?.Length ?? 0;
-        targetTextBox.SelectionLength = 0;
-    }
 
     private void OnMonthlyDueDatePreviewKeyDown(object sender, KeyEventArgs e)
     {

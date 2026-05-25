@@ -1,7 +1,10 @@
 using System.Globalization;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Helpers;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
@@ -308,6 +311,33 @@ public sealed class AddSpendingSourceVMTests
         Assert.Empty(sut.GetErrors(nameof(AddSpendingSourceVM.NameText)));
         Assert.Equal(string.Empty, sut.NameValidationHint);
         Assert.False(sut.CanSave);
+    }
+
+    [Fact]
+    public async Task ValidateNameField_WhenSourceNameAlreadyExists_ShowsExistingNameHint()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<SpendingSource>>(
+            [
+                new SpendingSource
+                {
+                    Id = 1,
+                    Name = "Checking",
+                    SpendingSourceType = SpendingSourceType.Checking,
+                    IsEnabled = true
+                }
+            ]));
+        var sut = new AddSpendingSourceVM(
+            mainViewModel: null!,
+            appData: appData);
+        await sut.LoadDeductSourcesAsync();
+        sut.NameText = "checking";
+
+        sut.ValidateNameField();
+
+        Assert.True(sut.HasErrors);
+        Assert.Equal("Existing Name", sut.NameValidationHint);
     }
 
     [Fact]

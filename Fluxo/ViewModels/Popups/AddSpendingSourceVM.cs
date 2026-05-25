@@ -901,6 +901,9 @@ public partial class AddSpendingSourceVM : ObservableValidator
         if (message.Contains("exceed", StringComparison.OrdinalIgnoreCase))
             return "Too Long";
 
+        if (message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+            return "Existing Name";
+
         return "Invalid Name";
     }
 

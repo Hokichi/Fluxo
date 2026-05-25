@@ -295,7 +295,7 @@ public partial class App : Application
         return true;
     }
 
-    private static bool TryCloseOwnedWindows(Window ownerWindow)
+    internal static bool TryCloseOwnedWindows(Window ownerWindow)
     {
         var ownedWindows = ownerWindow.OwnedWindows
             .Cast<Window>()

@@ -194,11 +194,9 @@
                         Foreground="{StaticResource Brush.Text.Muted}"
                         Text="{Binding SpendingSourceType}" />
                     <TextBlock
-                        Cursor="IBeam"
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Text.Primary}"
-                        MouseLeftButtonDown="OnHeaderNameTextMouseLeftButtonDown"
                         Text="{Binding NameText}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                     <TextBox
@@ -221,11 +219,9 @@
                     <TextBlock
                         Margin="0,6,0,0"
                         HorizontalAlignment="Right"
-                        Cursor="IBeam"
                         FontFamily="{StaticResource Bold}"
                         FontSize="26"
                         Foreground="{StaticResource Brush.Text.Primary}"
-                        MouseLeftButtonDown="OnHeaderAmountTextMouseLeftButtonDown"
                         ToolTip="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                         <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
@@ -309,10 +305,8 @@
                             <TextBlock Style="{StaticResource LeftSideLabelStyle}" Text="Spent" />
                             <TextBlock
                                 Grid.Column="1"
-                                Cursor="IBeam"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                MouseLeftButtonDown="OnCreditSpentTextMouseLeftButtonDown"
                                 ToolTip="{Binding SpentAmountText, Converter={StaticResource MoneyFullDisplayConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
@@ -332,10 +326,8 @@
                             <TextBlock Style="{StaticResource LeftSideLabelStyle}" Text="Limit" />
                             <TextBlock
                                 Grid.Column="1"
-                                Cursor="IBeam"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                MouseLeftButtonDown="OnCreditLimitTextMouseLeftButtonDown"
                                 ToolTip="{Binding AccountLimitText, Converter={StaticResource MoneyFullDisplayConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="{Binding AccountLimitText, Converter={StaticResource MoneyDisplayConverter}}" />
@@ -407,10 +399,8 @@
                             <TextBlock Style="{StaticResource LeftSideLabelStyle}" Text="Spend" />
                             <TextBlock
                                 Grid.Column="1"
-                                Cursor="IBeam"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                MouseLeftButtonDown="OnBnplSpentTextMouseLeftButtonDown"
                                 ToolTip="{Binding SpentAmountText, Converter={StaticResource MoneyFullDisplayConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
                                 <Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
@@ -496,10 +486,8 @@
                             <TextBlock Style="{StaticResource LeftSideLabelStyle}" Text="APY" />
                             <TextBlock
                                 Grid.Column="1"
-                                Cursor="IBeam"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                MouseLeftButtonDown="OnSavingApyTextMouseLeftButtonDown"
                                 Text="{Binding ApyText, StringFormat={}{0}%}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                             <customControls:MoneyTextBox

@@ -236,6 +236,12 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (!App.TryCloseOwnedWindows(this))
+        {
+            e.Cancel = true;
+            return;
+        }
+
         e.Cancel = true;
 
         try

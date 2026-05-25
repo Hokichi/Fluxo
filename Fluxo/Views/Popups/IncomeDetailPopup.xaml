@@ -106,7 +106,6 @@
                         FontSize="13"
                         Foreground="{DynamicResource Brush.Text.Primary}"
                         IsReadOnly="True"
-                        TextChanged="OnNoteTextChanged"
                         VerticalScrollBarVisibility="Auto" />
                 </Border>
             </StackPanel>

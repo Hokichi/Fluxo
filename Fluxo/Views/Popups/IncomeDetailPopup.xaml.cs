@@ -1,6 +1,4 @@
 using System;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using Fluxo.ViewModels.Popups;
@@ -11,7 +9,6 @@ namespace Fluxo.Views.Popups;
 public partial class IncomeDetailPopup : BasePopup
 {
     private readonly IncomeDetailVM _viewModel;
-    private bool _isSyncingNoteDocument;
 
     public IncomeDetailPopup(IncomeDetailVM viewModel)
     {
@@ -50,16 +47,6 @@ public partial class IncomeDetailPopup : BasePopup
         base.OnPreviewKeyDown(e);
     }
 
-    private void OnNoteTextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_isSyncingNoteDocument)
-            return;
-
-        _viewModel.NoteText = new TextRange(NoteRichTextBox.Document.ContentStart, NoteRichTextBox.Document.ContentEnd)
-            .Text
-            .Trim();
-    }
-
     private void OpenEditorPopupAndClose()
     {
         var ownerWindow = Owner as MainWindow;
@@ -73,16 +60,7 @@ public partial class IncomeDetailPopup : BasePopup
 
     private void SyncNoteDocumentFromViewModel()
     {
-        _isSyncingNoteDocument = true;
-
-        try
-        {
-            var noteText = _viewModel.NoteText ?? string.Empty;
-            new TextRange(NoteRichTextBox.Document.ContentStart, NoteRichTextBox.Document.ContentEnd).Text = noteText;
-        }
-        finally
-        {
-            _isSyncingNoteDocument = false;
-        }
+        var noteText = _viewModel.NoteText ?? string.Empty;
+        new TextRange(NoteRichTextBox.Document.ContentStart, NoteRichTextBox.Document.ContentEnd).Text = noteText;
     }
 }
