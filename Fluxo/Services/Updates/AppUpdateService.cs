@@ -8,6 +8,8 @@ namespace Fluxo.Services.Updates;
 public sealed partial class AppUpdateService : IAppUpdateService
 {
     private const string LatestReleaseUrl = "https://api.github.com/repos/Hokichi/Fluxo/releases/latest";
+    private const int InstallerDownloadBufferSize = 10_485_760;
+    private const double ProgressReportPercentageStep = 1d;
     private const string ConnectionErrorMessage =
         "Unable to check for updates. Check your internet connection and try again.";
 
@@ -111,9 +113,14 @@ public sealed partial class AppUpdateService : IAppUpdateService
             await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
             await using var destination = new FileStream(
                 destinationPath,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.None);
+                new FileStreamOptions
+                {
+                    Mode = FileMode.Create,
+                    Access = FileAccess.Write,
+                    Share = FileShare.None,
+                    BufferSize = InstallerDownloadBufferSize,
+                    Options = FileOptions.Asynchronous | FileOptions.SequentialScan
+                });
             await CopyToFileWithProgressAsync(source, destination, response.Content.Headers.ContentLength, progress, cancellationToken);
         }
         catch
@@ -218,8 +225,9 @@ public sealed partial class AppUpdateService : IAppUpdateService
         IProgress<double>? progress,
         CancellationToken cancellationToken)
     {
-        var buffer = new byte[81920];
+        var buffer = new byte[InstallerDownloadBufferSize];
         long totalBytesRead = 0;
+        double lastReportedPercentage = 0d;
         progress?.Report(0);
 
         while (true)
@@ -235,11 +243,19 @@ public sealed partial class AppUpdateService : IAppUpdateService
             if (totalBytes > 0)
             {
                 var percentage = Math.Clamp(totalBytesRead * 100d / totalBytes, 0d, 100d);
-                progress?.Report(percentage);
+                if (percentage < 100d
+                    && percentage - lastReportedPercentage >= ProgressReportPercentageStep)
+                {
+                    progress?.Report(percentage);
+                    lastReportedPercentage = percentage;
+                }
             }
         }
 
-        progress?.Report(100);
+        if (lastReportedPercentage < 100d)
+        {
+            progress?.Report(100);
+        }
     }
 
     [GeneratedRegex(@"^fluxo-.+-Installer\.exe$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
