@@ -56,7 +56,21 @@ xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
                             Margin="10,0,0,0"
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
-                            <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Border>
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource StateIconBadgeStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsHidden}" Value="True" />
+                                                    <Condition Binding="{Binding IsEnabled}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <components:Icon Margin="6" Path="{StaticResource EyeOff}" Color="{StaticResource Brush.Warning}" />
                             </Border>
                             <Border Style="{StaticResource StateIconBadgeStyle}" Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
@@ -257,7 +271,3 @@ xmlns:behaviors="clr-namespace:Fluxo.Views.Behaviors"
         </Grid>
     </Border>
 </UserControl>
-
-
-
-
