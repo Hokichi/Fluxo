@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -22,10 +23,24 @@ public partial class SettingsSourcesTab : UserControl
         if (_viewModel is null || !TryParseBatchAction(sender, out var action))
             return;
 
-        if (action == SettingsBatchAction.Delete &&
-            FluxoMessageBox.Show(Window.GetWindow(this), "Delete the selected items?", "Settings", MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
-            return;
+        if (action == SettingsBatchAction.Delete)
+        {
+            var selectedItems = _viewModel.SpendingSources.Where(item => item.IsChecked).ToList();
+            if (selectedItems.Count == 1)
+            {
+                var selectedItem = selectedItems[0];
+                var confirmationMessage =
+                    await _viewModel.BuildDeleteConfirmationMessageAsync(selectedItem.Id, selectedItem.Name);
+                if (FluxoMessageBox.Show(Window.GetWindow(this), confirmationMessage, "Settings", MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    return;
+            }
+            else if (FluxoMessageBox.Show(Window.GetWindow(this), "Delete the selected items?", "Settings",
+                         MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+        }
 
         if (_viewModel.ShouldWarnBeforeApplyingToAll(action) &&
             FluxoMessageBox.Show(Window.GetWindow(this),
@@ -74,10 +89,13 @@ public partial class SettingsSourcesTab : UserControl
             !TryParseBatchAction(sender, out var action))
             return;
 
-        if (action == SettingsBatchAction.Delete &&
-            FluxoMessageBox.Show(Window.GetWindow(this), $"Delete \"{sourceItem.Name}\"?", "Settings", MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
-            return;
+        if (action == SettingsBatchAction.Delete)
+        {
+            var confirmationMessage = await _viewModel.BuildDeleteConfirmationMessageAsync(sourceItem.Id, sourceItem.Name);
+            if (FluxoMessageBox.Show(Window.GetWindow(this), confirmationMessage, "Settings", MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+        }
 
         var result = await _viewModel.ExecuteItemActionAsync(sourceItem.Id, action);
         ShowResult(result);

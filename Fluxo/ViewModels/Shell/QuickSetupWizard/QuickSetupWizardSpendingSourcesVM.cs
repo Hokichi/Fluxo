@@ -155,6 +155,22 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         return Task.CompletedTask;
     }
 
+    public string BuildDeleteConfirmationMessage(int id)
+    {
+        var sourceName = ResolveSourceName(id);
+        var functioningSourceIds = _draftSources.Values
+            .Where(source => SpendingSourceDeletionConfirmationHelper.IsFunctioning(
+                source.SpendingSourceType,
+                source.IsEnabled,
+                source.Balance,
+                source.AccountLimit))
+            .Select(source => source.Id)
+            .ToList();
+
+        var isOnlyFunctioningSource = functioningSourceIds.Count == 1 && functioningSourceIds[0] == id;
+        return SpendingSourceDeletionConfirmationHelper.BuildDeleteConfirmationMessage(sourceName, isOnlyFunctioningSource);
+    }
+
     public async Task RefreshAsync()
     {
         if (!_isLoaded)
@@ -228,10 +244,25 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
             appData.UpdateSpendingSource(persisted);
         }
 
+        var allExpenseLogs = await appData.GetExpenseLogsAsync();
+        var allIncomeLogs = await appData.GetIncomeLogsAsync();
+
         foreach (var removedId in _removedPersistedIds)
         {
             if (existingSources.TryGetValue(removedId, out var existing))
+            {
+                var relatedExpenseLogs = allExpenseLogs
+                    .Where(log => log.SpendingSourceId == removedId);
+                foreach (var expenseLog in relatedExpenseLogs)
+                    appData.RemoveExpenseLog(expenseLog);
+
+                var relatedIncomeLogs = allIncomeLogs
+                    .Where(log => log.SpendingSourceId == removedId);
+                foreach (var incomeLog in relatedIncomeLogs)
+                    appData.RemoveIncomeLog(incomeLog);
+
                 appData.RemoveSpendingSource(existing);
+            }
         }
 
         _lastPersistedIdMap = new Dictionary<int, int>(idMap);

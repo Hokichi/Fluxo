@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
 
@@ -15,7 +16,7 @@ public partial class MessageBoxPopup : BasePopup
         InitializeComponent();
 
         PopupTitle = string.IsNullOrWhiteSpace(title) ? "Message" : title;
-        MessageTextBlock.Text = message;
+        SetFormattedMessage(message);
 
         ConfigureButtons(buttons);
         ConfigureIcon(icon);
@@ -134,5 +135,40 @@ public partial class MessageBoxPopup : BasePopup
         {
             Opacity = 0.16
         };
+    }
+
+    private void SetFormattedMessage(string? message)
+    {
+        MessageTextBlock.Inlines.Clear();
+
+        if (string.IsNullOrEmpty(message))
+            return;
+
+        var boldFont = TryFindResource("Bold") as FontFamily ?? MessageTextBlock.FontFamily;
+        var startIndex = 0;
+
+        while (startIndex < message.Length)
+        {
+            var markerStart = message.IndexOf("**", startIndex, StringComparison.Ordinal);
+            if (markerStart < 0)
+            {
+                MessageTextBlock.Inlines.Add(new Run(message[startIndex..]));
+                break;
+            }
+
+            if (markerStart > startIndex)
+                MessageTextBlock.Inlines.Add(new Run(message[startIndex..markerStart]));
+
+            var markerEnd = message.IndexOf("**", markerStart + 2, StringComparison.Ordinal);
+            if (markerEnd < 0)
+            {
+                MessageTextBlock.Inlines.Add(new Run(message[markerStart..]));
+                break;
+            }
+
+            var boldText = message.Substring(markerStart + 2, markerEnd - (markerStart + 2));
+            MessageTextBlock.Inlines.Add(new Run(boldText) { FontFamily = boldFont });
+            startIndex = markerEnd + 2;
+        }
     }
 }

@@ -4,12 +4,14 @@ using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -93,6 +95,18 @@ public partial class SettingsSourcesTabVM : ObservableObject
         SelectSingleItem(spendingSourceId);
     }
 
+    public Task<string> BuildDeleteConfirmationMessageAsync(
+        int spendingSourceId,
+        string? fallbackSourceName = null,
+        CancellationToken cancellationToken = default)
+    {
+        return SpendingSourceDeletionConfirmationHelper.BuildDeleteConfirmationMessageAsync(
+            _appData,
+            spendingSourceId,
+            fallbackSourceName,
+            cancellationToken);
+    }
+
     public void ClearSelections()
     {
         SetSelections(false);
@@ -133,10 +147,13 @@ public partial class SettingsSourcesTabVM : ObservableObject
             {
                 case SettingsBatchAction.Delete:
                     var allExpenseLogs = await _appData.GetExpenseLogsAsync();
-                    var activeExpenseSourceIds = allExpenseLogs.Where(log => !log.IsForDeletion)
-                        .Select(log => log.SpendingSourceId).ToHashSet();
+                    var expenseLogsBySourceId = allExpenseLogs
+                        .GroupBy(log => log.SpendingSourceId)
+                        .ToDictionary(group => group.Key, group => (IReadOnlyList<ExpenseLog>)group.ToList());
                     var allIncomeLogs = await _appData.GetIncomeLogsAsync();
-                    var incomeSourceIds = allIncomeLogs.Select(log => log.SpendingSourceId).ToHashSet();
+                    var incomeLogsBySourceId = allIncomeLogs
+                        .GroupBy(log => log.SpendingSourceId)
+                        .ToDictionary(group => group.Key, group => (IReadOnlyList<IncomeLog>)group.ToList());
 
                     foreach (var selectedId in selectedIds)
                     {
@@ -144,9 +161,13 @@ public partial class SettingsSourcesTabVM : ObservableObject
                         if (spendingSource is null)
                             continue;
 
-                        if (activeExpenseSourceIds.Contains(selectedId) || incomeSourceIds.Contains(selectedId))
-                            return SettingsOperationResult.Failure(
-                                $"{spendingSource.Name} still has activity, so it can't be deleted yet.");
+                        if (expenseLogsBySourceId.TryGetValue(selectedId, out var expenseLogs))
+                            foreach (var expenseLog in expenseLogs)
+                                _appData.RemoveExpenseLog(expenseLog);
+
+                        if (incomeLogsBySourceId.TryGetValue(selectedId, out var incomeLogs))
+                            foreach (var incomeLog in incomeLogs)
+                                _appData.RemoveIncomeLog(incomeLog);
 
                         var snapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
                         _appData.RemoveSpendingSource(spendingSource);

@@ -87,6 +87,36 @@ public sealed class SpendingSourceDetailVMTests
         Assert.False(await sut.ShouldConfirmDisablingOnlyEnabledSourceAsync());
     }
 
+    [Fact]
+    public async Task BuildDeleteConfirmationMessageAsync_WhenOnlyFunctioningSource_ReturnsLockWarningMessage()
+    {
+        var source = CreateSource(1, "Main", SpendingSourceType.Checking, balance: 200m);
+        var nonFunctioning = CreateSource(2, "Zero", SpendingSourceType.Cash, balance: 0m);
+        var appData = CreateAppData([source, nonFunctioning], [], []);
+        var sut = new SpendingSourceDetailVM(null!, source.Id, appData);
+
+        await sut.LoadAsync();
+        var message = await sut.BuildDeleteConfirmationMessageAsync();
+
+        Assert.Equal(
+            "Main is the only available source. Deleting it will lock the application. Proceed to delete Main and all of its data?\n\n**THIS ACTION CANNOT BE UNDONE**",
+            message);
+    }
+
+    [Fact]
+    public async Task BuildDeleteConfirmationMessageAsync_WhenNotOnlyFunctioningSource_ReturnsStandardMessage()
+    {
+        var source = CreateSource(1, "Main", SpendingSourceType.Checking, balance: 200m);
+        var another = CreateSource(2, "Backup", SpendingSourceType.Cash, balance: 100m);
+        var appData = CreateAppData([source, another], [], []);
+        var sut = new SpendingSourceDetailVM(null!, source.Id, appData);
+
+        await sut.LoadAsync();
+        var message = await sut.BuildDeleteConfirmationMessageAsync();
+
+        Assert.Equal("Delete Main and all of its data?\n\n**THIS ACTION CANNOT BE UNDONE**", message);
+    }
+
     private static IAppDataService CreateAppData(
         IReadOnlyList<SpendingSource> sources,
         IReadOnlyList<ExpenseLog> expenseLogs,
@@ -109,14 +139,15 @@ public sealed class SpendingSourceDetailVMTests
         int id,
         string name,
         SpendingSourceType type,
-        bool isEnabled = true)
+        bool isEnabled = true,
+        decimal balance = 100m)
     {
         return new SpendingSource
         {
             Id = id,
             Name = name,
             SpendingSourceType = type,
-            Balance = 100m,
+            Balance = balance,
             IsEnabled = isEnabled,
             ShowOnUI = true
         };

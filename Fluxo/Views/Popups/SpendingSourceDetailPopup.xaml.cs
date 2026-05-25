@@ -163,7 +163,8 @@ public partial class SpendingSourceDetailPopup : BasePopup
 
     private async void OnDeleteButtonClick(object sender, RoutedEventArgs e)
     {
-        if (FluxoMessageBox.Show(this, "Delete this spending source?", "Income Detail", MessageBoxButton.YesNo,
+        var confirmationMessage = await _viewModel.BuildDeleteConfirmationMessageAsync();
+        if (FluxoMessageBox.Show(this, confirmationMessage, "Income Detail", MessageBoxButton.YesNo,
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 

@@ -18,6 +18,7 @@ using Fluxo.Services.History;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
@@ -1454,14 +1455,23 @@ public partial class MainWindow : Window, IPopupHost
     {
         ArgumentNullException.ThrowIfNull(spendingSource);
 
-        if (requireDeleteConfirmation &&
-            _dialogService.ShowWarning($"Delete \"{spendingSource.Name}\"?", "Settings", this, MessageBoxButton.YesNo) !=
-            MessageBoxResult.Yes)
-            return;
-
         try
         {
             using var scope = _serviceProvider.CreateScope();
+            var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+
+            if (requireDeleteConfirmation)
+            {
+                var confirmationMessage = await SpendingSourceDeletionConfirmationHelper.BuildDeleteConfirmationMessageAsync(
+                    appData,
+                    spendingSource.Id,
+                    spendingSource.Name);
+
+                if (_dialogService.ShowWarning(confirmationMessage, "Settings", this, MessageBoxButton.YesNo) !=
+                    MessageBoxResult.Yes)
+                    return;
+            }
+
             var settingsViewModel = scope.ServiceProvider.GetRequiredService<SettingsVM>();
             await settingsViewModel.LoadAsync();
 

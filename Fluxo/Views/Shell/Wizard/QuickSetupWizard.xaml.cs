@@ -222,8 +222,9 @@ public partial class QuickSetupWizard : BasePopup
         if (sender is not Button { Tag: int id })
             return;
 
+        var confirmationMessage = _viewModel.MiddlePage.SpendingSources.BuildDeleteConfirmationMessage(id);
         var result = FluxoMessageBox.Show(this,
-            "Are you sure you want to delete this spending source?",
+            confirmationMessage,
             "Delete Spending Source", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)

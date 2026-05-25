@@ -255,6 +255,15 @@ public partial class SpendingSourceDetailVM : ObservableObject
                spendingSources.Any(source => source.Id == SpendingSourceId && source.IsEnabled);
     }
 
+    public Task<string> BuildDeleteConfirmationMessageAsync(CancellationToken cancellationToken = default)
+    {
+        return SpendingSourceDeletionConfirmationHelper.BuildDeleteConfirmationMessageAsync(
+            _appData,
+            SpendingSourceId,
+            NameText,
+            cancellationToken);
+    }
+
     public async Task<SpendingSourceDetailResult> ToggleVisibilityAsync()
     {
         if (IsEditing)
@@ -357,20 +366,20 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
         try
         {
-            var allExpenseLogs = await _appData.GetExpenseLogsAsync();
-            var expenseLogs = allExpenseLogs.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
-            var allIncomeLogs = await _appData.GetIncomeLogsAsync();
-            var incomeLogs = allIncomeLogs.Where(log => log.SpendingSourceId == SpendingSourceId).ToList();
-
-            if (expenseLogs.Any(log => !log.IsForDeletion) || incomeLogs.Count > 0)
-                return SpendingSourceDetailResult.Failure(
-                    "This spending source still has activity, so it can't be deleted yet.");
-
             var spendingSource = await _appData.GetSpendingSourceByIdAsync(SpendingSourceId);
             if (spendingSource is null)
                 return SpendingSourceDetailResult.Failure("Unable to load this spending source.");
 
+            var allExpenseLogs = await _appData.GetExpenseLogsAsync();
+            var allIncomeLogs = await _appData.GetIncomeLogsAsync();
+
             var snapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
+
+            foreach (var expenseLog in allExpenseLogs.Where(log => log.SpendingSourceId == SpendingSourceId))
+                _appData.RemoveExpenseLog(expenseLog);
+
+            foreach (var incomeLog in allIncomeLogs.Where(log => log.SpendingSourceId == SpendingSourceId))
+                _appData.RemoveIncomeLog(incomeLog);
 
             _appData.RemoveSpendingSource(spendingSource);
             await _appData.SaveChangesAsync();
