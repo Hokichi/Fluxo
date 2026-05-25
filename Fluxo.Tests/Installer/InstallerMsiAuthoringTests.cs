@@ -138,21 +138,23 @@ public sealed class InstallerMsiAuthoringTests
     }
 
     [Fact]
-    public void MsiProject_PublishesSelfContainedAppOutput()
+    public void MsiProject_BuildsFrameworkDependentAppOutput()
     {
         var project = File.ReadAllText(Path.Combine(
             GetRepositoryRoot(),
             "Fluxo.Installer.Msi",
             "Fluxo.Installer.Msi.wixproj"));
 
-        Assert.Contains(@"<FluxoAppOutputDir>$(MSBuildThisFileDirectory)..\Fluxo\bin\$(Configuration)\net10.0-windows\win-x64\publish\</FluxoAppOutputDir>", project);
-        Assert.Contains("Name=\"PublishFluxoApplicationForInstaller\"", project);
-        Assert.Contains("Targets=\"Restore;Publish\"", project);
+        Assert.Contains(@"<FluxoAppOutputDir>$(MSBuildThisFileDirectory)..\Fluxo\bin\$(Configuration)\net10.0-windows\win-x64\</FluxoAppOutputDir>", project);
+        Assert.Contains("Name=\"BuildFluxoApplicationForInstaller\"", project);
+        Assert.Contains("Targets=\"Restore;Build\"", project);
         Assert.Contains("RuntimeIdentifier=win-x64", project);
-        Assert.Contains("SelfContained=true", project);
-        Assert.Contains("PublishSelfContained=true", project);
-        Assert.Contains("PublishSingleFile=false", project);
-        Assert.DoesNotContain("Targets=\"Restore;Build\"", project);
+        Assert.Contains("SelfContained=false", project);
+        Assert.DoesNotContain("Name=\"PublishFluxoApplicationForInstaller\"", project);
+        Assert.DoesNotContain("Targets=\"Restore;Publish\"", project);
+        Assert.DoesNotContain("SelfContained=true", project);
+        Assert.DoesNotContain("PublishSelfContained=true", project);
+        Assert.DoesNotContain("PublishSingleFile=false", project);
     }
 
     [Fact]
