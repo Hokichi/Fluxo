@@ -12,7 +12,7 @@ public interface IDotNetRuntimeDetector
 
 public sealed class DotNetRuntimeDetector : IDotNetRuntimeDetector
 {
-    private const string RuntimeName = "Microsoft.NETCore.App";
+    private const string RuntimeName = "Microsoft.WindowsDesktop.App";
     private static readonly TimeSpan ProcessTimeout = TimeSpan.FromSeconds(5);
     private readonly int requiredMajorVersion;
     private readonly Func<string?> runtimeListProvider;

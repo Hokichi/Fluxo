@@ -21,7 +21,19 @@ public sealed class DotNetRuntimeDetectorTests
     }
 
     [Fact]
-    public void ReturnsTrue_When_RuntimePresent()
+    public void ReturnsTrue_When_WindowsDesktopRuntimePresent()
+    {
+        var detector = new DotNetRuntimeDetector(
+            requiredMajorVersion: 10,
+            runtimeListProvider: static () => WindowsPathFixtures.WindowsDesktopRuntimeListEntry(10));
+
+        var result = detector.IsRequiredRuntimeInstalled();
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ReturnsFalse_When_OnlyBaseRuntimePresent()
     {
         var detector = new DotNetRuntimeDetector(
             requiredMajorVersion: 10,
@@ -29,7 +41,7 @@ public sealed class DotNetRuntimeDetectorTests
 
         var result = detector.IsRequiredRuntimeInstalled();
 
-        Assert.True(result);
+        Assert.False(result);
     }
 
     [Fact]

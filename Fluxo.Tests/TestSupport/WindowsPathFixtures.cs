@@ -27,5 +27,11 @@ internal static class WindowsPathFixtures
     public static string TempFile(string fileName) => Path.Combine(@"X:\Temp", fileName);
 
     public static string RuntimeListEntry(int majorVersion) =>
-        $"Microsoft.NETCore.App {majorVersion}.0.0 [{Path.Combine(@"X:\dotnet", "shared", "Microsoft.NETCore.App")}]";
+        RuntimeListEntry("Microsoft.NETCore.App", majorVersion);
+
+    public static string WindowsDesktopRuntimeListEntry(int majorVersion) =>
+        RuntimeListEntry("Microsoft.WindowsDesktop.App", majorVersion);
+
+    public static string RuntimeListEntry(string runtimeName, int majorVersion) =>
+        $"{runtimeName} {majorVersion}.0.0 [{Path.Combine(@"X:\dotnet", "shared", runtimeName)}]";
 }
