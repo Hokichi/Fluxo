@@ -46,17 +46,15 @@ public partial class SpendingSourceDetailPopup : BasePopup
 
     private async void OnEditButtonClick(object sender, RoutedEventArgs e)
     {
-        if (!_viewModel.IsEditing)
+        var editViewModel = await _viewModel.CreateEditSpendingSourceViewModelAsync();
+        if (editViewModel is null)
         {
-            _viewModel.BeginEditing();
-            NameTextBox.Focus();
-            NameTextBox.SelectAll();
+            ShowValidationMessage("Unable to load this spending source.");
             return;
         }
 
-        var result = await _viewModel.SaveAsync();
-        if (!result.IsSuccess)
-            ShowValidationMessage(result.ErrorMessage);
+        _dialogService.ShowAddSpendingSource(editViewModel, this);
+        _ = _viewModel.LoadAsync();
     }
 
     private void OnHeaderNameTextMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -115,6 +113,15 @@ public partial class SpendingSourceDetailPopup : BasePopup
 
     private async void OnDisableButtonClick(object sender, RoutedEventArgs e)
     {
+        if (await _viewModel.ShouldConfirmDisablingOnlyEnabledSourceAsync() &&
+            FluxoMessageBox.Show(
+                this,
+                "This is the only working source. fluxo will lock if this source is disabled. Are you sure you want to disable this source?",
+                "Income Detail",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
         var result = await _viewModel.ToggleEnabledAsync();
         if (!result.IsSuccess)
             ShowValidationMessage(result.ErrorMessage);

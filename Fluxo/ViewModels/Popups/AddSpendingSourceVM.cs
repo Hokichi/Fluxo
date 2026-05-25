@@ -60,7 +60,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
     [CustomValidation(typeof(AddSpendingSourceVM), nameof(ValidateSpentAmountText))]
     private decimal _spentAmountText;
 
-    public int? EditingId { get; init; }
+    public int? EditingId { get; set; }
 
     public AddSpendingSourceVM(
         MainVM mainViewModel,
@@ -114,7 +114,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
     public bool CanSave => !IsBusy && !HasErrors && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool IsEditMode => EditingId.HasValue;
-    public string PopupTitle => IsEditMode ? "Edit Income Source" : "Add New Income Source";
+    public string PopupTitle => IsEditMode ? "Edit Spending Source" : "Add New Income Source";
     public string HeaderTitle => PopupTitle;
 
     public string HeaderDescription => IsEditMode
@@ -134,6 +134,39 @@ public partial class AddSpendingSourceVM : ObservableValidator
         _initialState = CaptureState();
         _isChangeTrackingInitialized = true;
         NotifyFormStateChanged();
+    }
+
+    public void InitializeFromSpendingSource(SpendingSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        EditingId = source.Id;
+        NameText = source.Name;
+        SelectedSpendingSourceType = source.SpendingSourceType;
+        ShowOnUI = source.ShowOnUI;
+        IsEnabled = source.IsEnabled;
+
+        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        {
+            PrimaryAmountText = source.SpentAmount;
+            SpentAmountText = source.SpentAmount;
+            AccountLimitText = source.AccountLimit;
+            MaximumSpendingText = source.MaximumSpending;
+            MinimumPaymentText = source.MinimumPayment ?? 0m;
+            MonthlyDueDateText = MonthlyDueDateHelper.Normalize(source.MonthlyDueDate)?
+                .ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+            SelectedDeductSource = source.DeductSource;
+        }
+        else
+        {
+            PrimaryAmountText = source.Balance;
+            MaximumSpendingText = source.MaximumSpending;
+        }
+
+        if (source.SpendingSourceType == SpendingSourceType.Saving && source.InterestRate.HasValue)
+            ApyText = source.InterestRate.Value;
+
+        ResetValidationState();
     }
 
     public void ResetAfterSaveAndCreateNew()

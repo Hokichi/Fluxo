@@ -75,7 +75,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public bool CanTransfer => IsEnabled &&
                                SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL) &&
-                               !IsEditing;
+                               !IsEditing &&
+                               DeductSources.Count > 0;
 
     public bool CanDelete => !IsEditing;
 
@@ -84,6 +85,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
     public string EditButtonLabel => IsEditing ? "Save" : "Edit";
 
     public bool IsHidden => !ShowOnUI;
+
+    public bool HasRecentActivities => RecentActivities.Count > 0;
 
     public decimal DisplayPrimaryAmount => SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
         ? SpentAmountText
@@ -229,6 +232,27 @@ public partial class SpendingSourceDetailVM : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    public async Task<AddSpendingSourceVM?> CreateEditSpendingSourceViewModelAsync()
+    {
+        var spendingSource = await _appData.GetSpendingSourceByIdAsync(SpendingSourceId);
+        if (spendingSource is null)
+            return null;
+
+        var viewModel = new AddSpendingSourceVM(MainViewModel, _appData);
+        viewModel.InitializeFromSpendingSource(spendingSource);
+        return viewModel;
+    }
+
+    public async Task<bool> ShouldConfirmDisablingOnlyEnabledSourceAsync()
+    {
+        if (!IsEnabled)
+            return false;
+
+        var spendingSources = await _appData.GetSpendingSourcesAsync();
+        return spendingSources.Count(source => source.IsEnabled) == 1 &&
+               spendingSources.Any(source => source.Id == SpendingSourceId && source.IsEnabled);
     }
 
     public async Task<SpendingSourceDetailResult> ToggleVisibilityAsync()
@@ -396,6 +420,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         MoneyOut = expenseLogs.Sum(log => log.Amount);
 
         ReplaceCollection(RecentActivities, BuildActivities(expenseLogs, incomeLogs));
+        OnPropertyChanged(nameof(HasRecentActivities));
         ReplaceCollection(Trends, BuildTrends(expenseLogs, incomeLogs));
         TrendMaximum = Math.Max(1m,
             Trends.SelectMany(item => new[] { item.IncomeAmount, item.ExpenseAmount }).DefaultIfEmpty(1m).Max());
@@ -554,6 +579,8 @@ public partial class SpendingSourceDetailVM : ObservableObject
         DeductSources.Clear();
         foreach (var option in options)
             DeductSources.Add(option);
+
+        OnPropertyChanged(nameof(CanTransfer));
 
         if (!IsCreditLike)
         {

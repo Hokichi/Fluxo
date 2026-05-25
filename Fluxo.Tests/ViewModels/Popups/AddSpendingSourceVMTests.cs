@@ -18,6 +18,54 @@ public sealed class AddSpendingSourceVMTests
         Assert.Equal(expected, sut.MonthlyDueDateText);
     }
 
+    [Fact]
+    public void PopupTitle_WhenEditingSpendingSource_UsesSpendingSourceCopy()
+    {
+        var sut = new AddSpendingSourceVM(
+            mainViewModel: null!,
+            appData: null!)
+        {
+            EditingId = 7
+        };
+
+        Assert.Equal("Edit Spending Source", sut.PopupTitle);
+    }
+
+    [Fact]
+    public void InitializeFromSpendingSource_LoadsEditableFields()
+    {
+        var sut = CreateSut();
+        var source = new Fluxo.Core.Entities.SpendingSource
+        {
+            Id = 7,
+            Name = "Visa",
+            SpendingSourceType = SpendingSourceType.Credit,
+            Balance = 0m,
+            SpentAmount = 120m,
+            AccountLimit = 1_000m,
+            MaximumSpending = 800m,
+            MinimumPayment = 5m,
+            MonthlyDueDate = 15,
+            DeductSource = 2,
+            ShowOnUI = false,
+            IsEnabled = false
+        };
+
+        sut.InitializeFromSpendingSource(source);
+
+        Assert.Equal(7, sut.EditingId);
+        Assert.Equal("Visa", sut.NameText);
+        Assert.Equal(SpendingSourceType.Credit, sut.SelectedSpendingSourceType);
+        Assert.Equal(120m, sut.SpentAmountText);
+        Assert.Equal(1_000m, sut.AccountLimitText);
+        Assert.Equal(800m, sut.MaximumSpendingText);
+        Assert.Equal(5m, sut.MinimumPaymentText);
+        Assert.Equal("15", sut.MonthlyDueDateText);
+        Assert.Equal(2, sut.SelectedDeductSource);
+        Assert.False(sut.ShowOnUI);
+        Assert.False(sut.IsEnabled);
+    }
+
     [Theory]
     [InlineData(SpendingSourceType.Checking, true)]
     [InlineData(SpendingSourceType.Cash, true)]

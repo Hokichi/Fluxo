@@ -597,9 +597,19 @@
                         FontSize="14"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="History" />
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemTemplate="{StaticResource SpendingSourceRecentActivityItemTemplate}" ItemsSource="{Binding RecentActivities}" />
-                    </ScrollViewer>
+                    <Grid Grid.Row="2">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <ItemsControl ItemTemplate="{StaticResource SpendingSourceRecentActivityItemTemplate}" ItemsSource="{Binding RecentActivities}" />
+                        </ScrollViewer>
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="No history found"
+                            Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

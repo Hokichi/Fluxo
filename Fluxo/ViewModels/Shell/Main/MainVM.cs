@@ -105,7 +105,14 @@ public partial class MainVM : ObservableRecipient
         ArgumentNullException.ThrowIfNull(spendingSources);
         ArgumentNullException.ThrowIfNull(expenseLogs);
 
-        foreach (var source in spendingSources)
+        var enabledSources = spendingSources
+            .Where(source => source.IsEnabled)
+            .ToList();
+
+        if (enabledSources.Count == 0)
+            return true;
+
+        foreach (var source in enabledSources)
         {
             var hasUsableAmount = source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
                 ? source.AccountLimit > 0m
