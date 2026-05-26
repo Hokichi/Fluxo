@@ -1,0 +1,348 @@
+<customControls:BasePopup
+    x:Class="Fluxo.Views.Popups.DataManagementPopup"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    Width="640"
+    PopupTitle="Data Management"
+    ShowRevertButton="False"
+    ShowSaveButton="False">
+    <customControls:BasePopup.Resources>
+        <Style x:Key="InitialPageStyle" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding PageIndex}" Value="0">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ProcessingPageStyle" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding PageIndex}" Value="1">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ConflictPageStyle" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding PageIndex}" Value="2">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ResultPageStyle" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding PageIndex}" Value="3">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ConflictAppendOptionStyle" TargetType="RadioButton">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsTag}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </customControls:BasePopup.Resources>
+
+    <Grid
+        Width="840"
+        Height="540"
+        Margin="24,0,24,24">
+        <Grid Style="{StaticResource InitialPageStyle}">
+            <Border Style="{StaticResource PanelStyle}">
+                <StackPanel>
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="18"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Choose operation and data scope" />
+                    <TextBlock
+                        Margin="0,8,0,16"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="Back up your current data or import from a backup file."
+                        TextWrapping="Wrap" />
+
+                    <Border
+                        Height="40"
+                        Padding="4"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                Grid.Column="0"
+                                Click="OnBackupModeClick"
+                                Content="Backup"
+                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                Tag="{Binding IsBackupSelected}" />
+                            <Button
+                                Grid.Column="1"
+                                Margin="4,0,0,0"
+                                Click="OnAppendModeClick"
+                                Content="Append"
+                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                Tag="{Binding IsAppendSelected}" />
+                            <Button
+                                Grid.Column="2"
+                                Margin="4,0,0,0"
+                                Click="OnOverwriteModeClick"
+                                Content="Overwrite"
+                                Style="{StaticResource MainContentViewToggleButtonStyle}"
+                                Tag="{Binding IsOverwriteSelected}" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Margin="0,16,0,8">
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Backup file path" />
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="10"
+                            Foreground="{StaticResource Brush.Danger}"
+                            Text="Overwrite will replace existing data with backup data."
+                            TextWrapping="Wrap"
+                            Visibility="{Binding IsOverwriteSelected, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox
+                            Grid.Column="0"
+                            Margin="0,0,8,0"
+                            IsReadOnly="True"
+                            Style="{StaticResource RoundedTextInputStyle}"
+                            Text="{Binding FilePath}" />
+                        <customControls:BalloonButton
+                            Grid.Column="1"
+                            Margin="0"
+                            VerticalAlignment="Center"
+                            ButtonIcon="{StaticResource DotsHorizontal}"
+                            Click="OnBrowseClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                    </Grid>
+
+                    <TextBlock
+                        Margin="0,16,0,8"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Entities" />
+                    <ScrollViewer Height="232" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Entities}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        Margin="0,0,0,8"
+                                        Content="{Binding Title}"
+                                        IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                        IsEnabled="{Binding IsEnabled}"
+                                        Style="{StaticResource ItemCheckBoxWithContentStyle}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <customControls:BalloonButton
+                            Margin="0"
+                            ButtonIcon="{StaticResource ControllerPlay}"
+                            Click="OnStartClick"
+                            HoveredBackground="{StaticResource Brush.Mint}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Style="{StaticResource ProcessingPageStyle}">
+            <Border Style="{StaticResource PanelStyle}">
+                <Grid>
+                    <components:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
+
+                    <StackPanel
+                        Margin="0,-40,0,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                        <Border
+                            Width="84"
+                            Height="84"
+                            HorizontalAlignment="Center"
+                            Background="{StaticResource Brush.Background.Surface}"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="42">
+                            <Image
+                                Margin="20"
+                                Source="/Fluxo.Resources;component/Resources/fluxo.ico"
+                                Stretch="Uniform" />
+                        </Border>
+                        <TextBlock
+                            Margin="0,24,0,0"
+                            HorizontalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="28"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding OperationTitle}" />
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            HorizontalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="13"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding OperationDescription}"
+                            TextAlignment="Center" />
+                    </StackPanel>
+
+                    <components:FluxoWave
+                        Height="120"
+                        Margin="0,200,0,0"
+                        VerticalAlignment="Bottom"
+                        ClipToBounds="True" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Style="{StaticResource ConflictPageStyle}">
+            <Border Style="{StaticResource PanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Append conflict handling" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="Choose how to handle conflicts before continuing."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        Grid.Row="1"
+                        Margin="0,16,0,0"
+                        VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Conflicts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        Margin="0,0,0,8"
+                                        Padding="12"
+                                        Background="{StaticResource Brush.Background.Surface}"
+                                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                        BorderThickness="1"
+                                        CornerRadius="12">
+                                        <StackPanel>
+                                            <TextBlock
+                                                FontFamily="{StaticResource Bold}"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding Name}" />
+                                            <TextBlock
+                                                Margin="0,4,0,0"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="10"
+                                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                                Text="{Binding EntityKind}" />
+                                            <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                                <RadioButton Content="Replace" IsChecked="{Binding IsReplaceSelected, Mode=TwoWay}" />
+                                                <RadioButton
+                                                    Margin="14,0,0,0"
+                                                    Content="Append"
+                                                    IsChecked="{Binding IsAppendSelected, Mode=TwoWay}"
+                                                    Style="{StaticResource ConflictAppendOptionStyle}" />
+                                                <RadioButton
+                                                    Margin="14,0,0,0"
+                                                    Content="Ignore"
+                                                    IsChecked="{Binding IsIgnoreSelected, Mode=TwoWay}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="Continue" />
+                        <customControls:BalloonButton
+                            Margin="0"
+                            ButtonIcon="{StaticResource ControllerPlay}"
+                            Click="OnStartClick"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Style="{StaticResource ResultPageStyle}">
+            <Border Style="{StaticResource PanelStyle}">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="22"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Result" />
+                    <TextBlock
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Center"
+                        FontFamily="{StaticResource Medium}"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="{Binding ResultMessage}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    <Button
+                        Width="132"
+                        Margin="0,20,0,0"
+                        HorizontalAlignment="Center"
+                        Click="OnCloseClick"
+                        Content="Close"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</customControls:BasePopup>

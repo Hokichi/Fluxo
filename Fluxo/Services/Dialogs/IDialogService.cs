@@ -16,6 +16,7 @@ public interface IDialogService
     bool? ShowSpendingSourcesList(Window? owner = null);
 
     bool? ShowSettings(Window? owner = null);
+    bool? ShowDataManagement(Window? owner = null);
 
     bool? ShowQuickSetupWizard(Window? owner = null);
 

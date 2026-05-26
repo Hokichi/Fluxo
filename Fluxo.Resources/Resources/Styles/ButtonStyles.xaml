@@ -91,7 +91,7 @@
     <Style x:Key="PopupTextButtonStyle" TargetType="Button">
         <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="14,0" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
@@ -1253,7 +1253,6 @@
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
         <Setter Property="FontFamily" Value="{StaticResource Bold}" />
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="Width" Value="80" />
         <Setter Property="Padding" Value="14,6" />
         <Setter Property="Template">
             <Setter.Value>

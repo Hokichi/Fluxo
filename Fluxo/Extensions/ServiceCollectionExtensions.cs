@@ -2,6 +2,7 @@ using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Mappings;
+using Fluxo.Services.Backups;
 using Fluxo.Services.Mappings;
 using Fluxo.Services.Persistence;
 using Fluxo.Services.Dialogs;
@@ -11,6 +12,7 @@ using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Controls;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
+using Fluxo.ViewModels.Popups.DataManagement;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Services.Updates;
@@ -52,6 +54,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ITagService, TagService>();
         services.AddTransient<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IAppDataService, AppDataService>();
+        services.AddTransient<IUserBackupService, UserBackupService>();
 
         return services;
     }
@@ -97,6 +100,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SettingsGoalsTabVM>();
         services.AddTransient<SettingsTagsTabVM>();
         services.AddTransient<SettingsPersonalizationTabVM>();
+        services.AddTransient<DataManagementVM>();
         services.AddTransient<SettingsVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardGreetingPageVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardNamePageVM>();
@@ -118,6 +122,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<NotificationChecklistActionPopup>();
         services.AddTransient<GoalDeadlineActionPopup>();
         services.AddTransient<SettingsPopup>();
+        services.AddTransient<DataManagementPopup>();
         services.AddTransient<QuickSetupWizard>();
         services.AddTransient<PlanningPopup>();
         services.AddTransient<PlanningReportPopup>();

@@ -58,15 +58,23 @@
                         Background="{StaticResource Brush.Background.Surface}"
                         LostFocus="OnUsernameTextBoxLostFocus"
                         Style="{StaticResource RoundedTextInputStyle}"
-                        TextChanged="OnUsernameTextBoxTextChanged"
-                        Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}" />
+                        Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanged="OnUsernameTextBoxTextChanged" />
                 </StackPanel>
 
-                <Border
-                    Height="0.5"
-                    Margin="0,16"
-                    Background="{StaticResource Brush.Border.Subtle}"
-                    SnapsToDevicePixels="True" />
+                <Grid Margin="0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        MinWidth="132"
+                        VerticalAlignment="Center"
+                        Click="OnDataManagementClick"
+                        Content="Data Management"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                </Grid>
 
                 <TextBlock
                     Margin="0,8,0,8"

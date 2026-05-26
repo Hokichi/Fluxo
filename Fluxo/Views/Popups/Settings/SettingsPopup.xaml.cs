@@ -307,6 +307,11 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         _ = SaveConfigurationChangesAsync();
     }
 
+    internal void ShowDataManagement()
+    {
+        _dialogService.ShowDataManagement(this);
+    }
+
     internal Task ShowToastWhileAsync(string message, Func<Task> work)
     {
         return _dialogService.ShowToastWhileAsync(message, work, this);

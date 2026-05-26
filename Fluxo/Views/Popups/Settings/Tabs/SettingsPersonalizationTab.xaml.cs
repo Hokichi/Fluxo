@@ -56,4 +56,10 @@ public partial class SettingsPersonalizationTab : UserControl
         if (Window.GetWindow(this) is SettingsPopup settingsPopup)
             settingsPopup.RequestPersonalizationAutosave();
     }
+
+    private void OnDataManagementClick(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is SettingsPopup settingsPopup)
+            settingsPopup.ShowDataManagement();
+    }
 }

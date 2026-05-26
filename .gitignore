@@ -256,6 +256,10 @@ Generated_Code/
 # because we have git ;-)
 _UpgradeReport_Files/
 Backup*/
+!Fluxo.Services/Backups/
+!Fluxo.Services/Backups/**
+!Fluxo.Tests/Services/Backups/
+!Fluxo.Tests/Services/Backups/**
 UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/

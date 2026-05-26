@@ -12,35 +12,49 @@
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="14">
-            <StackPanel Orientation="Horizontal">
+            <Grid Width="360">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
                 <Button
+                    Grid.Column="0"
                     Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.Daily}"
                     Content="Day"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"
                     Tag="{Binding IsDailyViewSelected}" />
+
                 <Button
+                    Grid.Column="1"
                     Margin="4,0,0,0"
                     Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.Weekly}"
                     Content="Week"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"
                     Tag="{Binding IsWeeklyViewSelected}" />
+
                 <Button
+                    Grid.Column="2"
                     Margin="4,0,0,0"
                     Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.Monthly}"
                     Content="Month"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"
                     Tag="{Binding IsMonthlyViewSelected}" />
+
                 <Button
+                    Grid.Column="3"
                     Margin="4,0,0,0"
                     Click="OnViewModeButtonClick"
                     CommandParameter="{x:Static enums:MainContentViewMode.AllTime}"
                     Content="All-time"
                     Style="{StaticResource MainContentViewToggleButtonStyle}"
                     Tag="{Binding IsAllTimeViewSelected}" />
-            </StackPanel>
+            </Grid>
         </Border>
 
         <Button

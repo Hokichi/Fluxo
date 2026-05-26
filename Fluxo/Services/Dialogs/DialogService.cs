@@ -50,6 +50,11 @@ public sealed class DialogService : IDialogService
         return ShowScopedDialog<SettingsPopup>(owner);
     }
 
+    public bool? ShowDataManagement(Window? owner = null)
+    {
+        return ShowScopedDialog<DataManagementPopup>(owner);
+    }
+
     public bool? ShowQuickSetupWizard(Window? owner = null)
     {
         return ShowScopedDialog<QuickSetupWizard>(owner);
