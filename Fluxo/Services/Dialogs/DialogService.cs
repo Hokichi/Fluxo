@@ -3,6 +3,8 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Planning;
@@ -228,10 +230,34 @@ public sealed class DialogService : IDialogService
 
     private static bool? ShowDialog(Window popup, Window? owner)
     {
+        var resolvedOwner = popup.Owner ?? ResolveOwner(owner);
         if (popup.Owner is null)
-            popup.Owner = ResolveOwner(owner);
+            popup.Owner = resolvedOwner;
 
-        return popup.ShowDialog();
+        try
+        {
+            return popup.ShowDialog();
+        }
+        finally
+        {
+            ReactivateOwnerAfterDialogClose(resolvedOwner);
+        }
+    }
+
+    private static void ReactivateOwnerAfterDialogClose(Window? owner)
+    {
+        if (owner is null || !owner.IsVisible || owner.WindowState == WindowState.Minimized)
+            return;
+
+        owner.Dispatcher.BeginInvoke(() =>
+        {
+            if (owner is null || !owner.IsVisible || owner.WindowState == WindowState.Minimized)
+                return;
+
+            owner.Activate();
+            owner.Focus();
+            Keyboard.Focus(owner);
+        }, DispatcherPriority.ApplicationIdle);
     }
 
     private static Window? ResolveOwner(Window? owner)
