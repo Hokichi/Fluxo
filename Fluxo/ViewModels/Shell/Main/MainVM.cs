@@ -3,7 +3,6 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
-using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
@@ -105,24 +104,7 @@ public partial class MainVM : ObservableRecipient
         ArgumentNullException.ThrowIfNull(spendingSources);
         ArgumentNullException.ThrowIfNull(expenseLogs);
 
-        var enabledSources = spendingSources
-            .Where(source => source.IsEnabled)
-            .ToList();
-
-        if (enabledSources.Count == 0)
-            return true;
-
-        foreach (var source in enabledSources)
-        {
-            var hasUsableAmount = source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
-                ? source.AccountLimit > 0m
-                : source.Balance > 0m;
-
-            if (hasUsableAmount)
-                return false;
-        }
-
-        return !expenseLogs.Any(log => !log.IsForDeletion);
+        return !spendingSources.Any(source => source.IsEnabled);
     }
 
     private async Task LoadUserSettingsAsync()

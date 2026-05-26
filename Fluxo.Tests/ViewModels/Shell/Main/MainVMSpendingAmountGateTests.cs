@@ -16,7 +16,7 @@ public class MainVMSpendingAmountGateTests
     }
 
     [Fact]
-    public void ShouldLockDashboardForSpendingAmount_WhenNonCreditSourcesHaveNoPositiveBalance_ReturnsTrue()
+    public void ShouldLockDashboardForSpendingAmount_WhenEnabledNonCreditSourcesHaveNoPositiveBalance_ReturnsFalse()
     {
         var sources = new[]
         {
@@ -27,7 +27,7 @@ public class MainVMSpendingAmountGateTests
 
         var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
-        Assert.True(isLocked);
+        Assert.False(isLocked);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class MainVMSpendingAmountGateTests
     }
 
     [Fact]
-    public void ShouldLockDashboardForSpendingAmount_WhenCreditOrBnplHaveNoPositiveLimit_ReturnsTrue()
+    public void ShouldLockDashboardForSpendingAmount_WhenEnabledCreditOrBnplHaveNoPositiveLimit_ReturnsFalse()
     {
         var sources = new[]
         {
@@ -55,7 +55,7 @@ public class MainVMSpendingAmountGateTests
 
         var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
-        Assert.True(isLocked);
+        Assert.False(isLocked);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class MainVMSpendingAmountGateTests
     }
 
     [Fact]
-    public void ShouldLockDashboardForSpendingAmount_WhenHasExpenseLogMarkedForDeletion_ReturnsTrue()
+    public void ShouldLockDashboardForSpendingAmount_WhenEnabledSourceHasExpenseLogMarkedForDeletion_ReturnsFalse()
     {
         var sources = new[]
         {
@@ -116,7 +116,7 @@ public class MainVMSpendingAmountGateTests
 
         var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, logs);
 
-        Assert.True(isLocked);
+        Assert.False(isLocked);
     }
 
     [Fact]

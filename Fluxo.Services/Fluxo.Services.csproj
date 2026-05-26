@@ -8,8 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Calculations\" />
-    <Folder Include="Extensions\" />
+    <Compile Remove="Calculations\**" />
+    <Compile Remove="Extensions\**" />
+    <EmbeddedResource Remove="Calculations\**" />
+    <EmbeddedResource Remove="Extensions\**" />
+    <None Remove="Calculations\**" />
+    <None Remove="Extensions\**" />
+    <Page Remove="Calculations\**" />
+    <Page Remove="Extensions\**" />
   </ItemGroup>
 
   <ItemGroup>
