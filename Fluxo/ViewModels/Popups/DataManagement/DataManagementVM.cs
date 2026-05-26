@@ -29,9 +29,9 @@ public partial class DataManagementVM : ObservableObject
 
         Entities =
         [
+            new(DataManagementEntityKind.SpendingSources, "Spending Sources"),
             new(DataManagementEntityKind.Expenses, "Expenses"),
             new(DataManagementEntityKind.Incomes, "Incomes"),
-            new(DataManagementEntityKind.SpendingSources, "Spending Sources"),
             new(DataManagementEntityKind.Tags, "Tags"),
             new(DataManagementEntityKind.Goals, "Goals"),
             new(DataManagementEntityKind.RecurringTransactions, "Recurring Transactions"),

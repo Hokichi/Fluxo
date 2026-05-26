@@ -120,7 +120,7 @@
                                 <TextBlock
                                     FontFamily="{StaticResource Medium}"
                                     Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text="Installed version of "
+                                    Text="Currently installed version of "
                                     TextWrapping="Wrap" />
                                 <TextBlock
                                     FontFamily="{StaticResource Bold}"
@@ -129,12 +129,7 @@
                                 <TextBlock
                                     FontFamily="{StaticResource Bold}"
                                     Foreground="{StaticResource Brush.Mint.Muted}"
-                                    Text="o" />
-                                <TextBlock
-                                    FontFamily="{StaticResource Medium}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}"
-                                    Text=" is available."
-                                    TextWrapping="Wrap" />
+                                    Text="o." />
                             </StackPanel>
                         </StackPanel>
                         <StackPanel
@@ -162,21 +157,14 @@
                         <ColumnDefinition />
                         <ColumnDefinition Width="8" />
                         <ColumnDefinition />
-                        <ColumnDefinition Width="8" />
-                        <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <Button
                         Grid.Column="0"
-                        Click="OnRunSetupWizardClick"
-                        Content="Run Setup Wizard"
-                        Style="{StaticResource PopupTextButtonStyle}" />
-                    <Button
-                        Grid.Column="2"
                         Click="OnResetAllSettingsClick"
                         Content="Reset All Settings"
                         Style="{StaticResource PopupTextButtonStyle}" />
                     <Button
-                        Grid.Column="4"
+                        Grid.Column="2"
                         Click="OnDeleteAllDataClick"
                         Content="Delete All Data"
                         Foreground="{StaticResource Brush.Danger}"

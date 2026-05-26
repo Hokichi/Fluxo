@@ -83,22 +83,6 @@ public partial class SettingsAboutTab : UserControl
         });
     }
 
-    private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel is null)
-            return;
-
-        if (FluxoMessageBox.Show(Window.GetWindow(this),
-                "This will close the current window and open the setup wizard. Continue?",
-                "Run Setup Wizard",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question) != MessageBoxResult.Yes)
-            return;
-
-        _viewModel.RequestClosePopup();
-        await ((App)Application.Current).RunSetupWizardAsync();
-    }
-
     private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)
     {
         if (_viewModel is null)

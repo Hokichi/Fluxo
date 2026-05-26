@@ -69,10 +69,18 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Button
+                        Grid.Column="0"
                         MinWidth="132"
                         VerticalAlignment="Center"
                         Click="OnDataManagementClick"
-                        Content="Data Management"
+                        Content="Data Backup/Restore"
+                        Style="{StaticResource PopupTextButtonStyle}" />
+                    <Button
+                        Grid.Column="2"
+                        MinWidth="132"
+                        VerticalAlignment="Center"
+                        Click="OnRunSetupWizardClick"
+                        Content="Run Setup Wizard"
                         Style="{StaticResource PopupTextButtonStyle}" />
                 </Grid>
 

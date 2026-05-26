@@ -54,27 +54,21 @@
         </Style>
     </customControls:BasePopup.Resources>
 
+    <!--
+        TODO:
+        - Implement a verification against the JSON file: If the file has is invalid or corrupted, show "Invalid JSON file" and disable all checkboxes
+        - When switching from Backup to Append or Overwrite, clear the filepath TextBox.
+    -->
+
     <Grid
         Width="840"
-        Height="540"
+        Height="320"
         Margin="24,0,24,24">
         <Grid Style="{StaticResource InitialPageStyle}">
             <Border Style="{StaticResource PanelStyle}">
                 <StackPanel>
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="18"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="Choose operation and data scope" />
-                    <TextBlock
-                        Margin="0,8,0,16"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Back up your current data or import from a backup file."
-                        TextWrapping="Wrap" />
-
                     <Border
+                        Width="360"
                         Height="40"
                         Padding="4"
                         Background="{StaticResource Brush.Background.Surface}"
@@ -114,13 +108,13 @@
                         <TextBlock
                             FontFamily="{StaticResource Bold}"
                             Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Backup file path" />
+                            Text="File path" />
                         <TextBlock
                             HorizontalAlignment="Right"
-                            FontFamily="{StaticResource Medium}"
+                            FontFamily="{StaticResource Bold}"
                             FontSize="10"
                             Foreground="{StaticResource Brush.Danger}"
-                            Text="Overwrite will replace existing data with backup data."
+                            Text="Overwrite will replace all of your data. Please ensure the data has been properly backed up."
                             TextWrapping="Wrap"
                             Visibility="{Binding IsOverwriteSelected, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </Grid>
@@ -149,34 +143,33 @@
                         FontFamily="{StaticResource Bold}"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Entities" />
-                    <ScrollViewer Height="232" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding Entities}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <CheckBox
-                                        Margin="0,0,0,8"
-                                        Content="{Binding Title}"
-                                        IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                        IsEnabled="{Binding IsEnabled}"
-                                        Style="{StaticResource ItemCheckBoxWithContentStyle}" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-
-                    <StackPanel
-                        Margin="0,12,0,0"
-                        HorizontalAlignment="Right"
-                        Orientation="Horizontal">
-                        <customControls:BalloonButton
-                            Margin="0"
-                            ButtonIcon="{StaticResource ControllerPlay}"
-                            Click="OnStartClick"
-                            HoveredBackground="{StaticResource Brush.Mint}"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
-                    </StackPanel>
+                    <ItemsControl Margin="0,16,0,0" ItemsSource="{Binding Entities}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <customControls:SpacedUniformGrid Columns="3" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox
+                                    Margin="0,0,0,8"
+                                    Content="{Binding Title}"
+                                    IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                    IsEnabled="{Binding IsEnabled}"
+                                    Style="{StaticResource ItemCheckBoxWithContentStyle}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
+            <customControls:BalloonButton
+                Margin="24"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                ButtonIcon="{StaticResource ControllerPlay}"
+                Click="OnStartClick"
+                HoveredBackground="{StaticResource Brush.Mint}"
+                Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
         </Grid>
 
         <Grid Style="{StaticResource ProcessingPageStyle}">
