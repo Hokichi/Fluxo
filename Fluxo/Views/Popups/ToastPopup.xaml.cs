@@ -8,6 +8,9 @@ namespace Fluxo.Views.Popups;
 
 public partial class ToastPopup : BasePopup
 {
+    private const int MinimumCloseDelayMilliseconds = 500;
+    private const int CloseDelayMillisecondsPerCharacter = 50;
+
     private readonly Func<Task> _work;
     private bool _executionStarted;
     private bool _executionCompleted;
@@ -27,6 +30,16 @@ public partial class ToastPopup : BasePopup
     }
 
     public Exception? ExecutionException { get; private set; }
+
+    internal static TimeSpan CalculateCloseDelay(string message)
+    {
+        var messageLength = message.Length;
+        var delayMilliseconds = Math.Max(
+            MinimumCloseDelayMilliseconds,
+            messageLength * CloseDelayMillisecondsPerCharacter);
+
+        return TimeSpan.FromMilliseconds(delayMilliseconds);
+    }
 
     public Task UpdateMessageAsync(string message)
     {
@@ -80,6 +93,9 @@ public partial class ToastPopup : BasePopup
         }
         finally
         {
+            var closeDelay = await Dispatcher.InvokeAsync(() => CalculateCloseDelay(MessageTextBlock.Text));
+            await Task.Delay(closeDelay).ConfigureAwait(true);
+
             _executionCompleted = true;
             await Dispatcher.InvokeAsync(Close);
         }
