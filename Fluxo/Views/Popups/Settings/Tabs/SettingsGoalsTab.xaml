@@ -142,72 +142,75 @@
                     FontSize="16"
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Goals" />
-                <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal">
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource CircleMinusSolid}"
-                    Click="OnBatchActionClick"
-                    HoveredBackground="{StaticResource Brush.Danger}"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Goals:Delete"
-                    ToolTip="Delete selected"
-                    Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource LightningSlashFill}"
-                    Click="OnBatchActionClick"
-                    HoveredBackground="{StaticResource Brush.Warning}"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Goals:Disable"
-                    ToolTip="Disable selected"
-                    Visibility="{Binding ShowGoalDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource LightningFill}"
-                    Click="OnBatchActionClick"
-                    HoveredBackground="{StaticResource Brush.Mint}"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Goals:Enable"
-                    ToolTip="Enable selected"
-                    Visibility="{Binding ShowGoalEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource CheckAll}"
-                    Click="OnSelectionActionClick"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Goals:CheckAll"
-                    ToolTip="Check all"
-                    Visibility="{Binding ShowGoalCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource UncheckAll}"
-                    Click="OnSelectionActionClick"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Goals:UncheckAll"
-                    ToolTip="Uncheck all"
-                    Visibility="{Binding ShowGoalUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource EnableChecks}"
-                    Click="OnChecksToggleClick"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Goals:EnableChecks"
-                    ToolTip="Enable selection"
-                    Visibility="{Binding ShowGoalEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource DisableChecks}"
-                    Click="OnChecksToggleClick"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Goals:DisableChecks"
-                    ToolTip="Disable selection"
-                    Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    ButtonIcon="{StaticResource PlusSolid}"
-                    Click="OnAddPlaceholderClick"
-                    HoveredBackground="{StaticResource Brush.Mint}"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                    Tag="Add New Goal"
-                    ToolTip="Add goal"
-                    Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                <StackPanel
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                        Click="OnBatchActionClick"
+                        HoveredBackground="{StaticResource Brush.Danger}"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Goals:Delete"
+                        ToolTip="Delete selected"
+                        Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource LightningSlashFill}"
+                        Click="OnBatchActionClick"
+                        HoveredBackground="{StaticResource Brush.Warning}"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Goals:Disable"
+                        ToolTip="Disable selected"
+                        Visibility="{Binding ShowGoalDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource LightningFill}"
+                        Click="OnBatchActionClick"
+                        HoveredBackground="{StaticResource Brush.Mint}"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Goals:Enable"
+                        ToolTip="Enable selected"
+                        Visibility="{Binding ShowGoalEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource CheckAll}"
+                        Click="OnSelectionActionClick"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Goals:CheckAll"
+                        ToolTip="Check all"
+                        Visibility="{Binding ShowGoalCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource UncheckAll}"
+                        Click="OnSelectionActionClick"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Goals:UncheckAll"
+                        ToolTip="Uncheck all"
+                        Visibility="{Binding ShowGoalUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource EnableChecks}"
+                        Click="OnChecksToggleClick"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Goals:EnableChecks"
+                        ToolTip="Enable selection"
+                        Visibility="{Binding ShowGoalEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource DisableChecks}"
+                        Click="OnChecksToggleClick"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Goals:DisableChecks"
+                        ToolTip="Disable selection"
+                        Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource PlusSolid}"
+                        Click="OnAddPlaceholderClick"
+                        HoveredBackground="{StaticResource Brush.Mint}"
+                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                        Tag="Add New Goal"
+                        ToolTip="Add goal"
+                        Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </StackPanel>
             </Grid>
             <TextBlock
                 Grid.Row="1"
-                Margin="0,8,0,16"
+                Margin="0,0,0,16"
                 FontFamily="{StaticResource Medium}"
                 FontSize="11"
                 Foreground="{StaticResource Brush.Text.Secondary}"
