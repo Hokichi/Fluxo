@@ -56,8 +56,6 @@ public sealed class MainWindowLayoutTests
 
         AssertElementHasNameAndStyle(xamlDocument, "Grid", "HeaderSearchRegion", "HideWhenDashboardSpendingAmountGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderQuickAddButton", "HeaderButtonHideWhenDashboardSpendingAmountGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "SourcesMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "UndoMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "RedoMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "ViewAllSpendingSourcesButton", "TextOnlyButtonHideWhenDashboardSpendingAmountGateLockedStyle");
@@ -71,6 +69,31 @@ public sealed class MainWindowLayoutTests
         Assert.Contains(
             "Binding=\"{Binding IsDashboardSpendingAmountGateLocked}\" Value=\"True\"",
             analyticsTabHost!.ToString(SaveOptions.DisableFormatting));
+    }
+
+    [Fact]
+    public void SpendingAmountGate_HeaderMenuAddAndSourcesRemainAvailable()
+    {
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionButtonStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "SourcesMenuButton", "HeaderMenuActionButtonStyle");
+    }
+
+    [Fact]
+    public void SpendingAmountGate_DateCarouselAndViewModeToggle_AreInsideLockedContent()
+    {
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        var gatedContent = xamlDocument
+            .Descendants(PresentationNamespace + "Grid")
+            .SingleOrDefault(grid => (string?)grid.Attribute(XamlNamespace + "Name") == "DashboardSpendingAmountGateContent");
+
+        Assert.NotNull(gatedContent);
+        Assert.Contains(gatedContent!.Descendants(), element =>
+            (string?)element.Attribute(XamlNamespace + "Name") == "DaySpinnerControlHost");
+        Assert.Contains(gatedContent.Descendants(), element =>
+            (string?)element.Attribute(XamlNamespace + "Name") == "ViewModeToggleControlHost");
     }
 
     [Fact]
@@ -92,15 +115,15 @@ public sealed class MainWindowLayoutTests
         Assert.Equal("OnDashboardSpendingAmountGateActionClick", (string?)button.Attribute("Click"));
         Assert.Equal("{StaticResource TextOnlyButtonStyle}", (string?)button.Attribute("Style"));
 
-        var runs = button
-            .Descendants(PresentationNamespace + "Run")
+        var textBlocks = button
+            .Descendants(PresentationNamespace + "TextBlock")
             .ToList();
 
-        Assert.Equal(3, runs.Count);
-        Assert.Equal("Add a spending amount to start using ", (string?)runs[0].Attribute("Text"));
-        Assert.Equal("flux", (string?)runs[1].Attribute("Text"));
-        Assert.Equal("o", (string?)runs[2].Attribute("Text"));
-        Assert.Equal("{StaticResource Brush.Mint}", (string?)runs[2].Attribute("Foreground"));
+        Assert.True(textBlocks.Count >= 3);
+        Assert.Equal("Insufficient fund. Please include a spending source with sufficient funds to start using ", (string?)textBlocks[0].Attribute("Text"));
+        Assert.Equal("flux", (string?)textBlocks[1].Attribute("Text"));
+        Assert.Equal("o", (string?)textBlocks[2].Attribute("Text"));
+        Assert.Equal("{StaticResource Brush.Mint}", (string?)textBlocks[2].Attribute("Foreground"));
     }
 
     [Fact]
@@ -120,7 +143,8 @@ public sealed class MainWindowLayoutTests
             .SingleOrDefault(style => (string?)style.Attribute(XamlNamespace + "Key") == "DashboardSpendingAmountGateLockedContentStyle");
 
         Assert.NotNull(lockStyle);
-        Assert.Contains("BlurEffect Radius=\"8\"", lockStyle!.ToString(SaveOptions.DisableFormatting));
+        Assert.Contains("BlurEffect Radius=\"20\"", lockStyle!.ToString(SaveOptions.DisableFormatting));
+        Assert.Contains("Opacity\" Value=\"0.55", lockStyle.ToString(SaveOptions.DisableFormatting));
         Assert.Contains("IsHitTestVisible\" Value=\"False", lockStyle.ToString(SaveOptions.DisableFormatting));
     }
 

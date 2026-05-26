@@ -57,9 +57,28 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("e.Handled = true;", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
-        Assert.Contains("if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)", source);
         Assert.Contains("if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused()", source);
         Assert.Contains("if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused()", source);
+    }
+
+    [Fact]
+    public void LockedShortcuts_StillAllowQuickAddAndSources()
+    {
+        var source = ReadMainWindowSource();
+
+        var quickAddBranch = Slice(
+            source,
+            "if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))",
+            "if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))");
+        var sourcesBranch = Slice(
+            source,
+            "if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)",
+            "if (MainWindowShortcutMatcher.IsRunSetupWizardShortcut(e.Key, Keyboard.Modifiers))");
+
+        Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", quickAddBranch);
+        Assert.Contains("OpenQuickAddPopup();", quickAddBranch);
+        Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", sourcesBranch);
+        Assert.Contains("OpenSpendingSourcesListPopup();", sourcesBranch);
     }
 
     [Fact]
@@ -100,6 +119,17 @@ public sealed class MainWindowShortcutRoutingTests
     {
         var filePath = Path.Combine(GetRepositoryRootPath(), "Fluxo", "Views", "Shell", "Main", "MainWindow.xaml");
         return File.ReadAllText(filePath);
+    }
+
+    private static string Slice(string source, string startMarker, string endMarker)
+    {
+        var start = source.IndexOf(startMarker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Could not find start marker '{startMarker}'.");
+
+        var end = source.IndexOf(endMarker, start + startMarker.Length, StringComparison.Ordinal);
+        Assert.True(end >= 0, $"Could not find end marker '{endMarker}'.");
+
+        return source[start..end];
     }
 
     private static string GetRepositoryRootPath()

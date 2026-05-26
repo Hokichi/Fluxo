@@ -30,4 +30,13 @@ public partial class SpendingSourcesListPopup : BasePopup
         ownerWindow?.Dispatcher.BeginInvoke(new Action(() =>
             ownerWindow.OpenSpendingSourceDetailPopup(spendingSource)));
     }
+
+    private void OnAddNewSourceClick(object sender, RoutedEventArgs e)
+    {
+        var ownerWindow = Owner as MainWindow;
+        CloseForPopupHandoff();
+
+        ownerWindow?.Dispatcher.BeginInvoke(new Action(() =>
+            ownerWindow.OpenAddSpendingSourcePopup()));
+    }
 }

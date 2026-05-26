@@ -108,9 +108,11 @@
             <Style x:Key="DashboardSpendingAmountGateLockedContentStyle" TargetType="Grid">
                 <Setter Property="IsHitTestVisible" Value="True" />
                 <Setter Property="Effect" Value="{x:Null}" />
+                <Setter Property="Opacity" Value="1" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
                         <Setter Property="IsHitTestVisible" Value="False" />
+                        <Setter Property="Opacity" Value="0.55" />
                         <Setter Property="Effect">
                             <Setter.Value>
                                 <BlurEffect Radius="20" />
@@ -354,11 +356,6 @@
                         </TextBlock>
                     </StackPanel>
 
-                    <controls:DaySpinnerControl
-                        x:Name="DaySpinnerControlHost"
-                        Grid.Column="1"
-                        DataContext="{Binding DaySpinner}" />
-
                     <StackPanel
                         Grid.Column="2"
                         Margin="0"
@@ -518,7 +515,7 @@
                                     <Button
                                         x:Name="QuickAddMenuButton"
                                         Click="OnQuickAddButtonClick"
-                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
+                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -548,7 +545,7 @@
                                     <Button
                                         x:Name="SourcesMenuButton"
                                         Click="OnSpendingSourcesButtonClick"
-                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
+                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -717,27 +714,34 @@
                     </StackPanel>
                 </Grid>
 
-                <controls:MainViewModeToggleControl
-                    x:Name="ViewModeToggleControlHost"
-                    Grid.Row="1"
-                    Margin="0,16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    DataContext="{Binding ViewModeToggle}" />
-
                 <Grid
-                    x:Name="MainContentGrid"
-                    Grid.Row="1"
-                    Margin="200,48">
+                    x:Name="DashboardSpendingAmountGateContent"
+                    Grid.RowSpan="2"
+                    Style="{StaticResource DashboardSpendingAmountGateLockedContentStyle}">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="60" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
+
+                    <controls:DaySpinnerControl
+                        x:Name="DaySpinnerControlHost"
+                        Grid.Row="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        DataContext="{Binding DaySpinner}" />
+
+                    <controls:MainViewModeToggleControl
+                        x:Name="ViewModeToggleControlHost"
+                        Grid.Row="1"
+                        Margin="0,16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        DataContext="{Binding ViewModeToggle}" />
+
                     <Grid
-                        x:Name="DashboardSpendingAmountGateContent"
-                        Grid.RowSpan="3"
-                        Style="{StaticResource DashboardSpendingAmountGateLockedContentStyle}">
+                        x:Name="MainContentGrid"
+                        Grid.Row="1"
+                        Margin="200,48">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />

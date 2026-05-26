@@ -178,6 +178,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="12" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="12" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -187,8 +189,16 @@
             Foreground="{StaticResource Brush.Text.Secondary}"
             Text="Open any spending source to inspect or edit it." />
 
-        <Border
+        <Button
+            x:Name="AddNewSourceButton"
             Grid.Row="2"
+            HorizontalAlignment="Stretch"
+            Click="OnAddNewSourceClick"
+            Content="+ Add New Source"
+            Style="{StaticResource TextOnlyButtonStyle}" />
+
+        <Border
+            Grid.Row="4"
             Background="{StaticResource Brush.Background.Surface}"
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"

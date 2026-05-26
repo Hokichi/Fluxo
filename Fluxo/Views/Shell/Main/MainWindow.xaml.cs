@@ -615,12 +615,6 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))
         {
-            if (IsDashboardSpendingAmountGateLocked())
-            {
-                e.Handled = true;
-                return;
-            }
-
             OpenQuickAddPopup();
             e.Handled = true;
             return;
@@ -648,12 +642,6 @@ public partial class MainWindow : Window, IPopupHost
 
         if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            if (IsDashboardSpendingAmountGateLocked())
-            {
-                e.Handled = true;
-                return;
-            }
-
             OpenSpendingSourcesListPopup();
             e.Handled = true;
             return;
@@ -846,9 +834,6 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)
     {
-        if (IsDashboardSpendingAmountGateLocked())
-            return;
-
         CloseHeaderMenu();
         OpenQuickAddPopup();
     }
@@ -885,9 +870,6 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)
     {
-        if (IsDashboardSpendingAmountGateLocked())
-            return;
-
         CloseHeaderMenu();
         OpenSpendingSourcesListPopup();
     }
@@ -939,24 +921,21 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
     {
-        if (IsDashboardSpendingAmountGateLocked())
-            return;
-
         OpenAddSpendingSourcePopup();
     }
 
     private void OnDashboardSpendingAmountGateActionClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddSpendingSource(this);
+        OpenAddSpendingSourcePopup();
     }
 
     public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
-        if (IsDashboardSpendingAmountGateLocked())
-            return;
-
         if (draft is { } popupDraft)
         {
+            if (IsDashboardSpendingAmountGateLocked())
+                return;
+
             OpenAddNewTransactionPopup(popupDraft);
             return;
         }
@@ -1009,22 +988,19 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenSpendingSourcesListPopup()
     {
-        if (IsDashboardSpendingAmountGateLocked())
-            return;
-
         _dialogService.ShowSpendingSourcesList(this);
     }
 
     public void OpenAddSpendingSourcePopup()
     {
-        if (IsDashboardSpendingAmountGateLocked())
-            return;
-
         _dialogService.ShowAddSpendingSource(this);
     }
 
     public void OpenAddSavingGoalPopup()
     {
+        if (IsDashboardSpendingAmountGateLocked())
+            return;
+
         _dialogService.ShowAddSavingGoal(this);
     }
 
