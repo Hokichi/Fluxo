@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Fluxo.Resources.Infrastructure;
 
 namespace Fluxo.Resources.CustomControls;
 
@@ -76,7 +77,7 @@ public class SwipeRevealContainer : ContentControl
         base.OnPreviewMouseLeftButtonDown(e);
 
         // Don't start swipe if the click is on a button
-        if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) is not null)
+        if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<Button>(source) is not null)
             return;
 
         _startPoint = e.GetPosition(this);
@@ -129,7 +130,7 @@ public class SwipeRevealContainer : ContentControl
         {
             // Click (no drag): toggle swipe state
             // If currently revealed → restore; otherwise → swipe right to reveal left panel
-            if (e.OriginalSource is DependencyObject source && FindAncestor<Button>(source) is not null)
+            if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<Button>(source) is not null)
                 return;
 
             var targetOffset = _currentOffset != 0 ? 0 : RevealWidth;
@@ -196,12 +197,4 @@ public class SwipeRevealContainer : ContentControl
         _currentlyRevealed = targetX != 0 ? this : null;
     }
 
-    private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
-    {
-        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
-            if (current is T match)
-                return match;
-
-        return null;
-    }
 }

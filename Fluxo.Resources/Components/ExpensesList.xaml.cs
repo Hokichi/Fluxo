@@ -172,7 +172,7 @@ public partial class ExpensesList : UserControl
             return;
 
         // Reset the swipe on the container
-        if (FindAncestor<SwipeRevealContainer>((DependencyObject)sender) is { } container)
+        if (DependencyObjectTree.FindAncestor<SwipeRevealContainer>((DependencyObject)sender) is { } container)
             container.ResetSwipe();
 
         WindowMethodInvoker.TryInvoke(this, "OpenExpenseDetailPopup", expenseLog);
@@ -188,7 +188,7 @@ public partial class ExpensesList : UserControl
         if (sender is not DependencyObject source)
             return;
 
-        var fadingScrollViewer = FindAncestor<FadingScrollViewer>(source);
+        var fadingScrollViewer = DependencyObjectTree.FindAncestor<FadingScrollViewer>(source);
         if (fadingScrollViewer is null)
             return;
 
@@ -202,12 +202,4 @@ public partial class ExpensesList : UserControl
         e.Handled = true;
     }
 
-    private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
-    {
-        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
-            if (current is T match)
-                return match;
-
-        return null;
-    }
 }
