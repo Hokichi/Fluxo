@@ -615,6 +615,12 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))
         {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             OpenQuickAddPopup();
             e.Handled = true;
             return;
@@ -622,7 +628,7 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))
         {
-            if (IsDashboardSpendingAmountGateLocked())
+            if (IsSufficientFundsActionGateLocked())
             {
                 e.Handled = true;
                 return;
@@ -656,6 +662,12 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenPlanningShortcut(e.Key, Keyboard.Modifiers))
         {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
             OpenPlanningPopup();
             e.Handled = true;
             return;
@@ -663,7 +675,7 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))
         {
-            if (IsDashboardSpendingAmountGateLocked())
+            if (IsSufficientFundsActionGateLocked())
             {
                 e.Handled = true;
                 return;
@@ -677,7 +689,7 @@ public partial class MainWindow : Window, IPopupHost
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused() &&
             _logMemoryManager.CanUndo)
         {
-            if (IsDashboardSpendingAmountGateLocked())
+            if (IsSufficientFundsActionGateLocked())
             {
                 e.Handled = true;
                 return;
@@ -691,7 +703,7 @@ public partial class MainWindow : Window, IPopupHost
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused() &&
             _logMemoryManager.CanRedo)
         {
-            if (IsDashboardSpendingAmountGateLocked())
+            if (IsSufficientFundsActionGateLocked())
             {
                 e.Handled = true;
                 return;
@@ -716,7 +728,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderSearchButtonClick(object sender, RoutedEventArgs e)
     {
-        if (IsDashboardSpendingAmountGateLocked())
+        if (IsSufficientFundsActionGateLocked())
             return;
 
         ExpandHeaderSearch();
@@ -724,7 +736,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderQuickAddButtonClick(object sender, RoutedEventArgs e)
     {
-        if (IsDashboardSpendingAmountGateLocked())
+        if (IsSufficientFundsActionGateLocked())
             return;
 
         OpenAddNewTransactionPopup();
@@ -835,6 +847,9 @@ public partial class MainWindow : Window, IPopupHost
     private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
         OpenQuickAddPopup();
     }
 
@@ -877,12 +892,18 @@ public partial class MainWindow : Window, IPopupHost
     private async void OnUndoButtonClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
         await UndoLogMemoryAsync();
     }
 
     private async void OnRedoButtonClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
         await RedoLogMemoryAsync();
     }
 
@@ -895,12 +916,15 @@ public partial class MainWindow : Window, IPopupHost
     private void OnPlanningButtonClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
         OpenPlanningPopup();
     }
 
     private async void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)
     {
-        if (IsDashboardSpendingAmountGateLocked())
+        if (IsSufficientFundsActionGateLocked())
             return;
 
         CloseHeaderMenu();
@@ -933,12 +957,15 @@ public partial class MainWindow : Window, IPopupHost
     {
         if (draft is { } popupDraft)
         {
-            if (IsDashboardSpendingAmountGateLocked())
+            if (IsSufficientFundsActionGateLocked())
                 return;
 
             OpenAddNewTransactionPopup(popupDraft);
             return;
         }
+
+        if (IsSufficientFundsActionGateLocked())
+            return;
 
         _dialogService.ShowQuickAdd(this);
     }
@@ -958,7 +985,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
     {
-        if (IsDashboardSpendingAmountGateLocked())
+        if (IsSufficientFundsActionGateLocked())
             return;
 
         using var scope = _serviceProvider.CreateScope();
@@ -998,7 +1025,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAddSavingGoalPopup()
     {
-        if (IsDashboardSpendingAmountGateLocked())
+        if (IsSufficientFundsActionGateLocked())
             return;
 
         _dialogService.ShowAddSavingGoal(this);
@@ -1016,12 +1043,15 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenPlanningPopup()
     {
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
         _dialogService.ShowPlanningPopup(this);
     }
 
     public void OpenAnalyticsPopup()
     {
-        if (IsDashboardSpendingAmountGateLocked())
+        if (IsSufficientFundsActionGateLocked())
             return;
 
         _ = OpenAnalyticsPopupAsync();
@@ -1029,7 +1059,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private async Task OpenAnalyticsPopupAsync()
     {
-        if (IsDashboardSpendingAmountGateLocked())
+        if (IsSufficientFundsActionGateLocked())
             return;
 
         if (_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive || _isPreparingAnalyticsOpen)
@@ -1566,6 +1596,11 @@ public partial class MainWindow : Window, IPopupHost
     private bool IsDashboardSpendingAmountGateLocked()
     {
         return _mainVM.IsDashboardSpendingAmountGateLocked;
+    }
+
+    private bool IsSufficientFundsActionGateLocked()
+    {
+        return _mainVM.IsSufficientFundsActionGateLocked;
     }
 
     private void OnHistoryManagerStateChanged(object? sender, EventArgs e)

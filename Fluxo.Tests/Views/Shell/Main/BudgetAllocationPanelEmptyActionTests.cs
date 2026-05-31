@@ -20,6 +20,17 @@ public sealed class BudgetAllocationPanelEmptyActionTests
     }
 
     [Fact]
+    public void BudgetAllocationPanel_HidesEmptyActionsWhenSufficientFundsActionGateIsLocked()
+    {
+        var xaml = File.ReadAllText(ResolveBudgetAllocationPanelXamlPath());
+
+        Assert.Contains("x:Key=\"BudgetAllocationExpensesListStyle\"", xaml);
+        Assert.Contains("DataContext.IsSufficientFundsActionGateLocked", xaml);
+        Assert.Contains("Property=\"IsEmptyActionVisible\" Value=\"False\"", xaml);
+        Assert.Equal(3, CountOccurrences(xaml, "Style=\"{StaticResource BudgetAllocationExpensesListStyle}\""));
+    }
+
+    [Fact]
     public void BudgetAllocationPanelCodeBehind_OpensCategoryPrefilledTransactionPopup()
     {
         var source = File.ReadAllText(ResolveBudgetAllocationPanelCodeBehindPath());

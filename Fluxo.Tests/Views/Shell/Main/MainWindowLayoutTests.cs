@@ -54,12 +54,13 @@ public sealed class MainWindowLayoutTests
     {
         var xamlDocument = MainWindowXamlDocument.Value;
 
-        AssertElementHasNameAndStyle(xamlDocument, "Grid", "HeaderSearchRegion", "HideWhenDashboardSpendingAmountGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderQuickAddButton", "HeaderButtonHideWhenDashboardSpendingAmountGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "UndoMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "RedoMenuButton", "HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "ViewAllSpendingSourcesButton", "TextOnlyButtonHideWhenDashboardSpendingAmountGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "AddSpendingSourceButton", "SpendingSourceAddButtonHideWhenDashboardSpendingAmountGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Grid", "HeaderSearchRegion", "HideWhenSufficientFundsActionGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderQuickAddButton", "HeaderButtonHideWhenSufficientFundsActionGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "UndoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "RedoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "ViewAllSpendingSourcesButton", "TextOnlyButtonStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "AddSpendingSourceButton", "SpendingSourceAddButtonStyle");
 
         var analyticsTabHost = xamlDocument
             .Descendants(PresentationNamespace + "Border")
@@ -67,16 +68,15 @@ public sealed class MainWindowLayoutTests
 
         Assert.NotNull(analyticsTabHost);
         Assert.Contains(
-            "Binding=\"{Binding IsDashboardSpendingAmountGateLocked}\" Value=\"True\"",
+            "Binding=\"{Binding IsSufficientFundsActionGateLocked}\" Value=\"True\"",
             analyticsTabHost!.ToString(SaveOptions.DisableFormatting));
     }
 
     [Fact]
-    public void SpendingAmountGate_HeaderMenuAddAndSourcesRemainAvailable()
+    public void SpendingAmountGate_HeaderMenuSourcesRemainAvailable()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
 
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionButtonStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "SourcesMenuButton", "HeaderMenuActionButtonStyle");
     }
 

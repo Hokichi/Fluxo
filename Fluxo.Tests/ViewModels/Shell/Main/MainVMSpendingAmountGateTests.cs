@@ -136,4 +136,109 @@ public class MainVMSpendingAmountGateTests
 
         Assert.True(isLocked);
     }
+
+    [Fact]
+    public void ShouldLockActionsForSufficientFunds_WhenNoSources_ReturnsTrue()
+    {
+        var isLocked = MainVM.ShouldLockActionsForSufficientFunds([], []);
+
+        Assert.True(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockActionsForSufficientFunds_WhenEnabledSourcesHaveNoPositiveFunds_ReturnsTrue()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true },
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = -10m, IsEnabled = true },
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Saving, Balance = 0m, IsEnabled = true },
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 0m, IsEnabled = true },
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = -1m, IsEnabled = true }
+        };
+
+        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+
+        Assert.True(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockActionsForSufficientFunds_WhenAnyEnabledNonCreditSourceHasPositiveBalance_ReturnsFalse()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true },
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = 25m, IsEnabled = true }
+        };
+
+        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+
+        Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockActionsForSufficientFunds_WhenAnyEnabledCreditOrBnplHasPositiveLimit_ReturnsFalse()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 0m, IsEnabled = true },
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m, IsEnabled = true }
+        };
+
+        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+
+        Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockActionsForSufficientFunds_WhenOnlyFundedSourceIsDisabled_ReturnsTrue()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM
+            {
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 25m,
+                IsEnabled = false
+            }
+        };
+
+        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+
+        Assert.True(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockActionsForSufficientFunds_WhenEnabledSourcesHaveNoPositiveFundsButHasExpenseLog_ReturnsFalse()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true }
+        };
+        var logs = new[]
+        {
+            new ExpenseLogVM { IsForDeletion = false, Amount = 50m }
+        };
+
+        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, logs);
+
+        Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void ShouldLockActionsForSufficientFunds_WhenEnabledSourcesHaveNoPositiveFundsAndOnlyDeletedExpenseLog_ReturnsTrue()
+    {
+        var sources = new[]
+        {
+            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true }
+        };
+        var logs = new[]
+        {
+            new ExpenseLogVM { IsForDeletion = true, Amount = 50m }
+        };
+
+        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, logs);
+
+        Assert.True(isLocked);
+    }
 }

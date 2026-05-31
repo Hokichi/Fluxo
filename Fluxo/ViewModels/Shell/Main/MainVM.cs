@@ -15,6 +15,7 @@ public partial class MainVM : ObservableRecipient
     private bool _isInitialized;
 
     [ObservableProperty] private bool _isDashboardSpendingAmountGateLocked;
+    [ObservableProperty] private bool _isSufficientFundsActionGateLocked;
     [ObservableProperty] private string _username = "User";
 
     public bool IsInitialized => _isInitialized;
@@ -69,7 +70,7 @@ public partial class MainVM : ObservableRecipient
         await betweenStagesAsync();
 
         await BudgetPanel.LoadAsync();
-        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources, BudgetPanel.GetAllExpenseLogs());
+        RefreshSpendingAmountGateStates();
         await betweenStagesAsync();
 
         await SpentAllowancePanel.LoadAsync();
@@ -89,7 +90,7 @@ public partial class MainVM : ObservableRecipient
     public async Task ReloadCurrentDataAsync()
     {
         await BudgetPanel.LoadAsync();
-        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources, BudgetPanel.GetAllExpenseLogs());
+        RefreshSpendingAmountGateStates();
 
         await Task.WhenAll(
             SpentAllowancePanel.LoadAsync(),
@@ -105,6 +106,36 @@ public partial class MainVM : ObservableRecipient
         ArgumentNullException.ThrowIfNull(expenseLogs);
 
         return !spendingSources.Any(source => source.IsEnabled);
+    }
+
+    public static bool ShouldLockActionsForSufficientFunds(
+        IEnumerable<SpendingSourceVM> spendingSources,
+        IEnumerable<ExpenseLogVM> expenseLogs)
+    {
+        ArgumentNullException.ThrowIfNull(spendingSources);
+        ArgumentNullException.ThrowIfNull(expenseLogs);
+
+        var hasUsableFunds = spendingSources
+            .Where(source => source.IsEnabled)
+            .Any(HasUsableFunds);
+        var hasActiveExpenseLogs = expenseLogs.Any(log => !log.IsForDeletion);
+
+        return !hasUsableFunds && !hasActiveExpenseLogs;
+    }
+
+    private static bool HasUsableFunds(SpendingSourceVM source)
+    {
+        return source.SpendingSourceType is Fluxo.Core.Enums.SpendingSourceType.Credit or Fluxo.Core.Enums.SpendingSourceType.BNPL
+            ? source.AccountLimit > 0m
+            : source.Balance > 0m;
+    }
+
+    private void RefreshSpendingAmountGateStates()
+    {
+        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources, BudgetPanel.GetAllExpenseLogs());
+        IsSufficientFundsActionGateLocked =
+            IsDashboardSpendingAmountGateLocked ||
+            ShouldLockActionsForSufficientFunds(SpendingSources, BudgetPanel.GetAllExpenseLogs());
     }
 
     private async Task LoadUserSettingsAsync()

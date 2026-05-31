@@ -96,10 +96,10 @@
                 </Style.Triggers>
             </Style>
 
-            <Style x:Key="HideWhenDashboardSpendingAmountGateLockedStyle" TargetType="FrameworkElement">
+            <Style x:Key="HideWhenSufficientFundsActionGateLockedStyle" TargetType="FrameworkElement">
                 <Setter Property="Visibility" Value="Visible" />
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                    <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
                         <Setter Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
                 </Style.Triggers>
@@ -123,44 +123,22 @@
             </Style>
 
             <Style
-                x:Key="HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle"
+                x:Key="HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle"
                 BasedOn="{StaticResource HeaderMenuActionButtonStyle}"
                 TargetType="Button">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                    <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
                         <Setter Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
 
             <Style
-                x:Key="HeaderButtonHideWhenDashboardSpendingAmountGateLockedStyle"
+                x:Key="HeaderButtonHideWhenSufficientFundsActionGateLockedStyle"
                 BasedOn="{StaticResource HeaderButtonStyle}"
                 TargetType="customControls:BalloonButton">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-
-            <Style
-                x:Key="TextOnlyButtonHideWhenDashboardSpendingAmountGateLockedStyle"
-                BasedOn="{StaticResource TextOnlyButtonStyle}"
-                TargetType="Button">
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-
-            <Style
-                x:Key="SpendingSourceAddButtonHideWhenDashboardSpendingAmountGateLockedStyle"
-                BasedOn="{StaticResource SpendingSourceAddButtonStyle}"
-                TargetType="Button">
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                    <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
                         <Setter Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
                 </Style.Triggers>
@@ -367,7 +345,7 @@
                             VerticalAlignment="Top"
                             Panel.ZIndex="10"
                             PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus"
-                            Style="{StaticResource HideWhenDashboardSpendingAmountGateLockedStyle}">
+                            Style="{StaticResource HideWhenSufficientFundsActionGateLockedStyle}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -464,7 +442,7 @@
                             x:Name="HeaderQuickAddButton"
                             ButtonIcon="{StaticResource PlusSolid}"
                             Click="OnHeaderQuickAddButtonClick"
-                            Style="{StaticResource HeaderButtonHideWhenDashboardSpendingAmountGateLockedStyle}" />
+                            Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
 
                         <customControls:BalloonButton
                             x:Name="HeaderMenuButton"
@@ -515,7 +493,7 @@
                                     <Button
                                         x:Name="QuickAddMenuButton"
                                         Click="OnQuickAddButtonClick"
-                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                        Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -572,7 +550,10 @@
                                         </Grid>
                                     </Button>
 
-                                    <Button Click="OnPlanningButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                    <Button
+                                        x:Name="PlanningMenuButton"
+                                        Click="OnPlanningButtonClick"
+                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -603,7 +584,7 @@
                                         x:Name="UndoMenuButton"
                                         Click="OnUndoButtonClick"
                                         IsEnabled="False"
-                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
+                                        Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -634,7 +615,7 @@
                                         x:Name="RedoMenuButton"
                                         Click="OnRedoButtonClick"
                                         IsEnabled="False"
-                                        Style="{StaticResource HeaderMenuActionHideWhenDashboardSpendingAmountGateLockedStyle}">
+                                        Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="16" />
@@ -767,7 +748,7 @@
                                 VerticalAlignment="Center"
                                 Click="OnSpendingSourcesButtonClick"
                                 Content="View All Spending Sources"
-                                Style="{StaticResource TextOnlyButtonHideWhenDashboardSpendingAmountGateLockedStyle}" />
+                                Style="{StaticResource TextOnlyButtonStyle}" />
                         </Grid>
 
                         <Grid Grid.Row="1" Margin="0,20,0,0">
@@ -805,7 +786,7 @@
                                         Margin="0,0,8,0"
                                         Click="OnAddSpendingSourceButtonClick"
                                         Content="Add"
-                                        Style="{StaticResource SpendingSourceAddButtonHideWhenDashboardSpendingAmountGateLockedStyle}" />
+                                        Style="{StaticResource SpendingSourceAddButtonStyle}" />
 
                                     <ListView
                                         HorizontalAlignment="Left"
@@ -911,7 +892,7 @@
                         <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
                         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                            <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding IsMouseOver, ElementName=AnalyticsDrawerTabButton}" Value="True">

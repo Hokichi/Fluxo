@@ -46,6 +46,8 @@ public sealed class MainWindowShortcutRoutingTests
 
         Assert.Contains("private bool IsDashboardSpendingAmountGateLocked()", source);
         Assert.Contains("return _mainVM.IsDashboardSpendingAmountGateLocked;", source);
+        Assert.Contains("private bool IsSufficientFundsActionGateLocked()", source);
+        Assert.Contains("return _mainVM.IsSufficientFundsActionGateLocked;", source);
     }
 
     [Fact]
@@ -53,8 +55,9 @@ public sealed class MainWindowShortcutRoutingTests
     {
         var source = ReadMainWindowSource();
 
-        Assert.Contains("if (IsDashboardSpendingAmountGateLocked())", source);
+        Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
         Assert.Contains("e.Handled = true;", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused()", source);
@@ -62,7 +65,22 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
-    public void LockedShortcuts_StillAllowQuickAddAndSources()
+    public void LockedShortcuts_StillAllowSources()
+    {
+        var source = ReadMainWindowSource();
+
+        var sourcesBranch = Slice(
+            source,
+            "if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)",
+            "if (MainWindowShortcutMatcher.IsRunSetupWizardShortcut(e.Key, Keyboard.Modifiers))");
+
+        Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", sourcesBranch);
+        Assert.DoesNotContain("IsSufficientFundsActionGateLocked()", sourcesBranch);
+        Assert.Contains("OpenSpendingSourcesListPopup();", sourcesBranch);
+    }
+
+    [Fact]
+    public void LockedShortcuts_SuppressQuickAdd()
     {
         var source = ReadMainWindowSource();
 
@@ -70,15 +88,29 @@ public sealed class MainWindowShortcutRoutingTests
             source,
             "if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))",
             "if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))");
-        var sourcesBranch = Slice(
-            source,
-            "if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)",
-            "if (MainWindowShortcutMatcher.IsRunSetupWizardShortcut(e.Key, Keyboard.Modifiers))");
 
-        Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", quickAddBranch);
+        Assert.Contains("IsSufficientFundsActionGateLocked()", quickAddBranch);
         Assert.Contains("OpenQuickAddPopup();", quickAddBranch);
-        Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", sourcesBranch);
-        Assert.Contains("OpenSpendingSourcesListPopup();", sourcesBranch);
+    }
+
+    [Fact]
+    public void SourcePopupOpenMethods_AreNotGuardedBySufficientFundsGate()
+    {
+        var source = ReadMainWindowSource();
+
+        var sourcesMethod = Slice(
+            source,
+            "public void OpenSpendingSourcesListPopup()",
+            "public void OpenAddSpendingSourcePopup()");
+        var addSourceMethod = Slice(
+            source,
+            "public void OpenAddSpendingSourcePopup()",
+            "public void OpenAddSavingGoalPopup()");
+
+        Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", sourcesMethod);
+        Assert.DoesNotContain("IsSufficientFundsActionGateLocked()", sourcesMethod);
+        Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", addSourceMethod);
+        Assert.DoesNotContain("IsSufficientFundsActionGateLocked()", addSourceMethod);
     }
 
     [Fact]
@@ -92,7 +124,7 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private async void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)", source);
-        Assert.Contains("if (IsDashboardSpendingAmountGateLocked())", source);
+        Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
     }
 
     [Fact]
@@ -106,7 +138,7 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("public void OpenAddSpendingSourcePopup()", source);
         Assert.Contains("public void OpenAnalyticsPopup()", source);
         Assert.Contains("private async Task OpenAnalyticsPopupAsync()", source);
-        Assert.Contains("if (IsDashboardSpendingAmountGateLocked())", source);
+        Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
     }
 
     private static string ReadMainWindowSource()

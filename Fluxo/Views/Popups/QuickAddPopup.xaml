@@ -107,7 +107,7 @@
             BasedOn="{StaticResource QuickAddTileButtonStyle}"
             TargetType="Button">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
                     <Setter Property="IsEnabled" Value="False" />
                     <Setter Property="Cursor" Value="Arrow" />
                 </DataTrigger>

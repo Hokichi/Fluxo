@@ -113,7 +113,7 @@ public sealed class SettingsSpendingAmountGateTextTests
             "SettingsPopup.xaml"));
 
         Assert.Contains("x:Key=\"LockedSettingsTabButtonStyle\"", xaml);
-        Assert.Contains("Binding=\"{Binding IsDashboardSpendingAmountGateLocked}\"", xaml);
+        Assert.Contains("Binding=\"{Binding IsSufficientFundsActionGateLocked}\"", xaml);
         Assert.Contains("Property=\"IsHitTestVisible\" Value=\"False\"", xaml);
         Assert.Contains("Property=\"Opacity\" Value=\"0.45\"", xaml);
 

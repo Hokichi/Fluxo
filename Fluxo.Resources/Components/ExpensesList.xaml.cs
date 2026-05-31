@@ -38,6 +38,9 @@ public partial class ExpensesList : UserControl
     public static readonly DependencyProperty IsListEmptyProperty = DependencyProperty.Register(
         nameof(IsListEmpty), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
 
+    public static readonly DependencyProperty IsEmptyActionVisibleProperty = DependencyProperty.Register(
+        nameof(IsEmptyActionVisible), typeof(bool), typeof(ExpensesList), new PropertyMetadata(true));
+
     public static readonly DependencyProperty EmptyActionTextProperty = DependencyProperty.Register(
         nameof(EmptyActionText), typeof(string), typeof(ExpensesList), new PropertyMetadata("Add"));
 
@@ -113,6 +116,12 @@ public partial class ExpensesList : UserControl
     {
         get => (bool)GetValue(IsListEmptyProperty);
         set => SetValue(IsListEmptyProperty, value);
+    }
+
+    public bool IsEmptyActionVisible
+    {
+        get => (bool)GetValue(IsEmptyActionVisibleProperty);
+        set => SetValue(IsEmptyActionVisibleProperty, value);
     }
 
     public string EmptyActionText

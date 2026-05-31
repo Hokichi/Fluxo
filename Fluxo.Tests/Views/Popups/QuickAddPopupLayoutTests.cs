@@ -19,7 +19,7 @@ public sealed class QuickAddPopupLayoutTests
         "QuickAddPopup.xaml.cs");
 
     [Fact]
-    public void LockedDashboard_DisablesTransactionAndSavingGoalTilesOnly()
+    public void SufficientFundsActionGate_DisablesTransactionAndSavingGoalTilesOnly()
     {
         var xaml = File.ReadAllText(PopupXamlPath);
 
@@ -29,7 +29,7 @@ public sealed class QuickAddPopupLayoutTests
         Assert.Contains("x:Name=\"NewSavingGoalQuickAddButton\"", xaml);
         Assert.Equal(2, xaml.Split("Style=\"{StaticResource LockedDisabledQuickAddTileButtonStyle}\"").Length - 1);
         Assert.Contains("Style=\"{StaticResource QuickAddTileButtonStyle}\"", xaml);
-        Assert.Contains("<DataTrigger Binding=\"{Binding IsDashboardSpendingAmountGateLocked}\" Value=\"True\">", xaml);
+        Assert.Contains("<DataTrigger Binding=\"{Binding IsSufficientFundsActionGateLocked}\" Value=\"True\">", xaml);
         Assert.Contains("<Setter Property=\"IsEnabled\" Value=\"False\" />", xaml);
     }
 

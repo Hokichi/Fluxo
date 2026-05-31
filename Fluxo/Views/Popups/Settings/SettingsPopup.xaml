@@ -21,7 +21,7 @@
                 BasedOn="{StaticResource TabButtonStyle}"
                 TargetType="RadioButton">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                    <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
                         <Setter Property="Opacity" Value="0.45" />
                         <Setter Property="IsHitTestVisible" Value="False" />
                     </DataTrigger>

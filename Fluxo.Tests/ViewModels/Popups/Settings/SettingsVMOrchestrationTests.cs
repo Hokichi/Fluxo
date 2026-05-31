@@ -66,7 +66,7 @@ public sealed class SettingsVMOrchestrationTests
     }
 
     [Fact]
-    public void SpendingSourceDataChanged_RefreshesDashboardSpendingAmountGateState()
+    public void SpendingSourceDataChanged_RefreshesSufficientFundsActionGateState()
     {
         RunInSta(() =>
         {
@@ -77,15 +77,16 @@ public sealed class SettingsVMOrchestrationTests
             var propertyChanges = new List<string?>();
             settings.PropertyChanged += (_, args) => propertyChanges.Add(args.PropertyName);
 
-            Assert.True(settings.IsDashboardSpendingAmountGateLocked);
+            Assert.True(settings.IsSufficientFundsActionGateLocked);
 
             mainViewModel.IsDashboardSpendingAmountGateLocked = false;
+            mainViewModel.IsSufficientFundsActionGateLocked = false;
             settings.Receive(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
 
-            Assert.False(settings.IsDashboardSpendingAmountGateLocked);
+            Assert.False(settings.IsSufficientFundsActionGateLocked);
             Assert.False(settings.FixedExpensesTab.IsDashboardSpendingAmountGateLocked);
             Assert.False(settings.GoalsTab.IsDashboardSpendingAmountGateLocked);
-            Assert.Contains(nameof(SettingsVM.IsDashboardSpendingAmountGateLocked), propertyChanges);
+            Assert.Contains(nameof(SettingsVM.IsSufficientFundsActionGateLocked), propertyChanges);
         });
     }
 
@@ -96,6 +97,7 @@ public sealed class SettingsVMOrchestrationTests
         var appData = new AppDataService(unitOfWork);
         var mainViewModel = CreateMainViewModel(messenger, unitOfWork);
         mainViewModel.IsDashboardSpendingAmountGateLocked = true;
+        mainViewModel.IsSufficientFundsActionGateLocked = true;
 
         var settings = new SettingsVM(
             mainViewModel,

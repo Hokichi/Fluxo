@@ -14,7 +14,9 @@ public sealed class ExpensesListEmptyActionTests
         Assert.Contains("Content=\"{Binding EmptyActionText", xaml);
         Assert.Contains("Click=\"OnEmptyActionButtonClick\"", xaml);
         Assert.Contains("Style=\"{StaticResource SpendingSourceAddButtonStyle}\"", xaml);
-        Assert.Contains("Visibility=\"{Binding IsListEmpty", xaml);
+        Assert.Contains("<MultiDataTrigger.Conditions>", xaml);
+        Assert.Contains("Binding IsListEmpty", xaml);
+        Assert.Contains("Binding IsEmptyActionVisible", xaml);
         Assert.Contains("Panel.ZIndex=\"1\"", xaml);
     }
 
@@ -25,6 +27,8 @@ public sealed class ExpensesListEmptyActionTests
 
         Assert.Contains("EmptyActionTextProperty", source);
         Assert.Contains("EmptyActionParameterProperty", source);
+        Assert.Contains("IsEmptyActionVisibleProperty", source);
+        Assert.Contains("public bool IsEmptyActionVisible", source);
         Assert.Contains("public event RoutedEventHandler? EmptyActionClick;", source);
         Assert.Contains("private void OnEmptyActionButtonClick(object sender, RoutedEventArgs e)", source);
     }
