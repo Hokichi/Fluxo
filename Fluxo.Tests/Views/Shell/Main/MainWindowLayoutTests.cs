@@ -97,6 +97,26 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void StateChange_SetsWindowLayoutStateBeforeFadeInStarts()
+    {
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+
+        Assert.Contains("public static readonly DependencyProperty IsWindowLayoutMaximizedProperty", source);
+
+        var animateToMaximized = ExtractMethodBodyBySignature(source, "private void AnimateToMaximized()");
+        var animateToRestored = ExtractMethodBodyBySignature(source, "private void AnimateToRestored()");
+        var animateStateChange = ExtractMethodBodyBySignature(source, "private void AnimateStateChange(Rect from, Rect to, bool maximizing)");
+
+        Assert.DoesNotContain("IsWindowLayoutMaximized = true;", animateToMaximized);
+        Assert.DoesNotContain("IsWindowLayoutMaximized = false;", animateToRestored);
+        Assert.Contains("FadeContentIn(() =>", animateStateChange);
+        Assert.Contains("IsWindowLayoutMaximized = maximizing;", animateStateChange);
+        Assert.True(
+            animateStateChange.IndexOf("IsWindowLayoutMaximized = maximizing;", StringComparison.Ordinal) <
+            animateStateChange.IndexOf("FadeContentIn(() =>", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void SpendingAmountGate_HideMarkers_ArePresent()
     {
         var xamlDocument = MainWindowXamlDocument.Value;

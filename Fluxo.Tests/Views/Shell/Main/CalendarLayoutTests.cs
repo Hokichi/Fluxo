@@ -13,7 +13,7 @@ public sealed class CalendarLayoutTests
         var xaml = LoadCalendarXaml();
 
         Assert.Contains("x:Class=\"Fluxo.Views.Shell.Main.Calendar\"", xaml);
-        Assert.Contains("<ColumnDefinition Width=\"350", xaml);
+        Assert.Contains("<ColumnDefinition Width=\"Auto", xaml);
         Assert.Contains("<ColumnDefinition Width=\"*\"", xaml);
         Assert.Contains("ItemsSource=\"{Binding VisibleWeeks}\"", xaml);
         Assert.Contains("Command=\"{Binding DataContext.SelectDateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}\"", xaml);
@@ -53,6 +53,66 @@ public sealed class CalendarLayoutTests
         Assert.Contains("CommandParameter=\"{Binding}\"", xaml);
         Assert.DoesNotContain("DataContext=\"{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}\"", xaml);
         Assert.DoesNotContain("CommandParameter=\"{Binding Tag, RelativeSource={RelativeSource AncestorType=Grid}}\"", xaml);
+    }
+
+    [Fact]
+    public void CalendarLayout_CentersWeekHeadersOverDateCells()
+    {
+        var xaml = LoadCalendarXaml();
+
+        Assert.Contains("x:Key=\"CalendarWeekHeaderLabelStyle\"", xaml);
+        Assert.Contains("<Setter Property=\"TextAlignment\" Value=\"Center\" />", xaml);
+        Assert.Contains("Style=\"{StaticResource CalendarWeekHeaderLabelStyle}\" Text=\"SUN\"", xaml);
+        Assert.Contains("Style=\"{StaticResource CalendarWeekHeaderLabelStyle}\" Text=\"SAT\"", xaml);
+    }
+
+    [Fact]
+    public void CalendarLayout_UsesStackedSummaryCardsWhenWindowIsMaximized()
+    {
+        var xaml = LoadCalendarXaml();
+
+        Assert.Contains("x:Key=\"CalendarSummaryMaximizedVisibilityStyle\"", xaml);
+        Assert.Contains("Binding=\"{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}\" Value=\"True\"", xaml);
+        Assert.Contains("x:Key=\"CalendarSummaryInlineValueTextStyle\"", xaml);
+        Assert.Contains("<Setter Property=\"Margin\" Value=\"12,0,0,0\" />", xaml);
+        Assert.Contains("<Setter Property=\"HorizontalAlignment\" Value=\"Right\" />", xaml);
+    }
+
+    [Fact]
+    public void CalendarLayout_ResizesCalendarCardWithWindowLayoutState()
+    {
+        var xaml = LoadCalendarXaml();
+
+        Assert.Contains("x:Key=\"CalendarColumnLayoutStyle\"", xaml);
+        Assert.Contains("x:Key=\"CalendarGridCardStyle\"", xaml);
+        Assert.Contains("<Setter Property=\"Width\" Value=\"480\" />", xaml);
+        Assert.Contains("<Setter Property=\"Height\" Value=\"480\" />", xaml);
+        Assert.Contains("<Setter Property=\"Width\" Value=\"570\" />", xaml);
+        Assert.Contains("<Setter Property=\"Height\" Value=\"570\" />", xaml);
+        Assert.Contains("Binding=\"{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}\" Value=\"True\"", xaml);
+        Assert.Contains("Style=\"{StaticResource CalendarGridCardStyle}\"", xaml);
+        Assert.Contains("Style=\"{StaticResource CalendarColumnLayoutStyle}\"", xaml);
+    }
+
+    [Fact]
+    public void CalendarLayout_StretchesWeekRowsAndDateButtonsVertically()
+    {
+        var xaml = LoadCalendarXaml();
+
+        Assert.Contains("<UniformGrid Rows=\"6\" />", xaml);
+        Assert.Contains("<UniformGrid Columns=\"7\" Rows=\"1\" />", xaml);
+        Assert.Contains("<Setter Property=\"VerticalAlignment\" Value=\"Stretch\" />", xaml);
+        Assert.Contains("VerticalAlignment=\"Stretch\"", xaml);
+    }
+
+    [Fact]
+    public void CalendarLayout_KeepsRestoredSummaryGridFullWidth()
+    {
+        var xaml = LoadCalendarXaml();
+
+        Assert.Contains("x:Key=\"CalendarSummaryRestoredVisibilityStyle\"", xaml);
+        Assert.Contains("<ColumnDefinition Width=\"*\" />", xaml);
+        Assert.Contains("HorizontalAlignment=\"Stretch\"", xaml);
     }
 
     [Fact]

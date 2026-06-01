@@ -33,6 +33,12 @@ namespace Fluxo.Views.Shell.Main;
 /// </summary>
 public partial class MainWindow : Window, IPopupHost
 {
+    public static readonly DependencyProperty IsWindowLayoutMaximizedProperty = DependencyProperty.Register(
+        nameof(IsWindowLayoutMaximized),
+        typeof(bool),
+        typeof(MainWindow),
+        new PropertyMetadata(false));
+
     private enum MainDrawerPage
     {
         Analytics,
@@ -75,6 +81,12 @@ public partial class MainWindow : Window, IPopupHost
     private IServiceScope? _calendarDrawerScope;
 
     private EventHandler? _renderHandler;
+
+    public bool IsWindowLayoutMaximized
+    {
+        get => (bool)GetValue(IsWindowLayoutMaximizedProperty);
+        private set => SetValue(IsWindowLayoutMaximizedProperty, value);
+    }
 
     public MainWindow(
         MainVM mainVM,
@@ -408,6 +420,7 @@ public partial class MainWindow : Window, IPopupHost
         Height = anchoredRestoreBounds.Height;
 
         _isMaximized = false;
+        IsWindowLayoutMaximized = false;
         _isStateChangeTransitionActive = false;
         _currentBounds = anchoredRestoreBounds;
         UpdateExpandRestoreButtonIcon();
@@ -457,7 +470,11 @@ public partial class MainWindow : Window, IPopupHost
 
             AnimateBounds(from, to, maximizing, () =>
             {
-                FadeContentIn(() => _isStateChangeTransitionActive = false);
+                IsWindowLayoutMaximized = maximizing;
+                FadeContentIn(() =>
+                {
+                    _isStateChangeTransitionActive = false;
+                });
             });
         });
     }
