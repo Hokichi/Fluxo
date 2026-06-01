@@ -2,6 +2,8 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Extensions;
 using Fluxo.Services.Persistence;
 using Fluxo.Services.Notifications;
+using Fluxo.ViewModels.Shell.Main;
+using Fluxo.Views.Shell.Main;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -33,5 +35,21 @@ public sealed class ServiceCollectionExtensionsTests
         Assert.NotNull(descriptor);
         Assert.Equal(typeof(CalendarService), descriptor!.ImplementationType);
         Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddUIData_RegistersCalendarViewAndViewModel()
+    {
+        var services = new ServiceCollection();
+
+        services.AddUIData();
+
+        var calendarVmDescriptor = services.LastOrDefault(sd => sd.ServiceType == typeof(CalendarVM));
+        var calendarViewDescriptor = services.LastOrDefault(sd => sd.ServiceType == typeof(Calendar));
+
+        Assert.NotNull(calendarVmDescriptor);
+        Assert.Equal(ServiceLifetime.Transient, calendarVmDescriptor!.Lifetime);
+        Assert.NotNull(calendarViewDescriptor);
+        Assert.Equal(ServiceLifetime.Transient, calendarViewDescriptor!.Lifetime);
     }
 }

@@ -26,6 +26,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using AnalyticsVM = Fluxo.ViewModels.Shell.Main.AnalyticsVM;
 using BudgetAllocationPanelVM = Fluxo.ViewModels.Shell.Main.BudgetAllocationPanelVM;
+using CalendarVM = Fluxo.ViewModels.Shell.Main.CalendarVM;
 using DaySpinnerVM = Fluxo.ViewModels.Shell.Main.DaySpinnerVM;
 using MainViewModeToggleVM = Fluxo.ViewModels.Shell.Main.MainViewModeToggleVM;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -95,6 +96,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PlanningPopupVM>();
         services.AddTransient<PlanningReportVM>();
         services.AddTransient<AnalyticsVM>();
+        services.AddTransient<CalendarVM>();
         services.AddTransient<SettingsBudgetTabVM>();
         services.AddTransient<SettingsSourcesTabVM>();
         services.AddTransient<SettingsFixedExpensesTabVM>();
@@ -128,6 +130,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PlanningPopup>();
         services.AddTransient<PlanningReportPopup>();
         services.AddTransient<Analytics>();
+        services.AddTransient<Calendar>();
         services.AddTransient<INotificationGroupingService, NotificationGroupingService>();
         services.AddTransient<INotificationActionService, NotificationActionService>();
         services.AddTransient<IStartupNotificationSummaryService, StartupNotificationSummaryService>();
