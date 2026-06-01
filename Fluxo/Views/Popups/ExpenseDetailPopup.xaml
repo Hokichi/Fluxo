@@ -70,7 +70,6 @@
             <Setter Property="Margin" Value="0,0,8,8" />
         </Style>
 
-
         <DataTemplate x:Key="PopupTagTemplate">
             <ToggleButton
                 Content="{Binding Name}"
@@ -184,7 +183,7 @@
     </customControls:BasePopup.Resources>
 
     <Border Padding="20,4,20,20">
-        <Grid Width="560">
+        <Grid Width="800">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -240,10 +239,7 @@
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
-                        <components:DateSelector
-                            x:Name="ExpenseTransactionDateSelector"
-                            IsEnabled="{Binding CanEditFields}"
-                            SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                        <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
                     </StackPanel>
                 </Grid>
 
@@ -263,7 +259,6 @@
                         <ComboBox
                             x:Name="ExpenseCategoryComboBox"
                             DisplayMemberPath="Label"
-                            IsEnabled="{Binding CanEditFields}"
                             ItemsSource="{Binding ExpenseCategories}"
                             SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
                             SelectedValuePath="Value"
@@ -275,7 +270,6 @@
                         <ComboBox
                             x:Name="ExpenseSpendingSourceComboBox"
                             DisplayMemberPath="Name"
-                            IsEnabled="{Binding CanEditFields}"
                             ItemsSource="{Binding SpendingSourcesView}"
                             SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
                             Style="{StaticResource FluxoComboBoxStyle}">
@@ -320,7 +314,6 @@
                             Checked="OnMoreTagsButtonChecked"
                             Content="More"
                             IsChecked="{Binding IsMoreTagsOpen, Mode=TwoWay}"
-                            IsEnabled="{Binding CanEditFields}"
                             MouseEnter="OnMoreTagsHoverChanged"
                             MouseLeave="OnMoreTagsHoverChanged"
                             Style="{StaticResource PopupTagToggleStyle}"
@@ -530,12 +523,12 @@
                         VerticalScrollBarVisibility="Auto" />
                 </Border>
             </StackPanel>
+
+            <Border
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Background="Transparent"
+                Visibility="{Binding CanEditFields, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
         </Grid>
     </Border>
 </customControls:BasePopup>
-
-
-
-
-
-
