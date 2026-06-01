@@ -61,6 +61,15 @@
                                         Visibility="{TemplateBinding ShowCloneButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
+                                    <!--  Split  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_SplitButton"
+                                        ButtonIcon="{StaticResource ArrowsOutLineVertical}"
+                                        HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        Visibility="{TemplateBinding ShowSplitButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
                                     <!--  Delete  -->
                                     <c:BalloonButton
                                         x:Name="PART_DeleteButton"

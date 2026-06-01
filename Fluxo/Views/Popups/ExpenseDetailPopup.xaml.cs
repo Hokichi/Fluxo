@@ -36,6 +36,7 @@ public partial class ExpenseDetailPopup : BasePopup
     private readonly DispatcherTimer _moreTagsHoverCloseTimer;
     private MoreTagsPopupLifecycleState _moreTagsPopupState = MoreTagsPopupLifecycleState.Closed;
     private bool _isSyncingNoteDocument;
+    private readonly PropertyChangedEventHandler _viewModelPropertyChangedHandler;
 
     public ExpenseDetailPopup(
         ExpenseDetailVM viewModel,
@@ -55,18 +56,19 @@ public partial class ExpenseDetailPopup : BasePopup
             TryCloseMoreTagsPopupIfNotPinned();
         };
 
-        _viewModel.PropertyChanged += (_, e) =>
+        _viewModelPropertyChangedHandler = (_, e) =>
         {
             if (e.PropertyName == nameof(ExpenseDetailVM.PopupTitle))
                 PopupTitle = _viewModel.PopupTitle;
 
-            if (e.PropertyName == nameof(ExpenseDetailVM.IsEditing))
+            if (e.PropertyName is nameof(ExpenseDetailVM.IsEditing) or nameof(ExpenseDetailVM.IsSplitMode))
             {
                 UpdateButtonStates();
                 RecalculateTagLayout();
                 SyncMoreTagsPopupState();
             }
         };
+        _viewModel.PropertyChanged += _viewModelPropertyChangedHandler;
 
         Loaded += (_, _) =>
         {
@@ -76,6 +78,7 @@ public partial class ExpenseDetailPopup : BasePopup
             SyncMoreTagsPopupState();
         };
         Closing += OnPopupClosing;
+        Closed += OnPopupClosed;
 
         TagsDockPanel.SizeChanged += (_, _) => RecalculateTagLayout();
         PreviewMouseDown += OnPopupPreviewMouseDown;
@@ -91,10 +94,21 @@ public partial class ExpenseDetailPopup : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
-        var result = await _viewModel.SaveAsync();
-        if (!result.IsSuccess)
+        var wasSplitModeSave = _viewModel.IsSplitMode;
+        var result = await TrySaveWithSplitRemainderConfirmationAsync();
+        if (result is null)
+            return;
+
+        if (!result.Value.IsSuccess)
         {
-            ShowValidationMessage(result.ErrorMessage);
+            ShowValidationMessage(result.Value.ErrorMessage);
+            return;
+        }
+
+        if (wasSplitModeSave)
+        {
+            _allowClose = true;
+            Close();
             return;
         }
 
@@ -111,11 +125,20 @@ public partial class ExpenseDetailPopup : BasePopup
         ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenAddNewTransactionPopup(draft)));
     }
 
+    protected override void OnSplitButtonClick()
+    {
+        _viewModel.BeginSplitMode();
+        UpdateButtonStates();
+        SyncMoreTagsPopupState();
+        ExpenseAmountTextBox.Focus();
+    }
+
     protected override void OnCancelButtonClick()
     {
         _viewModel.CancelEditing();
         SyncNoteDocumentFromViewModel();
         SyncMoreTagsPopupState();
+        UpdateButtonStates();
     }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -128,7 +151,41 @@ public partial class ExpenseDetailPopup : BasePopup
 
     private async void OnPopupClosing(object? sender, CancelEventArgs e)
     {
-        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasValidChangesToPersistOnClose())
+        if (_allowClose || _isHandlingCloseRequest)
+            return;
+
+        if (_viewModel.CanCloseSplitModeWithoutSaving)
+            return;
+
+        if (_viewModel.RequiresEmptySplitConfirmationOnClose)
+        {
+            e.Cancel = true;
+            _isHandlingCloseRequest = true;
+
+            try
+            {
+                var closeWithoutSaving = FluxoMessageBox.Show(
+                    this,
+                    "You have split rows without amounts. Close without saving?",
+                    "Expense Detail",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (closeWithoutSaving != MessageBoxResult.Yes)
+                    return;
+
+                _allowClose = true;
+                _ = Dispatcher.BeginInvoke(new Action(Close));
+            }
+            finally
+            {
+                _isHandlingCloseRequest = false;
+            }
+
+            return;
+        }
+
+        if (!_viewModel.HasValidChangesToPersistOnClose())
             return;
 
         e.Cancel = true;
@@ -145,10 +202,13 @@ public partial class ExpenseDetailPopup : BasePopup
 
             if (confirmation == MessageBoxResult.Yes)
             {
-                var result = await _viewModel.SaveAsync();
-                if (!result.IsSuccess)
+                var result = await TrySaveWithSplitRemainderConfirmationAsync();
+                if (result is null)
+                    return;
+
+                if (!result.Value.IsSuccess)
                 {
-                    ShowValidationMessage(result.ErrorMessage);
+                    ShowValidationMessage(result.Value.ErrorMessage);
                     return;
                 }
 
@@ -164,6 +224,11 @@ public partial class ExpenseDetailPopup : BasePopup
         }
     }
 
+    private void OnPopupClosed(object? sender, EventArgs e)
+    {
+        _viewModel.PropertyChanged -= _viewModelPropertyChangedHandler;
+    }
+
     private void OnNoteTextChanged(object sender, TextChangedEventArgs e)
     {
         if (_isSyncingNoteDocument)
@@ -176,10 +241,11 @@ public partial class ExpenseDetailPopup : BasePopup
 
     private void UpdateButtonStates()
     {
-        ShowEditButton = !_viewModel.IsEditing;
+        ShowEditButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
         ShowSaveButton = _viewModel.IsEditing;
-        ShowCloneButton = !_viewModel.IsEditing;
+        ShowCloneButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
         ShowCancelButton = _viewModel.IsEditing;
+        ShowSplitButton = _viewModel.ShowSplitButton;
     }
 
     private void ShowValidationMessage(string? message)
@@ -454,6 +520,38 @@ public partial class ExpenseDetailPopup : BasePopup
         }
 
         return visibleCount;
+    }
+
+    private void OnAddSplitRowClick(object sender, RoutedEventArgs e)
+    {
+        _viewModel.AddSplitRow();
+    }
+
+    private void OnRemoveSplitRowClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is ExpenseSplitRowVM row)
+            _viewModel.RemoveSplitRow(row);
+    }
+
+    private async Task<ExpenseDetailVM.ExpenseDetailSaveResult?> TrySaveWithSplitRemainderConfirmationAsync()
+    {
+        var keepParentExpenseWhenRemainder = false;
+        if (_viewModel.IsSplitMode && _viewModel.HasSplitRowsWithAmounts && _viewModel.HasSplitParentRemainder)
+        {
+            var confirmation = FluxoMessageBox.Show(
+                this,
+                "Keep the remaining amount in this expense and create split expenses for the rows?",
+                "Expense Detail",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmation != MessageBoxResult.Yes)
+                return null;
+
+            keepParentExpenseWhenRemainder = true;
+        }
+
+        return await _viewModel.SaveAsync(keepParentExpenseWhenRemainder);
     }
 
 }

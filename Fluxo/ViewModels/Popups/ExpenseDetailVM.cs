@@ -26,8 +26,12 @@ public partial class ExpenseDetailVM : ObservableObject
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isEditing;
+    [ObservableProperty] private bool _isSplitMode;
     [ObservableProperty] private bool _isMoreTagsOpen;
+    [ObservableProperty] private bool _hasNegativeSplitRemainder;
     [ObservableProperty] private bool _isSaving;
+    [ObservableProperty] private ExpenseSplitRowVM? _negativeRemainderRow;
+    private bool _isApplyingSplitRemainder;
     private bool _isUpdatingTagCollections;
     private int _visibleTagSlots = DefaultVisibleTagSlots;
     [ObservableProperty] private string _nameText = string.Empty;
@@ -67,12 +71,22 @@ public partial class ExpenseDetailVM : ObservableObject
 
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
     public ICollectionView SpendingSourcesView { get; }
+    public ObservableCollection<ExpenseSplitRowVM> SplitRows { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
 
     public bool AreFieldsReadOnly => !IsEditing;
     public bool CanEditFields => IsEditing;
     public bool HasMoreTags => OverflowTags.Count > 0;
+    public bool HasSplitRows => SplitRows.Count > 0;
+    public bool HasSplitRowsWithAmounts => SplitRows.Any(row => row.HasAmount);
+    public bool HasSplitRowsWithoutAmounts => SplitRows.Count > 0 && SplitRows.All(row => !row.HasAmount);
+    public bool ShowSplitButton => !IsSplitMode;
+    public bool ShowNormalExpenseFields => !IsSplitMode;
+    public IEnumerable<ExpenseTagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
+    public bool HasSplitParentRemainder => IsSplitMode && AmountText > 0m;
+    public bool CanCloseSplitModeWithoutSaving => IsSplitMode && !HasSplitRows;
+    public bool RequiresEmptySplitConfirmationOnClose => IsSplitMode && HasSplitRowsWithoutAmounts;
 
     partial void OnIsEditingChanged(bool value)
     {
@@ -82,6 +96,25 @@ public partial class ExpenseDetailVM : ObservableObject
 
         if (!value)
             IsMoreTagsOpen = false;
+    }
+
+    partial void OnIsSplitModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowSplitButton));
+        OnPropertyChanged(nameof(ShowNormalExpenseFields));
+        OnPropertyChanged(nameof(HasSplitParentRemainder));
+        OnPropertyChanged(nameof(CanCloseSplitModeWithoutSaving));
+        OnPropertyChanged(nameof(RequiresEmptySplitConfirmationOnClose));
+    }
+
+    partial void OnAmountTextChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(HasSplitParentRemainder));
+
+        if (!IsSplitMode || _isApplyingSplitRemainder)
+            return;
+
+        UpdateSplitNegativeRemainderState(value, SplitRows.LastOrDefault(row => row.HasAmount));
     }
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
@@ -110,7 +143,66 @@ public partial class ExpenseDetailVM : ObservableObject
     public void CancelEditing()
     {
         IsEditing = false;
+        ClearSplitMode();
         LoadFromSavedState();
+    }
+
+    public void BeginSplitMode()
+    {
+        IsEditing = true;
+        IsSplitMode = true;
+        HasNegativeSplitRemainder = false;
+        NegativeRemainderRow = null;
+    }
+
+    public void AddSplitRow()
+    {
+        var row = new ExpenseSplitRowVM
+        {
+            SelectedExpenseCategory = SelectedExpenseCategory,
+            SelectedTag = SelectedTag
+        };
+
+        row.PropertyChanged += OnSplitRowPropertyChanged;
+        SplitRows.Add(row);
+        NotifySplitRowStateChanged();
+        RecalculateSplitRemainder(row);
+    }
+
+    public void RemoveSplitRow(ExpenseSplitRowVM row)
+    {
+        row.PropertyChanged -= OnSplitRowPropertyChanged;
+        SplitRows.Remove(row);
+        NotifySplitRowStateChanged();
+        RecalculateSplitRemainder(SplitRows.LastOrDefault());
+    }
+
+    public void ClearSplitMode()
+    {
+        foreach (var row in SplitRows)
+            row.PropertyChanged -= OnSplitRowPropertyChanged;
+
+        SplitRows.Clear();
+        IsSplitMode = false;
+        HasNegativeSplitRemainder = false;
+        NegativeRemainderRow = null;
+        NotifySplitRowStateChanged();
+    }
+
+    public void RecalculateSplitRemainder(ExpenseSplitRowVM? changedRow)
+    {
+        var remainder = _savedState.Amount - SplitRows.Sum(row => row.AmountText);
+        _isApplyingSplitRemainder = true;
+        try
+        {
+            AmountText = remainder;
+        }
+        finally
+        {
+            _isApplyingSplitRemainder = false;
+        }
+
+        UpdateSplitNegativeRemainderState(remainder, changedRow);
     }
 
     public async Task EnsureTagsLoadedAsync(CancellationToken cancellationToken = default)
@@ -152,10 +244,13 @@ public partial class ExpenseDetailVM : ObservableObject
             SelectedTag?.Id);
     }
 
-    public async Task<ExpenseDetailSaveResult> SaveAsync()
+    public async Task<ExpenseDetailSaveResult> SaveAsync(bool keepParentExpenseWhenRemainder = false)
     {
         if (IsSaving)
             return ExpenseDetailSaveResult.Failure("This expense is already being saved.");
+
+        if (IsSplitMode)
+            return await SaveSplitAsync(keepParentExpenseWhenRemainder);
 
         if (!TryBuildInput(out var input, out var validationMessage))
             return ExpenseDetailSaveResult.Failure(validationMessage);
@@ -165,6 +260,7 @@ public partial class ExpenseDetailVM : ObservableObject
         if (changedFields == ExpenseDetailChangedFields.None)
         {
             IsEditing = false;
+            ClearSplitMode();
             LoadFromSavedState();
             return ExpenseDetailSaveResult.Success();
         }
@@ -236,6 +332,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 input.TagId);
 
             IsEditing = false;
+            ClearSplitMode();
             LoadFromSavedState();
             WeakReferenceMessenger.Default.Send(new ExpenseDetailUpdatedMessage(
                 new ExpenseDetailUpdate(_expenseLog.Id, previousState, changedFields)));
@@ -258,6 +355,9 @@ public partial class ExpenseDetailVM : ObservableObject
     {
         if (!IsEditing)
             return false;
+
+        if (IsSplitMode)
+            return HasSplitRowsWithAmounts;
 
         if (!TryBuildInput(out var input, out _))
             return false;
@@ -325,6 +425,245 @@ public partial class ExpenseDetailVM : ObservableObject
         return true;
     }
 
+    private bool TryBuildSplitInputs(
+        bool keepParentExpenseWhenRemainder,
+        out IReadOnlyList<ExpenseSplitInput> inputs,
+        out string validationMessage)
+    {
+        inputs = [];
+        validationMessage = string.Empty;
+
+        if (HasNegativeSplitRemainder || AmountText < 0m)
+        {
+            validationMessage = "Split amounts exceed the original expense amount.";
+            return false;
+        }
+
+        if (SplitRows.Any(row => row.AmountText < 0m))
+        {
+            validationMessage = "Split amounts cannot be negative.";
+            return false;
+        }
+
+        var result = new List<ExpenseSplitInput>();
+        var shouldCreateParentReplacement = !keepParentExpenseWhenRemainder && AmountText > 0m;
+        if (shouldCreateParentReplacement)
+        {
+            if (SelectedTag is null)
+            {
+                validationMessage = "Please choose a tag.";
+                return false;
+            }
+
+            result.Add(new ExpenseSplitInput(
+                NameText.Trim(),
+                AmountText,
+                SelectedExpenseCategory,
+                SelectedTag.Id,
+                NoteText.Trim(),
+                SelectedDate.Date));
+        }
+
+        foreach (var row in SplitRows.Where(row => row.AmountText > 0m))
+        {
+            if (row.SelectedTag is null)
+            {
+                validationMessage = "Please choose a tag for each split row.";
+                return false;
+            }
+
+            result.Add(new ExpenseSplitInput(
+                row.NameText.Trim(),
+                row.AmountText,
+                row.SelectedExpenseCategory,
+                row.SelectedTag.Id,
+                string.Empty,
+                SelectedDate.Date));
+        }
+
+        if (result.Count == 0)
+        {
+            validationMessage = "Add at least one split amount before saving.";
+            return false;
+        }
+
+        var splitRowsPositiveTotal = SplitRows
+            .Where(row => row.AmountText > 0m)
+            .Sum(row => row.AmountText);
+        var splitTotal = AmountText + splitRowsPositiveTotal;
+        if (splitTotal != _savedState.Amount)
+        {
+            validationMessage = "Split total must match the original expense amount.";
+            return false;
+        }
+
+        inputs = result;
+        return true;
+    }
+
+    private async Task<ExpenseDetailSaveResult> SaveSplitAsync(bool keepParentExpenseWhenRemainder)
+    {
+        if (!TryBuildSplitInputs(keepParentExpenseWhenRemainder, out var inputs, out var validationMessage))
+            return ExpenseDetailSaveResult.Failure(validationMessage);
+
+        IsSaving = true;
+
+        try
+        {
+            var originalLog = await _appData.GetExpenseLogByIdAsync(_expenseLog.Id);
+            if (originalLog?.Expense is null)
+                return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
+
+            var spendingSource = originalLog.SpendingSource;
+            if (spendingSource is null)
+                return ExpenseDetailSaveResult.Failure("Unable to load this expense source.");
+
+            var splitEntries = new List<(ExpenseSplitInput Input, ExpenseTag Tag)>();
+            foreach (var input in inputs)
+            {
+                var tag = await _appData.GetExpenseTagByIdAsync(input.TagId);
+                if (tag is null)
+                    return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
+
+                splitEntries.Add((input, tag));
+            }
+
+            var deleteSnapshot = ExpenseLogMemorySnapshot.Create(originalLog);
+
+            RevertExpenseFromSpendingSource(spendingSource, originalLog.Amount);
+            var keptParentSnapshot = default(ExpenseLogMemorySnapshot?);
+            var keepParentWithRemainder = keepParentExpenseWhenRemainder && AmountText > 0m;
+            if (keepParentWithRemainder)
+            {
+                if (SelectedTag is null)
+                    return ExpenseDetailSaveResult.Failure("Please choose a tag.");
+
+                var parentTag = await _appData.GetExpenseTagByIdAsync(SelectedTag.Id);
+                if (parentTag is null)
+                    return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
+
+                var parentExpense = originalLog.Expense;
+                var parentName = BuildExpenseName(NameText.Trim(), NoteText.Trim(), parentTag.Name);
+
+                parentExpense.Name = parentName;
+                parentExpense.Amount = AmountText;
+                parentExpense.ExpenseCategory = SelectedExpenseCategory;
+                parentExpense.ExpenseTag = parentTag;
+                parentExpense.ExpenseTagId = parentTag.Id;
+
+                originalLog.Amount = AmountText;
+                originalLog.DeductedOn = SelectedDate.Date;
+                originalLog.Notes = NoteText.Trim();
+                originalLog.IsForDeletion = false;
+
+                _appData.UpdateExpense(parentExpense);
+                _appData.UpdateExpenseLog(originalLog);
+                ApplyExpenseToSpendingSource(spendingSource, AmountText);
+                keptParentSnapshot = ExpenseLogMemorySnapshot.Create(originalLog);
+            }
+            else
+            {
+                originalLog.IsForDeletion = true;
+                _appData.UpdateExpenseLog(originalLog);
+            }
+
+            var createdLogs = new List<(Expense Expense, ExpenseLog ExpenseLog, ExpenseTag Tag)>(splitEntries.Count);
+            foreach (var (input, tag) in splitEntries)
+            {
+                var expense = new Expense
+                {
+                    Name = BuildExpenseName(input.Name, input.Note, tag.Name),
+                    Amount = input.Amount,
+                    ExpenseCategory = input.Category,
+                    SpendingSourceId = spendingSource.Id,
+                    ExpenseTagId = tag.Id
+                };
+                var expenseLog = new ExpenseLog
+                {
+                    Expense = expense,
+                    Amount = input.Amount,
+                    DeductedOn = input.Date,
+                    Notes = input.Note,
+                    IsForDeletion = false,
+                    SpendingSourceId = spendingSource.Id
+                };
+
+                await _appData.AddExpenseAsync(expense);
+                await _appData.AddExpenseLogAsync(expenseLog);
+                ApplyExpenseToSpendingSource(spendingSource, input.Amount);
+                createdLogs.Add((expense, expenseLog, tag));
+            }
+
+            _appData.UpdateSpendingSource(spendingSource);
+            await _appData.SaveChangesAsync();
+
+            var createdSnapshots = createdLogs.Select(entry => new ExpenseLogMemorySnapshot(
+                entry.Expense.Id,
+                entry.ExpenseLog.Id,
+                entry.Expense.Name,
+                entry.ExpenseLog.Amount,
+                entry.Expense.ExpenseCategory,
+                spendingSource.Id,
+                entry.Tag.Id,
+                entry.ExpenseLog.DeductedOn,
+                entry.ExpenseLog.Notes,
+                entry.ExpenseLog.IsForDeletion)).ToList();
+
+            var historyActions = new List<ILogMemoryAction>();
+            if (keptParentSnapshot is null)
+                historyActions.Add(new DeleteExpenseLogMemoryAction(deleteSnapshot));
+            else
+                historyActions.Add(new EditExpenseLogMemoryAction(deleteSnapshot, keptParentSnapshot));
+
+            historyActions.AddRange(createdSnapshots.Select(snapshot =>
+                new AddExpenseLogMemoryAction(snapshot, shouldAdjustSpendingSourceTotals: false)));
+
+            WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
+                new CompositeLogMemoryAction("Split expense", historyActions)));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
+                DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
+            await _mainViewModel.ReloadCurrentDataAsync();
+
+            if (keepParentWithRemainder)
+            {
+                _savedState = new ExpenseDetailSavedState(
+                    BuildExpenseName(NameText.Trim(), NoteText.Trim(), SelectedTag?.Name ?? string.Empty),
+                    AmountText,
+                    NoteText.Trim(),
+                    SelectedDate.Date,
+                    SelectedExpenseCategory,
+                    spendingSource.Id,
+                    SelectedTag?.Id ?? 0);
+            }
+            else
+            {
+                var primary = splitEntries[0];
+                _savedState = new ExpenseDetailSavedState(
+                    BuildExpenseName(primary.Input.Name, primary.Input.Note, primary.Tag.Name),
+                    primary.Input.Amount,
+                    primary.Input.Note,
+                    primary.Input.Date,
+                    primary.Input.Category,
+                    spendingSource.Id,
+                    primary.Tag.Id);
+            }
+
+            IsEditing = false;
+            ClearSplitMode();
+            LoadFromSavedState();
+            return ExpenseDetailSaveResult.Success();
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogError(exception, "Unable to split expense.");
+            return ExpenseDetailSaveResult.Failure(FluxoLogManager.CreateFailureMessage("split expense"));
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
     private void ReloadChoicesFromMainViewModel()
     {
         _availableSpendingSources.Clear();
@@ -367,6 +706,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 ReplaceCollection(VisibleTags, SelectedTag is null ? [] : [SelectedTag]);
                 ReplaceCollection(OverflowTags, []);
                 OnPropertyChanged(nameof(HasMoreTags));
+                OnPropertyChanged(nameof(AllSplitTags));
                 IsMoreTagsOpen = false;
                 return;
             }
@@ -376,6 +716,7 @@ public partial class ExpenseDetailVM : ObservableObject
             ReplaceCollection(OverflowTags, editableTags.Skip(_visibleTagSlots));
 
             OnPropertyChanged(nameof(HasMoreTags));
+            OnPropertyChanged(nameof(AllSplitTags));
             if (!HasMoreTags)
                 IsMoreTagsOpen = false;
 
@@ -502,6 +843,39 @@ public partial class ExpenseDetailVM : ObservableObject
         return changedFields;
     }
 
+    private void NotifySplitRowStateChanged()
+    {
+        OnPropertyChanged(nameof(HasSplitRows));
+        OnPropertyChanged(nameof(HasSplitRowsWithAmounts));
+        OnPropertyChanged(nameof(HasSplitRowsWithoutAmounts));
+        OnPropertyChanged(nameof(CanCloseSplitModeWithoutSaving));
+        OnPropertyChanged(nameof(RequiresEmptySplitConfirmationOnClose));
+    }
+
+    private void OnSplitRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not ExpenseSplitRowVM row)
+            return;
+
+        if (e.PropertyName != nameof(ExpenseSplitRowVM.AmountText))
+            return;
+
+        NotifySplitRowStateChanged();
+        RecalculateSplitRemainder(row);
+    }
+
+    private void UpdateSplitNegativeRemainderState(decimal remainder, ExpenseSplitRowVM? causingRow)
+    {
+        foreach (var row in SplitRows)
+            row.IsCausingNegativeRemainder = false;
+
+        HasNegativeSplitRemainder = remainder < 0m;
+        NegativeRemainderRow = HasNegativeSplitRemainder ? causingRow : null;
+
+        if (NegativeRemainderRow is not null)
+            NegativeRemainderRow.IsCausingNegativeRemainder = true;
+    }
+
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
 
     public readonly record struct ExpenseDetailSaveResult(bool IsSuccess, string? ErrorMessage)
@@ -525,6 +899,14 @@ public partial class ExpenseDetailVM : ObservableObject
         string Note,
         ExpenseCategory Category,
         int TagId);
+
+    private readonly record struct ExpenseSplitInput(
+        string Name,
+        decimal Amount,
+        ExpenseCategory Category,
+        int TagId,
+        string Note,
+        DateTime Date);
 
     private readonly record struct ExpenseDetailSavedState(
         string Name,
