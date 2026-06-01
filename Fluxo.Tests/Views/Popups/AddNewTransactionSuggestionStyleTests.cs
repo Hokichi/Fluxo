@@ -6,6 +6,22 @@ namespace Fluxo.Tests.Views.Popups;
 public sealed class AddNewTransactionSuggestionStyleTests
 {
     [Fact]
+    public void TransactionTypeSelector_UsesSharedSegmentedToggleGroup()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
+
+        Assert.Contains("<customControls:SegmentedToggleGroup", xaml);
+        Assert.Equal(3, xaml.Split("<customControls:SegmentedToggleOption", StringSplitOptions.None).Length - 1);
+        Assert.Contains("Content=\"Expense\"", xaml);
+        Assert.Contains("IsSelected=\"{Binding IsExpense, Mode=TwoWay}\"", xaml);
+        Assert.Contains("Content=\"Income\"", xaml);
+        Assert.Contains("IsSelected=\"{Binding IsIncome, Mode=TwoWay}\"", xaml);
+        Assert.Contains("Content=\"Goal Update\"", xaml);
+        Assert.Contains("IsSelected=\"{Binding IsGoal, Mode=TwoWay}\"", xaml);
+        Assert.DoesNotContain("GroupName=\"TransactionType\"", xaml);
+    }
+
+    [Fact]
     public void TransactionNameSuggestions_UseHoverBackgroundResource()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));

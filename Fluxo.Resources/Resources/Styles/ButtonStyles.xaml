@@ -841,20 +841,55 @@
         </Setter>
     </Style>
 
-    <Style x:Key="SegmentedToggleOptionStyle" TargetType="RadioButton">
+    <SolidColorBrush
+        x:Key="SegmentedToggleSubtleSelectedBackgroundBrush"
+        Opacity="0.16"
+        Color="{StaticResource Color.Mint}" />
+
+    <Style TargetType="{x:Type c:SegmentedToggleGroup}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="OptionSpacing" Value="4" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type c:SegmentedToggleGroup}">
+                    <Border
+                        Height="{TemplateBinding Height}"
+                        Padding="{TemplateBinding Padding}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="14">
+                        <ItemsPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <c:SegmentedTogglePanel />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type c:SegmentedToggleOption}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}" />
-        <Setter Property="FontFamily" Value="{DynamicResource Bold}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        <Setter Property="FontFamily" Value="{StaticResource Bold}" />
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="MinWidth" Value="128" />
-        <Setter Property="Padding" Value="16,8" />
+        <Setter Property="Padding" Value="14,6" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="RadioButton">
+                <ControlTemplate TargetType="{x:Type c:SegmentedToggleOption}">
                     <Border
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
@@ -867,12 +902,24 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
-                <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
+                <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
             </Trigger>
-            <Trigger Property="IsChecked" Value="True">
-                <Setter Property="Background" Value="{DynamicResource Brush.Mint}" />
-                <Setter Property="Foreground" Value="{DynamicResource Brush.Background.Surface}" />
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource SegmentedToggleSubtleSelectedBackgroundBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+            </Trigger>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource SegmentedToggleSubtleSelectedBackgroundBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+            </MultiDataTrigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.4" />
+                <Setter Property="Cursor" Value="Arrow" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -1063,11 +1110,6 @@
         </Style.Triggers>
     </Style>
 
-    <SolidColorBrush
-        x:Key="MainContentViewToggleSelectedBackgroundBrush"
-        Opacity="0.16"
-        Color="{StaticResource Color.Mint}" />
-
     <Style
         x:Key="HeaderButtonStyle"
         BasedOn="{StaticResource MainWindowBalloonButtonChromeStyle}"
@@ -1245,49 +1287,6 @@
             <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
                 <Setter Property="Visibility" Value="Collapsed" />
             </DataTrigger>
-        </Style.Triggers>
-    </Style>
-
-    <Style x:Key="MainContentViewToggleButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
-        <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-        <Setter Property="FontSize" Value="11" />
-        <Setter Property="Padding" Value="14,6" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="10">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            </Trigger>
-            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
-                <Setter Property="Background" Value="{StaticResource MainContentViewToggleSelectedBackgroundBrush}" />
-                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
-            </DataTrigger>
-            <MultiDataTrigger>
-                <MultiDataTrigger.Conditions>
-                    <Condition Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True" />
-                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
-                </MultiDataTrigger.Conditions>
-                <Setter Property="Background" Value="{StaticResource MainContentViewToggleSelectedBackgroundBrush}" />
-                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
-            </MultiDataTrigger>
         </Style.Triggers>
     </Style>
 

@@ -171,44 +171,11 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="{Binding Label}" />
 
-                    <Border
-                        Height="32"
-                        Margin="0,8,0,0"
-                        Padding="4"
-                        Background="{StaticResource Brush.Background.Surface}"
-                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                        BorderThickness="1"
-                        CornerRadius="14">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="8" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="8" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <RadioButton
-                                Grid.Column="0"
-                                MinWidth="0"
-                                Content="Ignore"
-                                IsChecked="{Binding IsIgnoreSelected, Mode=TwoWay}"
-                                Style="{StaticResource SegmentedToggleOptionStyle}" />
-                            <RadioButton
-                                Grid.Column="2"
-                                MinWidth="0"
-                                Margin="4,0,0,0"
-                                Content="Paid"
-                                IsChecked="{Binding IsPaidSelected, Mode=TwoWay}"
-                                Style="{StaticResource SegmentedToggleOptionStyle}" />
-                            <RadioButton
-                                Grid.Column="4"
-                                MinWidth="0"
-                                Margin="4,0,0,0"
-                                Content="Process"
-                                IsChecked="{Binding IsProcessSelected, Mode=TwoWay}"
-                                Style="{StaticResource SegmentedToggleOptionStyle}" />
-                        </Grid>
-                    </Border>
+                    <customControls:SegmentedToggleGroup Margin="0,8,0,0">
+                        <customControls:SegmentedToggleOption Content="Ignore" IsSelected="{Binding IsIgnoreSelected, Mode=TwoWay}" />
+                        <customControls:SegmentedToggleOption Content="Paid" IsSelected="{Binding IsPaidSelected, Mode=TwoWay}" />
+                        <customControls:SegmentedToggleOption Content="Process" IsSelected="{Binding IsProcessSelected, Mode=TwoWay}" />
+                    </customControls:SegmentedToggleGroup>
                 </StackPanel>
 
                 <Grid

@@ -67,42 +67,23 @@
         <Grid Style="{StaticResource InitialPageStyle}">
             <Border Style="{StaticResource PanelStyle}">
                 <StackPanel>
-                    <Border
-                        Width="360"
-                        Height="40"
-                        Padding="4"
-                        Background="{StaticResource Brush.Background.Surface}"
-                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                        BorderThickness="1"
-                        CornerRadius="12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition />
-                                <ColumnDefinition />
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
-                            <Button
-                                Grid.Column="0"
-                                Click="OnBackupModeClick"
-                                Content="Backup"
-                                Style="{StaticResource MainContentViewToggleButtonStyle}"
-                                Tag="{Binding IsBackupSelected}" />
-                            <Button
-                                Grid.Column="1"
-                                Margin="4,0,0,0"
-                                Click="OnAppendModeClick"
-                                Content="Append"
-                                Style="{StaticResource MainContentViewToggleButtonStyle}"
-                                Tag="{Binding IsAppendSelected}" />
-                            <Button
-                                Grid.Column="2"
-                                Margin="4,0,0,0"
-                                Click="OnOverwriteModeClick"
-                                Content="Overwrite"
-                                Style="{StaticResource MainContentViewToggleButtonStyle}"
-                                Tag="{Binding IsOverwriteSelected}" />
-                        </Grid>
-                    </Border>
+                    <customControls:SegmentedToggleGroup Width="360" Height="40">
+                        <customControls:SegmentedToggleOption
+                            Click="OnBackupModeClick"
+                            Content="Backup"
+                            IsSelected="{Binding IsBackupSelected, Mode=OneWay}"
+                            SelectOnClick="False" />
+                        <customControls:SegmentedToggleOption
+                            Click="OnAppendModeClick"
+                            Content="Append"
+                            IsSelected="{Binding IsAppendSelected, Mode=OneWay}"
+                            SelectOnClick="False" />
+                        <customControls:SegmentedToggleOption
+                            Click="OnOverwriteModeClick"
+                            Content="Overwrite"
+                            IsSelected="{Binding IsOverwriteSelected, Mode=OneWay}"
+                            SelectOnClick="False" />
+                    </customControls:SegmentedToggleGroup>
 
                     <Grid Margin="0,16,0,8">
                         <TextBlock

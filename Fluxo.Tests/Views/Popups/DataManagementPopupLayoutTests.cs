@@ -34,6 +34,6 @@ public sealed class DataManagementPopupLayoutTests
 
         Assert.Contains("ResultMessage", xaml);
         Assert.Contains("Result", xaml);
-        Assert.Contains("Overwrite will replace existing data with backup data.", xaml);
+        Assert.Contains("Overwrite will replace all of your data. Please ensure the data has been properly backed up.", xaml);
     }
 }

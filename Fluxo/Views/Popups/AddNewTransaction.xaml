@@ -168,37 +168,20 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0">
-                <Border
-                    Height="32"
-                    Padding="4"
-                    HorizontalAlignment="Center"
-                    Background="{DynamicResource Brush.Background.Surface}"
-                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
-                    BorderThickness="1"
-                    CornerRadius="14">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton
-                            x:Name="ExpenseRadioButton"
-                            Content="Expense"
-                            GroupName="TransactionType"
-                            IsChecked="{Binding IsExpense, Mode=TwoWay}"
-                            Style="{StaticResource SegmentedToggleOptionStyle}" />
-                        <RadioButton
-                            x:Name="IncomeRadioButton"
-                            Margin="4,0,0,0"
-                            Content="Income"
-                            GroupName="TransactionType"
-                            IsChecked="{Binding IsIncome, Mode=TwoWay}"
-                            Style="{StaticResource SegmentedToggleOptionStyle}" />
-                        <RadioButton
-                            x:Name="GoalRadioButton"
-                            Margin="4,0,0,0"
-                            Content="Goal Update"
-                            GroupName="TransactionType"
-                            IsChecked="{Binding IsGoal, Mode=TwoWay}"
-                            Style="{StaticResource SegmentedToggleOptionStyle}" />
-                    </StackPanel>
-                </Border>
+                <customControls:SegmentedToggleGroup Width="400" HorizontalAlignment="Center">
+                    <customControls:SegmentedToggleOption
+                        x:Name="ExpenseRadioButton"
+                        Content="Expense"
+                        IsSelected="{Binding IsExpense, Mode=TwoWay}" />
+                    <customControls:SegmentedToggleOption
+                        x:Name="IncomeRadioButton"
+                        Content="Income"
+                        IsSelected="{Binding IsIncome, Mode=TwoWay}" />
+                    <customControls:SegmentedToggleOption
+                        x:Name="GoalRadioButton"
+                        Content="Goal Update"
+                        IsSelected="{Binding IsGoal, Mode=TwoWay}" />
+                </customControls:SegmentedToggleGroup>
 
                 <Border
                     Width="400"

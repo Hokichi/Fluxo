@@ -34,24 +34,20 @@ public sealed class NotificationChecklistActionPopupLayoutTests
     {
         var document = LoadPopupXaml();
         var template = GetChecklistItemTemplate(document);
-        var radioButtons = template.Descendants().Where(element => element.Name.LocalName == "RadioButton").ToList();
+        var groups = template.Descendants().Where(element => element.Name.LocalName == "SegmentedToggleGroup").ToList();
+        var options = template.Descendants().Where(element => element.Name.LocalName == "SegmentedToggleOption").ToList();
 
-        Assert.Equal(3, radioButtons.Count);
+        Assert.Single(groups);
+        Assert.Equal(3, options.Count);
 
-        var ignoreOption = Assert.Single(radioButtons.Where(element => (string?)element.Attribute("Content") == "Ignore"));
-        Assert.Equal("{Binding IsIgnoreSelected, Mode=TwoWay}", (string?)ignoreOption.Attribute("IsChecked"));
+        var ignoreOption = Assert.Single(options.Where(element => (string?)element.Attribute("Content") == "Ignore"));
+        Assert.Equal("{Binding IsIgnoreSelected, Mode=TwoWay}", (string?)ignoreOption.Attribute("IsSelected"));
 
-        var paidOption = Assert.Single(radioButtons.Where(element => (string?)element.Attribute("Content") == "Paid"));
-        Assert.Equal("{Binding IsPaidSelected, Mode=TwoWay}", (string?)paidOption.Attribute("IsChecked"));
+        var paidOption = Assert.Single(options.Where(element => (string?)element.Attribute("Content") == "Paid"));
+        Assert.Equal("{Binding IsPaidSelected, Mode=TwoWay}", (string?)paidOption.Attribute("IsSelected"));
 
-        var processOption = Assert.Single(radioButtons.Where(element => (string?)element.Attribute("Content") == "Process"));
-        Assert.Equal("{Binding IsProcessSelected, Mode=TwoWay}", (string?)processOption.Attribute("IsChecked"));
-
-        Assert.All(radioButtons, element =>
-        {
-            Assert.Equal("{StaticResource SegmentedToggleOptionStyle}", (string?)element.Attribute("Style"));
-            Assert.Null(element.Attribute("GroupName"));
-        });
+        var processOption = Assert.Single(options.Where(element => (string?)element.Attribute("Content") == "Process"));
+        Assert.Equal("{Binding IsProcessSelected, Mode=TwoWay}", (string?)processOption.Attribute("IsSelected"));
     }
 
     [Fact]

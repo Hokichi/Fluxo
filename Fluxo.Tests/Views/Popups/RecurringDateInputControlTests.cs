@@ -15,7 +15,7 @@ public sealed class RecurringDateInputControlTests
         Assert.Equal(3, Regex.Matches(xaml, "ItemsSource=\"\\{Binding RecurringPeriods\\}\"").Count);
         Assert.Equal(3, Regex.Matches(xaml, "ItemsSource=\"\\{Binding WeekdayOptions\\}\"").Count);
         Assert.Equal(3, Regex.Matches(xaml, "SelectedValue=\"\\{Binding RecurringTimeText, Mode=TwoWay\\}\"").Count);
-        Assert.Equal(3, Regex.Matches(xaml, "Visibility=\"\\{Binding ShowRecurringNoneInput, Converter=\\{StaticResource BoolToVisibilityConverter\\}\\}\"").Count);
+        Assert.Equal(3, Regex.Matches(xaml, "Visibility=\"\\{Binding ShowRecurringDayInput, Converter=\\{StaticResource BoolToVisibilityConverter\\}\\}\"").Count);
         Assert.DoesNotContain("RecurringDayText", xaml);
         Assert.DoesNotContain("OnRecurringDatePasting", xaml);
         Assert.DoesNotContain("OnRecurringDatePreviewKeyDown", xaml);

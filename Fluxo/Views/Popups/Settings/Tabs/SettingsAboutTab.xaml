@@ -2,6 +2,7 @@
     x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsAboutTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
     <Border Style="{StaticResource PanelStyle}">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -76,32 +77,20 @@
                                 Foreground="{StaticResource Brush.Mint}"
                                 Text="o" />
                         </StackPanel>
-                        <Border
-                            Height="32"
-                            Padding="4"
-                            HorizontalAlignment="Right"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
-                            CornerRadius="14">
-                            <StackPanel Orientation="Horizontal">
-                                <Button
-                                    Width="120"
-                                    Command="{Binding SetCloseBehaviorCommand}"
-                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}"
-                                    Content="Minimize to tray"
-                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
-                                    Tag="{Binding IsMinimizeToTrayCloseBehaviorSelected}" />
-                                <Button
-                                    Width="120"
-                                    Margin="4,0,0,0"
-                                    Command="{Binding SetCloseBehaviorCommand}"
-                                    CommandParameter="{x:Static coreEnums:AppCloseBehavior.Exit}"
-                                    Content="Exit"
-                                    Style="{StaticResource MainContentViewToggleButtonStyle}"
-                                    Tag="{Binding IsExitCloseBehaviorSelected}" />
-                            </StackPanel>
-                        </Border>
+                        <customControls:SegmentedToggleGroup Width="252" HorizontalAlignment="Right">
+                            <customControls:SegmentedToggleOption
+                                Command="{Binding SetCloseBehaviorCommand}"
+                                CommandParameter="{x:Static coreEnums:AppCloseBehavior.MinimizeToTray}"
+                                Content="Minimize to tray"
+                                IsSelected="{Binding IsMinimizeToTrayCloseBehaviorSelected, Mode=OneWay}"
+                                SelectOnClick="False" />
+                            <customControls:SegmentedToggleOption
+                                Command="{Binding SetCloseBehaviorCommand}"
+                                CommandParameter="{x:Static coreEnums:AppCloseBehavior.Exit}"
+                                Content="Exit"
+                                IsSelected="{Binding IsExitCloseBehaviorSelected, Mode=OneWay}"
+                                SelectOnClick="False" />
+                        </customControls:SegmentedToggleGroup>
                     </Grid>
                 </Border>
 

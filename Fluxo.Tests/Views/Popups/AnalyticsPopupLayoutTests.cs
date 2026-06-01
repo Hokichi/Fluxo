@@ -18,8 +18,11 @@ public sealed class AnalyticsPopupLayoutTests
     {
         var xaml = File.ReadAllText(AnalyticsXamlPath);
 
+        Assert.Contains("<customControls:SegmentedToggleGroup", xaml);
         Assert.Contains("Command=\"{Binding SetTrendModeCommand}\"", xaml);
-        Assert.Contains("Style=\"{StaticResource MainContentViewToggleButtonStyle}\"", xaml);
+        Assert.Contains("CommandParameter=\"{x:Static main:AnalyticsTrendMode.Expenses}\"", xaml);
+        Assert.Contains("CommandParameter=\"{x:Static main:AnalyticsTrendMode.Incomes}\"", xaml);
+        Assert.Contains("CommandParameter=\"{x:Static main:AnalyticsTrendMode.Both}\"", xaml);
         Assert.DoesNotContain("<ComboBox", xaml);
     }
 
