@@ -53,6 +53,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISpendingSourceService, SpendingSourceService>();
         services.AddTransient<ITagService, TagService>();
         services.AddTransient<IAnalyticsService, AnalyticsService>();
+        services.AddTransient<ICalendarService, CalendarService>();
         services.AddScoped<IAppDataService, AppDataService>();
         services.AddTransient<IUserBackupService, UserBackupService>();
 
