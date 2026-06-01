@@ -72,6 +72,7 @@ public sealed class MainWindowLayoutTests
             .ToList();
 
         Assert.Equal(2, dateSelectors.Count);
+        Assert.Equal("{x:Null}", (string?)dateRangeSelectorHost.Attribute("DataContext"));
         Assert.Equal("{Binding StartDate, Mode=TwoWay}", (string?)dateSelectors[0].Attribute("SelectedDate"));
         Assert.Equal("{Binding EndDate, Mode=TwoWay}", (string?)dateSelectors[1].Attribute("SelectedDate"));
         Assert.DoesNotContain("AnalyticsDrawerContentHost", dateRangeSelectorHost.ToString(SaveOptions.DisableFormatting));

@@ -989,6 +989,7 @@
                                 x:Name="AnalyticsDateRangeSelectorHost"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
+                                DataContext="{x:Null}"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
                                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
