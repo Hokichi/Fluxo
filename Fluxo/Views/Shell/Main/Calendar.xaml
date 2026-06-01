@@ -87,22 +87,18 @@
         </Style>
 
         <DataTemplate x:Key="CalendarDayTemplate">
-            <Grid Tag="{Binding}">
-                <Button
-                    Command="{Binding SelectDateCommand}"
-                    CommandParameter="{Binding Tag, RelativeSource={RelativeSource AncestorType=Grid}}"
-                    DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    Style="{StaticResource CalendarDayButtonStyle}">
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        DataContext="{Binding Tag, RelativeSource={RelativeSource AncestorType=Grid}}"
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="14"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding DayNumber}" />
-                </Button>
-            </Grid>
+            <Button
+                Command="{Binding DataContext.SelectDateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                CommandParameter="{Binding}"
+                Style="{StaticResource CalendarDayButtonStyle}">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="14"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="{Binding DayNumber}" />
+            </Button>
         </DataTemplate>
 
         <DataTemplate x:Key="CalendarWeekTemplate">
@@ -223,6 +219,8 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="14" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Border Style="{StaticResource CalendarCardStyle}">
@@ -264,25 +262,18 @@
                         ItemsSource="{Binding VisibleWeeks}" />
                 </Grid>
             </Border>
-        </Grid>
 
-        <Grid Grid.Column="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="14" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-
-            <Grid>
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="10" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
                 <Border Style="{StaticResource CalendarCardStyle}">
                     <StackPanel>
@@ -304,7 +295,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="4" Style="{StaticResource CalendarCardStyle}">
+                <Border Grid.Row="2" Style="{StaticResource CalendarCardStyle}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource CalendarCardLabelStyle}" Text="Goals Due" />
                         <TextBlock
@@ -314,7 +305,10 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="6" Style="{StaticResource CalendarCardStyle}">
+                <Border
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Style="{StaticResource CalendarCardStyle}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource CalendarCardLabelStyle}" Text="Payment Due" />
                         <TextBlock
@@ -324,8 +318,10 @@
                     </StackPanel>
                 </Border>
             </Grid>
+        </Grid>
 
-            <Grid Grid.Row="2">
+        <Grid Grid.Column="2">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="14" />
