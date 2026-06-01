@@ -76,7 +76,6 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         RebuildVisibleWeeks();
 
         _loadCts?.Cancel();
-        _loadCts?.Dispose();
         var loadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _loadCts = loadCts;
         var requestVersion = ++_loadRequestVersion;
@@ -95,7 +94,12 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         finally
         {
             if (IsCurrentLoad(requestVersion, loadCts))
+            {
                 IsLoading = false;
+                _loadCts = null;
+            }
+
+            loadCts.Dispose();
         }
     }
 
@@ -163,7 +167,6 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     public void Dispose()
     {
         _loadCts?.Cancel();
-        _loadCts?.Dispose();
         _loadCts = null;
     }
 }

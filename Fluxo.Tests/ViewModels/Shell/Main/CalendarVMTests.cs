@@ -98,6 +98,35 @@ public sealed class CalendarVMTests
     }
 
     [Fact]
+    public async Task SelectDate_WhenNewerLoadCancelsOlderLoad_DoesNotDisposeOlderTokenBeforeItFinishes()
+    {
+        var olderDate = new DateOnly(2026, 6, 12);
+        var newerDate = new DateOnly(2026, 6, 13);
+        var inspectOlderToken = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = Substitute.For<ICalendarService>();
+        service.GetCalendarDayAsync(olderDate, Arg.Any<CancellationToken>())
+            .Returns(async call =>
+            {
+                var token = call.Arg<CancellationToken>();
+                await inspectOlderToken.Task;
+                using var registration = token.Register(() => { });
+                return CreateDto(olderDate, totalSpent: 100m);
+            });
+        service.GetCalendarDayAsync(newerDate, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(CreateDto(newerDate, totalSpent: 200m)));
+        var vm = new CalendarVM(service, new DateTime(2026, 6, 1));
+
+        var olderSelection = vm.SelectDateAsync(olderDate);
+        var newerSelection = vm.SelectDateAsync(newerDate);
+        await newerSelection;
+        inspectOlderToken.SetResult();
+        await olderSelection;
+
+        Assert.Equal(newerDate, vm.SelectedDate);
+        Assert.Equal("200", vm.TotalSpentText);
+    }
+
+    [Fact]
     public async Task SelectDate_WhenCurrentLoadIsCanceled_ClearsLoadingState()
     {
         using var cts = new CancellationTokenSource();
