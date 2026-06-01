@@ -877,8 +877,8 @@
             </Grid>
 
             <Border
-                x:Name="AnalyticsDrawerTabHost"
-                Width="170"
+                x:Name="DrawerTabHost"
+                Width="260"
                 Height="28"
                 Margin="0"
                 HorizontalAlignment="Center"
@@ -899,26 +899,51 @@
                                 <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
                                 <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding IsMouseOver, ElementName=CalendarDrawerTabButton}" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=AnalyticsDrawerTabButton}" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=CalendarDrawerTabButton}" Value="True">
                                 <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <Button
-                    x:Name="AnalyticsDrawerTabButton"
-                    AutomationProperties.Name="Open Analytics Drawer"
-                    Click="OnAnalyticsDrawerTabClick"
-                    Style="{StaticResource AnalyticsDrawerTabButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="12"
-                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                            Text="Analytics" />
-                    </StackPanel>
-                </Button>
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        x:Name="AnalyticsDrawerTabButton"
+                        Width="128"
+                        AutomationProperties.Name="Open Analytics Drawer"
+                        Click="OnAnalyticsDrawerTabClick"
+                        Style="{StaticResource AnalyticsDrawerTabButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                Text="Analytics" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="CalendarDrawerTabButton"
+                        Width="128"
+                        AutomationProperties.Name="Open Calendar Drawer"
+                        Click="OnCalendarDrawerTabClick"
+                        Style="{StaticResource AnalyticsDrawerTabButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                Text="Calendar" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Border>
 
             <Grid x:Name="AnalyticsDrawerLayer" Panel.ZIndex="20">
@@ -953,6 +978,7 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock
+                                x:Name="AnalyticsDrawerTitle"
                                 VerticalAlignment="Center"
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="18"

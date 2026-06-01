@@ -34,19 +34,25 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void AnalyticsDrawerTabTrigger_RemainsAvailable()
+    public void DrawerTabTrigger_ExposesAnalyticsAndCalendarTabs()
     {
         var xaml = MainWindowXaml.Value;
         var xamlDocument = MainWindowXamlDocument.Value;
 
         Assert.Contains("Click=\"OnAnalyticsDrawerTabClick\"", xaml);
+        Assert.Contains("Click=\"OnCalendarDrawerTabClick\"", xaml);
 
         var analyticsDrawerTabButton = xamlDocument
             .Descendants(PresentationNamespace + "Button")
             .SingleOrDefault(button => (string?)button.Attribute(XamlNamespace + "Name") == "AnalyticsDrawerTabButton");
+        var calendarDrawerTabButton = xamlDocument
+            .Descendants(PresentationNamespace + "Button")
+            .SingleOrDefault(button => (string?)button.Attribute(XamlNamespace + "Name") == "CalendarDrawerTabButton");
 
         Assert.NotNull(analyticsDrawerTabButton);
+        Assert.NotNull(calendarDrawerTabButton);
         Assert.Equal("OnAnalyticsDrawerTabClick", (string?)analyticsDrawerTabButton!.Attribute("Click"));
+        Assert.Equal("OnCalendarDrawerTabClick", (string?)calendarDrawerTabButton!.Attribute("Click"));
     }
 
     [Fact]
@@ -62,14 +68,14 @@ public sealed class MainWindowLayoutTests
         AssertElementHasNameAndStyle(xamlDocument, "Button", "ViewAllSpendingSourcesButton", "TextOnlyButtonStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "AddSpendingSourceButton", "SpendingSourceAddButtonStyle");
 
-        var analyticsTabHost = xamlDocument
+        var drawerTabHost = xamlDocument
             .Descendants(PresentationNamespace + "Border")
-            .SingleOrDefault(border => (string?)border.Attribute(XamlNamespace + "Name") == "AnalyticsDrawerTabHost");
+            .SingleOrDefault(border => (string?)border.Attribute(XamlNamespace + "Name") == "DrawerTabHost");
 
-        Assert.NotNull(analyticsTabHost);
+        Assert.NotNull(drawerTabHost);
         Assert.Contains(
             "Binding=\"{Binding IsSufficientFundsActionGateLocked}\" Value=\"True\"",
-            analyticsTabHost!.ToString(SaveOptions.DisableFormatting));
+            drawerTabHost!.ToString(SaveOptions.DisableFormatting));
     }
 
     [Fact]
