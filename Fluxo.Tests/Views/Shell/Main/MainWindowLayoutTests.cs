@@ -56,6 +56,26 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void DrawerHeader_DateRangeSelectorHost_IsNamedAndControlledForAnalyticsOnly()
+    {
+        var xamlDocument = MainWindowXamlDocument.Value;
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+
+        var dateRangeSelectorHost = xamlDocument
+            .Descendants(PresentationNamespace + "Border")
+            .SingleOrDefault(border => (string?)border.Attribute(XamlNamespace + "Name") == "AnalyticsDateRangeSelectorHost");
+
+        Assert.NotNull(dateRangeSelectorHost);
+        Assert.Equal(2, dateRangeSelectorHost!.Descendants().Count(element => element.Name.LocalName == "DateSelector"));
+
+        Assert.Contains("SetAnalyticsDateRangeSelectorVisibility(page);", source);
+        Assert.Contains("private void SetAnalyticsDateRangeSelectorVisibility(MainDrawerPage page)", source);
+        Assert.Contains("AnalyticsDateRangeSelectorHost.Visibility = page switch", source);
+        Assert.Contains("MainDrawerPage.Analytics => Visibility.Visible", source);
+        Assert.Contains("MainDrawerPage.Calendar => Visibility.Collapsed", source);
+    }
+
+    [Fact]
     public void SpendingAmountGate_HideMarkers_ArePresent()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
@@ -200,6 +220,41 @@ public sealed class MainWindowLayoutTests
                 }
 
                 return mainWindowXamlPath;
+            }
+
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
+    }
+
+    private static string ResolveMainWindowCodeBehindPath()
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (currentDirectory is not null)
+        {
+            var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
+            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
+            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
+            {
+                var mainWindowCodeBehindPath = Path.Combine(
+                    currentDirectory.FullName,
+                    "Fluxo",
+                    "Views",
+                    "Shell",
+                    "Main",
+                    "MainWindow.xaml.cs");
+
+                if (!File.Exists(mainWindowCodeBehindPath))
+                {
+                    throw new FileNotFoundException(
+                        $"MainWindow.xaml.cs was not found at '{mainWindowCodeBehindPath}'.",
+                        mainWindowCodeBehindPath);
+                }
+
+                return mainWindowCodeBehindPath;
             }
 
             currentDirectory = currentDirectory.Parent;

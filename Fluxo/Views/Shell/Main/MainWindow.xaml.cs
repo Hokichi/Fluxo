@@ -1100,6 +1100,9 @@ public partial class MainWindow : Window, IPopupHost
 
         try
         {
+            SetDrawerTitle(page == MainDrawerPage.Analytics ? "Analytics" : "Calendar");
+            SetAnalyticsDateRangeSelectorVisibility(page);
+
             if (page == MainDrawerPage.Analytics)
             {
                 EnsureAnalyticsDrawerLoaded();
@@ -1127,7 +1130,6 @@ public partial class MainWindow : Window, IPopupHost
             }
 
             _activeDrawerPage = page;
-            SetDrawerTitle(page == MainDrawerPage.Analytics ? "Analytics" : "Calendar");
             OpenAnalyticsDrawer();
         }
         catch (Exception exception)
@@ -1218,6 +1220,16 @@ public partial class MainWindow : Window, IPopupHost
     private void SetDrawerTitle(string title)
     {
         AnalyticsDrawerTitle.Text = title;
+    }
+
+    private void SetAnalyticsDateRangeSelectorVisibility(MainDrawerPage page)
+    {
+        AnalyticsDateRangeSelectorHost.Visibility = page switch
+        {
+            MainDrawerPage.Analytics => Visibility.Visible,
+            MainDrawerPage.Calendar => Visibility.Collapsed,
+            _ => Visibility.Collapsed
+        };
     }
 
     private void SetDrawerTabButtonsEnabled(bool isEnabled)

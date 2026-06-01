@@ -986,6 +986,7 @@
                                 Text="Analytics" />
 
                             <Border
+                                x:Name="AnalyticsDateRangeSelectorHost"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
                                 HorizontalAlignment="Center"
