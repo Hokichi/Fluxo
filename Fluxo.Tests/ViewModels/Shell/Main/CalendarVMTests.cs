@@ -73,6 +73,52 @@ public sealed class CalendarVMTests
         Assert.False(vm.HasNoRecurringTransactions);
     }
 
+    [Fact]
+    public async Task SelectDate_WhenOlderLoadCompletesAfterNewerLoad_KeepsNewerDetails()
+    {
+        var olderDate = new DateOnly(2026, 6, 12);
+        var newerDate = new DateOnly(2026, 6, 13);
+        var olderLoad = new TaskCompletionSource<CalendarDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var newerLoad = new TaskCompletionSource<CalendarDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = Substitute.For<ICalendarService>();
+        service.GetCalendarDayAsync(olderDate, Arg.Any<CancellationToken>()).Returns(olderLoad.Task);
+        service.GetCalendarDayAsync(newerDate, Arg.Any<CancellationToken>()).Returns(newerLoad.Task);
+        var vm = new CalendarVM(service, new DateTime(2026, 6, 1));
+
+        var olderSelection = vm.SelectDateAsync(olderDate);
+        var newerSelection = vm.SelectDateAsync(newerDate);
+        newerLoad.SetResult(CreateDto(newerDate, totalSpent: 200m));
+        await newerSelection;
+
+        olderLoad.SetResult(CreateDto(olderDate, totalSpent: 100m));
+        await olderSelection;
+
+        Assert.Equal(newerDate, vm.SelectedDate);
+        Assert.Equal("200", vm.TotalSpentText);
+    }
+
+    [Fact]
+    public async Task SelectDate_WhenCurrentLoadIsCanceled_ClearsLoadingState()
+    {
+        using var cts = new CancellationTokenSource();
+        var service = Substitute.For<ICalendarService>();
+        service.GetCalendarDayAsync(new DateOnly(2026, 6, 12), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var load = new TaskCompletionSource<CalendarDto>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var token = call.Arg<CancellationToken>();
+                token.Register(() => load.SetCanceled(token));
+                return load.Task;
+            });
+        var vm = new CalendarVM(service, new DateTime(2026, 6, 1));
+
+        var selection = vm.SelectDateAsync(new DateOnly(2026, 6, 12), cts.Token);
+        cts.Cancel();
+        await selection;
+
+        Assert.False(vm.IsLoading);
+    }
+
     private static CalendarVM CreateVm(DateTime currentDate)
     {
         var service = Substitute.For<ICalendarService>();
@@ -87,5 +133,17 @@ public sealed class CalendarVMTests
                 [])));
 
         return new CalendarVM(service, currentDate);
+    }
+
+    private static CalendarDto CreateDto(DateOnly date, decimal totalSpent)
+    {
+        return new CalendarDto(
+            date,
+            totalSpent,
+            0m,
+            [],
+            [],
+            [],
+            []);
     }
 }

@@ -11,6 +11,7 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
 {
     private readonly ICalendarService _calendarService;
     private CancellationTokenSource? _loadCts;
+    private int _loadRequestVersion;
     private DateOnly _firstVisibleWeekStart;
     private DateOnly _visibleMonth;
 
@@ -76,23 +77,31 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
 
         _loadCts?.Cancel();
         _loadCts?.Dispose();
-        _loadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var token = _loadCts.Token;
+        var loadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _loadCts = loadCts;
+        var requestVersion = ++_loadRequestVersion;
+        var token = loadCts.Token;
 
         IsLoading = true;
         try
         {
             var dto = await _calendarService.GetCalendarDayAsync(date, token);
-            Apply(dto);
+            if (IsCurrentLoad(requestVersion, loadCts) && !token.IsCancellationRequested)
+                Apply(dto);
         }
         catch (OperationCanceledException)
         {
         }
         finally
         {
-            if (!token.IsCancellationRequested)
+            if (IsCurrentLoad(requestVersion, loadCts))
                 IsLoading = false;
         }
+    }
+
+    private bool IsCurrentLoad(int requestVersion, CancellationTokenSource loadCts)
+    {
+        return requestVersion == _loadRequestVersion && ReferenceEquals(_loadCts, loadCts);
     }
 
     private void Apply(CalendarDto dto)
