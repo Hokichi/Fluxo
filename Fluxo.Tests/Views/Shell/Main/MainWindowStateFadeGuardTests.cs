@@ -13,7 +13,7 @@ public sealed class MainWindowStateFadeGuardTests
 
         Assert.Contains("_isAnalyticsDrawerTabVisibilityTransitionActive", methodBody);
         Assert.Contains("? new UIElement[] { ContentGrid, AnalyticsDrawerLayer }", methodBody);
-        Assert.Contains(": new UIElement[] { ContentGrid, AnalyticsDrawerLayer, AnalyticsDrawerTabHost };", methodBody);
+        Assert.Contains(": new UIElement[] { ContentGrid, AnalyticsDrawerLayer, DrawerTabHost };", methodBody);
     }
 
     [Fact]

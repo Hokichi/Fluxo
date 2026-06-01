@@ -33,6 +33,12 @@ namespace Fluxo.Views.Shell.Main;
 /// </summary>
 public partial class MainWindow : Window, IPopupHost
 {
+    private enum MainDrawerPage
+    {
+        Analytics,
+        Calendar
+    }
+
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 100; // ms
     private const int AnalyticsDrawerTransitionDuration = 220; // ms
@@ -64,6 +70,9 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isAnalyticsDrawerTabVisibilityTransitionActive;
     private IServiceScope? _analyticsDrawerScope;
     private Analytics? _analyticsDrawerView;
+    private MainDrawerPage? _activeDrawerPage;
+    private Calendar? _calendarDrawerView;
+    private IServiceScope? _calendarDrawerScope;
 
     private EventHandler? _renderHandler;
 
@@ -182,7 +191,7 @@ public partial class MainWindow : Window, IPopupHost
         // Avoid interrupting the tab host's own opacity animation because its completion callback re-enables the tab button.
         return _isAnalyticsDrawerTabVisibilityTransitionActive
             ? new UIElement[] { ContentGrid, AnalyticsDrawerLayer }
-            : new UIElement[] { ContentGrid, AnalyticsDrawerLayer, AnalyticsDrawerTabHost };
+            : new UIElement[] { ContentGrid, AnalyticsDrawerLayer, DrawerTabHost };
     }
 
     private static void FadeElements(UIElement[] elements, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
@@ -929,13 +938,29 @@ public partial class MainWindow : Window, IPopupHost
 
         CloseHeaderMenu();
 
-        if (_isAnalyticsDrawerOpen)
+        if (_isAnalyticsDrawerOpen && _activeDrawerPage == MainDrawerPage.Analytics)
         {
             CloseAnalyticsDrawer();
             return;
         }
 
-        await OpenAnalyticsPopupAsync();
+        await OpenDrawerPageAsync(MainDrawerPage.Analytics);
+    }
+
+    private async void OnCalendarDrawerTabClick(object sender, RoutedEventArgs e)
+    {
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
+        CloseHeaderMenu();
+
+        if (_isAnalyticsDrawerOpen && _activeDrawerPage == MainDrawerPage.Calendar)
+        {
+            CloseAnalyticsDrawer();
+            return;
+        }
+
+        await OpenDrawerPageAsync(MainDrawerPage.Calendar);
     }
 
     private void OnCloseAnalyticsDrawerButtonClick(object sender, RoutedEventArgs e)
@@ -1059,41 +1084,67 @@ public partial class MainWindow : Window, IPopupHost
 
     private async Task OpenAnalyticsPopupAsync()
     {
+        await OpenDrawerPageAsync(MainDrawerPage.Analytics);
+    }
+
+    private async Task OpenDrawerPageAsync(MainDrawerPage page)
+    {
         if (IsSufficientFundsActionGateLocked())
             return;
 
-        if (_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive || _isPreparingAnalyticsOpen)
+        if (_isAnalyticsDrawerTransitionActive || _isPreparingAnalyticsOpen)
             return;
 
         _isPreparingAnalyticsOpen = true;
-        AnalyticsDrawerTabButton.IsEnabled = false;
+        SetDrawerTabButtonsEnabled(false);
 
         try
         {
-            EnsureAnalyticsDrawerLoaded();
-            ApplyMainWindowRangeToAnalyticsIfBounded();
+            if (page == MainDrawerPage.Analytics)
+            {
+                EnsureAnalyticsDrawerLoaded();
+                ApplyMainWindowRangeToAnalyticsIfBounded();
 
-            if (_analyticsDrawerView is null)
-                return;
+                if (_analyticsDrawerView is null)
+                    return;
 
-            await _dialogService.ShowToastWhileAsync(
-                "Loading analytics",
-                () => _analyticsDrawerView.PrepareForOpenAsync(showInternalToast: false),
-                this);
+                await _dialogService.ShowToastWhileAsync(
+                    "Loading analytics",
+                    () => _analyticsDrawerView.PrepareForOpenAsync(showInternalToast: false),
+                    this);
+            }
+            else
+            {
+                EnsureCalendarDrawerLoaded();
 
+                if (_calendarDrawerView is null)
+                    return;
+
+                await _dialogService.ShowToastWhileAsync(
+                    "Loading calendar",
+                    () => _calendarDrawerView.PrepareForOpenAsync(),
+                    this);
+            }
+
+            _activeDrawerPage = page;
+            SetDrawerTitle(page == MainDrawerPage.Analytics ? "Analytics" : "Calendar");
             OpenAnalyticsDrawer();
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to open analytics drawer.");
-            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("open analytics"), "Analytics", this);
+            var label = page == MainDrawerPage.Analytics ? "analytics" : "calendar";
+            FluxoLogManager.LogError(exception, $"Unable to open {label} drawer.");
+            _dialogService.ShowError(
+                FluxoLogManager.CreateFailureMessage($"open {label}"),
+                page == MainDrawerPage.Analytics ? "Analytics" : "Calendar",
+                this);
         }
         finally
         {
             _isPreparingAnalyticsOpen = false;
 
             if (!_isAnalyticsDrawerOpen && !_isAnalyticsDrawerTransitionActive)
-                AnalyticsDrawerTabButton.IsEnabled = true;
+                SetDrawerTabButtonsEnabled(true);
         }
     }
 
@@ -1141,11 +1192,38 @@ public partial class MainWindow : Window, IPopupHost
     private void EnsureAnalyticsDrawerLoaded()
     {
         if (_analyticsDrawerView is not null)
+        {
+            AnalyticsDrawerContentHost.Content = _analyticsDrawerView;
             return;
+        }
 
         _analyticsDrawerScope = _serviceProvider.CreateScope();
         _analyticsDrawerView = _analyticsDrawerScope.ServiceProvider.GetRequiredService<Analytics>();
         AnalyticsDrawerContentHost.Content = _analyticsDrawerView;
+    }
+
+    private void EnsureCalendarDrawerLoaded()
+    {
+        if (_calendarDrawerView is not null)
+        {
+            AnalyticsDrawerContentHost.Content = _calendarDrawerView;
+            return;
+        }
+
+        _calendarDrawerScope = _serviceProvider.CreateScope();
+        _calendarDrawerView = _calendarDrawerScope.ServiceProvider.GetRequiredService<Calendar>();
+        AnalyticsDrawerContentHost.Content = _calendarDrawerView;
+    }
+
+    private void SetDrawerTitle(string title)
+    {
+        AnalyticsDrawerTitle.Text = title;
+    }
+
+    private void SetDrawerTabButtonsEnabled(bool isEnabled)
+    {
+        AnalyticsDrawerTabButton.IsEnabled = isEnabled;
+        CalendarDrawerTabButton.IsEnabled = isEnabled;
     }
 
     private void ApplyMainWindowRangeToAnalyticsIfBounded()
@@ -1188,7 +1266,7 @@ public partial class MainWindow : Window, IPopupHost
     private void AnimateAnalyticsDrawer(bool opening)
     {
         _isAnalyticsDrawerTransitionActive = true;
-        AnalyticsDrawerTabButton.IsEnabled = false;
+        SetDrawerTabButtonsEnabled(false);
 
         AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, null);
 
@@ -1207,7 +1285,7 @@ public partial class MainWindow : Window, IPopupHost
                 AnalyticsDrawerTransform.Y = 0;
                 AnalyticsDrawerPanel.Visibility = Visibility.Visible;
                 AnalyticsDrawerPanel.IsHitTestVisible = true;
-                AnalyticsDrawerTabButton.IsEnabled = false;
+                SetDrawerTabButtonsEnabled(false);
                 FocusAnalyticsDrawerForShortcuts();
             }
             else
@@ -1217,7 +1295,7 @@ public partial class MainWindow : Window, IPopupHost
                 AnalyticsDrawerTransform.Y = panelHeight;
                 SetAnalyticsDrawerTabVisibility(visible: true, animate: false, onCompleted: () =>
                 {
-                    AnalyticsDrawerTabButton.IsEnabled = true;
+                    SetDrawerTabButtonsEnabled(true);
                 });
             }
 
@@ -1242,12 +1320,12 @@ public partial class MainWindow : Window, IPopupHost
                 AnalyticsDrawerTransform.Y = panelHeight;
                 SetAnalyticsDrawerTabVisibility(visible: true, animate: true, onCompleted: () =>
                 {
-                    AnalyticsDrawerTabButton.IsEnabled = true;
+                    SetDrawerTabButtonsEnabled(true);
                 });
             }
             else
             {
-                AnalyticsDrawerTabButton.IsEnabled = false;
+                SetDrawerTabButtonsEnabled(false);
                 FocusAnalyticsDrawerForShortcuts();
             }
         };
@@ -1270,34 +1348,34 @@ public partial class MainWindow : Window, IPopupHost
         var visibilityToken = _analyticsDrawerTabVisibilityToken;
         _isAnalyticsDrawerTabVisibilityTransitionActive = false;
 
-        AnalyticsDrawerTabHost.BeginAnimation(OpacityProperty, null);
+        DrawerTabHost.BeginAnimation(OpacityProperty, null);
 
         if (!animate)
         {
-            AnalyticsDrawerTabHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-            AnalyticsDrawerTabHost.IsHitTestVisible = visible;
-            AnalyticsDrawerTabHost.Opacity = visible ? 1d : 0d;
+            DrawerTabHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            DrawerTabHost.IsHitTestVisible = visible;
+            DrawerTabHost.Opacity = visible ? 1d : 0d;
             onCompleted?.Invoke();
             return;
         }
 
         if (visible)
         {
-            AnalyticsDrawerTabHost.Visibility = Visibility.Visible;
-            AnalyticsDrawerTabHost.IsHitTestVisible = true;
+            DrawerTabHost.Visibility = Visibility.Visible;
+            DrawerTabHost.IsHitTestVisible = true;
         }
         else
         {
-            AnalyticsDrawerTabHost.IsHitTestVisible = false;
+            DrawerTabHost.IsHitTestVisible = false;
         }
 
-        var fromOpacity = visible ? AnalyticsDrawerTabHost.Opacity : 1d;
+        var fromOpacity = visible ? DrawerTabHost.Opacity : 1d;
         var toOpacity = visible ? 1d : 0d;
 
         if (Math.Abs(fromOpacity - toOpacity) < 0.001d)
         {
             if (!visible)
-                AnalyticsDrawerTabHost.Visibility = Visibility.Collapsed;
+                DrawerTabHost.Visibility = Visibility.Collapsed;
 
             onCompleted?.Invoke();
             return;
@@ -1317,12 +1395,12 @@ public partial class MainWindow : Window, IPopupHost
             _isAnalyticsDrawerTabVisibilityTransitionActive = false;
 
             if (!visible)
-                AnalyticsDrawerTabHost.Visibility = Visibility.Collapsed;
+                DrawerTabHost.Visibility = Visibility.Collapsed;
 
             onCompleted?.Invoke();
         };
 
-        AnalyticsDrawerTabHost.BeginAnimation(OpacityProperty, tabAnimation);
+        DrawerTabHost.BeginAnimation(OpacityProperty, tabAnimation);
     }
 
     private static bool ShouldReduceMotion()
@@ -1336,10 +1414,14 @@ public partial class MainWindow : Window, IPopupHost
         _analyticsDrawerView = null;
         _analyticsDrawerScope?.Dispose();
         _analyticsDrawerScope = null;
+        _calendarDrawerView = null;
+        _calendarDrawerScope?.Dispose();
+        _calendarDrawerScope = null;
+        _activeDrawerPage = null;
         _isAnalyticsDrawerOpen = false;
         _isAnalyticsDrawerTransitionActive = false;
         SetAnalyticsDrawerTabVisibility(visible: true, animate: false);
-        AnalyticsDrawerTabButton.IsEnabled = true;
+        SetDrawerTabButtonsEnabled(true);
     }
 
     // ── Popup overlay & blur ────────────────────────────────────────
@@ -1446,14 +1528,14 @@ public partial class MainWindow : Window, IPopupHost
     {
         ContentGrid.Effect = CreatePopupBlurEffect();
         AnalyticsDrawerLayer.Effect = CreatePopupBlurEffect();
-        AnalyticsDrawerTabHost.Effect = CreatePopupBlurEffect();
+        DrawerTabHost.Effect = CreatePopupBlurEffect();
     }
 
     private void ClearPopupBlur()
     {
         ContentGrid.Effect = null;
         AnalyticsDrawerLayer.Effect = null;
-        AnalyticsDrawerTabHost.Effect = null;
+        DrawerTabHost.Effect = null;
     }
 
     private static BlurEffect CreatePopupBlurEffect()
