@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Fluxo.Tests.Views.Shell.Main;
@@ -57,27 +59,46 @@ public sealed class CalendarLayoutTests
     public void CalendarLayout_PlacesSummaryCardsUnderCalendarInLeftColumn()
     {
         var xaml = LoadCalendarXaml();
-        var rightColumnIndex = xaml.IndexOf("        <Grid Grid.Column=\"2\">", StringComparison.Ordinal);
+        var document = XDocument.Parse(xaml);
+        var presentation = document.Root!.Name.Namespace;
+        var layoutGrid = document.Root
+            .Elements(presentation + "Grid")
+            .Single(element => (string?)element.Attribute("Margin") == "12");
+        var leftColumn = layoutGrid
+            .Elements(presentation + "Grid")
+            .Single(element => element.Attribute("Grid.Column") is null);
+        var rightColumn = layoutGrid
+            .Elements(presentation + "Grid")
+            .Single(element => (string?)element.Attribute("Grid.Column") == "2");
 
-        Assert.True(rightColumnIndex > 0, "Calendar layout should have a right column grid.");
+        AssertTextExists(leftColumn, "Total Spent");
+        AssertTextExists(leftColumn, "Total Earned");
+        AssertTextExists(leftColumn, "Goals Due");
+        AssertTextExists(leftColumn, "Payment Due");
 
-        var leftColumnXaml = xaml[..rightColumnIndex];
-        var rightColumnXaml = xaml[rightColumnIndex..];
+        AssertTextDoesNotExist(rightColumn, "Total Spent");
+        AssertTextDoesNotExist(rightColumn, "Total Earned");
+        AssertTextDoesNotExist(rightColumn, "Goals Due");
+        AssertTextDoesNotExist(rightColumn, "Payment Due");
 
-        Assert.Contains("Text=\"Total Spent\"", leftColumnXaml);
-        Assert.Contains("Text=\"Total Earned\"", leftColumnXaml);
-        Assert.Contains("Text=\"Goals Due\"", leftColumnXaml);
-        Assert.Contains("Text=\"Payment Due\"", leftColumnXaml);
+        AssertTextExists(rightColumn, "Expenses");
+        AssertTextExists(rightColumn, "Incomes");
+        AssertTextExists(rightColumn, "Goal Deadlines");
+        AssertTextExists(rightColumn, "Recurring Transactions");
+    }
 
-        Assert.DoesNotContain("Text=\"Total Spent\"", rightColumnXaml);
-        Assert.DoesNotContain("Text=\"Total Earned\"", rightColumnXaml);
-        Assert.DoesNotContain("Text=\"Goals Due\"", rightColumnXaml);
-        Assert.DoesNotContain("Text=\"Payment Due\"", rightColumnXaml);
+    private static void AssertTextExists(XElement element, string text)
+    {
+        Assert.Contains(
+            element.Descendants().Attributes("Text"),
+            attribute => attribute.Value == text);
+    }
 
-        Assert.Contains("Text=\"Expenses\"", rightColumnXaml);
-        Assert.Contains("Text=\"Incomes\"", rightColumnXaml);
-        Assert.Contains("Text=\"Goal Deadlines\"", rightColumnXaml);
-        Assert.Contains("Text=\"Recurring Transactions\"", rightColumnXaml);
+    private static void AssertTextDoesNotExist(XElement element, string text)
+    {
+        Assert.DoesNotContain(
+            element.Descendants().Attributes("Text"),
+            attribute => attribute.Value == text);
     }
 
     private static string LoadCalendarXaml()
