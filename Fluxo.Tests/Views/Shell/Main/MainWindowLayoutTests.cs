@@ -66,13 +66,33 @@ public sealed class MainWindowLayoutTests
             .SingleOrDefault(border => (string?)border.Attribute(XamlNamespace + "Name") == "AnalyticsDateRangeSelectorHost");
 
         Assert.NotNull(dateRangeSelectorHost);
-        Assert.Equal(2, dateRangeSelectorHost!.Descendants().Count(element => element.Name.LocalName == "DateSelector"));
+        var dateSelectors = dateRangeSelectorHost!
+            .Descendants()
+            .Where(element => element.Name.LocalName == "DateSelector")
+            .ToList();
+
+        Assert.Equal(2, dateSelectors.Count);
+        Assert.Equal("{Binding StartDate, Mode=TwoWay}", (string?)dateSelectors[0].Attribute("SelectedDate"));
+        Assert.Equal("{Binding EndDate, Mode=TwoWay}", (string?)dateSelectors[1].Attribute("SelectedDate"));
+        Assert.DoesNotContain("AnalyticsDrawerContentHost", dateRangeSelectorHost.ToString(SaveOptions.DisableFormatting));
 
         Assert.Contains("SetAnalyticsDateRangeSelectorVisibility(page);", source);
         Assert.Contains("private void SetAnalyticsDateRangeSelectorVisibility(MainDrawerPage page)", source);
         Assert.Contains("AnalyticsDateRangeSelectorHost.Visibility = page switch", source);
         Assert.Contains("MainDrawerPage.Analytics => Visibility.Visible", source);
         Assert.Contains("MainDrawerPage.Calendar => Visibility.Collapsed", source);
+
+        var ensureAnalyticsDrawerLoaded = ExtractMethodBodyBySignature(
+            source,
+            "private void EnsureAnalyticsDrawerLoaded()");
+        var ensureCalendarDrawerLoaded = ExtractMethodBodyBySignature(
+            source,
+            "private void EnsureCalendarDrawerLoaded()");
+
+        Assert.Contains(
+            "AnalyticsDateRangeSelectorHost.DataContext = _analyticsDrawerView.DataContext;",
+            ensureAnalyticsDrawerLoaded);
+        Assert.DoesNotContain("AnalyticsDateRangeSelectorHost.DataContext", ensureCalendarDrawerLoaded);
     }
 
     [Fact]
@@ -262,5 +282,35 @@ public sealed class MainWindowLayoutTests
 
         throw new DirectoryNotFoundException(
             $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
+    }
+
+    private static string ExtractMethodBodyBySignature(string source, string signatureMarker)
+    {
+        var signatureIndex = source.IndexOf(signatureMarker, StringComparison.Ordinal);
+        Assert.True(signatureIndex >= 0, $"Method signature '{signatureMarker}' was not found in MainWindow.xaml.cs.");
+
+        var openingBraceIndex = source.IndexOf('{', signatureIndex);
+        Assert.True(openingBraceIndex >= 0, $"Opening brace for method signature '{signatureMarker}' was not found.");
+
+        var depth = 0;
+        for (var index = openingBraceIndex; index < source.Length; index++)
+        {
+            if (source[index] == '{')
+            {
+                depth++;
+                continue;
+            }
+
+            if (source[index] != '}')
+                continue;
+
+            depth--;
+            if (depth != 0)
+                continue;
+
+            return source.Substring(openingBraceIndex + 1, index - openingBraceIndex - 1);
+        }
+
+        throw new InvalidOperationException($"Closing brace for method signature '{signatureMarker}' was not found.");
     }
 }

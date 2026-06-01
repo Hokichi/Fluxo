@@ -1193,15 +1193,14 @@ public partial class MainWindow : Window, IPopupHost
 
     private void EnsureAnalyticsDrawerLoaded()
     {
-        if (_analyticsDrawerView is not null)
+        if (_analyticsDrawerView is null)
         {
-            AnalyticsDrawerContentHost.Content = _analyticsDrawerView;
-            return;
+            _analyticsDrawerScope = _serviceProvider.CreateScope();
+            _analyticsDrawerView = _analyticsDrawerScope.ServiceProvider.GetRequiredService<Analytics>();
         }
 
-        _analyticsDrawerScope = _serviceProvider.CreateScope();
-        _analyticsDrawerView = _analyticsDrawerScope.ServiceProvider.GetRequiredService<Analytics>();
         AnalyticsDrawerContentHost.Content = _analyticsDrawerView;
+        AnalyticsDateRangeSelectorHost.DataContext = _analyticsDrawerView.DataContext;
     }
 
     private void EnsureCalendarDrawerLoaded()
