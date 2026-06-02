@@ -108,7 +108,7 @@ public class MoneyAmountToCanonicalConverter : IValueConverter
             ? groupedInteger + decimalSeparator
             : groupedInteger + decimalSeparator + fractionalDigits;
 
-        return isNegative && baseText != "0" ? "-" + baseText : baseText;
+        return baseText;
     }
 
     private static string TrimLeadingZeros(string digits)

@@ -222,7 +222,10 @@
         </DataTemplate>
     </customControls:BasePopup.Resources>
 
-    <Grid Width="600" Margin="24,0,24,24">
+    <Grid
+        Width="600"
+        MaxHeight="780"
+        Margin="24,0,24,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="12" />
@@ -244,7 +247,7 @@
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="12">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden">
                 <ItemsControl ItemTemplate="{StaticResource NotificationChecklistItemTemplate}" ItemsSource="{Binding Items}" />
             </ScrollViewer>
         </Border>

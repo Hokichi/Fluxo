@@ -338,7 +338,7 @@
 
                             <Border
                                 Height="24"
-                                Margin="12,0,0,0"
+                                Margin="12,0,0,8"
                                 Padding="12,0"
                                 Background="{StaticResource Brush.Background.Surface}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"
@@ -355,7 +355,7 @@
                             </Border>
                         </StackPanel>
 
-                        <TextBlock Margin="0,8,0,0" VerticalAlignment="Bottom">
+                        <TextBlock Margin="0,0,0,-8" VerticalAlignment="Bottom">
                             <Run
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="24"
