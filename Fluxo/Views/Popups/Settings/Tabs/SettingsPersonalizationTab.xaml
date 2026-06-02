@@ -47,22 +47,27 @@
                     Foreground="{StaticResource Brush.Text.Secondary}"
                     Text="Set your app display preferences and notification behavior." />
 
-                <StackPanel>
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="Username" />
-                    <TextBox
-                        x:Name="UsernameTextBox"
-                        Margin="0,8,0,0"
-                        Background="{StaticResource Brush.Background.Surface}"
-                        LostFocus="OnUsernameTextBoxLostFocus"
-                        Style="{StaticResource RoundedTextInputStyle}"
-                        Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}"
-                        TextChanged="OnUsernameTextBoxTextChanged" />
-                </StackPanel>
 
-                <Grid Margin="0,16">
+                <TextBlock
+                    FontFamily="{StaticResource Bold}"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="Username" />
+                <TextBox
+                    x:Name="UsernameTextBox"
+                    Margin="0,8,0,0"
+                    Background="{StaticResource Brush.Background.Surface}"
+                    LostFocus="OnUsernameTextBoxLostFocus"
+                    Style="{StaticResource RoundedTextInputStyle}"
+                    Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanged="OnUsernameTextBoxTextChanged" />
+
+                <TextBlock
+                    Margin="0,24,0,0"
+                    FontFamily="{StaticResource Bold}"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="Data Management" />
+
+                <Grid Margin="0,8,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="16" />

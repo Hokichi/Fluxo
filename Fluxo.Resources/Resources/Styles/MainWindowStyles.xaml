@@ -83,7 +83,7 @@
 
 
     <DataTemplate x:Key="SavingGoalTemplate">
-        <Border Margin="0,0,0,12" Padding="12,0">
+        <Border Margin="0,0,0,8" Padding="12,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -91,7 +91,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Grid Width="64" Height="64">
+                <Grid Width="56" Height="56">
                     <Canvas
                         Width="80"
                         Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"

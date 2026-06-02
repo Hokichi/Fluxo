@@ -30,7 +30,7 @@
                     FontFamily="{StaticResource Medium}"
                     FontSize="11"
                     Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="Adjust how the current budget is split between Needs, Wants, and Invest." />
+                    Text="Manage how you budget is allocated." />
 
                 <Border Style="{StaticResource RowCardStyle}">
                     <Grid>

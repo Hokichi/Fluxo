@@ -740,7 +740,7 @@
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="18"
                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Overview" />
+                                Text="Dashboard" />
 
                             <Button
                                 x:Name="ViewAllSpendingSourcesButton"
@@ -751,7 +751,7 @@
                                 Style="{StaticResource TextOnlyButtonStyle}" />
                         </Grid>
 
-                        <Grid Grid.Row="1" Margin="0,20,0,0">
+                        <Grid Grid.Row="1" Margin="0,0,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
@@ -806,7 +806,7 @@
                         <Grid Grid.Row="2" Margin="0,8,0,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="160" />
+                                <RowDefinition Height="180" />
                             </Grid.RowDefinitions>
 
                             <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
@@ -989,9 +989,9 @@
                                 x:Name="AnalyticsDateRangeSelectorHost"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
-                                DataContext="{x:Null}"
                                 HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
+                                VerticalAlignment="Center"
+                                DataContext="{x:Null}">
                                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                                     <components:DateSelector SelectedDate="{Binding StartDate, Mode=TwoWay}" />
 
