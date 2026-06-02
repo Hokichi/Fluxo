@@ -16,6 +16,13 @@ namespace Fluxo.ViewModels.Popups.Settings;
 public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>,
     IRecipient<SettingsMaintenanceRequestedMessage>, IRecipient<SettingsDataChangedMessage>, IDisposable
 {
+    private static readonly IReadOnlyList<ExpenseTag> RequiredDeleteAllDataSystemTags =
+    [
+        new() { Name = "Balance Update", HexCode = "#a3e5d6", IsSystemTag = true },
+        new() { Name = "Goal Update", HexCode = "#eaabf2", IsSystemTag = true },
+        new() { Name = "Data Restoration", HexCode = "#123456", IsSystemTag = true }
+    ];
+
     private static readonly IReadOnlyDictionary<string, string> SettingsDefaultsAfterDeletion =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
@@ -360,6 +367,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             var savingGoals = await _appData.GetSavingGoalsAsync();
             var spendingSources = await _appData.GetSpendingSourcesAsync();
             var tags = await _appData.GetExpenseTagsAsync();
+            var recurringTransactions = await _appData.GetRecurringTransactionsAsync();
             var notifications = await _appData.GetNotificationsAsync();
             var settings = keepSettings ? [] : await _appData.GetUserSettingsAsync();
 
@@ -371,6 +379,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 expenseLogs,
                 incomeLogs,
                 savingGoals,
+                recurringTransactions,
                 notifications);
 
             if (!keepSettings)
@@ -379,6 +388,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 _startupRegistrationService.SetRunAtStartup(false);
             }
 
+            await EnsureDeleteAllDataSystemTagsAsync(_appData, tags);
             await _appData.SaveChangesAsync();
             Messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
@@ -529,6 +539,42 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return true;
     }
 
+    internal static async Task EnsureDeleteAllDataSystemTagsAsync(
+        IAppDataService appData,
+        IReadOnlyList<ExpenseTag> existingTags,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(appData);
+        ArgumentNullException.ThrowIfNull(existingTags);
+
+        foreach (var requiredTag in RequiredDeleteAllDataSystemTags)
+        {
+            var existingSystemTag = existingTags.FirstOrDefault(existingTag =>
+                existingTag.IsSystemTag &&
+                string.Equals(existingTag.Name, requiredTag.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (existingSystemTag is not null)
+            {
+                if (!string.Equals(existingSystemTag.HexCode, requiredTag.HexCode, StringComparison.Ordinal))
+                {
+                    existingSystemTag.Name = requiredTag.Name;
+                    existingSystemTag.HexCode = requiredTag.HexCode;
+                    existingSystemTag.IsSystemTag = true;
+                    appData.UpdateExpenseTag(existingSystemTag);
+                }
+
+                continue;
+            }
+
+            await appData.AddExpenseTagAsync(new ExpenseTag
+            {
+                Name = requiredTag.Name,
+                HexCode = requiredTag.HexCode,
+                IsSystemTag = true
+            }, cancellationToken);
+        }
+    }
+
     internal static void ApplyDeleteAllDataRemovalPolicy(
         IAppDataService appData,
         IReadOnlyList<ExpenseTag> tags,
@@ -537,6 +583,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         IReadOnlyList<ExpenseLog> expenseLogs,
         IReadOnlyList<IncomeLog> incomeLogs,
         IReadOnlyList<SavingGoal> savingGoals,
+        IReadOnlyList<RecurringTransaction> recurringTransactions,
         IReadOnlyList<Notification> notifications)
     {
         ArgumentNullException.ThrowIfNull(appData);
@@ -546,26 +593,30 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         ArgumentNullException.ThrowIfNull(expenseLogs);
         ArgumentNullException.ThrowIfNull(incomeLogs);
         ArgumentNullException.ThrowIfNull(savingGoals);
+        ArgumentNullException.ThrowIfNull(recurringTransactions);
         ArgumentNullException.ThrowIfNull(notifications);
 
-        foreach (var tag in tags)
-            if (ShouldDeleteTagOnDeleteAllData(tag))
-                appData.RemoveExpenseTag(tag);
-
-        foreach (var source in spendingSources)
-            appData.RemoveSpendingSource(source);
-
-        foreach (var expense in expenses)
-            appData.RemoveExpense(expense);
+        foreach (var recurringTransaction in recurringTransactions)
+            appData.RemoveRecurringTransaction(recurringTransaction);
 
         foreach (var expenseLog in expenseLogs)
             appData.RemoveExpenseLog(expenseLog);
 
+        foreach (var expense in expenses)
+            appData.RemoveExpense(expense);
+
         foreach (var incomeLog in incomeLogs)
             appData.RemoveIncomeLog(incomeLog);
 
+        foreach (var source in spendingSources)
+            appData.RemoveSpendingSource(source);
+
         foreach (var goal in savingGoals)
             appData.RemoveSavingGoal(goal);
+
+        foreach (var tag in tags)
+            if (ShouldDeleteTagOnDeleteAllData(tag))
+                appData.RemoveExpenseTag(tag);
 
         foreach (var notification in notifications)
             if (ShouldDeleteNotificationOnDeleteAllData(notification))

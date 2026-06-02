@@ -65,7 +65,7 @@ public sealed class SettingsVMMaintenancePolicyTests
     }
 
     [Fact]
-    public void ApplyDeleteAllDataRemovalPolicy_RemovesAllNotifications_AndOnlyNonSystemTags()
+    public void ApplyDeleteAllDataRemovalPolicy_RemovesDependentsBeforePrincipals_AndOnlyNonSystemTags()
     {
         var appData = Substitute.For<IAppDataService>();
 
@@ -102,6 +102,17 @@ public sealed class SettingsVMMaintenancePolicyTests
         };
 
         var savingGoal = new SavingGoal { Id = 1, Name = "Emergency" };
+        var recurringTransaction = new RecurringTransaction
+        {
+            Id = 1,
+            Name = "Rent",
+            SourceId = source.Id,
+            Source = source,
+            TagId = customTag.Id,
+            Tag = customTag,
+            GoalId = savingGoal.Id,
+            Goal = savingGoal
+        };
         var firstNotification = new Notification { Id = 1, Type = "A", Header = "H1", Message = "M1" };
         var secondNotification = new Notification { Id = 2, Type = "B", Header = "H2", Message = "M2" };
 
@@ -113,9 +124,11 @@ public sealed class SettingsVMMaintenancePolicyTests
             [expenseLog],
             [incomeLog],
             [savingGoal],
+            [recurringTransaction],
             [firstNotification, secondNotification]);
 
         appData.DidNotReceive().RemoveExpenseTag(systemTag);
+        appData.Received(1).RemoveRecurringTransaction(recurringTransaction);
         appData.Received(1).RemoveExpenseTag(customTag);
         appData.Received(1).RemoveSpendingSource(source);
         appData.Received(1).RemoveExpense(expense);
@@ -124,5 +137,85 @@ public sealed class SettingsVMMaintenancePolicyTests
         appData.Received(1).RemoveSavingGoal(savingGoal);
         appData.Received(1).RemoveNotification(firstNotification);
         appData.Received(1).RemoveNotification(secondNotification);
+
+        Received.InOrder(() =>
+        {
+            appData.RemoveRecurringTransaction(recurringTransaction);
+            appData.RemoveExpenseLog(expenseLog);
+            appData.RemoveExpense(expense);
+            appData.RemoveIncomeLog(incomeLog);
+            appData.RemoveSpendingSource(source);
+            appData.RemoveSavingGoal(savingGoal);
+            appData.RemoveExpenseTag(customTag);
+            appData.RemoveNotification(firstNotification);
+            appData.RemoveNotification(secondNotification);
+        });
+    }
+
+    [Fact]
+    public async Task EnsureDeleteAllDataSystemTagsAsync_AddsMissingSystemTags_ByNameAndColor()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var existingTags = new List<ExpenseTag>
+        {
+            new()
+            {
+                Id = 1,
+                Name = "Balance Update",
+                HexCode = "#000000",
+                IsSystemTag = false
+            },
+            new()
+            {
+                Id = 2,
+                Name = "Goal Update",
+                HexCode = "#eaabf2",
+                IsSystemTag = true
+            }
+        };
+
+        await SettingsVM.EnsureDeleteAllDataSystemTagsAsync(appData, existingTags);
+
+        await appData.Received(1).AddExpenseTagAsync(
+            Arg.Is<ExpenseTag>(tag =>
+                tag.Name == "Balance Update" &&
+                tag.HexCode == "#a3e5d6" &&
+                tag.IsSystemTag),
+            Arg.Any<CancellationToken>());
+
+        await appData.Received(1).AddExpenseTagAsync(
+            Arg.Is<ExpenseTag>(tag =>
+                tag.Name == "Data Restoration" &&
+                tag.HexCode == "#123456" &&
+                tag.IsSystemTag),
+            Arg.Any<CancellationToken>());
+
+        await appData.DidNotReceive().AddExpenseTagAsync(
+            Arg.Is<ExpenseTag>(tag => tag.Name == "Goal Update"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EnsureDeleteAllDataSystemTagsAsync_UpdatesExistingSystemTagColor_WhenColorDiffers()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        var dataRestorationTag = new ExpenseTag
+        {
+            Id = 3,
+            Name = "Data Restoration",
+            HexCode = "#e9c178",
+            IsSystemTag = true
+        };
+
+        await SettingsVM.EnsureDeleteAllDataSystemTagsAsync(appData, [dataRestorationTag]);
+
+        appData.Received(1).UpdateExpenseTag(Arg.Is<ExpenseTag>(tag =>
+            tag.Id == dataRestorationTag.Id &&
+            tag.Name == "Data Restoration" &&
+            tag.HexCode == "#123456" &&
+            tag.IsSystemTag));
     }
 }
