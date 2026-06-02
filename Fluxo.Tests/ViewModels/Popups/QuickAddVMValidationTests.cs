@@ -540,6 +540,194 @@ public sealed class QuickAddVMValidationTests
         });
     }
 
+    [Fact]
+    public void RecurringDraft_HardStopExhaustedCategory_StillSavesDraft()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 100m,
+                AllocationPeriod = AllocationPeriod.Monthly,
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                OverspendPolicy = OverspendPolicy.HardStop
+            };
+            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 30m));
+            QuickAddVM.RecurringDraftSaveInput? captured = null;
+            var vm = new QuickAddVM(
+                CreateMainViewModel([source]),
+                appData,
+                saveRecurringDraftAsync: input =>
+                {
+                    captured = input;
+                    return Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Success());
+                });
+            vm.IsExpense = true;
+            vm.IsRecurring = true;
+            vm.NameText = "Subscription";
+            vm.AmountText = 5m;
+            vm.SelectedExpenseCategory = ExpenseCategory.Wants;
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "10";
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            Assert.True(captured.HasValue);
+            Assert.Equal(RecurringTransactionType.Expense, captured.Value.Type);
+            appData.DidNotReceive().UpdateBudgetAllocation(Arg.Any<BudgetAllocation>());
+        });
+    }
+
+    [Fact]
+    public void RecurringDraft_SoftDebt_DoesNotAddBudgetDebt()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 100m,
+                AllocationPeriod = AllocationPeriod.Monthly,
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                OverspendPolicy = OverspendPolicy.SoftDebt
+            };
+            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 30m));
+            var vm = new QuickAddVM(
+                CreateMainViewModel([source]),
+                appData,
+                saveRecurringDraftAsync: _ => Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Success()));
+            vm.IsExpense = true;
+            vm.IsRecurring = true;
+            vm.NameText = "Subscription";
+            vm.AmountText = 5m;
+            vm.SelectedExpenseCategory = ExpenseCategory.Wants;
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "10";
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(0m, allocation.WantsDebt);
+            appData.DidNotReceive().UpdateBudgetAllocation(Arg.Any<BudgetAllocation>());
+        });
+    }
+
+    [Fact]
+    public void Expense_HardStop_BlocksOverspendingCategory()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 100m,
+                AllocationPeriod = AllocationPeriod.Monthly,
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                OverspendPolicy = OverspendPolicy.HardStop
+            };
+            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 25m));
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 6m, appData: appData);
+            vm.SelectedExpenseCategory = ExpenseCategory.Wants;
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.False(result.IsSuccess);
+            Assert.Equal("Wants budget is exhausted for this allocation period.", result.ErrorMessage);
+            appData.DidNotReceiveWithAnyArgs().AddExpenseAsync(default!, default);
+        });
+    }
+
+    [Fact]
+    public void Expense_HardStop_UsesExpenseDateAllocationPeriod()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 100m,
+                AllocationPeriod = AllocationPeriod.Monthly,
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                OverspendPolicy = OverspendPolicy.HardStop
+            };
+            var expenseDate = new DateTime(2026, 5, 15);
+            var appData = CreateAppData(
+                allocation,
+                CreateExpenseLogsForBudget(ExpenseCategory.Wants, 29m, new DateTime(2026, 5, 1)));
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 2m, appData: appData);
+            vm.SelectedExpenseCategory = ExpenseCategory.Wants;
+            vm.SelectedDate = expenseDate;
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.False(result.IsSuccess);
+            Assert.Equal("Wants budget is exhausted for this allocation period.", result.ErrorMessage);
+        });
+    }
+
+    [Fact]
+    public void Expense_SoftDebt_AddsCategoryDebt()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 100m,
+                AllocationPeriod = AllocationPeriod.Monthly,
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                OverspendPolicy = OverspendPolicy.SoftDebt
+            };
+            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 25m));
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 12m, appData: appData);
+            vm.SelectedExpenseCategory = ExpenseCategory.Wants;
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(7m, allocation.WantsDebt);
+            appData.Received(1).UpdateBudgetAllocation(allocation);
+        });
+    }
+
+    [Fact]
+    public void GoalUpdate_HardStop_BlocksOverspendingInvestCategory()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 100m,
+                AllocationPeriod = AllocationPeriod.Monthly,
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                OverspendPolicy = OverspendPolicy.HardStop
+            };
+            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Savings, 20m));
+            var vm = CreateVm(TransactionKind.Goal, source, isRecurring: false, amount: 1m, appData: appData);
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.False(result.IsSuccess);
+            Assert.Equal("Invest budget is exhausted for this allocation period.", result.ErrorMessage);
+            appData.DidNotReceiveWithAnyArgs().AddExpenseAsync(default!, default);
+        });
+    }
+
     private static QuickAddVM CreateVm(
         TransactionKind kind,
         SpendingSourceVM source,
@@ -576,11 +764,13 @@ public sealed class QuickAddVMValidationTests
         return vm;
     }
 
-    private static IAppDataService CreateAppData()
+    private static IAppDataService CreateAppData(
+        BudgetAllocation? budgetAllocation = null,
+        IReadOnlyList<ExpenseLog>? expenseLogs = null)
     {
         var appData = Substitute.For<IAppDataService>();
         appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([]));
+            .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(expenseLogs ?? []));
         appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>([]));
         appData.GetSpendingSourceByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
@@ -595,6 +785,43 @@ public sealed class QuickAddVMValidationTests
                 SpentAmount = 0m,
                 IsEnabled = true
             }));
+        appData.GetExpenseTagByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult<ExpenseTag?>(new ExpenseTag
+            {
+                Id = callInfo.ArgAt<int>(0),
+                Name = "General",
+                HexCode = "#22C55E",
+                IsSystemTag = false
+            }));
+        appData.GetSavingGoalByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult<SavingGoal?>(new SavingGoal
+            {
+                Id = callInfo.ArgAt<int>(0),
+                Name = "Goal",
+                TargetAmount = 500m,
+                CurrentAmount = 100m
+            }));
+        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>(
+            [
+                new ExpenseTag
+                {
+                    Id = 99,
+                    Name = GoalUpdateTransactionSupport.GoalUpdateTagName,
+                    HexCode = GoalUpdateTransactionSupport.GoalUpdateTagColor,
+                    IsSystemTag = false
+                }
+            ]));
+        appData.AddExpenseAsync(Arg.Any<Expense>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.AddExpenseLogAsync(Arg.Any<ExpenseLog>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.AddRecurringTransactionAsync(Arg.Any<RecurringTransaction>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.GetBudgetAllocationAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(budgetAllocation ?? new BudgetAllocation()));
         return appData;
     }
 
@@ -604,26 +831,46 @@ public sealed class QuickAddVMValidationTests
         var mapper = Substitute.For<IMapper>();
         var unitOfWork = CreateUnitOfWork();
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
+        mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<Fluxo.Core.DTO.RecurringTransactionDto>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<Fluxo.Core.DTO.SavingGoalDto>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns([]);
+
+        var expenseLogService = Substitute.For<IExpenseLogService>();
+        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseLogDto>>([]));
+        var spendingSourceService = Substitute.For<ISpendingSourceService>();
+        spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.SpendingSourceDto>>([]));
+        var tagService = Substitute.For<ITagService>();
+        tagService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseTagDto>>([]));
+        var expenseService = Substitute.For<IExpenseService>();
+        expenseService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseDto>>([]));
 
         var main = new MainVM(
             dataOperationRunner,
             new NotificationPanelVM(
-                Substitute.For<IExpenseService>(),
-                Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                expenseService,
+                expenseLogService,
+                spendingSourceService,
                 dataOperationRunner,
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
-                Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
-                Substitute.For<ITagService>(),
+                expenseLogService,
+                spendingSourceService,
+                tagService,
                 dataOperationRunner,
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
-                Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                expenseLogService,
+                spendingSourceService,
                 dataOperationRunner,
                 mapper,
                 messenger),
@@ -670,7 +917,35 @@ public sealed class QuickAddVMValidationTests
             .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>([]));
         unitOfWork.IncomeLogs.Returns(incomeLogs);
 
+        var budgetAllocation = Substitute.For<IBudgetAllocationRepository>();
+        budgetAllocation.GetAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<BudgetAllocation?>(new BudgetAllocation()));
+        unitOfWork.BudgetAllocation.Returns(budgetAllocation);
+
         return unitOfWork;
+    }
+
+    private static IReadOnlyList<ExpenseLog> CreateExpenseLogsForBudget(
+        ExpenseCategory category,
+        decimal amount,
+        DateTime? deductedOn = null)
+    {
+        return
+        [
+            new ExpenseLog
+            {
+                Id = 10,
+                Amount = amount,
+                DeductedOn = deductedOn ?? DateTime.Today,
+                IsForDeletion = false,
+                Expense = new Expense
+                {
+                    Id = 20,
+                    Name = "Existing",
+                    ExpenseCategory = category
+                }
+            }
+        ];
     }
 
     private static SpendingSourceVM CreateCheckingSource(

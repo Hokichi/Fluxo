@@ -15,6 +15,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
+    public DbSet<BudgetAllocation> BudgetAllocation => Set<BudgetAllocation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +28,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureRecurringTransaction(modelBuilder.Entity<RecurringTransaction>());
         ConfigureNotification(modelBuilder.Entity<Notification>());
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
+        ConfigureBudgetAllocation(modelBuilder.Entity<BudgetAllocation>());
         ConfigureReferenceAutoIncludes(modelBuilder);
     }
 
@@ -180,6 +182,29 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.Property(settings => settings.Name).IsRequired();
         entity.Property(settings => settings.Value).IsRequired();
+    }
+
+    private static void ConfigureBudgetAllocation(EntityTypeBuilder<BudgetAllocation> entity)
+    {
+        entity.ToTable("BudgetAllocation");
+        entity.Property(allocation => allocation.Id).ValueGeneratedOnAdd();
+        entity.HasKey(allocation => allocation.Id);
+
+        entity.Property(allocation => allocation.NeedsThreshold).IsRequired();
+        entity.Property(allocation => allocation.WantsThreshold).IsRequired();
+        entity.Property(allocation => allocation.InvestThreshold).IsRequired();
+        entity.Property(allocation => allocation.AllocationPeriod).IsRequired();
+        entity.Property(allocation => allocation.AllocationLimit).HasColumnType("NUMERIC");
+        entity.Property(allocation => allocation.NeedsDebt).HasColumnType("NUMERIC");
+        entity.Property(allocation => allocation.WantsDebt).HasColumnType("NUMERIC");
+        entity.Property(allocation => allocation.InvestDebt).HasColumnType("NUMERIC");
+        entity.Property(allocation => allocation.RolloverPolicy).IsRequired();
+        entity.Property(allocation => allocation.OverspendPolicy).IsRequired();
+
+        entity.Property<int>("SingletonKey")
+            .HasDefaultValue(1)
+            .IsRequired();
+        entity.HasIndex("SingletonKey").IsUnique();
     }
 
     private static void ConfigureReferenceAutoIncludes(ModelBuilder modelBuilder)

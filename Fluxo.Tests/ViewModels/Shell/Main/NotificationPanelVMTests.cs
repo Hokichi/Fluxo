@@ -155,6 +155,75 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task LoadAsync_BudgetThresholdUsesTypedAllocationAndKeepsNotificationSettingsFromUserSettings()
+    {
+        var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
+            ? 7
+            : (int)DateTime.Today.DayOfWeek;
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs:
+            [
+                new ExpenseLogVM
+                {
+                    Id = 1,
+                    Amount = 380m,
+                    DeductedOn = DateTime.Today,
+                    Expense = new ExpenseVM
+                    {
+                        Id = 1,
+                        Name = "Rent",
+                        ExpenseCategory = ExpenseCategory.Needs
+                    }
+                }
+            ],
+            spendingSources:
+            [
+                new SpendingSourceVM
+                {
+                    Id = 1,
+                    Name = "Checking",
+                    SpendingSourceType = SpendingSourceType.Checking,
+                    Balance = 1_000m,
+                    IsEnabled = true
+                }
+            ],
+            out _,
+            recurringTransactions:
+            [
+                new RecurringTransaction
+                {
+                    Id = 10,
+                    Name = "Recurring Rent",
+                    Amount = 100m,
+                    RecurringPeriod = RecurringPeriod.Weekly,
+                    RecurringTime = currentWeekday,
+                    Type = RecurringTransactionType.Expense,
+                    IsEnabled = true
+                }
+            ],
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+            ],
+            budgetAllocation: new BudgetAllocation
+            {
+                NeedsThreshold = 40,
+                WantsThreshold = 40,
+                InvestThreshold = 20
+            });
+
+        await vm.LoadAsync();
+
+        Assert.Contains(vm.Notifications, notification =>
+            notification.Type == "BudgetThresholdNeeds" &&
+            notification.Message == "Needs has reached 95% of its allocation.");
+        Assert.Contains(vm.Notifications, notification =>
+            notification.Type.StartsWith("RecurringTransactionDue-10_", StringComparison.Ordinal));
+    }
+
+
+    [Fact]
     public async Task LoadAsync_CreatesNotificationForEachRecurringTransactionDueWithinReminderWindow()
     {
         var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
@@ -898,7 +967,8 @@ public class NotificationPanelVMTests
         IDialogService? dialogService = null,
         IAppUpdateInteractionService? appUpdateInteractionService = null,
         IReadOnlyList<RecurringTransaction>? recurringTransactions = null,
-        IReadOnlyList<UserSettings>? userSettings = null)
+        IReadOnlyList<UserSettings>? userSettings = null,
+        BudgetAllocation? budgetAllocation = null)
     {
         var expenseService = Substitute.For<IExpenseService>();
         expenseService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -969,6 +1039,10 @@ public class NotificationPanelVMTests
             .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>([]));
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.UserSettings.Returns(userSettingsRepository);
+        var budgetAllocationRepository = Substitute.For<IBudgetAllocationRepository>();
+        budgetAllocationRepository.GetAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<BudgetAllocation?>(budgetAllocation ?? new BudgetAllocation()));
+        unitOfWork.BudgetAllocation.Returns(budgetAllocationRepository);
         unitOfWork.RecurringTransactions.Returns(recurringTransactionRepository);
         unitOfWork.Notifications.Returns(notificationRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);

@@ -13,5 +13,6 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IRecurringTransactionRepository RecurringTransactions { get; }
     INotificationRepository Notifications { get; }
     IUserSettingsRepository UserSettings { get; }
+    IBudgetAllocationRepository BudgetAllocation { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

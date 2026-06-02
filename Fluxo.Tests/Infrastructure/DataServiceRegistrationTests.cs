@@ -3,9 +3,13 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Data;
 using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
+using Fluxo.Data.Repositories;
 using Fluxo.Services.Persistence;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -31,6 +35,7 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IRecurringTransactionRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<INotificationRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IUserSettingsRepository>(services, ServiceLifetime.Scoped);
+        AssertLifetime<IBudgetAllocationRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<Expense>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<ExpenseLog>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<IncomeLog>>(services, ServiceLifetime.Scoped);
@@ -48,8 +53,39 @@ public sealed class DataServiceRegistrationTests
         var recurringRepository = provider.GetService<IRecurringTransactionRepository>();
         Assert.NotNull(recurringRepository);
 
+        var budgetAllocationRepository = provider.GetService<IBudgetAllocationRepository>();
+        Assert.NotNull(budgetAllocationRepository);
+
         var appData = provider.GetRequiredService<IAppDataService>();
         Assert.NotNull(appData.GetRecurringTransactionsAsync());
+        Assert.NotNull(appData.GetBudgetAllocationAsync());
+    }
+
+    [Fact]
+    public async Task EnsureBudgetAllocationAsync_WhenCalledRepeatedlyBeforeSave_ReusesPendingRow()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<FluxoDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var dbContext = new FluxoDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        using var unitOfWork = CreateUnitOfWork(dbContext);
+        var appData = new AppDataService(unitOfWork);
+
+        var first = await appData.EnsureBudgetAllocationAsync();
+        var second = await appData.EnsureBudgetAllocationAsync();
+
+        Assert.Same(first, second);
+        Assert.Single(dbContext.BudgetAllocation.Local);
+
+        await appData.SaveChangesAsync();
+
+        Assert.Single(await dbContext.BudgetAllocation.AsNoTracking().ToListAsync());
     }
 
     private static void AssertLifetime<TService>(
@@ -59,5 +95,21 @@ public sealed class DataServiceRegistrationTests
         var descriptor = services.LastOrDefault(sd => sd.ServiceType == typeof(TService));
         Assert.NotNull(descriptor);
         Assert.Equal(expectedLifetime, descriptor!.Lifetime);
+    }
+
+    private static UnitOfWork CreateUnitOfWork(FluxoDbContext dbContext)
+    {
+        return new UnitOfWork(
+            dbContext,
+            new ExpenseRepository(dbContext),
+            new ExpenseLogRepository(dbContext),
+            new IncomeLogRepository(dbContext),
+            new ExpenseTagRepository(dbContext),
+            new SavingGoalRepository(dbContext),
+            new SpendingSourceRepository(dbContext),
+            new RecurringTransactionRepository(dbContext),
+            new NotificationRepository(dbContext),
+            new UserSettingsRepository(dbContext),
+            new BudgetAllocationRepository(dbContext));
     }
 }

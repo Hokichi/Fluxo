@@ -5,6 +5,7 @@ using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Budgeting;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
@@ -52,11 +53,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private bool _isLowAccountBalanceNotifEnabled;
     private bool _isLowCreditNotifEnabled;
     private decimal _lowAccountBalancePercentage = 0.20m;
-    private decimal _needsThreshold = 0.5m;
     private (DateTime From, DateTime To)? _selectedRange;
     private decimal _creditUsageWarningPercentage = 0.30m;
-    private decimal _investThreshold = 0.2m;
-    private decimal _wantsThreshold = 0.3m;
+    private BudgetAllocation _budgetAllocation = new();
     private IReadOnlyList<RecurringTransactionVM> _recurringTransactions = [];
     private IReadOnlyList<ExpenseLogVM> _expenseLogs = [];
     private IReadOnlyList<SpendingSourceVM> _spendingSources = [];
@@ -248,6 +247,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         await LoadUserSettingsAsync(cancellationToken);
+        _budgetAllocation = await LoadBudgetAllocationAsync(cancellationToken);
 
         _recurringTransactions = _mapper.Map<IReadOnlyList<RecurringTransactionVM>>(
             _mapper.Map<IReadOnlyList<RecurringTransactionDto>>(
@@ -406,46 +406,45 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (!_isBudgetThresholdNotifEnabled)
             yield break;
 
-        var visibleExpenseLogs = GetVisibleExpenseLogs();
-        var totalIncomeAmount = _spendingSources.Sum(source => source.Balance);
-        var needsAvailable = decimal.Round(totalIncomeAmount * _needsThreshold, 2);
-        var wantsAvailable = decimal.Round(totalIncomeAmount * _wantsThreshold, 2);
-        var investAvailable = decimal.Round(totalIncomeAmount * _investThreshold, 2);
+        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today);
+        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today);
+        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
+            _budgetAllocation,
+            CalculateSpentByCategory(currentPeriod),
+            CalculateSpentByCategory(previousPeriod),
+            DateTime.Today,
+            _spendingSources.Sum(source => source.Balance));
 
-        var needsSpent = visibleExpenseLogs
-            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs)
-            .Sum(log => log.Amount);
-        var wantsSpent = visibleExpenseLogs
-            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Wants)
-            .Sum(log => log.Amount);
-        var investSpent = visibleExpenseLogs
-            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings)
-            .Sum(log => log.Amount);
-
-        var needsPercentage = CalculatePercentage(needsSpent, needsAvailable);
-        var wantsPercentage = CalculatePercentage(wantsSpent, wantsAvailable);
-        var investPercentage = CalculatePercentage(investSpent, investAvailable);
-
-        if (HasCrossedBudgetThreshold(needsSpent, needsAvailable))
+        if (HasCrossedBudgetThreshold(snapshot.Needs.Spent, snapshot.Needs.Available))
             yield return new NotificationCandidate(
                 Type: BuildNotificationType("BudgetThresholdNeeds"),
                 Header: "Budget Threshold - Needs",
-                Message: $"Needs has reached {needsPercentage}% of its allocation.",
+                Message: $"Needs has reached {snapshot.Needs.Percentage}% of its allocation.",
                 Severity: NotificationSeverity.Danger);
 
-        if (HasCrossedBudgetThreshold(wantsSpent, wantsAvailable))
+        if (HasCrossedBudgetThreshold(snapshot.Wants.Spent, snapshot.Wants.Available))
             yield return new NotificationCandidate(
                 Type: BuildNotificationType("BudgetThresholdWants"),
                 Header: "Budget Threshold - Wants",
-                Message: $"Wants has reached {wantsPercentage}% of its allocation.",
+                Message: $"Wants has reached {snapshot.Wants.Percentage}% of its allocation.",
                 Severity: NotificationSeverity.Warning);
 
-        if (HasCrossedBudgetThreshold(investSpent, investAvailable))
+        if (HasCrossedBudgetThreshold(snapshot.Invest.Spent, snapshot.Invest.Available))
             yield return new NotificationCandidate(
                 Type: BuildNotificationType("BudgetThresholdSavings"),
                 Header: "Budget Threshold - Savings",
-                Message: $"Savings has reached {investPercentage}% of its allocation.",
+                Message: $"Savings has reached {snapshot.Invest.Percentage}% of its allocation.",
                 Severity: NotificationSeverity.Warning);
+    }
+
+    private IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(BudgetAllocationPeriod period)
+    {
+        return _expenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.DeductedOn.Date >= period.Start && log.DeductedOn.Date <= period.End)
+            .Where(log => log.Expense is not null)
+            .GroupBy(log => log.Expense!.ExpenseCategory)
+            .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
     }
 
     private IEnumerable<NotificationCandidate> GetCreditThresholdNotifications()
@@ -744,16 +743,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         return new DateTime(today.Year, today.Month, normalizedDueDate.Value);
     }
 
-    private IReadOnlyList<ExpenseLogVM> GetVisibleExpenseLogs()
-    {
-        if (_selectedRange is not { } range)
-            return _expenseLogs;
-
-        return _expenseLogs
-            .Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
-            .ToList();
-    }
-
     private async Task LoadUserSettingsAsync(CancellationToken cancellationToken)
     {
         var settingsByName = await _dataOperationRunner.RunAsync(async (scope, ct) =>
@@ -762,9 +751,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
             return settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
         }, cancellationToken);
 
-        _needsThreshold = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
-        _wantsThreshold = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
-        _investThreshold = ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
         _deadlineReminderDays = ParseInt(settingsByName, UserSettingNames.DeadlineReminderDays, 7);
         _budgetUsageWarningPercentage =
             ParseDecimal(settingsByName, UserSettingNames.BudgetUsageWarningPercentage, 0.90m);
@@ -790,26 +776,18 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _disabledSavingGoalIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.DisabledSavingGoalIds));
     }
 
+    private async Task<BudgetAllocation> LoadBudgetAllocationAsync(CancellationToken cancellationToken)
+    {
+        return await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            await scope.UnitOfWork.BudgetAllocation.GetAsync(ct) ?? new BudgetAllocation(), cancellationToken);
+    }
+
     private bool HasCrossedBudgetThreshold(decimal spentAmount, decimal availableAmount)
     {
         if (availableAmount <= 0)
             return false;
 
         return spentAmount / availableAmount >= _budgetUsageWarningPercentage;
-    }
-
-    private static int CalculatePercentage(decimal spentAmount, decimal availableAmount)
-    {
-        if (availableAmount <= 0)
-            return 0;
-
-        return (int)Math.Round(spentAmount / availableAmount * 100, MidpointRounding.AwayFromZero);
-    }
-
-    private static decimal ParsePercentage(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)
-    {
-        var percentageValue = ParseDecimal(settings, name, defaultValue);
-        return percentageValue / 100m;
     }
 
     private static decimal ParseDecimal(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)

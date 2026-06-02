@@ -177,6 +177,75 @@ public sealed class UserBackupServiceAppendTests
     }
 
     [Fact]
+    public async Task AppendAsync_WhenUserSettingsSelected_SkipsLegacyBudgetAllocationSettings()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetUserSettingsAsync(Arg.Any<CancellationToken>())
+            .Returns([new UserSettings { Name = "PreferredDisplayName", Value = "Existing" }]);
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(tempFile, """
+        {
+          "schemaVersion": 1,
+          "createdAt": "2026-05-26T00:00:00Z",
+          "includedEntities": [ "userSettings" ],
+          "entities": {
+            "userSettings": [
+              { "name": "NeedsThreshold", "value": "40" },
+              { "name": "WantsThreshold", "value": "40" },
+              { "name": "InvestThreshold", "value": "20" },
+              { "name": "AllocationPeriod", "value": "Yearly" },
+              { "name": "AllocationLimit", "value": "1000" },
+              { "name": "RolloverPolicy", "value": "Pooled" },
+              { "name": "OverspendPolicy", "value": "SoftDebt" },
+              { "name": "NeedsDebt", "value": "5" },
+              { "name": "WantsDebt", "value": "6" },
+              { "name": "InvestDebt", "value": "7" },
+              { "name": "PreferredDisplayName", "value": "Alex" }
+            ]
+          }
+        }
+        """);
+
+        try
+        {
+            var service = new UserBackupService(appData);
+            var result = await service.AppendAsync(
+                tempFile,
+                new UserBackupSelection(new HashSet<DataManagementEntityKind>
+                {
+                    DataManagementEntityKind.UserSettings
+                }),
+                new Dictionary<string, DataManagementConflictDecision>());
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            var legacyBudgetSettingNames = new HashSet<string>(StringComparer.Ordinal)
+            {
+                "NeedsThreshold",
+                "WantsThreshold",
+                "InvestThreshold",
+                "AllocationPeriod",
+                "AllocationLimit",
+                "RolloverPolicy",
+                "OverspendPolicy",
+                "NeedsDebt",
+                "WantsDebt",
+                "InvestDebt"
+            };
+            await appData.DidNotReceive().AddUserSettingAsync(
+                Arg.Is<UserSettings>(setting => legacyBudgetSettingNames.Contains(setting.Name)),
+                Arg.Any<CancellationToken>());
+            appData.Received(1).UpdateUserSetting(Arg.Is<UserSettings>(setting =>
+                setting.Name == "PreferredDisplayName" &&
+                setting.Value == "Alex"));
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
     public async Task AppendAsync_WithAppendDecisionOnSourceAndGoal_AddsAmountsToExistingEntities()
     {
         var existingSource = new SpendingSource

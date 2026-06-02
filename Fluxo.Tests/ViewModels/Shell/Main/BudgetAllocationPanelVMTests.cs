@@ -3,7 +3,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Data;
 using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
@@ -122,7 +121,7 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
-    public void LoadAsync_UsesBudgetThresholdsFromUserSettings()
+    public void LoadAsync_UsesTypedBudgetAllocation()
     {
         RunInSta(() =>
         {
@@ -132,23 +131,26 @@ public class BudgetAllocationPanelVMTests
                 CreateExpenseLogs(),
                 CreateTags(),
                 CreateSpendingSources(),
-                settings:
-                [
-                    new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "40" },
-                    new UserSettings { Name = UserSettingNames.WantsThreshold, Value = "35" },
-                    new UserSettings { Name = UserSettingNames.InvestThreshold, Value = "25" }
-                ]);
+                budgetAllocation: new BudgetAllocation
+                {
+                    NeedsThreshold = 45,
+                    WantsThreshold = 35,
+                    InvestThreshold = 20
+                });
 
             vm.LoadAsync().GetAwaiter().GetResult();
 
-            Assert.Equal(800m, vm.NeedsAvailable);
+            Assert.Equal(45, vm.NeedsAllocationPercentage);
+            Assert.Equal(35, vm.WantsAllocationPercentage);
+            Assert.Equal(20, vm.InvestAllocationPercentage);
+            Assert.Equal(900m, vm.NeedsAvailable);
             Assert.Equal(700m, vm.WantsAvailable);
-            Assert.Equal(500m, vm.InvestAvailable);
+            Assert.Equal(400m, vm.InvestAvailable);
         });
     }
 
     [Fact]
-    public void LoadAsync_ExposesAllocationPercentagesForUiFromUserSettings()
+    public void LoadAsync_ExposesAllocationPercentagesForUiFromTypedAllocation()
     {
         RunInSta(() =>
         {
@@ -158,12 +160,12 @@ public class BudgetAllocationPanelVMTests
                 CreateExpenseLogs(),
                 CreateTags(),
                 CreateSpendingSources(),
-                settings:
-                [
-                    new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "40" },
-                    new UserSettings { Name = UserSettingNames.WantsThreshold, Value = "35" },
-                    new UserSettings { Name = UserSettingNames.InvestThreshold, Value = "25" }
-                ]);
+                budgetAllocation: new BudgetAllocation
+                {
+                    NeedsThreshold = 40,
+                    WantsThreshold = 35,
+                    InvestThreshold = 25
+                });
 
             vm.LoadAsync().GetAwaiter().GetResult();
 
@@ -186,7 +188,7 @@ public class BudgetAllocationPanelVMTests
                 CreateSpendingSources(),
                 settings:
                 [
-                    new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "invalid" }
+                    new UserSettings { Name = "NeedsThreshold", Value = "invalid" }
                 ]);
 
             vm.LoadAsync().GetAwaiter().GetResult();
@@ -250,7 +252,7 @@ public class BudgetAllocationPanelVMTests
                     ExpenseCategory: ExpenseCategory.Needs,
                     SpendingSourceId: 1,
                     TagId: 1,
-                    DeductedOn: new DateTime(2026, 4, 10),
+                    DeductedOn: DateTime.Today,
                     Notes: string.Empty,
                     IsForDeletion: false))));
 
@@ -420,7 +422,8 @@ public class BudgetAllocationPanelVMTests
         IReadOnlyList<ExpenseTagVM> tags,
         IReadOnlyList<SpendingSourceVM> spendingSources,
         IReadOnlyList<IncomeLogVM>? incomeLogs = null,
-        IReadOnlyList<UserSettings>? settings = null)
+        IReadOnlyList<UserSettings>? settings = null,
+        BudgetAllocation? budgetAllocation = null)
     {
         var expenseLogService = Substitute.For<IExpenseLogService>();
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -441,6 +444,10 @@ public class BudgetAllocationPanelVMTests
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>(settings ?? []));
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.UserSettings.Returns(userSettingsRepository);
+        var budgetAllocationRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IBudgetAllocationRepository>();
+        budgetAllocationRepository.GetAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<BudgetAllocation?>(budgetAllocation ?? new BudgetAllocation()));
+        unitOfWork.BudgetAllocation.Returns(budgetAllocationRepository);
         var incomeLogRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IIncomeLogRepository>();
         incomeLogRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>(

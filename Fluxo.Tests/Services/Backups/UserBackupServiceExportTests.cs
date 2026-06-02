@@ -107,6 +107,51 @@ public sealed class UserBackupServiceExportTests
     }
 
     [Fact]
+    public async Task BackupAsync_WhenUserSettingsSelected_ExcludesLegacyBudgetAllocationSettings()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetUserSettingsAsync(Arg.Any<CancellationToken>())
+            .Returns([
+                new UserSettings { Name = "NeedsThreshold", Value = "40" },
+                new UserSettings { Name = "WantsThreshold", Value = "40" },
+                new UserSettings { Name = "InvestThreshold", Value = "20" },
+                new UserSettings { Name = "AllocationPeriod", Value = "Yearly" },
+                new UserSettings { Name = "AllocationLimit", Value = "1000" },
+                new UserSettings { Name = "RolloverPolicy", Value = "Pooled" },
+                new UserSettings { Name = "OverspendPolicy", Value = "SoftDebt" },
+                new UserSettings { Name = "NeedsDebt", Value = "5" },
+                new UserSettings { Name = "WantsDebt", Value = "6" },
+                new UserSettings { Name = "InvestDebt", Value = "7" },
+                new UserSettings { Name = "PreferredDisplayName", Value = "Alex" }
+            ]);
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        var service = new UserBackupService(appData);
+
+        try
+        {
+            var result = await service.BackupAsync(new UserBackupSelection(new HashSet<DataManagementEntityKind>
+            {
+                DataManagementEntityKind.UserSettings
+            }), tempFile);
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            var json = await File.ReadAllTextAsync(tempFile);
+            var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
+            Assert.NotNull(document);
+
+            var setting = Assert.Single(document.Entities.UserSettings);
+            Assert.Equal("PreferredDisplayName", setting.Name);
+            Assert.Equal("Alex", setting.Value);
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
     public async Task ReadManifestAsync_ReturnsIncludedEntityKinds()
     {
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");

@@ -14,6 +14,19 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
     internal const int CurrentSchemaVersion = 1;
     private const string DataRestorationTagName = "Data Restoration";
     private const string DataRestorationTagHex = "#e9c178";
+    private static readonly HashSet<string> LegacyBudgetAllocationUserSettingNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "NeedsThreshold",
+        "WantsThreshold",
+        "InvestThreshold",
+        "AllocationPeriod",
+        "AllocationLimit",
+        "RolloverPolicy",
+        "OverspendPolicy",
+        "NeedsDebt",
+        "WantsDebt",
+        "InvestDebt"
+    };
 
     internal static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -885,6 +898,9 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
         foreach (var backupSetting in document.Entities.UserSettings)
         {
+            if (IsLegacyBudgetAllocationUserSetting(backupSetting.Name))
+                continue;
+
             if (existingByName.TryGetValue(backupSetting.Name, out var existingSetting))
             {
                 existingSetting.Value = backupSetting.Value;
@@ -1134,6 +1150,16 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
     {
         var settings = await appData.GetUserSettingsAsync(cancellationToken);
         foreach (var setting in settings)
+        {
+            if (IsLegacyBudgetAllocationUserSetting(setting.Name))
+                continue;
+
             document.Entities.UserSettings.Add(new BackupUserSetting(setting.Name, setting.Value));
+        }
+    }
+
+    private static bool IsLegacyBudgetAllocationUserSetting(string name)
+    {
+        return LegacyBudgetAllocationUserSettingNames.Contains(name);
     }
 }

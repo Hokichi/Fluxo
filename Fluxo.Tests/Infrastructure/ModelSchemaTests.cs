@@ -1,4 +1,3 @@
-using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Data.Context;
@@ -31,6 +30,27 @@ public sealed class ModelSchemaTests
         Assert.False(recurringTransaction.FindProperty("RecurringPeriod")!.IsNullable);
         Assert.False(recurringTransaction.FindProperty("RecurringTime")!.IsNullable);
         Assert.Null(recurringTransaction.FindProperty("RecurringDate"));
+
+        var budgetAllocation = model.FindEntityType(typeof(BudgetAllocation))!;
+        Assert.Equal("BudgetAllocation", budgetAllocation.GetTableName());
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.NeedsThreshold))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.WantsThreshold))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.InvestThreshold))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.AllocationPeriod))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.RolloverPolicy))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.OverspendPolicy))!.IsNullable);
+        Assert.Equal("NUMERIC", budgetAllocation.FindProperty(nameof(BudgetAllocation.AllocationLimit))!.GetColumnType());
+        Assert.Equal("NUMERIC", budgetAllocation.FindProperty(nameof(BudgetAllocation.NeedsDebt))!.GetColumnType());
+        Assert.Equal("NUMERIC", budgetAllocation.FindProperty(nameof(BudgetAllocation.WantsDebt))!.GetColumnType());
+        Assert.Equal("NUMERIC", budgetAllocation.FindProperty(nameof(BudgetAllocation.InvestDebt))!.GetColumnType());
+
+        var singletonKey = budgetAllocation.FindProperty("SingletonKey")!;
+        Assert.False(singletonKey.IsNullable);
+        Assert.Equal(1, singletonKey.GetDefaultValue());
+        Assert.Contains(budgetAllocation.GetIndexes(), index =>
+            index.IsUnique &&
+            index.Properties.Count == 1 &&
+            string.Equals(index.Properties[0].Name, "SingletonKey", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -73,7 +93,6 @@ public sealed class ModelSchemaTests
         Assert.Null(typeof(SavingGoalVM).GetProperty("RecurringPeriod"));
         Assert.Equal(RecurringPeriod.Biweekly, recurringTransactionVm.RecurringPeriod);
         Assert.Equal(5, recurringTransactionVm.RecurringTime);
-        Assert.Equal(nameof(UserSettingNames.AllocationPeriod), UserSettingNames.AllocationPeriod);
     }
 
     [Fact]
@@ -86,6 +105,14 @@ public sealed class ModelSchemaTests
         Assert.Equal(
             ["None", "Weekly", "Biweekly", "Monthly"],
             Enum.GetNames<RecurringPeriod>());
+
+        Assert.Equal(
+            ["None", "Matching", "Pooled"],
+            Enum.GetNames<RolloverPolicy>());
+
+        Assert.Equal(
+            ["Ignore", "SoftDebt", "HardStop"],
+            Enum.GetNames<OverspendPolicy>());
     }
 
     private static FluxoDbContext CreateDbContext()

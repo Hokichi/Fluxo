@@ -258,6 +258,27 @@ public sealed class AppDataService(IUnitOfWork unitOfWork) : IAppDataService
         unitOfWork.UserSettings.Remove(entity);
     }
 
+    public Task<BudgetAllocation> GetBudgetAllocationAsync(CancellationToken cancellationToken = default)
+    {
+        return EnsureBudgetAllocationAsync(cancellationToken);
+    }
+
+    public async Task<BudgetAllocation> EnsureBudgetAllocationAsync(CancellationToken cancellationToken = default)
+    {
+        var existing = await unitOfWork.BudgetAllocation.GetAsync(cancellationToken);
+        if (existing is not null)
+            return existing;
+
+        var allocation = new BudgetAllocation();
+        await unitOfWork.BudgetAllocation.AddAsync(allocation, cancellationToken);
+        return allocation;
+    }
+
+    public void UpdateBudgetAllocation(BudgetAllocation entity)
+    {
+        unitOfWork.BudgetAllocation.Update(entity);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await unitOfWork.SaveChangesAsync(cancellationToken);

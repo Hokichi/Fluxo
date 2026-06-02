@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+        services.AddScoped<IBudgetAllocationRepository, BudgetAllocationRepository>();
 
         services.AddScoped<IRepository<Expense>, ExpenseRepository>();
         services.AddScoped<IRepository<ExpenseLog>, ExpenseLogRepository>();

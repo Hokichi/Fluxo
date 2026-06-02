@@ -14,7 +14,8 @@ public sealed class UnitOfWork(
     ISpendingSourceRepository spendingSources,
     IRecurringTransactionRepository recurringTransactions,
     INotificationRepository notifications,
-    IUserSettingsRepository userSettings) : IUnitOfWork
+    IUserSettingsRepository userSettings,
+    IBudgetAllocationRepository budgetAllocation) : IUnitOfWork
 {
     private readonly FluxoDbContext _dbContext = dbContext;
 
@@ -27,6 +28,7 @@ public sealed class UnitOfWork(
     public IRecurringTransactionRepository RecurringTransactions { get; } = recurringTransactions;
     public INotificationRepository Notifications { get; } = notifications;
     public IUserSettingsRepository UserSettings { get; } = userSettings;
+    public IBudgetAllocationRepository BudgetAllocation { get; } = budgetAllocation;
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

@@ -1,7 +1,6 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
@@ -16,11 +15,23 @@ public partial class SettingsBudgetTabVM : ObservableObject
     private readonly Func<decimal> _totalBudgetAmountProvider;
     private readonly IMessenger _messenger;
     private readonly IAppDataService _appData;
-    private BudgetAllocationSnapshot _savedBudgetAllocation = new(50, 30, 20);
+    private bool _suppressPendingStatePublish;
+    private BudgetAllocationSnapshot _savedBudgetAllocation = new(
+        50,
+        30,
+        20,
+        0m,
+        AllocationPeriod.Monthly,
+        RolloverPolicy.None,
+        OverspendPolicy.Ignore);
 
+    [ObservableProperty] private decimal _allocationLimit;
+    [ObservableProperty] private AllocationPeriod _allocationPeriod = AllocationPeriod.Monthly;
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
     [ObservableProperty] private int _investAllocationPercentage;
     [ObservableProperty] private int _needsAllocationPercentage;
+    [ObservableProperty] private OverspendPolicy _overspendPolicy = OverspendPolicy.Ignore;
+    [ObservableProperty] private RolloverPolicy _rolloverPolicy = RolloverPolicy.None;
     [ObservableProperty] private int _wantsAllocationPercentage;
 
     public SettingsBudgetTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
@@ -43,7 +54,11 @@ public partial class SettingsBudgetTabVM : ObservableObject
     public bool HasPendingChanges =>
         NeedsAllocationPercentage != _savedBudgetAllocation.Needs ||
         WantsAllocationPercentage != _savedBudgetAllocation.Wants ||
-        InvestAllocationPercentage != _savedBudgetAllocation.Invest;
+        InvestAllocationPercentage != _savedBudgetAllocation.Invest ||
+        AllocationLimit != _savedBudgetAllocation.AllocationLimit ||
+        AllocationPeriod != _savedBudgetAllocation.AllocationPeriod ||
+        RolloverPolicy != _savedBudgetAllocation.RolloverPolicy ||
+        OverspendPolicy != _savedBudgetAllocation.OverspendPolicy;
 
     public bool CanSaveConfiguration => !HasBudgetAllocationError;
 
@@ -55,23 +70,40 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     public async Task LoadAsync()
     {
-        var settingsByName = await SettingsShared.GetSettingsDictionaryAsync(_appData);
-        NeedsAllocationPercentage = SettingsShared.ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
-        WantsAllocationPercentage = SettingsShared.ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
-        InvestAllocationPercentage = SettingsShared.ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
+        var allocation = await _appData.GetBudgetAllocationAsync();
+        _suppressPendingStatePublish = true;
+        try
+        {
+            NeedsAllocationPercentage = allocation.NeedsThreshold;
+            WantsAllocationPercentage = allocation.WantsThreshold;
+            InvestAllocationPercentage = allocation.InvestThreshold;
+            AllocationLimit = allocation.AllocationLimit;
+            AllocationPeriod = allocation.AllocationPeriod;
+            RolloverPolicy = allocation.RolloverPolicy;
+            OverspendPolicy = allocation.OverspendPolicy;
 
-        _savedBudgetAllocation = new BudgetAllocationSnapshot(
-            NeedsAllocationPercentage,
-            WantsAllocationPercentage,
-            InvestAllocationPercentage);
+            _savedBudgetAllocation = new BudgetAllocationSnapshot(
+                NeedsAllocationPercentage,
+                WantsAllocationPercentage,
+                InvestAllocationPercentage,
+                AllocationLimit,
+                AllocationPeriod,
+                RolloverPolicy,
+                OverspendPolicy);
 
-        HasSpendingSources = (await _appData.GetSpendingSourcesAsync()).Count > 0;
-        ValidateBudgetAllocation();
-        OnPropertyChanged(nameof(HasSpendingSources));
-        OnPropertyChanged(nameof(TotalBudgetAmount));
-        OnPropertyChanged(nameof(NeedsAllocationAmountText));
-        OnPropertyChanged(nameof(WantsAllocationAmountText));
-        OnPropertyChanged(nameof(InvestAllocationAmountText));
+            HasSpendingSources = (await _appData.GetSpendingSourcesAsync()).Count > 0;
+            ValidateBudgetAllocation();
+            OnPropertyChanged(nameof(HasSpendingSources));
+            OnPropertyChanged(nameof(TotalBudgetAmount));
+            OnPropertyChanged(nameof(NeedsAllocationAmountText));
+            OnPropertyChanged(nameof(WantsAllocationAmountText));
+            OnPropertyChanged(nameof(InvestAllocationAmountText));
+        }
+        finally
+        {
+            _suppressPendingStatePublish = false;
+        }
+
         PublishPendingState();
     }
 
@@ -81,15 +113,17 @@ public partial class SettingsBudgetTabVM : ObservableObject
         if (HasBudgetAllocationError)
             return (SettingsOperationResult.Failure(BudgetAllocationErrorMessage), []);
 
-        var actions = new List<ILogMemoryAction>();
-        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.NeedsThreshold,
-            NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
-        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.WantsThreshold,
-            WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
-        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.InvestThreshold,
-            InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture), actions);
+        var allocation = await _appData.GetBudgetAllocationAsync();
+        allocation.NeedsThreshold = NeedsAllocationPercentage;
+        allocation.WantsThreshold = WantsAllocationPercentage;
+        allocation.InvestThreshold = InvestAllocationPercentage;
+        allocation.AllocationLimit = AllocationLimit;
+        allocation.AllocationPeriod = AllocationPeriod;
+        allocation.RolloverPolicy = RolloverPolicy;
+        allocation.OverspendPolicy = OverspendPolicy;
+        _appData.UpdateBudgetAllocation(allocation);
 
-        return (SettingsOperationResult.Success(), actions);
+        return (SettingsOperationResult.Success(), []);
     }
 
     public void CommitSavedState()
@@ -97,7 +131,11 @@ public partial class SettingsBudgetTabVM : ObservableObject
         _savedBudgetAllocation = new BudgetAllocationSnapshot(
             NeedsAllocationPercentage,
             WantsAllocationPercentage,
-            InvestAllocationPercentage);
+            InvestAllocationPercentage,
+            AllocationLimit,
+            AllocationPeriod,
+            RolloverPolicy,
+            OverspendPolicy);
         PublishPendingState();
     }
 
@@ -112,6 +150,10 @@ public partial class SettingsBudgetTabVM : ObservableObject
         NeedsAllocationPercentage = _savedBudgetAllocation.Needs;
         WantsAllocationPercentage = _savedBudgetAllocation.Wants;
         InvestAllocationPercentage = _savedBudgetAllocation.Invest;
+        AllocationLimit = _savedBudgetAllocation.AllocationLimit;
+        AllocationPeriod = _savedBudgetAllocation.AllocationPeriod;
+        RolloverPolicy = _savedBudgetAllocation.RolloverPolicy;
+        OverspendPolicy = _savedBudgetAllocation.OverspendPolicy;
         ValidateBudgetAllocation();
         PublishPendingState();
     }
@@ -168,6 +210,26 @@ public partial class SettingsBudgetTabVM : ObservableObject
         OnAllocationChanged();
     }
 
+    partial void OnAllocationLimitChanged(decimal value)
+    {
+        PublishPendingState();
+    }
+
+    partial void OnAllocationPeriodChanged(AllocationPeriod value)
+    {
+        PublishPendingState();
+    }
+
+    partial void OnRolloverPolicyChanged(RolloverPolicy value)
+    {
+        PublishPendingState();
+    }
+
+    partial void OnOverspendPolicyChanged(OverspendPolicy value)
+    {
+        PublishPendingState();
+    }
+
     private string BuildAllocationAmountText(int percentage)
     {
         var allocatedAmount = decimal.Round(TotalBudgetAmount * percentage / 100m, 2);
@@ -194,6 +256,9 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     private void PublishPendingState()
     {
+        if (_suppressPendingStatePublish)
+            return;
+
         _messenger.Send(new SettingsPendingChangesChangedMessage(
             new SettingsPendingChangesChanged(SettingsTabKey.Budget, HasPendingChanges)));
     }

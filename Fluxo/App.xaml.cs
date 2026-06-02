@@ -714,8 +714,22 @@ public partial class App : Application
     {
         await dbContext.Database.ExecuteSqlRawAsync(
             """
-            INSERT OR IGNORE INTO "UserSettings" ("Name", "Value")
-            VALUES ('AllocationPeriod', 'Monthly');
+            INSERT INTO "BudgetAllocation" (
+                "NeedsThreshold",
+                "WantsThreshold",
+                "InvestThreshold",
+                "AllocationPeriod",
+                "AllocationLimit",
+                "NeedsDebt",
+                "WantsDebt",
+                "InvestDebt",
+                "RolloverPolicy",
+                "OverspendPolicy")
+            SELECT 50, 30, 20, 2, 0, 0, 0, 0, 0, 0
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM "BudgetAllocation"
+            );
             """,
             cancellationToken);
     }

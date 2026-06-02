@@ -65,5 +65,9 @@ public interface IAppDataService
     void UpdateUserSetting(UserSettings entity);
     void RemoveUserSetting(UserSettings entity);
 
+    Task<BudgetAllocation> GetBudgetAllocationAsync(CancellationToken cancellationToken = default);
+    Task<BudgetAllocation> EnsureBudgetAllocationAsync(CancellationToken cancellationToken = default);
+    void UpdateBudgetAllocation(BudgetAllocation entity);
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -126,6 +126,16 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ExpenseCategoryComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+            <Setter Property="Opacity" Value="1" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                    <Setter Property="Opacity" Value="0.45" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <DataTemplate x:Key="TransactionNameSuggestionTemplate">
             <Grid Width="320" Margin="0,0,0,2">
                 <Grid.ColumnDefinitions>
@@ -341,6 +351,7 @@
                             <ComboBox
                                 x:Name="ExpenseCategoryComboBox"
                                 DisplayMemberPath="Label"
+                                ItemContainerStyle="{StaticResource ExpenseCategoryComboBoxItemStyle}"
                                 ItemsSource="{Binding ExpenseCategories}"
                                 SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
                                 SelectedValuePath="Value"

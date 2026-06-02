@@ -2,7 +2,6 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
-using Fluxo.Core.Constants;
 using Fluxo.Core.Enums;
 using Fluxo.Data;
 using Fluxo.Data.Context;
@@ -19,6 +18,7 @@ namespace Fluxo.Tests.Infrastructure;
 public sealed class AppDatabaseMigrationTests
 {
     private const string MoveRecurringPeriodMigrationId = "20260520090000_MoveRecurringPeriodToRecurringTransactions";
+    private const string AddBudgetAllocationMigrationId = "20260602084415_AddBudgetAllocation";
 
     [Fact]
     public async Task MigrateDatabaseAsync_WhenDatabaseFileDoesNotExist_CreatesCurrentSchemaAndSeedsMigrationHistory()
@@ -43,9 +43,72 @@ public sealed class AppDatabaseMigrationTests
             Assert.Equal(migrations.Count, appliedMigrations.Count);
             Assert.Empty(await dbContext.SpendingSources.ToListAsync());
 
-            var allocationPeriod = await dbContext.UserSettings.SingleAsync(
-                setting => setting.Name == UserSettingNames.AllocationPeriod);
-            Assert.Equal(AllocationPeriod.Monthly.ToString(), allocationPeriod.Value);
+            var budgetAllocation = await dbContext.BudgetAllocation.SingleAsync();
+            Assert.Equal(50, budgetAllocation.NeedsThreshold);
+            Assert.Equal(30, budgetAllocation.WantsThreshold);
+            Assert.Equal(20, budgetAllocation.InvestThreshold);
+            Assert.Equal(AllocationPeriod.Monthly, budgetAllocation.AllocationPeriod);
+            Assert.Equal(0m, budgetAllocation.AllocationLimit);
+            Assert.Equal(RolloverPolicy.None, budgetAllocation.RolloverPolicy);
+            Assert.Equal(OverspendPolicy.Ignore, budgetAllocation.OverspendPolicy);
+
+            var movedKeys = new[]
+            {
+                "NeedsThreshold",
+                "WantsThreshold",
+                "InvestThreshold",
+                "AllocationPeriod"
+            };
+            Assert.Empty(await dbContext.UserSettings
+                .Where(setting => movedKeys.Contains(setting.Name))
+                .ToListAsync());
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task MigrateDatabaseAsync_WhenDatabaseHasOldBudgetUserSettings_MovesBudgetValuesToBudgetAllocation()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(tempDirectory, "fluxo.db");
+
+        try
+        {
+            Directory.CreateDirectory(tempDirectory);
+            using var serviceProvider = CreateServiceProvider(databasePath);
+            await CreateOldBudgetUserSettingsDatabaseAsync(databasePath, serviceProvider);
+            var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
+
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+
+            using var verificationScope = serviceProvider.CreateScope();
+            var dbContext = verificationScope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+
+            var budgetAllocation = await dbContext.BudgetAllocation.SingleAsync();
+            Assert.Equal(45, budgetAllocation.NeedsThreshold);
+            Assert.Equal(35, budgetAllocation.WantsThreshold);
+            Assert.Equal(20, budgetAllocation.InvestThreshold);
+            Assert.Equal(AllocationPeriod.Quarterly, budgetAllocation.AllocationPeriod);
+            Assert.Equal(0m, budgetAllocation.AllocationLimit);
+            Assert.Equal(RolloverPolicy.None, budgetAllocation.RolloverPolicy);
+            Assert.Equal(OverspendPolicy.Ignore, budgetAllocation.OverspendPolicy);
+
+            var movedKeys = new[]
+            {
+                "NeedsThreshold",
+                "WantsThreshold",
+                "InvestThreshold",
+                "AllocationPeriod"
+            };
+            Assert.Empty(await dbContext.UserSettings
+                .Where(setting => movedKeys.Contains(setting.Name))
+                .ToListAsync());
         }
         finally
         {
@@ -113,10 +176,60 @@ public sealed class AppDatabaseMigrationTests
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+        services.AddScoped<IBudgetAllocationRepository, BudgetAllocationRepository>();
         services.AddSingleton<IDataOperationScopeFactory, DataOperationScopeFactory>();
         services.AddSingleton<IDataOperationRunner, DataOperationRunner>();
 
         return services.BuildServiceProvider();
+    }
+
+    private static async Task CreateOldBudgetUserSettingsDatabaseAsync(
+        string databasePath,
+        IServiceProvider serviceProvider)
+    {
+        await using var connection = new SqliteConnection($"Data Source={databasePath}");
+        await connection.OpenAsync();
+
+        await ExecuteNonQueryAsync(
+            connection,
+            """
+            CREATE TABLE "UserSettings" (
+                "Name" TEXT NOT NULL CONSTRAINT "PK_UserSettings" PRIMARY KEY,
+                "Value" TEXT NOT NULL
+            );
+
+            INSERT INTO "UserSettings" ("Name", "Value")
+            VALUES
+                ('NeedsThreshold', '45'),
+                ('WantsThreshold', '35'),
+                ('InvestThreshold', '20'),
+                ('AllocationPeriod', 'Quarterly');
+
+            CREATE TABLE "__EFMigrationsHistory" (
+                "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+                "ProductVersion" TEXT NOT NULL
+            );
+            """);
+
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+        var migrationsToSeed = dbContext.Database.GetMigrations()
+            .Where(migrationId => !string.Equals(
+                migrationId,
+                AddBudgetAllocationMigrationId,
+                StringComparison.Ordinal))
+            .ToList();
+
+        foreach (var migrationId in migrationsToSeed)
+        {
+            await ExecuteNonQueryAsync(
+                connection,
+                """
+                INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                VALUES ($migrationId, '10.0.5');
+                """,
+                ("$migrationId", migrationId));
+        }
     }
 
     private static async Task CreatePreviousRecurringSchemaDatabaseAsync(

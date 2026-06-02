@@ -1,5 +1,6 @@
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
@@ -130,6 +131,112 @@ public sealed class QuickSetupWizardVMTests
         Assert.Contains("Recurring transactions, Saving goals, and Budget allocation setup will be skipped.", source);
     }
 
+    [Fact]
+    public void MiddlePage_AllowsVerticalScrollForBudgetAllocationStep()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Shell",
+            "Wizard",
+            "Pages",
+            "StartupWizardMiddlePage.xaml"));
+        var scrollViewerIndex = xaml.IndexOf("<ScrollViewer", StringComparison.Ordinal);
+
+        Assert.NotEqual(-1, scrollViewerIndex);
+        var scrollViewerBlock = xaml[scrollViewerIndex..xaml.IndexOf("</ScrollViewer>", scrollViewerIndex, StringComparison.Ordinal)];
+        Assert.Contains("Grid.Row=\"2\"", scrollViewerBlock);
+        Assert.Contains("VerticalScrollBarVisibility=\"Auto\"", scrollViewerBlock);
+        Assert.DoesNotContain("Binding=\"{Binding IsStep5Active}\"", scrollViewerBlock);
+        Assert.DoesNotContain("<Setter Property=\"VerticalScrollBarVisibility\" Value=\"Disabled\" />", scrollViewerBlock);
+    }
+
+    [Fact]
+    public async Task BudgetAllocation_LoadAndApply_PersistsConfigurationFields()
+    {
+        var unitOfWork = new TestUnitOfWork(
+            new TestUserSettingsRepository([]),
+            new TestBudgetAllocationRepository(new BudgetAllocation
+            {
+                NeedsThreshold = 45,
+                WantsThreshold = 35,
+                InvestThreshold = 20,
+                AllocationLimit = 500m,
+                AllocationPeriod = AllocationPeriod.Biweekly,
+                RolloverPolicy = RolloverPolicy.Matching,
+                OverspendPolicy = OverspendPolicy.SoftDebt
+            }));
+        var appData = new AppDataService(unitOfWork);
+        var viewModel = new QuickSetupWizardBudgetAllocationVM(appData, new WeakReferenceMessenger());
+
+        await viewModel.LoadAsync();
+
+        Assert.Equal(45, viewModel.NeedsAllocationPercentage);
+        Assert.Equal(35, viewModel.WantsAllocationPercentage);
+        Assert.Equal(20, viewModel.InvestAllocationPercentage);
+        Assert.Equal(500m, viewModel.AllocationLimit);
+        Assert.Equal(AllocationPeriod.Biweekly, viewModel.AllocationPeriod);
+        Assert.Equal(RolloverPolicy.Matching, viewModel.RolloverPolicy);
+        Assert.Equal(OverspendPolicy.SoftDebt, viewModel.OverspendPolicy);
+
+        viewModel.AllocationLimit = 1200m;
+        viewModel.AllocationPeriod = AllocationPeriod.Monthly;
+        viewModel.RolloverPolicy = RolloverPolicy.Pooled;
+        viewModel.OverspendPolicy = OverspendPolicy.HardStop;
+
+        var result = await viewModel.ApplyAsync(appData);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(45, unitOfWork.BudgetAllocationEntity!.NeedsThreshold);
+        Assert.Equal(35, unitOfWork.BudgetAllocationEntity.WantsThreshold);
+        Assert.Equal(20, unitOfWork.BudgetAllocationEntity.InvestThreshold);
+        Assert.Equal(1200m, unitOfWork.BudgetAllocationEntity.AllocationLimit);
+        Assert.Equal(AllocationPeriod.Monthly, unitOfWork.BudgetAllocationEntity.AllocationPeriod);
+        Assert.Equal(RolloverPolicy.Pooled, unitOfWork.BudgetAllocationEntity.RolloverPolicy);
+        Assert.Equal(OverspendPolicy.HardStop, unitOfWork.BudgetAllocationEntity.OverspendPolicy);
+    }
+
+    [Fact]
+    public async Task BudgetAllocation_ApplyAsync_InvalidTotal_ReturnsFailureWithoutPersisting()
+    {
+        var allocation = new BudgetAllocation
+        {
+            NeedsThreshold = 40,
+            WantsThreshold = 30,
+            InvestThreshold = 30,
+            AllocationLimit = 500m,
+            AllocationPeriod = AllocationPeriod.Biweekly,
+            RolloverPolicy = RolloverPolicy.Matching,
+            OverspendPolicy = OverspendPolicy.SoftDebt
+        };
+        var unitOfWork = new TestUnitOfWork(
+            new TestUserSettingsRepository([]),
+            new TestBudgetAllocationRepository(allocation));
+        var appData = new AppDataService(unitOfWork);
+        var viewModel = new QuickSetupWizardBudgetAllocationVM(appData, new WeakReferenceMessenger())
+        {
+            NeedsAllocationPercentage = 60,
+            WantsAllocationPercentage = 30,
+            InvestAllocationPercentage = 20,
+            AllocationLimit = 1200m,
+            AllocationPeriod = AllocationPeriod.Monthly,
+            RolloverPolicy = RolloverPolicy.Pooled,
+            OverspendPolicy = OverspendPolicy.HardStop
+        };
+
+        var result = await viewModel.ApplyAsync(appData);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Needs, Wants, and Invest must add up to 100%. Current total: 110%", result.ErrorMessage);
+        Assert.Equal(40, unitOfWork.BudgetAllocationEntity!.NeedsThreshold);
+        Assert.Equal(30, unitOfWork.BudgetAllocationEntity.WantsThreshold);
+        Assert.Equal(30, unitOfWork.BudgetAllocationEntity.InvestThreshold);
+        Assert.Equal(500m, unitOfWork.BudgetAllocationEntity.AllocationLimit);
+        Assert.Equal(AllocationPeriod.Biweekly, unitOfWork.BudgetAllocationEntity.AllocationPeriod);
+        Assert.Equal(RolloverPolicy.Matching, unitOfWork.BudgetAllocationEntity.RolloverPolicy);
+        Assert.Equal(OverspendPolicy.SoftDebt, unitOfWork.BudgetAllocationEntity.OverspendPolicy);
+    }
+
     private static QuickSetupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)
     {
         unitOfWork ??= new TestUnitOfWork(new TestUserSettingsRepository([]));
@@ -174,8 +281,13 @@ public sealed class QuickSetupWizardVMTests
         }
     }
 
-    private sealed class TestUnitOfWork(TestUserSettingsRepository userSettingsRepository) : IUnitOfWork
+    private sealed class TestUnitOfWork(
+        TestUserSettingsRepository userSettingsRepository,
+        TestBudgetAllocationRepository? budgetAllocationRepository = null) : IUnitOfWork
     {
+        private readonly TestBudgetAllocationRepository _budgetAllocationRepository =
+            budgetAllocationRepository ?? new TestBudgetAllocationRepository();
+
         public IExpenseRepository Expenses => throw new NotSupportedException();
         public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
@@ -185,6 +297,9 @@ public sealed class QuickSetupWizardVMTests
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
         public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => userSettingsRepository;
+        public IBudgetAllocationRepository BudgetAllocation => _budgetAllocationRepository;
+
+        public BudgetAllocation? BudgetAllocationEntity => _budgetAllocationRepository.Entity;
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -198,6 +313,28 @@ public sealed class QuickSetupWizardVMTests
         public ValueTask DisposeAsync()
         {
             return ValueTask.CompletedTask;
+        }
+    }
+
+    private sealed class TestBudgetAllocationRepository(BudgetAllocation? initialAllocation = null)
+        : IBudgetAllocationRepository
+    {
+        public BudgetAllocation? Entity { get; private set; } = initialAllocation;
+
+        public Task<BudgetAllocation?> GetAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Entity);
+        }
+
+        public Task AddAsync(BudgetAllocation entity, CancellationToken cancellationToken = default)
+        {
+            Entity = entity;
+            return Task.CompletedTask;
+        }
+
+        public void Update(BudgetAllocation entity)
+        {
+            Entity = entity;
         }
     }
 

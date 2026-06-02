@@ -17,6 +17,10 @@ public sealed class SettingsVMMaintenancePolicyTests
         {
             new() { Name = UserSettingNames.PreferredDisplayName, Value = "Alex" },
             new() { Name = UserSettingNames.Salary, Value = "5000" },
+            new() { Name = "NeedsThreshold", Value = "40" },
+            new() { Name = "WantsThreshold", Value = "40" },
+            new() { Name = "InvestThreshold", Value = "20" },
+            new() { Name = "AllocationPeriod", Value = AllocationPeriod.Yearly.ToString() },
             new() { Name = UserSettingNames.IsCreditDeadlineNotifEnabled, Value = "False" },
             new() { Name = UserSettingNames.IsGoalDeadlineNotifEnabled, Value = "True" }
         };
@@ -25,10 +29,14 @@ public sealed class SettingsVMMaintenancePolicyTests
 
         Assert.Contains(UserSettingNames.PreferredDisplayName, removedSettingNames);
         Assert.Contains(UserSettingNames.Salary, removedSettingNames);
+        Assert.Contains("NeedsThreshold", removedSettingNames);
+        Assert.Contains("WantsThreshold", removedSettingNames);
+        Assert.Contains("InvestThreshold", removedSettingNames);
+        Assert.Contains("AllocationPeriod", removedSettingNames);
         Assert.DoesNotContain(UserSettingNames.IsCreditDeadlineNotifEnabled, removedSettingNames);
         Assert.DoesNotContain(UserSettingNames.IsGoalDeadlineNotifEnabled, removedSettingNames);
 
-        Assert.Equal(10, upsertSettingValues.Count);
+        Assert.Equal(9, upsertSettingValues.Count);
         Assert.Equal("True", upsertSettingValues[UserSettingNames.IsFixedExpensesDeductionNotifEnabled]);
         Assert.Equal("True", upsertSettingValues[UserSettingNames.IsCreditDeadlineNotifEnabled]);
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsGoalDeadlineNotifEnabled]);
@@ -38,7 +46,73 @@ public sealed class SettingsVMMaintenancePolicyTests
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsLowAccountBalanceNotifEnabled]);
         Assert.Equal("False", upsertSettingValues[UserSettingNames.ShouldRunAtStartup]);
         Assert.Equal("Exit", upsertSettingValues[UserSettingNames.CloseBehavior]);
-        Assert.Equal(AllocationPeriod.Monthly.ToString(), upsertSettingValues[UserSettingNames.AllocationPeriod]);
+        Assert.DoesNotContain("AllocationPeriod", upsertSettingValues.Keys);
+    }
+
+    [Fact]
+    public async Task ResetBudgetAllocationToDefaultsAsync_ResetsTypedBudgetAllocation()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        var allocation = new BudgetAllocation
+        {
+            NeedsThreshold = 25,
+            WantsThreshold = 25,
+            InvestThreshold = 50,
+            AllocationLimit = 900m,
+            AllocationPeriod = AllocationPeriod.Yearly,
+            NeedsDebt = 11m,
+            WantsDebt = 22m,
+            InvestDebt = 33m,
+            RolloverPolicy = RolloverPolicy.Pooled,
+            OverspendPolicy = OverspendPolicy.SoftDebt
+        };
+        appData.GetBudgetAllocationAsync(Arg.Any<CancellationToken>())
+            .Returns(allocation);
+
+        await SettingsVM.ResetBudgetAllocationToDefaultsAsync(appData);
+
+        Assert.Equal(50, allocation.NeedsThreshold);
+        Assert.Equal(30, allocation.WantsThreshold);
+        Assert.Equal(20, allocation.InvestThreshold);
+        Assert.Equal(0m, allocation.AllocationLimit);
+        Assert.Equal(AllocationPeriod.Monthly, allocation.AllocationPeriod);
+        Assert.Equal(0m, allocation.NeedsDebt);
+        Assert.Equal(0m, allocation.WantsDebt);
+        Assert.Equal(0m, allocation.InvestDebt);
+        Assert.Equal(RolloverPolicy.None, allocation.RolloverPolicy);
+        Assert.Equal(OverspendPolicy.Ignore, allocation.OverspendPolicy);
+        appData.Received(1).UpdateBudgetAllocation(allocation);
+    }
+
+    [Fact]
+    public async Task ApplyDeleteAllDataBudgetAllocationPolicyAsync_ResetsOnlyWhenSettingsAreNotPreserved()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        var allocation = new BudgetAllocation
+        {
+            NeedsThreshold = 10,
+            WantsThreshold = 80,
+            InvestThreshold = 10,
+            AllocationPeriod = AllocationPeriod.Quarterly
+        };
+        appData.GetBudgetAllocationAsync(Arg.Any<CancellationToken>())
+            .Returns(allocation);
+
+        await SettingsVM.ApplyDeleteAllDataBudgetAllocationPolicyAsync(appData, keepSettings: true);
+
+        Assert.Equal(10, allocation.NeedsThreshold);
+        Assert.Equal(80, allocation.WantsThreshold);
+        Assert.Equal(10, allocation.InvestThreshold);
+        Assert.Equal(AllocationPeriod.Quarterly, allocation.AllocationPeriod);
+        appData.DidNotReceive().UpdateBudgetAllocation(Arg.Any<BudgetAllocation>());
+
+        await SettingsVM.ApplyDeleteAllDataBudgetAllocationPolicyAsync(appData, keepSettings: false);
+
+        Assert.Equal(50, allocation.NeedsThreshold);
+        Assert.Equal(30, allocation.WantsThreshold);
+        Assert.Equal(20, allocation.InvestThreshold);
+        Assert.Equal(AllocationPeriod.Monthly, allocation.AllocationPeriod);
+        appData.Received(1).UpdateBudgetAllocation(allocation);
     }
 
     [Fact]

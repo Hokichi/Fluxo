@@ -13,12 +13,17 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
     IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>
 {
     private readonly IAppDataService _appData;
+    private bool _isLoadingBudgetAllocation;
     private decimal _totalBudgetAmount;
 
+    [ObservableProperty] private decimal _allocationLimit;
+    [ObservableProperty] private AllocationPeriod _allocationPeriod = AllocationPeriod.Monthly;
     [ObservableProperty] private string _budgetAllocationErrorMessage = string.Empty;
     [ObservableProperty] private int _investAllocationPercentage = 20;
     [ObservableProperty] private bool _isStep5Active;
     [ObservableProperty] private int _needsAllocationPercentage = 50;
+    [ObservableProperty] private OverspendPolicy _overspendPolicy = OverspendPolicy.Ignore;
+    [ObservableProperty] private RolloverPolicy _rolloverPolicy = RolloverPolicy.None;
     [ObservableProperty] private int _wantsAllocationPercentage = 30;
 
     public QuickSetupWizardBudgetAllocationVM(
@@ -46,12 +51,23 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
 
     public async Task LoadAsync()
     {
-        var settings = await _appData.GetUserSettingsAsync();
-        var settingsByName = settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
+        var allocation = await _appData.GetBudgetAllocationAsync();
 
-        NeedsAllocationPercentage = QuickSetupWizardShared.ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
-        WantsAllocationPercentage = QuickSetupWizardShared.ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
-        InvestAllocationPercentage = QuickSetupWizardShared.ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
+        _isLoadingBudgetAllocation = true;
+        try
+        {
+            NeedsAllocationPercentage = allocation.NeedsThreshold;
+            WantsAllocationPercentage = allocation.WantsThreshold;
+            InvestAllocationPercentage = allocation.InvestThreshold;
+            AllocationLimit = allocation.AllocationLimit;
+            AllocationPeriod = allocation.AllocationPeriod;
+            RolloverPolicy = allocation.RolloverPolicy;
+            OverspendPolicy = allocation.OverspendPolicy;
+        }
+        finally
+        {
+            _isLoadingBudgetAllocation = false;
+        }
 
         ValidateBudgetAllocation();
         PublishSnapshot();
@@ -59,12 +75,10 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
 
     public async Task<SettingsOperationResult> SaveAsync()
     {
-        var total = NeedsAllocationPercentage + WantsAllocationPercentage + InvestAllocationPercentage;
-        if (total != 100)
-            return SettingsOperationResult.Failure(
-                $"Needs, Wants, and Invest must add up to 100%. Current total: {total}%");
+        var applyResult = await ApplyAsync(_appData);
+        if (!applyResult.IsSuccess)
+            return applyResult;
 
-        await ApplyAsync(_appData);
         await _appData.SaveChangesAsync();
 
         Messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.Budget));
@@ -72,20 +86,22 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
         return SettingsOperationResult.Success();
     }
 
-    public async Task ApplyAsync(IAppDataService appData)
+    public async Task<SettingsOperationResult> ApplyAsync(IAppDataService appData)
     {
-        await QuickSetupWizardShared.UpsertUserSettingAsync(
-            appData,
-            UserSettingNames.NeedsThreshold,
-            NeedsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
-        await QuickSetupWizardShared.UpsertUserSettingAsync(
-            appData,
-            UserSettingNames.WantsThreshold,
-            WantsAllocationPercentage.ToString(CultureInfo.InvariantCulture));
-        await QuickSetupWizardShared.UpsertUserSettingAsync(
-            appData,
-            UserSettingNames.InvestThreshold,
-            InvestAllocationPercentage.ToString(CultureInfo.InvariantCulture));
+        ValidateBudgetAllocation();
+        if (HasBudgetAllocationError)
+            return SettingsOperationResult.Failure(BudgetAllocationErrorMessage);
+
+        var allocation = await appData.GetBudgetAllocationAsync();
+        allocation.NeedsThreshold = NeedsAllocationPercentage;
+        allocation.WantsThreshold = WantsAllocationPercentage;
+        allocation.InvestThreshold = InvestAllocationPercentage;
+        allocation.AllocationLimit = AllocationLimit;
+        allocation.AllocationPeriod = AllocationPeriod;
+        allocation.RolloverPolicy = RolloverPolicy;
+        allocation.OverspendPolicy = OverspendPolicy;
+        appData.UpdateBudgetAllocation(allocation);
+        return SettingsOperationResult.Success();
     }
 
     public void IncrementAllocation(BudgetAllocationSegment segment, int delta)
@@ -110,21 +126,24 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
     {
         OnPropertyChanged(nameof(NeedsAllocationAmountText));
         ValidateBudgetAllocation();
-        PublishSnapshot();
+        if (!_isLoadingBudgetAllocation)
+            PublishSnapshot();
     }
 
     partial void OnWantsAllocationPercentageChanged(int value)
     {
         OnPropertyChanged(nameof(WantsAllocationAmountText));
         ValidateBudgetAllocation();
-        PublishSnapshot();
+        if (!_isLoadingBudgetAllocation)
+            PublishSnapshot();
     }
 
     partial void OnInvestAllocationPercentageChanged(int value)
     {
         OnPropertyChanged(nameof(InvestAllocationAmountText));
         ValidateBudgetAllocation();
-        PublishSnapshot();
+        if (!_isLoadingBudgetAllocation)
+            PublishSnapshot();
     }
 
     private void ValidateBudgetAllocation()

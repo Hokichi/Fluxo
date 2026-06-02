@@ -1,6 +1,5 @@
 using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Core.Constants;
 using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
@@ -49,7 +48,7 @@ public sealed class SpentAllowancePanelVMTests
         await vm.LoadAsync();
 
         Assert.Equal(100m, vm.TotalSpent);
-        Assert.Equal(23.33m, vm.Allowance);
+        Assert.Equal(33.33m, vm.Allowance);
 
         messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(
             new ExpenseLogMemorySnapshot(
@@ -65,13 +64,35 @@ public sealed class SpentAllowancePanelVMTests
                 IsForDeletion: false))));
 
         Assert.Equal(0m, vm.TotalSpent);
-        Assert.Equal(29.33m, vm.Allowance);
+        Assert.Equal(36.67m, vm.Allowance);
+    }
+
+    [Fact]
+    public async Task LoadAsync_DailyAllowanceUsesAllocationLimitAndPeriod()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var vm = CreateVm(
+            messenger,
+            [],
+            [CreateCheckingSource(balance: 1_000m)],
+            new BudgetAllocation
+            {
+                AllocationLimit = 280m,
+                AllocationPeriod = AllocationPeriod.Monthly
+            },
+            () => new DateTime(2026, 2, 10));
+
+        await vm.LoadAsync();
+
+        Assert.Equal(10m, vm.Allowance);
     }
 
     private static SpentAllowancePanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
-        IReadOnlyList<SpendingSourceVM> spendingSources)
+        IReadOnlyList<SpendingSourceVM> spendingSources,
+        BudgetAllocation? budgetAllocation = null,
+        Func<DateTime>? todayProvider = null)
     {
         var expenseLogService = Substitute.For<IExpenseLogService>();
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -85,11 +106,15 @@ public sealed class SpentAllowancePanelVMTests
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>(
             [
-                new UserSettings { Name = UserSettingNames.NeedsThreshold, Value = "50" },
-                new UserSettings { Name = UserSettingNames.WantsThreshold, Value = "30" }
+                new UserSettings { Name = "NeedsThreshold", Value = "50" },
+                new UserSettings { Name = "WantsThreshold", Value = "30" }
             ]));
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.UserSettings.Returns(userSettingsRepository);
+        var budgetAllocationRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IBudgetAllocationRepository>();
+        budgetAllocationRepository.GetAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<BudgetAllocation?>(budgetAllocation ?? new BudgetAllocation()));
+        unitOfWork.BudgetAllocation.Returns(budgetAllocationRepository);
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
@@ -101,6 +126,19 @@ public sealed class SpentAllowancePanelVMTests
             spendingSourceService,
             dataOperationRunner,
             mapper,
-            messenger);
+            messenger,
+            todayProvider);
+    }
+
+    private static SpendingSourceVM CreateCheckingSource(decimal balance)
+    {
+        return new SpendingSourceVM
+        {
+            Id = 1,
+            Name = "Checking",
+            SpendingSourceType = SpendingSourceType.Checking,
+            Balance = balance,
+            IsEnabled = true
+        };
     }
 }

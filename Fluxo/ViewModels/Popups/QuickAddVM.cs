@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Budgeting;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
@@ -469,6 +470,13 @@ public partial class QuickAddVM : ObservableValidator
                 if (goal is null)
                     return QuickAddSubmissionResult.Failure("Please select a valid goal.");
 
+                var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(
+                    ExpenseCategory.Savings,
+                    input.Amount,
+                    input.Date);
+                if (!budgetPolicyResult.IsSuccess)
+                    return budgetPolicyResult;
+
                 var goalUpdateTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(_appData);
                 var expense = new Expense
                 {
@@ -519,6 +527,10 @@ public partial class QuickAddVM : ObservableValidator
                 var expenseTag = await _appData.GetExpenseTagByIdAsync(input.TagId!.Value);
                 if (expenseTag is null)
                     return QuickAddSubmissionResult.Failure("Please select a valid tag.");
+
+                var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(input.Category!.Value, input.Amount, input.Date);
+                if (!budgetPolicyResult.IsSuccess)
+                    return budgetPolicyResult;
 
                 var expense = new Expense
                 {
@@ -734,6 +746,132 @@ public partial class QuickAddVM : ObservableValidator
         ReplaceCollection(Goals, _orderedGoals);
         RefreshTagCollections();
         RefreshSpendingSources();
+        _ = RefreshExpenseCategoryAvailabilityAsync();
+    }
+
+    private async Task RefreshExpenseCategoryAvailabilityAsync()
+    {
+        try
+        {
+            var allocation = await _appData.GetBudgetAllocationAsync();
+            if (allocation.OverspendPolicy != OverspendPolicy.HardStop)
+            {
+                SetAllExpenseCategoriesEnabled(true);
+                return;
+            }
+
+            var snapshot = await BuildBudgetAllocationSnapshotAsync(allocation, DateTime.Today);
+            foreach (var option in ExpenseCategories)
+                option.IsEnabled = GetCategoryState(snapshot, option.Value).Remaining > 0m;
+        }
+        catch
+        {
+            SetAllExpenseCategoriesEnabled(true);
+        }
+    }
+
+    private async Task<QuickAddSubmissionResult> ApplyExpenseBudgetPolicyAsync(
+        ExpenseCategory category,
+        decimal amount,
+        DateTime expenseDate)
+    {
+        var allocation = await _appData.GetBudgetAllocationAsync();
+        if (allocation.OverspendPolicy == OverspendPolicy.Ignore)
+            return QuickAddSubmissionResult.Success();
+
+        var snapshot = await BuildBudgetAllocationSnapshotAsync(allocation, expenseDate);
+        var categoryState = GetCategoryState(snapshot, category);
+
+        if (allocation.OverspendPolicy == OverspendPolicy.HardStop &&
+            BudgetAllocationCalculator.WouldHardStop(categoryState, amount))
+        {
+            return QuickAddSubmissionResult.Failure(
+                $"{GetExpenseCategoryLabel(category)} budget is exhausted for this allocation period.");
+        }
+
+        if (allocation.OverspendPolicy == OverspendPolicy.SoftDebt)
+        {
+            var debtDelta = BudgetAllocationCalculator.CalculateSoftDebtDelta(categoryState.Remaining, amount);
+            if (debtDelta > 0m)
+            {
+                AddDebtDelta(allocation, category, debtDelta);
+                _appData.UpdateBudgetAllocation(allocation);
+            }
+        }
+
+        return QuickAddSubmissionResult.Success();
+    }
+
+    private async Task<BudgetAllocationSnapshot> BuildBudgetAllocationSnapshotAsync(
+        BudgetAllocation allocation,
+        DateTime allocationDate)
+    {
+        var expenseLogs = await _appData.GetExpenseLogsAsync();
+        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(allocation.AllocationPeriod, allocationDate);
+        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(allocation.AllocationPeriod, allocationDate);
+
+        return BudgetAllocationCalculator.CalculateSnapshot(
+            allocation,
+            CalculateSpentByCategory(expenseLogs, currentPeriod),
+            CalculateSpentByCategory(expenseLogs, previousPeriod),
+            allocationDate,
+            _mainViewModel.BudgetPanel.TotalIncomeAmount);
+    }
+
+    private static IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(
+        IEnumerable<ExpenseLog> expenseLogs,
+        BudgetAllocationPeriod period)
+    {
+        return expenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.DeductedOn.Date >= period.Start && log.DeductedOn.Date <= period.End)
+            .Where(log => log.Expense is not null)
+            .GroupBy(log => log.Expense!.ExpenseCategory)
+            .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
+    }
+
+    private static BudgetAllocationCategoryState GetCategoryState(
+        BudgetAllocationSnapshot snapshot,
+        ExpenseCategory category)
+    {
+        return category switch
+        {
+            ExpenseCategory.Wants => snapshot.Wants,
+            ExpenseCategory.Savings => snapshot.Invest,
+            _ => snapshot.Needs
+        };
+    }
+
+    private static void AddDebtDelta(BudgetAllocation allocation, ExpenseCategory category, decimal debtDelta)
+    {
+        switch (category)
+        {
+            case ExpenseCategory.Wants:
+                allocation.WantsDebt += debtDelta;
+                break;
+            case ExpenseCategory.Savings:
+                allocation.InvestDebt += debtDelta;
+                break;
+            default:
+                allocation.NeedsDebt += debtDelta;
+                break;
+        }
+    }
+
+    private static string GetExpenseCategoryLabel(ExpenseCategory category)
+    {
+        return category switch
+        {
+            ExpenseCategory.Wants => "Wants",
+            ExpenseCategory.Savings => "Invest",
+            _ => "Needs"
+        };
+    }
+
+    private void SetAllExpenseCategoriesEnabled(bool isEnabled)
+    {
+        foreach (var option in ExpenseCategories)
+            option.IsEnabled = isEnabled;
     }
 
     private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
@@ -1337,7 +1475,21 @@ public partial class QuickAddVM : ObservableValidator
         };
     }
 
-    public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
+    public sealed partial class ExpenseCategoryOption : ObservableObject
+    {
+        public ExpenseCategoryOption(string label, ExpenseCategory value)
+        {
+            Label = label;
+            Value = value;
+        }
+
+        public string Label { get; }
+
+        public ExpenseCategory Value { get; }
+
+        [ObservableProperty]
+        private bool _isEnabled = true;
+    }
 
     public sealed record QuickAddTransactionSuggestion(
         string Name,

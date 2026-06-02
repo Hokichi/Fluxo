@@ -1,12 +1,12 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows.Data;
 using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Core.Constants;
+using Fluxo.Core.Budgeting;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
@@ -48,6 +48,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLogVM> _allIncomeLogs = [];
+    private BudgetAllocation _budgetAllocation = new();
     private int _investVisibleCount = BucketPageSize;
     private bool _isSynchronizingTagSelections;
     private bool _suppressFilterFeedback;
@@ -233,7 +234,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        await LoadUserSettingsAsync(cancellationToken);
+        _budgetAllocation = await LoadBudgetAllocationAsync(cancellationToken);
+        NeedsThreshold = _budgetAllocation.NeedsThreshold / 100m;
+        WantsThreshold = _budgetAllocation.WantsThreshold / 100m;
+        InvestThreshold = _budgetAllocation.InvestThreshold / 100m;
 
         var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken));
@@ -521,31 +525,41 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private void RefreshBudgetMetrics()
     {
         var totalIncomeAmount = CalculateBudgetAvailableBase();
+        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
+            _budgetAllocation,
+            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolveCurrentPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today)),
+            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolvePreviousPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today)),
+            DateTime.Today,
+            totalIncomeAmount);
 
-        NeedsAvailable = decimal.Round(totalIncomeAmount * NeedsThreshold, 2);
-        WantsAvailable = decimal.Round(totalIncomeAmount * WantsThreshold, 2);
-        InvestAvailable = decimal.Round(totalIncomeAmount * InvestThreshold, 2);
+        NeedsAvailable = snapshot.Needs.Available;
+        WantsAvailable = snapshot.Wants.Available;
+        InvestAvailable = snapshot.Invest.Available;
 
-        NeedsSpent = _allExpenseLogs
-            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Needs)
-            .Sum(log => log.Amount);
-        WantsSpent = _allExpenseLogs
-            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Wants)
-            .Sum(log => log.Amount);
-        InvestSpent = _allExpenseLogs
-            .Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings)
-            .Sum(log => log.Amount);
+        NeedsSpent = snapshot.Needs.Spent;
+        WantsSpent = snapshot.Wants.Spent;
+        InvestSpent = snapshot.Invest.Spent;
 
         TotalSpent = NeedsSpent + WantsSpent + InvestSpent;
 
-        NeedsRemaining = NeedsAvailable - NeedsSpent;
-        WantsRemaining = WantsAvailable - WantsSpent;
-        InvestRemaining = InvestAvailable - InvestSpent;
+        NeedsRemaining = snapshot.Needs.Remaining;
+        WantsRemaining = snapshot.Wants.Remaining;
+        InvestRemaining = snapshot.Invest.Remaining;
 
-        NeedsPercentage = CalculatePercentage(NeedsSpent, NeedsAvailable);
-        WantsPercentage = CalculatePercentage(WantsSpent, WantsAvailable);
-        InvestPercentage = CalculatePercentage(InvestSpent, InvestAvailable);
-        DailyAllowance = CalculateDailyAllowance(totalIncomeAmount);
+        NeedsPercentage = snapshot.Needs.Percentage;
+        WantsPercentage = snapshot.Wants.Percentage;
+        InvestPercentage = snapshot.Invest.Percentage;
+        DailyAllowance = (int)snapshot.DailyAllowance;
+    }
+
+    private IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(BudgetAllocationPeriod snapshotPeriod)
+    {
+        return _allExpenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.DeductedOn.Date >= snapshotPeriod.Start && log.DeductedOn.Date <= snapshotPeriod.End)
+            .Where(log => log.Expense is not null)
+            .GroupBy(log => log.Expense!.ExpenseCategory)
+            .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
     }
 
     private decimal CalculateBudgetAvailableBase()
@@ -568,49 +582,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         return source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL);
     }
 
-    private int CalculateDailyAllowance(decimal totalIncomeAmount)
+    private async Task<BudgetAllocation> LoadBudgetAllocationAsync(CancellationToken cancellationToken)
     {
-        var daysLeft = Math.Max(
-            1,
-            DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month) - DateTime.Today.Day);
-
-        return (int)((totalIncomeAmount * (1 - _investThreshold) - TotalSpent) / daysLeft);
-    }
-
-    private async Task LoadUserSettingsAsync(CancellationToken cancellationToken)
-    {
-        var settingsByName = await _dataOperationRunner.RunAsync(async (scope, ct) =>
-        {
-            var settings = await scope.UnitOfWork.UserSettings.GetAllAsync(ct);
-            return settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
-        }, cancellationToken);
-
-        NeedsThreshold = ParsePercentage(settingsByName, UserSettingNames.NeedsThreshold, 50m);
-        WantsThreshold = ParsePercentage(settingsByName, UserSettingNames.WantsThreshold, 30m);
-        InvestThreshold = ParsePercentage(settingsByName, UserSettingNames.InvestThreshold, 20m);
-    }
-
-    private static decimal ParsePercentage(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)
-    {
-        var percentageValue = ParseDecimal(settings, name, defaultValue);
-        return percentageValue / 100m;
-    }
-
-    private static decimal ParseDecimal(IReadOnlyDictionary<string, string> settings, string name, decimal defaultValue)
-    {
-        if (settings.TryGetValue(name, out var value) &&
-            decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedValue))
-            return parsedValue;
-
-        return defaultValue;
-    }
-
-    private static int CalculatePercentage(decimal spentAmount, decimal availableAmount)
-    {
-        if (availableAmount <= 0)
-            return 0;
-
-        return (int)Math.Round(spentAmount / availableAmount * 100, MidpointRounding.AwayFromZero);
+        return await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            await scope.UnitOfWork.BudgetAllocation.GetAsync(ct) ?? new BudgetAllocation(), cancellationToken);
     }
 
     private static int ConvertThresholdToPercentage(decimal threshold)

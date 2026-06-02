@@ -263,7 +263,10 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
 
             var stagedAppData = new AppDataService(scope.UnitOfWork);
             await NamePage.ApplyAsync(stagedAppData);
-            await MiddlePage.BudgetAllocation.ApplyAsync(stagedAppData);
+            var budgetAllocationResult = await MiddlePage.BudgetAllocation.ApplyAsync(stagedAppData);
+            if (!budgetAllocationResult.IsSuccess)
+                throw new InvalidOperationException(budgetAllocationResult.ErrorMessage);
+
             await MiddlePage.Notification.ApplyAsync(stagedAppData);
             await MiddlePage.SpendingSources.ApplyAsync(stagedAppData);
             await MiddlePage.FixedExpenses.ApplyAsync(

@@ -34,8 +34,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             [UserSettingNames.IsLowCreditNotifEnabled] = bool.FalseString,
             [UserSettingNames.IsLowAccountBalanceNotifEnabled] = bool.FalseString,
             [UserSettingNames.ShouldRunAtStartup] = bool.FalseString,
-            [UserSettingNames.CloseBehavior] = AppCloseBehavior.Exit.ToString(),
-            [UserSettingNames.AllocationPeriod] = AllocationPeriod.Monthly.ToString()
+            [UserSettingNames.CloseBehavior] = AppCloseBehavior.Exit.ToString()
         };
 
     private readonly MainVM _mainViewModel;
@@ -170,7 +169,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         actions.AddRange(budgetActions);
         actions.AddRange(personalizationActions);
 
-        if (actions.Count == 0)
+        if (actions.Count == 0 &&
+            !BudgetTab.HasPendingChanges &&
+            !PersonalizationTab.HasPendingChanges)
             return SettingsOperationResult.Success();
 
         try
@@ -334,13 +335,12 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         {
             var settings = await _appData.GetUserSettingsAsync();
             var actions = await ApplySettingsResetPolicyAsync(settings, trackActions: true);
+            await ResetBudgetAllocationToDefaultsAsync(_appData);
             _startupRegistrationService.SetRunAtStartup(false);
 
+            await _appData.SaveChangesAsync();
             if (actions.Count > 0)
-            {
-                await _appData.SaveChangesAsync();
                 SettingsShared.RecordActions(actions, Messenger);
-            }
 
             Messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
@@ -385,6 +385,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             if (!keepSettings)
             {
                 await ApplySettingsResetPolicyAsync(settings, trackActions: false);
+                await ApplyDeleteAllDataBudgetAllocationPolicyAsync(_appData, keepSettings);
                 _startupRegistrationService.SetRunAtStartup(false);
             }
 
@@ -640,6 +641,42 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 StringComparer.Ordinal);
 
         return (removedSettingNames, upsertSettingValues);
+    }
+
+    internal static async Task ApplyDeleteAllDataBudgetAllocationPolicyAsync(
+        IAppDataService appData,
+        bool keepSettings,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(appData);
+
+        if (keepSettings)
+            return;
+
+        await ResetBudgetAllocationToDefaultsAsync(appData, cancellationToken);
+    }
+
+    internal static async Task ResetBudgetAllocationToDefaultsAsync(
+        IAppDataService appData,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(appData);
+
+        var allocation = await appData.GetBudgetAllocationAsync(cancellationToken);
+        var defaults = new BudgetAllocation();
+
+        allocation.NeedsThreshold = defaults.NeedsThreshold;
+        allocation.WantsThreshold = defaults.WantsThreshold;
+        allocation.InvestThreshold = defaults.InvestThreshold;
+        allocation.AllocationPeriod = defaults.AllocationPeriod;
+        allocation.AllocationLimit = defaults.AllocationLimit;
+        allocation.NeedsDebt = defaults.NeedsDebt;
+        allocation.WantsDebt = defaults.WantsDebt;
+        allocation.InvestDebt = defaults.InvestDebt;
+        allocation.RolloverPolicy = defaults.RolloverPolicy;
+        allocation.OverspendPolicy = defaults.OverspendPolicy;
+
+        appData.UpdateBudgetAllocation(allocation);
     }
 
     private async Task<List<ILogMemoryAction>> ApplySettingsResetPolicyAsync(
