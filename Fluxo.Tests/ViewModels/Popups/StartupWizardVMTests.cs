@@ -1,4 +1,5 @@
 using Fluxo.Core.Constants;
+using System.Globalization;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -6,6 +7,7 @@ using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Persistence;
 using Fluxo.Tests.TestSupport;
 using Fluxo.ViewModels.Popups;
@@ -194,6 +196,37 @@ public sealed class QuickSetupWizardVMTests
         Assert.Equal(AllocationPeriod.Monthly, unitOfWork.BudgetAllocationEntity.AllocationPeriod);
         Assert.Equal(RolloverPolicy.Pooled, unitOfWork.BudgetAllocationEntity.RolloverPolicy);
         Assert.Equal(OverspendPolicy.HardStop, unitOfWork.BudgetAllocationEntity.OverspendPolicy);
+    }
+
+    [Fact]
+    public async Task BudgetAllocation_AllocationAmountText_UsesAllocationLimit()
+    {
+        var unitOfWork = new TestUnitOfWork(
+            new TestUserSettingsRepository([]),
+            new TestBudgetAllocationRepository(new BudgetAllocation
+            {
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                AllocationLimit = 2000m
+            }));
+        var viewModel = new QuickSetupWizardBudgetAllocationVM(
+            new AppDataService(unitOfWork),
+            new WeakReferenceMessenger());
+        viewModel.Receive(new QuickSetupWizardSpendingSourcesChangedMessage(
+            new QuickSetupWizardSpendingSourcesChanged(1, true, 1000m)));
+
+        await viewModel.LoadAsync();
+
+        Assert.Equal(1000m.ToString("N2", CultureInfo.CurrentCulture), viewModel.NeedsAllocationAmountText);
+        Assert.Equal(600m.ToString("N2", CultureInfo.CurrentCulture), viewModel.WantsAllocationAmountText);
+        Assert.Equal(400m.ToString("N2", CultureInfo.CurrentCulture), viewModel.InvestAllocationAmountText);
+
+        viewModel.AllocationLimit = 3000m;
+
+        Assert.Equal(1500m.ToString("N2", CultureInfo.CurrentCulture), viewModel.NeedsAllocationAmountText);
+        Assert.Equal(900m.ToString("N2", CultureInfo.CurrentCulture), viewModel.WantsAllocationAmountText);
+        Assert.Equal(600m.ToString("N2", CultureInfo.CurrentCulture), viewModel.InvestAllocationAmountText);
     }
 
     [Fact]

@@ -146,6 +146,11 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
             PublishSnapshot();
     }
 
+    partial void OnAllocationLimitChanged(decimal value)
+    {
+        RaiseAmountProperties();
+    }
+
     private void ValidateBudgetAllocation()
     {
         var total = NeedsAllocationPercentage + WantsAllocationPercentage + InvestAllocationPercentage;
@@ -157,8 +162,13 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
 
     private string BuildAllocationAmountText(int percentage)
     {
-        var amount = decimal.Round(_totalBudgetAmount * percentage / 100m, 2);
+        var amount = decimal.Round(ResolveAllocationBaseAmount() * percentage / 100m, 2);
         return amount.ToString("N2", CultureInfo.CurrentCulture);
+    }
+
+    private decimal ResolveAllocationBaseAmount()
+    {
+        return AllocationLimit > 0m ? AllocationLimit : _totalBudgetAmount;
     }
 
     private void RaiseAmountProperties()

@@ -212,6 +212,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     partial void OnAllocationLimitChanged(decimal value)
     {
+        RaiseAmountProperties();
         PublishPendingState();
     }
 
@@ -232,17 +233,27 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     private string BuildAllocationAmountText(int percentage)
     {
-        var allocatedAmount = decimal.Round(TotalBudgetAmount * percentage / 100m, 2);
+        var allocatedAmount = decimal.Round(ResolveAllocationBaseAmount() * percentage / 100m, 2);
         return allocatedAmount.ToString("N2", CultureInfo.CurrentCulture);
     }
 
     private void OnAllocationChanged()
     {
         ValidateBudgetAllocation();
+        RaiseAmountProperties();
+        PublishPendingState();
+    }
+
+    private decimal ResolveAllocationBaseAmount()
+    {
+        return AllocationLimit > 0m ? AllocationLimit : TotalBudgetAmount;
+    }
+
+    private void RaiseAmountProperties()
+    {
         OnPropertyChanged(nameof(NeedsAllocationAmountText));
         OnPropertyChanged(nameof(WantsAllocationAmountText));
         OnPropertyChanged(nameof(InvestAllocationAmountText));
-        PublishPendingState();
     }
 
     private void ValidateBudgetAllocation()

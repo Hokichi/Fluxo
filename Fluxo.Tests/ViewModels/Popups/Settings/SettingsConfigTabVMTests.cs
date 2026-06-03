@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
+using System.Globalization;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Filters;
@@ -90,6 +91,34 @@ public sealed class SettingsConfigTabVMTests
         Assert.Equal(AllocationPeriod.Weekly, vm.AllocationPeriod);
         Assert.Equal(RolloverPolicy.Matching, vm.RolloverPolicy);
         Assert.Equal(OverspendPolicy.HardStop, vm.OverspendPolicy);
+    }
+
+    [Fact]
+    public async Task BudgetTab_AllocationAmountText_UsesAllocationLimit()
+    {
+        var unitOfWork = new NullUnitOfWork
+        {
+            BudgetAllocationEntity = new BudgetAllocation
+            {
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                AllocationLimit = 2000m
+            }
+        };
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(unitOfWork));
+
+        await vm.LoadAsync();
+
+        Assert.Equal(1000m.ToString("N2", CultureInfo.CurrentCulture), vm.NeedsAllocationAmountText);
+        Assert.Equal(600m.ToString("N2", CultureInfo.CurrentCulture), vm.WantsAllocationAmountText);
+        Assert.Equal(400m.ToString("N2", CultureInfo.CurrentCulture), vm.InvestAllocationAmountText);
+
+        vm.AllocationLimit = 3000m;
+
+        Assert.Equal(1500m.ToString("N2", CultureInfo.CurrentCulture), vm.NeedsAllocationAmountText);
+        Assert.Equal(900m.ToString("N2", CultureInfo.CurrentCulture), vm.WantsAllocationAmountText);
+        Assert.Equal(600m.ToString("N2", CultureInfo.CurrentCulture), vm.InvestAllocationAmountText);
     }
 
     [Fact]
