@@ -290,6 +290,43 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
+    public void LoadAsync_TotalIncomeAmountUsesAllocationLimitWhenConfigured()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var source = new SpendingSourceVM
+            {
+                Id = 1,
+                Name = "Checking",
+                SpendingSourceType = SpendingSourceType.Checking,
+                Balance = 17_660_000m,
+                IsEnabled = true,
+                ShowOnUI = true
+            };
+            var vm = CreateVm(
+                messenger,
+                [],
+                CreateTags(),
+                [source],
+                budgetAllocation: new BudgetAllocation
+                {
+                    AllocationLimit = 10_000_000m,
+                    NeedsThreshold = 50,
+                    WantsThreshold = 30,
+                    InvestThreshold = 20
+                });
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(10_000_000m, vm.TotalIncomeAmount);
+            Assert.Equal(5_000_000m, vm.NeedsAvailable);
+            Assert.Equal(3_000_000m, vm.WantsAvailable);
+            Assert.Equal(2_000_000m, vm.InvestAvailable);
+        });
+    }
+
+    [Fact]
     public void RecordLogMemoryMessage_AddIncomeUpdatesAvailableValuesWithoutReload()
     {
         RunInSta(() =>
