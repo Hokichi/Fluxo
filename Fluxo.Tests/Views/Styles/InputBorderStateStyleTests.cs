@@ -127,7 +127,7 @@ public sealed class InputBorderStateStyleTests
 
         Assert.Contains("VerticalContentAlignment=\"Center\"", textBoxSection);
         Assert.Contains("VerticalAlignment=\"Stretch\"", textBoxSection);
-        Assert.DoesNotContain("<ScrollViewer x:Name=\"PART_ContentHost\" Margin=\"0\" />", textBoxSection);
+        Assert.DoesNotContain("<customControls:FadingScrollViewer x:Name=\"PART_ContentHost\" Margin=\"0\" />", textBoxSection);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public sealed class InputBorderStateStyleTests
 
         Assert.Contains("<Setter Property=\"VerticalContentAlignment\" Value=\"Center\" />", styleSection);
         Assert.Contains("VerticalAlignment=\"Stretch\"", styleSection);
-        Assert.DoesNotContain("<ScrollViewer x:Name=\"PART_ContentHost\" Margin=\"0\" />", styleSection);
+        Assert.DoesNotContain("<customControls:FadingScrollViewer x:Name=\"PART_ContentHost\" Margin=\"0\" />", styleSection);
     }
 
     [Fact]

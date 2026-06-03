@@ -486,7 +486,7 @@
                             Text="Only goals created between the selected start and end dates." />
                     </StackPanel>
 
-                    <ScrollViewer
+                    <customControls:FadingScrollViewer
                         Grid.Row="1"
                         Margin="0,14,0,0"
                         VerticalScrollBarVisibility="Auto">
@@ -497,7 +497,7 @@
                                 Text="No Goals Found"
                                 Visibility="{Binding HasGoalsData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                         </Grid>
-                    </ScrollViewer>
+                    </customControls:FadingScrollViewer>
                 </Grid>
             </Border>
         </Grid>

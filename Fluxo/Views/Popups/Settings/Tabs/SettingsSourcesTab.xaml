@@ -254,7 +254,7 @@
                 FontSize="11"
                 Foreground="{StaticResource Brush.Text.Secondary}"
                 Text="Manage where your spending comes from and control visibility and status." />
-            <ScrollViewer
+            <customControls:FadingScrollViewer
                 Grid.Row="2"
                 Margin="0,8,0,0"
                 VerticalScrollBarVisibility="Auto">
@@ -265,7 +265,7 @@
                     behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand}"
                     ItemTemplate="{StaticResource SettingsSourceItemTemplate}"
                     ItemsSource="{Binding SpendingSourcesView}" />
-            </ScrollViewer>
+            </customControls:FadingScrollViewer>
             <TextBlock
                 Grid.RowSpan="3"
                 Margin="0,24"

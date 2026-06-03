@@ -395,7 +395,7 @@
                                         TextChanged="OnHeaderSearchTextChanged">
                                         <TextBox.Template>
                                             <ControlTemplate TargetType="TextBox">
-                                                <ScrollViewer
+                                                <customControls:FadingScrollViewer
                                                     x:Name="PART_ContentHost"
                                                     Margin="0"
                                                     VerticalAlignment="Stretch" />

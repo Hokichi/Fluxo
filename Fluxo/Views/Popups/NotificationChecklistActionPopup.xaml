@@ -126,12 +126,12 @@
                                             Grid.Row="1"
                                             Margin="4,4"
                                             Background="{StaticResource Brush.Border.Subtle}" />
-                                        <ScrollViewer
+                                        <customControls:FadingScrollViewer
                                             Grid.Row="2"
                                             CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
                                             VerticalScrollBarVisibility="Hidden">
                                             <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
-                                        </ScrollViewer>
+                                        </customControls:FadingScrollViewer>
                                     </Grid>
                                 </Border>
                             </Popup>
@@ -247,9 +247,9 @@
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="12">
-            <ScrollViewer VerticalScrollBarVisibility="Hidden">
+            <customControls:FadingScrollViewer VerticalScrollBarVisibility="Hidden">
                 <ItemsControl ItemTemplate="{StaticResource NotificationChecklistItemTemplate}" ItemsSource="{Binding Items}" />
-            </ScrollViewer>
+            </customControls:FadingScrollViewer>
         </Border>
 
         <Button

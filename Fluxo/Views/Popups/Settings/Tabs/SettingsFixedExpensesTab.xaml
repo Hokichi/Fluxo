@@ -215,7 +215,7 @@
                 FontSize="11"
                 Foreground="{StaticResource Brush.Text.Secondary}"
                 Text="Review recurring entries and quickly update their availability." />
-            <ScrollViewer
+            <customControls:FadingScrollViewer
                 Grid.Row="2"
                 Margin="0,8,0,0"
                 VerticalScrollBarVisibility="Auto">
@@ -226,7 +226,7 @@
                     behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand}"
                     ItemTemplate="{StaticResource SettingsFixedExpenseItemTemplate}"
                     ItemsSource="{Binding FixedExpensesView}" />
-            </ScrollViewer>
+            </customControls:FadingScrollViewer>
             <StackPanel
                 Grid.RowSpan="3"
                 Margin="0,24"

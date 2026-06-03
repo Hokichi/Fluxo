@@ -24,7 +24,7 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="8">
-                        <ScrollViewer
+                        <customControls:FadingScrollViewer
                             x:Name="PART_ContentHost"
                             Margin="{TemplateBinding Padding}"
                             VerticalAlignment="Stretch" />
@@ -71,7 +71,7 @@
                                 IsHitTestVisible="False"
                                 Text="{TemplateBinding PlaceholderText}"
                                 Visibility="Collapsed" />
-                            <ScrollViewer
+                            <customControls:FadingScrollViewer
                                 x:Name="PART_ContentHost"
                                 Margin="{TemplateBinding Padding}"
                                 VerticalAlignment="Stretch" />
@@ -146,7 +146,7 @@
                                 IsHitTestVisible="False"
                                 Text="{TemplateBinding PlaceholderText}"
                                 Visibility="Collapsed" />
-                            <ScrollViewer
+                            <customControls:FadingScrollViewer
                                 x:Name="PART_ContentHost"
                                 Margin="{TemplateBinding Padding}"
                                 VerticalAlignment="Stretch" />

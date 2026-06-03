@@ -143,10 +143,10 @@ public sealed class QuickSetupWizardVMTests
             "Wizard",
             "Pages",
             "StartupWizardMiddlePage.xaml"));
-        var scrollViewerIndex = xaml.IndexOf("<ScrollViewer", StringComparison.Ordinal);
+        var scrollViewerIndex = xaml.IndexOf("<customControls:FadingScrollViewer", StringComparison.Ordinal);
 
         Assert.NotEqual(-1, scrollViewerIndex);
-        var scrollViewerBlock = xaml[scrollViewerIndex..xaml.IndexOf("</ScrollViewer>", scrollViewerIndex, StringComparison.Ordinal)];
+        var scrollViewerBlock = xaml[scrollViewerIndex..xaml.IndexOf("</customControls:FadingScrollViewer>", scrollViewerIndex, StringComparison.Ordinal)];
         Assert.Contains("Grid.Row=\"2\"", scrollViewerBlock);
         Assert.Contains("VerticalScrollBarVisibility=\"Auto\"", scrollViewerBlock);
         Assert.DoesNotContain("Binding=\"{Binding IsStep5Active}\"", scrollViewerBlock);

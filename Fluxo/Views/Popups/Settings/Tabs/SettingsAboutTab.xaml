@@ -5,7 +5,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
     <Border Style="{StaticResource PanelStyle}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <TextBlock
                     FontFamily="{StaticResource Bold}"
@@ -160,6 +160,6 @@
                         Style="{StaticResource PopupTextButtonStyle}" />
                 </Grid>
             </StackPanel>
-        </ScrollViewer>
+        </customControls:FadingScrollViewer>
     </Border>
 </UserControl>

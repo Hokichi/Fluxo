@@ -215,7 +215,7 @@
                 FontSize="11"
                 Foreground="{StaticResource Brush.Text.Secondary}"
                 Text="Track savings targets and manage which goals stay active." />
-            <ScrollViewer
+            <customControls:FadingScrollViewer
                 Grid.Row="2"
                 Margin="0,8,0,0"
                 VerticalScrollBarVisibility="Auto">
@@ -226,7 +226,7 @@
                     behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand}"
                     ItemTemplate="{StaticResource SettingsGoalItemTemplate}"
                     ItemsSource="{Binding SavingGoalsView}" />
-            </ScrollViewer>
+            </customControls:FadingScrollViewer>
             <StackPanel
                 Grid.RowSpan="3"
                 Margin="0,24"

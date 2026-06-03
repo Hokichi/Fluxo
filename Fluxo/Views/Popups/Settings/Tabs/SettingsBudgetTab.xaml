@@ -5,7 +5,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
     <Border Style="{StaticResource PanelStyle}">
-        <ScrollViewer>
+        <customControls:FadingScrollViewer>
 
             <Grid>
                 <StackPanel>
@@ -321,7 +321,7 @@
                     Style="{StaticResource TextOnlyButtonStyle}"
                     Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
             </Grid>
-        </ScrollViewer>
+        </customControls:FadingScrollViewer>
     </Border>
 </UserControl>
 

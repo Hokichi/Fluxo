@@ -38,7 +38,7 @@
 
     <Grid Width="640" Margin="24,0,24,24">
         <Border Style="{StaticResource PanelStyle}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -199,7 +199,7 @@
                             Style="{StaticResource ItemCheckBoxWithContentStyle}" />
                     </StackPanel>
                 </StackPanel>
-            </ScrollViewer>
+            </customControls:FadingScrollViewer>
         </Border>
     </Grid>
 </customControls:BasePopup>

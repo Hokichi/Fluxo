@@ -649,7 +649,7 @@
                                         Background="{StaticResource Brush.Text.Muted}"
                                         Opacity="0.25" />
 
-                                    <ScrollViewer
+                                    <customControls:FadingScrollViewer
                                         x:Name="IncomeScrollViewer"
                                         Grid.Row="2"
                                         Height="152"
@@ -658,7 +658,7 @@
                                             AlternationCount="1000"
                                             ItemTemplate="{StaticResource PlanningReportIncomeItemTemplate}"
                                             ItemsSource="{Binding Incomes}" />
-                                    </ScrollViewer>
+                                    </customControls:FadingScrollViewer>
                                 </Grid>
                             </Border>
                         </Border>
@@ -712,13 +712,13 @@
                                     Background="{StaticResource Brush.Text.Muted}"
                                     Opacity="0.25" />
 
-                                <ScrollViewer
+                                <customControls:FadingScrollViewer
                                     x:Name="ExpenseScrollViewer"
                                     Grid.Row="2"
                                     Height="152"
                                     VerticalScrollBarVisibility="Hidden">
                                     <ItemsControl ItemTemplate="{StaticResource PlanningReportExpenseItemTemplate}" ItemsSource="{Binding Expenses}" />
-                                </ScrollViewer>
+                                </customControls:FadingScrollViewer>
                             </Grid>
                         </Border>
 

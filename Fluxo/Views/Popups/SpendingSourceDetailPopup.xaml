@@ -34,7 +34,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <ScrollViewer
+                        <customControls:FadingScrollViewer
                             x:Name="PART_ContentHost"
                             Margin="0"
                             VerticalAlignment="Stretch" />
@@ -586,9 +586,9 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="History" />
                     <Grid Grid.Row="2">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVisibilityConverter}}">
                             <ItemsControl ItemTemplate="{StaticResource SpendingSourceRecentActivityItemTemplate}" ItemsSource="{Binding RecentActivities}" />
-                        </ScrollViewer>
+                        </customControls:FadingScrollViewer>
                         <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"

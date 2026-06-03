@@ -1,7 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsPersonalizationTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources">
     <UserControl.Resources>
         <DataTemplate x:Key="SettingsNotificationItemTemplate">
             <Border Style="{StaticResource RowCardStyle}">
@@ -33,7 +34,7 @@
     </UserControl.Resources>
 
     <Border Style="{StaticResource PanelStyle}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <TextBlock
                     FontFamily="{StaticResource Bold}"
@@ -96,7 +97,7 @@
                     Text="Notifications" />
                 <ItemsControl ItemTemplate="{StaticResource SettingsNotificationItemTemplate}" ItemsSource="{Binding NotificationSettings}" />
             </StackPanel>
-        </ScrollViewer>
+        </customControls:FadingScrollViewer>
     </Border>
 </UserControl>
 

@@ -188,7 +188,7 @@
                         Text="Add expected income, tune the allocation split, then list planned expenses for this cycle." />
                 </StackPanel>
 
-                <ScrollViewer
+                <customControls:FadingScrollViewer
                     Grid.Row="1"
                     MaxHeight="470"
                     Margin="0,18,0,0"
@@ -447,7 +447,7 @@
                             </Border>
                         </StackPanel>
                     </Grid>
-                </ScrollViewer>
+                </customControls:FadingScrollViewer>
                 <Grid Grid.Row="2" Margin="0,18,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />

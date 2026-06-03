@@ -128,7 +128,7 @@ public sealed class NotificationChecklistActionPopupLayoutTests
 
         var addButtonRow = int.Parse((string?)addButton.Attribute("Grid.Row") ?? "0");
         var scrollViewer = Assert.Single(tagsComboStyle.Descendants().Where(element =>
-            element.Name.LocalName == "ScrollViewer" &&
+            element.Name.LocalName == "FadingScrollViewer" &&
             element.Descendants().Any(descendant => descendant.Name.LocalName == "ItemsPresenter")));
         var scrollViewerRow = int.Parse((string?)scrollViewer.Attribute("Grid.Row") ?? "0");
 
