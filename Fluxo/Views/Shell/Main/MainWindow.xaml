@@ -39,6 +39,43 @@
                 <components:IncomeSource />
             </DataTemplate>
 
+            <Style x:Key="DashboardSpendingSourcesScrollButtonStyle" TargetType="Button">
+                <Setter Property="Width" Value="28" />
+                <Setter Property="Height" Value="80" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border
+                                x:Name="ButtonSurface"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                    <Setter TargetName="ButtonSurface" Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.85" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.4" />
+                                    <Setter Property="Cursor" Value="Arrow" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <Style x:Key="AnalyticsDrawerTabButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderBrush" Value="Transparent" />
@@ -774,33 +811,80 @@
                                 Background="{StaticResource Brush.Border.Subtle}"
                                 SnapsToDevicePixels="True" />
 
-                            <customControls:FadingScrollViewer
-                                Grid.Column="2"
-                                HorizontalAlignment="Stretch"
-                                CanContentScroll="False"
-                                HorizontalScrollBarVisibility="Hidden"
-                                VerticalScrollBarVisibility="Disabled">
-                                <StackPanel Orientation="Horizontal">
-                                    <Button
-                                        x:Name="AddSpendingSourceButton"
-                                        Margin="0,0,8,0"
-                                        Click="OnAddSpendingSourceButtonClick"
-                                        Content="Add"
-                                        Style="{StaticResource SpendingSourceAddButtonStyle}" />
+                            <Grid Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                                    <ListView
+                                <Button
+                                    x:Name="AddSpendingSourceButton"
+                                    Grid.Column="0"
+                                    Margin="12,20,8,0"
+                                    VerticalAlignment="Top"
+                                    Click="OnAddSpendingSourceButtonClick"
+                                    Content="Add"
+                                    Style="{StaticResource SpendingSourceAddButtonStyle}" />
+
+                                <Grid Grid.Column="1">
+                                    <customControls:FadingScrollViewer
+                                        x:Name="DashboardSpendingSourcesScrollViewer"
+                                        HorizontalAlignment="Stretch"
+                                        CanContentScroll="False"
+                                        HorizontalScrollBarVisibility="Hidden"
+                                        ScrollChanged="OnDashboardSpendingSourcesScrollChanged"
+                                        SizeChanged="OnDashboardSpendingSourcesScrollViewerSizeChanged"
+                                        VerticalScrollBarVisibility="Disabled">
+                                        <ListView
+                                            HorizontalAlignment="Left"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            BorderThickness="0"
+                                            ItemContainerStyle="{StaticResource IncomeSources}"
+                                            ItemTemplate="{StaticResource MainWindowSpendingSourceItemTemplate}"
+                                            ItemsPanel="{StaticResource MainWindowSpendingSourcesItemsPanelTemplate}"
+                                            ItemsSource="{Binding SpendingSources}"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                                    </customControls:FadingScrollViewer>
+
+                                    <Button
+                                        x:Name="DashboardSpendingSourcesScrollLeftButton"
                                         HorizontalAlignment="Left"
-                                        Background="Transparent"
-                                        BorderBrush="Transparent"
-                                        BorderThickness="0"
-                                        ItemContainerStyle="{StaticResource IncomeSources}"
-                                        ItemTemplate="{StaticResource MainWindowSpendingSourceItemTemplate}"
-                                        ItemsPanel="{StaticResource MainWindowSpendingSourcesItemsPanelTemplate}"
-                                        ItemsSource="{Binding SpendingSources}"
-                                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                        ScrollViewer.VerticalScrollBarVisibility="Disabled" />
-                                </StackPanel>
-                            </customControls:FadingScrollViewer>
+                                        VerticalAlignment="Center"
+                                        Panel.ZIndex="1"
+                                        AutomationProperties.Name="Scroll spending sources left"
+                                        LostMouseCapture="OnDashboardSpendingSourcesScrollButtonLostMouseCapture"
+                                        PreviewMouseLeftButtonDown="OnDashboardSpendingSourcesScrollLeftButtonPressed"
+                                        PreviewMouseLeftButtonUp="OnDashboardSpendingSourcesScrollButtonReleased"
+                                        Style="{StaticResource DashboardSpendingSourcesScrollButtonStyle}"
+                                        Visibility="Collapsed">
+                                        <components:Icon
+                                            Width="14"
+                                            Height="14"
+                                            Path="{StaticResource AngleLeft}"
+                                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                    </Button>
+
+                                    <Button
+                                        x:Name="DashboardSpendingSourcesScrollRightButton"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Panel.ZIndex="1"
+                                        AutomationProperties.Name="Scroll spending sources right"
+                                        LostMouseCapture="OnDashboardSpendingSourcesScrollButtonLostMouseCapture"
+                                        PreviewMouseLeftButtonDown="OnDashboardSpendingSourcesScrollRightButtonPressed"
+                                        PreviewMouseLeftButtonUp="OnDashboardSpendingSourcesScrollButtonReleased"
+                                        Style="{StaticResource DashboardSpendingSourcesScrollButtonStyle}"
+                                        Visibility="Collapsed">
+                                        <components:Icon
+                                            Width="14"
+                                            Height="14"
+                                            Path="{StaticResource AngleRight}"
+                                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                    </Button>
+                                </Grid>
+                            </Grid>
                         </Grid>
 
                         <Grid Grid.Row="2" Margin="0,8,0,0">

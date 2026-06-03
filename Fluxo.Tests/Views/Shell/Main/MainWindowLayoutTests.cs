@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Fluxo.Tests.TestSupport;
 using Xunit;
 
 namespace Fluxo.Tests.Views.Shell.Main;
@@ -145,6 +146,87 @@ public sealed class MainWindowLayoutTests
         var xamlDocument = MainWindowXamlDocument.Value;
 
         AssertElementHasNameAndStyle(xamlDocument, "Button", "SourcesMenuButton", "HeaderMenuActionButtonStyle");
+    }
+
+    [Fact]
+    public void DashboardSpendingSources_HasOverflowScrollButtons()
+    {
+        var xaml = MainWindowXaml.Value;
+        var xamlDocument = MainWindowXamlDocument.Value;
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+        var icons = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo.Resources",
+            "Resources",
+            "Icons.xaml"));
+
+        Assert.Contains("x:Key=\"AngleLeft\"", icons);
+        Assert.Contains("x:Key=\"AngleRight\"", icons);
+        Assert.Contains("x:Key=\"DashboardSpendingSourcesScrollButtonStyle\"", xaml);
+        Assert.Contains("Foreground\" Value=\"{StaticResource Brush.Text.Muted}", xaml);
+        Assert.Contains("Foreground\" Value=\"{StaticResource Brush.Mint}", xaml);
+
+        AssertElementHasNameAndStyle(
+            xamlDocument,
+            "Button",
+            "AddSpendingSourceButton",
+            "SpendingSourceAddButtonStyle");
+        AssertElementHasNameAndStyle(
+            xamlDocument,
+            "Button",
+            "DashboardSpendingSourcesScrollLeftButton",
+            "DashboardSpendingSourcesScrollButtonStyle");
+        AssertElementHasNameAndStyle(
+            xamlDocument,
+            "Button",
+            "DashboardSpendingSourcesScrollRightButton",
+            "DashboardSpendingSourcesScrollButtonStyle");
+
+        var leftButton = xamlDocument
+            .Descendants(PresentationNamespace + "Button")
+            .Single(button => (string?)button.Attribute(XamlNamespace + "Name") == "DashboardSpendingSourcesScrollLeftButton");
+        var rightButton = xamlDocument
+            .Descendants(PresentationNamespace + "Button")
+            .Single(button => (string?)button.Attribute(XamlNamespace + "Name") == "DashboardSpendingSourcesScrollRightButton");
+        var addButton = xamlDocument
+            .Descendants(PresentationNamespace + "Button")
+            .Single(button => (string?)button.Attribute(XamlNamespace + "Name") == "AddSpendingSourceButton");
+        var scrollViewer = xamlDocument
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "FadingScrollViewer" &&
+                (string?)element.Attribute(XamlNamespace + "Name") == "DashboardSpendingSourcesScrollViewer");
+
+        Assert.DoesNotContain(addButton, scrollViewer.Descendants());
+        Assert.Equal("0", (string?)addButton.Attribute("Grid.Column"));
+        Assert.Equal(scrollViewer.Parent, leftButton.Parent);
+        Assert.Equal(scrollViewer.Parent, rightButton.Parent);
+        Assert.Equal("Left", (string?)leftButton.Attribute("HorizontalAlignment"));
+        Assert.Equal("Right", (string?)rightButton.Attribute("HorizontalAlignment"));
+        Assert.Equal("Center", (string?)leftButton.Attribute("VerticalAlignment"));
+        Assert.Equal("Center", (string?)rightButton.Attribute("VerticalAlignment"));
+        Assert.Equal("1", (string?)leftButton.Attribute("Panel.ZIndex"));
+        Assert.Equal("1", (string?)rightButton.Attribute("Panel.ZIndex"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollLeftButtonPressed", (string?)leftButton.Attribute("PreviewMouseLeftButtonDown"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollRightButtonPressed", (string?)rightButton.Attribute("PreviewMouseLeftButtonDown"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollButtonReleased", (string?)leftButton.Attribute("PreviewMouseLeftButtonUp"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollButtonReleased", (string?)rightButton.Attribute("PreviewMouseLeftButtonUp"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollButtonLostMouseCapture", (string?)leftButton.Attribute("LostMouseCapture"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollButtonLostMouseCapture", (string?)rightButton.Attribute("LostMouseCapture"));
+        Assert.Equal("Collapsed", (string?)leftButton.Attribute("Visibility"));
+        Assert.Equal("Collapsed", (string?)rightButton.Attribute("Visibility"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollChanged", (string?)scrollViewer.Attribute("ScrollChanged"));
+        Assert.Equal("OnDashboardSpendingSourcesScrollViewerSizeChanged", (string?)scrollViewer.Attribute("SizeChanged"));
+
+        Assert.Contains("DashboardSpendingSourcesScrollPixels = 50", source);
+        Assert.Contains("DashboardSpendingSourcesScrollIntervalMilliseconds = 100", source);
+        Assert.Contains("Interval = TimeSpan.FromMilliseconds(DashboardSpendingSourcesScrollIntervalMilliseconds)", source);
+        Assert.Contains("_dashboardSpendingSourcesScrollTimer.Tick += OnDashboardSpendingSourcesScrollTimerTick;", source);
+        Assert.Contains("private void OnDashboardSpendingSourcesScrollTimerTick(object? sender, EventArgs e)", source);
+        Assert.Contains("ScrollDashboardSpendingSources(", source);
+        Assert.Contains("UpdateDashboardSpendingSourcesScrollButtonVisibility();", source);
+        Assert.Contains("DashboardSpendingSourcesScrollViewer.ScrollableWidth > 0", source);
+        Assert.Contains("DashboardSpendingSourcesScrollViewer.HorizontalOffset > 0", source);
+        Assert.Contains("DashboardSpendingSourcesScrollViewer.HorizontalOffset < DashboardSpendingSourcesScrollViewer.ScrollableWidth", source);
     }
 
     [Fact]
