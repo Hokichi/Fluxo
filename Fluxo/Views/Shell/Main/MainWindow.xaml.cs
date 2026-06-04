@@ -1301,6 +1301,7 @@ public partial class MainWindow : Window, IPopupHost
             else
             {
                 EnsureLedgerDrawerLoaded();
+                ApplyMainWindowRangeToLedger();
                 if (_ledgerDrawerView is null)
                     return;
 
@@ -1416,12 +1417,14 @@ public partial class MainWindow : Window, IPopupHost
         if (_ledgerDrawerView is not null)
         {
             AnalyticsDrawerContentHost.Content = _ledgerDrawerView;
+            AnalyticsDateRangeSelectorHost.DataContext = _ledgerDrawerView.DataContext;
             return;
         }
 
         _ledgerDrawerScope = _serviceProvider.CreateScope();
         _ledgerDrawerView = _ledgerDrawerScope.ServiceProvider.GetRequiredService<Ledger>();
         AnalyticsDrawerContentHost.Content = _ledgerDrawerView;
+        AnalyticsDateRangeSelectorHost.DataContext = _ledgerDrawerView.DataContext;
     }
 
     private void SetDrawerTitle(string title)
@@ -1462,6 +1465,26 @@ public partial class MainWindow : Window, IPopupHost
 
         var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
         _analyticsDrawerView.ApplyOpenRange(range.From, range.To);
+    }
+
+    private void ApplyMainWindowRangeToLedger()
+    {
+        if (_ledgerDrawerView is null)
+            return;
+
+        var selectedMode = _mainVM.ViewModeToggle.SelectedMainContentViewMode;
+        if (selectedMode == MainContentViewMode.AllTime)
+        {
+            _ledgerDrawerView.ApplyAllTimeRange();
+            return;
+        }
+
+        var selectedDate = _mainVM.DaySpinner.SelectedDay.Date;
+        if (selectedDate == default)
+            selectedDate = DateTime.Today;
+
+        var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
+        _ledgerDrawerView.ApplyOpenRange(range.From, range.To);
     }
 
     private void OpenAnalyticsDrawer()

@@ -105,6 +105,74 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void DateRangeMessage_UpdatesLedgerDateSelectorProperties()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+
+            vm.Receive(new DateRangeSelectionChangedMessage(new DateTime(2026, 6, 1), new DateTime(2026, 6, 3)));
+
+            Assert.Equal(new DateTime(2026, 6, 1), vm.StartDate.Date);
+            Assert.Equal(new DateTime(2026, 6, 3), vm.EndDate.Date);
+        });
+    }
+
+    [Fact]
+    public void DateSelectorPropertyChange_ReloadsLedgerForSelectedPeriod()
+    {
+        RunInSta(() =>
+        {
+            var expenseLogService = Substitute.For<IExpenseLogService>();
+            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(CreateExpenseLogs());
+            var vm = CreateVm(expenseLogService: expenseLogService);
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            vm.StartDate = new DateTime(2026, 6, 2);
+            vm.EndDate = new DateTime(2026, 6, 2);
+
+            SpinWait.SpinUntil(() =>
+            {
+                try
+                {
+                    expenseLogService.Received(3).GetAllAsync(Arg.Any<CancellationToken>());
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }, TimeSpan.FromSeconds(2));
+
+            Assert.All(GetItems(vm.TransactionsView), item => Assert.Equal(new DateTime(2026, 6, 2), item.OccurredOn.Date));
+        });
+    }
+
+    [Fact]
+    public void AmountSort_DefaultsDescendingAndToggleSwitchesToAscending()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.SelectedGroupingMode = LedgerGroupingMode.None;
+
+            Assert.Equal(LedgerAmountSortDirection.Descending, vm.AmountSortDirection);
+            Assert.Equal(
+                new[] { 2800m, -15.99m, -67.50m, -100m },
+                GetItems(vm.TransactionsView).Select(item => item.SignedAmount).ToArray());
+
+            vm.ToggleAmountSortDirectionCommand.Execute(null);
+
+            Assert.Equal(LedgerAmountSortDirection.Ascending, vm.AmountSortDirection);
+            Assert.Equal(
+                new[] { -100m, -67.50m, -15.99m, 2800m },
+                GetItems(vm.TransactionsView).Select(item => item.SignedAmount).ToArray());
+        });
+    }
+
+    [Fact]
     public void GroupingByDate_UsesMonthDayHeaderAndSortsAmountsInsideGroup()
     {
         RunInSta(() =>

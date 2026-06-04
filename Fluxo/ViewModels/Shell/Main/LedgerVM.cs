@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Data;
@@ -28,11 +29,15 @@ public partial class LedgerVM : ObservableRecipient,
     private readonly ITagService _tagService;
     private readonly ObservableCollection<LedgerTransactionItemVM> _transactions = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
+    private bool _isApplyingExternalRange;
     private bool _isSynchronizingFilters;
     private (DateTime From, DateTime To)? _selectedRange;
 
     [ObservableProperty] private LedgerGroupingMode _selectedGroupingMode = LedgerGroupingMode.Date;
     [ObservableProperty] private LedgerAmountSortDirection _amountSortDirection = LedgerAmountSortDirection.Descending;
+    [ObservableProperty] private DateTime _startDate = DateTime.Today;
+    [ObservableProperty] private DateTime _endDate = DateTime.Today;
+    [ObservableProperty] private DateTime _maxSelectableDate = DateTime.Today;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private decimal _spentAmount;
     [ObservableProperty] private decimal _earnedAmount;
@@ -91,14 +96,38 @@ public partial class LedgerVM : ObservableRecipient,
 
     public void Receive(DateRangeSelectionChangedMessage message)
     {
-        _selectedRange = message.Value;
-        _ = LoadAsync();
+        ApplyExternalDateRange(message.Value.From, message.Value.To, refresh: true);
+    }
+
+    public void ApplyExternalDateRange(DateTime from, DateTime to, bool refresh)
+    {
+        SetSelectedRange(from, to, updateSelectors: true);
+
+        if (refresh)
+            _ = LoadAsync();
     }
 
     public void Receive(AllTimeViewModeMessage message)
     {
+        ApplyAllTimeRange(refresh: true);
+    }
+
+    public void ApplyAllTimeRange(bool refresh)
+    {
         _selectedRange = null;
-        _ = LoadAsync();
+        _isApplyingExternalRange = true;
+        try
+        {
+            StartDate = DateTime.Today;
+            EndDate = DateTime.Today;
+        }
+        finally
+        {
+            _isApplyingExternalRange = false;
+        }
+
+        if (refresh)
+            _ = LoadAsync();
     }
 
     public void Receive(LedgerSearchTextChangedMessage message)
@@ -152,6 +181,24 @@ public partial class LedgerVM : ObservableRecipient,
         TransactionsView.Refresh();
     }
 
+    partial void OnStartDateChanged(DateTime value)
+    {
+        if (_isApplyingExternalRange)
+            return;
+
+        SetSelectedRange(value, EndDate, updateSelectors: true);
+        _ = LoadAsync();
+    }
+
+    partial void OnEndDateChanged(DateTime value)
+    {
+        if (_isApplyingExternalRange)
+            return;
+
+        SetSelectedRange(StartDate, value, updateSelectors: true);
+        _ = LoadAsync();
+    }
+
     partial void OnSelectedGroupingModeChanged(LedgerGroupingMode value)
     {
         UpdateSortAndGroups();
@@ -189,6 +236,38 @@ public partial class LedgerVM : ObservableRecipient,
 
         RefreshSummaries();
         TransactionsView.Refresh();
+    }
+
+    private void SetSelectedRange(DateTime from, DateTime to, bool updateSelectors)
+    {
+        var start = from.Date;
+        var end = to.Date;
+        var max = MaxSelectableDate.Date;
+
+        if (start > max)
+            start = max;
+        if (end > max)
+            end = max;
+        if (start > end)
+            (start, end) = (end, start);
+
+        _selectedRange = (start, end);
+
+        if (!updateSelectors)
+            return;
+
+        _isApplyingExternalRange = true;
+        try
+        {
+            if (StartDate.Date != start)
+                StartDate = start;
+            if (EndDate.Date != end)
+                EndDate = end;
+        }
+        finally
+        {
+            _isApplyingExternalRange = false;
+        }
     }
 
     private async Task<IReadOnlyList<IncomeLogVM>> LoadIncomeLogsAsync(CancellationToken cancellationToken)
@@ -413,12 +492,15 @@ public partial class LedgerVM : ObservableRecipient,
             if (GetGroupPropertyName(SelectedGroupingMode) is { } groupPropertyName)
                 TransactionsView.GroupDescriptions.Add(new PropertyGroupDescription(groupPropertyName));
 
-            TransactionsView.SortDescriptions.Clear();
-            if (SelectedGroupingMode == LedgerGroupingMode.None)
-                TransactionsView.SortDescriptions.Add(new SortDescription(
-                    nameof(LedgerTransactionItemVM.OccurredOn),
-                    ListSortDirection.Descending));
+            if (TransactionsView is ListCollectionView listCollectionView)
+            {
+                listCollectionView.CustomSort = new LedgerTransactionComparer(
+                    SelectedGroupingMode,
+                    AmountSortDirection);
+                return;
+            }
 
+            TransactionsView.SortDescriptions.Clear();
             TransactionsView.SortDescriptions.Add(new SortDescription(
                 nameof(LedgerTransactionItemVM.SignedAmount),
                 AmountSortDirection == LedgerAmountSortDirection.Ascending
@@ -621,5 +703,46 @@ public partial class LedgerVM : ObservableRecipient,
         var tag = TagFilters.FirstOrDefault(option => !option.IsAll && option.Value == transaction.TagId);
         if (tag is not null)
             transaction.TagName = tag.Label;
+    }
+
+    private sealed class LedgerTransactionComparer(
+        LedgerGroupingMode groupingMode,
+        LedgerAmountSortDirection amountSortDirection)
+        : IComparer
+    {
+        public int Compare(object? x, object? y)
+        {
+            if (ReferenceEquals(x, y))
+                return 0;
+            if (x is not LedgerTransactionItemVM left)
+                return -1;
+            if (y is not LedgerTransactionItemVM right)
+                return 1;
+
+            var groupComparison = CompareGroup(left, right);
+            if (groupComparison != 0)
+                return groupComparison;
+
+            var amountComparison = left.SignedAmount.CompareTo(right.SignedAmount);
+            if (amountSortDirection == LedgerAmountSortDirection.Descending)
+                amountComparison *= -1;
+            if (amountComparison != 0)
+                return amountComparison;
+
+            return string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private int CompareGroup(LedgerTransactionItemVM left, LedgerTransactionItemVM right)
+        {
+            return groupingMode switch
+            {
+                LedgerGroupingMode.Date => right.OccurredOn.Date.CompareTo(left.OccurredOn.Date),
+                LedgerGroupingMode.Tags => string.Compare(left.TagGroupKey, right.TagGroupKey, StringComparison.OrdinalIgnoreCase),
+                LedgerGroupingMode.SpendingSources => string.Compare(left.SpendingSourceGroupKey, right.SpendingSourceGroupKey, StringComparison.OrdinalIgnoreCase),
+                LedgerGroupingMode.Types => string.Compare(left.TypeGroupKey, right.TypeGroupKey, StringComparison.OrdinalIgnoreCase),
+                LedgerGroupingMode.Category => string.Compare(left.CategoryGroupKey, right.CategoryGroupKey, StringComparison.OrdinalIgnoreCase),
+                _ => 0
+            };
+        }
     }
 }
