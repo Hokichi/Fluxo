@@ -362,7 +362,10 @@ public partial class LedgerVM : ObservableRecipient,
                 NormalizeFilterSelection(CategoryFilters, category);
                 break;
         }
+    }
 
+    public void ApplyFilters()
+    {
         TransactionsView.Refresh();
     }
 

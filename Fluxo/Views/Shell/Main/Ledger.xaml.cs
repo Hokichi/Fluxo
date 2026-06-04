@@ -81,6 +81,44 @@ public partial class Ledger : UserControl
         }
     }
 
+    private async void OnApplyFiltersClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LedgerVM viewModel)
+            return;
+
+        await _dialogService.ShowToastWhileAsync(
+            "Filtering...",
+            async () =>
+            {
+                await Dispatcher.InvokeAsync(
+                    viewModel.ApplyFilters,
+                    DispatcherPriority.Render);
+                await Dispatcher.InvokeAsync(
+                    () => LedgerTransactionsList.Items.Refresh(),
+                    DispatcherPriority.ContextIdle);
+            },
+            Window.GetWindow(this));
+    }
+
+    private async void OnOrderingButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LedgerVM viewModel)
+            return;
+
+        await _dialogService.ShowToastWhileAsync(
+            "Ordering...",
+            async () =>
+            {
+                await Dispatcher.InvokeAsync(
+                    () => viewModel.ToggleAmountSortDirectionCommand.Execute(null),
+                    DispatcherPriority.Render);
+                await Dispatcher.InvokeAsync(
+                    () => LedgerTransactionsList.Items.Refresh(),
+                    DispatcherPriority.ContextIdle);
+            },
+            Window.GetWindow(this));
+    }
+
     private async void OnGroupingModeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_hasLoaded || _isApplyingGroupingSelection || sender is not ComboBox comboBox)

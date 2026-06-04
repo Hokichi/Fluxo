@@ -21,9 +21,7 @@
             <Setter Property="CornerRadius" Value="8" />
         </Style>
 
-        <Style
-            x:Key="LedgerFilterComboStyle"
-            TargetType="ComboBox">
+        <Style x:Key="LedgerFilterComboStyle" TargetType="ComboBox">
             <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="MinWidth" Value="170" />
@@ -36,7 +34,7 @@
             <Setter Property="FontSize" Value="13" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="MaxDropDownHeight" Value="220" />
-            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
             <Setter Property="ItemContainerStyle" Value="{DynamicResource LedgerFilterComboBoxItemStyle}" />
             <Setter Property="Template">
@@ -131,6 +129,14 @@
             </Setter>
         </Style>
 
+        <Style
+            x:Key="LedgerGroupingComboStyle"
+            BasedOn="{StaticResource LedgerFilterComboStyle}"
+            TargetType="ComboBox">
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource FluxoComboBoxItemStyle}" />
+        </Style>
+
         <Style x:Key="LedgerFilterComboBoxItemStyle" TargetType="ComboBoxItem">
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -139,10 +145,10 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
                         <ContentPresenter
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             Content="{TemplateBinding Content}"
                             ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                            ContentTemplate="{TemplateBinding ContentTemplate}"
-                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                            ContentTemplate="{TemplateBinding ContentTemplate}" />
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -213,10 +219,10 @@
                     <ControlTemplate TargetType="ListViewItem">
                         <ContentPresenter
                             Margin="0"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             Content="{TemplateBinding Content}"
                             ContentStringFormat="{TemplateBinding ContentStringFormat}"
                             ContentTemplate="{TemplateBinding ContentTemplate}"
-                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                     </ControlTemplate>
                 </Setter.Value>
@@ -288,57 +294,59 @@
                         </Border.Style>
                     </Border>
 
-                    <StackPanel Grid.Column="2" Margin="0,8,0,8">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox
-                                MinWidth="120"
+                    <StackPanel
+                        Grid.Column="2"
+                        Margin="0,8,0,8"
+                        Orientation="Horizontal">
+                        <TextBox
+                            MinWidth="120"
+                            VerticalContentAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="13"
+                            Style="{StaticResource LedgerEditableTextBoxStyle}"
+                            Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Border
+                            Margin="8,0,0,0"
+                            Padding="5,1"
+                            Background="{StaticResource Brush.Background.Hover}"
+                            CornerRadius="4">
+                            <TextBlock
                                 FontFamily="{StaticResource Bold}"
-                                FontSize="13"
-                                Style="{StaticResource LedgerEditableTextBoxStyle}"
-                                Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <Border
-                                Margin="8,0,0,0"
-                                Padding="5,1"
-                                Background="{StaticResource Brush.Background.Hover}"
-                                CornerRadius="4">
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="9"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="GOAL" />
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsGoal}" Value="True">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                            </Border>
-                            <Border
-                                Margin="6,0,0,0"
-                                Padding="5,1"
-                                Background="#FFEBD2"
-                                CornerRadius="4">
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="9"
-                                    Foreground="#7A4A00"
-                                    Text="RECURRING" />
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsRecurring}" Value="True">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                            </Border>
-                        </StackPanel>
+                                FontSize="9"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="GOAL" />
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsGoal}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <Border
+                            Margin="6,0,0,0"
+                            Padding="5,1"
+                            Background="#FFEBD2"
+                            CornerRadius="4">
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="9"
+                                Foreground="#7A4A00"
+                                Text="RECURRING" />
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRecurring}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
                     </StackPanel>
 
                     <Border
@@ -453,6 +461,12 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="GroupItem">
+                        <Border
+                            Margin="0,0,0,8"
+                            Background="{StaticResource Brush.Background.Surface}"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="8">
                         <StackPanel>
                             <ToggleButton
                                 x:Name="LedgerGroupHeaderToggle"
@@ -499,6 +513,7 @@
 
                             <ItemsPresenter x:Name="LedgerGroupItemsPresenter" />
                         </StackPanel>
+                        </Border>
                         <ControlTemplate.Triggers>
                             <Trigger SourceName="LedgerGroupHeaderToggle" Property="IsChecked" Value="False">
                                 <Setter TargetName="LedgerGroupItemsPresenter" Property="Visibility" Value="Collapsed" />
@@ -580,6 +595,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ComboBox
                 Grid.Column="0"
@@ -616,14 +632,23 @@
                 ItemsSource="{Binding GroupingModes}"
                 SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
                 SelectionChanged="OnGroupingModeSelectionChanged"
-                Style="{StaticResource LedgerFilterComboStyle}"
+                Style="{StaticResource LedgerGroupingComboStyle}"
                 Tag="Group By" />
             <customControls:BalloonButton
                 Grid.Column="5"
                 Width="34"
                 Height="34"
                 Margin="10,0,0,0"
-                Command="{Binding ToggleAmountSortDirectionCommand}"
+                ButtonIcon="{StaticResource Check}"
+                Click="OnApplyFiltersClick"
+                IconSize="14"
+                Style="{StaticResource HeaderButtonStyle}" />
+            <customControls:BalloonButton
+                Grid.Column="6"
+                Width="34"
+                Height="34"
+                Margin="10,0,0,0"
+                Click="OnOrderingButtonClick"
                 IconSize="14">
                 <customControls:BalloonButton.Style>
                     <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
@@ -638,76 +663,18 @@
             </customControls:BalloonButton>
         </Grid>
 
-        <Border
+        <ListView
+            x:Name="LedgerTransactionsList"
             Grid.Row="3"
-            Background="{StaticResource Brush.Background.Surface}"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
-            BorderThickness="1"
-            CornerRadius="8">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="34" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <Grid
-                    Margin="0"
-                    Background="{StaticResource Brush.Background.Elevated}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="2*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="130" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="Name" />
-                    <TextBlock
-                        Grid.Column="3"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="Tag" />
-                    <TextBlock
-                        Grid.Column="4"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="Spending Source" />
-                    <TextBlock
-                        Grid.Column="5"
-                        Margin="0,0,16,0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="Amount" />
-                </Grid>
-
-                <ListView
-                    x:Name="LedgerTransactionsList"
-                    Grid.Row="1"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    ItemContainerStyle="{StaticResource LedgerListViewItemStyle}"
-                    ItemTemplate="{StaticResource LedgerRowTemplate}"
-                    ItemsSource="{Binding TransactionsView}"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto">
-                    <ListView.GroupStyle>
-                        <StaticResource ResourceKey="LedgerGroupStyle" />
-                    </ListView.GroupStyle>
-                </ListView>
-            </Grid>
-        </Border>
+            Background="Transparent"
+            BorderThickness="0"
+            ItemContainerStyle="{StaticResource LedgerListViewItemStyle}"
+            ItemTemplate="{StaticResource LedgerRowTemplate}"
+            ItemsSource="{Binding TransactionsView}"
+            ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListView.GroupStyle>
+                <StaticResource ResourceKey="LedgerGroupStyle" />
+            </ListView.GroupStyle>
+        </ListView>
     </Grid>
 </UserControl>

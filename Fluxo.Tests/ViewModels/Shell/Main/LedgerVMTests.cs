@@ -55,7 +55,7 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
-    public void AnySpecificSelection_UnchecksAll()
+    public void AnySpecificSelection_UnchecksAllButDoesNotFilterUntilApplied()
     {
         RunInSta(() =>
         {
@@ -65,6 +65,10 @@ public sealed class LedgerVMTests
             vm.TypeFilters.Single(option => option.Value == LedgerTransactionKind.Income).IsChecked = true;
 
             Assert.False(vm.TypeFilters.Single(option => option.IsAll).IsChecked);
+            Assert.Contains(GetItems(vm.TransactionsView), item => item.Kind == LedgerTransactionKind.Expense);
+
+            vm.ApplyFilters();
+
             var item = Assert.Single(GetItems(vm.TransactionsView));
             Assert.Equal(LedgerTransactionKind.Income, item.Kind);
         });
