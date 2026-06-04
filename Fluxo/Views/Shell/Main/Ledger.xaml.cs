@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
+using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Shell.Main;
 
@@ -56,6 +58,27 @@ public partial class Ledger : UserControl
             return;
 
         _ = viewModel.RemoveTransactionCommand.ExecuteAsync(transaction);
+    }
+
+    private void OnFilterOptionPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is not FrameworkElement { DataContext: object option })
+            return;
+
+        switch (option)
+        {
+            case LedgerFilterOption<LedgerTransactionKind> type:
+                type.IsChecked = !type.IsChecked;
+                break;
+            case LedgerFilterOption<int> integerOption:
+                integerOption.IsChecked = !integerOption.IsChecked;
+                break;
+            case LedgerFilterOption<ExpenseCategory> category:
+                category.IsChecked = !category.IsChecked;
+                break;
+        }
     }
 
     private async void OnGroupingModeSelectionChanged(object sender, SelectionChangedEventArgs e)
