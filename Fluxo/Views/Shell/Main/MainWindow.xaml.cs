@@ -10,9 +10,11 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
@@ -42,7 +44,8 @@ public partial class MainWindow : Window, IPopupHost
     private enum MainDrawerPage
     {
         Analytics,
-        Calendar
+        Calendar,
+        Ledger
     }
 
     private const int FadeDuration = 180; // ms
@@ -87,6 +90,8 @@ public partial class MainWindow : Window, IPopupHost
     private MainDrawerPage? _activeDrawerPage;
     private Calendar? _calendarDrawerView;
     private IServiceScope? _calendarDrawerScope;
+    private Ledger? _ledgerDrawerView;
+    private IServiceScope? _ledgerDrawerScope;
     private int _dashboardSpendingSourcesScrollDirection;
 
     private EventHandler? _renderHandler;
@@ -883,6 +888,9 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderSearchTextChanged(object sender, TextChangedEventArgs e)
     {
+        if (_activeDrawerPage == MainDrawerPage.Ledger)
+            WeakReferenceMessenger.Default.Send(new LedgerSearchTextChangedMessage(HeaderSearchBox.Text));
+
         UpdateHeaderSearchResults();
     }
 
@@ -901,6 +909,9 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         if (IsDescendantOf(newFocus, HeaderSearchRegion))
+            return;
+
+        if (_activeDrawerPage == MainDrawerPage.Ledger)
             return;
 
         CollapseHeaderSearch();
@@ -946,6 +957,7 @@ public partial class MainWindow : Window, IPopupHost
         HeaderSearchResultsPopup.IsOpen = false;
         HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
         HeaderSearchBox.Text = string.Empty;
+        WeakReferenceMessenger.Default.Send(new LedgerSearchTextChangedMessage(string.Empty));
         _headerSearchResults.Clear();
     }
 
@@ -953,6 +965,14 @@ public partial class MainWindow : Window, IPopupHost
     {
         if (!_isHeaderSearchExpanded)
             return;
+
+        if (_activeDrawerPage == MainDrawerPage.Ledger)
+        {
+            HeaderSearchResultsPopup.IsOpen = false;
+            HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
+            _headerSearchResults.Clear();
+            return;
+        }
 
         var query = HeaderSearchBox.Text;
         var matches = HeaderQuickSearchEngine.Search(
@@ -1093,6 +1113,20 @@ public partial class MainWindow : Window, IPopupHost
         await OpenDrawerPageAsync(MainDrawerPage.Calendar);
     }
 
+    private async void OnLedgerDrawerTabClick(object sender, RoutedEventArgs e)
+    {
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
+        if (_isAnalyticsDrawerOpen && _activeDrawerPage == MainDrawerPage.Ledger)
+        {
+            CloseAnalyticsDrawer();
+            return;
+        }
+
+        await OpenDrawerPageAsync(MainDrawerPage.Ledger);
+    }
+
     private void OnCloseAnalyticsDrawerButtonClick(object sender, RoutedEventArgs e)
     {
         CloseAnalyticsDrawer();
@@ -1230,7 +1264,13 @@ public partial class MainWindow : Window, IPopupHost
 
         try
         {
-            SetDrawerTitle(page == MainDrawerPage.Analytics ? "Analytics" : "Calendar");
+            SetDrawerTitle(page switch
+            {
+                MainDrawerPage.Analytics => "Analytics",
+                MainDrawerPage.Calendar => "Calendar",
+                MainDrawerPage.Ledger => "Ledger",
+                _ => "Ledger"
+            });
             SetAnalyticsDateRangeSelectorVisibility(page);
 
             if (page == MainDrawerPage.Analytics)
@@ -1246,7 +1286,7 @@ public partial class MainWindow : Window, IPopupHost
                     () => _analyticsDrawerView.PrepareForOpenAsync(showInternalToast: false),
                     this);
             }
-            else
+            else if (page == MainDrawerPage.Calendar)
             {
                 EnsureCalendarDrawerLoaded();
 
@@ -1258,17 +1298,42 @@ public partial class MainWindow : Window, IPopupHost
                     () => _calendarDrawerView.PrepareForOpenAsync(),
                     this);
             }
+            else
+            {
+                EnsureLedgerDrawerLoaded();
+                if (_ledgerDrawerView is null)
+                    return;
+
+                await _dialogService.ShowToastWhileAsync(
+                    "Loading ledger",
+                    () => _ledgerDrawerView.PrepareForOpenAsync(),
+                    this);
+            }
 
             _activeDrawerPage = page;
+            if (page == MainDrawerPage.Ledger)
+                ExpandHeaderSearch();
             OpenAnalyticsDrawer();
         }
         catch (Exception exception)
         {
-            var label = page == MainDrawerPage.Analytics ? "analytics" : "calendar";
+            var label = page switch
+            {
+                MainDrawerPage.Analytics => "analytics",
+                MainDrawerPage.Calendar => "calendar",
+                MainDrawerPage.Ledger => "ledger",
+                _ => "drawer"
+            };
             FluxoLogManager.LogError(exception, $"Unable to open {label} drawer.");
             _dialogService.ShowError(
                 FluxoLogManager.CreateFailureMessage($"open {label}"),
-                page == MainDrawerPage.Analytics ? "Analytics" : "Calendar",
+                page switch
+                {
+                    MainDrawerPage.Analytics => "Analytics",
+                    MainDrawerPage.Calendar => "Calendar",
+                    MainDrawerPage.Ledger => "Ledger",
+                    _ => "Drawer"
+                },
                 this);
         }
         finally
@@ -1346,6 +1411,19 @@ public partial class MainWindow : Window, IPopupHost
         AnalyticsDrawerContentHost.Content = _calendarDrawerView;
     }
 
+    private void EnsureLedgerDrawerLoaded()
+    {
+        if (_ledgerDrawerView is not null)
+        {
+            AnalyticsDrawerContentHost.Content = _ledgerDrawerView;
+            return;
+        }
+
+        _ledgerDrawerScope = _serviceProvider.CreateScope();
+        _ledgerDrawerView = _ledgerDrawerScope.ServiceProvider.GetRequiredService<Ledger>();
+        AnalyticsDrawerContentHost.Content = _ledgerDrawerView;
+    }
+
     private void SetDrawerTitle(string title)
     {
         AnalyticsDrawerTitle.Text = title;
@@ -1355,8 +1433,9 @@ public partial class MainWindow : Window, IPopupHost
     {
         AnalyticsDateRangeSelectorHost.Visibility = page switch
         {
-            MainDrawerPage.Analytics => Visibility.Visible,
+            MainDrawerPage.Ledger => Visibility.Visible,
             MainDrawerPage.Calendar => Visibility.Collapsed,
+            MainDrawerPage.Analytics => Visibility.Collapsed,
             _ => Visibility.Collapsed
         };
     }
@@ -1365,6 +1444,7 @@ public partial class MainWindow : Window, IPopupHost
     {
         AnalyticsDrawerTabButton.IsEnabled = isEnabled;
         CalendarDrawerTabButton.IsEnabled = isEnabled;
+        LedgerDrawerTabButton.IsEnabled = isEnabled;
     }
 
     private void ApplyMainWindowRangeToAnalyticsIfBounded()
@@ -1558,6 +1638,9 @@ public partial class MainWindow : Window, IPopupHost
         _calendarDrawerView = null;
         _calendarDrawerScope?.Dispose();
         _calendarDrawerScope = null;
+        _ledgerDrawerView = null;
+        _ledgerDrawerScope?.Dispose();
+        _ledgerDrawerScope = null;
         _activeDrawerPage = null;
         _isAnalyticsDrawerOpen = false;
         _isAnalyticsDrawerTransitionActive = false;

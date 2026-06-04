@@ -962,7 +962,7 @@
 
             <Border
                 x:Name="DrawerTabHost"
-                Width="260"
+                Width="390"
                 Height="28"
                 Margin="0"
                 HorizontalAlignment="Center"
@@ -987,10 +987,17 @@
                                 <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
                                 <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding IsMouseOver, ElementName=LedgerDrawerTabButton}" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=AnalyticsDrawerTabButton}" Value="True">
                                 <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=CalendarDrawerTabButton}" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=LedgerDrawerTabButton}" Value="True">
                                 <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -1025,6 +1032,21 @@
                                 FontSize="12"
                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                 Text="Calendar" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        x:Name="LedgerDrawerTabButton"
+                        Width="128"
+                        AutomationProperties.Name="Open Ledger Drawer"
+                        Click="OnLedgerDrawerTabClick"
+                        Style="{StaticResource AnalyticsDrawerTabButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                Text="Ledger" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

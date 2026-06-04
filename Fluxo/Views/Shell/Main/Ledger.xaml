@@ -1,0 +1,347 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Main.Ledger"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:controls="clr-namespace:Fluxo.Views.Shell.Main.Controls"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:main="clr-namespace:Fluxo.ViewModels.Shell.Main"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=main:LedgerVM}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="LedgerSummaryCardStyle" TargetType="Border">
+            <Setter Property="MinHeight" Value="84" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="LedgerFilterComboStyle" TargetType="ComboBox">
+            <Setter Property="MinWidth" Value="170" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+
+        <DataTemplate x:Key="LedgerFilterOptionTemplate">
+            <CheckBox
+                MinWidth="140"
+                Content="{Binding Label}"
+                IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </DataTemplate>
+
+        <Style x:Key="LedgerEditableTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CaretBrush" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                    <Setter Property="IsReadOnly" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LedgerEditableMoneyTextBoxStyle" TargetType="customControls:MoneyTextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CaretBrush" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="HorizontalContentAlignment" Value="Right" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                    <Setter Property="IsReadOnly" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="LedgerRowTemplate">
+            <Border
+                x:Name="RowRoot"
+                MinHeight="48"
+                Padding="12,8"
+                Background="Transparent"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="8" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox
+                                MinWidth="120"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="13"
+                                Style="{StaticResource LedgerEditableTextBoxStyle}"
+                                Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Border
+                                Margin="8,0,0,0"
+                                Padding="5,1"
+                                Background="{StaticResource Brush.Background.Hover}"
+                                CornerRadius="4">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="9"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="GOAL" />
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsGoal}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                            <Border
+                                Margin="6,0,0,0"
+                                Padding="5,1"
+                                Background="#FFEBD2"
+                                CornerRadius="4">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="9"
+                                    Foreground="#7A4A00"
+                                    Text="RECURRING" />
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRecurring}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock
+                            Margin="2,2,0,0"
+                            FontFamily="{StaticResource Regular}"
+                            FontSize="10"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding OccurredOn, StringFormat={}{0:HH:mm}}" />
+                    </StackPanel>
+
+                    <Border
+                        Grid.Column="1"
+                        MaxWidth="160"
+                        Padding="8,2"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Background="{Binding TagHexCode}"
+                        CornerRadius="8">
+                        <TextBlock
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding TagName}" />
+                    </Border>
+
+                    <Border
+                        Grid.Column="2"
+                        MaxWidth="180"
+                        Padding="8,3"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Background="{StaticResource Brush.Background.Hover}"
+                        CornerRadius="8">
+                        <TextBlock
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Mint}"
+                            Text="{Binding SpendingSourceName}" />
+                    </Border>
+
+                    <customControls:MoneyTextBox
+                        Grid.Column="3"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="12"
+                        Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
+                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Border
+                        Grid.Column="4"
+                        Width="4"
+                        HorizontalAlignment="Right"
+                        CornerRadius="4">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CategoryLabel}" Value="Wants">
+                                        <Setter Property="Background" Value="#E59F3A" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding CategoryLabel}" Value="Invest">
+                                        <Setter Property="Background" Value="#7DD3FC" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+
+                    <Border
+                        x:Name="RowActions"
+                        Grid.Column="3"
+                        Grid.ColumnSpan="2"
+                        HorizontalAlignment="Right"
+                        Background="{StaticResource Brush.Background.Elevated}"
+                        Opacity="0"
+                        Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <customControls:BalloonButton
+                                Width="30"
+                                Height="30"
+                                ButtonIcon="{StaticResource Pen}"
+                                Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                IconSize="12"
+                                Style="{StaticResource HeaderButtonStyle}" />
+                            <customControls:BalloonButton
+                                Width="30"
+                                Height="30"
+                                ButtonIcon="{StaticResource CircleMinusSolid}"
+                                Click="OnRemoveTransactionClick"
+                                CommandParameter="{Binding}"
+                                HoveredBackground="{StaticResource Brush.Danger}"
+                                IconSize="12"
+                                Style="{StaticResource HeaderButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+            </Border>
+            <DataTemplate.Triggers>
+                <Trigger SourceName="RowRoot" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="RowActions" Property="Opacity" Value="1" />
+                </Trigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <GroupStyle x:Key="LedgerGroupStyle">
+            <GroupStyle.HeaderTemplate>
+                <DataTemplate>
+                    <Expander
+                        Margin="0,10,0,0"
+                        IsExpanded="True">
+                        <Expander.Header>
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="11"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="{Binding Name}" />
+                        </Expander.Header>
+                        <ItemsPresenter />
+                    </Expander>
+                </DataTemplate>
+            </GroupStyle.HeaderTemplate>
+        </GroupStyle>
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <controls:MainViewModeToggleControl
+            HorizontalAlignment="Center"
+            DataContext="{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}" />
+
+        <UniformGrid Grid.Row="1" Margin="0,18,0,0" Columns="4">
+            <Border Margin="0,0,8,0" Style="{StaticResource LedgerSummaryCardStyle}">
+                <StackPanel>
+                    <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Spent" />
+                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Danger}" Text="{Binding SpentAmount, StringFormat={}{0:$#,##0.00}}" />
+                </StackPanel>
+            </Border>
+            <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
+                <StackPanel>
+                    <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Earned" />
+                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Success}" Text="{Binding EarnedAmount, StringFormat={}{0:$#,##0.00}}" />
+                </StackPanel>
+            </Border>
+            <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
+                <StackPanel>
+                    <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Goals" />
+                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Mint}" Text="{Binding GoalAmount, StringFormat={}{0:$#,##0.00}}" />
+                </StackPanel>
+            </Border>
+            <Border Margin="8,0,0,0" Style="{StaticResource LedgerSummaryCardStyle}">
+                <StackPanel>
+                    <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Net" />
+                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding NetAmount, StringFormat={}{0:$#,##0.00}}" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <WrapPanel Grid.Row="2" Margin="0,16,0,10">
+            <ComboBox ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding TypeFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox Margin="10,0,0,0" ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding SpendingSourceFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox Margin="10,0,0,0" ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding CategoryFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox Margin="10,0,0,0" ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding TagFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox
+                MinWidth="170"
+                Margin="10,0,0,0"
+                ItemsSource="{Binding GroupingModes}"
+                SelectedItem="{Binding SelectedGroupingMode, Mode=TwoWay}" />
+            <customControls:BalloonButton
+                Width="34"
+                Height="34"
+                Margin="10,0,0,0"
+                ButtonIcon="{StaticResource ArrowDownWideNarrow}"
+                Command="{Binding ToggleAmountSortDirectionCommand}"
+                IconSize="14">
+                <customControls:BalloonButton.Style>
+                    <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
+                        <Setter Property="ButtonIcon" Value="{StaticResource ArrowDownWideNarrow}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding AmountSortDirection}" Value="Ascending">
+                                <Setter Property="ButtonIcon" Value="{StaticResource ArrowDownNarrowWide}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </customControls:BalloonButton.Style>
+            </customControls:BalloonButton>
+        </WrapPanel>
+
+        <customControls:FadingScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <ListView
+                Background="Transparent"
+                BorderThickness="0"
+                ItemTemplate="{StaticResource LedgerRowTemplate}"
+                ItemsSource="{Binding TransactionsView}">
+                <ListView.GroupStyle>
+                    <StaticResource ResourceKey="LedgerGroupStyle" />
+                </ListView.GroupStyle>
+            </ListView>
+        </customControls:FadingScrollViewer>
+    </Grid>
+</UserControl>

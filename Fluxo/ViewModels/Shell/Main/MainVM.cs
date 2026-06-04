@@ -27,7 +27,8 @@ public partial class MainVM : ObservableRecipient
         Main.SpentAllowancePanelVM spentAllowancePanel,
         Main.SavingGoalsPanelVM savingGoalsPanel,
         Main.DaySpinnerVM daySpinner,
-        Main.MainViewModeToggleVM viewModeToggle)
+        Main.MainViewModeToggleVM viewModeToggle,
+        Main.LedgerVM? ledger = null)
     {
         _dataOperationRunner = dataOperationRunner;
         NotificationPanel = notificationPanel;
@@ -36,6 +37,7 @@ public partial class MainVM : ObservableRecipient
         SavingGoalsPanel = savingGoalsPanel;
         DaySpinner = daySpinner;
         ViewModeToggle = viewModeToggle;
+        Ledger = ledger;
 
         WeakReferenceMessenger.Default.Register<MainVM, UsernameChangedMessage>(this,
             static (recipient, message) => recipient.Username = message.Value);
@@ -49,6 +51,7 @@ public partial class MainVM : ObservableRecipient
     public Main.SavingGoalsPanelVM SavingGoalsPanel { get; }
     public Main.DaySpinnerVM DaySpinner { get; }
     public Main.MainViewModeToggleVM ViewModeToggle { get; }
+    public Main.LedgerVM? Ledger { get; }
 
     public ObservableCollection<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
 
@@ -82,6 +85,12 @@ public partial class MainVM : ObservableRecipient
         await SavingGoalsPanel.LoadAsync();
         await betweenStagesAsync();
 
+        if (Ledger is not null)
+        {
+            await Ledger.LoadAsync();
+            await betweenStagesAsync();
+        }
+
         ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
             ViewModeToggle.SelectedMainContentViewMode);
         _isInitialized = true;
@@ -96,6 +105,9 @@ public partial class MainVM : ObservableRecipient
             SpentAllowancePanel.LoadAsync(),
             NotificationPanel.LoadAsync(),
             SavingGoalsPanel.LoadAsync());
+
+        if (Ledger is not null)
+            await Ledger.LoadAsync();
     }
 
     public static bool ShouldLockDashboardForSpendingAmount(

@@ -28,6 +28,7 @@ using AnalyticsVM = Fluxo.ViewModels.Shell.Main.AnalyticsVM;
 using BudgetAllocationPanelVM = Fluxo.ViewModels.Shell.Main.BudgetAllocationPanelVM;
 using CalendarVM = Fluxo.ViewModels.Shell.Main.CalendarVM;
 using DaySpinnerVM = Fluxo.ViewModels.Shell.Main.DaySpinnerVM;
+using LedgerVM = Fluxo.ViewModels.Shell.Main.LedgerVM;
 using MainViewModeToggleVM = Fluxo.ViewModels.Shell.Main.MainViewModeToggleVM;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 using NotificationPanelVM = Fluxo.ViewModels.Shell.Main.NotificationPanelVM;
@@ -80,6 +81,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SpentAllowancePanelVM>();
         services.AddSingleton<NotificationPanelVM>();
         services.AddSingleton<SavingGoalsPanelVM>();
+        services.AddSingleton<LedgerVM>();
         services.AddSingleton<DayOfWeekVM>();
         services.AddTransient<ExpenseVM>();
         services.AddTransient<ExpenseLogVM>();
@@ -131,6 +133,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PlanningReportPopup>();
         services.AddTransient<Analytics>();
         services.AddTransient<Calendar>();
+        services.AddTransient<Ledger>();
         services.AddTransient<INotificationGroupingService, NotificationGroupingService>();
         services.AddTransient<INotificationActionService, NotificationActionService>();
         services.AddTransient<IStartupNotificationSummaryService, StartupNotificationSummaryService>();
