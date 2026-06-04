@@ -21,11 +21,12 @@
             <Setter Property="CornerRadius" Value="8" />
         </Style>
 
-        <Style x:Key="LedgerFilterComboStyle" TargetType="ComboBox">
+        <Style
+            x:Key="LedgerFilterComboStyle"
+            BasedOn="{StaticResource FluxoComboBoxStyle}"
+            TargetType="ComboBox">
             <Setter Property="MinWidth" Value="170" />
             <Setter Property="Height" Value="34" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
         </Style>
 
         <DataTemplate x:Key="LedgerFilterOptionTemplate">
@@ -267,9 +268,7 @@
         <GroupStyle x:Key="LedgerGroupStyle">
             <GroupStyle.HeaderTemplate>
                 <DataTemplate>
-                    <Expander
-                        Margin="0,10,0,0"
-                        IsExpanded="True">
+                    <Expander Margin="0,10,0,0" IsExpanded="True">
                         <Expander.Header>
                             <TextBlock
                                 FontFamily="{StaticResource Bold}"
@@ -284,7 +283,7 @@
         </GroupStyle>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="24,0,24,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -292,48 +291,95 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <controls:MainViewModeToggleControl
-            HorizontalAlignment="Center"
-            DataContext="{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <controls:MainViewModeToggleControl HorizontalAlignment="Center" DataContext="{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}" />
 
-        <UniformGrid Grid.Row="1" Margin="0,18,0,0" Columns="4">
+        <UniformGrid
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            Columns="4">
             <Border Margin="0,0,8,0" Style="{StaticResource LedgerSummaryCardStyle}">
                 <StackPanel>
                     <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Spent" />
-                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Danger}" Text="{Binding SpentAmount, StringFormat={}{0:$#,##0.00}}" />
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="22"
+                        Foreground="{StaticResource Brush.Danger}"
+                        Text="{Binding SpentAmount, StringFormat={}{0:$#,##0.00}}" />
                 </StackPanel>
             </Border>
             <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
                 <StackPanel>
                     <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Earned" />
-                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Success}" Text="{Binding EarnedAmount, StringFormat={}{0:$#,##0.00}}" />
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="22"
+                        Foreground="{StaticResource Brush.Success}"
+                        Text="{Binding EarnedAmount, StringFormat={}{0:$#,##0.00}}" />
                 </StackPanel>
             </Border>
             <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
                 <StackPanel>
                     <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Goals" />
-                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Mint}" Text="{Binding GoalAmount, StringFormat={}{0:$#,##0.00}}" />
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="22"
+                        Foreground="{StaticResource Brush.Mint}"
+                        Text="{Binding GoalAmount, StringFormat={}{0:$#,##0.00}}" />
                 </StackPanel>
             </Border>
             <Border Margin="8,0,0,0" Style="{StaticResource LedgerSummaryCardStyle}">
                 <StackPanel>
                     <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Net" />
-                    <TextBlock FontFamily="{StaticResource Bold}" FontSize="22" Foreground="{StaticResource Brush.Text.Primary}" Text="{Binding NetAmount, StringFormat={}{0:$#,##0.00}}" />
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="22"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="{Binding NetAmount, StringFormat={}{0:$#,##0.00}}" />
                 </StackPanel>
             </Border>
         </UniformGrid>
 
-        <WrapPanel Grid.Row="2" Margin="0,16,0,10">
-            <ComboBox ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding TypeFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
-            <ComboBox Margin="10,0,0,0" ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding SpendingSourceFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
-            <ComboBox Margin="10,0,0,0" ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding CategoryFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
-            <ComboBox Margin="10,0,0,0" ItemTemplate="{StaticResource LedgerFilterOptionTemplate}" ItemsSource="{Binding TagFilters}" Style="{StaticResource LedgerFilterComboStyle}" />
+        <Grid Grid.Row="2" Margin="0,16,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <ComboBox
+                Grid.Column="0"
+                ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
+                ItemsSource="{Binding TypeFilters}"
+                Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox
+                Grid.Column="1"
+                Margin="10,0,0,0"
+                ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
+                ItemsSource="{Binding SpendingSourceFilters}"
+                Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox
+                Grid.Column="2"
+                Margin="10,0,0,0"
+                ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
+                ItemsSource="{Binding CategoryFilters}"
+                Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox
+                Grid.Column="3"
+                Margin="10,0,0,0"
+                ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
+                ItemsSource="{Binding TagFilters}"
+                Style="{StaticResource LedgerFilterComboStyle}" />
+            <ComboBox
+                Grid.Column="4"
                 MinWidth="170"
                 Margin="10,0,0,0"
                 ItemsSource="{Binding GroupingModes}"
-                SelectedItem="{Binding SelectedGroupingMode, Mode=TwoWay}" />
+                SelectedItem="{Binding SelectedGroupingMode, Mode=TwoWay}"
+                Style="{StaticResource LedgerFilterComboStyle}" />
             <customControls:BalloonButton
+                Grid.Column="5"
                 Width="34"
                 Height="34"
                 Margin="10,0,0,0"
@@ -351,7 +397,7 @@
                     </Style>
                 </customControls:BalloonButton.Style>
             </customControls:BalloonButton>
-        </WrapPanel>
+        </Grid>
 
         <customControls:FadingScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
             <ListView
