@@ -11,6 +11,7 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
+using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Shell.Main;
@@ -111,6 +112,39 @@ public partial class LedgerVM : ObservableRecipient,
         AmountSortDirection = AmountSortDirection == LedgerAmountSortDirection.Descending
             ? LedgerAmountSortDirection.Ascending
             : LedgerAmountSortDirection.Descending;
+    }
+
+    [RelayCommand]
+    private async Task EditTransactionAsync(LedgerTransactionItemVM? transaction)
+    {
+        if (transaction is null || transaction.IsGoal)
+            return;
+
+        if (!transaction.IsEditing)
+        {
+            transaction.IsEditing = true;
+            return;
+        }
+
+        await CommitTransactionEditAsync(transaction);
+        transaction.IsEditing = false;
+    }
+
+    [RelayCommand]
+    private async Task RemoveTransactionAsync(LedgerTransactionItemVM? transaction)
+    {
+        if (transaction is null || transaction.IsGoal)
+            return;
+
+        switch (transaction.Kind)
+        {
+            case LedgerTransactionKind.Expense:
+                await RemoveExpenseTransactionAsync(transaction);
+                break;
+            case LedgerTransactionKind.Income:
+                await RemoveIncomeTransactionAsync(transaction);
+                break;
+        }
     }
 
     partial void OnSearchTextChanged(string value)
@@ -419,5 +453,173 @@ public partial class LedgerVM : ObservableRecipient,
             .Where(transaction => transaction.IsGoal)
             .Sum(transaction => transaction.Amount);
         NetAmount = EarnedAmount - SpentAmount - GoalAmount;
+    }
+
+    private Task CommitTransactionEditAsync(LedgerTransactionItemVM transaction)
+    {
+        return transaction.Kind switch
+        {
+            LedgerTransactionKind.Expense => CommitExpenseEditAsync(transaction),
+            LedgerTransactionKind.Income => CommitIncomeEditAsync(transaction),
+            _ => Task.CompletedTask
+        };
+    }
+
+    private async Task CommitExpenseEditAsync(LedgerTransactionItemVM transaction)
+    {
+        var (before, after) = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
+            if (expenseLog?.Expense is null)
+                return ((ExpenseLogMemorySnapshot?)null, (ExpenseLogMemorySnapshot?)null);
+
+            var beforeSnapshot = ExpenseLogMemorySnapshot.Create(expenseLog);
+            var targetSpendingSource =
+                await scope.UnitOfWork.SpendingSources.GetByIdAsync(transaction.SpendingSourceId, ct) ??
+                expenseLog.SpendingSource;
+            var targetTag =
+                await scope.UnitOfWork.ExpenseTags.GetByIdAsync(transaction.TagId, ct) ??
+                expenseLog.Expense.ExpenseTag;
+
+            expenseLog.Expense.Name = transaction.Name.Trim();
+            expenseLog.Expense.Amount = transaction.Amount;
+            expenseLog.Expense.SpendingSource = targetSpendingSource;
+            expenseLog.Expense.SpendingSourceId = targetSpendingSource.Id;
+            expenseLog.Expense.ExpenseTag = targetTag;
+            expenseLog.Expense.ExpenseTagId = targetTag.Id;
+
+            expenseLog.Amount = transaction.Amount;
+            expenseLog.SpendingSource = targetSpendingSource;
+            expenseLog.SpendingSourceId = targetSpendingSource.Id;
+
+            scope.UnitOfWork.Expenses.Update(expenseLog.Expense);
+            scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
+            await scope.UnitOfWork.SaveChangesAsync(ct);
+
+            return (beforeSnapshot, ExpenseLogMemorySnapshot.Create(expenseLog));
+        });
+
+        if (before is null || after is null)
+            return;
+
+        ApplyExpenseSnapshotToTransaction(transaction, after);
+        RefreshTransactionLookups(transaction);
+        Messenger.Send(new RecordLogMemoryMessage(new EditExpenseLogMemoryAction(before, after)));
+        RefreshSummaries();
+        TransactionsView.Refresh();
+    }
+
+    private async Task CommitIncomeEditAsync(LedgerTransactionItemVM transaction)
+    {
+        var (before, after) = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
+            if (incomeLog is null)
+                return ((IncomeLogMemorySnapshot?)null, (IncomeLogMemorySnapshot?)null);
+
+            var beforeSnapshot = IncomeLogMemorySnapshot.Create(incomeLog);
+            var targetSpendingSource =
+                await scope.UnitOfWork.SpendingSources.GetByIdAsync(transaction.SpendingSourceId, ct) ??
+                incomeLog.SpendingSource;
+
+            incomeLog.Name = transaction.Name.Trim();
+            incomeLog.Amount = transaction.Amount;
+            incomeLog.SpendingSource = targetSpendingSource;
+            incomeLog.SpendingSourceId = targetSpendingSource.Id;
+
+            scope.UnitOfWork.IncomeLogs.Update(incomeLog);
+            await scope.UnitOfWork.SaveChangesAsync(ct);
+
+            return (beforeSnapshot, IncomeLogMemorySnapshot.Create(incomeLog));
+        });
+
+        if (before is null || after is null)
+            return;
+
+        ApplyIncomeSnapshotToTransaction(transaction, after);
+        RefreshTransactionLookups(transaction);
+        Messenger.Send(new RecordLogMemoryMessage(new EditIncomeLogMemoryAction(before, after)));
+        RefreshSummaries();
+        TransactionsView.Refresh();
+    }
+
+    private async Task RemoveExpenseTransactionAsync(LedgerTransactionItemVM transaction)
+    {
+        var snapshot = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
+            if (expenseLog is null)
+                return null;
+
+            var result = ExpenseLogMemorySnapshot.Create(expenseLog);
+            expenseLog.IsForDeletion = true;
+            scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
+            await scope.UnitOfWork.SaveChangesAsync(ct);
+            return result;
+        });
+
+        if (snapshot is null)
+            return;
+
+        _transactions.Remove(transaction);
+        Messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(snapshot)));
+        RefreshSummaries();
+        TransactionsView.Refresh();
+    }
+
+    private async Task RemoveIncomeTransactionAsync(LedgerTransactionItemVM transaction)
+    {
+        var snapshot = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
+            if (incomeLog is null)
+                return null;
+
+            var result = IncomeLogMemorySnapshot.Create(incomeLog);
+            scope.UnitOfWork.IncomeLogs.Remove(incomeLog);
+            await scope.UnitOfWork.SaveChangesAsync(ct);
+            return result;
+        });
+
+        if (snapshot is null)
+            return;
+
+        _transactions.Remove(transaction);
+        Messenger.Send(new RecordLogMemoryMessage(new DeleteIncomeLogMemoryAction(snapshot)));
+        RefreshSummaries();
+        TransactionsView.Refresh();
+    }
+
+    private static void ApplyExpenseSnapshotToTransaction(
+        LedgerTransactionItemVM transaction,
+        ExpenseLogMemorySnapshot snapshot)
+    {
+        transaction.Name = snapshot.ExpenseName;
+        transaction.Amount = snapshot.Amount;
+        transaction.SpendingSourceId = snapshot.SpendingSourceId;
+        transaction.TagId = snapshot.TagId;
+    }
+
+    private static void ApplyIncomeSnapshotToTransaction(
+        LedgerTransactionItemVM transaction,
+        IncomeLogMemorySnapshot snapshot)
+    {
+        transaction.Name = snapshot.Name;
+        transaction.Amount = snapshot.Amount;
+        transaction.SpendingSourceId = snapshot.SpendingSourceId;
+    }
+
+    private void RefreshTransactionLookups(LedgerTransactionItemVM transaction)
+    {
+        transaction.SpendingSourceName = SpendingSourceFilters
+            .FirstOrDefault(option => !option.IsAll && option.Value == transaction.SpendingSourceId)
+            ?.Label ?? transaction.SpendingSourceName;
+
+        if (transaction.Kind != LedgerTransactionKind.Expense)
+            return;
+
+        var tag = TagFilters.FirstOrDefault(option => !option.IsAll && option.Value == transaction.TagId);
+        if (tag is not null)
+            transaction.TagName = tag.Label;
     }
 }

@@ -9,6 +9,7 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     [ObservableProperty] private decimal _amount;
     [ObservableProperty] private int _spendingSourceId;
     [ObservableProperty] private int _tagId;
+    [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private string _spendingSourceName = string.Empty;
     [ObservableProperty] private string _tagHexCode = string.Empty;
