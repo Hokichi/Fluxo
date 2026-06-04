@@ -368,6 +368,7 @@ MigrationBackup/
 .claude/
 .codex/
 .idea/
+.superpowers/*
 docs/superpowers/
 
 # Fody - auto-generated XML schema
