@@ -16,27 +16,14 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
-    public void EscapeShortcut_ClosesAnalyticsDrawerWhenOpen()
+    public void AnalyticsShortcut_NavigatesToAnalyticsMainPage()
     {
         var source = ReadMainWindowSource();
 
-        Assert.Contains("if (_isAnalyticsDrawerOpen && MainWindowShortcutMatcher.IsCloseAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
-        Assert.Contains("CloseAnalyticsDrawer();", source);
-        Assert.Contains("e.Handled = true;", source);
-    }
-
-    [Fact]
-    public void AnalyticsDrawer_TakesKeyboardFocusAfterOpening()
-    {
-        var source = ReadMainWindowSource();
-        var xaml = ReadMainWindowXaml();
-
-        Assert.Contains("x:Name=\"AnalyticsDrawerPanel\"", xaml);
-        Assert.Contains("Focusable=\"True\"", xaml);
-        Assert.Contains("private void FocusAnalyticsDrawerForShortcuts()", source);
-        Assert.Contains("AnalyticsDrawerPanel.Focus();", source);
-        Assert.Contains("Keyboard.Focus(AnalyticsDrawerPanel);", source);
-        Assert.Contains("FocusAnalyticsDrawerForShortcuts();", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("_ = OpenAnalyticsPopupAsync();", source);
+        Assert.Contains("private async Task OpenAnalyticsPopupAsync()", source);
+        Assert.Contains("await NavigateToHostedPageAsync(HostedMainPage.Analytics);", source);
     }
 
     [Fact]
@@ -122,8 +109,9 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("private void OnHeaderQuickAddButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)", source);
-        Assert.Contains("private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)", source);
-        Assert.Contains("private async void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)", source);
+        Assert.Contains("private async void OnAnalyticsNavigationClick(object sender, RoutedEventArgs e)", source);
+        Assert.Contains("private async Task NavigateToHostedPageAsync(HostedMainPage page)", source);
+        Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
         Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
     }
 

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -41,7 +41,7 @@ public partial class MainWindow : Window, IPopupHost
         typeof(MainWindow),
         new PropertyMetadata(false));
 
-    private enum MainDrawerPage
+    private enum HostedMainPage
     {
         Analytics,
         Calendar,
@@ -50,15 +50,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 100; // ms
-    private const int AnalyticsDrawerTransitionDuration = 220; // ms
-    private const int AnalyticsDrawerTabFadeDuration = 180; // ms
-    private const double DashboardSpendingSourcesScrollPixels = 10;
-    private const int DashboardSpendingSourcesScrollIntervalMilliseconds = 10;
-
-    private readonly DispatcherTimer _dashboardSpendingSourcesScrollTimer = new()
-    {
-        Interval = TimeSpan.FromMilliseconds(DashboardSpendingSourcesScrollIntervalMilliseconds)
-    };
+    private const int MainPageTransitionDuration = 180; // ms
 
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new() { Interval = TimeSpan.FromMilliseconds(FadeDuration) };
@@ -78,21 +70,19 @@ public partial class MainWindow : Window, IPopupHost
     private bool _wasMinimized;
     private bool _isPointerOverHeaderMenuButton;
     private bool _isPointerOverHeaderMenuPopup;
-    private bool _isAnalyticsDrawerOpen;
-    private bool _isAnalyticsDrawerTransitionActive;
-    private bool _isPreparingAnalyticsOpen;
+    private bool _isMainPageTransitionActive;
+    private bool _isPreparingMainPage;
     private bool _isHeaderSearchExpanded;
-    private int _analyticsDrawerTabVisibilityToken;
     private EventHandler? _popupOverlayDeferredHideTickHandler;
-    private bool _isAnalyticsDrawerTabVisibilityTransitionActive;
-    private IServiceScope? _analyticsDrawerScope;
-    private Analytics? _analyticsDrawerView;
-    private MainDrawerPage? _activeDrawerPage;
-    private Calendar? _calendarDrawerView;
-    private IServiceScope? _calendarDrawerScope;
-    private Ledger? _ledgerDrawerView;
-    private IServiceScope? _ledgerDrawerScope;
-    private int _dashboardSpendingSourcesScrollDirection;
+    private HostedMainPage? _activeHostedPage;
+    private IServiceScope? _dashboardPageScope;
+    private Dashboard? _dashboardPageView;
+    private IServiceScope? _analyticsPageScope;
+    private Analytics? _analyticsPageView;
+    private IServiceScope? _calendarPageScope;
+    private Calendar? _calendarPageView;
+    private IServiceScope? _ledgerPageScope;
+    private Ledger? _ledgerPageView;
 
     private EventHandler? _renderHandler;
 
@@ -129,11 +119,11 @@ public partial class MainWindow : Window, IPopupHost
                 await InitializeDashboardPanelsAsync();
             }
 
+            EnsureDashboardPageLoaded();
+            DashboardPageHost.Content = _dashboardPageView;
+            UpdateMainNavigationCheckedState(null);
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
-            _ = Dispatcher.BeginInvoke(
-                UpdateDashboardSpendingSourcesScrollButtonVisibility,
-                DispatcherPriority.ApplicationIdle);
             FadeIn();
         };
 
@@ -142,7 +132,6 @@ public partial class MainWindow : Window, IPopupHost
         StateChanged += OnWindowStateChanged;
         PreviewKeyDown += OnPreviewKeyDown;
         PreviewMouseLeftButtonDown += OnWindowPreviewMouseLeftButtonDown;
-        _dashboardSpendingSourcesScrollTimer.Tick += OnDashboardSpendingSourcesScrollTimerTick;
         _headerMenuCloseTimer.Tick += OnHeaderMenuCloseTimerTick;
     }
 
@@ -172,7 +161,7 @@ public partial class MainWindow : Window, IPopupHost
         }
     }
 
-    // ── Fade helpers ────────────────────────────────────────────────
+    // â”€â”€ Fade helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void FadeIn(Action? onCompleted = null)
     {
@@ -218,10 +207,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private UIElement[] GetStateChangeFadeElements()
     {
-        // Avoid interrupting the tab host's own opacity animation because its completion callback re-enables the tab button.
-        return _isAnalyticsDrawerTabVisibilityTransitionActive
-            ? new UIElement[] { ContentGrid, AnalyticsDrawerLayer }
-            : new UIElement[] { ContentGrid, AnalyticsDrawerLayer, DrawerTabHost };
+        return [ContentGrid, MainPageHost, FloatingSideNavigationRail];
     }
 
     private static void FadeElements(UIElement[] elements, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
@@ -257,7 +243,7 @@ public partial class MainWindow : Window, IPopupHost
         element.BeginAnimation(OpacityProperty, animation);
     }
 
-    // ── SystemCommand handlers ───────────────────────────────────────
+    // â”€â”€ SystemCommand handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void OnCloseWindow(object sender, ExecutedRoutedEventArgs e)
     {
@@ -292,7 +278,7 @@ public partial class MainWindow : Window, IPopupHost
         finally
         {
             CancelPendingPopupOverlayDeferredHide();
-            DisposeAnalyticsDrawer();
+            DisposeMainPages();
             Application.Current.Shutdown(0);
         }
     }
@@ -552,7 +538,7 @@ public partial class MainWindow : Window, IPopupHost
         BeginAnimation(HeightProperty, null);
     }
 
-    // ── Monitor work area ───────────────────────────────────────────
+    // â”€â”€ Monitor work area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private Rect GetMonitorWorkArea()
     {
@@ -578,7 +564,7 @@ public partial class MainWindow : Window, IPopupHost
     [DllImport("user32.dll")]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
-    // ── Shared UI helpers ───────────────────────────────────────────
+    // â”€â”€ Shared UI helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private async Task InitializeDashboardPanelsAsync()
     {
@@ -594,106 +580,6 @@ public partial class MainWindow : Window, IPopupHost
                 "Dashboard",
                 this);
         }
-    }
-
-    private void OnDashboardSpendingSourcesScrollChanged(object sender, ScrollChangedEventArgs e)
-    {
-        UpdateDashboardSpendingSourcesScrollButtonVisibility();
-    }
-
-    private void OnDashboardSpendingSourcesScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        _ = Dispatcher.BeginInvoke(
-            UpdateDashboardSpendingSourcesScrollButtonVisibility,
-            DispatcherPriority.ApplicationIdle);
-    }
-
-    private void OnDashboardSpendingSourcesScrollLeftButtonPressed(object sender, MouseButtonEventArgs e)
-    {
-        StartDashboardSpendingSourcesScroll(sender, e, -1);
-    }
-
-    private void OnDashboardSpendingSourcesScrollRightButtonPressed(object sender, MouseButtonEventArgs e)
-    {
-        StartDashboardSpendingSourcesScroll(sender, e, 1);
-    }
-
-    private void OnDashboardSpendingSourcesScrollButtonReleased(object sender, MouseButtonEventArgs e)
-    {
-        StopDashboardSpendingSourcesScroll(sender);
-        e.Handled = true;
-    }
-
-    private void OnDashboardSpendingSourcesScrollButtonLostMouseCapture(object sender, MouseEventArgs e)
-    {
-        StopDashboardSpendingSourcesScroll(sender);
-    }
-
-    private void OnDashboardSpendingSourcesScrollTimerTick(object? sender, EventArgs e)
-    {
-        if (_dashboardSpendingSourcesScrollDirection == 0)
-            return;
-
-        ScrollDashboardSpendingSources(_dashboardSpendingSourcesScrollDirection);
-    }
-
-    private void StartDashboardSpendingSourcesScroll(object sender, MouseButtonEventArgs e, int direction)
-    {
-        if (DashboardSpendingSourcesScrollViewer.ScrollableWidth <= 0)
-            return;
-
-        _dashboardSpendingSourcesScrollDirection = direction;
-
-        if (sender is UIElement scrollButton)
-            scrollButton.CaptureMouse();
-
-        _dashboardSpendingSourcesScrollTimer.Stop();
-        _dashboardSpendingSourcesScrollTimer.Start();
-        e.Handled = true;
-    }
-
-    private void StopDashboardSpendingSourcesScroll(object sender)
-    {
-        _dashboardSpendingSourcesScrollTimer.Stop();
-        _dashboardSpendingSourcesScrollDirection = 0;
-
-        if (sender is UIElement { IsMouseCaptured: true } scrollButton)
-            scrollButton.ReleaseMouseCapture();
-    }
-
-    private void ScrollDashboardSpendingSources(int direction)
-    {
-        if (DashboardSpendingSourcesScrollViewer.ScrollableWidth <= 0)
-            return;
-
-        var targetOffset = Math.Clamp(
-            DashboardSpendingSourcesScrollViewer.HorizontalOffset + direction * DashboardSpendingSourcesScrollPixels,
-            0,
-            DashboardSpendingSourcesScrollViewer.ScrollableWidth);
-
-        DashboardSpendingSourcesScrollViewer.ScrollToHorizontalOffset(targetOffset);
-        UpdateDashboardSpendingSourcesScrollButtonVisibility();
-    }
-
-    private void UpdateDashboardSpendingSourcesScrollButtonVisibility()
-    {
-        if (DashboardSpendingSourcesScrollLeftButton is null ||
-            DashboardSpendingSourcesScrollRightButton is null ||
-            DashboardSpendingSourcesScrollViewer is null)
-            return;
-
-        var canScroll = DashboardSpendingSourcesScrollViewer.ScrollableWidth > 0;
-        var canScrollLeft = canScroll &&
-                            DashboardSpendingSourcesScrollViewer.HorizontalOffset > 0;
-        var canScrollRight = canScroll &&
-                             DashboardSpendingSourcesScrollViewer.HorizontalOffset < DashboardSpendingSourcesScrollViewer.ScrollableWidth;
-
-        DashboardSpendingSourcesScrollLeftButton.Visibility = canScrollLeft
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        DashboardSpendingSourcesScrollRightButton.Visibility = canScrollRight
-            ? Visibility.Visible
-            : Visibility.Collapsed;
     }
 
     private void OnTopBorderHitAreaMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -739,20 +625,13 @@ public partial class MainWindow : Window, IPopupHost
         return false;
     }
 
-    // ── Keyboard shortcuts ────────────────────────────────────────────
+    // â”€â”€ Keyboard shortcuts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (_isHeaderSearchExpanded && e.Key == Key.Escape)
         {
             CollapseHeaderSearch();
-            e.Handled = true;
-            return;
-        }
-
-        if (_isAnalyticsDrawerOpen && MainWindowShortcutMatcher.IsCloseAnalyticsShortcut(e.Key, Keyboard.Modifiers))
-        {
-            CloseAnalyticsDrawer();
             e.Handled = true;
             return;
         }
@@ -888,7 +767,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderSearchTextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_activeDrawerPage == MainDrawerPage.Ledger)
+        if (_activeHostedPage == HostedMainPage.Ledger)
             WeakReferenceMessenger.Default.Send(new LedgerSearchTextChangedMessage(HeaderSearchBox.Text));
 
         UpdateHeaderSearchResults();
@@ -911,7 +790,7 @@ public partial class MainWindow : Window, IPopupHost
         if (IsDescendantOf(newFocus, HeaderSearchRegion))
             return;
 
-        if (_activeDrawerPage == MainDrawerPage.Ledger)
+        if (_activeHostedPage == HostedMainPage.Ledger)
             return;
 
         CollapseHeaderSearch();
@@ -966,7 +845,7 @@ public partial class MainWindow : Window, IPopupHost
         if (!_isHeaderSearchExpanded)
             return;
 
-        if (_activeDrawerPage == MainDrawerPage.Ledger)
+        if (_activeHostedPage == HostedMainPage.Ledger)
         {
             HeaderSearchResultsPopup.IsOpen = false;
             HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
@@ -1081,55 +960,24 @@ public partial class MainWindow : Window, IPopupHost
         OpenPlanningPopup();
     }
 
-    private async void OnAnalyticsDrawerTabClick(object sender, RoutedEventArgs e)
+    private async void OnHomeNavigationClick(object sender, RoutedEventArgs e)
     {
-        if (IsSufficientFundsActionGateLocked())
-            return;
-
-        CloseHeaderMenu();
-
-        if (_isAnalyticsDrawerOpen && _activeDrawerPage == MainDrawerPage.Analytics)
-        {
-            CloseAnalyticsDrawer();
-            return;
-        }
-
-        await OpenDrawerPageAsync(MainDrawerPage.Analytics);
+        await ShowDashboardShellAsync();
     }
 
-    private async void OnCalendarDrawerTabClick(object sender, RoutedEventArgs e)
+    private async void OnAnalyticsNavigationClick(object sender, RoutedEventArgs e)
     {
-        if (IsSufficientFundsActionGateLocked())
-            return;
-
-        CloseHeaderMenu();
-
-        if (_isAnalyticsDrawerOpen && _activeDrawerPage == MainDrawerPage.Calendar)
-        {
-            CloseAnalyticsDrawer();
-            return;
-        }
-
-        await OpenDrawerPageAsync(MainDrawerPage.Calendar);
+        await NavigateToHostedPageAsync(HostedMainPage.Analytics);
     }
 
-    private async void OnLedgerDrawerTabClick(object sender, RoutedEventArgs e)
+    private async void OnCalendarNavigationClick(object sender, RoutedEventArgs e)
     {
-        if (IsSufficientFundsActionGateLocked())
-            return;
-
-        if (_isAnalyticsDrawerOpen && _activeDrawerPage == MainDrawerPage.Ledger)
-        {
-            CloseAnalyticsDrawer();
-            return;
-        }
-
-        await OpenDrawerPageAsync(MainDrawerPage.Ledger);
+        await NavigateToHostedPageAsync(HostedMainPage.Calendar);
     }
 
-    private void OnCloseAnalyticsDrawerButtonClick(object sender, RoutedEventArgs e)
+    private async void OnLedgerNavigationClick(object sender, RoutedEventArgs e)
     {
-        CloseAnalyticsDrawer();
+        await NavigateToHostedPageAsync(HostedMainPage.Ledger);
     }
 
     private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
@@ -1248,102 +1096,265 @@ public partial class MainWindow : Window, IPopupHost
 
     private async Task OpenAnalyticsPopupAsync()
     {
-        await OpenDrawerPageAsync(MainDrawerPage.Analytics);
+        await NavigateToHostedPageAsync(HostedMainPage.Analytics);
     }
 
-    private async Task OpenDrawerPageAsync(MainDrawerPage page)
+    private async Task ShowDashboardShellAsync()
     {
-        if (IsSufficientFundsActionGateLocked())
+        if (_activeHostedPage is null || _isMainPageTransitionActive || _isPreparingMainPage)
+        {
+            UpdateMainNavigationCheckedState(_activeHostedPage);
             return;
+        }
 
-        if (_isAnalyticsDrawerTransitionActive || _isPreparingAnalyticsOpen)
-            return;
-
-        _isPreparingAnalyticsOpen = true;
-        SetDrawerTabButtonsEnabled(false);
+        _isPreparingMainPage = true;
+        SetMainNavigationEnabled(false);
+        CloseHeaderMenu();
 
         try
         {
-            SetDrawerTitle(page switch
-            {
-                MainDrawerPage.Analytics => "Analytics",
-                MainDrawerPage.Calendar => "Calendar",
-                MainDrawerPage.Ledger => "Ledger",
-                _ => "Ledger"
-            });
-            SetAnalyticsDateRangeSelectorVisibility(page);
-
-            if (page == MainDrawerPage.Analytics)
-            {
-                EnsureAnalyticsDrawerLoaded();
-                ApplyMainWindowRangeToAnalyticsIfBounded();
-
-                if (_analyticsDrawerView is null)
-                    return;
-
-                await _dialogService.ShowToastWhileAsync(
-                    "Loading analytics",
-                    () => _analyticsDrawerView.PrepareForOpenAsync(showInternalToast: false),
-                    this);
-            }
-            else if (page == MainDrawerPage.Calendar)
-            {
-                EnsureCalendarDrawerLoaded();
-
-                if (_calendarDrawerView is null)
-                    return;
-
-                await _dialogService.ShowToastWhileAsync(
-                    "Loading calendar",
-                    () => _calendarDrawerView.PrepareForOpenAsync(),
-                    this);
-            }
-            else
-            {
-                EnsureLedgerDrawerLoaded();
-                ApplyMainWindowRangeToLedger();
-                if (_ledgerDrawerView is null)
-                    return;
-
-                await _dialogService.ShowToastWhileAsync(
-                    "Loading ledger",
-                    () => _ledgerDrawerView.PrepareForOpenAsync(),
-                    this);
-            }
-
-            _activeDrawerPage = page;
-            if (page == MainDrawerPage.Ledger)
-                ExpandHeaderSearch();
-            OpenAnalyticsDrawer();
+            await CrossfadeToDashboardShellAsync();
+            _activeHostedPage = null;
+            UpdateMainNavigationCheckedState(_activeHostedPage);
         }
         catch (Exception exception)
         {
-            var label = page switch
-            {
-                MainDrawerPage.Analytics => "analytics",
-                MainDrawerPage.Calendar => "calendar",
-                MainDrawerPage.Ledger => "ledger",
-                _ => "drawer"
-            };
-            FluxoLogManager.LogError(exception, $"Unable to open {label} drawer.");
+            FluxoLogManager.LogError(exception, "Unable to return to dashboard.");
             _dialogService.ShowError(
-                FluxoLogManager.CreateFailureMessage($"open {label}"),
-                page switch
-                {
-                    MainDrawerPage.Analytics => "Analytics",
-                    MainDrawerPage.Calendar => "Calendar",
-                    MainDrawerPage.Ledger => "Ledger",
-                    _ => "Drawer"
-                },
+                FluxoLogManager.CreateFailureMessage("return to dashboard"),
+                "Dashboard",
                 this);
+            UpdateMainNavigationCheckedState(_activeHostedPage);
         }
         finally
         {
-            _isPreparingAnalyticsOpen = false;
-
-            if (!_isAnalyticsDrawerOpen && !_isAnalyticsDrawerTransitionActive)
-                SetDrawerTabButtonsEnabled(true);
+            _isPreparingMainPage = false;
+            SetMainNavigationEnabled(true);
         }
+    }
+
+    private async Task NavigateToHostedPageAsync(HostedMainPage page)
+    {
+        if (IsSufficientFundsActionGateLocked())
+        {
+            UpdateMainNavigationCheckedState(_activeHostedPage);
+            return;
+        }
+
+        if (_activeHostedPage == page || _isMainPageTransitionActive || _isPreparingMainPage)
+        {
+            UpdateMainNavigationCheckedState(_activeHostedPage);
+            return;
+        }
+
+        _isPreparingMainPage = true;
+        SetMainNavigationEnabled(false);
+        CloseHeaderMenu();
+
+        try
+        {
+            var nextPage = await PrepareHostedPageAsync(page);
+            await CrossfadeToHostedPageAsync(nextPage);
+            _activeHostedPage = page;
+            UpdateMainNavigationCheckedState(_activeHostedPage);
+        }
+        catch (Exception exception)
+        {
+            var label = GetHostedPageLabel(page);
+            FluxoLogManager.LogError(exception, $"Unable to navigate to {label}.");
+            _dialogService.ShowError(
+                FluxoLogManager.CreateFailureMessage($"open {label}"),
+                label,
+                this);
+            UpdateMainNavigationCheckedState(_activeHostedPage);
+        }
+        finally
+        {
+            _isPreparingMainPage = false;
+            SetMainNavigationEnabled(true);
+        }
+    }
+
+    private async Task<UIElement> PrepareHostedPageAsync(HostedMainPage page)
+    {
+        switch (page)
+        {
+            case HostedMainPage.Analytics:
+                EnsureAnalyticsPageLoaded();
+                ApplyMainWindowRangeToAnalyticsIfBounded();
+                await _dialogService.ShowToastWhileAsync(
+                    "Loading analytics",
+                    () => _analyticsPageView!.PrepareForOpenAsync(showInternalToast: false),
+                    this);
+                return _analyticsPageView!;
+            case HostedMainPage.Calendar:
+                EnsureCalendarPageLoaded();
+                await _dialogService.ShowToastWhileAsync(
+                    "Loading calendar",
+                    () => _calendarPageView!.PrepareForOpenAsync(),
+                    this);
+                return _calendarPageView!;
+            case HostedMainPage.Ledger:
+                EnsureLedgerPageLoaded();
+                ApplyMainWindowRangeToLedger();
+                await _dialogService.ShowToastWhileAsync(
+                    "Loading ledger",
+                    () => _ledgerPageView!.PrepareForOpenAsync(),
+                    this);
+                return _ledgerPageView!;
+            default:
+                EnsureAnalyticsPageLoaded();
+                return _analyticsPageView!;
+        }
+    }
+
+    private void EnsureDashboardPageLoaded()
+    {
+        if (_dashboardPageView is not null)
+            return;
+
+        _dashboardPageScope = _serviceProvider.CreateScope();
+        _dashboardPageView = _dashboardPageScope.ServiceProvider.GetRequiredService<Dashboard>();
+    }
+
+    private void EnsureAnalyticsPageLoaded()
+    {
+        if (_analyticsPageView is not null)
+            return;
+
+        _analyticsPageScope = _serviceProvider.CreateScope();
+        _analyticsPageView = _analyticsPageScope.ServiceProvider.GetRequiredService<Analytics>();
+    }
+
+    private void EnsureCalendarPageLoaded()
+    {
+        if (_calendarPageView is not null)
+            return;
+
+        _calendarPageScope = _serviceProvider.CreateScope();
+        _calendarPageView = _calendarPageScope.ServiceProvider.GetRequiredService<Calendar>();
+    }
+
+    private void EnsureLedgerPageLoaded()
+    {
+        if (_ledgerPageView is not null)
+            return;
+
+        _ledgerPageScope = _serviceProvider.CreateScope();
+        _ledgerPageView = _ledgerPageScope.ServiceProvider.GetRequiredService<Ledger>();
+    }
+
+    private async Task CrossfadeToHostedPageAsync(UIElement nextPage)
+    {
+        _isMainPageTransitionActive = true;
+        try
+        {
+            if (ShouldReduceMotion())
+            {
+                ShowHostedPageWithoutTransition(nextPage);
+                return;
+            }
+
+            UIElement currentPageElement = _activeHostedPage is null
+                ? DashboardPageHost
+                : MainPageHost;
+
+            await FadeElementAsync(currentPageElement, 0, EasingMode.EaseIn, MainPageTransitionDuration);
+
+            DashboardPageHost.Visibility = Visibility.Collapsed;
+            MainPageHost.Content = nextPage;
+            MainPageHost.Visibility = Visibility.Visible;
+            MainPageHost.Opacity = 0;
+            await FadeElementAsync(MainPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
+        }
+        finally
+        {
+            _isMainPageTransitionActive = false;
+        }
+    }
+
+    private async Task CrossfadeToDashboardShellAsync()
+    {
+        _isMainPageTransitionActive = true;
+        try
+        {
+            if (ShouldReduceMotion())
+            {
+                ShowDashboardShellWithoutTransition();
+                return;
+            }
+
+            await FadeElementAsync(MainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration);
+            MainPageHost.Content = null;
+            MainPageHost.Visibility = Visibility.Collapsed;
+            MainPageHost.Opacity = 0;
+            DashboardPageHost.Visibility = Visibility.Visible;
+            await FadeElementAsync(DashboardPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
+        }
+        finally
+        {
+            _isMainPageTransitionActive = false;
+        }
+    }
+
+    private void ShowHostedPageWithoutTransition(UIElement nextPage)
+    {
+        DashboardPageHost.Visibility = Visibility.Collapsed;
+        DashboardPageHost.Opacity = 0;
+        MainPageHost.Content = nextPage;
+        MainPageHost.Visibility = Visibility.Visible;
+        MainPageHost.Opacity = 1;
+    }
+
+    private void ShowDashboardShellWithoutTransition()
+    {
+        MainPageHost.Content = null;
+        MainPageHost.Visibility = Visibility.Collapsed;
+        MainPageHost.Opacity = 0;
+        DashboardPageHost.Visibility = Visibility.Visible;
+        DashboardPageHost.Opacity = 1;
+    }
+
+    private static Task FadeElementAsync(UIElement element, double toOpacity, EasingMode easingMode, int durationMilliseconds)
+    {
+        element.BeginAnimation(OpacityProperty, null);
+
+        var completion = new TaskCompletionSource();
+        var animation = new DoubleAnimation(element.Opacity, toOpacity, TimeSpan.FromMilliseconds(durationMilliseconds))
+        {
+            EasingFunction = new CubicEase { EasingMode = easingMode }
+        };
+
+        animation.Completed += (_, _) => completion.SetResult();
+        element.BeginAnimation(OpacityProperty, animation);
+        return completion.Task;
+    }
+
+    private void SetMainNavigationEnabled(bool isEnabled)
+    {
+        HomeNavigationButton.IsEnabled = isEnabled;
+        AnalyticsNavigationButton.IsEnabled = isEnabled;
+        CalendarNavigationButton.IsEnabled = isEnabled;
+        LedgerNavigationButton.IsEnabled = isEnabled;
+    }
+
+    private void UpdateMainNavigationCheckedState(HostedMainPage? page)
+    {
+        HomeNavigationButton.IsChecked = page is null;
+        AnalyticsNavigationButton.IsChecked = page == HostedMainPage.Analytics;
+        CalendarNavigationButton.IsChecked = page == HostedMainPage.Calendar;
+        LedgerNavigationButton.IsChecked = page == HostedMainPage.Ledger;
+    }
+
+    private static string GetHostedPageLabel(HostedMainPage page)
+    {
+        return page switch
+        {
+            HostedMainPage.Analytics => "Analytics",
+            HostedMainPage.Calendar => "Calendar",
+            HostedMainPage.Ledger => "Ledger",
+            _ => "Analytics"
+        };
     }
 
     public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
@@ -1387,72 +1398,9 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowTransferFunds(transferVm, this);
     }
 
-    private void EnsureAnalyticsDrawerLoaded()
-    {
-        if (_analyticsDrawerView is null)
-        {
-            _analyticsDrawerScope = _serviceProvider.CreateScope();
-            _analyticsDrawerView = _analyticsDrawerScope.ServiceProvider.GetRequiredService<Analytics>();
-        }
-
-        AnalyticsDrawerContentHost.Content = _analyticsDrawerView;
-        AnalyticsDateRangeSelectorHost.DataContext = _analyticsDrawerView.DataContext;
-    }
-
-    private void EnsureCalendarDrawerLoaded()
-    {
-        if (_calendarDrawerView is not null)
-        {
-            AnalyticsDrawerContentHost.Content = _calendarDrawerView;
-            return;
-        }
-
-        _calendarDrawerScope = _serviceProvider.CreateScope();
-        _calendarDrawerView = _calendarDrawerScope.ServiceProvider.GetRequiredService<Calendar>();
-        AnalyticsDrawerContentHost.Content = _calendarDrawerView;
-    }
-
-    private void EnsureLedgerDrawerLoaded()
-    {
-        if (_ledgerDrawerView is not null)
-        {
-            AnalyticsDrawerContentHost.Content = _ledgerDrawerView;
-            AnalyticsDateRangeSelectorHost.DataContext = _ledgerDrawerView.DataContext;
-            return;
-        }
-
-        _ledgerDrawerScope = _serviceProvider.CreateScope();
-        _ledgerDrawerView = _ledgerDrawerScope.ServiceProvider.GetRequiredService<Ledger>();
-        AnalyticsDrawerContentHost.Content = _ledgerDrawerView;
-        AnalyticsDateRangeSelectorHost.DataContext = _ledgerDrawerView.DataContext;
-    }
-
-    private void SetDrawerTitle(string title)
-    {
-        AnalyticsDrawerTitle.Text = title;
-    }
-
-    private void SetAnalyticsDateRangeSelectorVisibility(MainDrawerPage page)
-    {
-        AnalyticsDateRangeSelectorHost.Visibility = page switch
-        {
-            MainDrawerPage.Ledger => Visibility.Visible,
-            MainDrawerPage.Calendar => Visibility.Collapsed,
-            MainDrawerPage.Analytics => Visibility.Collapsed,
-            _ => Visibility.Collapsed
-        };
-    }
-
-    private void SetDrawerTabButtonsEnabled(bool isEnabled)
-    {
-        AnalyticsDrawerTabButton.IsEnabled = isEnabled;
-        CalendarDrawerTabButton.IsEnabled = isEnabled;
-        LedgerDrawerTabButton.IsEnabled = isEnabled;
-    }
-
     private void ApplyMainWindowRangeToAnalyticsIfBounded()
     {
-        if (_analyticsDrawerView is null)
+        if (_analyticsPageView is null)
             return;
 
         var selectedMode = _mainVM.ViewModeToggle.SelectedMainContentViewMode;
@@ -1464,18 +1412,18 @@ public partial class MainWindow : Window, IPopupHost
             selectedDate = DateTime.Today;
 
         var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
-        _analyticsDrawerView.ApplyOpenRange(range.From, range.To);
+        _analyticsPageView.ApplyOpenRange(range.From, range.To);
     }
 
     private void ApplyMainWindowRangeToLedger()
     {
-        if (_ledgerDrawerView is null)
+        if (_ledgerPageView is null)
             return;
 
         var selectedMode = _mainVM.ViewModeToggle.SelectedMainContentViewMode;
         if (selectedMode == MainContentViewMode.AllTime)
         {
-            _ledgerDrawerView.ApplyAllTimeRange();
+            _ledgerPageView.ApplyAllTimeRange();
             return;
         }
 
@@ -1484,167 +1432,7 @@ public partial class MainWindow : Window, IPopupHost
             selectedDate = DateTime.Today;
 
         var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
-        _ledgerDrawerView.ApplyOpenRange(range.From, range.To);
-    }
-
-    private void OpenAnalyticsDrawer()
-    {
-        if (_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive)
-            return;
-
-        AnalyticsDrawerPanel.Visibility = Visibility.Visible;
-        AnalyticsDrawerPanel.IsHitTestVisible = true;
-        AnalyticsDrawerPanel.UpdateLayout();
-        SetAnalyticsDrawerTabVisibility(visible: false, animate: true);
-        AnimateAnalyticsDrawer(opening: true);
-    }
-
-    private void CloseAnalyticsDrawer()
-    {
-        if (!_isAnalyticsDrawerOpen || _isAnalyticsDrawerTransitionActive)
-            return;
-
-        AnimateAnalyticsDrawer(opening: false);
-    }
-
-    private void AnimateAnalyticsDrawer(bool opening)
-    {
-        _isAnalyticsDrawerTransitionActive = true;
-        SetDrawerTabButtonsEnabled(false);
-
-        AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, null);
-
-        var panelHeight = Math.Max(AnalyticsDrawerPanel.ActualHeight, 1);
-        var from = opening ? panelHeight : 0;
-        var to = opening ? 0 : panelHeight;
-        var shouldReduceMotion = ShouldReduceMotion();
-
-        if (shouldReduceMotion)
-        {
-            _isAnalyticsDrawerOpen = opening;
-            _isAnalyticsDrawerTransitionActive = false;
-
-            if (opening)
-            {
-                AnalyticsDrawerTransform.Y = 0;
-                AnalyticsDrawerPanel.Visibility = Visibility.Visible;
-                AnalyticsDrawerPanel.IsHitTestVisible = true;
-                SetDrawerTabButtonsEnabled(false);
-                FocusAnalyticsDrawerForShortcuts();
-            }
-            else
-            {
-                AnalyticsDrawerPanel.Visibility = Visibility.Collapsed;
-                AnalyticsDrawerPanel.IsHitTestVisible = false;
-                AnalyticsDrawerTransform.Y = panelHeight;
-                SetAnalyticsDrawerTabVisibility(visible: true, animate: false, onCompleted: () =>
-                {
-                    SetDrawerTabButtonsEnabled(true);
-                });
-            }
-
-            return;
-        }
-
-        var animation = new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(AnalyticsDrawerTransitionDuration))
-        {
-            EasingFunction = new CubicEase { EasingMode = opening ? EasingMode.EaseOut : EasingMode.EaseIn }
-        };
-
-        animation.Completed += (_, _) =>
-        {
-            _isAnalyticsDrawerOpen = opening;
-            _isAnalyticsDrawerTransitionActive = false;
-
-            if (!opening)
-            {
-                AnalyticsDrawerPanel.Visibility = Visibility.Collapsed;
-                AnalyticsDrawerPanel.IsHitTestVisible = false;
-                AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, null);
-                AnalyticsDrawerTransform.Y = panelHeight;
-                SetAnalyticsDrawerTabVisibility(visible: true, animate: true, onCompleted: () =>
-                {
-                    SetDrawerTabButtonsEnabled(true);
-                });
-            }
-            else
-            {
-                SetDrawerTabButtonsEnabled(false);
-                FocusAnalyticsDrawerForShortcuts();
-            }
-        };
-
-        AnalyticsDrawerTransform.BeginAnimation(TranslateTransform.YProperty, animation);
-    }
-
-    private void FocusAnalyticsDrawerForShortcuts()
-    {
-        AnalyticsDrawerPanel.Focus();
-        Keyboard.Focus(AnalyticsDrawerPanel);
-    }
-
-    private void SetAnalyticsDrawerTabVisibility(bool visible, bool animate, Action? onCompleted = null)
-    {
-        if (ShouldReduceMotion())
-            animate = false;
-
-        _analyticsDrawerTabVisibilityToken++;
-        var visibilityToken = _analyticsDrawerTabVisibilityToken;
-        _isAnalyticsDrawerTabVisibilityTransitionActive = false;
-
-        DrawerTabHost.BeginAnimation(OpacityProperty, null);
-
-        if (!animate)
-        {
-            DrawerTabHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-            DrawerTabHost.IsHitTestVisible = visible;
-            DrawerTabHost.Opacity = visible ? 1d : 0d;
-            onCompleted?.Invoke();
-            return;
-        }
-
-        if (visible)
-        {
-            DrawerTabHost.Visibility = Visibility.Visible;
-            DrawerTabHost.IsHitTestVisible = true;
-        }
-        else
-        {
-            DrawerTabHost.IsHitTestVisible = false;
-        }
-
-        var fromOpacity = visible ? DrawerTabHost.Opacity : 1d;
-        var toOpacity = visible ? 1d : 0d;
-
-        if (Math.Abs(fromOpacity - toOpacity) < 0.001d)
-        {
-            if (!visible)
-                DrawerTabHost.Visibility = Visibility.Collapsed;
-
-            onCompleted?.Invoke();
-            return;
-        }
-
-        _isAnalyticsDrawerTabVisibilityTransitionActive = true;
-        var tabAnimation = new DoubleAnimation(fromOpacity, toOpacity, TimeSpan.FromMilliseconds(AnalyticsDrawerTabFadeDuration))
-        {
-            EasingFunction = new CubicEase { EasingMode = visible ? EasingMode.EaseOut : EasingMode.EaseIn }
-        };
-
-        tabAnimation.Completed += (_, _) =>
-        {
-            if (visibilityToken != _analyticsDrawerTabVisibilityToken)
-                return;
-
-            _isAnalyticsDrawerTabVisibilityTransitionActive = false;
-
-            if (!visible)
-                DrawerTabHost.Visibility = Visibility.Collapsed;
-
-            onCompleted?.Invoke();
-        };
-
-        DrawerTabHost.BeginAnimation(OpacityProperty, tabAnimation);
+        _ledgerPageView.ApplyOpenRange(range.From, range.To);
     }
 
     private static bool ShouldReduceMotion()
@@ -1652,26 +1440,33 @@ public partial class MainWindow : Window, IPopupHost
         return !SystemParameters.ClientAreaAnimation;
     }
 
-    private void DisposeAnalyticsDrawer()
+    private void DisposeMainPages()
     {
-        AnalyticsDrawerContentHost.Content = null;
-        _analyticsDrawerView = null;
-        _analyticsDrawerScope?.Dispose();
-        _analyticsDrawerScope = null;
-        _calendarDrawerView = null;
-        _calendarDrawerScope?.Dispose();
-        _calendarDrawerScope = null;
-        _ledgerDrawerView = null;
-        _ledgerDrawerScope?.Dispose();
-        _ledgerDrawerScope = null;
-        _activeDrawerPage = null;
-        _isAnalyticsDrawerOpen = false;
-        _isAnalyticsDrawerTransitionActive = false;
-        SetAnalyticsDrawerTabVisibility(visible: true, animate: false);
-        SetDrawerTabButtonsEnabled(true);
+        MainPageHost.Content = null;
+        DashboardPageHost.Content = null;
+
+        _dashboardPageView = null;
+        _dashboardPageScope?.Dispose();
+        _dashboardPageScope = null;
+
+        _analyticsPageView = null;
+        _analyticsPageScope?.Dispose();
+        _analyticsPageScope = null;
+
+        _calendarPageView = null;
+        _calendarPageScope?.Dispose();
+        _calendarPageScope = null;
+
+        _ledgerPageView = null;
+        _ledgerPageScope?.Dispose();
+        _ledgerPageScope = null;
+
+        _activeHostedPage = null;
+        _isMainPageTransitionActive = false;
+        _isPreparingMainPage = false;
     }
 
-    // ── Popup overlay & blur ────────────────────────────────────────
+    // â”€â”€ Popup overlay & blur â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public void BeginPopupHandoff()
     {
@@ -1774,15 +1569,13 @@ public partial class MainWindow : Window, IPopupHost
     private void ApplyPopupBlur()
     {
         ContentGrid.Effect = CreatePopupBlurEffect();
-        AnalyticsDrawerLayer.Effect = CreatePopupBlurEffect();
-        DrawerTabHost.Effect = CreatePopupBlurEffect();
+        FloatingSideNavigationRail.Effect = CreatePopupBlurEffect();
     }
 
     private void ClearPopupBlur()
     {
         ContentGrid.Effect = null;
-        AnalyticsDrawerLayer.Effect = null;
-        DrawerTabHost.Effect = null;
+        FloatingSideNavigationRail.Effect = null;
     }
 
     private static BlurEffect CreatePopupBlurEffect()
@@ -1961,3 +1754,4 @@ public partial class MainWindow : Window, IPopupHost
         public int Left, Top, Right, Bottom;
     }
 }
+

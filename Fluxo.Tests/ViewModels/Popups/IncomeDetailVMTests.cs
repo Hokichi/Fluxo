@@ -143,8 +143,7 @@ public sealed class IncomeDetailVMTests
         var unitOfWork = CreateUnitOfWork();
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
-        var main = new MainVM(
-            dataOperationRunner,
+        var dashboard = new DashboardVM(
             new NotificationPanelVM(
                 Substitute.For<IExpenseService>(),
                 Substitute.For<IExpenseLogService>(),
@@ -166,8 +165,12 @@ public sealed class IncomeDetailVMTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(dataOperationRunner, mapper, messenger),
-            new DaySpinnerVM(messenger),
             new MainViewModeToggleVM(messenger));
+        var main = new MainVM(
+            dataOperationRunner,
+            dashboard,
+            new DaySpinnerVM(messenger),
+            null);
 
         foreach (var source in spendingSources)
             main.BudgetPanel.SpendingSources.Add(source);

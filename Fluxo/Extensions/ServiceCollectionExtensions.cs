@@ -27,6 +27,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using AnalyticsVM = Fluxo.ViewModels.Shell.Main.AnalyticsVM;
 using BudgetAllocationPanelVM = Fluxo.ViewModels.Shell.Main.BudgetAllocationPanelVM;
 using CalendarVM = Fluxo.ViewModels.Shell.Main.CalendarVM;
+using DashboardVM = Fluxo.ViewModels.Shell.Main.DashboardVM;
 using DaySpinnerVM = Fluxo.ViewModels.Shell.Main.DaySpinnerVM;
 using LedgerVM = Fluxo.ViewModels.Shell.Main.LedgerVM;
 using MainViewModeToggleVM = Fluxo.ViewModels.Shell.Main.MainViewModeToggleVM;
@@ -75,6 +76,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStartupUpdateNotificationService, StartupUpdateNotificationService>();
 
         services.AddSingleton<MainVM>();
+        services.AddSingleton<DashboardVM>();
         services.AddSingleton<DaySpinnerVM>();
         services.AddSingleton<MainViewModeToggleVM>();
         services.AddSingleton<BudgetAllocationPanelVM>();
@@ -131,6 +133,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<QuickSetupWizard>();
         services.AddTransient<PlanningPopup>();
         services.AddTransient<PlanningReportPopup>();
+        services.AddTransient<Dashboard>();
         services.AddTransient<Analytics>();
         services.AddTransient<Calendar>();
         services.AddTransient<Ledger>();

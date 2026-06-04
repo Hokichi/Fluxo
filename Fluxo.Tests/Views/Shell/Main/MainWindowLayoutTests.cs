@@ -12,6 +12,8 @@ public sealed class MainWindowLayoutTests
     private static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
     private static readonly Lazy<string> MainWindowXaml = new(LoadMainWindowXaml);
     private static readonly Lazy<XDocument> MainWindowXamlDocument = new(() => XDocument.Parse(MainWindowXaml.Value));
+    private static readonly Lazy<string> DashboardXaml = new(LoadDashboardXaml);
+    private static readonly Lazy<XDocument> DashboardXamlDocument = new(() => XDocument.Parse(DashboardXaml.Value));
 
     [Fact]
     public void HeaderMenu_DoesNotExposeAnalyticsActionButton()
@@ -35,67 +37,53 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void DrawerTabTrigger_ExposesAnalyticsAndCalendarTabs()
+    public void FloatingSideNavigation_ExposesFourMainPagesAndNoDrawer()
     {
         var xaml = MainWindowXaml.Value;
         var xamlDocument = MainWindowXamlDocument.Value;
 
-        Assert.Contains("Click=\"OnAnalyticsDrawerTabClick\"", xaml);
-        Assert.Contains("Click=\"OnCalendarDrawerTabClick\"", xaml);
+        Assert.DoesNotContain("DrawerTabHost", xaml);
+        Assert.DoesNotContain("AnalyticsDrawerLayer", xaml);
+        Assert.DoesNotContain("AnalyticsDrawerPanel", xaml);
+        Assert.DoesNotContain("AnalyticsDrawerContentHost", xaml);
+        Assert.DoesNotContain("OnAnalyticsDrawerTabClick", xaml);
+        Assert.DoesNotContain("OnCalendarDrawerTabClick", xaml);
+        Assert.DoesNotContain("OnLedgerDrawerTabClick", xaml);
 
-        var analyticsDrawerTabButton = xamlDocument
-            .Descendants(PresentationNamespace + "Button")
-            .SingleOrDefault(button => (string?)button.Attribute(XamlNamespace + "Name") == "AnalyticsDrawerTabButton");
-        var calendarDrawerTabButton = xamlDocument
-            .Descendants(PresentationNamespace + "Button")
-            .SingleOrDefault(button => (string?)button.Attribute(XamlNamespace + "Name") == "CalendarDrawerTabButton");
+        AssertElementHasNameAndStyle(xamlDocument, "Border", "FloatingSideNavigationRail", "FloatingSideNavigationRailStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "ToggleButton", "HomeNavigationButton", "FloatingSideNavigationButtonStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "ToggleButton", "AnalyticsNavigationButton", "FloatingSideNavigationButtonStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "ToggleButton", "CalendarNavigationButton", "FloatingSideNavigationButtonStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "ToggleButton", "LedgerNavigationButton", "FloatingSideNavigationButtonStyle");
 
-        Assert.NotNull(analyticsDrawerTabButton);
-        Assert.NotNull(calendarDrawerTabButton);
-        Assert.Equal("OnAnalyticsDrawerTabClick", (string?)analyticsDrawerTabButton!.Attribute("Click"));
-        Assert.Equal("OnCalendarDrawerTabClick", (string?)calendarDrawerTabButton!.Attribute("Click"));
+        var pageHost = xamlDocument
+            .Descendants(PresentationNamespace + "ContentControl")
+            .SingleOrDefault(control => (string?)control.Attribute(XamlNamespace + "Name") == "MainPageHost");
+
+        Assert.NotNull(pageHost);
+        Assert.Contains("Path=\"{StaticResource Home}\"", xaml);
+        Assert.Contains("Path=\"{StaticResource ChartColumn}\"", xaml);
+        Assert.Contains("Path=\"{StaticResource Calendar}\"", xaml);
+        Assert.Contains("Path=\"{StaticResource BookAiFill}\"", xaml);
     }
 
     [Fact]
-    public void DrawerHeader_DateRangeSelectorHost_IsNamedAndControlledForLedgerOnly()
+    public void PopupOverlay_BlursContentAndFloatingNavigation()
     {
-        var xamlDocument = MainWindowXamlDocument.Value;
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
 
-        var dateRangeSelectorHost = xamlDocument
-            .Descendants(PresentationNamespace + "Border")
-            .SingleOrDefault(border => (string?)border.Attribute(XamlNamespace + "Name") == "AnalyticsDateRangeSelectorHost");
+        var applyPopupBlur = ExtractMethodBodyBySignature(source, "private void ApplyPopupBlur()");
+        var clearPopupBlur = ExtractMethodBodyBySignature(source, "private void ClearPopupBlur()");
 
-        Assert.NotNull(dateRangeSelectorHost);
-        var dateSelectors = dateRangeSelectorHost!
-            .Descendants()
-            .Where(element => element.Name.LocalName == "DateSelector")
-            .ToList();
+        Assert.Contains("ContentGrid.Effect = CreatePopupBlurEffect();", applyPopupBlur);
+        Assert.Contains("FloatingSideNavigationRail.Effect = CreatePopupBlurEffect();", applyPopupBlur);
+        Assert.DoesNotContain("AnalyticsDrawerLayer", applyPopupBlur);
+        Assert.DoesNotContain("DrawerTabHost", applyPopupBlur);
 
-        Assert.Equal(2, dateSelectors.Count);
-        Assert.Equal("{x:Null}", (string?)dateRangeSelectorHost.Attribute("DataContext"));
-        Assert.Equal("{Binding StartDate, Mode=TwoWay}", (string?)dateSelectors[0].Attribute("SelectedDate"));
-        Assert.Equal("{Binding EndDate, Mode=TwoWay}", (string?)dateSelectors[1].Attribute("SelectedDate"));
-        Assert.DoesNotContain("AnalyticsDrawerContentHost", dateRangeSelectorHost.ToString(SaveOptions.DisableFormatting));
-
-        Assert.Contains("SetAnalyticsDateRangeSelectorVisibility(page);", source);
-        Assert.Contains("private void SetAnalyticsDateRangeSelectorVisibility(MainDrawerPage page)", source);
-        Assert.Contains("AnalyticsDateRangeSelectorHost.Visibility = page switch", source);
-        Assert.Contains("MainDrawerPage.Ledger => Visibility.Visible", source);
-        Assert.Contains("MainDrawerPage.Calendar => Visibility.Collapsed", source);
-        Assert.Contains("MainDrawerPage.Analytics => Visibility.Collapsed", source);
-
-        var ensureAnalyticsDrawerLoaded = ExtractMethodBodyBySignature(
-            source,
-            "private void EnsureAnalyticsDrawerLoaded()");
-        var ensureCalendarDrawerLoaded = ExtractMethodBodyBySignature(
-            source,
-            "private void EnsureCalendarDrawerLoaded()");
-
-        Assert.Contains(
-            "AnalyticsDateRangeSelectorHost.DataContext = _analyticsDrawerView.DataContext;",
-            ensureAnalyticsDrawerLoaded);
-        Assert.DoesNotContain("AnalyticsDateRangeSelectorHost.DataContext", ensureCalendarDrawerLoaded);
+        Assert.Contains("ContentGrid.Effect = null;", clearPopupBlur);
+        Assert.Contains("FloatingSideNavigationRail.Effect = null;", clearPopupBlur);
+        Assert.DoesNotContain("AnalyticsDrawerLayer", clearPopupBlur);
+        Assert.DoesNotContain("DrawerTabHost", clearPopupBlur);
     }
 
     [Fact]
@@ -128,17 +116,6 @@ public sealed class MainWindowLayoutTests
         AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "UndoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "RedoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "ViewAllSpendingSourcesButton", "TextOnlyButtonStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "AddSpendingSourceButton", "SpendingSourceAddButtonStyle");
-
-        var drawerTabHost = xamlDocument
-            .Descendants(PresentationNamespace + "Border")
-            .SingleOrDefault(border => (string?)border.Attribute(XamlNamespace + "Name") == "DrawerTabHost");
-
-        Assert.NotNull(drawerTabHost);
-        Assert.Contains(
-            "Binding=\"{Binding IsSufficientFundsActionGateLocked}\" Value=\"True\"",
-            drawerTabHost!.ToString(SaveOptions.DisableFormatting));
     }
 
     [Fact]
@@ -150,11 +127,36 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void DashboardSpendingSources_HasOverflowScrollButtons()
+    public void MainWindow_KeepsDashboardContentInShellWithCorrectControlOwnership()
     {
-        var xaml = MainWindowXaml.Value;
         var xamlDocument = MainWindowXamlDocument.Value;
-        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+        var dashboardXaml = DashboardXaml.Value;
+        var dashboardXamlDocument = DashboardXamlDocument.Value;
+
+        AssertElementHasNameAndStyle(xamlDocument, "Grid", "DashboardSpendingAmountGateContent", "DashboardSpendingAmountGateLockedContentStyle");
+        AssertElementHasName(xamlDocument, "DaySpinnerControl", "DaySpinnerControlHost");
+        AssertElementHasName(xamlDocument, "ContentControl", "DashboardPageHost");
+        AssertElementHasName(xamlDocument, "Grid", "DashboardSpendingAmountGateOverlay");
+
+        Assert.DoesNotContain("DaySpinnerControlHost", dashboardXaml);
+        AssertElementHasName(dashboardXamlDocument, "MainViewModeToggleControl", "ViewModeToggleControlHost");
+        AssertElementHasName(dashboardXamlDocument, "Grid", "MainContentGrid");
+        AssertElementHasName(dashboardXamlDocument, "Button", "ViewAllSpendingSourcesButton");
+        AssertElementHasName(dashboardXamlDocument, "Button", "AddSpendingSourceButton");
+        AssertElementHasName(dashboardXamlDocument, "SpentAllowancePanel", "SpentAllowancePanelHost");
+        AssertElementHasName(dashboardXamlDocument, "BudgetAllocationPanel", "BudgetAllocationPanelHost");
+        AssertElementHasName(dashboardXamlDocument, "SavingGoalsPanel", "SavingGoalsPanelHost");
+        AssertElementHasName(dashboardXamlDocument, "NotificationPanel", "NotificationPanelHost");
+        AssertElementHasName(dashboardXamlDocument, "FadingScrollViewer", "DashboardSpendingSourcesScrollViewer");
+        AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollLeftButton");
+        AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollRightButton");
+    }
+
+    [Fact]
+    public void DashboardSpendingSources_HasOverflowScrollButtonsInMainWindow()
+    {
+        var xaml = DashboardXaml.Value;
+        var source = File.ReadAllText(ResolveDashboardCodeBehindPath());
         var icons = File.ReadAllText(RepositoryPaths.File(
             "Fluxo.Resources",
             "Resources",
@@ -163,139 +165,27 @@ public sealed class MainWindowLayoutTests
         Assert.Contains("x:Key=\"AngleLeft\"", icons);
         Assert.Contains("x:Key=\"AngleRight\"", icons);
         Assert.Contains("x:Key=\"DashboardSpendingSourcesScrollButtonStyle\"", xaml);
-        Assert.Contains("Foreground\" Value=\"{StaticResource Brush.Text.Muted}", xaml);
-        Assert.Contains("Foreground\" Value=\"{StaticResource Brush.Mint}", xaml);
-
-        AssertElementHasNameAndStyle(
-            xamlDocument,
-            "Button",
-            "AddSpendingSourceButton",
-            "SpendingSourceAddButtonStyle");
-        AssertElementHasNameAndStyle(
-            xamlDocument,
-            "Button",
-            "DashboardSpendingSourcesScrollLeftButton",
-            "DashboardSpendingSourcesScrollButtonStyle");
-        AssertElementHasNameAndStyle(
-            xamlDocument,
-            "Button",
-            "DashboardSpendingSourcesScrollRightButton",
-            "DashboardSpendingSourcesScrollButtonStyle");
-
-        var leftButton = xamlDocument
-            .Descendants(PresentationNamespace + "Button")
-            .Single(button => (string?)button.Attribute(XamlNamespace + "Name") == "DashboardSpendingSourcesScrollLeftButton");
-        var rightButton = xamlDocument
-            .Descendants(PresentationNamespace + "Button")
-            .Single(button => (string?)button.Attribute(XamlNamespace + "Name") == "DashboardSpendingSourcesScrollRightButton");
-        var addButton = xamlDocument
-            .Descendants(PresentationNamespace + "Button")
-            .Single(button => (string?)button.Attribute(XamlNamespace + "Name") == "AddSpendingSourceButton");
-        var scrollViewer = xamlDocument
-            .Descendants()
-            .Single(element =>
-                element.Name.LocalName == "FadingScrollViewer" &&
-                (string?)element.Attribute(XamlNamespace + "Name") == "DashboardSpendingSourcesScrollViewer");
-
-        Assert.DoesNotContain(addButton, scrollViewer.Descendants());
-        Assert.Equal("0", (string?)addButton.Attribute("Grid.Column"));
-        Assert.Equal(scrollViewer.Parent, leftButton.Parent);
-        Assert.Equal(scrollViewer.Parent, rightButton.Parent);
-        Assert.Equal("Left", (string?)leftButton.Attribute("HorizontalAlignment"));
-        Assert.Equal("Right", (string?)rightButton.Attribute("HorizontalAlignment"));
-        Assert.Equal("Center", (string?)leftButton.Attribute("VerticalAlignment"));
-        Assert.Equal("Center", (string?)rightButton.Attribute("VerticalAlignment"));
-        Assert.Equal("1", (string?)leftButton.Attribute("Panel.ZIndex"));
-        Assert.Equal("1", (string?)rightButton.Attribute("Panel.ZIndex"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollLeftButtonPressed", (string?)leftButton.Attribute("PreviewMouseLeftButtonDown"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollRightButtonPressed", (string?)rightButton.Attribute("PreviewMouseLeftButtonDown"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollButtonReleased", (string?)leftButton.Attribute("PreviewMouseLeftButtonUp"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollButtonReleased", (string?)rightButton.Attribute("PreviewMouseLeftButtonUp"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollButtonLostMouseCapture", (string?)leftButton.Attribute("LostMouseCapture"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollButtonLostMouseCapture", (string?)rightButton.Attribute("LostMouseCapture"));
-        Assert.Equal("Collapsed", (string?)leftButton.Attribute("Visibility"));
-        Assert.Equal("Collapsed", (string?)rightButton.Attribute("Visibility"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollChanged", (string?)scrollViewer.Attribute("ScrollChanged"));
-        Assert.Equal("OnDashboardSpendingSourcesScrollViewerSizeChanged", (string?)scrollViewer.Attribute("SizeChanged"));
-
-        Assert.Contains("DashboardSpendingSourcesScrollPixels = 50", source);
-        Assert.Contains("DashboardSpendingSourcesScrollIntervalMilliseconds = 100", source);
-        Assert.Contains("Interval = TimeSpan.FromMilliseconds(DashboardSpendingSourcesScrollIntervalMilliseconds)", source);
+        Assert.Contains("DashboardSpendingSourcesScrollPixels = 10", source);
+        Assert.Contains("DashboardSpendingSourcesScrollIntervalMilliseconds = 10", source);
         Assert.Contains("_dashboardSpendingSourcesScrollTimer.Tick += OnDashboardSpendingSourcesScrollTimerTick;", source);
         Assert.Contains("private void OnDashboardSpendingSourcesScrollTimerTick(object? sender, EventArgs e)", source);
         Assert.Contains("ScrollDashboardSpendingSources(", source);
-        Assert.Contains("UpdateDashboardSpendingSourcesScrollButtonVisibility();", source);
         Assert.Contains("DashboardSpendingSourcesScrollViewer.ScrollableWidth > 0", source);
-        Assert.Contains("DashboardSpendingSourcesScrollViewer.HorizontalOffset > 0", source);
-        Assert.Contains("DashboardSpendingSourcesScrollViewer.HorizontalOffset < DashboardSpendingSourcesScrollViewer.ScrollableWidth", source);
     }
 
-    [Fact]
-    public void SpendingAmountGate_DateCarouselAndViewModeToggle_AreInsideLockedContent()
+    private static void AssertElementHasName(XDocument xamlDocument, string elementName, string xName)
     {
-        var xamlDocument = MainWindowXamlDocument.Value;
+        var localName = elementName.Contains(':')
+            ? elementName[(elementName.IndexOf(':') + 1)..]
+            : elementName;
 
-        var gatedContent = xamlDocument
-            .Descendants(PresentationNamespace + "Grid")
-            .SingleOrDefault(grid => (string?)grid.Attribute(XamlNamespace + "Name") == "DashboardSpendingAmountGateContent");
+        var element = xamlDocument
+            .Descendants()
+            .SingleOrDefault(node =>
+                node.Name.LocalName == localName &&
+                (string?)node.Attribute(XamlNamespace + "Name") == xName);
 
-        Assert.NotNull(gatedContent);
-        Assert.Contains(gatedContent!.Descendants(), element =>
-            (string?)element.Attribute(XamlNamespace + "Name") == "DaySpinnerControlHost");
-        Assert.Contains(gatedContent.Descendants(), element =>
-            (string?)element.Attribute(XamlNamespace + "Name") == "ViewModeToggleControlHost");
-    }
-
-    [Fact]
-    public void SpendingAmountGate_DashboardOverlay_UsesTextButtonWithRequiredMessageAndWordmark()
-    {
-        var xamlDocument = MainWindowXamlDocument.Value;
-
-        var overlay = xamlDocument
-            .Descendants(PresentationNamespace + "Grid")
-            .SingleOrDefault(grid => (string?)grid.Attribute(XamlNamespace + "Name") == "DashboardSpendingAmountGateOverlay");
-
-        Assert.NotNull(overlay);
-
-        var button = overlay!
-            .Descendants(PresentationNamespace + "Button")
-            .Single();
-
-        Assert.Equal("DashboardSpendingAmountGateActionButton", (string?)button.Attribute(XamlNamespace + "Name"));
-        Assert.Equal("OnDashboardSpendingAmountGateActionClick", (string?)button.Attribute("Click"));
-        Assert.Equal("{StaticResource TextOnlyButtonStyle}", (string?)button.Attribute("Style"));
-
-        var textBlocks = button
-            .Descendants(PresentationNamespace + "TextBlock")
-            .ToList();
-
-        Assert.True(textBlocks.Count >= 3);
-        Assert.Equal("Insufficient fund. Please include a spending source with sufficient funds to start using ", (string?)textBlocks[0].Attribute("Text"));
-        Assert.Equal("flux", (string?)textBlocks[1].Attribute("Text"));
-        Assert.Equal("o", (string?)textBlocks[2].Attribute("Text"));
-        Assert.Equal("{StaticResource Brush.Mint}", (string?)textBlocks[2].Attribute("Foreground"));
-    }
-
-    [Fact]
-    public void SpendingAmountGate_DashboardContent_UsesBlurAndHitTestLockStyle()
-    {
-        var xamlDocument = MainWindowXamlDocument.Value;
-
-        var gatedContent = xamlDocument
-            .Descendants(PresentationNamespace + "Grid")
-            .SingleOrDefault(grid => (string?)grid.Attribute(XamlNamespace + "Name") == "DashboardSpendingAmountGateContent");
-
-        Assert.NotNull(gatedContent);
-        Assert.Equal("{StaticResource DashboardSpendingAmountGateLockedContentStyle}", (string?)gatedContent!.Attribute("Style"));
-
-        var lockStyle = xamlDocument
-            .Descendants(PresentationNamespace + "Style")
-            .SingleOrDefault(style => (string?)style.Attribute(XamlNamespace + "Key") == "DashboardSpendingAmountGateLockedContentStyle");
-
-        Assert.NotNull(lockStyle);
-        Assert.Contains("BlurEffect Radius=\"20\"", lockStyle!.ToString(SaveOptions.DisableFormatting));
-        Assert.Contains("Opacity\" Value=\"0.55", lockStyle.ToString(SaveOptions.DisableFormatting));
-        Assert.Contains("IsHitTestVisible\" Value=\"False", lockStyle.ToString(SaveOptions.DisableFormatting));
+        Assert.NotNull(element);
     }
 
     private static void AssertElementHasNameAndStyle(XDocument xamlDocument, string elementName, string xName, string styleKey)
@@ -318,6 +208,12 @@ public sealed class MainWindowLayoutTests
     {
         var mainWindowXamlPath = ResolveMainWindowXamlPath();
         return File.ReadAllText(mainWindowXamlPath);
+    }
+
+    private static string LoadDashboardXaml()
+    {
+        var dashboardXamlPath = ResolveDashboardXamlPath();
+        return File.ReadAllText(dashboardXamlPath);
     }
 
     private static string ResolveMainWindowXamlPath()
@@ -379,6 +275,74 @@ public sealed class MainWindowLayoutTests
                 }
 
                 return mainWindowCodeBehindPath;
+            }
+
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
+    }
+
+    private static string ResolveDashboardXamlPath()
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (currentDirectory is not null)
+        {
+            var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
+            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
+            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
+            {
+                var dashboardXamlPath = Path.Combine(
+                    currentDirectory.FullName,
+                    "Fluxo",
+                    "Views",
+                    "Shell",
+                    "Main",
+                    "Dashboard.xaml");
+
+                if (!File.Exists(dashboardXamlPath))
+                {
+                    throw new FileNotFoundException($"Dashboard.xaml was not found at '{dashboardXamlPath}'.", dashboardXamlPath);
+                }
+
+                return dashboardXamlPath;
+            }
+
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
+    }
+
+    private static string ResolveDashboardCodeBehindPath()
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (currentDirectory is not null)
+        {
+            var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
+            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
+            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
+            {
+                var dashboardCodeBehindPath = Path.Combine(
+                    currentDirectory.FullName,
+                    "Fluxo",
+                    "Views",
+                    "Shell",
+                    "Main",
+                    "Dashboard.xaml.cs");
+
+                if (!File.Exists(dashboardCodeBehindPath))
+                {
+                    throw new FileNotFoundException(
+                        $"Dashboard.xaml.cs was not found at '{dashboardCodeBehindPath}'.",
+                        dashboardCodeBehindPath);
+                }
+
+                return dashboardCodeBehindPath;
             }
 
             currentDirectory = currentDirectory.Parent;

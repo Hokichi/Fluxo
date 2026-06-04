@@ -1,0 +1,224 @@
+<UserControl
+    x:Class="Fluxo.Views.Shell.Main.Dashboard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:controls="clr-namespace:Fluxo.Views.Shell.Main.Controls"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections">
+
+    <UserControl.Resources>
+        <ItemsPanelTemplate x:Key="MainWindowSpendingSourcesItemsPanelTemplate">
+            <StackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+
+        <DataTemplate x:Key="MainWindowSpendingSourceItemTemplate">
+            <components:IncomeSource />
+        </DataTemplate>
+
+        <Style x:Key="DashboardSpendingSourcesScrollButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="80" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="ButtonSurface"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                <Setter TargetName="ButtonSurface" Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <controls:MainViewModeToggleControl
+            x:Name="ViewModeToggleControlHost"
+            Margin="0,16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            DataContext="{Binding ViewModeToggle}" />
+
+        <Grid
+            x:Name="MainContentGrid"
+            Margin="200,48">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="18"
+                    Foreground="{StaticResource Brush.Text.Primary}"
+                    Text="Dashboard" />
+
+                <Button
+                    x:Name="ViewAllSpendingSourcesButton"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Click="OnSpendingSourcesButtonClick"
+                    Content="View All Spending Sources"
+                    Style="{StaticResource TextOnlyButtonStyle}" />
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <sections:SpentAllowancePanel
+                    x:Name="SpentAllowancePanelHost"
+                    Height="120"
+                    VerticalAlignment="Top"
+                    DataContext="{Binding SpentAllowancePanel}" />
+
+                <Border
+                    Grid.Column="1"
+                    Width="1"
+                    Height="64"
+                    Margin="12,0,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{StaticResource Brush.Border.Subtle}"
+                    SnapsToDevicePixels="True" />
+
+                <Grid Grid.Column="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        x:Name="AddSpendingSourceButton"
+                        Grid.Column="0"
+                        Margin="12,20,8,0"
+                        VerticalAlignment="Top"
+                        Click="OnAddSpendingSourceButtonClick"
+                        Content="Add"
+                        Style="{StaticResource SpendingSourceAddButtonStyle}" />
+
+                    <Grid Grid.Column="1">
+                        <customControls:FadingScrollViewer
+                            x:Name="DashboardSpendingSourcesScrollViewer"
+                            HorizontalAlignment="Stretch"
+                            CanContentScroll="False"
+                            HorizontalScrollBarVisibility="Hidden"
+                            ScrollChanged="OnDashboardSpendingSourcesScrollChanged"
+                            SizeChanged="OnDashboardSpendingSourcesScrollViewerSizeChanged"
+                            VerticalScrollBarVisibility="Disabled">
+                            <ListView
+                                HorizontalAlignment="Left"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource IncomeSources}"
+                                ItemTemplate="{StaticResource MainWindowSpendingSourceItemTemplate}"
+                                ItemsPanel="{StaticResource MainWindowSpendingSourcesItemsPanelTemplate}"
+                                ItemsSource="{Binding SpendingSources}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                        </customControls:FadingScrollViewer>
+
+                        <Button
+                            x:Name="DashboardSpendingSourcesScrollLeftButton"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            AutomationProperties.Name="Scroll spending sources left"
+                            LostMouseCapture="OnDashboardSpendingSourcesScrollButtonLostMouseCapture"
+                            PreviewMouseLeftButtonDown="OnDashboardSpendingSourcesScrollLeftButtonPressed"
+                            PreviewMouseLeftButtonUp="OnDashboardSpendingSourcesScrollButtonReleased"
+                            Style="{StaticResource DashboardSpendingSourcesScrollButtonStyle}"
+                            Visibility="Collapsed">
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource AngleLeft}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+
+                        <Button
+                            x:Name="DashboardSpendingSourcesScrollRightButton"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            AutomationProperties.Name="Scroll spending sources right"
+                            LostMouseCapture="OnDashboardSpendingSourcesScrollButtonLostMouseCapture"
+                            PreviewMouseLeftButtonDown="OnDashboardSpendingSourcesScrollRightButtonPressed"
+                            PreviewMouseLeftButtonUp="OnDashboardSpendingSourcesScrollButtonReleased"
+                            Style="{StaticResource DashboardSpendingSourcesScrollButtonStyle}"
+                            Visibility="Collapsed">
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource AngleRight}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="0,8,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="180" />
+                </Grid.RowDefinitions>
+
+                <sections:BudgetAllocationPanel x:Name="BudgetAllocationPanelHost" DataContext="{Binding BudgetPanel}" />
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.5*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <sections:SavingGoalsPanel
+                        x:Name="SavingGoalsPanelHost"
+                        Grid.Column="0"
+                        DataContext="{Binding SavingGoalsPanel}" />
+
+                    <sections:NotificationPanel
+                        x:Name="NotificationPanelHost"
+                        Grid.Column="2"
+                        DataContext="{Binding NotificationPanel}" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

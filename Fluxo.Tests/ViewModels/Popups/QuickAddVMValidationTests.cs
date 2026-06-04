@@ -852,8 +852,7 @@ public sealed class QuickAddVMValidationTests
         expenseService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseDto>>([]));
 
-        var main = new MainVM(
-            dataOperationRunner,
+        var dashboard = new DashboardVM(
             new NotificationPanelVM(
                 expenseService,
                 expenseLogService,
@@ -875,8 +874,12 @@ public sealed class QuickAddVMValidationTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(dataOperationRunner, mapper, messenger),
-            new DaySpinnerVM(messenger),
             new MainViewModeToggleVM(messenger));
+        var main = new MainVM(
+            dataOperationRunner,
+            dashboard,
+            new DaySpinnerVM(messenger),
+            null);
 
         foreach (var source in spendingSources)
             main.BudgetPanel.SpendingSources.Add(source);

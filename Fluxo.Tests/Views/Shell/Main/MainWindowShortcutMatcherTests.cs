@@ -66,25 +66,6 @@ public class MainWindowShortcutMatcherTests
     }
 
     [Fact]
-    public void IsCloseAnalyticsShortcut_ReturnsTrue_ForEscape()
-    {
-        var isShortcut = MainWindowShortcutMatcher.IsCloseAnalyticsShortcut(Key.Escape, ModifierKeys.None);
-
-        Assert.True(isShortcut);
-    }
-
-    [Theory]
-    [InlineData(Key.Escape, ModifierKeys.Control)]
-    [InlineData(Key.Escape, ModifierKeys.Shift)]
-    [InlineData(Key.A, ModifierKeys.None)]
-    public void IsCloseAnalyticsShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
-    {
-        var isShortcut = MainWindowShortcutMatcher.IsCloseAnalyticsShortcut(key, modifiers);
-
-        Assert.False(isShortcut);
-    }
-
-    [Fact]
     public void IsOpenSearchShortcut_ReturnsTrue_ForCtrlF()
     {
         var isShortcut = MainWindowShortcutMatcher.IsOpenSearchShortcut(Key.F, ModifierKeys.Control);

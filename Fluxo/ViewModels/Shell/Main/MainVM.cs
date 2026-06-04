@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
@@ -14,30 +15,21 @@ public partial class MainVM : ObservableRecipient
     private readonly IDataOperationRunner _dataOperationRunner;
     private bool _isInitialized;
 
-    [ObservableProperty] private bool _isDashboardSpendingAmountGateLocked;
-    [ObservableProperty] private bool _isSufficientFundsActionGateLocked;
     [ObservableProperty] private string _username = "User";
 
     public bool IsInitialized => _isInitialized;
 
     public MainVM(
         IDataOperationRunner dataOperationRunner,
-        Main.NotificationPanelVM notificationPanel,
-        Main.BudgetAllocationPanelVM budgetPanel,
-        Main.SpentAllowancePanelVM spentAllowancePanel,
-        Main.SavingGoalsPanelVM savingGoalsPanel,
+        DashboardVM dashboard,
         Main.DaySpinnerVM daySpinner,
-        Main.MainViewModeToggleVM viewModeToggle,
         Main.LedgerVM? ledger = null)
     {
         _dataOperationRunner = dataOperationRunner;
-        NotificationPanel = notificationPanel;
-        BudgetPanel = budgetPanel;
-        SpentAllowancePanel = spentAllowancePanel;
-        SavingGoalsPanel = savingGoalsPanel;
+        Dashboard = dashboard;
         DaySpinner = daySpinner;
-        ViewModeToggle = viewModeToggle;
         Ledger = ledger;
+        Dashboard.PropertyChanged += OnDashboardPropertyChanged;
 
         WeakReferenceMessenger.Default.Register<MainVM, UsernameChangedMessage>(this,
             static (recipient, message) => recipient.Username = message.Value);
@@ -45,19 +37,23 @@ public partial class MainVM : ObservableRecipient
             static (recipient, message) => recipient.HandleExpenseDetailUpdatedMessage(message));
     }
 
-    public Main.NotificationPanelVM NotificationPanel { get; }
-    public Main.BudgetAllocationPanelVM BudgetPanel { get; }
-    public Main.SpentAllowancePanelVM SpentAllowancePanel { get; }
-    public Main.SavingGoalsPanelVM SavingGoalsPanel { get; }
+    public DashboardVM Dashboard { get; }
+    public Main.NotificationPanelVM NotificationPanel => Dashboard.NotificationPanel;
+    public Main.BudgetAllocationPanelVM BudgetPanel => Dashboard.BudgetPanel;
+    public Main.SpentAllowancePanelVM SpentAllowancePanel => Dashboard.SpentAllowancePanel;
+    public Main.SavingGoalsPanelVM SavingGoalsPanel => Dashboard.SavingGoalsPanel;
     public Main.DaySpinnerVM DaySpinner { get; }
-    public Main.MainViewModeToggleVM ViewModeToggle { get; }
+    public Main.MainViewModeToggleVM ViewModeToggle => Dashboard.ViewModeToggle;
     public Main.LedgerVM? Ledger { get; }
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
+    public bool IsDashboardSpendingAmountGateLocked => Dashboard.IsDashboardSpendingAmountGateLocked;
+    public bool IsSufficientFundsActionGateLocked => Dashboard.IsSufficientFundsActionGateLocked;
+
+    public ObservableCollection<SpendingSourceVM> SpendingSources => Dashboard.SpendingSources;
 
     public void ToggleSpendingSourceFilter(SpendingSourceVM? spendingSource)
     {
-        BudgetPanel.ToggleSelectedSpendingSource(spendingSource);
+        Dashboard.ToggleSpendingSourceFilter(spendingSource);
     }
 
     public Task Initialize()
@@ -72,18 +68,7 @@ public partial class MainVM : ObservableRecipient
         await LoadUserSettingsAsync();
         await betweenStagesAsync();
 
-        await BudgetPanel.LoadAsync();
-        RefreshSpendingAmountGateStates();
-        await betweenStagesAsync();
-
-        await SpentAllowancePanel.LoadAsync();
-        await betweenStagesAsync();
-
-        await NotificationPanel.LoadAsync();
-        await betweenStagesAsync();
-
-        await SavingGoalsPanel.LoadAsync();
-        await betweenStagesAsync();
+        await Dashboard.InitializeWithStartupStagesAsync(betweenStagesAsync);
 
         if (Ledger is not null)
         {
@@ -91,63 +76,16 @@ public partial class MainVM : ObservableRecipient
             await betweenStagesAsync();
         }
 
-        ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
-            ViewModeToggle.SelectedMainContentViewMode);
         _isInitialized = true;
+        OnPropertyChanged(nameof(IsInitialized));
     }
 
     public async Task ReloadCurrentDataAsync()
     {
-        await BudgetPanel.LoadAsync();
-        RefreshSpendingAmountGateStates();
-
-        await Task.WhenAll(
-            SpentAllowancePanel.LoadAsync(),
-            NotificationPanel.LoadAsync(),
-            SavingGoalsPanel.LoadAsync());
+        await Dashboard.ReloadCurrentDataAsync();
 
         if (Ledger is not null)
             await Ledger.LoadAsync();
-    }
-
-    public static bool ShouldLockDashboardForSpendingAmount(
-        IEnumerable<SpendingSourceVM> spendingSources,
-        IEnumerable<ExpenseLogVM> expenseLogs)
-    {
-        ArgumentNullException.ThrowIfNull(spendingSources);
-        ArgumentNullException.ThrowIfNull(expenseLogs);
-
-        return !spendingSources.Any(source => source.IsEnabled);
-    }
-
-    public static bool ShouldLockActionsForSufficientFunds(
-        IEnumerable<SpendingSourceVM> spendingSources,
-        IEnumerable<ExpenseLogVM> expenseLogs)
-    {
-        ArgumentNullException.ThrowIfNull(spendingSources);
-        ArgumentNullException.ThrowIfNull(expenseLogs);
-
-        var hasUsableFunds = spendingSources
-            .Where(source => source.IsEnabled)
-            .Any(HasUsableFunds);
-        var hasActiveExpenseLogs = expenseLogs.Any(log => !log.IsForDeletion);
-
-        return !hasUsableFunds && !hasActiveExpenseLogs;
-    }
-
-    private static bool HasUsableFunds(SpendingSourceVM source)
-    {
-        return source.SpendingSourceType is Fluxo.Core.Enums.SpendingSourceType.Credit or Fluxo.Core.Enums.SpendingSourceType.BNPL
-            ? source.AccountLimit > 0m
-            : source.Balance > 0m;
-    }
-
-    private void RefreshSpendingAmountGateStates()
-    {
-        IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(SpendingSources, BudgetPanel.GetAllExpenseLogs());
-        IsSufficientFundsActionGateLocked =
-            IsDashboardSpendingAmountGateLocked ||
-            ShouldLockActionsForSufficientFunds(SpendingSources, BudgetPanel.GetAllExpenseLogs());
     }
 
     private async Task LoadUserSettingsAsync()
@@ -171,5 +109,18 @@ public partial class MainVM : ObservableRecipient
             return;
 
         _ = ReloadCurrentDataAsync();
+    }
+
+    private void OnDashboardPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(DashboardVM.IsDashboardSpendingAmountGateLocked):
+                OnPropertyChanged(nameof(IsDashboardSpendingAmountGateLocked));
+                break;
+            case nameof(DashboardVM.IsSufficientFundsActionGateLocked):
+                OnPropertyChanged(nameof(IsSufficientFundsActionGateLocked));
+                break;
+        }
     }
 }

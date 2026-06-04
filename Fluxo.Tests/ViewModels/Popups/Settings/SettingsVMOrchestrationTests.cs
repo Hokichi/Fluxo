@@ -79,8 +79,8 @@ public sealed class SettingsVMOrchestrationTests
 
             Assert.True(settings.IsSufficientFundsActionGateLocked);
 
-            mainViewModel.IsDashboardSpendingAmountGateLocked = false;
-            mainViewModel.IsSufficientFundsActionGateLocked = false;
+            mainViewModel.Dashboard.IsDashboardSpendingAmountGateLocked = false;
+            mainViewModel.Dashboard.IsSufficientFundsActionGateLocked = false;
             settings.Receive(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
 
             Assert.False(settings.IsSufficientFundsActionGateLocked);
@@ -96,8 +96,8 @@ public sealed class SettingsVMOrchestrationTests
         var unitOfWork = CreateUnitOfWork();
         var appData = new AppDataService(unitOfWork);
         var mainViewModel = CreateMainViewModel(messenger, unitOfWork);
-        mainViewModel.IsDashboardSpendingAmountGateLocked = true;
-        mainViewModel.IsSufficientFundsActionGateLocked = true;
+        mainViewModel.Dashboard.IsDashboardSpendingAmountGateLocked = true;
+        mainViewModel.Dashboard.IsSufficientFundsActionGateLocked = true;
 
         var settings = new SettingsVM(
             mainViewModel,
@@ -120,8 +120,7 @@ public sealed class SettingsVMOrchestrationTests
         var mapper = Substitute.For<IMapper>();
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
-        return new MainVM(
-            dataOperationRunner,
+        var dashboard = new DashboardVM(
             new NotificationPanelVM(
                 Substitute.For<IExpenseService>(),
                 Substitute.For<IExpenseLogService>(),
@@ -143,8 +142,13 @@ public sealed class SettingsVMOrchestrationTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(dataOperationRunner, mapper, messenger),
-            new DaySpinnerVM(messenger),
             new MainViewModeToggleVM(messenger));
+
+        return new MainVM(
+            dataOperationRunner,
+            dashboard,
+            new DaySpinnerVM(messenger),
+            null);
     }
 
     private static IUnitOfWork CreateUnitOfWork()

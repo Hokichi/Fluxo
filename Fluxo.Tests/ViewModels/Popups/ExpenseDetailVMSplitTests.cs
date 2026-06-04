@@ -639,8 +639,7 @@ public sealed class ExpenseDetailVMSplitTests
 
         var runner = new InlineDataOperationRunner(unitOfWork);
 
-        var main = new MainVM(
-            runner,
+        var dashboard = new DashboardVM(
             new NotificationPanelVM(
                 Substitute.For<IExpenseService>(),
                 Substitute.For<IExpenseLogService>(),
@@ -662,8 +661,12 @@ public sealed class ExpenseDetailVMSplitTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(runner, mapper, messenger),
-            new DaySpinnerVM(messenger),
             new MainViewModeToggleVM(messenger));
+        var main = new MainVM(
+            runner,
+            dashboard,
+            new DaySpinnerVM(messenger),
+            null);
 
         main.BudgetPanel.SpendingSources.Add(source);
         main.BudgetPanel.Tags = new ObservableCollection<ExpenseTagVM>([tag]);

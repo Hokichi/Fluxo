@@ -6,32 +6,44 @@ namespace Fluxo.Tests.Views.Shell.Main;
 public sealed class MainWindowStateFadeGuardTests
 {
     [Fact]
-    public void StateChangeFadeElements_ExcludeTabHost_WhenTabVisibilityTransitionIsActive()
+    public void StateChangeFadeElements_IncludeContentHostAndFloatingNavigation()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
         var methodBody = ExtractMethodBodyBySignature(source, "private UIElement[] GetStateChangeFadeElements()");
 
-        Assert.Contains("_isAnalyticsDrawerTabVisibilityTransitionActive", methodBody);
-        Assert.Contains("? new UIElement[] { ContentGrid, AnalyticsDrawerLayer }", methodBody);
-        Assert.Contains(": new UIElement[] { ContentGrid, AnalyticsDrawerLayer, DrawerTabHost };", methodBody);
+        Assert.Contains("ContentGrid", methodBody);
+        Assert.Contains("MainPageHost", methodBody);
+        Assert.Contains("FloatingSideNavigationRail", methodBody);
+        Assert.DoesNotContain("AnalyticsDrawerLayer", methodBody);
+        Assert.DoesNotContain("DrawerTabHost", methodBody);
     }
 
     [Fact]
-    public void SetAnalyticsDrawerTabVisibility_ManagesTransitionFlagLifecycle()
+    public void HostedPageCrossfade_UsesDashboardPageHostWhenLeavingDashboard()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
-        var methodBody = ExtractMethodBodyBySignature(source, "private void SetAnalyticsDrawerTabVisibility(");
+        var methodBody = ExtractMethodBodyBySignature(source, "private async Task CrossfadeToHostedPageAsync(UIElement nextPage)");
 
-        Assert.Contains("_isAnalyticsDrawerTabVisibilityTransitionActive = false;", methodBody);
-        Assert.Contains("_isAnalyticsDrawerTabVisibilityTransitionActive = true;", methodBody);
-        Assert.Contains("tabAnimation.Completed += (_, _) =>", methodBody);
-        Assert.Contains("if (visibilityToken != _analyticsDrawerTabVisibilityToken)", methodBody);
+        Assert.Contains("_isMainPageTransitionActive = true;", methodBody);
+        Assert.Contains("_isMainPageTransitionActive = false;", methodBody);
+        Assert.Contains("? DashboardPageHost", methodBody);
+        Assert.Contains("DashboardPageHost.Visibility = Visibility.Collapsed;", methodBody);
+        Assert.Contains("MainPageHost.Content = nextPage;", methodBody);
+        Assert.Contains("await FadeElementAsync(MainPageHost, 1", methodBody);
+        Assert.DoesNotContain("MainShellPage.Home", methodBody);
+    }
 
-        var clearTransitionFlagCount =
-            CountOccurrences(methodBody, "_isAnalyticsDrawerTabVisibilityTransitionActive = false;");
-        Assert.True(
-            clearTransitionFlagCount >= 2,
-            "Expected transition flag to be cleared before animation setup and after animation completion.");
+    [Fact]
+    public void DashboardShellCrossfade_RestoresDashboardContentWithoutHostedPage()
+    {
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+        var methodBody = ExtractMethodBodyBySignature(source, "private async Task CrossfadeToDashboardShellAsync()");
+
+        Assert.Contains("MainPageHost.Content = null;", methodBody);
+        Assert.Contains("MainPageHost.Visibility = Visibility.Collapsed;", methodBody);
+        Assert.Contains("DashboardPageHost.Visibility = Visibility.Visible;", methodBody);
+        Assert.Contains("await FadeElementAsync(DashboardPageHost, 1", methodBody);
+        Assert.DoesNotContain("PrepareHostedPageAsync", methodBody);
     }
 
     private static string ExtractMethodBodyBySignature(string source, string signatureMarker)
@@ -62,19 +74,6 @@ public sealed class MainWindowStateFadeGuardTests
         }
 
         throw new InvalidOperationException($"Closing brace for method signature '{signatureMarker}' was not found.");
-    }
-
-    private static int CountOccurrences(string source, string value)
-    {
-        var count = 0;
-        var index = 0;
-        while ((index = source.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
-        {
-            count++;
-            index += value.Length;
-        }
-
-        return count;
     }
 
     private static string ResolveMainWindowCodeBehindPath()

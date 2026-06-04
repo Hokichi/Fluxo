@@ -10,7 +10,7 @@ public class MainVMSpendingAmountGateTests
     [Fact]
     public void ShouldLockDashboardForSpendingAmount_WhenNoSources_ReturnsTrue()
     {
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount([], []);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount([], []);
 
         Assert.True(isLocked);
     }
@@ -25,7 +25,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Saving, Balance = 0m, IsEnabled = true }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.False(isLocked);
     }
@@ -39,7 +39,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = 25m, IsEnabled = true }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.False(isLocked);
     }
@@ -53,7 +53,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = -1m, IsEnabled = true }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.False(isLocked);
     }
@@ -67,7 +67,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m, IsEnabled = true }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.False(isLocked);
     }
@@ -80,7 +80,7 @@ public class MainVMSpendingAmountGateTests
             new ExpenseLogVM { IsForDeletion = false, Amount = 10m }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount([], logs);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount([], logs);
 
         Assert.True(isLocked);
     }
@@ -97,7 +97,7 @@ public class MainVMSpendingAmountGateTests
             new ExpenseLogVM { IsForDeletion = false, Amount = 50m }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, logs);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, logs);
 
         Assert.False(isLocked);
     }
@@ -114,7 +114,7 @@ public class MainVMSpendingAmountGateTests
             new ExpenseLogVM { IsForDeletion = true, Amount = 50m }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, logs);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, logs);
 
         Assert.False(isLocked);
     }
@@ -132,7 +132,7 @@ public class MainVMSpendingAmountGateTests
             }
         };
 
-        var isLocked = MainVM.ShouldLockDashboardForSpendingAmount(sources, []);
+        var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
 
         Assert.True(isLocked);
     }
@@ -140,7 +140,7 @@ public class MainVMSpendingAmountGateTests
     [Fact]
     public void ShouldLockActionsForSufficientFunds_WhenNoSources_ReturnsTrue()
     {
-        var isLocked = MainVM.ShouldLockActionsForSufficientFunds([], []);
+        var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds([], []);
 
         Assert.True(isLocked);
     }
@@ -157,7 +157,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = -1m, IsEnabled = true }
         };
 
-        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+        var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, []);
 
         Assert.True(isLocked);
     }
@@ -171,7 +171,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = 25m, IsEnabled = true }
         };
 
-        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+        var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, []);
 
         Assert.False(isLocked);
     }
@@ -185,7 +185,7 @@ public class MainVMSpendingAmountGateTests
             new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m, IsEnabled = true }
         };
 
-        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+        var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, []);
 
         Assert.False(isLocked);
     }
@@ -203,7 +203,7 @@ public class MainVMSpendingAmountGateTests
             }
         };
 
-        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, []);
+        var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, []);
 
         Assert.True(isLocked);
     }
@@ -220,7 +220,7 @@ public class MainVMSpendingAmountGateTests
             new ExpenseLogVM { IsForDeletion = false, Amount = 50m }
         };
 
-        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, logs);
+        var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, logs);
 
         Assert.False(isLocked);
     }
@@ -237,7 +237,7 @@ public class MainVMSpendingAmountGateTests
             new ExpenseLogVM { IsForDeletion = true, Amount = 50m }
         };
 
-        var isLocked = MainVM.ShouldLockActionsForSufficientFunds(sources, logs);
+        var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, logs);
 
         Assert.True(isLocked);
     }
