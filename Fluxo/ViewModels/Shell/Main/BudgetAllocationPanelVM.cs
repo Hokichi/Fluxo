@@ -797,6 +797,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                 ApplyIncomeAction(addIncomeAction.Snapshot, direction);
                 return;
 
+            case EditIncomeLogMemoryAction editIncomeAction:
+                ApplyEditedIncomeAction(editIncomeAction, direction);
+                return;
+
+            case DeleteIncomeLogMemoryAction deleteIncomeAction:
+                ApplyDeletedIncomeAction(deleteIncomeAction, direction);
+                return;
+
             case EditExpenseLogMemoryAction editExpenseAction:
                 ApplyEditedExpenseAction(editExpenseAction, direction);
                 return;
@@ -854,6 +862,19 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         RefreshExpenseBucketsFromTrackedLogs();
     }
 
+    private void ApplyEditedIncomeAction(EditIncomeLogMemoryAction action, LogMemoryApplyDirection direction)
+    {
+        var previous = direction == LogMemoryApplyDirection.Redo ? action.Before : action.After;
+        var target = direction == LogMemoryApplyDirection.Redo ? action.After : action.Before;
+
+        UpsertIncomeLog(target);
+        RestoreIncomeFromTrackedSource(previous);
+        ApplyIncomeToTrackedSource(target);
+        AdjustSourceDifference(previous.SpendingSourceId, previous.AddedOn, previous.Amount);
+        AdjustSourceDifference(target.SpendingSourceId, target.AddedOn, -target.Amount);
+        RefreshBudgetMetrics();
+    }
+
     private void ApplyDeletedExpenseAction(DeleteExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
     {
         if (action.Snapshot is not { } snapshot)
@@ -872,6 +893,25 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         ApplyExpenseToTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
+    }
+
+    private void ApplyDeletedIncomeAction(DeleteIncomeLogMemoryAction action, LogMemoryApplyDirection direction)
+    {
+        var snapshot = action.Snapshot;
+
+        if (direction == LogMemoryApplyDirection.Redo)
+        {
+            RemoveIncomeLog(snapshot.IncomeLogId);
+            RestoreIncomeFromTrackedSource(snapshot);
+            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, snapshot.Amount);
+            RefreshBudgetMetrics();
+            return;
+        }
+
+        UpsertIncomeLog(snapshot);
+        ApplyIncomeToTrackedSource(snapshot);
+        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, -snapshot.Amount);
+        RefreshBudgetMetrics();
     }
 
     private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)

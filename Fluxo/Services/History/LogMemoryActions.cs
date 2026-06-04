@@ -314,6 +314,104 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
     }
 }
 
+public sealed class EditIncomeLogMemoryAction(
+    IncomeLogMemorySnapshot before,
+    IncomeLogMemorySnapshot after) : ILogMemoryAction
+{
+    public IncomeLogMemorySnapshot Before => before;
+    public IncomeLogMemorySnapshot After => after;
+
+    public string Description => "Edit income";
+
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
+    }
+
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
+    }
+
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, IncomeLogMemorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        var incomeLog = await unitOfWork.IncomeLogs.GetByIdAsync(snapshot.IncomeLogId, cancellationToken);
+        if (incomeLog is null)
+            return;
+
+        var currentSpendingSource = incomeLog.SpendingSource;
+        var targetSpendingSource =
+            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                cancellationToken);
+
+        LogMemoryPersistence.RevertIncomeFromSpendingSource(currentSpendingSource, incomeLog.Amount);
+        LogMemoryPersistence.ApplyIncomeToSpendingSource(targetSpendingSource, snapshot.Amount);
+
+        incomeLog.Name = snapshot.Name;
+        incomeLog.Amount = snapshot.Amount;
+        incomeLog.AddedOn = snapshot.AddedOn;
+        incomeLog.Notes = snapshot.Notes;
+        incomeLog.SpendingSource = targetSpendingSource;
+        incomeLog.SpendingSourceId = snapshot.SpendingSourceId;
+
+        unitOfWork.IncomeLogs.Update(incomeLog);
+        unitOfWork.SpendingSources.Update(currentSpendingSource);
+
+        if (!ReferenceEquals(currentSpendingSource, targetSpendingSource))
+            unitOfWork.SpendingSources.Update(targetSpendingSource);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class DeleteIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public IncomeLogMemorySnapshot Snapshot => snapshot;
+
+    public string Description => "Delete income";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.IncomeLogs.GetByIdAsync(snapshot.IncomeLogId, cancellationToken) is not null)
+            return;
+
+        var spendingSource =
+            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+                cancellationToken);
+
+        var incomeLog = new IncomeLog
+        {
+            Id = snapshot.IncomeLogId,
+            Name = snapshot.Name,
+            Amount = snapshot.Amount,
+            AddedOn = snapshot.AddedOn,
+            Notes = snapshot.Notes,
+            SpendingSourceId = snapshot.SpendingSourceId,
+            SpendingSource = spendingSource
+        };
+
+        await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
+        LogMemoryPersistence.ApplyIncomeToSpendingSource(spendingSource, snapshot.Amount);
+        unitOfWork.SpendingSources.Update(spendingSource);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var incomeLog = await unitOfWork.IncomeLogs.GetByIdAsync(snapshot.IncomeLogId, cancellationToken);
+        if (incomeLog is null)
+            return;
+
+        LogMemoryPersistence.RevertIncomeFromSpendingSource(incomeLog.SpendingSource, incomeLog.Amount);
+        unitOfWork.SpendingSources.Update(incomeLog.SpendingSource);
+        unitOfWork.IncomeLogs.Remove(incomeLog);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
 public sealed class CompositeLogMemoryAction(string description, IReadOnlyList<ILogMemoryAction> actions)
     : ILogMemoryAction
 {

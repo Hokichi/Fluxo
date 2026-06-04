@@ -417,6 +417,60 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
+    public void RecordLogMemoryMessage_EditIncomeUpdatesTrackedIncomeWithoutReload()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources(), CreateIncomeLogs());
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            var before = new IncomeLogMemorySnapshot(
+                10,
+                1,
+                "Refund",
+                20m,
+                new DateTime(2026, 4, 12),
+                "refund");
+            var after = before with
+            {
+                Name = "Bonus",
+                Amount = 50m
+            };
+
+            messenger.Send(new RecordLogMemoryMessage(new EditIncomeLogMemoryAction(before, after)));
+
+            var updated = vm.GetAllIncomeLogs().Single(log => log.Id == 10);
+            Assert.Equal("Bonus", updated.Name);
+            Assert.Equal(50m, updated.Amount);
+            Assert.Equal(2030m, vm.TotalIncomeAmount);
+        });
+    }
+
+    [Fact]
+    public void RecordLogMemoryMessage_DeleteIncomeRemovesTrackedIncomeWithoutReload()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources(), CreateIncomeLogs());
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            messenger.Send(new RecordLogMemoryMessage(new DeleteIncomeLogMemoryAction(
+                new IncomeLogMemorySnapshot(
+                    10,
+                    1,
+                    "Refund",
+                    20m,
+                    new DateTime(2026, 4, 12),
+                    "refund"))));
+
+            Assert.Empty(vm.GetAllIncomeLogs());
+            Assert.Equal(1980m, vm.TotalIncomeAmount);
+        });
+    }
+
+    [Fact]
     public void RecordLogMemoryMessage_EditExpensePreservesTagColorAndSourceNameWithoutReload()
     {
         RunInSta(() =>
