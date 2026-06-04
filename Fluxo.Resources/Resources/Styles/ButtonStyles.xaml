@@ -7,6 +7,8 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type c:BalloonButton}">
@@ -20,19 +22,44 @@
                             IsHitTestVisible="False"
                             Opacity="0" />
                         <!--  Content area, inset by Padding to clear the bulging edges  -->
-                        <StackPanel
+                        <Grid
+                            x:Name="PART_ContentHost"
                             Margin="{TemplateBinding Padding}"
                             HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                            <Path
-                                x:Name="PART_Icon"
-                                Width="{TemplateBinding IconSize}"
-                                Height="{TemplateBinding IconSize}"
+                            VerticalAlignment="Center"
+                            ClipToBounds="True">
+                            <StackPanel
                                 HorizontalAlignment="Center"
-                                Fill="{TemplateBinding Foreground}"
-                                IsHitTestVisible="False"
-                                Stretch="Uniform" />
-                        </StackPanel>
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Path
+                                    x:Name="PART_Icon"
+                                    Width="{TemplateBinding IconSize}"
+                                    Height="{TemplateBinding IconSize}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Fill="{TemplateBinding Foreground}"
+                                    IsHitTestVisible="False"
+                                    Stretch="Uniform" />
+                                <Border
+                                    x:Name="PART_TextReveal"
+                                    Width="0"
+                                    ClipToBounds="True"
+                                    Opacity="0">
+                                    <TextBlock
+                                        x:Name="PART_ButtonText"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{TemplateBinding FontFamily}"
+                                        FontSize="{TemplateBinding FontSize}"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        Opacity="0"
+                                        Text="{TemplateBinding ButtonText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsPressed" Value="True">
@@ -50,14 +77,12 @@
         </Style.Triggers>
     </Style>
 
-    <!--  TODO: Implement an expanding BalloonButton with text  -->
-
     <Style
         x:Key="MainWindowBalloonButtonChromeStyle"
         BasedOn="{StaticResource {x:Type c:BalloonButton}}"
         TargetType="{x:Type c:BalloonButton}">
-        <Setter Property="Width" Value="28" />
-        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=Width}" />
+        <Setter Property="ButtonSize" Value="28" />
+        <Setter Property="ExpandedWidth" Value="96" />
         <Setter Property="Margin" Value="8,0,0,0" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="CurveHeight" Value="8" />
@@ -90,7 +115,6 @@
         </Setter>
     </Style>
 
-    <!--  TODO: Implement hovered background and foreground  -->
     <Style x:Key="PopupTextButtonStyle" TargetType="Button">
         <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="14,0" />
@@ -802,7 +826,7 @@
         TargetType="{x:Type c:BalloonButton}">
         <Setter Property="Margin" Value="8" />
         <Setter Property="IconSize" Value="14" />
-        <Setter Property="Width" Value="40" />
+        <Setter Property="ButtonSize" Value="40" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Hover}" />
         <Setter Property="HoveredBackground" Value="{StaticResource Brush.Background.Elevated}" />
         <Style.Triggers>

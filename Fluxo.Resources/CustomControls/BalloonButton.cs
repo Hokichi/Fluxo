@@ -10,13 +10,20 @@ namespace Fluxo.Resources.CustomControls;
 [TemplatePart(Name = PartShape, Type = typeof(Path))]
 [TemplatePart(Name = PartOverlay, Type = typeof(Path))]
 [TemplatePart(Name = PartIcon, Type = typeof(Path))]
+[TemplatePart(Name = PartTextReveal, Type = typeof(Border))]
+[TemplatePart(Name = PartButtonText, Type = typeof(TextBlock))]
 public class BalloonButton : Button
 {
     private const string PartShape = "PART_Shape";
     private const string PartOverlay = "PART_Overlay";
     private const string PartIcon = "PART_Icon";
+    private const string PartTextReveal = "PART_TextReveal";
+    private const string PartButtonText = "PART_ButtonText";
 
     private static readonly Duration FadeDuration = new(TimeSpan.FromSeconds(0.2));
+    private static readonly Duration ExpandDuration = new(TimeSpan.FromSeconds(0.18));
+    private static readonly Duration CollapseDuration = new(TimeSpan.FromSeconds(0.16));
+    private static readonly Duration TextFadeDuration = new(TimeSpan.FromSeconds(0.12));
 
     // --- DefaultBackground ---
     public static readonly DependencyProperty DefaultBackgroundProperty =
@@ -32,6 +39,26 @@ public class BalloonButton : Button
     public static readonly DependencyProperty ButtonIconProperty =
         DependencyProperty.Register(nameof(ButtonIcon), typeof(object), typeof(BalloonButton),
             new PropertyMetadata(null, (d, _) => ((BalloonButton)d).ApplyIcon()));
+
+    // --- ButtonText ---
+    public static readonly DependencyProperty ButtonTextProperty =
+        DependencyProperty.Register(nameof(ButtonText), typeof(string), typeof(BalloonButton),
+            new PropertyMetadata(null));
+
+    // --- ShouldExpand ---
+    public static readonly DependencyProperty ShouldExpandProperty =
+        DependencyProperty.Register(nameof(ShouldExpand), typeof(bool), typeof(BalloonButton),
+            new PropertyMetadata(false));
+
+    // --- ButtonSize ---
+    public static readonly DependencyProperty ButtonSizeProperty =
+        DependencyProperty.Register(nameof(ButtonSize), typeof(double), typeof(BalloonButton),
+            new PropertyMetadata(30.0));
+
+    // --- ExpandedWidth ---
+    public static readonly DependencyProperty ExpandedWidthProperty =
+        DependencyProperty.Register(nameof(ExpandedWidth), typeof(double), typeof(BalloonButton),
+            new PropertyMetadata(96.0));
 
     // --- CurveHeight ---
     public static readonly DependencyProperty CurveHeightProperty =
@@ -52,6 +79,8 @@ public class BalloonButton : Button
     private Path? _overlay;
 
     private Path? _shape;
+    private TextBlock? _buttonText;
+    private Border? _textReveal;
 
     static BalloonButton()
     {
@@ -75,6 +104,30 @@ public class BalloonButton : Button
     {
         get => GetValue(ButtonIconProperty);
         set => SetValue(ButtonIconProperty, value);
+    }
+
+    public string? ButtonText
+    {
+        get => (string?)GetValue(ButtonTextProperty);
+        set => SetValue(ButtonTextProperty, value);
+    }
+
+    public bool ShouldExpand
+    {
+        get => (bool)GetValue(ShouldExpandProperty);
+        set => SetValue(ShouldExpandProperty, value);
+    }
+
+    public double ButtonSize
+    {
+        get => (double)GetValue(ButtonSizeProperty);
+        set => SetValue(ButtonSizeProperty, value);
+    }
+
+    public double ExpandedWidth
+    {
+        get => (double)GetValue(ExpandedWidthProperty);
+        set => SetValue(ExpandedWidthProperty, value);
     }
 
     public double CurveHeight
@@ -103,8 +156,11 @@ public class BalloonButton : Button
         _shape = GetTemplateChild(PartShape) as Path;
         _overlay = GetTemplateChild(PartOverlay) as Path;
         _icon = GetTemplateChild(PartIcon) as Path;
+        _textReveal = GetTemplateChild(PartTextReveal) as Border;
+        _buttonText = GetTemplateChild(PartButtonText) as TextBlock;
         ResetShapeFill();
         ApplyIcon();
+        ResetExpansion();
         RebuildGeometry();
     }
 
@@ -112,12 +168,14 @@ public class BalloonButton : Button
     {
         base.OnMouseEnter(e);
         AnimateShapeFill(HoveredBackground);
+        AnimateExpansion(isExpanded: true);
     }
 
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
         AnimateShapeFill(DefaultBackground);
+        AnimateExpansion(isExpanded: false);
     }
 
     protected override void OnRenderSizeChanged(SizeChangedInfo info)
@@ -151,6 +209,50 @@ public class BalloonButton : Button
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
         };
         current.BeginAnimation(SolidColorBrush.ColorProperty, animation);
+    }
+
+    private void ResetExpansion()
+    {
+        Width = ButtonSize;
+
+        if (_textReveal is not null)
+        {
+            _textReveal.Width = 0;
+            _textReveal.Opacity = 0;
+        }
+
+        if (_buttonText is not null)
+            _buttonText.Opacity = 0;
+    }
+
+    private void AnimateExpansion(bool isExpanded)
+    {
+        if (!ShouldExpand)
+            return;
+
+        var widthTarget = isExpanded ? ExpandedWidth : ButtonSize;
+        var textWidthTarget = isExpanded ? Math.Max(0, ExpandedWidth - ButtonSize - 8) : 0;
+        var opacityTarget = isExpanded ? 1 : 0;
+        var duration = isExpanded ? ExpandDuration : CollapseDuration;
+        var easingMode = isExpanded ? EasingMode.EaseOut : EasingMode.EaseIn;
+        var easing = new CubicEase { EasingMode = easingMode };
+
+        BeginAnimation(WidthProperty, new DoubleAnimation(widthTarget, duration)
+        {
+            EasingFunction = easing
+        });
+
+        if (_textReveal is not null)
+        {
+            _textReveal.BeginAnimation(WidthProperty, new DoubleAnimation(textWidthTarget, duration)
+            {
+                EasingFunction = easing
+            });
+            _textReveal.BeginAnimation(OpacityProperty, new DoubleAnimation(opacityTarget, TextFadeDuration));
+        }
+
+        if (_buttonText is not null)
+            _buttonText.BeginAnimation(OpacityProperty, new DoubleAnimation(opacityTarget, TextFadeDuration));
     }
 
     private void ApplyIcon()
