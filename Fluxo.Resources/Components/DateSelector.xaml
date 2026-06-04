@@ -23,6 +23,7 @@
             <Button
                 Click="OnDayButtonClick"
                 Content="{Binding DayNumber}"
+                IsEnabled="{Binding IsEnabled}"
                 Style="{StaticResource CalendarDayButtonStyle}"
                 Tag="{Binding Date}" />
         </DataTemplate>
@@ -35,6 +36,7 @@
             <Button
                 Click="OnMonthButtonClick"
                 Content="{Binding Label}"
+                IsEnabled="{Binding IsEnabled}"
                 Style="{StaticResource CalendarChoiceButtonStyle}"
                 Tag="{Binding Value}" />
         </DataTemplate>
@@ -47,6 +49,7 @@
             <Button
                 Click="OnYearButtonClick"
                 Content="{Binding Label}"
+                IsEnabled="{Binding IsEnabled}"
                 Style="{StaticResource CalendarChoiceButtonStyle}"
                 Tag="{Binding Value}" />
         </DataTemplate>

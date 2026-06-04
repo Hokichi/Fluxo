@@ -19,6 +19,13 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                 OnSelectedDateChanged));
 
+    public static readonly DependencyProperty MaxSelectableDateProperty =
+        DependencyProperty.Register(
+            nameof(MaxSelectableDate),
+            typeof(DateTime?),
+            typeof(DateSelector),
+            new FrameworkPropertyMetadata(null, OnMaxSelectableDateChanged));
+
     private DisplayMode _displayMode = DisplayMode.Day;
     private DateTime _displayMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private bool _isPopupOpen;
@@ -39,6 +46,12 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
     {
         get => (DateTime)GetValue(SelectedDateProperty);
         set => SetValue(SelectedDateProperty, value);
+    }
+
+    public DateTime? MaxSelectableDate
+    {
+        get => (DateTime?)GetValue(MaxSelectableDateProperty);
+        set => SetValue(MaxSelectableDateProperty, value);
     }
 
     public bool IsPopupOpen
@@ -79,10 +92,21 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public void RebuildViewForTests()
+    {
+        RebuildView();
+    }
+
     private static void OnSelectedDateChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
     {
         if (dependencyObject is not DateSelector selector || e.NewValue is not DateTime selectedDate)
             return;
+
+        if (selector.MaxSelectableDate is DateTime maxDate && selectedDate.Date > maxDate.Date)
+        {
+            selector.SelectedDate = maxDate.Date;
+            return;
+        }
 
         selector._displayMonth = new DateTime(selectedDate.Year, selectedDate.Month, 1);
         selector._yearRangeStart = selectedDate.Year - 5;
@@ -90,6 +114,20 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
         selector.OnPropertyChanged(nameof(DisplayMonthLabel));
         selector.OnPropertyChanged(nameof(DisplayYearLabel));
         selector.OnPropertyChanged(nameof(DisplayYearRangeLabel));
+        selector.RebuildView();
+    }
+
+    private static void OnMaxSelectableDateChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+    {
+        if (dependencyObject is not DateSelector selector)
+            return;
+
+        if (selector.MaxSelectableDate is DateTime maxDate && selector.SelectedDate.Date > maxDate.Date)
+        {
+            selector.SelectedDate = maxDate.Date;
+            return;
+        }
+
         selector.RebuildView();
     }
 
@@ -147,6 +185,9 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
         if (sender is not Button { Tag: DateTime selectedDate })
             return;
 
+        if (!IsSelectable(selectedDate))
+            return;
+
         SelectedDate = selectedDate.Date;
         IsPopupOpen = false;
     }
@@ -154,6 +195,9 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
     private void OnMonthButtonClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int month })
+            return;
+
+        if (!IsMonthSelectable(_displayMonth.Year, month))
             return;
 
         _displayMonth = new DateTime(_displayMonth.Year, month, 1);
@@ -165,6 +209,9 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
     private void OnYearButtonClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int year })
+            return;
+
+        if (!IsYearSelectable(year))
             return;
 
         _displayMonth = new DateTime(year, _displayMonth.Month, 1);
@@ -217,7 +264,8 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
                 currentDay.Day.ToString(CultureInfo.InvariantCulture),
                 currentDay.Month == _displayMonth.Month,
                 currentDay.Date == DateTime.Today,
-                currentDay.Date == SelectedDate.Date));
+                currentDay.Date == SelectedDate.Date,
+                IsSelectable(currentDay)));
         }
     }
 
@@ -231,7 +279,8 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
             Months.Add(new CalendarChoiceItem(
                 monthDate.ToString("MMM", CultureInfo.InvariantCulture),
                 month,
-                SelectedDate.Year == _displayMonth.Year && SelectedDate.Month == month));
+                SelectedDate.Year == _displayMonth.Year && SelectedDate.Month == month,
+                IsMonthSelectable(_displayMonth.Year, month)));
         }
     }
 
@@ -243,7 +292,28 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
             Years.Add(new CalendarChoiceItem(
                 year.ToString(CultureInfo.InvariantCulture),
                 year,
-                SelectedDate.Year == year));
+                SelectedDate.Year == year,
+                IsYearSelectable(year)));
+    }
+
+    private bool IsSelectable(DateTime date)
+    {
+        return MaxSelectableDate is not DateTime maxDate || date.Date <= maxDate.Date;
+    }
+
+    private bool IsMonthSelectable(int year, int month)
+    {
+        if (MaxSelectableDate is not DateTime maxDate)
+            return true;
+
+        var firstDayOfMonth = new DateTime(year, month, 1);
+        var maxMonth = new DateTime(maxDate.Year, maxDate.Month, 1);
+        return firstDayOfMonth <= maxMonth;
+    }
+
+    private bool IsYearSelectable(int year)
+    {
+        return MaxSelectableDate is not DateTime maxDate || year <= maxDate.Year;
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -263,10 +333,12 @@ public partial class DateSelector : UserControl, INotifyPropertyChanged
         string DayNumber,
         bool IsCurrentMonth,
         bool IsToday,
-        bool IsSelected);
+        bool IsSelected,
+        bool IsEnabled);
 
     public sealed record CalendarChoiceItem(
         string Label,
         int Value,
-        bool IsSelected);
+        bool IsSelected,
+        bool IsEnabled);
 }
