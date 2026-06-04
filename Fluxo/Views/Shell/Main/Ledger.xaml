@@ -168,12 +168,33 @@
                             Text="{Binding SpendingSourceName}" />
                     </Border>
 
+                    <TextBlock
+                        Grid.Column="3"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="12"
+                        Text="{Binding SignedAmount, StringFormat={}{0:+$#,##0.00;-$#,##0.00;$0.00}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                <Setter Property="Visibility" Value="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Kind}" Value="{x:Static main:LedgerTransactionKind.Income}">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
                     <customControls:MoneyTextBox
                         Grid.Column="3"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
                         Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
-                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <Border
                         Grid.Column="4"

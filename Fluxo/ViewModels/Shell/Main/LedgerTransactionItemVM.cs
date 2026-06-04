@@ -37,4 +37,9 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     public string SpendingSourceGroupKey => string.IsNullOrWhiteSpace(SpendingSourceName) ? "No source" : SpendingSourceName;
     public string TypeGroupKey => TypeLabel;
     public string CategoryGroupKey => CategoryLabel;
+
+    partial void OnAmountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(SignedAmount));
+    }
 }

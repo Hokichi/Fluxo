@@ -57,7 +57,7 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void DrawerHeader_DateRangeSelectorHost_IsNamedAndControlledForAnalyticsOnly()
+    public void DrawerHeader_DateRangeSelectorHost_IsNamedAndControlledForLedgerOnly()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
@@ -81,8 +81,9 @@ public sealed class MainWindowLayoutTests
         Assert.Contains("SetAnalyticsDateRangeSelectorVisibility(page);", source);
         Assert.Contains("private void SetAnalyticsDateRangeSelectorVisibility(MainDrawerPage page)", source);
         Assert.Contains("AnalyticsDateRangeSelectorHost.Visibility = page switch", source);
-        Assert.Contains("MainDrawerPage.Analytics => Visibility.Visible", source);
+        Assert.Contains("MainDrawerPage.Ledger => Visibility.Visible", source);
         Assert.Contains("MainDrawerPage.Calendar => Visibility.Collapsed", source);
+        Assert.Contains("MainDrawerPage.Analytics => Visibility.Collapsed", source);
 
         var ensureAnalyticsDrawerLoaded = ExtractMethodBodyBySignature(
             source,
