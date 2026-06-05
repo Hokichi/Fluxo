@@ -114,17 +114,30 @@ public partial class Ledger : UserControl
         viewModel.ApplySpendingSourceFilter(transaction.SpendingSourceId);
     }
 
-    private async void OnApplyFiltersClick(object sender, RoutedEventArgs e)
+    private async void OnFilterDropDownClosed(object sender, EventArgs e)
     {
         if (DataContext is not LedgerVM viewModel)
             return;
 
-        await _dialogService.ShowToastWhileAsync(
+        await ShowFilterRefreshToastAsync(viewModel.ApplyFilters);
+    }
+
+    private async void OnClearFiltersClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LedgerVM viewModel)
+            return;
+
+        await ShowFilterRefreshToastAsync(viewModel.ClearFilters);
+    }
+
+    private Task ShowFilterRefreshToastAsync(Action refreshAction)
+    {
+        return _dialogService.ShowToastWhileAsync(
             "Filtering...",
             async () =>
             {
                 await Dispatcher.InvokeAsync(
-                    viewModel.ApplyFilters,
+                    refreshAction,
                     DispatcherPriority.Render);
                 await Dispatcher.InvokeAsync(
                     () => LedgerTransactionsList.Items.Refresh(),

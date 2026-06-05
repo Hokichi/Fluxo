@@ -75,6 +75,49 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void MultipleSpecificTagSelections_FilterAsAnySelectedTagWhenApplied()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            vm.TypeFilters.Single(option => !option.IsAll && option.Value == LedgerTransactionKind.Expense).IsChecked = true;
+            vm.TagFilters.Single(option => option.Value == 1).IsChecked = true;
+            vm.TagFilters.Single(option => option.Value == 2).IsChecked = true;
+            vm.ApplyFilters();
+
+            Assert.Equal(
+                new[] { "FreshMart Grocery", "Netflix" },
+                GetItems(vm.TransactionsView).Select(item => item.Name).OrderBy(name => name).ToArray());
+        });
+    }
+
+    [Fact]
+    public void ClearFilters_ResetsDropdownFiltersAndSearchButPreservesGrouping()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.SearchText = "flix";
+            vm.SelectedGroupingMode = LedgerGroupingMode.SpendingSources;
+            vm.TypeFilters.Single(option => option.Value == LedgerTransactionKind.Income).IsChecked = true;
+            vm.ApplyFilters();
+
+            vm.ClearFilters();
+
+            Assert.Equal(string.Empty, vm.SearchText);
+            Assert.Equal(LedgerGroupingMode.SpendingSources, vm.SelectedGroupingMode);
+            Assert.True(vm.TypeFilters.Single(option => option.IsAll).IsChecked);
+            Assert.True(vm.SpendingSourceFilters.Single(option => option.IsAll).IsChecked);
+            Assert.True(vm.CategoryFilters.Single(option => option.IsAll).IsChecked);
+            Assert.True(vm.TagFilters.Single(option => option.IsAll).IsChecked);
+            Assert.Equal(4, GetItems(vm.TransactionsView).Count);
+        });
+    }
+
+    [Fact]
     public void ApplyTagFilter_SelectsClickedTagOnTopOfCurrentFilterAndRefreshesImmediately()
     {
         RunInSta(() =>

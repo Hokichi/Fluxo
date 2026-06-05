@@ -197,6 +197,39 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Spending Sources", ledgerVm);
     }
 
+    [Fact]
+    public void Ledger_FilterDropdownsApplyOnCloseButGroupByDoesNot()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+
+        Assert.Equal(4, CountOccurrences(ledgerXaml, "DropDownClosed=\"OnFilterDropDownClosed\""));
+        Assert.Contains("ItemsSource=\"{Binding TypeFilters}\"", ledgerXaml);
+        Assert.Contains("ItemsSource=\"{Binding SpendingSourceFilters}\"", ledgerXaml);
+        Assert.Contains("ItemsSource=\"{Binding CategoryFilters}\"", ledgerXaml);
+        Assert.Contains("ItemsSource=\"{Binding TagFilters}\"", ledgerXaml);
+
+        var groupingComboIndex = ledgerXaml.IndexOf("x:Name=\"LedgerGroupingComboBox\"", StringComparison.Ordinal);
+        Assert.True(groupingComboIndex >= 0);
+        var groupingComboEndIndex = ledgerXaml.IndexOf("/>", groupingComboIndex, StringComparison.Ordinal);
+        Assert.True(groupingComboEndIndex > groupingComboIndex);
+        var groupingCombo = ledgerXaml.Substring(groupingComboIndex, groupingComboEndIndex - groupingComboIndex);
+        Assert.DoesNotContain("OnFilterDropDownClosed", groupingCombo);
+    }
+
+    [Fact]
+    public void Ledger_ClearFiltersButtonUsesBanIconAndClearHandler()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var banButtonIndex = ledgerXaml.IndexOf("ButtonIcon=\"{StaticResource Ban}\"", StringComparison.Ordinal);
+
+        Assert.True(banButtonIndex >= 0);
+        var buttonEndIndex = ledgerXaml.IndexOf("/>", banButtonIndex, StringComparison.Ordinal);
+        Assert.True(buttonEndIndex > banButtonIndex);
+        var button = ledgerXaml.Substring(banButtonIndex, buttonEndIndex - banButtonIndex);
+        Assert.Contains("Click=\"OnClearFiltersClick\"", button);
+        Assert.DoesNotContain("Click=\"OnApplyFiltersClick\"", button);
+    }
+
     private static void AssertPageHasDateSelectors(
         string pageName,
         string startSelectorName,
@@ -218,6 +251,19 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains(dateSelectors, selector =>
             (string?)selector.Attribute(XamlNamespace + "Name") == endSelectorName &&
             ((string?)selector.Attribute("SelectedDate"))?.Contains(endBinding) is true);
+    }
+
+    private static int CountOccurrences(string source, string value)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = source.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+
+        return count;
     }
 
     private static string ExtractMethodBodyBySignature(string source, string signatureMarker)

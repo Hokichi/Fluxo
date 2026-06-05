@@ -400,6 +400,16 @@ public partial class LedgerVM : ObservableRecipient,
         RefreshVisibleTransactionState();
     }
 
+    public void ClearFilters()
+    {
+        ResetFilter(TypeFilters);
+        ResetFilter(SpendingSourceFilters);
+        ResetFilter(CategoryFilters);
+        ResetFilter(TagFilters);
+        SearchText = string.Empty;
+        ApplyFilters();
+    }
+
     public void ApplyTagFilter(int tagId)
     {
         ApplySpecificFilter(TagFilters, tagId);
@@ -442,6 +452,20 @@ public partial class LedgerVM : ObservableRecipient,
 
             if (!options.Any(option => option.IsChecked))
                 allOption.IsChecked = true;
+        }
+        finally
+        {
+            _isSynchronizingFilters = false;
+        }
+    }
+
+    private void ResetFilter<T>(ObservableCollection<LedgerFilterOption<T>> options)
+    {
+        _isSynchronizingFilters = true;
+        try
+        {
+            foreach (var option in options)
+                option.IsChecked = option.IsAll;
         }
         finally
         {
