@@ -684,13 +684,6 @@
                 Style="{StaticResource LedgerFilterComboStyle}"
                 Tag="Tag" />
             <customControls:BalloonButton
-                Grid.Column="4"
-                ButtonIcon="{StaticResource Check}"
-                ButtonSize="34"
-                Click="OnApplyFiltersClick"
-                IconSize="14"
-                Style="{StaticResource HeaderButtonStyle}" />
-            <customControls:BalloonButton
                 Grid.Column="5"
                 ButtonIcon="{StaticResource Ban}"
                 ButtonSize="34"
@@ -700,7 +693,7 @@
             <Border
                 Grid.Column="6"
                 Width="1"
-                Margin="16,2,8,2"
+                Margin="8,2,0,2"
                 Background="{StaticResource Brush.Text.Muted}"
                 SnapsToDevicePixels="True" />
             <ComboBox
