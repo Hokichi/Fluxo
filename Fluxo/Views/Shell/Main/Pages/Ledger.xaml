@@ -37,7 +37,7 @@
             <Setter Property="MaxDropDownHeight" Value="220" />
             <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-            <Setter Property="ItemContainerStyle" Value="{DynamicResource LedgerFilterComboBoxItemStyle}" />
+            <Setter Property="ItemContainerStyle" Value="{DynamicResource FluxoComboBoxItemStyle}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -701,7 +701,7 @@
                 ItemsSource="{Binding GroupingModes}"
                 SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
                 SelectionChanged="OnGroupingModeSelectionChanged"
-                Style="{StaticResource LedgerGroupingComboStyle}"
+                Style="{StaticResource LedgerFilterComboStyle}"
                 Tag="Group By" />
             <customControls:BalloonButton
                 Grid.Column="7"
