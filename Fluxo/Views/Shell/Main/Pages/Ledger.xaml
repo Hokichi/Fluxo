@@ -259,7 +259,6 @@
             <Border
                 x:Name="RowRoot"
                 MinHeight="48"
-                Margin="0"
                 Padding="0"
                 Background="Transparent"
                 BorderBrush="{StaticResource Brush.Border.Subtle}"
@@ -267,7 +266,7 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4" />
-                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="6" />
                         <ColumnDefinition Width="2*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -276,17 +275,17 @@
 
                     <Border
                         Grid.Column="0"
-                        Margin="0,8,0,8"
+                        Margin="0,8"
                         CornerRadius="0,4,4,0">
                         <Border.Style>
                             <Style TargetType="Border">
-                                <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                                <Setter Property="Background" Value="{StaticResource Brush.Category.Needs}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding CategoryLabel}" Value="Wants">
-                                        <Setter Property="Background" Value="#E59F3A" />
+                                        <Setter Property="Background" Value="{StaticResource Brush.Category.Wants}" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding CategoryLabel}" Value="Invest">
-                                        <Setter Property="Background" Value="#7DD3FC" />
+                                        <Setter Property="Background" Value="{StaticResource Brush.Category.Investments}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
