@@ -134,7 +134,6 @@
             x:Key="LedgerGroupingComboStyle"
             BasedOn="{StaticResource LedgerFilterComboStyle}"
             TargetType="ComboBox">
-            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
             <Setter Property="ItemContainerStyle" Value="{StaticResource FluxoComboBoxItemStyle}" />
         </Style>
 
@@ -281,7 +280,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="72" />
+                        <ColumnDefinition Width="0.5*" />
                     </Grid.ColumnDefinitions>
 
                     <Border
@@ -417,6 +416,7 @@
                     <customControls:MoneyTextBox
                         Grid.Column="5"
                         Margin="0,8,8,8"
+                        VerticalContentAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
                         Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
@@ -697,8 +697,8 @@
                 x:Name="LedgerGroupingComboBox"
                 Grid.Column="6"
                 Margin="8,0,0,0"
-                ItemsSource="{Binding GroupingModes}"
                 ItemTemplate="{StaticResource LedgerGroupingModeTemplate}"
+                ItemsSource="{Binding GroupingModes}"
                 SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
                 SelectionChanged="OnGroupingModeSelectionChanged"
                 Style="{StaticResource LedgerGroupingComboStyle}"
