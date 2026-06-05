@@ -74,6 +74,7 @@ public sealed class AddNewTransactionSuggestionStyleTests
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
 
         Assert.Contains("x:Key=\"ExpenseCategoryComboBoxItemStyle\"", xaml);
+        Assert.Contains("BasedOn=\"{StaticResource FluxoComboBoxItemStyle}\"", xaml);
         Assert.Contains("Binding=\"{Binding IsEnabled}\" Value=\"False\"", xaml);
         Assert.Contains("Property=\"Opacity\" Value=\"0.45\"", xaml);
         Assert.Contains("ItemContainerStyle=\"{StaticResource ExpenseCategoryComboBoxItemStyle}\"", xaml);

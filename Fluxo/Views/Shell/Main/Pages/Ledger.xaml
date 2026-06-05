@@ -110,16 +110,16 @@
                                 VerticalOffset="8">
                                 <Border
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                                    Margin="0,8,0,0"
                                     Background="{StaticResource Brush.Background.Surface}"
                                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                                     BorderThickness="1"
                                     CornerRadius="8">
                                     <customControls:FadingScrollViewer
                                         Margin="4"
-                                        CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
-                                        VerticalScrollBarVisibility="Auto">
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        CanContentScroll="False"
+                                        HorizontalScrollBarVisibility="Disabled"
+                                        VerticalScrollBarVisibility="Hidden">
                                         <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
                                     </customControls:FadingScrollViewer>
                                 </Border>

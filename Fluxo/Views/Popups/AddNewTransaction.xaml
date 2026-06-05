@@ -126,7 +126,10 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ExpenseCategoryComboBoxItemStyle" TargetType="ComboBoxItem">
+        <Style
+            x:Key="ExpenseCategoryComboBoxItemStyle"
+            BasedOn="{StaticResource FluxoComboBoxItemStyle}"
+            TargetType="ComboBoxItem">
             <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
             <Setter Property="Opacity" Value="1" />
             <Style.Triggers>
@@ -256,9 +259,7 @@
                                 Margin="0"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Name" />
-                            <TextBlock
-                                Style="{StaticResource FieldValidationHintStyle}"
-                                Text="{Binding NameValidationHint}" />
+                            <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding NameValidationHint}" />
                         </Grid>
                         <TextBox
                             x:Name="ExpenseNameTextBox"
@@ -297,16 +298,14 @@
                                     Margin="0"
                                     Style="{StaticResource SectionLabelStyle}"
                                     Text="Amount" />
-                                <TextBlock
-                                    Style="{StaticResource FieldValidationHintStyle}"
-                                    Text="{Binding AmountValidationHint}" />
+                                <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
                             </Grid>
                             <customControls:MoneyTextBox
                                 x:Name="ExpenseAmountTextBox"
                                 LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
-                                TextChanged="OnTransactionAmountTextBoxTextChanged"
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
+                                TextChanged="OnTransactionAmountTextBoxTextChanged" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
@@ -388,9 +387,7 @@
                                     Margin="0"
                                     Style="{StaticResource SectionLabelStyle}"
                                     Text="Name" />
-                                <TextBlock
-                                    Style="{StaticResource FieldValidationHintStyle}"
-                                    Text="{Binding NameValidationHint}" />
+                                <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding NameValidationHint}" />
                             </Grid>
                             <TextBox
                                 x:Name="IncomeNameTextBox"
@@ -422,16 +419,14 @@
                                     Margin="0"
                                     Style="{StaticResource SectionLabelStyle}"
                                     Text="Amount" />
-                                <TextBlock
-                                    Style="{StaticResource FieldValidationHintStyle}"
-                                    Text="{Binding AmountValidationHint}" />
+                                <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
                             </Grid>
                             <customControls:MoneyTextBox
                                 x:Name="IncomeAmountTextBox"
                                 LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
-                                TextChanged="OnTransactionAmountTextBoxTextChanged"
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
+                                TextChanged="OnTransactionAmountTextBoxTextChanged" />
                         </StackPanel>
                     </Grid>
 
@@ -494,16 +489,14 @@
                                 Margin="0"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Amount" />
-                            <TextBlock
-                                Style="{StaticResource FieldValidationHintStyle}"
-                                Text="{Binding AmountValidationHint}" />
+                            <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
                         </Grid>
                         <customControls:MoneyTextBox
                             x:Name="GoalAmountTextBox"
                             LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
-                            TextChanged="OnTransactionAmountTextBoxTextChanged"
                             Style="{StaticResource RoundedMoneyTextInputStyle}"
-                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
+                            TextChanged="OnTransactionAmountTextBoxTextChanged" />
                     </StackPanel>
 
                     <Grid Margin="0,16,0,0">

@@ -45,7 +45,8 @@ Width="500"
             Grid.Row="8"
             DisplayMemberPath="Name"
             ItemsSource="{Binding EligibleSourcesView}"
-            SelectedItem="{Binding SelectedSource, Mode=TwoWay}">
+            SelectedItem="{Binding SelectedSource, Mode=TwoWay}"
+            Style="{StaticResource FluxoComboBoxStyle}">
             <ComboBox.GroupStyle>
                 <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
             </ComboBox.GroupStyle>

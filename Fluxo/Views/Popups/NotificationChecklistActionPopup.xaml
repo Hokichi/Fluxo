@@ -102,8 +102,6 @@
                                 <Border
                                     x:Name="DropDownBorder"
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                                    Margin="0,8,0,0"
                                     Background="{StaticResource Brush.Background.Surface}"
                                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                                     BorderThickness="1"
@@ -112,7 +110,7 @@
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="1" />
-                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
                                         <Button
@@ -128,7 +126,9 @@
                                             Background="{StaticResource Brush.Border.Subtle}" />
                                         <customControls:FadingScrollViewer
                                             Grid.Row="2"
-                                            CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
+                                            MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                            CanContentScroll="False"
+                                            HorizontalScrollBarVisibility="Disabled"
                                             VerticalScrollBarVisibility="Hidden">
                                             <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
                                         </customControls:FadingScrollViewer>

@@ -195,6 +195,40 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void FluxoComboBoxStyle_DropDownSizesToContentUntilMaxDropDownHeight()
+    {
+        var globalStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "GlobalStyles.xaml"));
+        var styleSection = ExtractSection(globalStylesXaml, "x:Key=\"FluxoComboBoxStyle\"", "x:Key=\"BudgetSliderThumbStyle\"");
+
+        Assert.Contains("Property=\"ScrollViewer.CanContentScroll\" Value=\"False\"", styleSection);
+        Assert.Contains("MaxHeight=\"{TemplateBinding MaxDropDownHeight}\"", styleSection);
+        Assert.Contains("CanContentScroll=\"False\"", styleSection);
+        Assert.Contains("HorizontalScrollBarVisibility=\"Disabled\"", styleSection);
+        Assert.Contains("VerticalScrollBarVisibility=\"Hidden\"", styleSection);
+        Assert.DoesNotContain("Margin=\"0,8,0,0\"", styleSection);
+    }
+
+    [Fact]
+    public void CustomComboBoxTemplates_DoNotReserveEmptyDropDownViewportSpace()
+    {
+        var notificationPopupXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Popups", "NotificationChecklistActionPopup.xaml"));
+        var notificationStyleSection = ExtractSection(notificationPopupXaml, "x:Key=\"NotificationChecklistTagsComboBoxStyle\"", "x:Key=\"NotificationChecklistItemTemplate\"");
+        var ledgerXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerFilterComboStyle\"", "x:Key=\"LedgerGroupingComboStyle\"");
+
+        Assert.Contains("MaxHeight=\"{TemplateBinding MaxDropDownHeight}\"", notificationStyleSection);
+        Assert.Contains("MaxHeight=\"{TemplateBinding MaxDropDownHeight}\"", ledgerStyleSection);
+        Assert.Contains("CanContentScroll=\"False\"", notificationStyleSection);
+        Assert.Contains("CanContentScroll=\"False\"", ledgerStyleSection);
+        Assert.Contains("HorizontalScrollBarVisibility=\"Disabled\"", notificationStyleSection);
+        Assert.Contains("HorizontalScrollBarVisibility=\"Disabled\"", ledgerStyleSection);
+        Assert.Contains("VerticalScrollBarVisibility=\"Hidden\"", notificationStyleSection);
+        Assert.Contains("VerticalScrollBarVisibility=\"Hidden\"", ledgerStyleSection);
+        Assert.DoesNotContain("Margin=\"0,8,0,0\"", notificationStyleSection);
+        Assert.DoesNotContain("Margin=\"0,8,0,0\"", ledgerStyleSection);
+    }
+
+    [Fact]
     public void DateSelector_PropagatesValidationStateToSelectorButton_AndStyleSupportsMintAndDangerBorders()
     {
         var dateSelectorXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Components", "DateSelector.xaml"));
