@@ -135,8 +135,10 @@ public sealed class MainWindowLayoutTests
 
         AssertElementHasNameAndStyle(xamlDocument, "Grid", "DashboardSpendingAmountGateContent", "DashboardSpendingAmountGateLockedContentStyle");
         AssertElementHasName(xamlDocument, "DaySpinnerControl", "DaySpinnerControlHost");
-        AssertElementHasName(xamlDocument, "ContentControl", "DashboardPageHost");
+        AssertElementHasName(xamlDocument, "ContentControl", "MainPageHost");
         AssertElementHasName(xamlDocument, "Grid", "DashboardSpendingAmountGateOverlay");
+        Assert.DoesNotContain("DashboardPageHost", MainWindowXaml.Value);
+        Assert.DoesNotContain("OutgoingMainPageHost", MainWindowXaml.Value);
 
         Assert.DoesNotContain("DaySpinnerControlHost", dashboardXaml);
         AssertElementHasName(dashboardXamlDocument, "MainViewModeToggleControl", "ViewModeToggleControlHost");

@@ -729,9 +729,10 @@
                         DataContext="{Binding DaySpinner}" />
 
                     <ContentControl
-                        x:Name="DashboardPageHost"
+                        x:Name="MainPageHost"
                         Grid.Row="1"
-                        Panel.ZIndex="0" />
+                        Panel.ZIndex="6" />
+
                 </Grid>
             </Grid>
 
@@ -777,20 +778,6 @@
                     </StackPanel>
                 </Button>
             </Grid>
-
-            <ContentControl
-                x:Name="MainPageHost"
-                Margin="92,76,24,24"
-                Panel.ZIndex="6"
-                Opacity="0"
-                Visibility="Collapsed" />
-
-            <ContentControl
-                x:Name="OutgoingMainPageHost"
-                Margin="92,76,24,24"
-                Panel.ZIndex="5"
-                Opacity="0"
-                Visibility="Collapsed" />
 
             <Border
                 x:Name="FloatingSideNavigationRail"

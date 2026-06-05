@@ -37,20 +37,72 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
-    public void HostedPageNavigation_KeepsToastVisibleUntilCrossfadeCompletes()
+    public void MainPageNavigation_KeepsToastVisibleUntilTransitionAndPreparationComplete()
     {
         var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
-        var navigationBody = ExtractMethodBodyBySignature(source, "private async Task NavigateToHostedPageAsync(HostedMainPage page)");
+        var navigationBody = ExtractMethodBodyBySignature(source, "private async Task NavigateToMainPageAsync(MainPage page)");
 
         var toastIndex = navigationBody.IndexOf("await _dialogService.ShowToastWhileAsync(", StringComparison.Ordinal);
-        var prepareIndex = navigationBody.IndexOf("nextPage = await PrepareHostedPageContentAsync(page);", StringComparison.Ordinal);
-        var crossfadeIndex = navigationBody.IndexOf("await CrossfadeToHostedPageAsync(nextPage);", StringComparison.Ordinal);
-        var activePageIndex = navigationBody.IndexOf("_activeHostedPage = page;", StringComparison.Ordinal);
+        var resolveIndex = navigationBody.IndexOf("nextPage = ResolveMainPageView(page);", StringComparison.Ordinal);
+        var transitionIndex = navigationBody.IndexOf("await TransitionToMainPageAsync(nextPage);", StringComparison.Ordinal);
+        var prepareIndex = navigationBody.IndexOf("await PrepareMainPageContentAsync(page);", StringComparison.Ordinal);
+        var activePageIndex = navigationBody.IndexOf("_activeMainPage = page;", StringComparison.Ordinal);
 
-        Assert.True(toastIndex >= 0, "Hosted page navigation should wrap page preparation and crossfade in the toast.");
-        Assert.True(prepareIndex > toastIndex, "Hosted page preparation should run while the toast is visible.");
-        Assert.True(crossfadeIndex > prepareIndex, "Hosted page crossfade should complete while the toast is visible.");
-        Assert.True(activePageIndex > crossfadeIndex, "The active hosted page should update after the fade-in completes.");
+        Assert.True(toastIndex >= 0, "Main page navigation should wrap page resolution, transition, preparation, and final state updates in the toast.");
+        Assert.True(resolveIndex > toastIndex, "The next page view should be resolved while the toast is visible.");
+        Assert.True(transitionIndex > resolveIndex, "The visual transition should run before page preparation.");
+        Assert.True(prepareIndex > transitionIndex, "Page preparation should run after the new page has faded in.");
+        Assert.True(activePageIndex > prepareIndex, "The active main page should update only after preparation finishes.");
+    }
+
+    [Fact]
+    public void MainPageNavigation_KeepsCurrentNavigationButtonCheckedUntilPreparationCompletes()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+        var navigationBody = ExtractMethodBodyBySignature(source, "private async Task NavigateToMainPageAsync(MainPage page)");
+
+        var prepareFlagIndex = navigationBody.IndexOf("_isPreparingMainPage = true;", StringComparison.Ordinal);
+        var holdCurrentPageIndex = navigationBody.LastIndexOf(
+            "UpdateMainNavigationCheckedState(_activeMainPage);",
+            prepareFlagIndex,
+            StringComparison.Ordinal);
+        var toastIndex = navigationBody.IndexOf("await _dialogService.ShowToastWhileAsync(", StringComparison.Ordinal);
+        var transitionIndex = navigationBody.IndexOf("await TransitionToMainPageAsync(nextPage);", StringComparison.Ordinal);
+        var prepareIndex = navigationBody.IndexOf("await PrepareMainPageContentAsync(page);", StringComparison.Ordinal);
+        var activePageIndex = navigationBody.IndexOf("_activeMainPage = page;", StringComparison.Ordinal);
+        var switchNavigationIndex = navigationBody.IndexOf(
+            "UpdateMainNavigationCheckedState(_activeMainPage);",
+            activePageIndex,
+            StringComparison.Ordinal);
+
+        Assert.True(holdCurrentPageIndex >= 0, "A valid navigation click should be reset to the current page before loading starts.");
+        Assert.True(holdCurrentPageIndex < prepareFlagIndex, "The side navigation should hold the current page before preparation starts.");
+        Assert.True(switchNavigationIndex > activePageIndex, "The side navigation should switch after the active page changes.");
+        Assert.True(switchNavigationIndex > transitionIndex, "The side navigation should switch only after the new page has faded in.");
+        Assert.True(switchNavigationIndex > prepareIndex, "The side navigation should switch only after page preparation finishes.");
+        Assert.True(switchNavigationIndex > toastIndex, "The final navigation state update should happen inside the toast callback before it closes.");
+    }
+
+    [Fact]
+    public void Dashboard_UsesSharedMainPageTransitionPipeline()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+        var pageEnumBody = ExtractMethodBodyBySignature(source, "private enum MainPage");
+        var navigationBody = ExtractMethodBodyBySignature(source, "private async Task NavigateToMainPageAsync(MainPage page)");
+        var prepareBody = ExtractMethodBodyBySignature(source, "private async Task PrepareMainPageContentAsync(MainPage page)");
+
+        Assert.Contains("Dashboard", pageEnumBody);
+        Assert.Contains("case MainPage.Dashboard:", prepareBody);
+        Assert.Contains("ResolveMainPageView(page)", navigationBody);
+        Assert.Contains("TransitionToMainPageAsync(nextPage)", navigationBody);
+        Assert.Contains("PrepareMainPageContentAsync(page)", navigationBody);
+        Assert.DoesNotContain("ShowDashboardShellAsync", source);
+        Assert.DoesNotContain("CrossfadeToDashboardShellAsync", source);
+        Assert.DoesNotContain("PrepareHostedPageContentAsync", source);
+        Assert.DoesNotContain("NavigateToHostedPageAsync", source);
+        Assert.DoesNotContain("DashboardPageHost", source);
+        Assert.DoesNotContain("ResolveMainPageHost", source);
+        Assert.DoesNotContain("CollapseInactiveMainPageHost", source);
     }
 
     [Fact]
@@ -69,10 +121,10 @@ public sealed class MainWindowPageRegressionTests
     {
         var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
 
-        Assert.Contains("UpdateHeaderDateSelectorEnabledState(page);", source);
-        Assert.Contains("DaySpinnerControlHost.IsEnabled = page is not HostedMainPage.Analytics and not HostedMainPage.Calendar;", source);
-        Assert.DoesNotContain("DaySpinnerControlHost.IsHitTestVisible = page is not HostedMainPage.Analytics and not HostedMainPage.Calendar;", source);
-        Assert.Contains("UpdateHeaderDateSelectorEnabledState(null);", source);
+        Assert.Contains("UpdateHeaderDateSelectorEnabledState(_activeMainPage);", source);
+        Assert.Contains("DaySpinnerControlHost.IsEnabled = page is not MainPage.Analytics and not MainPage.Calendar;", source);
+        Assert.DoesNotContain("DaySpinnerControlHost.IsHitTestVisible = page is not MainPage.Analytics and not MainPage.Calendar;", source);
+        Assert.DoesNotContain("UpdateHeaderDateSelectorEnabledState(null);", source);
     }
 
     [Fact]

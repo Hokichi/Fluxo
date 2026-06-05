@@ -9,7 +9,6 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
@@ -46,8 +45,9 @@ public partial class MainWindow : Window, IPopupHost
         typeof(MainWindow),
         new PropertyMetadata(false));
 
-    private enum HostedMainPage
+    private enum MainPage
     {
+        Dashboard,
         Analytics,
         Calendar,
         Ledger
@@ -79,7 +79,7 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isPreparingMainPage;
     private bool _isHeaderSearchExpanded;
     private EventHandler? _popupOverlayDeferredHideTickHandler;
-    private HostedMainPage? _activeHostedPage;
+    private MainPage _activeMainPage = MainPage.Dashboard;
     private IServiceScope? _dashboardPageScope;
     private Dashboard? _dashboardPageView;
     private IServiceScope? _analyticsPageScope;
@@ -125,9 +125,9 @@ public partial class MainWindow : Window, IPopupHost
             }
 
             EnsureDashboardPageLoaded();
-            DashboardPageHost.Content = _dashboardPageView;
-            UpdateMainNavigationCheckedState(null);
-            UpdateHeaderDateSelectorEnabledState(null);
+            MainPageHost.Content = _dashboardPageView;
+            UpdateMainNavigationCheckedState(_activeMainPage);
+            UpdateHeaderDateSelectorEnabledState(_activeMainPage);
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
             FadeIn();
@@ -213,7 +213,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private UIElement[] GetStateChangeFadeElements()
     {
-        return [ContentGrid, MainPageHost, OutgoingMainPageHost, FloatingSideNavigationRail];
+        return [ContentGrid, MainPageHost, FloatingSideNavigationRail];
     }
 
     private static void FadeElements(UIElement[] elements, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
@@ -773,7 +773,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderSearchTextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_activeHostedPage == HostedMainPage.Ledger)
+        if (_activeMainPage == MainPage.Ledger)
             WeakReferenceMessenger.Default.Send(new LedgerSearchTextChangedMessage(HeaderSearchBox.Text));
 
         UpdateHeaderSearchResults();
@@ -796,7 +796,7 @@ public partial class MainWindow : Window, IPopupHost
         if (IsDescendantOf(newFocus, HeaderSearchRegion))
             return;
 
-        if (_activeHostedPage == HostedMainPage.Ledger)
+        if (_activeMainPage == MainPage.Ledger)
             return;
 
         CollapseHeaderSearch();
@@ -851,7 +851,7 @@ public partial class MainWindow : Window, IPopupHost
         if (!_isHeaderSearchExpanded)
             return;
 
-        if (_activeHostedPage == HostedMainPage.Ledger)
+        if (_activeMainPage == MainPage.Ledger)
         {
             HeaderSearchResultsPopup.IsOpen = false;
             HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
@@ -968,22 +968,22 @@ public partial class MainWindow : Window, IPopupHost
 
     private async void OnHomeNavigationClick(object sender, RoutedEventArgs e)
     {
-        await ShowDashboardShellAsync();
+        await NavigateToMainPageAsync(MainPage.Dashboard);
     }
 
     private async void OnAnalyticsNavigationClick(object sender, RoutedEventArgs e)
     {
-        await NavigateToHostedPageAsync(HostedMainPage.Analytics);
+        await NavigateToMainPageAsync(MainPage.Analytics);
     }
 
     private async void OnCalendarNavigationClick(object sender, RoutedEventArgs e)
     {
-        await NavigateToHostedPageAsync(HostedMainPage.Calendar);
+        await NavigateToMainPageAsync(MainPage.Calendar);
     }
 
     private async void OnLedgerNavigationClick(object sender, RoutedEventArgs e)
     {
-        await NavigateToHostedPageAsync(HostedMainPage.Ledger);
+        await NavigateToMainPageAsync(MainPage.Ledger);
     }
 
     private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
@@ -1102,61 +1102,24 @@ public partial class MainWindow : Window, IPopupHost
 
     private async Task OpenAnalyticsPopupAsync()
     {
-        await NavigateToHostedPageAsync(HostedMainPage.Analytics);
+        await NavigateToMainPageAsync(MainPage.Analytics);
     }
 
-    private async Task ShowDashboardShellAsync()
+    private async Task NavigateToMainPageAsync(MainPage page)
     {
-        if (_activeHostedPage is null || _isMainPageTransitionActive || _isPreparingMainPage)
+        if (page != MainPage.Dashboard && IsSufficientFundsActionGateLocked())
         {
-            UpdateMainNavigationCheckedState(_activeHostedPage);
+            UpdateMainNavigationCheckedState(_activeMainPage);
             return;
         }
 
-        _isPreparingMainPage = true;
-        SetMainNavigationEnabled(false);
-        CloseHeaderMenu();
-
-        try
+        if (_activeMainPage == page || _isMainPageTransitionActive || _isPreparingMainPage)
         {
-            await _dialogService.ShowToastWhileAsync(
-                "Loading Dashboard",
-                CrossfadeToDashboardShellAsync,
-                this);
-            _activeHostedPage = null;
-            UpdateMainNavigationCheckedState(_activeHostedPage);
-            UpdateHeaderDateSelectorEnabledState(null);
-        }
-        catch (Exception exception)
-        {
-            FluxoLogManager.LogError(exception, "Unable to return to dashboard.");
-            _dialogService.ShowError(
-                FluxoLogManager.CreateFailureMessage("return to dashboard"),
-                "Dashboard",
-                this);
-            UpdateMainNavigationCheckedState(_activeHostedPage);
-        }
-        finally
-        {
-            _isPreparingMainPage = false;
-            SetMainNavigationEnabled(true);
-        }
-    }
-
-    private async Task NavigateToHostedPageAsync(HostedMainPage page)
-    {
-        if (IsSufficientFundsActionGateLocked())
-        {
-            UpdateMainNavigationCheckedState(_activeHostedPage);
+            UpdateMainNavigationCheckedState(_activeMainPage);
             return;
         }
 
-        if (_activeHostedPage == page || _isMainPageTransitionActive || _isPreparingMainPage)
-        {
-            UpdateMainNavigationCheckedState(_activeHostedPage);
-            return;
-        }
-
+        UpdateMainNavigationCheckedState(_activeMainPage);
         _isPreparingMainPage = true;
         SetMainNavigationEnabled(false);
         CloseHeaderMenu();
@@ -1165,27 +1128,27 @@ public partial class MainWindow : Window, IPopupHost
         {
             UIElement? nextPage = null;
             await _dialogService.ShowToastWhileAsync(
-                GetHostedPageLoadingMessage(page),
+                GetMainPageLoadingMessage(page),
                 async () =>
                 {
-                    nextPage = await PrepareHostedPageContentAsync(page);
-                    await CrossfadeToHostedPageAsync(nextPage);
+                    nextPage = ResolveMainPageView(page);
+                    await TransitionToMainPageAsync(nextPage);
+                    await PrepareMainPageContentAsync(page);
+                    _activeMainPage = page;
+                    UpdateMainNavigationCheckedState(_activeMainPage);
+                    UpdateHeaderDateSelectorEnabledState(_activeMainPage);
                 },
                 this);
-
-            _activeHostedPage = page;
-            UpdateMainNavigationCheckedState(_activeHostedPage);
-            UpdateHeaderDateSelectorEnabledState(page);
         }
         catch (Exception exception)
         {
-            var label = GetHostedPageLabel(page);
+            var label = GetMainPageLabel(page);
             FluxoLogManager.LogError(exception, $"Unable to navigate to {label}.");
             _dialogService.ShowError(
                 FluxoLogManager.CreateFailureMessage($"open {label}"),
                 label,
                 this);
-            UpdateMainNavigationCheckedState(_activeHostedPage);
+            UpdateMainNavigationCheckedState(_activeMainPage);
         }
         finally
         {
@@ -1194,27 +1157,51 @@ public partial class MainWindow : Window, IPopupHost
         }
     }
 
-    private async Task<UIElement> PrepareHostedPageContentAsync(HostedMainPage page)
+    private UIElement ResolveMainPageView(MainPage page)
     {
         switch (page)
         {
-            case HostedMainPage.Analytics:
+            case MainPage.Dashboard:
+                EnsureDashboardPageLoaded();
+                return _dashboardPageView!;
+            case MainPage.Analytics:
                 EnsureAnalyticsPageLoaded();
-                ApplyMainWindowRangeToAnalyticsIfBounded();
-                await _analyticsPageView!.PrepareForOpenAsync(showInternalToast: false);
                 return _analyticsPageView!;
-            case HostedMainPage.Calendar:
+            case MainPage.Calendar:
                 EnsureCalendarPageLoaded();
-                await _calendarPageView!.PrepareForOpenAsync();
                 return _calendarPageView!;
-            case HostedMainPage.Ledger:
+            case MainPage.Ledger:
                 EnsureLedgerPageLoaded();
-                ApplyMainWindowRangeToLedger();
-                await _ledgerPageView!.PrepareForOpenAsync();
                 return _ledgerPageView!;
             default:
-                EnsureAnalyticsPageLoaded();
-                return _analyticsPageView!;
+                EnsureDashboardPageLoaded();
+                return _dashboardPageView!;
+        }
+    }
+
+    private async Task PrepareMainPageContentAsync(MainPage page)
+    {
+        switch (page)
+        {
+            case MainPage.Dashboard:
+                if (_mainVM.Dashboard.IsInitialized)
+                    await _mainVM.Dashboard.ReloadCurrentDataAsync();
+                else
+                    await _mainVM.Dashboard.Initialize();
+                return;
+            case MainPage.Analytics:
+                ApplyMainWindowRangeToAnalyticsIfBounded();
+                await _analyticsPageView!.PrepareForOpenAsync(showInternalToast: false);
+                return;
+            case MainPage.Calendar:
+                await _calendarPageView!.PrepareForOpenAsync();
+                return;
+            case MainPage.Ledger:
+                ApplyMainWindowRangeToLedger();
+                await _ledgerPageView!.PrepareForOpenAsync();
+                return;
+            default:
+                return;
         }
     }
 
@@ -1254,141 +1241,24 @@ public partial class MainWindow : Window, IPopupHost
         _ledgerPageView = _ledgerPageScope.ServiceProvider.GetRequiredService<Ledger>();
     }
 
-    private async Task CrossfadeToHostedPageAsync(UIElement nextPage)
+    private async Task TransitionToMainPageAsync(UIElement nextPage)
     {
         _isMainPageTransitionActive = true;
         try
         {
-            var outgoingElement = _activeHostedPage is null
-                ? DashboardPageHost
-                : MainPageHost;
+            await FadeElementAsync(MainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration);
 
-            OutgoingMainPageHost.Content = CaptureElementSnapshot(outgoingElement);
-            OutgoingMainPageHost.Visibility = Visibility.Visible;
-            OutgoingMainPageHost.Opacity = outgoingElement.Opacity;
-
-            if (_activeHostedPage is null)
-            {
-                DashboardPageHost.Visibility = Visibility.Collapsed;
-                DashboardPageHost.Opacity = 0;
-            }
-
+            MainPageHost.BeginAnimation(OpacityProperty, null);
             MainPageHost.Content = nextPage;
             MainPageHost.Visibility = Visibility.Visible;
             MainPageHost.Opacity = 0;
-            await AwaitElementRenderAsync(MainPageHost);
 
-            var fadeOutTask = FadeElementAsync(OutgoingMainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration);
-            var fadeInTask = FadeElementAsync(MainPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
-            await Task.WhenAll(fadeOutTask, fadeInTask);
-
-            OutgoingMainPageHost.Content = null;
-            OutgoingMainPageHost.Visibility = Visibility.Collapsed;
-            OutgoingMainPageHost.Opacity = 0;
+            await FadeElementAsync(MainPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
         }
         finally
         {
             _isMainPageTransitionActive = false;
         }
-    }
-
-    private async Task CrossfadeToDashboardShellAsync()
-    {
-        _isMainPageTransitionActive = true;
-        try
-        {
-            OutgoingMainPageHost.Content = CaptureElementSnapshot(MainPageHost);
-            OutgoingMainPageHost.Visibility = Visibility.Visible;
-            OutgoingMainPageHost.Opacity = MainPageHost.Opacity;
-
-            MainPageHost.Content = null;
-            MainPageHost.Visibility = Visibility.Collapsed;
-            MainPageHost.Opacity = 0;
-
-            DashboardPageHost.Visibility = Visibility.Visible;
-            DashboardPageHost.Opacity = 0;
-            await AwaitElementRenderAsync(DashboardPageHost);
-
-            var fadeOutTask = FadeElementAsync(OutgoingMainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration);
-            var fadeInTask = FadeElementAsync(DashboardPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
-            await Task.WhenAll(fadeOutTask, fadeInTask);
-
-            OutgoingMainPageHost.Content = null;
-            OutgoingMainPageHost.Visibility = Visibility.Collapsed;
-            OutgoingMainPageHost.Opacity = 0;
-        }
-        finally
-        {
-            _isMainPageTransitionActive = false;
-        }
-    }
-
-    private void ShowHostedPageWithoutTransition(UIElement nextPage)
-    {
-        DashboardPageHost.Visibility = Visibility.Collapsed;
-        DashboardPageHost.Opacity = 0;
-        OutgoingMainPageHost.Content = null;
-        OutgoingMainPageHost.Visibility = Visibility.Collapsed;
-        OutgoingMainPageHost.Opacity = 0;
-        MainPageHost.Content = nextPage;
-        MainPageHost.Visibility = Visibility.Visible;
-        MainPageHost.Opacity = 1;
-    }
-
-    private void ShowDashboardShellWithoutTransition()
-    {
-        OutgoingMainPageHost.Content = null;
-        OutgoingMainPageHost.Visibility = Visibility.Collapsed;
-        OutgoingMainPageHost.Opacity = 0;
-        MainPageHost.Content = null;
-        MainPageHost.Visibility = Visibility.Collapsed;
-        MainPageHost.Opacity = 0;
-        DashboardPageHost.Visibility = Visibility.Visible;
-        DashboardPageHost.Opacity = 1;
-    }
-
-    private static Image CaptureElementSnapshot(FrameworkElement element)
-    {
-        element.UpdateLayout();
-
-        var width = Math.Max(1, element.ActualWidth);
-        var height = Math.Max(1, element.ActualHeight);
-        var source = PresentationSource.FromVisual(element);
-        var transformToDevice = source?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
-        var pixelWidth = Math.Max(1, (int)Math.Ceiling(width * transformToDevice.M11));
-        var pixelHeight = Math.Max(1, (int)Math.Ceiling(height * transformToDevice.M22));
-        var dpiX = 96 * transformToDevice.M11;
-        var dpiY = 96 * transformToDevice.M22;
-
-        var bitmap = new RenderTargetBitmap(pixelWidth, pixelHeight, dpiX, dpiY, PixelFormats.Pbgra32);
-        bitmap.Render(element);
-
-        return new Image
-        {
-            Source = bitmap,
-            Width = width,
-            Height = height,
-            Stretch = Stretch.Fill,
-            SnapsToDevicePixels = true
-        };
-    }
-
-    private static async Task AwaitElementRenderAsync(UIElement element)
-    {
-        element.UpdateLayout();
-
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        EventHandler? renderHandler = null;
-        renderHandler = (_, _) =>
-        {
-            CompositionTarget.Rendering -= renderHandler;
-            completion.TrySetResult();
-        };
-
-        CompositionTarget.Rendering += renderHandler;
-        await element.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-        await completion.Task;
-        element.UpdateLayout();
     }
 
     private static Task FadeElementAsync(UIElement element, double toOpacity, EasingMode easingMode, int durationMilliseconds)
@@ -1414,38 +1284,40 @@ public partial class MainWindow : Window, IPopupHost
         LedgerNavigationButton.IsEnabled = isEnabled;
     }
 
-    private void UpdateMainNavigationCheckedState(HostedMainPage? page)
+    private void UpdateMainNavigationCheckedState(MainPage page)
     {
-        HomeNavigationButton.IsChecked = page is null;
-        AnalyticsNavigationButton.IsChecked = page == HostedMainPage.Analytics;
-        CalendarNavigationButton.IsChecked = page == HostedMainPage.Calendar;
-        LedgerNavigationButton.IsChecked = page == HostedMainPage.Ledger;
+        HomeNavigationButton.IsChecked = page == MainPage.Dashboard;
+        AnalyticsNavigationButton.IsChecked = page == MainPage.Analytics;
+        CalendarNavigationButton.IsChecked = page == MainPage.Calendar;
+        LedgerNavigationButton.IsChecked = page == MainPage.Ledger;
     }
 
-    private void UpdateHeaderDateSelectorEnabledState(HostedMainPage? page)
+    private void UpdateHeaderDateSelectorEnabledState(MainPage page)
     {
-        DaySpinnerControlHost.IsEnabled = page is not HostedMainPage.Analytics and not HostedMainPage.Calendar;
+        DaySpinnerControlHost.IsEnabled = page is not MainPage.Analytics and not MainPage.Calendar;
     }
 
-    private static string GetHostedPageLabel(HostedMainPage page)
+    private static string GetMainPageLabel(MainPage page)
     {
         return page switch
         {
-            HostedMainPage.Analytics => "Analytics",
-            HostedMainPage.Calendar => "Calendar",
-            HostedMainPage.Ledger => "Ledger",
-            _ => "Analytics"
+            MainPage.Dashboard => "Dashboard",
+            MainPage.Analytics => "Analytics",
+            MainPage.Calendar => "Calendar",
+            MainPage.Ledger => "Ledger",
+            _ => "Dashboard"
         };
     }
 
-    private static string GetHostedPageLoadingMessage(HostedMainPage page)
+    private static string GetMainPageLoadingMessage(MainPage page)
     {
         return page switch
         {
-            HostedMainPage.Analytics => "Loading Analytics",
-            HostedMainPage.Calendar => "Loading Calendar",
-            HostedMainPage.Ledger => "Loading Ledger",
-            _ => "Loading Analytics"
+            MainPage.Dashboard => "Loading Dashboard",
+            MainPage.Analytics => "Loading Analytics",
+            MainPage.Calendar => "Loading Calendar",
+            MainPage.Ledger => "Loading Ledger",
+            _ => "Loading Dashboard"
         };
     }
 
@@ -1535,8 +1407,6 @@ public partial class MainWindow : Window, IPopupHost
     private void DisposeMainPages()
     {
         MainPageHost.Content = null;
-        OutgoingMainPageHost.Content = null;
-        DashboardPageHost.Content = null;
 
         _dashboardPageView = null;
         _dashboardPageScope?.Dispose();
@@ -1554,7 +1424,7 @@ public partial class MainWindow : Window, IPopupHost
         _ledgerPageScope?.Dispose();
         _ledgerPageScope = null;
 
-        _activeHostedPage = null;
+        _activeMainPage = MainPage.Dashboard;
         _isMainPageTransitionActive = false;
         _isPreparingMainPage = false;
     }
@@ -1663,7 +1533,6 @@ public partial class MainWindow : Window, IPopupHost
     {
         ContentGrid.Effect = CreatePopupBlurEffect();
         MainPageHost.Effect = CreatePopupBlurEffect();
-        OutgoingMainPageHost.Effect = CreatePopupBlurEffect();
         FloatingSideNavigationRail.Effect = CreatePopupBlurEffect();
     }
 
@@ -1671,7 +1540,6 @@ public partial class MainWindow : Window, IPopupHost
     {
         ContentGrid.Effect = null;
         MainPageHost.Effect = null;
-        OutgoingMainPageHost.Effect = null;
         FloatingSideNavigationRail.Effect = null;
     }
 

@@ -23,7 +23,7 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("_ = OpenAnalyticsPopupAsync();", source);
         Assert.Contains("private async Task OpenAnalyticsPopupAsync()", source);
-        Assert.Contains("await NavigateToHostedPageAsync(HostedMainPage.Analytics);", source);
+        Assert.Contains("await NavigateToMainPageAsync(MainPage.Analytics);", source);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private async void OnAnalyticsNavigationClick(object sender, RoutedEventArgs e)", source);
-        Assert.Contains("private async Task NavigateToHostedPageAsync(HostedMainPage page)", source);
+        Assert.Contains("private async Task NavigateToMainPageAsync(MainPage page)", source);
         Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
         Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
     }
