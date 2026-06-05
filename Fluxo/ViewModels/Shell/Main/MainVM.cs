@@ -43,7 +43,6 @@ public partial class MainVM : ObservableRecipient
     public Main.SpentAllowancePanelVM SpentAllowancePanel => Dashboard.SpentAllowancePanel;
     public Main.SavingGoalsPanelVM SavingGoalsPanel => Dashboard.SavingGoalsPanel;
     public Main.DaySpinnerVM DaySpinner { get; }
-    public Main.MainViewModeToggleVM ViewModeToggle => Dashboard.ViewModeToggle;
     public Main.LedgerVM? Ledger { get; }
 
     public bool IsDashboardSpendingAmountGateLocked => Dashboard.IsDashboardSpendingAmountGateLocked;

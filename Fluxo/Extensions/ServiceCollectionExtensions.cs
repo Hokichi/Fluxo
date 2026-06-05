@@ -79,7 +79,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<MainVM>();
         services.AddSingleton<DashboardVM>();
         services.AddSingleton<DaySpinnerVM>();
-        services.AddSingleton<MainViewModeToggleVM>();
+        services.AddTransient<MainViewModeToggleVM>();
         services.AddSingleton<BudgetAllocationPanelVM>();
         services.AddSingleton<SpentAllowancePanelVM>();
         services.AddSingleton<NotificationPanelVM>();

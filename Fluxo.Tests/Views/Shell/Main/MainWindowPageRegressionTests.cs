@@ -165,6 +165,38 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Value=\"{x:Static enums:MainContentViewMode.Daily}\"", toggleXaml);
     }
 
+    [Fact]
+    public void MainVM_DoesNotExposeSharedViewModeToggle()
+    {
+        var mainVm = File.ReadAllText(RepositoryPaths.File("Fluxo", "ViewModels", "Shell", "Main", "MainVM.cs"));
+        var services = File.ReadAllText(RepositoryPaths.File("Fluxo", "Extensions", "ServiceCollectionExtensions.cs"));
+
+        Assert.DoesNotContain("ViewModeToggle =>", mainVm);
+        Assert.DoesNotContain("AddSingleton<MainViewModeToggleVM>", services);
+        Assert.Contains("AddTransient<MainViewModeToggleVM>", services);
+    }
+
+    [Fact]
+    public void Ledger_UsesOwnViewModeToggleAndDisablesFiltersWhenNoTransactions()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+
+        Assert.Contains("DataContext=\"{Binding ViewModeToggle}\"", ledgerXaml);
+        Assert.DoesNotContain("DataContext=\"{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}\"", ledgerXaml);
+        Assert.Contains("x:Name=\"LedgerFiltersRow\"", ledgerXaml);
+        Assert.Contains("IsEnabled=\"{Binding HasTransactions}\"", ledgerXaml);
+    }
+
+    [Fact]
+    public void Ledger_GroupByDisplaysSpendingSourcesWithSpace()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerVm = File.ReadAllText(RepositoryPaths.File("Fluxo", "ViewModels", "Shell", "Main", "LedgerVM.cs"));
+
+        Assert.Contains("LedgerGroupingModeDisplayConverter", ledgerXaml);
+        Assert.Contains("Spending Sources", ledgerVm);
+    }
+
     private static void AssertPageHasDateSelectors(
         string pageName,
         string startSelectorName,

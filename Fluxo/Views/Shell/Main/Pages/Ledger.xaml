@@ -12,6 +12,8 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+        <main:LedgerGroupingModeDisplayConverter x:Key="LedgerGroupingModeDisplayConverter" />
+
         <Style x:Key="LedgerSummaryCardStyle" TargetType="Border">
             <Setter Property="MinHeight" Value="84" />
             <Setter Property="Padding" Value="16" />
@@ -208,6 +210,14 @@
             </Button>
         </DataTemplate>
 
+        <DataTemplate x:Key="LedgerGroupingModeTemplate">
+            <TextBlock
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Foreground="{StaticResource Brush.Text.Primary}"
+                Text="{Binding Converter={StaticResource LedgerGroupingModeDisplayConverter}}" />
+        </DataTemplate>
+
         <Style x:Key="LedgerListViewItemStyle" TargetType="ListViewItem">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -271,6 +281,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="72" />
                     </Grid.ColumnDefinitions>
 
                     <Border
@@ -294,7 +305,7 @@
 
                     <StackPanel
                         Grid.Column="2"
-                        Margin="0,8,0,8"
+                        Margin="0,8"
                         Orientation="Horizontal">
                         <TextBox
                             MinWidth="120"
@@ -304,8 +315,9 @@
                             Style="{StaticResource LedgerEditableTextBoxStyle}"
                             Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <Border
-                            Margin="8,0,0,0"
-                            Padding="5,1"
+                            Margin="8,4,0,0"
+                            Padding="8,3"
+                            VerticalAlignment="Center"
                             Background="{StaticResource Brush.Background.Hover}"
                             CornerRadius="4">
                             <TextBlock
@@ -354,7 +366,9 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Background="{Binding TagHexCode}"
-                        CornerRadius="8">
+                        CornerRadius="8"
+                        Cursor="Hand"
+                        PreviewMouseLeftButtonDown="OnTransactionTagPreviewMouseLeftButtonDown">
                         <TextBlock
                             FontFamily="{StaticResource Medium}"
                             FontSize="11"
@@ -369,7 +383,9 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Background="{StaticResource Brush.Background.Hover}"
-                        CornerRadius="8">
+                        CornerRadius="8"
+                        Cursor="Hand"
+                        PreviewMouseLeftButtonDown="OnTransactionSpendingSourcePreviewMouseLeftButtonDown">
                         <TextBlock
                             FontFamily="{StaticResource Medium}"
                             FontSize="11"
@@ -379,7 +395,7 @@
 
                     <TextBlock
                         Grid.Column="5"
-                        Margin="0,8,16,8"
+                        Margin="0,8,8,8"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
@@ -400,7 +416,7 @@
 
                     <customControls:MoneyTextBox
                         Grid.Column="5"
-                        Margin="0,8,16,8"
+                        Margin="0,8,8,8"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
                         Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
@@ -409,20 +425,30 @@
 
                     <Border
                         x:Name="RowActions"
-                        Grid.Column="5"
+                        Grid.Column="6"
                         HorizontalAlignment="Right"
-                        Background="{StaticResource Brush.Background.Surface}"
-                        Opacity="0"
-                        Visibility="Collapsed">
-                        <StackPanel Margin="0,0,16,0" Orientation="Horizontal">
+                        VerticalAlignment="Center"
+                        Background="Transparent">
+                        <StackPanel Margin="0,0,8,0" Orientation="Horizontal">
                             <customControls:BalloonButton
                                 Width="30"
                                 Height="30"
-                                ButtonIcon="{StaticResource Pen}"
                                 Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 CommandParameter="{Binding}"
-                                IconSize="12"
-                                Style="{StaticResource HeaderButtonStyle}" />
+                                IconSize="12">
+                                <customControls:BalloonButton.Style>
+                                    <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
+                                        <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
+                                        <Setter Property="ToolTip" Value="Edit" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                <Setter Property="ButtonIcon" Value="{StaticResource Check}" />
+                                                <Setter Property="ToolTip" Value="Save" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </customControls:BalloonButton.Style>
+                            </customControls:BalloonButton>
                             <customControls:BalloonButton
                                 Width="30"
                                 Height="30"
@@ -447,12 +473,6 @@
                     </Style>
                 </Border.Style>
             </Border>
-            <DataTemplate.Triggers>
-                <Trigger SourceName="RowRoot" Property="IsMouseOver" Value="True">
-                    <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
-                    <Setter TargetName="RowActions" Property="Opacity" Value="1" />
-                </Trigger>
-            </DataTemplate.Triggers>
         </DataTemplate>
 
         <Style x:Key="LedgerGroupItemStyle" TargetType="GroupItem">
@@ -515,6 +535,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger SourceName="LedgerGroupHeaderToggle" Property="IsChecked" Value="False">
                                 <Setter TargetName="LedgerGroupItemsPresenter" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="LedgerGroupHeaderToggle" Property="Margin" Value="0,10,0,8" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -538,7 +559,7 @@
             Margin="0,16"
             HorizontalAlignment="Center"
             VerticalAlignment="Top"
-            DataContext="{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}" />
+            DataContext="{Binding ViewModeToggle}" />
 
         <StackPanel
             Grid.Row="1"
@@ -617,14 +638,19 @@
             </Border>
         </UniformGrid>
 
-        <Grid Grid.Row="3" Margin="0,16,0,10">
+        <Grid
+            x:Name="LedgerFiltersRow"
+            Grid.Row="3"
+            Margin="0,16,0,10"
+            IsEnabled="{Binding HasTransactions}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="3*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ComboBox
@@ -654,24 +680,31 @@
                 ItemsSource="{Binding TagFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
                 Tag="Tag" />
-            <ComboBox
-                x:Name="LedgerGroupingComboBox"
-                Grid.Column="4"
-                Margin="8,0,0,0"
-                ItemsSource="{Binding GroupingModes}"
-                SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
-                SelectionChanged="OnGroupingModeSelectionChanged"
-                Style="{StaticResource LedgerGroupingComboStyle}"
-                Tag="Group By" />
             <customControls:BalloonButton
-                Grid.Column="5"
+                Grid.Column="4"
                 ButtonIcon="{StaticResource Check}"
                 ButtonSize="34"
                 Click="OnApplyFiltersClick"
                 IconSize="14"
                 Style="{StaticResource HeaderButtonStyle}" />
-            <customControls:BalloonButton
+            <Border
+                Grid.Column="5"
+                Width="1"
+                Margin="16,2,8,2"
+                Background="{StaticResource Brush.Text.Muted}"
+                SnapsToDevicePixels="True" />
+            <ComboBox
+                x:Name="LedgerGroupingComboBox"
                 Grid.Column="6"
+                Margin="8,0,0,0"
+                ItemsSource="{Binding GroupingModes}"
+                ItemTemplate="{StaticResource LedgerGroupingModeTemplate}"
+                SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
+                SelectionChanged="OnGroupingModeSelectionChanged"
+                Style="{StaticResource LedgerGroupingComboStyle}"
+                Tag="Group By" />
+            <customControls:BalloonButton
+                Grid.Column="7"
                 ButtonSize="34"
                 Click="OnOrderingButtonClick"
                 IconSize="14">
@@ -697,7 +730,8 @@
                 ItemContainerStyle="{StaticResource LedgerListViewItemStyle}"
                 ItemTemplate="{StaticResource LedgerRowTemplate}"
                 ItemsSource="{Binding TransactionsView}"
-                ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                ScrollViewer.ScrollChanged="OnLedgerTransactionsListScrollChanged"
+                ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <ListView.GroupStyle>
                     <StaticResource ResourceKey="LedgerGroupStyle" />
                 </ListView.GroupStyle>

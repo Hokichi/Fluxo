@@ -10,6 +10,8 @@ namespace Fluxo.Views.Shell.Main.Pages;
 
 public partial class Ledger : UserControl
 {
+    private static readonly Thickness LedgerTransactionsListDefaultMargin = new(0, 0, 0, 0);
+    private static readonly Thickness LedgerTransactionsListScrollableMargin = new(0, 0, -32, 0);
     private readonly IDialogService _dialogService;
     private bool _hasLoaded;
     private bool _isApplyingGroupingSelection;
@@ -27,6 +29,15 @@ public partial class Ledger : UserControl
         return DataContext is LedgerVM viewModel
             ? viewModel.LoadAsync()
             : Task.CompletedTask;
+    }
+
+    public void PublishViewMode()
+    {
+        if (DataContext is not LedgerVM viewModel)
+            return;
+
+        viewModel.ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
+            viewModel.ViewModeToggle.SelectedMainContentViewMode);
     }
 
     public void ApplyOpenRange(DateTime from, DateTime to)
@@ -79,6 +90,28 @@ public partial class Ledger : UserControl
                 category.IsChecked = !category.IsChecked;
                 break;
         }
+    }
+
+    private void OnTransactionTagPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel ||
+            transaction.TagId <= 0)
+            return;
+
+        e.Handled = true;
+        viewModel.ApplyTagFilter(transaction.TagId);
+    }
+
+    private void OnTransactionSpendingSourcePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel ||
+            transaction.SpendingSourceId <= 0)
+            return;
+
+        e.Handled = true;
+        viewModel.ApplySpendingSourceFilter(transaction.SpendingSourceId);
     }
 
     private async void OnApplyFiltersClick(object sender, RoutedEventArgs e)
@@ -149,5 +182,12 @@ public partial class Ledger : UserControl
         {
             _isApplyingGroupingSelection = false;
         }
+    }
+
+    private void OnLedgerTransactionsListScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        LedgerTransactionsList.Margin = e.ExtentHeight > e.ViewportHeight
+            ? LedgerTransactionsListScrollableMargin
+            : LedgerTransactionsListDefaultMargin;
     }
 }

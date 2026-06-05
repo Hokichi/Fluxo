@@ -44,6 +44,7 @@ public partial class LedgerVM : ObservableRecipient,
     [ObservableProperty] private decimal _earnedAmount;
     [ObservableProperty] private decimal _goalAmount;
     [ObservableProperty] private decimal _netAmount;
+    [ObservableProperty] private bool _hasTransactions;
     [ObservableProperty] private bool _hasVisibleTransactions;
 
     public LedgerVM(
@@ -53,6 +54,25 @@ public partial class LedgerVM : ObservableRecipient,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         IMessenger? messenger = null)
+        : this(
+            expenseLogService,
+            spendingSourceService,
+            tagService,
+            dataOperationRunner,
+            mapper,
+            new MainViewModeToggleVM(messenger ?? WeakReferenceMessenger.Default),
+            messenger)
+    {
+    }
+
+    public LedgerVM(
+        IExpenseLogService expenseLogService,
+        ISpendingSourceService spendingSourceService,
+        ITagService tagService,
+        IDataOperationRunner dataOperationRunner,
+        IMapper mapper,
+        MainViewModeToggleVM viewModeToggle,
+        IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseLogService = expenseLogService;
@@ -60,6 +80,7 @@ public partial class LedgerVM : ObservableRecipient,
         _tagService = tagService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
+        ViewModeToggle = viewModeToggle;
 
         TransactionsView = CollectionViewSource.GetDefaultView(_transactions);
         TransactionsView.Filter = FilterTransaction;
@@ -68,6 +89,7 @@ public partial class LedgerVM : ObservableRecipient,
         IsActive = true;
     }
 
+    public MainViewModeToggleVM ViewModeToggle { get; }
     public ICollectionView TransactionsView { get; }
     public string EmptyStatePeriodText => BuildSelectedPeriodText();
     public ObservableCollection<LedgerFilterOption<LedgerTransactionKind>> TypeFilters { get; } = [];
@@ -239,6 +261,7 @@ public partial class LedgerVM : ObservableRecipient,
         foreach (var transaction in projected)
             _transactions.Add(transaction);
 
+        HasTransactions = _transactions.Count > 0;
         RefreshSummaries();
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
@@ -377,6 +400,18 @@ public partial class LedgerVM : ObservableRecipient,
         RefreshVisibleTransactionState();
     }
 
+    public void ApplyTagFilter(int tagId)
+    {
+        ApplySpecificFilter(TagFilters, tagId);
+        ApplyFilters();
+    }
+
+    public void ApplySpendingSourceFilter(int spendingSourceId)
+    {
+        ApplySpecificFilter(SpendingSourceFilters, spendingSourceId);
+        ApplyFilters();
+    }
+
     private void NormalizeFilterSelection<T>(
         ObservableCollection<LedgerFilterOption<T>> options,
         LedgerFilterOption<T> changedOption)
@@ -412,6 +447,28 @@ public partial class LedgerVM : ObservableRecipient,
         {
             _isSynchronizingFilters = false;
         }
+    }
+
+    private void ApplySpecificFilter<T>(ObservableCollection<LedgerFilterOption<T>> options, T value)
+    {
+        var selectedOption = options.FirstOrDefault(option =>
+            !option.IsAll && EqualityComparer<T>.Default.Equals(option.Value, value));
+        if (selectedOption is null)
+            return;
+
+        var allOption = options.First(option => option.IsAll);
+        _isSynchronizingFilters = true;
+        try
+        {
+            allOption.IsChecked = false;
+            selectedOption.IsChecked = true;
+        }
+        finally
+        {
+            _isSynchronizingFilters = false;
+        }
+
+        NormalizeFilterSelection(options, selectedOption);
     }
 
     private bool FilterTransaction(object item)
@@ -657,6 +714,7 @@ public partial class LedgerVM : ObservableRecipient,
             return;
 
         _transactions.Remove(transaction);
+        HasTransactions = _transactions.Count > 0;
         Messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(snapshot)));
         RefreshSummaries();
         TransactionsView.Refresh();
@@ -681,6 +739,7 @@ public partial class LedgerVM : ObservableRecipient,
             return;
 
         _transactions.Remove(transaction);
+        HasTransactions = _transactions.Count > 0;
         Messenger.Send(new RecordLogMemoryMessage(new DeleteIncomeLogMemoryAction(snapshot)));
         RefreshSummaries();
         TransactionsView.Refresh();
@@ -787,5 +846,23 @@ public partial class LedgerVM : ObservableRecipient,
                 _ => 0
             };
         }
+    }
+}
+
+public sealed class LedgerGroupingModeDisplayConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value switch
+        {
+            LedgerGroupingMode.SpendingSources => "Spending Sources",
+            LedgerGroupingMode groupingMode => groupingMode.ToString(),
+            _ => string.Empty
+        };
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
     }
 }

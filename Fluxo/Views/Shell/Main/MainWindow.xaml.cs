@@ -1184,6 +1184,7 @@ public partial class MainWindow : Window, IPopupHost
         switch (page)
         {
             case MainPage.Dashboard:
+                PublishDashboardViewMode();
                 if (_mainVM.Dashboard.IsInitialized)
                     await _mainVM.Dashboard.ReloadCurrentDataAsync();
                 else
@@ -1197,6 +1198,7 @@ public partial class MainWindow : Window, IPopupHost
                 await _calendarPageView!.PrepareForOpenAsync();
                 return;
             case MainPage.Ledger:
+                _ledgerPageView!.PublishViewMode();
                 ApplyMainWindowRangeToLedger();
                 await _ledgerPageView!.PrepareForOpenAsync();
                 return;
@@ -1367,7 +1369,7 @@ public partial class MainWindow : Window, IPopupHost
         if (_analyticsPageView is null)
             return;
 
-        var selectedMode = _mainVM.ViewModeToggle.SelectedMainContentViewMode;
+        var selectedMode = _mainVM.Dashboard.ViewModeToggle.SelectedMainContentViewMode;
         if (selectedMode == MainContentViewMode.AllTime)
             return;
 
@@ -1381,10 +1383,10 @@ public partial class MainWindow : Window, IPopupHost
 
     private void ApplyMainWindowRangeToLedger()
     {
-        if (_ledgerPageView is null)
+        if (_ledgerPageView is null || _mainVM.Ledger is null)
             return;
 
-        var selectedMode = _mainVM.ViewModeToggle.SelectedMainContentViewMode;
+        var selectedMode = _mainVM.Ledger.ViewModeToggle.SelectedMainContentViewMode;
         if (selectedMode == MainContentViewMode.AllTime)
         {
             _ledgerPageView.ApplyAllTimeRange();
@@ -1397,6 +1399,12 @@ public partial class MainWindow : Window, IPopupHost
 
         var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
         _ledgerPageView.ApplyOpenRange(range.From, range.To);
+    }
+
+    private void PublishDashboardViewMode()
+    {
+        var viewModeToggle = _mainVM.Dashboard.ViewModeToggle;
+        viewModeToggle.SetSelectedMainContentViewCommand.Execute(viewModeToggle.SelectedMainContentViewMode);
     }
 
     private static bool ShouldReduceMotion()

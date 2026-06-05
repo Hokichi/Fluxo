@@ -75,6 +75,63 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void ApplyTagFilter_SelectsClickedTagOnTopOfCurrentFilterAndRefreshesImmediately()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.TypeFilters.Single(option => !option.IsAll && option.Value == LedgerTransactionKind.Expense).IsChecked = true;
+            vm.ApplyFilters();
+
+            vm.ApplyTagFilter(2);
+
+            Assert.True(vm.TypeFilters.Single(option => !option.IsAll && option.Value == LedgerTransactionKind.Expense).IsChecked);
+            Assert.False(vm.TagFilters.Single(option => option.IsAll).IsChecked);
+            Assert.True(vm.TagFilters.Single(option => option.Value == 2).IsChecked);
+            var item = Assert.Single(GetItems(vm.TransactionsView));
+            Assert.Equal("Netflix", item.Name);
+        });
+    }
+
+    [Fact]
+    public void ApplySpendingSourceFilter_SelectsClickedSourceOnTopOfCurrentFilterAndRefreshesImmediately()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.CategoryFilters.Single(option => option.Value == ExpenseCategory.Wants).IsChecked = true;
+            vm.ApplyFilters();
+
+            vm.ApplySpendingSourceFilter(2);
+
+            Assert.True(vm.CategoryFilters.Single(option => option.Value == ExpenseCategory.Wants).IsChecked);
+            Assert.False(vm.SpendingSourceFilters.Single(option => option.IsAll).IsChecked);
+            Assert.True(vm.SpendingSourceFilters.Single(option => option.Value == 2).IsChecked);
+            var item = Assert.Single(GetItems(vm.TransactionsView));
+            Assert.Equal("Netflix", item.Name);
+        });
+    }
+
+    [Fact]
+    public void HasTransactions_TracksRawLoadedLedgerData()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.True(vm.HasTransactions);
+
+            vm.Receive(new DateRangeSelectionChangedMessage(new DateTime(2026, 6, 5), new DateTime(2026, 6, 5)));
+            SpinWait.SpinUntil(() => !vm.HasTransactions, TimeSpan.FromSeconds(2));
+
+            Assert.False(vm.HasTransactions);
+        });
+    }
+
+    [Fact]
     public void DateRangeMessage_ReloadsPeriodDataButSearchDoesNot()
     {
         RunInSta(() =>
