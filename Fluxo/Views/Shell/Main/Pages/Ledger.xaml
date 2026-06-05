@@ -23,6 +23,72 @@
             <Setter Property="CornerRadius" Value="8" />
         </Style>
 
+        <Style x:Key="LedgerFilterComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="OnFilterOptionPreviewMouseLeftButtonDown" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border
+                            x:Name="ItemBackground"
+                            Margin="2"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            CornerRadius="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <ContentPresenter
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalAlignment="Center"
+                                    Content="{TemplateBinding Content}"
+                                    ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    RecognizesAccessKey="True"
+                                    TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                    TextElement.FontSize="{TemplateBinding FontSize}"
+                                    TextElement.Foreground="{TemplateBinding Foreground}" />
+
+                                <Path
+                                    x:Name="SelectedCheckmark"
+                                    Grid.Column="1"
+                                    Width="10"
+                                    Height="10"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Data="{StaticResource Check}"
+                                    Fill="{TemplateBinding Foreground}"
+                                    Opacity="0"
+                                    Stretch="Uniform" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsChecked}" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                                <Setter TargetName="SelectedCheckmark" Property="Opacity" Value="1" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="LedgerFilterComboStyle" TargetType="ComboBox">
             <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -37,7 +103,7 @@
             <Setter Property="MaxDropDownHeight" Value="220" />
             <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-            <Setter Property="ItemContainerStyle" Value="{DynamicResource FluxoComboBoxItemStyle}" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource LedgerFilterComboBoxItemStyle}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -137,76 +203,12 @@
             <Setter Property="ItemContainerStyle" Value="{StaticResource FluxoComboBoxItemStyle}" />
         </Style>
 
-        <Style x:Key="LedgerFilterComboBoxItemStyle" TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <ContentPresenter
-                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            Content="{TemplateBinding Content}"
-                            ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                            ContentTemplate="{TemplateBinding ContentTemplate}" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <DataTemplate x:Key="LedgerFilterOptionTemplate">
-            <Button
-                MinWidth="140"
-                Padding="8,6"
-                HorizontalAlignment="Stretch"
-                Background="Transparent"
-                BorderThickness="0"
-                PreviewMouseLeftButtonDown="OnFilterOptionPreviewMouseLeftButtonDown">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="OptionBackground"
-                            Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="6">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Medium}"
-                                    FontSize="12"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="{Binding Label}" />
-
-                                <Path
-                                    x:Name="SelectedCheckmark"
-                                    Grid.Column="1"
-                                    Width="10"
-                                    Height="10"
-                                    Margin="12,0,0,0"
-                                    VerticalAlignment="Center"
-                                    Data="{StaticResource Check}"
-                                    Fill="{StaticResource Brush.Text.Primary}"
-                                    Opacity="0"
-                                    Stretch="Uniform" />
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="OptionBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                            </Trigger>
-                            <DataTrigger Binding="{Binding IsChecked}" Value="True">
-                                <Setter TargetName="OptionBackground" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                                <Setter TargetName="SelectedCheckmark" Property="Opacity" Value="1" />
-                            </DataTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
+            <TextBlock
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Foreground="{StaticResource Brush.Text.Primary}"
+                Text="{Binding Label}" />
         </DataTemplate>
 
         <DataTemplate x:Key="LedgerGroupingModeTemplate">
@@ -701,7 +703,7 @@
                 ItemsSource="{Binding GroupingModes}"
                 SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
                 SelectionChanged="OnGroupingModeSelectionChanged"
-                Style="{StaticResource LedgerFilterComboStyle}"
+                Style="{StaticResource LedgerGroupingComboStyle}"
                 Tag="Group By" />
             <customControls:BalloonButton
                 Grid.Column="7"

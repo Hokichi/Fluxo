@@ -229,6 +229,23 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void LedgerFilterComboBoxes_UseGroupingRowShapeWithoutNestedButtons()
+    {
+        var ledgerXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var filterComboStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerFilterComboStyle\"", "x:Key=\"LedgerGroupingComboStyle\"");
+        var filterItemStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerFilterComboBoxItemStyle\"", "x:Key=\"LedgerFilterOptionTemplate\"");
+        var filterTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerFilterOptionTemplate\"", "x:Key=\"LedgerGroupingModeTemplate\"");
+        var filtersRowSection = ExtractSection(ledgerXaml, "x:Name=\"LedgerFiltersRow\"", "x:Name=\"LedgerTransactionsList\"");
+
+        Assert.Contains("Value=\"{StaticResource LedgerFilterComboBoxItemStyle}\"", filterComboStyleSection);
+        Assert.Contains("Event=\"PreviewMouseLeftButtonDown\" Handler=\"OnFilterOptionPreviewMouseLeftButtonDown\"", filterItemStyleSection);
+        Assert.Contains("Binding=\"{Binding IsChecked}\" Value=\"True\"", filterItemStyleSection);
+        Assert.DoesNotContain("<Button", filterTemplateSection);
+        Assert.Contains("Text=\"{Binding Label}\"", filterTemplateSection);
+        Assert.Contains("Style=\"{StaticResource LedgerGroupingComboStyle}\"", filtersRowSection);
+    }
+
+    [Fact]
     public void DateSelector_PropagatesValidationStateToSelectorButton_AndStyleSupportsMintAndDangerBorders()
     {
         var dateSelectorXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Components", "DateSelector.xaml"));
