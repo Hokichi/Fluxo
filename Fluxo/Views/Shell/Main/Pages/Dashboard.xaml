@@ -57,42 +57,24 @@
     <Grid>
         <controls:MainViewModeToggleControl
             x:Name="ViewModeToggleControlHost"
-            Margin="0,16"
             HorizontalAlignment="Center"
             VerticalAlignment="Top"
             DataContext="{Binding ViewModeToggle}" />
 
-        <Grid
-            x:Name="MainContentGrid"
-            Margin="200,48">
+        <Grid x:Name="MainContentGrid" Margin="0,48,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="18"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Dashboard" />
-
-                <Button
-                    x:Name="ViewAllSpendingSourcesButton"
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Click="OnSpendingSourcesButtonClick"
-                    Content="View All Spending Sources"
-                    Style="{StaticResource TextOnlyButtonStyle}" />
-            </Grid>
+            <Button
+                x:Name="ViewAllSpendingSourcesButton"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Click="OnSpendingSourcesButtonClick"
+                Content="View All Spending Sources"
+                Style="{StaticResource TextOnlyButtonStyle}" />
 
             <Grid Grid.Row="1" Margin="0,0,0,0">
                 <Grid.ColumnDefinitions>

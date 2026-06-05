@@ -24,7 +24,6 @@
         <Style x:Key="LedgerFilterComboStyle" TargetType="ComboBox">
             <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
-            <Setter Property="MinWidth" Value="170" />
             <Setter Property="Height" Value="34" />
             <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
@@ -416,7 +415,7 @@
                         Background="{StaticResource Brush.Background.Surface}"
                         Opacity="0"
                         Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Margin="0,0,16,0" Orientation="Horizontal">
                             <customControls:BalloonButton
                                 Width="30"
                                 Height="30"
@@ -637,21 +636,21 @@
                 Tag="Type" />
             <ComboBox
                 Grid.Column="1"
-                Margin="10,0,0,0"
+                Margin="8,0,0,0"
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding SpendingSourceFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
                 Tag="Spending Source" />
             <ComboBox
                 Grid.Column="2"
-                Margin="10,0,0,0"
+                Margin="8,0,0,0"
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding CategoryFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
                 Tag="Category" />
             <ComboBox
                 Grid.Column="3"
-                Margin="10,0,0,0"
+                Margin="8,0,0,0"
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding TagFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
@@ -659,8 +658,7 @@
             <ComboBox
                 x:Name="LedgerGroupingComboBox"
                 Grid.Column="4"
-                MinWidth="170"
-                Margin="10,0,0,0"
+                Margin="8,0,0,0"
                 ItemsSource="{Binding GroupingModes}"
                 SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
                 SelectionChanged="OnGroupingModeSelectionChanged"
@@ -668,18 +666,14 @@
                 Tag="Group By" />
             <customControls:BalloonButton
                 Grid.Column="5"
-                Width="34"
-                Height="34"
-                Margin="10,0,0,0"
                 ButtonIcon="{StaticResource Check}"
+                ButtonSize="34"
                 Click="OnApplyFiltersClick"
                 IconSize="14"
                 Style="{StaticResource HeaderButtonStyle}" />
             <customControls:BalloonButton
                 Grid.Column="6"
-                Width="34"
-                Height="34"
-                Margin="10,0,0,0"
+                ButtonSize="34"
                 Click="OnOrderingButtonClick"
                 IconSize="14">
                 <customControls:BalloonButton.Style>
@@ -695,16 +689,16 @@
             </customControls:BalloonButton>
         </Grid>
 
-        <Grid
-            Grid.Row="4">
+        <Grid Grid.Row="4">
             <ListView
                 x:Name="LedgerTransactionsList"
+                Margin="0,0,0,0"
                 Background="Transparent"
                 BorderThickness="0"
                 ItemContainerStyle="{StaticResource LedgerListViewItemStyle}"
                 ItemTemplate="{StaticResource LedgerRowTemplate}"
                 ItemsSource="{Binding TransactionsView}"
-                ScrollViewer.VerticalScrollBarVisibility="Auto">
+                ScrollViewer.VerticalScrollBarVisibility="Hidden">
                 <ListView.GroupStyle>
                     <StaticResource ResourceKey="LedgerGroupStyle" />
                 </ListView.GroupStyle>
