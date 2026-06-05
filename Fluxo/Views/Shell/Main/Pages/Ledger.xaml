@@ -181,8 +181,8 @@
                                     BorderThickness="1"
                                     CornerRadius="8">
                                     <customControls:FadingScrollViewer
-                                        Margin="4"
                                         MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        Margin="4"
                                         CanContentScroll="False"
                                         HorizontalScrollBarVisibility="Disabled"
                                         VerticalScrollBarVisibility="Hidden">
@@ -652,6 +652,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -689,15 +690,22 @@
                 Click="OnApplyFiltersClick"
                 IconSize="14"
                 Style="{StaticResource HeaderButtonStyle}" />
-            <Border
+            <customControls:BalloonButton
                 Grid.Column="5"
+                ButtonIcon="{StaticResource Ban}"
+                ButtonSize="34"
+                Click="OnApplyFiltersClick"
+                IconSize="14"
+                Style="{StaticResource HeaderButtonStyle}" />
+            <Border
+                Grid.Column="6"
                 Width="1"
                 Margin="16,2,8,2"
                 Background="{StaticResource Brush.Text.Muted}"
                 SnapsToDevicePixels="True" />
             <ComboBox
                 x:Name="LedgerGroupingComboBox"
-                Grid.Column="6"
+                Grid.Column="7"
                 Margin="8,0,0,0"
                 ItemTemplate="{StaticResource LedgerGroupingModeTemplate}"
                 ItemsSource="{Binding GroupingModes}"
@@ -706,7 +714,7 @@
                 Style="{StaticResource LedgerGroupingComboStyle}"
                 Tag="Group By" />
             <customControls:BalloonButton
-                Grid.Column="7"
+                Grid.Column="8"
                 ButtonSize="34"
                 Click="OnOrderingButtonClick"
                 IconSize="14">
