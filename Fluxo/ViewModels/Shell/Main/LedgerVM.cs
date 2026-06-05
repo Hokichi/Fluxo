@@ -30,6 +30,7 @@ public partial class LedgerVM : ObservableRecipient,
     private readonly ITagService _tagService;
     private readonly ObservableCollection<LedgerTransactionItemVM> _transactions = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
+    private LedgerFilterSelectionSnapshot _appliedFilterSelection = LedgerFilterSelectionSnapshot.Empty;
     private bool _isApplyingExternalRange;
     private bool _isSynchronizingFilters;
     private (DateTime From, DateTime To)? _selectedRange;
@@ -96,6 +97,7 @@ public partial class LedgerVM : ObservableRecipient,
     public ObservableCollection<LedgerFilterOption<int>> SpendingSourceFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<ExpenseCategory>> CategoryFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> TagFilters { get; } = [];
+    public bool HasPendingFilterChanges => CaptureFilterSelectionSnapshot() != _appliedFilterSelection;
     public IReadOnlyList<LedgerGroupingMode> GroupingModes { get; } =
     [
         LedgerGroupingMode.None,
@@ -355,6 +357,8 @@ public partial class LedgerVM : ObservableRecipient,
                     .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
                     .Select(tag => new LedgerFilterOption<int>(tag.Name, tag.Id)))
                 .ToList());
+
+        _appliedFilterSelection = CaptureFilterSelectionSnapshot();
     }
 
     private void RebuildFilter<T>(
@@ -392,12 +396,25 @@ public partial class LedgerVM : ObservableRecipient,
                 NormalizeFilterSelection(CategoryFilters, category);
                 break;
         }
+
+        OnPropertyChanged(nameof(HasPendingFilterChanges));
     }
 
     public void ApplyFilters()
     {
+        _appliedFilterSelection = CaptureFilterSelectionSnapshot();
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
+        OnPropertyChanged(nameof(HasPendingFilterChanges));
+    }
+
+    public bool ApplyFiltersIfChanged()
+    {
+        if (!HasPendingFilterChanges)
+            return false;
+
+        ApplyFilters();
+        return true;
     }
 
     public void ClearFilters()
@@ -471,6 +488,8 @@ public partial class LedgerVM : ObservableRecipient,
         {
             _isSynchronizingFilters = false;
         }
+
+        OnPropertyChanged(nameof(HasPendingFilterChanges));
     }
 
     private void ApplySpecificFilter<T>(ObservableCollection<LedgerFilterOption<T>> options, T value)
@@ -493,6 +512,25 @@ public partial class LedgerVM : ObservableRecipient,
         }
 
         NormalizeFilterSelection(options, selectedOption);
+        OnPropertyChanged(nameof(HasPendingFilterChanges));
+    }
+
+    private LedgerFilterSelectionSnapshot CaptureFilterSelectionSnapshot()
+    {
+        return new LedgerFilterSelectionSnapshot(
+            CaptureFilterSelection(TypeFilters),
+            CaptureFilterSelection(SpendingSourceFilters),
+            CaptureFilterSelection(CategoryFilters),
+            CaptureFilterSelection(TagFilters));
+    }
+
+    private static string CaptureFilterSelection<T>(IEnumerable<LedgerFilterOption<T>> options)
+    {
+        return string.Join(
+            "|",
+            options
+                .Where(option => option.IsChecked)
+                .Select(option => option.IsAll ? "all" : option.Value?.ToString() ?? string.Empty));
     }
 
     private bool FilterTransaction(object item)
@@ -870,6 +908,15 @@ public partial class LedgerVM : ObservableRecipient,
                 _ => 0
             };
         }
+    }
+
+    private readonly record struct LedgerFilterSelectionSnapshot(
+        string Type,
+        string SpendingSource,
+        string Category,
+        string Tag)
+    {
+        public static LedgerFilterSelectionSnapshot Empty { get; } = new(string.Empty, string.Empty, string.Empty, string.Empty);
     }
 }
 

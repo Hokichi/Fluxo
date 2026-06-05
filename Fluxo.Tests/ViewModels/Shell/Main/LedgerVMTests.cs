@@ -75,6 +75,32 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void FilterSelectionSnapshot_TracksOnlyNetDropdownSelectionChanges()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.False(vm.HasPendingFilterChanges);
+
+            var incomeFilter = vm.TypeFilters.Single(option => option.Value == LedgerTransactionKind.Income);
+            incomeFilter.IsChecked = true;
+
+            Assert.True(vm.HasPendingFilterChanges);
+            Assert.True(vm.ApplyFiltersIfChanged());
+            Assert.False(vm.HasPendingFilterChanges);
+            Assert.False(vm.ApplyFiltersIfChanged());
+
+            incomeFilter.IsChecked = false;
+
+            Assert.True(vm.HasPendingFilterChanges);
+            incomeFilter.IsChecked = true;
+            Assert.False(vm.HasPendingFilterChanges);
+        });
+    }
+
+    [Fact]
     public void MultipleSpecificTagSelections_FilterAsAnySelectedTagWhenApplied()
     {
         RunInSta(() =>

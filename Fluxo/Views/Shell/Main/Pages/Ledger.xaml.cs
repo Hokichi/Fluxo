@@ -119,6 +119,9 @@ public partial class Ledger : UserControl
         if (DataContext is not LedgerVM viewModel)
             return;
 
+        if (!viewModel.HasPendingFilterChanges)
+            return;
+
         await ShowFilterRefreshToastAsync(viewModel.ApplyFilters);
     }
 

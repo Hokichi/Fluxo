@@ -796,7 +796,7 @@ public partial class MainWindow : Window, IPopupHost
         if (IsDescendantOf(newFocus, HeaderSearchRegion))
             return;
 
-        if (_activeMainPage == MainPage.Ledger)
+        if (_activeMainPage == MainPage.Ledger && !ShouldCollapseHeaderSearchOnExternalClick())
             return;
 
         CollapseHeaderSearch();
@@ -1633,7 +1633,9 @@ public partial class MainWindow : Window, IPopupHost
         if (e.OriginalSource is not DependencyObject source)
             return;
 
-        if (_isHeaderSearchExpanded && !IsDescendantOf(source, HeaderSearchRegion))
+        if (_isHeaderSearchExpanded &&
+            !IsDescendantOf(source, HeaderSearchRegion) &&
+            ShouldCollapseHeaderSearchOnExternalClick())
             CollapseHeaderSearch();
 
         if (!_isHeaderMenuPinned)
@@ -1649,6 +1651,11 @@ public partial class MainWindow : Window, IPopupHost
     {
         CollapseHeaderSearch();
         CloseHeaderMenu();
+    }
+
+    private bool ShouldCollapseHeaderSearchOnExternalClick()
+    {
+        return _activeMainPage != MainPage.Ledger || string.IsNullOrWhiteSpace(HeaderSearchBox.Text);
     }
 
     private async Task UndoLogMemoryAsync()

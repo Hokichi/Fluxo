@@ -116,6 +116,19 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
+    public void LedgerSearchClickAway_PreservesNonEmptySearch()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("!IsDescendantOf(source, HeaderSearchRegion) &&", source);
+        Assert.Contains("ShouldCollapseHeaderSearchOnExternalClick())", source);
+        Assert.Contains("private bool ShouldCollapseHeaderSearchOnExternalClick()", source);
+        Assert.Contains(
+            "_activeMainPage != MainPage.Ledger || string.IsNullOrWhiteSpace(HeaderSearchBox.Text)",
+            source);
+    }
+
+    [Fact]
     public void PopupOpenMethods_AreGuardedBySpendingAmountGate()
     {
         var source = ReadMainWindowSource();
