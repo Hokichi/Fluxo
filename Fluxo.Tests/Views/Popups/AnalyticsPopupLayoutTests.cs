@@ -11,6 +11,7 @@ public sealed class AnalyticsPopupLayoutTests
         "Views",
         "Shell",
         "Main",
+        "Pages",
         "Analytics.xaml");
 
     [Fact]

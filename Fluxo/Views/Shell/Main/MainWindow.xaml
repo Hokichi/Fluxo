@@ -785,6 +785,13 @@
                 Opacity="0"
                 Visibility="Collapsed" />
 
+            <ContentControl
+                x:Name="OutgoingMainPageHost"
+                Margin="92,76,24,24"
+                Panel.ZIndex="5"
+                Opacity="0"
+                Visibility="Collapsed" />
+
             <Border
                 x:Name="FloatingSideNavigationRail"
                 Margin="24,76,0,28"

@@ -6,34 +6,40 @@
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
     <StackPanel>
-        <customControls:SegmentedToggleGroup Width="360">
+        <customControls:SegmentedToggleGroup
+            Width="360"
+            SelectedValue="{Binding SelectedMainContentViewMode, Mode=OneWay}">
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"
                 CommandParameter="{x:Static enums:MainContentViewMode.Daily}"
                 Content="Day"
                 IsSelected="{Binding IsDailyViewSelected, Mode=OneWay}"
-                SelectOnClick="False" />
+                SelectOnClick="False"
+                Value="{x:Static enums:MainContentViewMode.Daily}" />
 
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"
                 CommandParameter="{x:Static enums:MainContentViewMode.Weekly}"
                 Content="Week"
                 IsSelected="{Binding IsWeeklyViewSelected, Mode=OneWay}"
-                SelectOnClick="False" />
+                SelectOnClick="False"
+                Value="{x:Static enums:MainContentViewMode.Weekly}" />
 
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"
                 CommandParameter="{x:Static enums:MainContentViewMode.Monthly}"
                 Content="Month"
                 IsSelected="{Binding IsMonthlyViewSelected, Mode=OneWay}"
-                SelectOnClick="False" />
+                SelectOnClick="False"
+                Value="{x:Static enums:MainContentViewMode.Monthly}" />
 
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"
                 CommandParameter="{x:Static enums:MainContentViewMode.AllTime}"
                 Content="All-time"
                 IsSelected="{Binding IsAllTimeViewSelected, Mode=OneWay}"
-                SelectOnClick="False" />
+                SelectOnClick="False"
+                Value="{x:Static enums:MainContentViewMode.AllTime}" />
         </customControls:SegmentedToggleGroup>
 
         <Button

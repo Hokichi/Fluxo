@@ -5,7 +5,7 @@ namespace Fluxo.Tests.Views.Popups;
 
 public sealed class ProgressBarBindingModeTests
 {
-    private static readonly string AnalyticsXamlPath = ResolveRepoPath("Fluxo", "Views", "Shell", "Main", "Analytics.xaml");
+    private static readonly string AnalyticsXamlPath = ResolveRepoPath("Fluxo", "Views", "Shell", "Main", "Pages", "Analytics.xaml");
     private static readonly string SpendingSourceDetailPopupXamlPath = ResolveRepoPath("Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml");
 
     [Fact]

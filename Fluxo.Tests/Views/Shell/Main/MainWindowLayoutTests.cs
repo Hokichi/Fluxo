@@ -300,6 +300,7 @@ public sealed class MainWindowLayoutTests
                     "Views",
                     "Shell",
                     "Main",
+                    "Pages",
                     "Dashboard.xaml");
 
                 if (!File.Exists(dashboardXamlPath))
@@ -333,6 +334,7 @@ public sealed class MainWindowLayoutTests
                     "Views",
                     "Shell",
                     "Main",
+                    "Pages",
                     "Dashboard.xaml.cs");
 
                 if (!File.Exists(dashboardCodeBehindPath))

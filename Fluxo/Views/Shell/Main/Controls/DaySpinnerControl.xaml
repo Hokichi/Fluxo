@@ -8,14 +8,47 @@
         <ItemsPanelTemplate x:Key="DaySpinnerItemsPanelTemplate">
             <StackPanel Orientation="Horizontal" />
         </ItemsPanelTemplate>
+
+        <Style x:Key="TransparentDaySpinnerListViewStyle" TargetType="ListView">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListView">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ScrollViewer
+                                Padding="{TemplateBinding Padding}"
+                                Focusable="False">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
-    <Grid Visibility="{Binding IsSpinnerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+    <Grid
+        Background="Transparent"
+        Visibility="{Binding IsSpinnerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
         <Grid.Style>
             <Style TargetType="Grid">
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
                         <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False">
+                        <Setter Property="Opacity" Value="0.4" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
@@ -51,7 +84,8 @@
             ItemsPanel="{StaticResource DaySpinnerItemsPanelTemplate}"
             ItemsSource="{Binding DaysOfWeek}"
             SelectedItem="{Binding SelectedDay, Mode=OneWay}"
-            SelectionChanged="OnSelectedDayChanged" />
+            SelectionChanged="OnSelectedDayChanged"
+            Style="{StaticResource TransparentDaySpinnerListViewStyle}" />
 
         <Button
             Grid.Column="2"

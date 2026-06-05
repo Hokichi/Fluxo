@@ -5,7 +5,7 @@ using System.Windows.Threading;
 using Fluxo.Services.Dialogs;
 using DashboardVM = Fluxo.ViewModels.Shell.Main.DashboardVM;
 
-namespace Fluxo.Views.Shell.Main;
+namespace Fluxo.Views.Shell.Main.Pages;
 
 public partial class Dashboard : UserControl
 {

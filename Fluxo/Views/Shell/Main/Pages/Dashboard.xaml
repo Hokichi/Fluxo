@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Views.Shell.Main.Dashboard"
+    x:Class="Fluxo.Views.Shell.Main.Pages.Dashboard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"

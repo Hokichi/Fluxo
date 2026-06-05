@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using AnalyticsVM = Fluxo.ViewModels.Shell.Main.AnalyticsVM;
 
-namespace Fluxo.Views.Shell.Main;
+namespace Fluxo.Views.Shell.Main.Pages;
 
 public partial class Analytics : UserControl
 {

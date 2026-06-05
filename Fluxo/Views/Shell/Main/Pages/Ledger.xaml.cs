@@ -6,7 +6,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Shell.Main;
 
-namespace Fluxo.Views.Shell.Main;
+namespace Fluxo.Views.Shell.Main.Pages;
 
 public partial class Ledger : UserControl
 {

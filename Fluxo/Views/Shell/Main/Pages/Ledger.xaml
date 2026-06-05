@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Views.Shell.Main.Ledger"
+    x:Class="Fluxo.Views.Shell.Main.Pages.Ledger"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
@@ -532,6 +532,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -541,8 +542,39 @@
             VerticalAlignment="Top"
             DataContext="{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}" />
 
-        <UniformGrid
+        <StackPanel
             Grid.Row="1"
+            Margin="0,0,0,2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <TextBlock
+                Margin="0,0,8,0"
+                VerticalAlignment="Center"
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Foreground="{StaticResource Brush.Text.Muted}"
+                Text="From" />
+            <components:DateSelector
+                x:Name="LedgerStartDateSelector"
+                Width="150"
+                MaxSelectableDate="{Binding MaxSelectableDate}"
+                SelectedDate="{Binding StartDate, Mode=TwoWay}" />
+            <TextBlock
+                Margin="14,0,8,0"
+                VerticalAlignment="Center"
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Foreground="{StaticResource Brush.Text.Muted}"
+                Text="To" />
+            <components:DateSelector
+                x:Name="LedgerEndDateSelector"
+                Width="150"
+                MaxSelectableDate="{Binding MaxSelectableDate}"
+                SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+        </StackPanel>
+
+        <UniformGrid
+            Grid.Row="2"
             Margin="0,18,0,0"
             Columns="4">
             <Border Margin="0,0,8,0" Style="{StaticResource LedgerSummaryCardStyle}">
@@ -587,7 +619,7 @@
             </Border>
         </UniformGrid>
 
-        <Grid Grid.Row="2" Margin="0,16,0,10">
+        <Grid Grid.Row="3" Margin="0,16,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="3*" />
@@ -663,18 +695,31 @@
             </customControls:BalloonButton>
         </Grid>
 
-        <ListView
-            x:Name="LedgerTransactionsList"
-            Grid.Row="3"
-            Background="Transparent"
-            BorderThickness="0"
-            ItemContainerStyle="{StaticResource LedgerListViewItemStyle}"
-            ItemTemplate="{StaticResource LedgerRowTemplate}"
-            ItemsSource="{Binding TransactionsView}"
-            ScrollViewer.VerticalScrollBarVisibility="Auto">
-            <ListView.GroupStyle>
-                <StaticResource ResourceKey="LedgerGroupStyle" />
-            </ListView.GroupStyle>
-        </ListView>
+        <Grid
+            Grid.Row="4">
+            <ListView
+                x:Name="LedgerTransactionsList"
+                Background="Transparent"
+                BorderThickness="0"
+                ItemContainerStyle="{StaticResource LedgerListViewItemStyle}"
+                ItemTemplate="{StaticResource LedgerRowTemplate}"
+                ItemsSource="{Binding TransactionsView}"
+                ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListView.GroupStyle>
+                    <StaticResource ResourceKey="LedgerGroupStyle" />
+                </ListView.GroupStyle>
+            </ListView>
+
+            <TextBlock
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontFamily="{StaticResource Bold}"
+                FontSize="13"
+                Foreground="{StaticResource Brush.Text.Muted}"
+                Visibility="{Binding HasVisibleTransactions, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
+                <Run Text="No ledger data found for " />
+                <Run Text="{Binding EmptyStatePeriodText, Mode=OneWay}" />
+            </TextBlock>
+        </Grid>
     </Grid>
 </UserControl>

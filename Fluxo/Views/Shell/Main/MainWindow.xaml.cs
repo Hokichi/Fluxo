@@ -9,6 +9,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
@@ -25,7 +26,11 @@ using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using Fluxo.Views.Popups;
 using Microsoft.Extensions.DependencyInjection;
+using Analytics = Fluxo.Views.Shell.Main.Pages.Analytics;
+using Calendar = Fluxo.Views.Shell.Main.Pages.Calendar;
+using Dashboard = Fluxo.Views.Shell.Main.Pages.Dashboard;
 using DateRangeResolver = Fluxo.ViewModels.Shell.Main.DateRangeResolver;
+using Ledger = Fluxo.Views.Shell.Main.Pages.Ledger;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.Views.Shell.Main;
@@ -50,7 +55,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 100; // ms
-    private const int MainPageTransitionDuration = 180; // ms
+    private const int MainPageTransitionDuration = 300; // ms
 
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new() { Interval = TimeSpan.FromMilliseconds(FadeDuration) };
@@ -122,6 +127,7 @@ public partial class MainWindow : Window, IPopupHost
             EnsureDashboardPageLoaded();
             DashboardPageHost.Content = _dashboardPageView;
             UpdateMainNavigationCheckedState(null);
+            UpdateHeaderDateSelectorEnabledState(null);
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
             FadeIn();
@@ -207,7 +213,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private UIElement[] GetStateChangeFadeElements()
     {
-        return [ContentGrid, MainPageHost, FloatingSideNavigationRail];
+        return [ContentGrid, MainPageHost, OutgoingMainPageHost, FloatingSideNavigationRail];
     }
 
     private static void FadeElements(UIElement[] elements, double toOpacity, EasingMode easingMode, Action? onCompleted = null)
@@ -1113,9 +1119,13 @@ public partial class MainWindow : Window, IPopupHost
 
         try
         {
-            await CrossfadeToDashboardShellAsync();
+            await _dialogService.ShowToastWhileAsync(
+                "Loading Dashboard",
+                CrossfadeToDashboardShellAsync,
+                this);
             _activeHostedPage = null;
             UpdateMainNavigationCheckedState(_activeHostedPage);
+            UpdateHeaderDateSelectorEnabledState(null);
         }
         catch (Exception exception)
         {
@@ -1153,10 +1163,19 @@ public partial class MainWindow : Window, IPopupHost
 
         try
         {
-            var nextPage = await PrepareHostedPageAsync(page);
-            await CrossfadeToHostedPageAsync(nextPage);
+            UIElement? nextPage = null;
+            await _dialogService.ShowToastWhileAsync(
+                GetHostedPageLoadingMessage(page),
+                async () =>
+                {
+                    nextPage = await PrepareHostedPageContentAsync(page);
+                    await CrossfadeToHostedPageAsync(nextPage);
+                },
+                this);
+
             _activeHostedPage = page;
             UpdateMainNavigationCheckedState(_activeHostedPage);
+            UpdateHeaderDateSelectorEnabledState(page);
         }
         catch (Exception exception)
         {
@@ -1175,32 +1194,23 @@ public partial class MainWindow : Window, IPopupHost
         }
     }
 
-    private async Task<UIElement> PrepareHostedPageAsync(HostedMainPage page)
+    private async Task<UIElement> PrepareHostedPageContentAsync(HostedMainPage page)
     {
         switch (page)
         {
             case HostedMainPage.Analytics:
                 EnsureAnalyticsPageLoaded();
                 ApplyMainWindowRangeToAnalyticsIfBounded();
-                await _dialogService.ShowToastWhileAsync(
-                    "Loading analytics",
-                    () => _analyticsPageView!.PrepareForOpenAsync(showInternalToast: false),
-                    this);
+                await _analyticsPageView!.PrepareForOpenAsync(showInternalToast: false);
                 return _analyticsPageView!;
             case HostedMainPage.Calendar:
                 EnsureCalendarPageLoaded();
-                await _dialogService.ShowToastWhileAsync(
-                    "Loading calendar",
-                    () => _calendarPageView!.PrepareForOpenAsync(),
-                    this);
+                await _calendarPageView!.PrepareForOpenAsync();
                 return _calendarPageView!;
             case HostedMainPage.Ledger:
                 EnsureLedgerPageLoaded();
                 ApplyMainWindowRangeToLedger();
-                await _dialogService.ShowToastWhileAsync(
-                    "Loading ledger",
-                    () => _ledgerPageView!.PrepareForOpenAsync(),
-                    this);
+                await _ledgerPageView!.PrepareForOpenAsync();
                 return _ledgerPageView!;
             default:
                 EnsureAnalyticsPageLoaded();
@@ -1249,23 +1259,32 @@ public partial class MainWindow : Window, IPopupHost
         _isMainPageTransitionActive = true;
         try
         {
-            if (ShouldReduceMotion())
-            {
-                ShowHostedPageWithoutTransition(nextPage);
-                return;
-            }
-
-            UIElement currentPageElement = _activeHostedPage is null
+            var outgoingElement = _activeHostedPage is null
                 ? DashboardPageHost
                 : MainPageHost;
 
-            await FadeElementAsync(currentPageElement, 0, EasingMode.EaseIn, MainPageTransitionDuration);
+            OutgoingMainPageHost.Content = CaptureElementSnapshot(outgoingElement);
+            OutgoingMainPageHost.Visibility = Visibility.Visible;
+            OutgoingMainPageHost.Opacity = outgoingElement.Opacity;
 
-            DashboardPageHost.Visibility = Visibility.Collapsed;
+            if (_activeHostedPage is null)
+            {
+                DashboardPageHost.Visibility = Visibility.Collapsed;
+                DashboardPageHost.Opacity = 0;
+            }
+
             MainPageHost.Content = nextPage;
             MainPageHost.Visibility = Visibility.Visible;
             MainPageHost.Opacity = 0;
-            await FadeElementAsync(MainPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
+            await AwaitElementRenderAsync(MainPageHost);
+
+            var fadeOutTask = FadeElementAsync(OutgoingMainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration);
+            var fadeInTask = FadeElementAsync(MainPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
+            await Task.WhenAll(fadeOutTask, fadeInTask);
+
+            OutgoingMainPageHost.Content = null;
+            OutgoingMainPageHost.Visibility = Visibility.Collapsed;
+            OutgoingMainPageHost.Opacity = 0;
         }
         finally
         {
@@ -1278,18 +1297,25 @@ public partial class MainWindow : Window, IPopupHost
         _isMainPageTransitionActive = true;
         try
         {
-            if (ShouldReduceMotion())
-            {
-                ShowDashboardShellWithoutTransition();
-                return;
-            }
+            OutgoingMainPageHost.Content = CaptureElementSnapshot(MainPageHost);
+            OutgoingMainPageHost.Visibility = Visibility.Visible;
+            OutgoingMainPageHost.Opacity = MainPageHost.Opacity;
 
-            await FadeElementAsync(MainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration);
             MainPageHost.Content = null;
             MainPageHost.Visibility = Visibility.Collapsed;
             MainPageHost.Opacity = 0;
+
             DashboardPageHost.Visibility = Visibility.Visible;
-            await FadeElementAsync(DashboardPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
+            DashboardPageHost.Opacity = 0;
+            await AwaitElementRenderAsync(DashboardPageHost);
+
+            var fadeOutTask = FadeElementAsync(OutgoingMainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration);
+            var fadeInTask = FadeElementAsync(DashboardPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration);
+            await Task.WhenAll(fadeOutTask, fadeInTask);
+
+            OutgoingMainPageHost.Content = null;
+            OutgoingMainPageHost.Visibility = Visibility.Collapsed;
+            OutgoingMainPageHost.Opacity = 0;
         }
         finally
         {
@@ -1301,6 +1327,9 @@ public partial class MainWindow : Window, IPopupHost
     {
         DashboardPageHost.Visibility = Visibility.Collapsed;
         DashboardPageHost.Opacity = 0;
+        OutgoingMainPageHost.Content = null;
+        OutgoingMainPageHost.Visibility = Visibility.Collapsed;
+        OutgoingMainPageHost.Opacity = 0;
         MainPageHost.Content = nextPage;
         MainPageHost.Visibility = Visibility.Visible;
         MainPageHost.Opacity = 1;
@@ -1308,11 +1337,58 @@ public partial class MainWindow : Window, IPopupHost
 
     private void ShowDashboardShellWithoutTransition()
     {
+        OutgoingMainPageHost.Content = null;
+        OutgoingMainPageHost.Visibility = Visibility.Collapsed;
+        OutgoingMainPageHost.Opacity = 0;
         MainPageHost.Content = null;
         MainPageHost.Visibility = Visibility.Collapsed;
         MainPageHost.Opacity = 0;
         DashboardPageHost.Visibility = Visibility.Visible;
         DashboardPageHost.Opacity = 1;
+    }
+
+    private static Image CaptureElementSnapshot(FrameworkElement element)
+    {
+        element.UpdateLayout();
+
+        var width = Math.Max(1, element.ActualWidth);
+        var height = Math.Max(1, element.ActualHeight);
+        var source = PresentationSource.FromVisual(element);
+        var transformToDevice = source?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+        var pixelWidth = Math.Max(1, (int)Math.Ceiling(width * transformToDevice.M11));
+        var pixelHeight = Math.Max(1, (int)Math.Ceiling(height * transformToDevice.M22));
+        var dpiX = 96 * transformToDevice.M11;
+        var dpiY = 96 * transformToDevice.M22;
+
+        var bitmap = new RenderTargetBitmap(pixelWidth, pixelHeight, dpiX, dpiY, PixelFormats.Pbgra32);
+        bitmap.Render(element);
+
+        return new Image
+        {
+            Source = bitmap,
+            Width = width,
+            Height = height,
+            Stretch = Stretch.Fill,
+            SnapsToDevicePixels = true
+        };
+    }
+
+    private static async Task AwaitElementRenderAsync(UIElement element)
+    {
+        element.UpdateLayout();
+
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        EventHandler? renderHandler = null;
+        renderHandler = (_, _) =>
+        {
+            CompositionTarget.Rendering -= renderHandler;
+            completion.TrySetResult();
+        };
+
+        CompositionTarget.Rendering += renderHandler;
+        await element.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+        await completion.Task;
+        element.UpdateLayout();
     }
 
     private static Task FadeElementAsync(UIElement element, double toOpacity, EasingMode easingMode, int durationMilliseconds)
@@ -1346,6 +1422,11 @@ public partial class MainWindow : Window, IPopupHost
         LedgerNavigationButton.IsChecked = page == HostedMainPage.Ledger;
     }
 
+    private void UpdateHeaderDateSelectorEnabledState(HostedMainPage? page)
+    {
+        DaySpinnerControlHost.IsEnabled = page is not HostedMainPage.Analytics and not HostedMainPage.Calendar;
+    }
+
     private static string GetHostedPageLabel(HostedMainPage page)
     {
         return page switch
@@ -1354,6 +1435,17 @@ public partial class MainWindow : Window, IPopupHost
             HostedMainPage.Calendar => "Calendar",
             HostedMainPage.Ledger => "Ledger",
             _ => "Analytics"
+        };
+    }
+
+    private static string GetHostedPageLoadingMessage(HostedMainPage page)
+    {
+        return page switch
+        {
+            HostedMainPage.Analytics => "Loading Analytics",
+            HostedMainPage.Calendar => "Loading Calendar",
+            HostedMainPage.Ledger => "Loading Ledger",
+            _ => "Loading Analytics"
         };
     }
 
@@ -1443,6 +1535,7 @@ public partial class MainWindow : Window, IPopupHost
     private void DisposeMainPages()
     {
         MainPageHost.Content = null;
+        OutgoingMainPageHost.Content = null;
         DashboardPageHost.Content = null;
 
         _dashboardPageView = null;
@@ -1569,12 +1662,16 @@ public partial class MainWindow : Window, IPopupHost
     private void ApplyPopupBlur()
     {
         ContentGrid.Effect = CreatePopupBlurEffect();
+        MainPageHost.Effect = CreatePopupBlurEffect();
+        OutgoingMainPageHost.Effect = CreatePopupBlurEffect();
         FloatingSideNavigationRail.Effect = CreatePopupBlurEffect();
     }
 
     private void ClearPopupBlur()
     {
         ContentGrid.Effect = null;
+        MainPageHost.Effect = null;
+        OutgoingMainPageHost.Effect = null;
         FloatingSideNavigationRail.Effect = null;
     }
 

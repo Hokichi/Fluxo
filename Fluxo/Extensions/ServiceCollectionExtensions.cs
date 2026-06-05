@@ -21,6 +21,7 @@ using Fluxo.Views.Popups;
 using Fluxo.Views.Popups.Planning;
 using Fluxo.Views.Popups.Settings;
 using Fluxo.Views.Shell.Main;
+using Fluxo.Views.Shell.Main.Pages;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;

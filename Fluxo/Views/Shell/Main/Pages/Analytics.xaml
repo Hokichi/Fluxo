@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Views.Shell.Main.Analytics"
+    x:Class="Fluxo.Views.Shell.Main.Pages.Analytics"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
@@ -157,13 +157,43 @@
     </UserControl.Resources>
     <Grid Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="100" />
             <RowDefinition Height="3.5*" />
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
 
+        <StackPanel
+            Grid.Row="0"
+            Margin="0,0,0,14"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <TextBlock
+                Margin="0,0,8,0"
+                VerticalAlignment="Center"
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Foreground="{StaticResource Brush.Text.Muted}"
+                Text="From" />
+            <components:DateSelector
+                x:Name="AnalyticsStartDateSelector"
+                Width="150"
+                SelectedDate="{Binding StartDate, Mode=TwoWay}" />
+            <TextBlock
+                Margin="14,0,8,0"
+                VerticalAlignment="Center"
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Foreground="{StaticResource Brush.Text.Muted}"
+                Text="To" />
+            <components:DateSelector
+                x:Name="AnalyticsEndDateSelector"
+                Width="150"
+                SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+        </StackPanel>
+
         <!--  Second row: summary cards  -->
-        <Grid Grid.Row="0" Margin="0,0,0,14">
+        <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="10" />
@@ -210,7 +240,7 @@
         </Grid>
 
         <!--  Third row: trend chart + donut  -->
-        <Grid Grid.Row="1" Margin="0,0,0,14">
+        <Grid Grid.Row="2" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="4*" />
                 <ColumnDefinition Width="10" />
@@ -443,7 +473,7 @@
         </Grid>
 
         <!--  Fourth row: top tags + goals  -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="10" />

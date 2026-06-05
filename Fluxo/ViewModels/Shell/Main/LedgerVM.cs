@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Data;
 using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -43,6 +44,7 @@ public partial class LedgerVM : ObservableRecipient,
     [ObservableProperty] private decimal _earnedAmount;
     [ObservableProperty] private decimal _goalAmount;
     [ObservableProperty] private decimal _netAmount;
+    [ObservableProperty] private bool _hasVisibleTransactions;
 
     public LedgerVM(
         IExpenseLogService expenseLogService,
@@ -67,6 +69,7 @@ public partial class LedgerVM : ObservableRecipient,
     }
 
     public ICollectionView TransactionsView { get; }
+    public string EmptyStatePeriodText => BuildSelectedPeriodText();
     public ObservableCollection<LedgerFilterOption<LedgerTransactionKind>> TypeFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> SpendingSourceFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<ExpenseCategory>> CategoryFilters { get; } = [];
@@ -115,6 +118,7 @@ public partial class LedgerVM : ObservableRecipient,
     public void ApplyAllTimeRange(bool refresh)
     {
         _selectedRange = null;
+        OnPropertyChanged(nameof(EmptyStatePeriodText));
         _isApplyingExternalRange = true;
         try
         {
@@ -179,6 +183,7 @@ public partial class LedgerVM : ObservableRecipient,
     partial void OnSearchTextChanged(string value)
     {
         TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     partial void OnStartDateChanged(DateTime value)
@@ -236,6 +241,7 @@ public partial class LedgerVM : ObservableRecipient,
 
         RefreshSummaries();
         TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     private void SetSelectedRange(DateTime from, DateTime to, bool updateSelectors)
@@ -252,6 +258,7 @@ public partial class LedgerVM : ObservableRecipient,
             (start, end) = (end, start);
 
         _selectedRange = (start, end);
+        OnPropertyChanged(nameof(EmptyStatePeriodText));
 
         if (!updateSelectors)
             return;
@@ -367,6 +374,7 @@ public partial class LedgerVM : ObservableRecipient,
     public void ApplyFilters()
     {
         TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     private void NormalizeFilterSelection<T>(
@@ -592,6 +600,7 @@ public partial class LedgerVM : ObservableRecipient,
         Messenger.Send(new RecordLogMemoryMessage(new EditExpenseLogMemoryAction(before, after)));
         RefreshSummaries();
         TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     private async Task CommitIncomeEditAsync(LedgerTransactionItemVM transaction)
@@ -626,6 +635,7 @@ public partial class LedgerVM : ObservableRecipient,
         Messenger.Send(new RecordLogMemoryMessage(new EditIncomeLogMemoryAction(before, after)));
         RefreshSummaries();
         TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     private async Task RemoveExpenseTransactionAsync(LedgerTransactionItemVM transaction)
@@ -650,6 +660,7 @@ public partial class LedgerVM : ObservableRecipient,
         Messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(snapshot)));
         RefreshSummaries();
         TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     private async Task RemoveIncomeTransactionAsync(LedgerTransactionItemVM transaction)
@@ -673,6 +684,7 @@ public partial class LedgerVM : ObservableRecipient,
         Messenger.Send(new RecordLogMemoryMessage(new DeleteIncomeLogMemoryAction(snapshot)));
         RefreshSummaries();
         TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     private static void ApplyExpenseSnapshotToTransaction(
@@ -706,6 +718,34 @@ public partial class LedgerVM : ObservableRecipient,
         var tag = TagFilters.FirstOrDefault(option => !option.IsAll && option.Value == transaction.TagId);
         if (tag is not null)
             transaction.TagName = tag.Label;
+    }
+
+    private void RefreshVisibleTransactionState()
+    {
+        HasVisibleTransactions = TransactionsView.Cast<object>().Any();
+    }
+
+    private string BuildSelectedPeriodText()
+    {
+        if (_selectedRange is not { } range)
+            return "all time";
+
+        var start = range.From.Date;
+        var end = range.To.Date;
+        var dayRange = start == end
+            ? DateRangeResolver.Resolve(start, MainContentViewMode.Daily)
+            : null;
+        var from = dayRange?.From ?? start;
+        var to = dayRange?.To ?? end;
+
+        return from.Date == to.Date
+            ? FormatPeriodDate(from)
+            : $"{FormatPeriodDate(from)} to {FormatPeriodDate(to)}";
+    }
+
+    private static string FormatPeriodDate(DateTime date)
+    {
+        return date.ToString("MMMM d", CultureInfo.InvariantCulture);
     }
 
     private sealed class LedgerTransactionComparer(

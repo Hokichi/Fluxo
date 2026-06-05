@@ -4,6 +4,7 @@ using Fluxo.Services.Persistence;
 using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Shell.Main;
 using Fluxo.Views.Shell.Main;
+using Fluxo.Views.Shell.Main.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

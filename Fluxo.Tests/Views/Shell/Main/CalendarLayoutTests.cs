@@ -12,7 +12,7 @@ public sealed class CalendarLayoutTests
     {
         var xaml = LoadCalendarXaml();
 
-        Assert.Contains("x:Class=\"Fluxo.Views.Shell.Main.Calendar\"", xaml);
+        Assert.Contains("x:Class=\"Fluxo.Views.Shell.Main.Pages.Calendar\"", xaml);
         Assert.Contains("<ColumnDefinition Width=\"Auto", xaml);
         Assert.Contains("<ColumnDefinition Width=\"*\"", xaml);
         Assert.Contains("ItemsSource=\"{Binding VisibleWeeks}\"", xaml);
@@ -174,6 +174,7 @@ public sealed class CalendarLayoutTests
                     "Views",
                     "Shell",
                     "Main",
+                    "Pages",
                     "Calendar.xaml"));
             }
 
