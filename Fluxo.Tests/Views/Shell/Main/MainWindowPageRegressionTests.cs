@@ -133,8 +133,10 @@ public sealed class MainWindowPageRegressionTests
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Controls", "DaySpinnerControl.xaml"));
 
         Assert.Contains("Background=\"Transparent\"", xaml);
+        Assert.Contains("IsEnabled=\"{Binding IsSpinnerEnabled}\"", xaml);
         Assert.Contains("Binding=\"{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}\" Value=\"False\"", xaml);
         Assert.Contains("Property=\"Opacity\" Value=\"0.4\"", xaml);
+        Assert.DoesNotContain("Visibility=\"{Binding IsSpinnerVisible", xaml);
     }
 
     [Fact]
@@ -201,12 +203,17 @@ public sealed class MainWindowPageRegressionTests
     public void Ledger_FilterDropdownsApplyOnCloseButGroupByDoesNot()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
 
         Assert.Equal(4, CountOccurrences(ledgerXaml, "DropDownClosed=\"OnFilterDropDownClosed\""));
         Assert.Contains("ItemsSource=\"{Binding TypeFilters}\"", ledgerXaml);
         Assert.Contains("ItemsSource=\"{Binding SpendingSourceFilters}\"", ledgerXaml);
         Assert.Contains("ItemsSource=\"{Binding CategoryFilters}\"", ledgerXaml);
         Assert.Contains("ItemsSource=\"{Binding TagFilters}\"", ledgerXaml);
+        Assert.Contains("StaysOpen=\"False\"", ledgerXaml);
+        Assert.Contains("comboBox.IsDropDownOpen = true;", ledgerCodeBehind);
+        Assert.Contains("_suppressNextFilterDropDownClose", ledgerCodeBehind);
+        Assert.Contains("PreviewMouseLeftButtonUp", ledgerXaml);
 
         var groupingComboIndex = ledgerXaml.IndexOf("x:Name=\"LedgerGroupingComboBox\"", StringComparison.Ordinal);
         Assert.True(groupingComboIndex >= 0);
@@ -214,6 +221,31 @@ public sealed class MainWindowPageRegressionTests
         Assert.True(groupingComboEndIndex > groupingComboIndex);
         var groupingCombo = ledgerXaml.Substring(groupingComboIndex, groupingComboEndIndex - groupingComboIndex);
         Assert.DoesNotContain("OnFilterDropDownClosed", groupingCombo);
+    }
+
+    [Fact]
+    public void Ledger_FilterComboTogglesShowSelectionBadgeAndTooltip()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var filterComboStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerFilterComboStyle\"", "x:Key=\"LedgerGroupingComboStyle\"");
+
+        Assert.Contains("x:Name=\"SelectionCountBadge\"", filterComboStyleSection);
+        Assert.Contains("Background=\"{StaticResource Brush.Mint}\"", filterComboStyleSection);
+        Assert.Contains("Foreground=\"{StaticResource Brush.Background.Surface}\"", filterComboStyleSection);
+        Assert.Contains("Text=\"{Binding Tag.SelectionCount", filterComboStyleSection);
+        Assert.Contains("ToolTip=\"{Binding Tag.SelectionToolTip", filterComboStyleSection);
+        Assert.Contains("TargetName=\"SelectionCountBadge\" Property=\"Visibility\" Value=\"Collapsed\"", filterComboStyleSection);
+    }
+
+    [Fact]
+    public void Ledger_GroupingComboDoesNotUseFilterSelectionBadgeOrTooltip()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var groupingComboStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerGroupingComboStyle\"", "x:Key=\"LedgerFilterOptionTemplate\"");
+
+        Assert.DoesNotContain("SelectionCountBadge", groupingComboStyleSection);
+        Assert.DoesNotContain("SelectionToolTip", groupingComboStyleSection);
+        Assert.Contains("Text=\"{Binding Tag", groupingComboStyleSection);
     }
 
     [Fact]
@@ -228,6 +260,58 @@ public sealed class MainWindowPageRegressionTests
         var button = ledgerXaml.Substring(banButtonIndex, buttonEndIndex - banButtonIndex);
         Assert.Contains("Click=\"OnClearFiltersClick\"", button);
         Assert.DoesNotContain("Click=\"OnApplyFiltersClick\"", button);
+    }
+
+    [Fact]
+    public void Ledger_UsesRequestedDisabledHoverAndDeleteDialogStates()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
+        var filterComboStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerFilterComboStyle\"", "x:Key=\"LedgerGroupingComboStyle\"");
+        var groupingComboStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerGroupingComboStyle\"", "x:Key=\"LedgerFilterOptionTemplate\"");
+        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
+
+        Assert.Contains("Property=\"IsEnabled\" Value=\"False\"", filterComboStyleSection);
+        Assert.Contains("Property=\"Opacity\" Value=\"0.4\"", filterComboStyleSection);
+        Assert.Contains("Property=\"IsEnabled\" Value=\"False\"", groupingComboStyleSection);
+        Assert.Contains("Property=\"Opacity\" Value=\"0.4\"", groupingComboStyleSection);
+        Assert.Contains("Brush.Background.Hovered", rowTemplateSection);
+        Assert.Contains("IsDisabledByAnotherEdit", rowTemplateSection);
+        Assert.Contains("Property=\"IsHitTestVisible\" Value=\"False\"", rowTemplateSection);
+        Assert.Contains("CommandParameter=\"{Binding}\"", rowTemplateSection);
+        Assert.Contains("IsEnabled=\"{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}\"", rowTemplateSection);
+        Assert.Contains("FluxoMessageBox.Show", ledgerCodeBehind);
+        Assert.DoesNotContain("= MessageBox.Show", ledgerCodeBehind);
+    }
+
+    [Fact]
+    public void Ledger_GroupItemsAnimateAndRowsDoNotRenderSeparatorForLastItem()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var groupStyleSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerGroupItemStyle\"", "x:Key=\"LedgerGroupStyle\"");
+        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
+
+        Assert.Contains("LedgerGroupItemsClip", groupStyleSection);
+        Assert.Contains("DoubleAnimation", groupStyleSection);
+        Assert.Contains("Storyboard.TargetProperty=\"Opacity\"", groupStyleSection);
+        Assert.Contains("Storyboard.TargetProperty=\"MaxHeight\"", groupStyleSection);
+        Assert.Contains("x:Name=\"RowSeparator\"", rowTemplateSection);
+        Assert.Contains("IsLastVisibleInGroup", rowTemplateSection);
+        Assert.DoesNotContain("BorderThickness=\"0,0,0,1\"", rowTemplateSection);
+    }
+
+    [Fact]
+    public void Ledger_EditTagPopupUsesEditableTags()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
+        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
+
+        Assert.Contains("x:Name=\"LedgerEditTagPopup\"", rowTemplateSection);
+        Assert.Contains("ItemsSource=\"{Binding DataContext.EditableTags, ElementName=LedgerRoot}\"", rowTemplateSection);
+        Assert.Contains("SelectionChanged=\"OnEditTagSelectionChanged\"", rowTemplateSection);
+        Assert.Contains("OnTransactionTagPreviewMouseLeftButtonDown", ledgerCodeBehind);
+        Assert.Contains("ApplyTransactionTag", ledgerCodeBehind);
     }
 
     private static void AssertPageHasDateSelectors(
@@ -264,6 +348,15 @@ public sealed class MainWindowPageRegressionTests
         }
 
         return count;
+    }
+
+    private static string ExtractSection(string source, string startMarker, string endMarker)
+    {
+        var startIndex = source.IndexOf(startMarker, StringComparison.Ordinal);
+        Assert.True(startIndex >= 0, $"Start marker '{startMarker}' was not found.");
+        var endIndex = source.IndexOf(endMarker, startIndex + startMarker.Length, StringComparison.Ordinal);
+        Assert.True(endIndex > startIndex, $"End marker '{endMarker}' was not found after '{startMarker}'.");
+        return source.Substring(startIndex, endIndex - startIndex);
     }
 
     private static string ExtractMethodBodyBySignature(string source, string signatureMarker)

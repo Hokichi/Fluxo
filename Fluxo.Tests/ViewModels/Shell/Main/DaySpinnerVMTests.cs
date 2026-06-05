@@ -37,7 +37,7 @@ public class DaySpinnerVMTests
     }
 
     [Fact]
-    public void AllTimeMode_PublishesAllTimeViewModeMessage()
+    public void AllTimeMode_PublishesAllTimeViewModeMessageButKeepsSpinnerVisible()
     {
         var messenger = new WeakReferenceMessenger();
         var recipient = new MessageCaptureRecipient();
@@ -46,10 +46,14 @@ public class DaySpinnerVMTests
             static (target, message) => target.AllTimeMessages.Add(message));
 
         var vm = new DaySpinnerVM(messenger);
+        var visibleDates = vm.DaysOfWeek.Select(day => day.Date).ToArray();
+        var selectedDate = vm.SelectedDay.Date;
 
         messenger.Send(new ViewModeChangeMessage(MainContentViewMode.AllTime));
 
-        Assert.False(vm.IsSpinnerVisible);
+        Assert.True(vm.IsSpinnerVisible);
+        Assert.Equal(visibleDates, vm.DaysOfWeek.Select(day => day.Date));
+        Assert.Equal(selectedDate, vm.SelectedDay.Date);
         Assert.Single(recipient.AllTimeMessages);
     }
 

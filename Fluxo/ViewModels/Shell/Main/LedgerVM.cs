@@ -47,6 +47,7 @@ public partial class LedgerVM : ObservableRecipient,
     [ObservableProperty] private decimal _netAmount;
     [ObservableProperty] private bool _hasTransactions;
     [ObservableProperty] private bool _hasVisibleTransactions;
+    [ObservableProperty] private LedgerTransactionItemVM? _editingTransaction;
 
     public LedgerVM(
         IExpenseLogService expenseLogService,
@@ -82,6 +83,22 @@ public partial class LedgerVM : ObservableRecipient,
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
         ViewModeToggle = viewModeToggle;
+        TypeFilterPresentation = new LedgerFilterSelectionPresentation(
+            "Type",
+            () => TypeFilterSelectionCount,
+            () => TypeFilterSelectionToolTip);
+        SpendingSourceFilterPresentation = new LedgerFilterSelectionPresentation(
+            "Spending Source",
+            () => SpendingSourceFilterSelectionCount,
+            () => SpendingSourceFilterSelectionToolTip);
+        CategoryFilterPresentation = new LedgerFilterSelectionPresentation(
+            "Category",
+            () => CategoryFilterSelectionCount,
+            () => CategoryFilterSelectionToolTip);
+        TagFilterPresentation = new LedgerFilterSelectionPresentation(
+            "Tag",
+            () => TagFilterSelectionCount,
+            () => TagFilterSelectionToolTip);
 
         TransactionsView = CollectionViewSource.GetDefaultView(_transactions);
         TransactionsView.Filter = FilterTransaction;
@@ -97,7 +114,20 @@ public partial class LedgerVM : ObservableRecipient,
     public ObservableCollection<LedgerFilterOption<int>> SpendingSourceFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<ExpenseCategory>> CategoryFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> TagFilters { get; } = [];
+    public ObservableCollection<ExpenseTagVM> EditableTags { get; } = [];
     public bool HasPendingFilterChanges => CaptureFilterSelectionSnapshot() != _appliedFilterSelection;
+    public LedgerFilterSelectionPresentation TypeFilterPresentation { get; }
+    public LedgerFilterSelectionPresentation SpendingSourceFilterPresentation { get; }
+    public LedgerFilterSelectionPresentation CategoryFilterPresentation { get; }
+    public LedgerFilterSelectionPresentation TagFilterPresentation { get; }
+    public int TypeFilterSelectionCount => CountSpecificSelections(TypeFilters);
+    public int SpendingSourceFilterSelectionCount => CountSpecificSelections(SpendingSourceFilters);
+    public int CategoryFilterSelectionCount => CountSpecificSelections(CategoryFilters);
+    public int TagFilterSelectionCount => CountSpecificSelections(TagFilters);
+    public string? TypeFilterSelectionToolTip => BuildSpecificSelectionToolTip(TypeFilters);
+    public string? SpendingSourceFilterSelectionToolTip => BuildSpecificSelectionToolTip(SpendingSourceFilters);
+    public string? CategoryFilterSelectionToolTip => BuildSpecificSelectionToolTip(CategoryFilters);
+    public string? TagFilterSelectionToolTip => BuildSpecificSelectionToolTip(TagFilters);
     public IReadOnlyList<LedgerGroupingMode> GroupingModes { get; } =
     [
         LedgerGroupingMode.None,
@@ -179,18 +209,25 @@ public partial class LedgerVM : ObservableRecipient,
 
         if (!transaction.IsEditing)
         {
+            if (EditingTransaction is not null && !ReferenceEquals(EditingTransaction, transaction))
+                return;
+
             transaction.IsEditing = true;
+            EditingTransaction = transaction;
+            RefreshEditDisabledState();
             return;
         }
 
         await CommitTransactionEditAsync(transaction);
         transaction.IsEditing = false;
+        EditingTransaction = null;
+        RefreshEditDisabledState();
     }
 
     [RelayCommand]
     private async Task RemoveTransactionAsync(LedgerTransactionItemVM? transaction)
     {
-        if (transaction is null || transaction.IsGoal)
+        if (transaction is null || transaction.IsGoal || transaction.IsEditing || transaction.IsDisabledByAnotherEdit)
             return;
 
         switch (transaction.Kind)
@@ -231,11 +268,13 @@ public partial class LedgerVM : ObservableRecipient,
     partial void OnSelectedGroupingModeChanged(LedgerGroupingMode value)
     {
         UpdateSortAndGroups();
+        RefreshVisibleTransactionState();
     }
 
     partial void OnAmountSortDirectionChanged(LedgerAmountSortDirection value)
     {
         UpdateSortAndGroups();
+        RefreshVisibleTransactionState();
     }
 
     private async Task ReloadPeriodAsync(CancellationToken cancellationToken)
@@ -248,6 +287,7 @@ public partial class LedgerVM : ObservableRecipient,
         var tags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
             await _tagService.GetAllAsync(cancellationToken));
 
+        EditingTransaction = null;
         RebuildFilters(spendingSources, tags);
 
         var projected = expenseLogs
@@ -263,6 +303,7 @@ public partial class LedgerVM : ObservableRecipient,
         foreach (var transaction in projected)
             _transactions.Add(transaction);
 
+        RefreshEditDisabledState();
         HasTransactions = _transactions.Count > 0;
         RefreshSummaries();
         TransactionsView.Refresh();
@@ -329,6 +370,8 @@ public partial class LedgerVM : ObservableRecipient,
 
     private void RebuildFilters(IReadOnlyList<SpendingSourceVM> spendingSources, IReadOnlyList<ExpenseTagVM> tags)
     {
+        ReplaceEditableTags(tags);
+
         RebuildFilter(TypeFilters,
         [
             new LedgerFilterOption<LedgerTransactionKind>("All", default, isAll: true, isChecked: true),
@@ -359,6 +402,18 @@ public partial class LedgerVM : ObservableRecipient,
                 .ToList());
 
         _appliedFilterSelection = CaptureFilterSelectionSnapshot();
+        RefreshAllFilterSelectionPresentations();
+    }
+
+    private void ReplaceEditableTags(IReadOnlyList<ExpenseTagVM> tags)
+    {
+        EditableTags.Clear();
+        foreach (var tag in tags
+                     .Where(tag => !tag.IsSystemTag)
+                     .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            EditableTags.Add(tag);
+        }
     }
 
     private void RebuildFilter<T>(
@@ -398,6 +453,7 @@ public partial class LedgerVM : ObservableRecipient,
         }
 
         OnPropertyChanged(nameof(HasPendingFilterChanges));
+        RefreshFilterSelectionPresentation(sender);
     }
 
     public void ApplyFilters()
@@ -406,6 +462,7 @@ public partial class LedgerVM : ObservableRecipient,
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
         OnPropertyChanged(nameof(HasPendingFilterChanges));
+        RefreshAllFilterSelectionPresentations();
     }
 
     public bool ApplyFiltersIfChanged()
@@ -437,6 +494,23 @@ public partial class LedgerVM : ObservableRecipient,
     {
         ApplySpecificFilter(SpendingSourceFilters, spendingSourceId);
         ApplyFilters();
+    }
+
+    public void ApplyTransactionTag(LedgerTransactionItemVM? transaction, ExpenseTagVM? tag)
+    {
+        if (transaction is null ||
+            tag is null ||
+            tag.IsSystemTag ||
+            transaction.Kind != LedgerTransactionKind.Expense ||
+            !transaction.IsEditing)
+        {
+            return;
+        }
+
+        transaction.TagId = tag.Id;
+        transaction.TagName = tag.Name;
+        transaction.TagHexCode = tag.HexCode;
+        transaction.IsTagPopupOpen = false;
     }
 
     private void NormalizeFilterSelection<T>(
@@ -490,6 +564,7 @@ public partial class LedgerVM : ObservableRecipient,
         }
 
         OnPropertyChanged(nameof(HasPendingFilterChanges));
+        RefreshFilterSelectionPresentation(options);
     }
 
     private void ApplySpecificFilter<T>(ObservableCollection<LedgerFilterOption<T>> options, T value)
@@ -513,6 +588,83 @@ public partial class LedgerVM : ObservableRecipient,
 
         NormalizeFilterSelection(options, selectedOption);
         OnPropertyChanged(nameof(HasPendingFilterChanges));
+        RefreshFilterSelectionPresentation(options);
+    }
+
+    private static int CountSpecificSelections<T>(IEnumerable<LedgerFilterOption<T>> options)
+    {
+        return options.Count(option => !option.IsAll && option.IsChecked);
+    }
+
+    private static string? BuildSpecificSelectionToolTip<T>(IEnumerable<LedgerFilterOption<T>> options)
+    {
+        var labels = options
+            .Where(option => !option.IsAll && option.IsChecked)
+            .Select(option => option.Label)
+            .ToList();
+
+        return labels.Count == 0
+            ? null
+            : string.Join(Environment.NewLine, labels);
+    }
+
+    private void RefreshFilterSelectionPresentation(object? filterSource)
+    {
+        switch (filterSource)
+        {
+            case LedgerFilterOption<LedgerTransactionKind>:
+            case ObservableCollection<LedgerFilterOption<LedgerTransactionKind>>:
+                RefreshTypeFilterSelectionPresentation();
+                break;
+            case LedgerFilterOption<int> source when SpendingSourceFilters.Contains(source):
+            case ObservableCollection<LedgerFilterOption<int>> sourceCollection when ReferenceEquals(sourceCollection, SpendingSourceFilters):
+                RefreshSpendingSourceFilterSelectionPresentation();
+                break;
+            case LedgerFilterOption<int> tag when TagFilters.Contains(tag):
+            case ObservableCollection<LedgerFilterOption<int>> tagCollection when ReferenceEquals(tagCollection, TagFilters):
+                RefreshTagFilterSelectionPresentation();
+                break;
+            case LedgerFilterOption<ExpenseCategory>:
+            case ObservableCollection<LedgerFilterOption<ExpenseCategory>>:
+                RefreshCategoryFilterSelectionPresentation();
+                break;
+        }
+    }
+
+    private void RefreshAllFilterSelectionPresentations()
+    {
+        RefreshTypeFilterSelectionPresentation();
+        RefreshSpendingSourceFilterSelectionPresentation();
+        RefreshCategoryFilterSelectionPresentation();
+        RefreshTagFilterSelectionPresentation();
+    }
+
+    private void RefreshTypeFilterSelectionPresentation()
+    {
+        OnPropertyChanged(nameof(TypeFilterSelectionCount));
+        OnPropertyChanged(nameof(TypeFilterSelectionToolTip));
+        TypeFilterPresentation.Refresh();
+    }
+
+    private void RefreshSpendingSourceFilterSelectionPresentation()
+    {
+        OnPropertyChanged(nameof(SpendingSourceFilterSelectionCount));
+        OnPropertyChanged(nameof(SpendingSourceFilterSelectionToolTip));
+        SpendingSourceFilterPresentation.Refresh();
+    }
+
+    private void RefreshCategoryFilterSelectionPresentation()
+    {
+        OnPropertyChanged(nameof(CategoryFilterSelectionCount));
+        OnPropertyChanged(nameof(CategoryFilterSelectionToolTip));
+        CategoryFilterPresentation.Refresh();
+    }
+
+    private void RefreshTagFilterSelectionPresentation()
+    {
+        OnPropertyChanged(nameof(TagFilterSelectionCount));
+        OnPropertyChanged(nameof(TagFilterSelectionToolTip));
+        TagFilterPresentation.Refresh();
     }
 
     private LedgerFilterSelectionSnapshot CaptureFilterSelectionSnapshot()
@@ -839,11 +991,55 @@ public partial class LedgerVM : ObservableRecipient,
         var tag = TagFilters.FirstOrDefault(option => !option.IsAll && option.Value == transaction.TagId);
         if (tag is not null)
             transaction.TagName = tag.Label;
+
+        var editableTag = EditableTags.FirstOrDefault(tag => tag.Id == transaction.TagId);
+        if (editableTag is not null)
+            transaction.TagHexCode = editableTag.HexCode;
     }
 
     private void RefreshVisibleTransactionState()
     {
-        HasVisibleTransactions = TransactionsView.Cast<object>().Any();
+        foreach (var transaction in _transactions)
+            transaction.IsLastVisibleInGroup = false;
+
+        var visibleTransactions = TransactionsView.Cast<LedgerTransactionItemVM>().ToList();
+        HasVisibleTransactions = visibleTransactions.Count > 0;
+
+        if (SelectedGroupingMode == LedgerGroupingMode.None)
+        {
+            if (visibleTransactions.LastOrDefault() is { } lastTransaction)
+                lastTransaction.IsLastVisibleInGroup = true;
+            return;
+        }
+
+        foreach (var group in visibleTransactions.GroupBy(GetVisibleGroupKey))
+        {
+            if (group.LastOrDefault() is { } lastTransaction)
+                lastTransaction.IsLastVisibleInGroup = true;
+        }
+    }
+
+    private string GetVisibleGroupKey(LedgerTransactionItemVM transaction)
+    {
+        return SelectedGroupingMode switch
+        {
+            LedgerGroupingMode.Date => transaction.DateGroupKey,
+            LedgerGroupingMode.Tags => transaction.TagGroupKey,
+            LedgerGroupingMode.SpendingSources => transaction.SpendingSourceGroupKey,
+            LedgerGroupingMode.Types => transaction.TypeGroupKey,
+            LedgerGroupingMode.Category => transaction.CategoryGroupKey,
+            _ => string.Empty
+        };
+    }
+
+    private void RefreshEditDisabledState()
+    {
+        foreach (var transaction in _transactions)
+        {
+            transaction.IsTagPopupOpen = transaction.IsEditing && transaction.IsTagPopupOpen;
+            transaction.IsDisabledByAnotherEdit =
+                EditingTransaction is not null && !ReferenceEquals(EditingTransaction, transaction);
+        }
     }
 
     private string BuildSelectedPeriodText()
@@ -935,5 +1131,22 @@ public sealed class LedgerGroupingModeDisplayConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
         throw new NotSupportedException();
+    }
+}
+
+public sealed class LedgerFilterSelectionPresentation(
+    string label,
+    Func<int> selectionCountProvider,
+    Func<string?> selectionToolTipProvider)
+    : ObservableObject
+{
+    public string Label { get; } = label;
+    public int SelectionCount => selectionCountProvider();
+    public string? SelectionToolTip => selectionToolTipProvider();
+
+    public void Refresh()
+    {
+        OnPropertyChanged(nameof(SelectionCount));
+        OnPropertyChanged(nameof(SelectionToolTip));
     }
 }

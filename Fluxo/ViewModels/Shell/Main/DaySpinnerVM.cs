@@ -48,6 +48,9 @@ public partial class DaySpinnerVM : ObservableRecipient,
     private bool _isSpinnerVisible = true;
 
     [ObservableProperty]
+    private bool _isSpinnerEnabled = true;
+
+    [ObservableProperty]
     private bool _isAtCurrentPeriod = true;
 
     public string MoveToCurrentLabel => _selectedMainContentViewMode switch
@@ -68,12 +71,11 @@ public partial class DaySpinnerVM : ObservableRecipient,
             _suppressSelectionPublishing = true;
             try
             {
-                IsSpinnerVisible = false;
+                IsSpinnerVisible = true;
+                IsSpinnerEnabled = false;
                 IsAtCurrentPeriod = false;
                 CanNavigateForward = false;
                 _spinnerPageOffset = 0;
-                DaysOfWeek.Clear();
-                SelectedDay = new DayOfWeekVM();
             }
             finally
             {
@@ -86,6 +88,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
         }
 
         IsSpinnerVisible = true;
+        IsSpinnerEnabled = true;
         BuildSpinnerForMode(DateTime.Today, publishSelection: true);
     }
 

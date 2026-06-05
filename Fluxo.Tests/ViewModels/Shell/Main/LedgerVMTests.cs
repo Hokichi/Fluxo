@@ -120,6 +120,35 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void FilterSelectionBadgesAndTooltips_HideForAllAndListSpecificSelections()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(0, vm.TypeFilterSelectionCount);
+            Assert.Null(vm.TypeFilterSelectionToolTip);
+
+            vm.TypeFilters.Single(option => option.Value == LedgerTransactionKind.Income).IsChecked = true;
+            vm.TagFilters.Single(option => option.Value == 1).IsChecked = true;
+            vm.TagFilters.Single(option => option.Value == 2).IsChecked = true;
+
+            Assert.Equal(1, vm.TypeFilterSelectionCount);
+            Assert.Equal("Incomes", vm.TypeFilterSelectionToolTip);
+            Assert.Equal(2, vm.TagFilterSelectionCount);
+            Assert.Equal($"Groceries{Environment.NewLine}Streaming", vm.TagFilterSelectionToolTip);
+
+            vm.ClearFilters();
+
+            Assert.Equal(0, vm.TypeFilterSelectionCount);
+            Assert.Null(vm.TypeFilterSelectionToolTip);
+            Assert.Equal(0, vm.TagFilterSelectionCount);
+            Assert.Null(vm.TagFilterSelectionToolTip);
+        });
+    }
+
+    [Fact]
     public void ClearFilters_ResetsDropdownFiltersAndSearchButPreservesGrouping()
     {
         RunInSta(() =>
@@ -367,6 +396,53 @@ public sealed class LedgerVMTests
             Assert.Equal("FreshMart Market", action.After.ExpenseName);
             Assert.Equal(70m, action.After.Amount);
             Assert.Equal(2, action.After.TagId);
+        });
+    }
+
+    [Fact]
+    public void EditTransactionCommand_DisablesOtherRowsUntilEditIsSaved()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(unitOfWork: CreateUnitOfWork());
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var grocery = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+            var netflix = GetItems(vm.TransactionsView).Single(item => item.Name == "Netflix");
+
+            vm.EditTransactionCommand.ExecuteAsync(grocery).GetAwaiter().GetResult();
+
+            Assert.True(grocery.IsEditing);
+            Assert.False(grocery.IsDisabledByAnotherEdit);
+            Assert.True(netflix.IsDisabledByAnotherEdit);
+            Assert.Equal(grocery, vm.EditingTransaction);
+
+            vm.EditTransactionCommand.ExecuteAsync(grocery).GetAwaiter().GetResult();
+
+            Assert.False(grocery.IsEditing);
+            Assert.False(grocery.IsDisabledByAnotherEdit);
+            Assert.False(netflix.IsDisabledByAnotherEdit);
+            Assert.Null(vm.EditingTransaction);
+        });
+    }
+
+    [Fact]
+    public void LedgerTagsForEditing_ExposeOnlyNonSystemTagsAndUpdateTransactionSelection()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(unitOfWork: CreateUnitOfWork());
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var grocery = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+
+            Assert.Equal(new[] { "Groceries", "Streaming" }, vm.EditableTags.Select(tag => tag.Name).ToArray());
+            Assert.DoesNotContain(vm.EditableTags, tag => tag.IsSystemTag);
+
+            vm.EditTransactionCommand.ExecuteAsync(grocery).GetAwaiter().GetResult();
+            vm.ApplyTransactionTag(grocery, vm.EditableTags.Single(tag => tag.Name == "Streaming"));
+
+            Assert.Equal(2, grocery.TagId);
+            Assert.Equal("Streaming", grocery.TagName);
+            Assert.Equal("#D97936", grocery.TagHexCode);
         });
     }
 

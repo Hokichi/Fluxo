@@ -1,5 +1,6 @@
 <UserControl
     x:Class="Fluxo.Views.Shell.Main.Pages.Ledger"
+    x:Name="LedgerRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
@@ -33,6 +34,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="OnFilterOptionPreviewMouseLeftButtonDown" />
+            <EventSetter Event="PreviewMouseLeftButtonUp" Handler="OnFilterOptionPreviewMouseLeftButtonUp" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
@@ -118,6 +120,133 @@
                                 ClickMode="Press"
                                 Focusable="False"
                                 Foreground="{TemplateBinding Foreground}"
+                                IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                ToolTip="{Binding Tag.SelectionToolTip, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border
+                                            Padding="10,0,12,0"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="8">
+                                            <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="13"
+                                                Foreground="{StaticResource Brush.Text.Primary}"
+                                                Text="{Binding Tag.Label, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+
+                                            <Border
+                                                x:Name="SelectionCountBadge"
+                                                Grid.Column="1"
+                                                MinWidth="16"
+                                                Height="16"
+                                                Margin="8,0,8,0"
+                                                Padding="4,0"
+                                                VerticalAlignment="Center"
+                                                Background="{StaticResource Brush.Mint}"
+                                                CornerRadius="8">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    FontSize="10"
+                                                    Foreground="{StaticResource Brush.Background.Surface}"
+                                                    Text="{Binding Tag.SelectionCount, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+                                            </Border>
+
+                                            <Path
+                                                x:Name="DropDownChevron"
+                                                Grid.Column="2"
+                                                Width="8"
+                                                Height="8"
+                                                VerticalAlignment="Center"
+                                                Data="{StaticResource AngleDown}"
+                                                Fill="{StaticResource Brush.Text.Muted}"
+                                                    RenderTransformOrigin="0.5,0.5"
+                                                    Stretch="Uniform" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="DropDownChevron" Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <RotateTransform Angle="180" />
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding Tag.SelectionCount, RelativeSource={RelativeSource AncestorType=ComboBox}}" Value="0">
+                                            <Setter TargetName="SelectionCountBadge" Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                            <Popup
+                                x:Name="PART_Popup"
+                                AllowsTransparency="True"
+                                Focusable="False"
+                                IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                PopupAnimation="Fade"
+                                StaysOpen="False"
+                                VerticalOffset="8">
+                                <Border
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    Background="{StaticResource Brush.Background.Surface}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                    <customControls:FadingScrollViewer
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        Margin="4"
+                                        CanContentScroll="False"
+                                        HorizontalScrollBarVisibility="Disabled"
+                                        VerticalScrollBarVisibility="Hidden">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </customControls:FadingScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style
+            x:Key="LedgerGroupingComboStyle"
+            BasedOn="{StaticResource LedgerFilterComboStyle}"
+            TargetType="ComboBox">
+            <Setter Property="ItemContainerStyle" Value="{StaticResource FluxoComboBoxItemStyle}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid SnapsToDevicePixels="True">
+                            <ToggleButton
+                                x:Name="ToggleButton"
+                                Height="{TemplateBinding Height}"
+                                HorizontalAlignment="Stretch"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                ClickMode="Press"
+                                Focusable="False"
+                                Foreground="{TemplateBinding Foreground}"
                                 IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
@@ -173,6 +302,7 @@
                                 Placement="Bottom"
                                 PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                                 PopupAnimation="Fade"
+                                StaysOpen="False"
                                 VerticalOffset="8">
                                 <Border
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
@@ -194,13 +324,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <Style
-            x:Key="LedgerGroupingComboStyle"
-            BasedOn="{StaticResource LedgerFilterComboStyle}"
-            TargetType="ComboBox">
-            <Setter Property="ItemContainerStyle" Value="{StaticResource FluxoComboBoxItemStyle}" />
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <DataTemplate x:Key="LedgerFilterOptionTemplate">
@@ -266,14 +394,46 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="LedgerEditTagListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        </Style>
+
+        <Style x:Key="LedgerEditTagListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="LedgerEditTagTemplate">
+            <ToggleButton
+                Padding="12,6"
+                Content="{Binding Name}"
+                IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"
+                Style="{StaticResource PopupTagItemToggleStyle}" />
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="LedgerEditTagItemsPanelTemplate">
+            <WrapPanel />
+        </ItemsPanelTemplate>
+
         <DataTemplate x:Key="LedgerRowTemplate">
             <Border
                 x:Name="RowRoot"
                 MinHeight="48"
                 Padding="0"
-                Background="Transparent"
-                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                BorderThickness="0,0,0,1">
+                Background="Transparent">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4" />
@@ -284,6 +444,24 @@
                         <ColumnDefinition Width="130" />
                         <ColumnDefinition Width="0.5*" />
                     </Grid.ColumnDefinitions>
+
+                    <Border
+                        x:Name="RowSeparator"
+                        Grid.ColumnSpan="7"
+                        Height="1"
+                        VerticalAlignment="Bottom"
+                        Background="{StaticResource Brush.Border.Subtle}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLastVisibleInGroup}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
 
                     <Border
                         Grid.Column="0"
@@ -360,22 +538,59 @@
                         </Border>
                     </StackPanel>
 
-                    <Border
+                    <Grid
                         Grid.Column="3"
                         MaxWidth="160"
-                        Padding="8,2"
                         HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Background="{Binding TagHexCode}"
-                        CornerRadius="8"
-                        Cursor="Hand"
-                        PreviewMouseLeftButtonDown="OnTransactionTagPreviewMouseLeftButtonDown">
-                        <TextBlock
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="11"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding TagName}" />
-                    </Border>
+                        VerticalAlignment="Center">
+                        <Border
+                            x:Name="LedgerTransactionTagPill"
+                            Padding="8,2"
+                            Background="{Binding TagHexCode}"
+                            CornerRadius="8"
+                            Cursor="Hand"
+                            PreviewMouseLeftButtonDown="OnTransactionTagPreviewMouseLeftButtonDown">
+                            <TextBlock
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="11"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding TagName}" />
+                        </Border>
+
+                        <Popup
+                            x:Name="LedgerEditTagPopup"
+                            AllowsTransparency="True"
+                            IsOpen="{Binding IsTagPopupOpen, Mode=TwoWay}"
+                            Placement="Bottom"
+                            PlacementTarget="{Binding ElementName=LedgerTransactionTagPill}"
+                            PopupAnimation="Fade"
+                            StaysOpen="False"
+                            VerticalOffset="8">
+                            <Border
+                                MaxWidth="360"
+                                Padding="12"
+                                Background="{StaticResource Brush.Background.Elevated}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,10"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="12"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="More Tags" />
+                                    <ListBox
+                                        ItemContainerStyle="{StaticResource LedgerEditTagListBoxItemStyle}"
+                                        ItemTemplate="{StaticResource LedgerEditTagTemplate}"
+                                        ItemsPanel="{StaticResource LedgerEditTagItemsPanelTemplate}"
+                                        ItemsSource="{Binding DataContext.EditableTags, ElementName=LedgerRoot}"
+                                        SelectionChanged="OnEditTagSelectionChanged"
+                                        Style="{StaticResource LedgerEditTagListBoxStyle}" />
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
 
                     <Border
                         Grid.Column="4"
@@ -422,7 +637,7 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
                         Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
-                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <Border
@@ -459,6 +674,7 @@
                                 CommandParameter="{Binding}"
                                 HoveredBackground="{StaticResource Brush.Danger}"
                                 IconSize="12"
+                                IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
                                 Style="{StaticResource HeaderButtonStyle}" />
                         </StackPanel>
                     </Border>
@@ -466,11 +682,16 @@
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="IsHitTestVisible" Value="True" />
+                        <Setter Property="Opacity" Value="1" />
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
-                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                                <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
                             </Trigger>
+                            <DataTrigger Binding="{Binding IsDisabledByAnotherEdit}" Value="True">
+                                <Setter Property="IsHitTestVisible" Value="False" />
+                                <Setter Property="Opacity" Value="0.4" />
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
@@ -531,13 +752,50 @@
                                     </ToggleButton.Template>
                                 </ToggleButton>
 
-                                <ItemsPresenter x:Name="LedgerGroupItemsPresenter" />
+                                <Border
+                                    x:Name="LedgerGroupItemsClip"
+                                    MaxHeight="2000"
+                                    ClipToBounds="True"
+                                    Opacity="1">
+                                    <ItemsPresenter x:Name="LedgerGroupItemsPresenter" />
+                                </Border>
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger SourceName="LedgerGroupHeaderToggle" Property="IsChecked" Value="False">
-                                <Setter TargetName="LedgerGroupItemsPresenter" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="LedgerGroupHeaderToggle" Property="Margin" Value="0,10,0,8" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="LedgerGroupItemsClip"
+                                                Storyboard.TargetProperty="MaxHeight"
+                                                To="0"
+                                                Duration="0:0:0.16" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="LedgerGroupItemsClip"
+                                                Storyboard.TargetProperty="Opacity"
+                                                To="0"
+                                                Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="LedgerGroupItemsClip"
+                                                Storyboard.TargetProperty="MaxHeight"
+                                                To="2000"
+                                                Duration="0:0:0.18" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="LedgerGroupItemsClip"
+                                                Storyboard.TargetProperty="Opacity"
+                                                To="1"
+                                                Duration="0:0:0.14" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -662,7 +920,7 @@
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding TypeFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
-                Tag="Type" />
+                Tag="{Binding TypeFilterPresentation}" />
             <ComboBox
                 Grid.Column="1"
                 Margin="8,0,0,0"
@@ -670,7 +928,7 @@
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding SpendingSourceFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
-                Tag="Spending Source" />
+                Tag="{Binding SpendingSourceFilterPresentation}" />
             <ComboBox
                 Grid.Column="2"
                 Margin="8,0,0,0"
@@ -678,7 +936,7 @@
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding CategoryFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
-                Tag="Category" />
+                Tag="{Binding CategoryFilterPresentation}" />
             <ComboBox
                 Grid.Column="3"
                 Margin="8,0,0,0"
@@ -686,7 +944,7 @@
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding TagFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
-                Tag="Tag" />
+                Tag="{Binding TagFilterPresentation}" />
             <customControls:BalloonButton
                 Grid.Column="5"
                 ButtonIcon="{StaticResource Ban}"

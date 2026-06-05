@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
+using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell.Main;
 
 namespace Fluxo.Views.Shell.Main.Pages;
@@ -13,8 +14,10 @@ public partial class Ledger : UserControl
     private static readonly Thickness LedgerTransactionsListDefaultMargin = new(0, 0, 0, 0);
     private static readonly Thickness LedgerTransactionsListScrollableMargin = new(0, 0, -32, 0);
     private readonly IDialogService _dialogService;
+    private ComboBox? _filterDropDownKeepOpenComboBox;
     private bool _hasLoaded;
     private bool _isApplyingGroupingSelection;
+    private bool _suppressNextFilterDropDownClose;
 
     public Ledger(LedgerVM viewModel, IDialogService dialogService)
     {
@@ -58,7 +61,7 @@ public partial class Ledger : UserControl
             DataContext is not LedgerVM viewModel)
             return;
 
-        var result = MessageBox.Show(
+        var result = FluxoMessageBox.Show(
             Window.GetWindow(this),
             $"Remove {transaction.Name} from the ledger?",
             "Ledger",
@@ -78,6 +81,12 @@ public partial class Ledger : UserControl
         if (sender is not FrameworkElement { DataContext: object option })
             return;
 
+        var comboBox = sender is ComboBoxItem comboBoxItem
+            ? ItemsControl.ItemsControlFromItemContainer(comboBoxItem) as ComboBox
+            : null;
+
+        KeepFilterDropDownOpenAfterOptionClick(comboBox);
+
         switch (option)
         {
             case LedgerFilterOption<LedgerTransactionKind> type:
@@ -92,15 +101,63 @@ public partial class Ledger : UserControl
         }
     }
 
+    private void OnFilterOptionPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    private void KeepFilterDropDownOpenAfterOptionClick(ComboBox? comboBox)
+    {
+        if (comboBox is null)
+            return;
+
+        _suppressNextFilterDropDownClose = true;
+        _filterDropDownKeepOpenComboBox = comboBox;
+
+        _ = Dispatcher.BeginInvoke(() =>
+        {
+            comboBox.IsDropDownOpen = true;
+
+            if (ReferenceEquals(_filterDropDownKeepOpenComboBox, comboBox) && comboBox.IsDropDownOpen)
+            {
+                _filterDropDownKeepOpenComboBox = null;
+                _suppressNextFilterDropDownClose = false;
+            }
+        }, DispatcherPriority.Input);
+    }
+
     private void OnTransactionTagPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
-            DataContext is not LedgerVM viewModel ||
             transaction.TagId <= 0)
             return;
 
         e.Handled = true;
+        if (transaction.IsEditing)
+        {
+            transaction.IsTagPopupOpen = transaction.Kind == LedgerTransactionKind.Expense;
+            return;
+        }
+
+        if (DataContext is not LedgerVM viewModel)
+            return;
+
         viewModel.ApplyTagFilter(transaction.TagId);
+    }
+
+    private void OnEditTagSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel ||
+            e.AddedItems.Count == 0 ||
+            e.AddedItems[0] is not ExpenseTagVM tag)
+        {
+            return;
+        }
+
+        viewModel.ApplyTransactionTag(transaction, tag);
+        if (sender is ListBox listBox)
+            listBox.SelectedItem = null;
     }
 
     private void OnTransactionSpendingSourcePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -116,6 +173,19 @@ public partial class Ledger : UserControl
 
     private async void OnFilterDropDownClosed(object sender, EventArgs e)
     {
+        if (_suppressNextFilterDropDownClose &&
+            sender is ComboBox comboBox &&
+            ReferenceEquals(comboBox, _filterDropDownKeepOpenComboBox))
+        {
+            _filterDropDownKeepOpenComboBox = null;
+            _suppressNextFilterDropDownClose = false;
+            _ = Dispatcher.BeginInvoke(() =>
+            {
+                comboBox.IsDropDownOpen = true;
+            }, DispatcherPriority.Input);
+            return;
+        }
+
         if (DataContext is not LedgerVM viewModel)
             return;
 
@@ -136,7 +206,7 @@ public partial class Ledger : UserControl
     private Task ShowFilterRefreshToastAsync(Action refreshAction)
     {
         return _dialogService.ShowToastWhileAsync(
-            "Filtering...",
+            "Loading data...",
             async () =>
             {
                 await Dispatcher.InvokeAsync(

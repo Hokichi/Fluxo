@@ -40,14 +40,14 @@
 
     <Grid
         Background="Transparent"
-        Visibility="{Binding IsSpinnerVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+        IsEnabled="{Binding IsSpinnerEnabled}">
         <Grid.Style>
             <Style TargetType="Grid">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsSpinnerVisible}" Value="False">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                    </DataTrigger>
                     <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False">
+                        <Setter Property="Opacity" Value="0.4" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsSpinnerEnabled}" Value="False">
                         <Setter Property="Opacity" Value="0.4" />
                     </DataTrigger>
                 </Style.Triggers>
