@@ -45,11 +45,15 @@
     <Color x:Key="Color.Text.Secondary">#9BA3AE</Color>
     <Color x:Key="Color.Text.Muted">#6B7280</Color>
     <Color x:Key="Color.Text.Primary.Dark">#1A1D21</Color>
+    <Color x:Key="Color.Text.Secondary.Dark">#20242A</Color>
+    <Color x:Key="Color.Text.Muted.Dark">#232830</Color>
 
     <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Primary}" />
     <SolidColorBrush x:Key="Brush.Text.Secondary" Color="{StaticResource Color.Text.Secondary}" />
     <SolidColorBrush x:Key="Brush.Text.Muted" Color="{StaticResource Color.Text.Muted}" />
     <SolidColorBrush x:Key="Brush.Text.Primary.Dark" Color="{StaticResource Color.Text.Primary.Dark}" />
+    <SolidColorBrush x:Key="Brush.Text.Secondary.Dark" Color="{StaticResource Color.Text.Secondary.Dark}" />
+    <SolidColorBrush x:Key="Brush.Text.Muted.Dark" Color="{StaticResource Color.Text.Muted.Dark}" />
 
     <!--  =============================  -->
     <!--  BORDER COLORS  -->
