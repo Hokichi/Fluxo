@@ -149,6 +149,7 @@
 
         <DataTemplate x:Key="CalendarDayTemplate">
             <Button
+                x:Name="CalendarDayButton"
                 Command="{Binding DataContext.SelectDateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 CommandParameter="{Binding}"
                 Style="{StaticResource CalendarDayButtonStyle}">
@@ -157,8 +158,14 @@
                     VerticalAlignment="Center"
                     FontFamily="{StaticResource Bold}"
                     FontSize="14"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="{Binding DayNumber}" />
+                    Text="{Binding DayNumber}">
+                    <TextBlock.Foreground>
+                        <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                            <Binding ElementName="CalendarDayButton" Path="Background" />
+                            <Binding Source="{StaticResource Brush.Text.Primary}" />
+                        </MultiBinding>
+                    </TextBlock.Foreground>
+                </TextBlock>
             </Button>
         </DataTemplate>
 

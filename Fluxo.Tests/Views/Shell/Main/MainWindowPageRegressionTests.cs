@@ -231,7 +231,9 @@ public sealed class MainWindowPageRegressionTests
 
         Assert.Contains("x:Name=\"SelectionCountBadge\"", filterComboStyleSection);
         Assert.Contains("Background=\"{StaticResource Brush.Mint}\"", filterComboStyleSection);
-        Assert.Contains("Foreground=\"{StaticResource Brush.Background.Surface}\"", filterComboStyleSection);
+        Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", filterComboStyleSection);
+        Assert.Contains("ElementName=\"SelectionCountBadge\"", filterComboStyleSection);
+        Assert.Contains("Brush.Text.Primary", filterComboStyleSection);
         Assert.Contains("Text=\"{Binding Tag.SelectionCount", filterComboStyleSection);
         Assert.Contains("ToolTip=\"{Binding Tag.SelectionToolTip", filterComboStyleSection);
         Assert.Contains("TargetName=\"SelectionCountBadge\" Property=\"Visibility\" Value=\"Collapsed\"", filterComboStyleSection);

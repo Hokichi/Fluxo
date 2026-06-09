@@ -157,9 +157,15 @@
                                     VerticalAlignment="Center"
                                     FontFamily="{TemplateBinding FontFamily}"
                                     FontSize="{TemplateBinding FontSize}"
-                                    Foreground="{TemplateBinding Foreground}"
                                     Text="{TemplateBinding Content}"
-                                    TextTrimming="CharacterEllipsis" />
+                                    TextTrimming="CharacterEllipsis">
+                                    <TextBlock.Foreground>
+                                        <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                            <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
+                                            <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        </MultiBinding>
+                                    </TextBlock.Foreground>
+                                </TextBlock>
                             </StackPanel>
                         </Border>
                     </ControlTemplate>

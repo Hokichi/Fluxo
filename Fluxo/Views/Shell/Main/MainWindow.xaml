@@ -213,6 +213,7 @@
                                     Text="{Binding Date, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
 
                                 <Border
+                                    x:Name="HeaderSearchTagBadge"
                                     Margin="8,0,0,0"
                                     Padding="5,2"
                                     VerticalAlignment="Center"
@@ -240,8 +241,14 @@
                                         VerticalAlignment="Center"
                                         FontFamily="{StaticResource Medium}"
                                         FontSize="10"
-                                        Foreground="{Binding ExpenseTagBrush, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                        Text="{Binding ExpenseTagName}" />
+                                        Text="{Binding ExpenseTagName}">
+                                        <TextBlock.Foreground>
+                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                                <Binding ElementName="HeaderSearchTagBadge" Path="Background" />
+                                                <Binding Source="{StaticResource Brush.Text.Primary}" />
+                                            </MultiBinding>
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
                                 </Border>
                             </StackPanel>
                         </StackPanel>

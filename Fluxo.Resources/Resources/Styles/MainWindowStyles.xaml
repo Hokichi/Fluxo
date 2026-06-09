@@ -357,6 +357,7 @@
             </Border>
 
             <Border
+                x:Name="SelectedTagPill"
                 Height="24"
                 Margin="16,0,0,0"
                 Padding="12,0"
@@ -368,14 +369,20 @@
                     <Ellipse
                         Width="8"
                         Height="8"
-                        Fill="{StaticResource Brush.Background.Surface}" />
+                        Fill="{Binding Background, ElementName=SelectedTagPill, Converter={StaticResource ForegroundForBackgroundBrushConverter}, ConverterParameter={StaticResource Brush.Text.Primary}}" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Background.Surface}"
-                        Text="{Binding Name}" />
+                        Text="{Binding Name}">
+                        <TextBlock.Foreground>
+                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                <Binding ElementName="SelectedTagPill" Path="Background" />
+                                <Binding Source="{StaticResource Brush.Text.Primary}" />
+                            </MultiBinding>
+                        </TextBlock.Foreground>
+                    </TextBlock>
                 </StackPanel>
             </Border>
         </Grid>
@@ -423,6 +430,7 @@
             </Border>
 
             <Border
+                x:Name="SelectedPopupTagPill"
                 Height="24"
                 Padding="12,0"
                 Background="{Binding HexCode}"
@@ -433,14 +441,20 @@
                     <Ellipse
                         Width="6"
                         Height="6"
-                        Fill="{Binding HexCode}" />
+                        Fill="{Binding Background, ElementName=SelectedPopupTagPill, Converter={StaticResource ForegroundForBackgroundBrushConverter}, ConverterParameter={StaticResource Brush.Text.Primary}}" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Background.Surface}"
-                        Text="{Binding Name}" />
+                        Text="{Binding Name}">
+                        <TextBlock.Foreground>
+                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                <Binding ElementName="SelectedPopupTagPill" Path="Background" />
+                                <Binding Source="{StaticResource Brush.Text.Primary}" />
+                            </MultiBinding>
+                        </TextBlock.Foreground>
+                    </TextBlock>
                 </StackPanel>
             </Border>
         </Grid>

@@ -12,6 +12,7 @@
     <converters:CornerRadiusConverter x:Key="CornerRadiusConverter" />
     <converters:DateTimeToRelativeDateConverter x:Key="DateTimeToRelativeDateConverter" />
     <converters:DifferenceToBrushConverter x:Key="DifferenceToBrushConverter" />
+    <converters:ForegroundForBackgroundBrushConverter x:Key="ForegroundForBackgroundBrushConverter" />
     <converters:GoalProgressToBrushConverter x:Key="GoalProgressToBrushConverter" />
     <converters:MoneyAmountToCanonicalConverter x:Key="MoneyAmountToCanonicalConverter" />
     <converters:MoneyDisplayConverter x:Key="MoneyDisplayConverter" />

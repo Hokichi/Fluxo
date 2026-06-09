@@ -1026,8 +1026,14 @@
                             VerticalAlignment="Center"
                             FontFamily="{TemplateBinding FontFamily}"
                             FontSize="{TemplateBinding FontSize}"
-                            Foreground="{TemplateBinding Foreground}"
-                            Text="{TemplateBinding Content}" />
+                            Text="{TemplateBinding Content}">
+                            <TextBlock.Foreground>
+                                <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                    <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
+                                    <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                </MultiBinding>
+                            </TextBlock.Foreground>
+                        </TextBlock>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -1073,8 +1079,14 @@
                                 VerticalAlignment="Center"
                                 FontFamily="{TemplateBinding FontFamily}"
                                 FontSize="{TemplateBinding FontSize}"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="{TemplateBinding Content}" />
+                                Text="{TemplateBinding Content}">
+                                <TextBlock.Foreground>
+                                    <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                        <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                    </MultiBinding>
+                                </TextBlock.Foreground>
+                            </TextBlock>
                         </StackPanel>
                     </Border>
 
@@ -1113,8 +1125,14 @@
                                 VerticalAlignment="Center"
                                 FontFamily="{TemplateBinding FontFamily}"
                                 FontSize="{TemplateBinding FontSize}"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="{TemplateBinding Content}" />
+                                Text="{TemplateBinding Content}">
+                                <TextBlock.Foreground>
+                                    <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                        <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                    </MultiBinding>
+                                </TextBlock.Foreground>
+                            </TextBlock>
                         </StackPanel>
                     </Border>
 
