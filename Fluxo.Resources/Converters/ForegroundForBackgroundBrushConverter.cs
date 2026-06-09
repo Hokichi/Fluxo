@@ -7,6 +7,8 @@ namespace Fluxo.Resources.Converters;
 
 public sealed class ForegroundForBackgroundBrushConverter : IValueConverter, IMultiValueConverter
 {
+    private const double BrightBackgroundLuminanceThreshold = 0.5d;
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         var currentForeground = ResolveBrush(parameter, "Brush.Text.Primary");
@@ -37,28 +39,13 @@ public sealed class ForegroundForBackgroundBrushConverter : IValueConverter, IMu
         if (!TryGetColor(background, out var backgroundColor))
             return currentForeground;
 
-        var targetForeground = TryFindDarkTextBrush(currentForeground, out var darkForeground)
-            ? darkForeground
-            : ResolveBrush("Brush.Text.Primary.Dark", currentForeground);
+        if (GetRelativeLuminance(backgroundColor) < BrightBackgroundLuminanceThreshold)
+            return currentForeground;
 
-        if (!TryGetColor(currentForeground, out var foregroundColor) ||
-            !TryGetColor(targetForeground, out var targetColor))
-        {
-            return targetForeground;
-        }
+        if (TryFindDarkTextBrush(currentForeground, out var darkForeground))
+            return darkForeground;
 
-        var backgroundLuminance = GetRelativeLuminance(backgroundColor);
-        var computedForeground = new SolidColorBrush(
-            InterpolateColor(
-                foregroundColor,
-                targetColor,
-                backgroundLuminance,
-                InvertAlpha(backgroundColor.A)));
-
-        if (computedForeground.CanFreeze)
-            computedForeground.Freeze();
-
-        return computedForeground;
+        return ResolveBrush("Brush.Text.Primary.Dark", currentForeground);
     }
 
     private static bool TryFindDarkTextBrush(Brush foreground, out Brush darkForeground)
@@ -156,25 +143,5 @@ public sealed class ForegroundForBackgroundBrushConverter : IValueConverter, IMu
         return normalized <= 0.03928d
             ? normalized / 12.92d
             : Math.Pow((normalized + 0.055d) / 1.055d, 2.4d);
-    }
-
-    private static Color InterpolateColor(Color foregroundColor, Color targetColor, double amount, byte alpha)
-    {
-        var clampedAmount = Math.Clamp(amount, 0d, 1d);
-        return Color.FromArgb(
-            alpha,
-            InterpolateByte(foregroundColor.R, targetColor.R, clampedAmount),
-            InterpolateByte(foregroundColor.G, targetColor.G, clampedAmount),
-            InterpolateByte(foregroundColor.B, targetColor.B, clampedAmount));
-    }
-
-    private static byte InterpolateByte(byte start, byte end, double amount)
-    {
-        return (byte)Math.Clamp(Math.Round(start + (end - start) * amount), 0d, 255d);
-    }
-
-    private static byte InvertAlpha(byte alpha)
-    {
-        return (byte)(byte.MaxValue - alpha);
     }
 }

@@ -9,35 +9,33 @@ namespace Fluxo.Tests.Views.Converters;
 public sealed class ForegroundForBackgroundBrushConverterTests
 {
     [Fact]
-    public void Convert_ReturnsComputedPrimaryForeground_WhenBackgroundHexIsBright_AndForegroundIsPrimary()
+    public void Convert_ReturnsDarkPrimaryBrush_WhenBackgroundHexIsBright_AndForegroundIsPrimary()
     {
         using var appScope = new ApplicationResourceScope();
         var converter = new ForegroundForBackgroundBrushConverter();
 
         var result = converter.Convert(
-            "#FFFFFF",
+            "#E6EAF0",
             typeof(Brush),
             appScope.PrimaryBrush,
             CultureInfo.InvariantCulture);
 
-        var brush = Assert.IsType<SolidColorBrush>(result);
-        AssertColorEqual(Color.FromArgb(0, appScope.PrimaryDarkBrush.Color.R, appScope.PrimaryDarkBrush.Color.G, appScope.PrimaryDarkBrush.Color.B), brush.Color);
+        Assert.Same(appScope.PrimaryDarkBrush, result);
     }
 
     [Fact]
-    public void Convert_ReturnsCurrentForegroundColor_WhenBackgroundHexIsBlack()
+    public void Convert_ReturnsCurrentForeground_WhenBackgroundHexIsDark()
     {
         using var appScope = new ApplicationResourceScope();
         var converter = new ForegroundForBackgroundBrushConverter();
 
         var result = converter.Convert(
-            "#000000",
+            "#121417",
             typeof(Brush),
             appScope.PrimaryBrush,
             CultureInfo.InvariantCulture);
 
-        var brush = Assert.IsType<SolidColorBrush>(result);
-        AssertColorEqual(Color.FromArgb(0, appScope.PrimaryBrush.Color.R, appScope.PrimaryBrush.Color.G, appScope.PrimaryBrush.Color.B), brush.Color);
+        Assert.Same(appScope.PrimaryBrush, result);
     }
 
     [Fact]
@@ -56,28 +54,22 @@ public sealed class ForegroundForBackgroundBrushConverterTests
     }
 
     [Fact]
-    public void Convert_ReturnsInterpolatedBrush_WhenBackgroundBrushIsMidTone_AndForegroundIsSecondary()
+    public void Convert_ReturnsDarkSecondaryBrush_WhenBackgroundBrushIsBright_AndForegroundIsSecondary()
     {
         using var appScope = new ApplicationResourceScope();
         var converter = new ForegroundForBackgroundBrushConverter();
 
         var result = converter.Convert(
-            new SolidColorBrush(Color.FromRgb(128, 128, 128)),
+            new SolidColorBrush(Color.FromRgb(255, 176, 32)),
             typeof(Brush),
             appScope.SecondaryBrush,
             CultureInfo.InvariantCulture);
 
-        var brush = Assert.IsType<SolidColorBrush>(result);
-        Assert.Equal(0, brush.Color.A);
-        Assert.NotEqual(appScope.SecondaryBrush.Color, brush.Color);
-        Assert.NotEqual(appScope.SecondaryDarkBrush.Color, brush.Color);
-        Assert.InRange(brush.Color.R, appScope.SecondaryDarkBrush.Color.R + 1, appScope.SecondaryBrush.Color.R - 1);
-        Assert.InRange(brush.Color.G, appScope.SecondaryDarkBrush.Color.G + 1, appScope.SecondaryBrush.Color.G - 1);
-        Assert.InRange(brush.Color.B, appScope.SecondaryDarkBrush.Color.B + 1, appScope.SecondaryBrush.Color.B - 1);
+        Assert.Same(appScope.SecondaryDarkBrush, result);
     }
 
     [Fact]
-    public void Convert_ReturnsComputedPrimaryDarkColor_WhenBackgroundIsBright_AndNoForegroundIsProvided()
+    public void Convert_ReturnsPrimaryDarkBrush_WhenBackgroundIsBright_AndNoForegroundIsProvided()
     {
         using var appScope = new ApplicationResourceScope();
         var converter = new ForegroundForBackgroundBrushConverter();
@@ -88,32 +80,7 @@ public sealed class ForegroundForBackgroundBrushConverterTests
             null!,
             CultureInfo.InvariantCulture);
 
-        var brush = Assert.IsType<SolidColorBrush>(result);
-        AssertColorEqual(Color.FromArgb(0, appScope.PrimaryDarkBrush.Color.R, appScope.PrimaryDarkBrush.Color.G, appScope.PrimaryDarkBrush.Color.B), brush.Color);
-    }
-
-    [Fact]
-    public void Convert_InvertsBackgroundAlpha_ForComputedForeground()
-    {
-        using var appScope = new ApplicationResourceScope();
-        var converter = new ForegroundForBackgroundBrushConverter();
-
-        var result = converter.Convert(
-            new SolidColorBrush(Color.FromArgb(64, 255, 255, 255)),
-            typeof(Brush),
-            appScope.PrimaryBrush,
-            CultureInfo.InvariantCulture);
-
-        var brush = Assert.IsType<SolidColorBrush>(result);
-        Assert.Equal(191, brush.Color.A);
-    }
-
-    private static void AssertColorEqual(Color expected, Color actual)
-    {
-        Assert.Equal(expected.A, actual.A);
-        Assert.Equal(expected.R, actual.R);
-        Assert.Equal(expected.G, actual.G);
-        Assert.Equal(expected.B, actual.B);
+        Assert.Same(appScope.PrimaryDarkBrush, result);
     }
 
     private sealed class ApplicationResourceScope : IDisposable
