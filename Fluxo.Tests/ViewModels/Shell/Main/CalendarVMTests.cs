@@ -21,6 +21,7 @@ public sealed class CalendarVMTests
         Assert.Equal(new DateOnly(2026, 7, 11), vm.VisibleWeeks[5].Days[6].Date);
         Assert.True(vm.VisibleWeeks[1].Days[5].IsSelected);
         Assert.True(vm.VisibleWeeks[0].Days[0].IsOutsideVisibleMonth);
+        Assert.True(vm.VisibleWeeks[1].Days[5].IsCurrentDay);
     }
 
     [Fact]
@@ -43,6 +44,34 @@ public sealed class CalendarVMTests
 
         Assert.Equal(new DateOnly(2026, 5, 24), vm.VisibleWeeks[0].Days[0].Date);
         Assert.Equal(new DateOnly(2026, 7, 4), vm.VisibleWeeks[5].Days[6].Date);
+    }
+
+    [Fact]
+    public void NavigateToNextMonth_FillsGridFromFirstWeekOfNextMonth()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        vm.NavigateToNextMonthCommand.Execute(null);
+
+        Assert.Equal("July 2026", vm.VisibleMonthLabel);
+        Assert.Equal(new DateOnly(2026, 6, 28), vm.VisibleWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 8, 8), vm.VisibleWeeks[5].Days[6].Date);
+        Assert.True(vm.VisibleWeeks[0].Days[0].IsOutsideVisibleMonth);
+        Assert.False(vm.VisibleWeeks[0].Days[3].IsOutsideVisibleMonth);
+    }
+
+    [Fact]
+    public void NavigateToPreviousMonth_FillsGridFromFirstWeekOfPreviousMonth()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        vm.NavigateToPreviousMonthCommand.Execute(null);
+
+        Assert.Equal("May 2026", vm.VisibleMonthLabel);
+        Assert.Equal(new DateOnly(2026, 4, 26), vm.VisibleWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 6, 6), vm.VisibleWeeks[5].Days[6].Date);
+        Assert.True(vm.VisibleWeeks[0].Days[0].IsOutsideVisibleMonth);
+        Assert.False(vm.VisibleWeeks[0].Days[5].IsOutsideVisibleMonth);
     }
 
     [Fact]

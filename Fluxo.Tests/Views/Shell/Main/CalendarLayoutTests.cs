@@ -56,6 +56,71 @@ public sealed class CalendarLayoutTests
     }
 
     [Fact]
+    public void CalendarLayout_DayTextUsesFixedSelectionForegroundBrushes()
+    {
+        var xaml = LoadCalendarXaml();
+        var dayTemplate = ExtractSection(xaml, "x:Key=\"CalendarDayTemplate\"", "x:Key=\"CalendarWeekTemplate\"");
+
+        Assert.Contains("Property=\"Foreground\" Value=\"{StaticResource Brush.Text.Primary}\"", dayTemplate);
+        Assert.Contains("Binding=\"{Binding IsSelected}\" Value=\"True\"", dayTemplate);
+        Assert.Contains("Brush.Text.Primary.Dark", dayTemplate);
+        Assert.DoesNotContain("ForegroundForBackgroundBrushConverter", dayTemplate);
+    }
+
+    [Fact]
+    public void CalendarLayout_SelectedDayHoverUsesMutedMintBackground()
+    {
+        var xaml = LoadCalendarXaml();
+        var dayButtonStyle = ExtractSection(xaml, "x:Key=\"CalendarDayButtonStyle\"", "x:Key=\"CalendarDayTemplate\"");
+
+        Assert.Contains("Binding=\"{Binding IsSelected}\" Value=\"True\"", dayButtonStyle);
+        Assert.Contains("Property=\"IsMouseOver\" Value=\"True\"", dayButtonStyle);
+        Assert.Contains("Property=\"Background\" Value=\"{StaticResource Brush.Mint.Muted}\"", dayButtonStyle);
+    }
+
+    [Fact]
+    public void CalendarLayout_CurrentDayBorderUsesMintAndMutedMintOnHover()
+    {
+        var xaml = LoadCalendarXaml();
+        var dayButtonStyle = ExtractSection(xaml, "x:Key=\"CalendarDayButtonStyle\"", "x:Key=\"CalendarDayTemplate\"");
+
+        Assert.Contains("Binding=\"{Binding IsCurrentDay}\" Value=\"True\"", dayButtonStyle);
+        Assert.Contains("Property=\"BorderBrush\" Value=\"{StaticResource Brush.Mint}\"", dayButtonStyle);
+        Assert.Contains("Property=\"BorderBrush\" Value=\"{StaticResource Brush.Mint.Muted}\"", dayButtonStyle);
+    }
+
+    [Fact]
+    public void CalendarLayout_MonthHeaderContainsBalloonMonthNavigationButtons()
+    {
+        var xaml = LoadCalendarXaml();
+        var document = XDocument.Parse(xaml);
+        var presentation = document.Root!.Name.Namespace;
+        var calendarRoot = document.Root
+            .Elements(presentation + "Grid")
+            .Single(element => (string?)element.Attribute("Margin") == "12");
+        var leftColumn = calendarRoot
+            .Elements(presentation + "Grid")
+            .Single(element => element.Attribute("Grid.Column") is null);
+        var monthHeader = leftColumn
+            .Elements(presentation + "Border")
+            .Single(element => element.Attribute("Grid.Row") is null);
+
+        AssertTextExists(monthHeader, "{Binding VisibleMonthLabel}");
+        Assert.Contains(monthHeader.Descendants().Attributes("ButtonIcon"), attribute => attribute.Value == "{StaticResource AngleUp}");
+        Assert.Contains(monthHeader.Descendants().Attributes("ButtonIcon"), attribute => attribute.Value == "{StaticResource AngleDown}");
+        Assert.Contains(monthHeader.Descendants().Attributes("Command"), attribute => attribute.Value.Contains("NavigateToPreviousMonthCommand", StringComparison.Ordinal));
+        Assert.Contains(monthHeader.Descendants().Attributes("Command"), attribute => attribute.Value.Contains("NavigateToNextMonthCommand", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void CalendarLayout_DoesNotSetCanContentScroll()
+    {
+        var xaml = LoadCalendarXaml();
+
+        Assert.DoesNotContain("CanContentScroll", xaml);
+    }
+
+    [Fact]
     public void CalendarLayout_CentersWeekHeadersOverDateCells()
     {
         var xaml = LoadCalendarXaml();
@@ -159,6 +224,18 @@ public sealed class CalendarLayoutTests
         Assert.DoesNotContain(
             element.Descendants().Attributes("Text"),
             attribute => attribute.Value == text);
+    }
+
+    private static string ExtractSection(string content, string startMarker, string endMarker)
+    {
+        var start = content.IndexOf(startMarker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Could not find start marker '{startMarker}'.");
+
+        var endSearchStart = start + startMarker.Length;
+        var end = content.IndexOf(endMarker, endSearchStart, StringComparison.Ordinal);
+        Assert.True(end >= 0, $"Could not find end marker '{endMarker}'.");
+
+        return content[start..(end + endMarker.Length)];
     }
 
     private static string LoadCalendarXaml()

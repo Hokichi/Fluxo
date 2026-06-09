@@ -42,15 +42,15 @@ public sealed class DynamicForegroundStyleTests
     }
 
     [Fact]
-    public void CalendarSelectedDayText_BindsForegroundToDayButtonBackgroundBrightness()
+    public void CalendarSelectedDayText_UsesFixedForegroundBrushes()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Calendar.xaml"));
         var dayTemplate = ExtractSection(xaml, "x:Key=\"CalendarDayTemplate\"", "x:Key=\"CalendarWeekTemplate\"");
 
         Assert.Contains("x:Name=\"CalendarDayButton\"", dayTemplate);
-        Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", dayTemplate);
-        Assert.Contains("ElementName=\"CalendarDayButton\"", dayTemplate);
-        Assert.Contains("Brush.Text.Primary", dayTemplate);
+        Assert.Contains("Property=\"Foreground\" Value=\"{StaticResource Brush.Text.Primary}\"", dayTemplate);
+        Assert.Contains("Brush.Text.Primary.Dark", dayTemplate);
+        Assert.DoesNotContain("ForegroundForBackgroundBrushConverter", dayTemplate);
     }
 
     [Fact]

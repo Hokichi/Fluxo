@@ -10,6 +10,7 @@ namespace Fluxo.ViewModels.Shell.Main;
 public sealed partial class CalendarVM : ObservableObject, IDisposable
 {
     private readonly ICalendarService _calendarService;
+    private readonly DateOnly _currentDate;
     private CancellationTokenSource? _loadCts;
     private int _loadRequestVersion;
     private DateOnly _firstVisibleWeekStart;
@@ -35,7 +36,8 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     internal CalendarVM(ICalendarService calendarService, DateTime currentDate)
     {
         _calendarService = calendarService;
-        SelectedDate = DateOnly.FromDateTime(currentDate.Date);
+        _currentDate = DateOnly.FromDateTime(currentDate.Date);
+        SelectedDate = _currentDate;
         _visibleMonth = new DateOnly(SelectedDate.Year, SelectedDate.Month, 1);
         _firstVisibleWeekStart = StartOfWeek(_visibleMonth);
         RebuildVisibleWeeks();
@@ -63,6 +65,18 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         _firstVisibleWeekStart = _firstVisibleWeekStart.AddDays(delta > 0 ? 7 : -7);
         _visibleMonth = ResolveDominantVisibleMonth(_firstVisibleWeekStart);
         RebuildVisibleWeeks();
+    }
+
+    [RelayCommand]
+    private void NavigateToPreviousMonth()
+    {
+        SetVisibleMonth(_visibleMonth.AddMonths(-1));
+    }
+
+    [RelayCommand]
+    private void NavigateToNextMonth()
+    {
+        SetVisibleMonth(_visibleMonth.AddMonths(1));
     }
 
     public Task LoadAsync(CancellationToken cancellationToken = default)
@@ -138,6 +152,7 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
                         date,
                         date.Day.ToString(CultureInfo.InvariantCulture),
                         date == SelectedDate,
+                        date == _currentDate,
                         date.Month != _visibleMonth.Month || date.Year != _visibleMonth.Year);
                 })
                 .ToArray();
@@ -145,6 +160,13 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         }
 
         VisibleMonthLabel = _visibleMonth.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy", CultureInfo.InvariantCulture);
+    }
+
+    private void SetVisibleMonth(DateOnly month)
+    {
+        _visibleMonth = new DateOnly(month.Year, month.Month, 1);
+        _firstVisibleWeekStart = StartOfWeek(_visibleMonth);
+        RebuildVisibleWeeks();
     }
 
     private static DateOnly StartOfWeek(DateOnly date)
@@ -177,6 +199,7 @@ public sealed record CalendarDayItem(
     DateOnly Date,
     string DayNumber,
     bool IsSelected,
+    bool IsCurrentDay,
     bool IsOutsideVisibleMonth);
 
 public sealed record CalendarExpenseListItem(

@@ -132,6 +132,20 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="DayBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             </Trigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsSelected}" Value="True" />
+                                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="DayBorder" Property="Background" Value="{StaticResource Brush.Mint.Muted}" />
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsCurrentDay}" Value="True" />
+                                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="DayBorder" Property="BorderBrush" Value="{StaticResource Brush.Mint.Muted}" />
+                            </MultiDataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -139,6 +153,9 @@
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="Background" Value="{StaticResource Brush.Mint}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsCurrentDay}" Value="True">
                     <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsOutsideVisibleMonth}" Value="True">
@@ -159,12 +176,16 @@
                     FontFamily="{StaticResource Bold}"
                     FontSize="14"
                     Text="{Binding DayNumber}">
-                    <TextBlock.Foreground>
-                        <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                            <Binding ElementName="CalendarDayButton" Path="Background" />
-                            <Binding Source="{StaticResource Brush.Text.Primary}" />
-                        </MultiBinding>
-                    </TextBlock.Foreground>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary.Dark}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
                 </TextBlock>
             </Button>
         </DataTemplate>
@@ -297,12 +318,33 @@
 
             <Border Style="{StaticResource CalendarCardStyle}">
                 <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
                     <TextBlock
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="18"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="{Binding VisibleMonthLabel}" />
+                    <StackPanel
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource AngleUp}"
+                            Command="{Binding NavigateToPreviousMonthCommand}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            ToolTip="Previous month" />
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource AngleDown}"
+                            Command="{Binding NavigateToNextMonthCommand}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            ToolTip="Next month" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
