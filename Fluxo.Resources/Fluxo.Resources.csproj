@@ -9,15 +9,24 @@
 
   <ItemGroup>
     <Resource Include="Resources\fluxo.ico" />
-    <Resource Include="Resources\Fonts\Commissioner-Black.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-Bold.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-ExtraBold.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-ExtraLight.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-Light.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-Medium.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-Regular.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-SemiBold.ttf" />
-    <Resource Include="Resources\Fonts\Commissioner-Thin.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-Black.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-BlackItalic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-Bold.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-BoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-ExtraBold.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-ExtraBoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-ExtraLight.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-ExtraLightItalic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-Italic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-Light.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-LightItalic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-Medium.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-MediumItalic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-Regular.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-SemiBold.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-SemiBoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-Thin.ttf" />
+    <Resource Include="Resources\Fonts\Urbanist-ThinItalic.ttf" />
   </ItemGroup>
 
   <ItemGroup>
