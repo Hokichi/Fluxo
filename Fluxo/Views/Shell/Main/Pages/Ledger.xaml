@@ -1021,7 +1021,7 @@
                 FontSize="13"
                 Foreground="{StaticResource Brush.Text.Muted}"
                 Visibility="{Binding HasVisibleTransactions, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                <Run Text="No ledger data found for " />
+                <Run Text="No ledger data found for" />
                 <Run Text="{Binding EmptyStatePeriodText, Mode=OneWay}" />
             </TextBlock>
         </Grid>
