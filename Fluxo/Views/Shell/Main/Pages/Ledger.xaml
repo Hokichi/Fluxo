@@ -628,7 +628,7 @@
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
-                        Text="{Binding SignedAmount, StringFormat={}{0:+#,##0.00;-#,##0.00;$0.00}}">
+                        Text="{Binding SignedAmount, StringFormat={}{0:+#,##0;-#,##0;$0}}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
@@ -875,7 +875,7 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Danger}"
-                        Text="{Binding SpentAmount, StringFormat={}{0:#,##0.00}}" />
+                        Text="{Binding SpentAmount, StringFormat={}{0:#,##0}}" />
                 </StackPanel>
             </Border>
             <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
@@ -885,7 +885,7 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Success}"
-                        Text="{Binding EarnedAmount, StringFormat={}{0:#,##0.00}}" />
+                        Text="{Binding EarnedAmount, StringFormat={}{0:#,##0}}" />
                 </StackPanel>
             </Border>
             <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
@@ -895,7 +895,7 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Mint}"
-                        Text="{Binding GoalAmount, StringFormat={}{0:#,##0.00}}" />
+                        Text="{Binding GoalAmount, StringFormat={}{0:#,##0}}" />
                 </StackPanel>
             </Border>
             <Border Margin="8,0,0,0" Style="{StaticResource LedgerSummaryCardStyle}">
@@ -905,7 +905,7 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding NetAmount, StringFormat={}{0:#,##0.00}}" />
+                        Text="{Binding NetAmount, StringFormat={}{0:#,##0}}" />
                 </StackPanel>
             </Border>
         </UniformGrid>
