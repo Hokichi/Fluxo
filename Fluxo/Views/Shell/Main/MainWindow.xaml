@@ -485,7 +485,7 @@
                             Placement="Bottom"
                             PlacementTarget="{Binding ElementName=HeaderNotificationButton}"
                             PopupAnimation="Fade"
-                            StaysOpen="False"
+                            StaysOpen="True"
                             VerticalOffset="8">
                             <Border
                                 Width="360"

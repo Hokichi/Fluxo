@@ -1673,6 +1673,7 @@ public partial class MainWindow : Window, IPopupHost
             CollapseHeaderSearch();
 
         if (HeaderNotificationPopup.IsOpen &&
+            !IsDescendantOf(source, HeaderNotificationPanel) &&
             FindAncestor<BalloonButton>(source) != HeaderNotificationButton)
             CloseHeaderNotificationPopup();
 

@@ -144,7 +144,7 @@ public sealed class MainWindowLayoutTests
             .SingleOrDefault(element => (string?)element.Attribute(XamlNamespace + "Name") == "HeaderNotificationPopup");
 
         Assert.NotNull(popup);
-        Assert.Equal("False", (string?)popup!.Attribute("StaysOpen"));
+        Assert.Equal("True", (string?)popup!.Attribute("StaysOpen"));
         Assert.Equal("{Binding ElementName=HeaderNotificationButton}", (string?)popup.Attribute("PlacementTarget"));
 
         var panel = popup
@@ -155,6 +155,14 @@ public sealed class MainWindowLayoutTests
 
         Assert.NotNull(panel);
         Assert.Equal("{Binding Dashboard.NotificationPanel}", (string?)panel!.Attribute("DataContext"));
+
+        var codeBehind = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+        var externalClickHandler = ExtractMethodBodyBySignature(
+            codeBehind,
+            "private void OnWindowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)");
+
+        Assert.Contains("!IsDescendantOf(source, HeaderNotificationPanel)", externalClickHandler);
+        Assert.Contains("FindAncestor<BalloonButton>(source) != HeaderNotificationButton", externalClickHandler);
     }
 
     [Fact]
