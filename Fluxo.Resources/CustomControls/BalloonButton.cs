@@ -9,6 +9,7 @@ namespace Fluxo.Resources.CustomControls;
 
 [TemplatePart(Name = PartShape, Type = typeof(Path))]
 [TemplatePart(Name = PartOverlay, Type = typeof(Path))]
+[TemplatePart(Name = PartIconSlot, Type = typeof(FrameworkElement))]
 [TemplatePart(Name = PartIcon, Type = typeof(Path))]
 [TemplatePart(Name = PartTextReveal, Type = typeof(Border))]
 [TemplatePart(Name = PartButtonText, Type = typeof(TextBlock))]
@@ -16,9 +17,11 @@ public class BalloonButton : Button
 {
     private const string PartShape = "PART_Shape";
     private const string PartOverlay = "PART_Overlay";
+    private const string PartIconSlot = "PART_IconSlot";
     private const string PartIcon = "PART_Icon";
     private const string PartTextReveal = "PART_TextReveal";
     private const string PartButtonText = "PART_ButtonText";
+    private static readonly Thickness ButtonTextMargin = new(8, 0, 0, 0);
 
     private static readonly Duration FadeDuration = new(TimeSpan.FromSeconds(0.2));
     private static readonly Duration ExpandDuration = new(TimeSpan.FromSeconds(0.18));
@@ -43,22 +46,27 @@ public class BalloonButton : Button
     // --- ButtonText ---
     public static readonly DependencyProperty ButtonTextProperty =
         DependencyProperty.Register(nameof(ButtonText), typeof(string), typeof(BalloonButton),
-            new PropertyMetadata(null));
+            new PropertyMetadata(null, OnLayoutPropertyChanged));
 
     // --- ShouldExpand ---
     public static readonly DependencyProperty ShouldExpandProperty =
         DependencyProperty.Register(nameof(ShouldExpand), typeof(bool), typeof(BalloonButton),
-            new PropertyMetadata(false));
+            new FrameworkPropertyMetadata(false, null, CoerceShouldExpand));
+
+    // --- ShouldShowText ---
+    public static readonly DependencyProperty ShouldShowTextProperty =
+        DependencyProperty.Register(nameof(ShouldShowText), typeof(bool), typeof(BalloonButton),
+            new PropertyMetadata(false, OnShouldShowTextChanged));
 
     // --- ButtonSize ---
     public static readonly DependencyProperty ButtonSizeProperty =
         DependencyProperty.Register(nameof(ButtonSize), typeof(double), typeof(BalloonButton),
-            new PropertyMetadata(30.0));
+            new PropertyMetadata(30.0, OnLayoutPropertyChanged));
 
     // --- ExpandedWidth ---
     public static readonly DependencyProperty ExpandedWidthProperty =
         DependencyProperty.Register(nameof(ExpandedWidth), typeof(double), typeof(BalloonButton),
-            new PropertyMetadata(96.0));
+            new PropertyMetadata(double.NaN, OnLayoutPropertyChanged));
 
     // --- CurveHeight ---
     public static readonly DependencyProperty CurveHeightProperty =
@@ -73,9 +81,10 @@ public class BalloonButton : Button
     // --- IconSize ---
     public static readonly DependencyProperty IconSizeProperty =
         DependencyProperty.Register(nameof(IconSize), typeof(double), typeof(BalloonButton),
-            new PropertyMetadata(24.0));
+            new PropertyMetadata(24.0, OnLayoutPropertyChanged));
 
     private Path? _icon;
+    private FrameworkElement? _iconSlot;
     private Path? _overlay;
 
     private Path? _shape;
@@ -118,6 +127,12 @@ public class BalloonButton : Button
         set => SetValue(ShouldExpandProperty, value);
     }
 
+    public bool ShouldShowText
+    {
+        get => (bool)GetValue(ShouldShowTextProperty);
+        set => SetValue(ShouldShowTextProperty, value);
+    }
+
     public double ButtonSize
     {
         get => (double)GetValue(ButtonSizeProperty);
@@ -155,6 +170,7 @@ public class BalloonButton : Button
         base.OnApplyTemplate();
         _shape = GetTemplateChild(PartShape) as Path;
         _overlay = GetTemplateChild(PartOverlay) as Path;
+        _iconSlot = GetTemplateChild(PartIconSlot) as FrameworkElement;
         _icon = GetTemplateChild(PartIcon) as Path;
         _textReveal = GetTemplateChild(PartTextReveal) as Border;
         _buttonText = GetTemplateChild(PartButtonText) as TextBlock;
@@ -184,9 +200,34 @@ public class BalloonButton : Button
         RebuildGeometry();
     }
 
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (e.Property == PaddingProperty)
+            ResetExpansion();
+    }
+
     private static void OnGeometryInvalidated(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         ((BalloonButton)d).RebuildGeometry();
+    }
+
+    private static void OnLayoutPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((BalloonButton)d).ResetExpansion();
+    }
+
+    private static void OnShouldShowTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var button = (BalloonButton)d;
+        button.CoerceValue(ShouldExpandProperty);
+        button.ResetExpansion();
+    }
+
+    private static object CoerceShouldExpand(DependencyObject d, object baseValue)
+    {
+        return ((BalloonButton)d).ShouldShowText ? false : baseValue;
     }
 
     // Snaps the fill back to DefaultBackground (no animation); called on template apply or DP change.
@@ -213,16 +254,23 @@ public class BalloonButton : Button
 
     private void ResetExpansion()
     {
-        Width = ButtonSize;
+        BeginAnimation(WidthProperty, null);
+        ApplyIconSlotLayout(ShouldShowText);
+        Width = ShouldShowText ? GetEffectiveExpandedWidth() : ButtonSize;
 
         if (_textReveal is not null)
         {
-            _textReveal.Width = 0;
-            _textReveal.Opacity = 0;
+            _textReveal.BeginAnimation(WidthProperty, null);
+            _textReveal.BeginAnimation(OpacityProperty, null);
+            _textReveal.Width = ShouldShowText ? GetTextRevealWidth(Width) : 0;
+            _textReveal.Opacity = ShouldShowText ? 1 : 0;
         }
 
         if (_buttonText is not null)
-            _buttonText.Opacity = 0;
+        {
+            _buttonText.BeginAnimation(OpacityProperty, null);
+            _buttonText.Opacity = ShouldShowText ? 1 : 0;
+        }
     }
 
     private void AnimateExpansion(bool isExpanded)
@@ -230,8 +278,10 @@ public class BalloonButton : Button
         if (!ShouldExpand)
             return;
 
-        var widthTarget = isExpanded ? ExpandedWidth : ButtonSize;
-        var textWidthTarget = isExpanded ? Math.Max(0, ExpandedWidth - ButtonSize - 8) : 0;
+        ApplyIconSlotLayout(isExpanded);
+        var expandedWidth = GetEffectiveExpandedWidth();
+        var widthTarget = isExpanded ? expandedWidth : ButtonSize;
+        var textWidthTarget = isExpanded ? GetTextRevealWidth(expandedWidth) : 0;
         var opacityTarget = isExpanded ? 1 : 0;
         var duration = isExpanded ? ExpandDuration : CollapseDuration;
         var easingMode = isExpanded ? EasingMode.EaseOut : EasingMode.EaseIn;
@@ -253,6 +303,95 @@ public class BalloonButton : Button
 
         if (_buttonText is not null)
             _buttonText.BeginAnimation(OpacityProperty, new DoubleAnimation(opacityTarget, TextFadeDuration));
+    }
+
+    internal double GetEffectiveExpandedWidth()
+    {
+        var autoWidth = CalculateAutoExpandedWidth(
+            ButtonSize,
+            IconSize,
+            Padding,
+            MeasureButtonTextWidth(),
+            ButtonTextMargin);
+
+        return ResolveExpandedWidth(ExpandedWidth, ButtonSize, autoWidth);
+    }
+
+    internal static double ResolveExpandedWidth(double expandedWidth, double buttonSize, double autoWidth)
+    {
+        var minimumExpandedWidth = IsExpandedWidthSet(expandedWidth) ? expandedWidth : 0;
+        return Math.Max(buttonSize, Math.Max(minimumExpandedWidth, autoWidth));
+    }
+
+    internal static double CalculateAutoExpandedWidth(
+        double buttonSize,
+        double iconSize,
+        Thickness padding,
+        double textWidth,
+        Thickness textMargin)
+    {
+        var contentWidth = ResolveExpandedIconSlotWidth(buttonSize, iconSize, padding) +
+            textMargin.Left +
+            textWidth +
+            textMargin.Right;
+        var totalWidth = padding.Left + contentWidth + padding.Right;
+        return Math.Max(buttonSize, Math.Ceiling(totalWidth));
+    }
+
+    internal static double ResolveExpandedIconSlotWidth(double buttonSize, double iconSize, Thickness padding)
+    {
+        return Math.Max(iconSize, buttonSize - padding.Left - padding.Right);
+    }
+
+    private double GetTextRevealWidth(double width)
+    {
+        if (!IsExpandedWidthSet(ExpandedWidth))
+            return ButtonTextMargin.Left + MeasureButtonTextWidth() + ButtonTextMargin.Right;
+
+        return Math.Max(0, width - Padding.Left - Padding.Right - GetExpandedIconSlotWidth());
+    }
+
+    private void ApplyIconSlotLayout(bool useExpandedSlot)
+    {
+        if (_iconSlot is null)
+            return;
+
+        _iconSlot.Width = useExpandedSlot ? GetExpandedIconSlotWidth() : IconSize;
+    }
+
+    private double GetExpandedIconSlotWidth()
+    {
+        return ResolveExpandedIconSlotWidth(ButtonSize, IconSize, Padding);
+    }
+
+    private double MeasureButtonTextWidth()
+    {
+        if (string.IsNullOrEmpty(ButtonText))
+            return 0;
+
+        if (_buttonText is not null)
+        {
+            _buttonText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            return _buttonText.DesiredSize.Width;
+        }
+
+        var textBlock = new TextBlock
+        {
+            Text = ButtonText,
+            FontFamily = FontFamily,
+            FontSize = FontSize,
+            FontStretch = FontStretch,
+            FontStyle = FontStyle,
+            FontWeight = FontWeight
+        };
+
+        textBlock.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        return textBlock.DesiredSize.Width;
+    }
+
+    private static bool IsExpandedWidthSet(double expandedWidth)
+    {
+        return !double.IsNaN(expandedWidth) && expandedWidth > 0;
     }
 
     private void ApplyIcon()

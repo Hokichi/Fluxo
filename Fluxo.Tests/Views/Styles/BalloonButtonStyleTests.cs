@@ -54,6 +54,7 @@ public sealed class BalloonButtonStyleTests
 
         Assert.Contains("<Setter Property=\"ButtonSize\" Value=\"28\" />", style);
         Assert.Contains("<Setter Property=\"ExpandedWidth\" Value=\"96\" />", style);
+        Assert.DoesNotContain("<Setter Property=\"Padding\"", style);
     }
 
     [Fact]

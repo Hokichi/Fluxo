@@ -191,6 +191,7 @@ public sealed class MainWindowLayoutTests
         Assert.Equal("180", (string?)quickAddButton.Attribute("ExpandedWidth"));
         Assert.Equal("{StaticResource Brush.Mint.Muted}", (string?)quickAddButton.Attribute("HoveredBackground"));
         Assert.Equal("{StaticResource Brush.Text.Primary.Dark}", (string?)quickAddButton.Attribute("Foreground"));
+        Assert.Equal("8,0", (string?)quickAddButton.Attribute("Padding"));
         Assert.Equal("True", (string?)quickAddButton.Attribute("ShouldExpand"));
     }
 

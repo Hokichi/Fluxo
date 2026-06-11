@@ -32,15 +32,20 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Orientation="Horizontal">
-                                <Path
-                                    x:Name="PART_Icon"
+                                <Grid
+                                    x:Name="PART_IconSlot"
                                     Width="{TemplateBinding IconSize}"
-                                    Height="{TemplateBinding IconSize}"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Fill="{TemplateBinding Foreground}"
-                                    IsHitTestVisible="False"
-                                    Stretch="Uniform" />
+                                    VerticalAlignment="Center">
+                                    <Path
+                                        x:Name="PART_Icon"
+                                        Width="{TemplateBinding IconSize}"
+                                        Height="{TemplateBinding IconSize}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Fill="{TemplateBinding Foreground}"
+                                        IsHitTestVisible="False"
+                                        Stretch="Uniform" />
+                                </Grid>
                                 <Border
                                     x:Name="PART_TextReveal"
                                     Width="0"
