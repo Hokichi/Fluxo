@@ -158,6 +158,43 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void HeaderActions_UseRequestedOrderAndQuickAddStyling()
+    {
+        var xaml = MainWindowXaml.Value;
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        var searchIndex = xaml.IndexOf("x:Name=\"HeaderSearchButton\"", StringComparison.Ordinal);
+        var notificationIndex = xaml.IndexOf("x:Name=\"HeaderNotificationButton\"", StringComparison.Ordinal);
+        var menuIndex = xaml.IndexOf("x:Name=\"HeaderMenuButton\"", StringComparison.Ordinal);
+        var quickAddIndex = xaml.IndexOf("x:Name=\"HeaderQuickAddButton\"", StringComparison.Ordinal);
+        var minimizeIndex = xaml.IndexOf("Command=\"{x:Static SystemCommands.MinimizeWindowCommand}\"", quickAddIndex, StringComparison.Ordinal);
+        var maximizeIndex = xaml.IndexOf("x:Name=\"ExpandRestoreButton\"", minimizeIndex, StringComparison.Ordinal);
+        var closeIndex = xaml.IndexOf("Command=\"{x:Static SystemCommands.CloseWindowCommand}\"", maximizeIndex, StringComparison.Ordinal);
+
+        Assert.True(searchIndex < notificationIndex);
+        Assert.True(notificationIndex < menuIndex);
+        Assert.True(menuIndex < quickAddIndex);
+        Assert.True(quickAddIndex < minimizeIndex);
+        Assert.True(minimizeIndex < maximizeIndex);
+        Assert.True(maximizeIndex < closeIndex);
+
+        var quickAddButton = xamlDocument
+            .Descendants()
+            .SingleOrDefault(element =>
+                element.Name.LocalName == "BalloonButton" &&
+                (string?)element.Attribute(XamlNamespace + "Name") == "HeaderQuickAddButton");
+
+        Assert.NotNull(quickAddButton);
+        Assert.Equal("{StaticResource PlusSolid}", (string?)quickAddButton!.Attribute("ButtonIcon"));
+        Assert.Equal("New Transaction (Ctrl+N)", (string?)quickAddButton.Attribute("ButtonText"));
+        Assert.Equal("{StaticResource Brush.Mint}", (string?)quickAddButton.Attribute("DefaultBackground"));
+        Assert.Equal("180", (string?)quickAddButton.Attribute("ExpandedWidth"));
+        Assert.Equal("{StaticResource Brush.Mint.Muted}", (string?)quickAddButton.Attribute("HoveredBackground"));
+        Assert.Equal("{StaticResource Brush.Text.Primary.Dark}", (string?)quickAddButton.Attribute("Foreground"));
+        Assert.Equal("True", (string?)quickAddButton.Attribute("ShouldExpand"));
+    }
+
+    [Fact]
     public void NotificationPanel_UsesVerticalListWithStickyClearAllFooter()
     {
         var xaml = NotificationPanelXaml.Value;

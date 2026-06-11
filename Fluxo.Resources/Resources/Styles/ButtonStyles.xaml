@@ -50,7 +50,7 @@
                                         x:Name="PART_ButtonText"
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center"
-                                        FontFamily="{TemplateBinding FontFamily}"
+                                        FontFamily="{StaticResource Bold}"
                                         FontSize="{TemplateBinding FontSize}"
                                         Foreground="{TemplateBinding Foreground}"
                                         Opacity="0"

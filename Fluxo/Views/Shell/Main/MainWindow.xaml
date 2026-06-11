@@ -72,8 +72,6 @@
             <Style x:Key="FloatingSideNavigationRailStyle" TargetType="Border">
                 <Setter Property="Padding" Value="10,0" />
                 <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-                <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-                <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="CornerRadius">
                     <Setter.Value>
                         <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
@@ -87,8 +85,9 @@
                     <Setter.Value>
                         <DropShadowEffect
                             BlurRadius="24"
-                            Opacity="0.24"
-                            ShadowDepth="8" />
+                            Opacity="0.4"
+                            ShadowDepth="0"
+                            Color="{StaticResource Color.Background.Surface}" />
                     </Setter.Value>
                 </Setter>
             </Style>
@@ -379,7 +378,7 @@
 
                             <Border
                                 x:Name="HeaderSearchInputBorder"
-                                Width="300"
+                                Width="240"
                                 Padding="10,6"
                                 Background="{StaticResource Brush.Background.Surface}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"
@@ -456,12 +455,6 @@
                                 </Border>
                             </Popup>
                         </Grid>
-                        <customControls:BalloonButton
-                            x:Name="HeaderQuickAddButton"
-                            ButtonIcon="{StaticResource PlusSolid}"
-                            Click="OnHeaderQuickAddButtonClick"
-                            Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
-
                         <customControls:BalloonButton
                             x:Name="HeaderNotificationButton"
                             ButtonIcon="{StaticResource Bell}"
@@ -715,6 +708,29 @@
                             </Border>
                         </Popup>
 
+                        <Border
+                            Width="1"
+                            Margin="16,0,8,0"
+                            Background="{StaticResource Brush.Background.Hover}"
+                            SnapsToDevicePixels="True" />
+
+                        <customControls:BalloonButton
+                            x:Name="HeaderQuickAddButton"
+                            ButtonIcon="{StaticResource PlusSolid}"
+                            ButtonText="New Transaction"
+                            Click="OnHeaderQuickAddButtonClick"
+                            DefaultBackground="{StaticResource Brush.Mint}"
+                            Foreground="{StaticResource Brush.Text.Primary.Dark}"
+                            HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                            ShouldExpand="True"
+                            Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
+
+                        <Border
+                            Width="1"
+                            Margin="16,0,8,0"
+                            Background="{StaticResource Brush.Background.Hover}"
+                            SnapsToDevicePixels="True" />
+
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Minus}"
                             Command="{x:Static SystemCommands.MinimizeWindowCommand}"
@@ -759,7 +775,6 @@
                         Grid.Row="1"
                         Margin="200,16,200,48"
                         Panel.ZIndex="6" />
-
                 </Grid>
             </Grid>
 
