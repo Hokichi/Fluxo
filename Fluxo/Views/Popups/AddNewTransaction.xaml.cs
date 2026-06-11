@@ -70,6 +70,9 @@ public partial class AddNewTransaction : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
+        if (!await ShouldSaveCurrentTransactionAsync())
+            return;
+
         var result = await _viewModel.SaveAsync(false);
         if (!result.IsSuccess)
         {
@@ -82,6 +85,9 @@ public partial class AddNewTransaction : BasePopup
 
     protected override async void OnSaveAndCreateNewButtonClick()
     {
+        if (!await ShouldSaveCurrentTransactionAsync())
+            return;
+
         var result = await _viewModel.SaveAsync(true);
         if (!result.IsSuccess)
         {
@@ -92,6 +98,18 @@ public partial class AddNewTransaction : BasePopup
         NoteRichTextBox.Document.Blocks.Clear();
         _viewModel.BeginChangeTracking();
         FocusPrimaryInput();
+    }
+
+    private async Task<bool> ShouldSaveCurrentTransactionAsync()
+    {
+        if (!await _viewModel.HasSimilarTransactionAsync())
+            return true;
+
+        return _dialogService.ShowWarning(
+            "Potentially duplicated transaction found. Would you like to save the current one?",
+            "Add New Transaction",
+            this,
+            MessageBoxButton.YesNo) == MessageBoxResult.Yes;
     }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -480,5 +498,4 @@ public partial class AddNewTransaction : BasePopup
 
         return visibleCount;
     }
-
 }

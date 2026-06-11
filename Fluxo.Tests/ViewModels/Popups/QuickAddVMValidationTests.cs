@@ -485,6 +485,144 @@ public sealed class QuickAddVMValidationTests
     }
 
     [Fact]
+    public void HasSimilarTransactionAsync_FindsExpense_WithSameNameTypeSourceAndNearAmount()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData(expenseLogs: [
+                CreateExpenseLog("Valid name", 10.50m, sourceId: 1)
+            ]);
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 10m,
+                appData: appData);
+
+            var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.True(result);
+        });
+    }
+
+    [Fact]
+    public void HasSimilarTransactionAsync_IgnoresExpense_WhenAmountDiffersByMoreThanFivePercent()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData(expenseLogs: [
+                CreateExpenseLog("Valid name", 10.51m, sourceId: 1)
+            ]);
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 10m,
+                appData: appData);
+
+            var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.False(result);
+        });
+    }
+
+    [Fact]
+    public void HasSimilarTransactionAsync_IgnoresExpense_WhenSourceDiffers()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData(expenseLogs: [
+                CreateExpenseLog("Valid name", 10m, sourceId: 2)
+            ]);
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 10m,
+                appData: appData);
+
+            var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.False(result);
+        });
+    }
+
+    [Fact]
+    public void HasSimilarTransactionAsync_FindsIncome_WithSameNameTypeSourceAndNearAmount()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData(incomeLogs: [
+                new IncomeLog
+                {
+                    Name = "Valid name",
+                    Amount = 10.25m,
+                    SpendingSourceId = 1
+                }
+            ]);
+            var vm = CreateVm(
+                TransactionKind.Income,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 10m,
+                appData: appData);
+
+            var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.True(result);
+        });
+    }
+
+    [Fact]
+    public void HasSimilarTransactionAsync_SeparatesGoalUpdatesFromExpenses()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData(expenseLogs:
+            [
+                CreateExpenseLog("Goal Update: Goal", 10m, sourceId: 1, tagId: 1, tagName: "General")
+            ]);
+            var vm = CreateVm(
+                TransactionKind.Goal,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 10m,
+                appData: appData);
+
+            var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.False(result);
+        });
+    }
+
+    [Fact]
+    public void HasSimilarTransactionAsync_FindsGoalUpdate_WithSameGoalSourceAndNearAmount()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData(expenseLogs:
+            [
+                CreateExpenseLog(
+                    "Goal Update: Goal",
+                    10.25m,
+                    sourceId: 1,
+                    tagId: 99,
+                    tagName: GoalUpdateTransactionSupport.GoalUpdateTagName)
+            ]);
+            var vm = CreateVm(
+                TransactionKind.Goal,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 10m,
+                appData: appData);
+
+            var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.True(result);
+        });
+    }
+
+    [Fact]
     public void Constructor_UsesSpendingSourcesOverride_WhenProvided()
     {
         RunInSta(() =>
@@ -784,13 +922,14 @@ public sealed class QuickAddVMValidationTests
 
     private static IAppDataService CreateAppData(
         BudgetAllocation? budgetAllocation = null,
-        IReadOnlyList<ExpenseLog>? expenseLogs = null)
+        IReadOnlyList<ExpenseLog>? expenseLogs = null,
+        IReadOnlyList<IncomeLog>? incomeLogs = null)
     {
         var appData = Substitute.For<IAppDataService>();
         appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(expenseLogs ?? []));
         appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>([]));
+            .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>(incomeLogs ?? []));
         appData.GetSpendingSourceByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => Task.FromResult<SpendingSource?>(new SpendingSource
             {
@@ -967,6 +1106,36 @@ public sealed class QuickAddVMValidationTests
                 }
             }
         ];
+    }
+
+    private static ExpenseLog CreateExpenseLog(
+        string name,
+        decimal amount,
+        int sourceId,
+        int tagId = 1,
+        string tagName = "General")
+    {
+        return new ExpenseLog
+        {
+            Id = 10,
+            Amount = amount,
+            SpendingSourceId = sourceId,
+            DeductedOn = DateTime.Today,
+            IsForDeletion = false,
+            Expense = new Expense
+            {
+                Id = 20,
+                Name = name,
+                Amount = amount,
+                SpendingSourceId = sourceId,
+                ExpenseTagId = tagId,
+                ExpenseTag = new ExpenseTag
+                {
+                    Id = tagId,
+                    Name = tagName
+                }
+            }
+        };
     }
 
     private static SpendingSourceVM CreateCheckingSource(

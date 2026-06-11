@@ -25,6 +25,7 @@ public partial class QuickAddVM : ObservableValidator
     private const int NoSpendingSourceId = -1;
     private const int NoTagId = -1;
     private const int NoSavingGoalId = -1;
+    private const decimal SimilarAmountTolerance = 0.05m;
 
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
     private readonly IReadOnlyList<SpendingSourceVM>? _spendingSourcesOverride;
@@ -621,6 +622,39 @@ public partial class QuickAddVM : ObservableValidator
         }
     }
 
+    public async Task<bool> HasSimilarTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBuildTransactionInput(out var input, out _) || input.IsRecurring)
+            return false;
+
+        try
+        {
+            var candidateName = await ResolveSimilarTransactionNameAsync(input, cancellationToken);
+            if (string.IsNullOrWhiteSpace(candidateName))
+                return false;
+
+            if (!input.IsExpense && !input.IsGoal)
+            {
+                var incomeLogs = await _appData.GetIncomeLogsAsync(cancellationToken);
+                return incomeLogs.Any(log => IsSimilarIncomeTransaction(log, input, candidateName));
+            }
+
+            var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+            var goalUpdateTagIds = await GetGoalUpdateTagIdsAsync(cancellationToken);
+            return expenseLogs.Any(log => IsSimilarExpenseTransaction(
+                log,
+                input,
+                candidateName,
+                input.IsGoal,
+                goalUpdateTagIds));
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogError(exception, "Unable to check for similar quick-add transaction.");
+            return false;
+        }
+    }
+
     public bool HasValidEntryToPersistOnClose()
     {
         return TryBuildTransactionInput(out _, out _);
@@ -938,6 +972,101 @@ public partial class QuickAddVM : ObservableValidator
         return string.IsNullOrWhiteSpace(trimmedGoalName)
             ? GoalUpdateTransactionSupport.GoalUpdateTagName
             : $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {trimmedGoalName}";
+    }
+
+    private async Task<string> ResolveSimilarTransactionNameAsync(
+        QuickTransactionInput input,
+        CancellationToken cancellationToken)
+    {
+        if (input.IsGoal)
+        {
+            if (input.GoalId is null)
+                return string.Empty;
+
+            var goal = await _appData.GetSavingGoalByIdAsync(input.GoalId.Value, cancellationToken);
+            return goal is null ? string.Empty : BuildGoalUpdateName(goal.Name);
+        }
+
+        return input.Name.Trim();
+    }
+
+    private async Task<HashSet<int>> GetGoalUpdateTagIdsAsync(CancellationToken cancellationToken)
+    {
+        var tags = await _appData.GetExpenseTagsAsync(cancellationToken);
+        return tags
+            .Where(tag => string.Equals(
+                tag.Name?.Trim(),
+                GoalUpdateTransactionSupport.GoalUpdateTagName,
+                StringComparison.OrdinalIgnoreCase))
+            .Select(tag => tag.Id)
+            .ToHashSet();
+    }
+
+    private static bool IsSimilarExpenseTransaction(
+        ExpenseLog log,
+        QuickTransactionInput input,
+        string candidateName,
+        bool candidateIsGoalUpdate,
+        IReadOnlySet<int> goalUpdateTagIds)
+    {
+        if (log.IsForDeletion ||
+            log.SpendingSourceId != input.SpendingSourceId ||
+            log.Expense is null ||
+            !IsSameTransactionName(log.Expense.Name, candidateName) ||
+            !IsSimilarAmount(log.Amount, input.Amount))
+        {
+            return false;
+        }
+
+        return IsGoalUpdateExpenseLog(log, goalUpdateTagIds) == candidateIsGoalUpdate;
+    }
+
+    private static bool IsSimilarIncomeTransaction(
+        IncomeLog log,
+        QuickTransactionInput input,
+        string candidateName)
+    {
+        return log.SpendingSourceId == input.SpendingSourceId &&
+               IsSameTransactionName(log.Name, candidateName) &&
+               IsSimilarAmount(log.Amount, input.Amount);
+    }
+
+    private static bool IsGoalUpdateExpenseLog(ExpenseLog log, IReadOnlySet<int> goalUpdateTagIds)
+    {
+        var tagName = log.Expense?.ExpenseTag?.Name;
+        if (!string.IsNullOrWhiteSpace(tagName))
+            return string.Equals(
+                tagName.Trim(),
+                GoalUpdateTransactionSupport.GoalUpdateTagName,
+                StringComparison.OrdinalIgnoreCase);
+
+        if (log.Expense is not null && log.Expense.ExpenseTagId > 0 && goalUpdateTagIds.Count > 0)
+            return goalUpdateTagIds.Contains(log.Expense.ExpenseTagId);
+
+        var expenseName = log.Expense?.Name?.Trim();
+        return string.Equals(expenseName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
+               expenseName?.StartsWith($"{GoalUpdateTransactionSupport.GoalUpdateTagName}:", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool IsSameTransactionName(string? existingName, string candidateName)
+    {
+        return string.Equals(
+            existingName?.Trim(),
+            candidateName.Trim(),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static bool IsSimilarAmount(decimal existingAmount, decimal candidateAmount)
+    {
+        existingAmount = Math.Abs(existingAmount);
+        candidateAmount = Math.Abs(candidateAmount);
+
+        if (existingAmount <= 0m || candidateAmount <= 0m)
+            return existingAmount == candidateAmount;
+
+        var lowerAmount = Math.Min(existingAmount, candidateAmount);
+        var higherAmount = Math.Max(existingAmount, candidateAmount);
+        return (higherAmount - lowerAmount) / lowerAmount <= SimilarAmountTolerance;
     }
 
     private async Task RefreshTransactionNameSuggestionsAsync()
