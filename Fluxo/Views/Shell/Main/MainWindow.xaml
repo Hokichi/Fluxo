@@ -7,6 +7,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
     Title="Fluxo"
     Width="1600"
     Height="900"
@@ -461,12 +462,36 @@
                                 </Border>
                             </Popup>
                         </Grid>
-
                         <customControls:BalloonButton
                             x:Name="HeaderQuickAddButton"
                             ButtonIcon="{StaticResource PlusSolid}"
                             Click="OnHeaderQuickAddButtonClick"
                             Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
+
+                        <customControls:BalloonButton
+                            x:Name="HeaderNotificationButton"
+                            ButtonIcon="{StaticResource Bell}"
+                            Click="OnHeaderNotificationButtonClick"
+                            IconSize="11"
+                            Style="{StaticResource HeaderButtonStyle}" />
+
+                        <Popup
+                            x:Name="HeaderNotificationPopup"
+                            AllowsTransparency="True"
+                            DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                            IsOpen="False"
+                            Placement="Bottom"
+                            PlacementTarget="{Binding ElementName=HeaderNotificationButton}"
+                            PopupAnimation="Fade"
+                            StaysOpen="False"
+                            VerticalOffset="8">
+                            <Border
+                                Width="360"
+                                Height="420"
+                                Background="Transparent">
+                                <sections:NotificationPanel x:Name="HeaderNotificationPanel" DataContext="{Binding Dashboard.NotificationPanel}" />
+                            </Border>
+                        </Popup>
 
                         <customControls:BalloonButton
                             x:Name="HeaderMenuButton"

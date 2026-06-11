@@ -14,6 +14,8 @@ public sealed class MainWindowLayoutTests
     private static readonly Lazy<XDocument> MainWindowXamlDocument = new(() => XDocument.Parse(MainWindowXaml.Value));
     private static readonly Lazy<string> DashboardXaml = new(LoadDashboardXaml);
     private static readonly Lazy<XDocument> DashboardXamlDocument = new(() => XDocument.Parse(DashboardXaml.Value));
+    private static readonly Lazy<string> NotificationPanelXaml = new(LoadNotificationPanelXaml);
+    private static readonly Lazy<XDocument> NotificationPanelXamlDocument = new(() => XDocument.Parse(NotificationPanelXaml.Value));
 
     [Fact]
     public void HeaderMenu_DoesNotExposeAnalyticsActionButton()
@@ -127,6 +129,53 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void HeaderNotifications_ExposeBellPopupWithNotificationPanel()
+    {
+        var xaml = MainWindowXaml.Value;
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        Assert.Contains("xmlns:sections=\"clr-namespace:Fluxo.Views.Shell.Main.Sections\"", xaml);
+        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderNotificationButton", "HeaderButtonStyle");
+        Assert.Contains("ButtonIcon=\"{StaticResource Bell}\"", xaml);
+        Assert.Contains("Click=\"OnHeaderNotificationButtonClick\"", xaml);
+
+        var popup = xamlDocument
+            .Descendants(PresentationNamespace + "Popup")
+            .SingleOrDefault(element => (string?)element.Attribute(XamlNamespace + "Name") == "HeaderNotificationPopup");
+
+        Assert.NotNull(popup);
+        Assert.Equal("False", (string?)popup!.Attribute("StaysOpen"));
+        Assert.Equal("{Binding ElementName=HeaderNotificationButton}", (string?)popup.Attribute("PlacementTarget"));
+
+        var panel = popup
+            .Descendants()
+            .SingleOrDefault(element =>
+                element.Name.LocalName == "NotificationPanel" &&
+                (string?)element.Attribute(XamlNamespace + "Name") == "HeaderNotificationPanel");
+
+        Assert.NotNull(panel);
+        Assert.Equal("{Binding Dashboard.NotificationPanel}", (string?)panel!.Attribute("DataContext"));
+    }
+
+    [Fact]
+    public void NotificationPanel_UsesVerticalListWithStickyClearAllFooter()
+    {
+        var xaml = NotificationPanelXaml.Value;
+        var xamlDocument = NotificationPanelXamlDocument.Value;
+
+        Assert.DoesNotContain("StepNavigatorControl", xaml);
+        Assert.DoesNotContain("OnNavigatePreviousClick", xaml);
+        Assert.DoesNotContain("OnNavigateNextClick", xaml);
+        Assert.DoesNotContain("CarouselViewport", xaml);
+
+        AssertElementHasName(xamlDocument, "ScrollViewer", "NotificationListScrollViewer");
+        AssertElementHasName(xamlDocument, "ItemsControl", "NotificationItemsList");
+        AssertElementHasName(xamlDocument, "Button", "ClearAllNotificationsButton");
+        Assert.Contains("ItemsSource=\"{Binding NotificationItems}\"", xaml);
+        Assert.Contains("Command=\"{Binding ClearAllNotificationsCommand}\"", xaml);
+    }
+
+    [Fact]
     public void MainWindow_KeepsDashboardContentInShellWithCorrectControlOwnership()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
@@ -148,7 +197,8 @@ public sealed class MainWindowLayoutTests
         AssertElementHasName(dashboardXamlDocument, "SpentAllowancePanel", "SpentAllowancePanelHost");
         AssertElementHasName(dashboardXamlDocument, "BudgetAllocationPanel", "BudgetAllocationPanelHost");
         AssertElementHasName(dashboardXamlDocument, "SavingGoalsPanel", "SavingGoalsPanelHost");
-        AssertElementHasName(dashboardXamlDocument, "NotificationPanel", "NotificationPanelHost");
+        Assert.DoesNotContain("NotificationPanelHost", dashboardXaml);
+        AssertElementHasNameAndStyle(dashboardXamlDocument, "Border", "NotificationPanelPlaceholder", "DashboardPanelStyle");
         AssertElementHasName(dashboardXamlDocument, "FadingScrollViewer", "DashboardSpendingSourcesScrollViewer");
         AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollLeftButton");
         AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollRightButton");
@@ -216,6 +266,12 @@ public sealed class MainWindowLayoutTests
     {
         var dashboardXamlPath = ResolveDashboardXamlPath();
         return File.ReadAllText(dashboardXamlPath);
+    }
+
+    private static string LoadNotificationPanelXaml()
+    {
+        var notificationPanelXamlPath = ResolveNotificationPanelXamlPath();
+        return File.ReadAllText(notificationPanelXamlPath);
     }
 
     private static string ResolveMainWindowXamlPath()
@@ -311,6 +367,42 @@ public sealed class MainWindowLayoutTests
                 }
 
                 return dashboardXamlPath;
+            }
+
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
+    }
+
+    private static string ResolveNotificationPanelXamlPath()
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (currentDirectory is not null)
+        {
+            var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
+            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
+            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
+            {
+                var notificationPanelXamlPath = Path.Combine(
+                    currentDirectory.FullName,
+                    "Fluxo",
+                    "Views",
+                    "Shell",
+                    "Main",
+                    "Sections",
+                    "NotificationPanel.xaml");
+
+                if (!File.Exists(notificationPanelXamlPath))
+                {
+                    throw new FileNotFoundException(
+                        $"NotificationPanel.xaml was not found at '{notificationPanelXamlPath}'.",
+                        notificationPanelXamlPath);
+                }
+
+                return notificationPanelXamlPath;
             }
 
             currentDirectory = currentDirectory.Parent;

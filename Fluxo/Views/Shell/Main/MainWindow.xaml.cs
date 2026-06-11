@@ -298,6 +298,7 @@ public partial class MainWindow : Window, IPopupHost
     {
         CancelPendingPopupOverlayDeferredHide();
         CloseHeaderMenu();
+        CloseHeaderNotificationPopup();
         CollapseHeaderSearch();
 
         // If close-to-tray happens after a fade-out close animation, the window can
@@ -769,6 +770,11 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         OpenAddNewTransactionPopup();
+    }
+
+    private void OnHeaderNotificationButtonClick(object sender, RoutedEventArgs e)
+    {
+        HeaderNotificationPopup.IsOpen = !HeaderNotificationPopup.IsOpen;
     }
 
     private void OnHeaderSearchTextChanged(object sender, TextChangedEventArgs e)
@@ -1609,6 +1615,11 @@ public partial class MainWindow : Window, IPopupHost
         HeaderMenuPopup.IsOpen = false;
     }
 
+    private void CloseHeaderNotificationPopup()
+    {
+        HeaderNotificationPopup.IsOpen = false;
+    }
+
     private void ScheduleHeaderMenuClose()
     {
         if (_isHeaderMenuPinned)
@@ -1638,6 +1649,10 @@ public partial class MainWindow : Window, IPopupHost
             ShouldCollapseHeaderSearchOnExternalClick())
             CollapseHeaderSearch();
 
+        if (HeaderNotificationPopup.IsOpen &&
+            FindAncestor<BalloonButton>(source) != HeaderNotificationButton)
+            CloseHeaderNotificationPopup();
+
         if (!_isHeaderMenuPinned)
             return;
 
@@ -1651,6 +1666,7 @@ public partial class MainWindow : Window, IPopupHost
     {
         CollapseHeaderSearch();
         CloseHeaderMenu();
+        CloseHeaderNotificationPopup();
     }
 
     private bool ShouldCollapseHeaderSearchOnExternalClick()

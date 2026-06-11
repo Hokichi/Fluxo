@@ -195,10 +195,10 @@
                         Grid.Column="0"
                         DataContext="{Binding SavingGoalsPanel}" />
 
-                    <sections:NotificationPanel
-                        x:Name="NotificationPanelHost"
+                    <Border
+                        x:Name="NotificationPanelPlaceholder"
                         Grid.Column="2"
-                        DataContext="{Binding NotificationPanel}" />
+                        Style="{StaticResource DashboardPanelStyle}" />
                 </Grid>
             </Grid>
         </Grid>
