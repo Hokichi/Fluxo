@@ -56,7 +56,9 @@
                                     <c:BalloonButton
                                         x:Name="PART_CloneButton"
                                         ButtonIcon="{StaticResource CloneRegular}"
+                                        ButtonText="Clone"
                                         HoveredBackground="{StaticResource Brush.Mint}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCloneButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -65,7 +67,9 @@
                                     <c:BalloonButton
                                         x:Name="PART_SplitButton"
                                         ButtonIcon="{StaticResource ArrowsOutLineVertical}"
+                                        ButtonText="Split"
                                         HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSplitButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -74,7 +78,9 @@
                                     <c:BalloonButton
                                         x:Name="PART_DeleteButton"
                                         ButtonIcon="{StaticResource CircleMinusSolid}"
+                                        ButtonText="Delete"
                                         HoveredBackground="{StaticResource Brush.Danger}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowDeleteButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -83,7 +89,9 @@
                                     <c:BalloonButton
                                         x:Name="PART_EditButton"
                                         ButtonIcon="{StaticResource Pen}"
+                                        ButtonText="Edit"
                                         HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowEditButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -92,8 +100,10 @@
                                     <c:BalloonButton
                                         x:Name="PART_RevertButton"
                                         ButtonIcon="{StaticResource RegularUndo}"
+                                        ButtonText="Revert"
                                         HoveredBackground="{StaticResource Brush.Warning}"
                                         IsEnabled="{TemplateBinding IsRevertButtonEnabled}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowRevertButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -102,7 +112,9 @@
                                     <c:BalloonButton
                                         x:Name="PART_ApplyButton"
                                         ButtonIcon="{StaticResource Check}"
+                                        ButtonText="Apply"
                                         HoveredBackground="{StaticResource Brush.Success}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowApplyButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -111,7 +123,9 @@
                                     <c:BalloonButton
                                         x:Name="PART_CancelButton"
                                         ButtonIcon="{StaticResource Ban}"
+                                        ButtonText="Cancel"
                                         HoveredBackground="{StaticResource Brush.Warning}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCancelButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -120,8 +134,10 @@
                                     <c:BalloonButton
                                         x:Name="PART_SaveAndCreateNewButton"
                                         ButtonIcon="{StaticResource ContentSaveMove}"
+                                        ButtonText="Save and create new"
                                         HoveredBackground="{StaticResource Brush.Mint.Muted}"
                                         IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSaveAndCreateNewButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -130,8 +146,10 @@
                                     <c:BalloonButton
                                         x:Name="PART_SaveButton"
                                         ButtonIcon="{StaticResource ContentSave}"
+                                        ButtonText="Save"
                                         HoveredBackground="{StaticResource Brush.Mint}"
                                         IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSaveButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
@@ -140,7 +158,9 @@
                                     <c:BalloonButton
                                         x:Name="PART_CloseButton"
                                         ButtonIcon="{StaticResource Close}"
+                                        ButtonText="Close"
                                         HoveredBackground="{StaticResource Brush.Danger}"
+                                        ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCloseButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />

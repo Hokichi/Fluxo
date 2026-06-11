@@ -47,6 +47,37 @@ public sealed class BasePopupSplitButtonTests
         Assert.Contains("PopupBoolToVisibility", source);
     }
 
+    [Fact]
+    public void PopupTemplate_AllHeaderButtonsExpandWithFunctionalButtonText()
+    {
+        var source = File.ReadAllText(ResolvePopupStylesPath());
+
+        AssertHeaderButtonExpandsWithText(source, "PART_CloneButton", "Clone");
+        AssertHeaderButtonExpandsWithText(source, "PART_SplitButton", "Split");
+        AssertHeaderButtonExpandsWithText(source, "PART_DeleteButton", "Delete");
+        AssertHeaderButtonExpandsWithText(source, "PART_EditButton", "Edit");
+        AssertHeaderButtonExpandsWithText(source, "PART_RevertButton", "Revert");
+        AssertHeaderButtonExpandsWithText(source, "PART_ApplyButton", "Apply");
+        AssertHeaderButtonExpandsWithText(source, "PART_CancelButton", "Cancel");
+        AssertHeaderButtonExpandsWithText(source, "PART_SaveAndCreateNewButton", "Save and create new");
+        AssertHeaderButtonExpandsWithText(source, "PART_SaveButton", "Save");
+        AssertHeaderButtonExpandsWithText(source, "PART_CloseButton", "Close");
+    }
+
+    private static void AssertHeaderButtonExpandsWithText(string source, string partName, string buttonText)
+    {
+        var buttonNameIndex = source.IndexOf($"x:Name=\"{partName}\"", StringComparison.Ordinal);
+        Assert.True(buttonNameIndex >= 0, $"Header button '{partName}' was not found.");
+
+        var nextButtonIndex = source.IndexOf("<c:BalloonButton", buttonNameIndex + 1, StringComparison.Ordinal);
+        var buttonMarkup = nextButtonIndex >= 0
+            ? source[buttonNameIndex..nextButtonIndex]
+            : source[buttonNameIndex..];
+
+        Assert.Contains($"ButtonText=\"{buttonText}\"", buttonMarkup);
+        Assert.Contains("ShouldExpand=\"True\"", buttonMarkup);
+    }
+
     private static string ExtractMethodBodyBySignature(string source, string signatureMarker)
     {
         var signatureIndex = source.IndexOf(signatureMarker, StringComparison.Ordinal);

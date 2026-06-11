@@ -58,24 +58,26 @@
                             Height="24"
                             Margin="4,0,0,0"
                             ButtonIcon="{StaticResource Pen}"
+                            ButtonText="Process"
                             Command="{Binding DataContext.OpenNotificationActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}"
                             HoveredBackground="{StaticResource Brush.Mint}"
                             IconSize="10"
+                            ShouldExpand="True"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Resolve"
                             Visibility="{Binding HasActionCta, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                         <customControls:BalloonButton
                             Width="24"
                             Height="24"
                             ButtonIcon="{StaticResource Ban}"
+                            ButtonText="Clear"
                             Command="{Binding DataContext.ClearNotificationGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}"
                             HoveredBackground="{StaticResource Brush.Danger}"
                             IconSize="11"
+                            ShouldExpand="True"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Clear notification"
                             Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
                 </Grid>

@@ -717,11 +717,13 @@
                         <customControls:BalloonButton
                             x:Name="HeaderQuickAddButton"
                             ButtonIcon="{StaticResource PlusSolid}"
-                            ButtonText="New Transaction"
+                            ButtonText="New Transaction (Ctrl+N)"
                             Click="OnHeaderQuickAddButtonClick"
                             DefaultBackground="{StaticResource Brush.Mint}"
+                            ExpandedWidth="180"
                             Foreground="{StaticResource Brush.Text.Primary.Dark}"
                             HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                            Padding="8,0"
                             ShouldExpand="True"
                             Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
 
@@ -733,23 +735,29 @@
 
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Minus}"
+                            ButtonText="Minimize"
                             Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                            ShouldExpand="True"
                             Style="{StaticResource HeaderButtonStyle}" />
 
                         <customControls:BalloonButton
                             x:Name="ExpandRestoreButton"
                             ButtonIcon="{StaticResource ExpandAlt}"
+                            ButtonText="Maximize"
                             Click="OnExpandRestoreWindow"
                             HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                            ShouldExpand="True"
                             Style="{StaticResource HeaderButtonStyle}" />
 
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Close}"
+                            ButtonText="Close"
                             Command="{x:Static SystemCommands.CloseWindowCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                             HoveredBackground="{StaticResource Brush.Danger}"
+                            ShouldExpand="True"
                             Style="{StaticResource HeaderButtonStyle}" />
                     </StackPanel>
                 </Grid>

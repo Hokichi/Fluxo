@@ -196,6 +196,52 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void WindowChromeButtons_ExpandWithFunctionalButtonText()
+    {
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        var minimizeButton = xamlDocument
+            .Descendants()
+            .SingleOrDefault(element =>
+                element.Name.LocalName == "BalloonButton" &&
+                (string?)element.Attribute("Command") == "{x:Static SystemCommands.MinimizeWindowCommand}");
+        var maximizeButton = xamlDocument
+            .Descendants()
+            .SingleOrDefault(element =>
+                element.Name.LocalName == "BalloonButton" &&
+                (string?)element.Attribute(XamlNamespace + "Name") == "ExpandRestoreButton");
+        var closeButton = xamlDocument
+            .Descendants()
+            .SingleOrDefault(element =>
+                element.Name.LocalName == "BalloonButton" &&
+                (string?)element.Attribute("Command") == "{x:Static SystemCommands.CloseWindowCommand}");
+
+        AssertBalloonButtonExpandsWithText(minimizeButton, "Minimize");
+        AssertBalloonButtonExpandsWithText(maximizeButton, "Maximize");
+        AssertBalloonButtonExpandsWithText(closeButton, "Close");
+
+        var codeBehind = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+        var updateMethod = ExtractMethodBodyBySignature(codeBehind, "private void UpdateExpandRestoreButtonIcon()");
+
+        Assert.Contains("ExpandRestoreButton.ButtonText = _isMaximized ? \"Restore\" : \"Maximize\";", updateMethod);
+    }
+
+    [Fact]
+    public void DashboardNotificationGroupButtons_ExpandWithFunctionalButtonText()
+    {
+        var xamlDocument = NotificationPanelXamlDocument.Value;
+
+        var actionButtons = xamlDocument
+            .Descendants()
+            .Where(element => element.Name.LocalName == "BalloonButton")
+            .ToArray();
+
+        Assert.Equal(2, actionButtons.Length);
+        AssertBalloonButtonExpandsWithText(actionButtons[0], "Resolve");
+        AssertBalloonButtonExpandsWithText(actionButtons[1], "Clear notification");
+    }
+
+    [Fact]
     public void NotificationPanel_UsesVerticalListWithStickyClearAllFooter()
     {
         var xaml = NotificationPanelXaml.Value;
@@ -276,6 +322,13 @@ public sealed class MainWindowLayoutTests
                 (string?)node.Attribute(XamlNamespace + "Name") == xName);
 
         Assert.NotNull(element);
+    }
+
+    private static void AssertBalloonButtonExpandsWithText(XElement? button, string buttonText)
+    {
+        Assert.NotNull(button);
+        Assert.Equal(buttonText, (string?)button!.Attribute("ButtonText"));
+        Assert.Equal("True", (string?)button.Attribute("ShouldExpand"));
     }
 
     private static void AssertElementHasNameAndStyle(XDocument xamlDocument, string elementName, string xName, string styleKey)
