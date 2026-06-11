@@ -30,6 +30,18 @@ public sealed class BalloonButtonStyleTests
     }
 
     [Fact]
+    public void BalloonButtonDefaultTemplate_BindsIconAndTextForegroundToBackgroundBrightness()
+    {
+        var style = ReadDefaultBalloonButtonStyle();
+
+        Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);
+        Assert.Contains("Path=\"ActiveBackground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
+        Assert.Contains("Path=\"Foreground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
+        Assert.Contains("<Path.Fill>", style);
+        Assert.Contains("<TextBlock.Foreground>", style);
+    }
+
+    [Fact]
     public void BalloonButtonDefaultTemplate_LeavesExpansionAnimationToCodeBehind()
     {
         var style = ReadDefaultBalloonButtonStyle();

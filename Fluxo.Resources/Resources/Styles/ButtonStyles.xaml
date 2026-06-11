@@ -42,9 +42,15 @@
                                         Height="{TemplateBinding IconSize}"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Fill="{TemplateBinding Foreground}"
                                         IsHitTestVisible="False"
-                                        Stretch="Uniform" />
+                                        Stretch="Uniform">
+                                        <Path.Fill>
+                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                            </MultiBinding>
+                                        </Path.Fill>
+                                    </Path>
                                 </Grid>
                                 <Border
                                     x:Name="PART_TextReveal"
@@ -57,11 +63,17 @@
                                         VerticalAlignment="Center"
                                         FontFamily="{StaticResource Bold}"
                                         FontSize="{TemplateBinding FontSize}"
-                                        Foreground="{TemplateBinding Foreground}"
                                         Opacity="0"
                                         Text="{TemplateBinding ButtonText}"
                                         TextTrimming="CharacterEllipsis"
-                                        TextWrapping="NoWrap" />
+                                        TextWrapping="NoWrap">
+                                        <TextBlock.Foreground>
+                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                            </MultiBinding>
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
                                 </Border>
                             </StackPanel>
                         </Grid>

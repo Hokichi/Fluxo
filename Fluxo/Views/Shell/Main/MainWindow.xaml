@@ -455,12 +455,27 @@
                                 </Border>
                             </Popup>
                         </Grid>
-                        <customControls:BalloonButton
-                            x:Name="HeaderNotificationButton"
-                            ButtonIcon="{StaticResource Bell}"
-                            Click="OnHeaderNotificationButtonClick"
-                            IconSize="11"
-                            Style="{StaticResource HeaderButtonStyle}" />
+                        <Grid>
+                            <customControls:BalloonButton
+                                x:Name="HeaderNotificationButton"
+                                ButtonIcon="{StaticResource Bell}"
+                                Click="OnHeaderNotificationButtonClick"
+                                IconSize="11"
+                                Style="{StaticResource HeaderButtonStyle}" />
+
+                            <Ellipse
+                                x:Name="HeaderNotificationUnreadDot"
+                                Width="7"
+                                Height="7"
+                                Margin="0,1,0,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Fill="{StaticResource Brush.Danger}"
+                                IsHitTestVisible="False"
+                                Stroke="{StaticResource Brush.Background.Main}"
+                                StrokeThickness="1"
+                                Visibility="{Binding Dashboard.NotificationPanel.HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </Grid>
 
                         <Popup
                             x:Name="HeaderNotificationPopup"
@@ -474,7 +489,8 @@
                             VerticalOffset="8">
                             <Border
                                 Width="360"
-                                Height="420"
+                                MinHeight="150"
+                                MaxHeight="420"
                                 Background="Transparent">
                                 <sections:NotificationPanel x:Name="HeaderNotificationPanel" DataContext="{Binding Dashboard.NotificationPanel}" />
                             </Border>
@@ -716,14 +732,13 @@
 
                         <customControls:BalloonButton
                             x:Name="HeaderQuickAddButton"
+                            Padding="8,0"
                             ButtonIcon="{StaticResource PlusSolid}"
-                            ButtonText="New Transaction (Ctrl+N)"
+                            ButtonText="New Transaction"
                             Click="OnHeaderQuickAddButtonClick"
                             DefaultBackground="{StaticResource Brush.Mint}"
-                            ExpandedWidth="180"
                             Foreground="{StaticResource Brush.Text.Primary.Dark}"
                             HoveredBackground="{StaticResource Brush.Mint.Muted}"
-                            Padding="8,0"
                             ShouldExpand="True"
                             Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
 

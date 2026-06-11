@@ -31,12 +31,17 @@ public class BalloonButton : Button
     // --- DefaultBackground ---
     public static readonly DependencyProperty DefaultBackgroundProperty =
         DependencyProperty.Register(nameof(DefaultBackground), typeof(Brush), typeof(BalloonButton),
-            new PropertyMetadata(Brushes.CornflowerBlue, (d, _) => ((BalloonButton)d).ResetShapeFill()));
+            new PropertyMetadata(Brushes.CornflowerBlue, OnDefaultBackgroundChanged));
 
     // --- HoveredBackground ---
     public static readonly DependencyProperty HoveredBackgroundProperty =
         DependencyProperty.Register(nameof(HoveredBackground), typeof(Brush), typeof(BalloonButton),
-            new PropertyMetadata(Brushes.RoyalBlue));
+            new PropertyMetadata(Brushes.RoyalBlue, (d, _) => ((BalloonButton)d).UpdateActiveBackground()));
+
+    // --- ActiveBackground ---
+    public static readonly DependencyProperty ActiveBackgroundProperty =
+        DependencyProperty.Register(nameof(ActiveBackground), typeof(Brush), typeof(BalloonButton),
+            new PropertyMetadata(Brushes.CornflowerBlue));
 
     // --- ButtonIcon ---
     public static readonly DependencyProperty ButtonIconProperty =
@@ -109,6 +114,12 @@ public class BalloonButton : Button
         set => SetValue(HoveredBackgroundProperty, value);
     }
 
+    public Brush ActiveBackground
+    {
+        get => (Brush)GetValue(ActiveBackgroundProperty);
+        private set => SetValue(ActiveBackgroundProperty, value);
+    }
+
     public object? ButtonIcon
     {
         get => GetValue(ButtonIconProperty);
@@ -174,6 +185,7 @@ public class BalloonButton : Button
         _icon = GetTemplateChild(PartIcon) as Path;
         _textReveal = GetTemplateChild(PartTextReveal) as Border;
         _buttonText = GetTemplateChild(PartButtonText) as TextBlock;
+        UpdateActiveBackground();
         ResetShapeFill();
         ApplyIcon();
         ResetExpansion();
@@ -183,6 +195,7 @@ public class BalloonButton : Button
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
+        ActiveBackground = HoveredBackground;
         AnimateShapeFill(HoveredBackground);
         AnimateExpansion(isExpanded: true);
     }
@@ -190,6 +203,7 @@ public class BalloonButton : Button
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
+        ActiveBackground = DefaultBackground;
         AnimateShapeFill(DefaultBackground);
         AnimateExpansion(isExpanded: false);
     }
@@ -228,6 +242,18 @@ public class BalloonButton : Button
     private static object CoerceShouldExpand(DependencyObject d, object baseValue)
     {
         return ((BalloonButton)d).ShouldShowText ? false : baseValue;
+    }
+
+    private static void OnDefaultBackgroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var button = (BalloonButton)d;
+        button.UpdateActiveBackground();
+        button.ResetShapeFill();
+    }
+
+    private void UpdateActiveBackground()
+    {
+        ActiveBackground = IsMouseOver ? HoveredBackground : DefaultBackground;
     }
 
     // Snaps the fill back to DefaultBackground (no animation); called on template apply or DP change.

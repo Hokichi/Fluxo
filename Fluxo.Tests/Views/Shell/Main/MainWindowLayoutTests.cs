@@ -158,6 +158,43 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void HeaderNotifications_ShowUnreadDotOnlyWhenNotificationsExist()
+    {
+        var xaml = MainWindowXaml.Value;
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        AssertElementHasName(xamlDocument, "Ellipse", "HeaderNotificationUnreadDot");
+
+        var dotIndex = xaml.IndexOf("x:Name=\"HeaderNotificationUnreadDot\"", StringComparison.Ordinal);
+        var buttonIndex = xaml.IndexOf("x:Name=\"HeaderNotificationButton\"", StringComparison.Ordinal);
+
+        Assert.True(buttonIndex < dotIndex);
+        Assert.Contains("Fill=\"{StaticResource Brush.Danger}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding Dashboard.NotificationPanel.HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+    }
+
+    [Fact]
+    public void HeaderNotificationPopup_ConstrainsHeightToOneThroughFourItems()
+    {
+        var xaml = MainWindowXaml.Value;
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        var popup = xamlDocument
+            .Descendants(PresentationNamespace + "Popup")
+            .SingleOrDefault(element => (string?)element.Attribute(XamlNamespace + "Name") == "HeaderNotificationPopup");
+
+        Assert.NotNull(popup);
+        var popupHost = popup!
+            .Descendants(PresentationNamespace + "Border")
+            .SingleOrDefault(element => (string?)element.Attribute("Width") == "360");
+
+        Assert.NotNull(popupHost);
+        Assert.Equal("150", (string?)popupHost!.Attribute("MinHeight"));
+        Assert.Equal("420", (string?)popupHost.Attribute("MaxHeight"));
+        Assert.Null(popupHost.Attribute("Height"));
+    }
+
+    [Fact]
     public void HeaderActions_UseRequestedOrderAndQuickAddStyling()
     {
         var xaml = MainWindowXaml.Value;

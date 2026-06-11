@@ -67,6 +67,19 @@ public sealed class BalloonButtonDependencyPropertyTests
     }
 
     [Fact]
+    public void BalloonButton_TracksActiveBackgroundForForegroundConversion()
+    {
+        var source = File.ReadAllText(ResolveBalloonButtonPath());
+
+        Assert.Contains("public static readonly DependencyProperty ActiveBackgroundProperty =", source);
+        Assert.Contains("DependencyProperty.Register(nameof(ActiveBackground), typeof(Brush), typeof(BalloonButton),", source);
+        Assert.Contains("public Brush ActiveBackground", source);
+        Assert.Contains("private set => SetValue(ActiveBackgroundProperty, value);", source);
+        Assert.Contains("ActiveBackground = HoveredBackground;", source);
+        Assert.Contains("ActiveBackground = DefaultBackground;", source);
+    }
+
+    [Fact]
     public void BalloonButton_CoercesShouldExpandFalse_WhenShouldShowTextIsTrue()
     {
         RunOnStaThread(() =>
