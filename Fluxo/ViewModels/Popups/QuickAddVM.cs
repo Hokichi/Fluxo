@@ -133,7 +133,7 @@ public partial class QuickAddVM : ObservableValidator
         new("Saturday", "6"),
         new("Sunday", "7")
     ];
-    public bool CanSave => !IsSaving && !HasErrors;
+    public bool CanSave => !IsSaving && IsCurrentInputValid();
     public bool HasChanges => _isChangeTrackingInitialized && HasPendingTransactionInputChanges();
     public bool HasTransactionNameSuggestions => TransactionNameSuggestions.Count > 0;
     public bool ShowRecurringDayInput => IsRecurring;
@@ -1267,6 +1267,26 @@ public partial class QuickAddVM : ObservableValidator
     private static bool HasPendingTransactionInputValue(PendingTransactionInputState state)
     {
         return !string.IsNullOrWhiteSpace(state.NameText) || state.AmountText > 0m;
+    }
+
+    private bool IsCurrentInputValid()
+    {
+        return IsValidationSuccess(ValidateNameText(NameText, CreateValidationContext()))
+               && IsValidationSuccess(ValidateAmountText(AmountText, CreateValidationContext()))
+               && IsValidationSuccess(ValidateSelectedSpendingSource(SelectedSpendingSource, CreateValidationContext()))
+               && IsValidationSuccess(ValidateSelectedTag(SelectedTag, CreateValidationContext()))
+               && IsValidationSuccess(ValidateSelectedGoal(SelectedGoal, CreateValidationContext()))
+               && IsValidationSuccess(ValidateRecurringTimeText(RecurringTimeText, CreateValidationContext()));
+    }
+
+    private ValidationContext CreateValidationContext()
+    {
+        return new ValidationContext(this);
+    }
+
+    private static bool IsValidationSuccess(ValidationResult? result)
+    {
+        return result is null || result == ValidationResult.Success;
     }
 
     private void RefreshActiveValidation(params string[] propertyNames)

@@ -74,6 +74,24 @@ public sealed class QuickAddVMValidationTests
             var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
 
             Assert.False(vm.HasErrors);
+            Assert.False(vm.CanSave);
+            Assert.Equal(string.Empty, vm.NameValidationHint);
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
+    public void CanSave_BecomesEnabled_WhenInitialRequiredFieldsAreValid()
+    {
+        RunInSta(() =>
+        {
+            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+
+            vm.NameText = "Coffee";
+            vm.AmountText = 5m;
+
+            Assert.True(vm.CanSave);
+            Assert.False(vm.HasErrors);
             Assert.Equal(string.Empty, vm.NameValidationHint);
             Assert.Equal(string.Empty, vm.AmountValidationHint);
         });
