@@ -347,16 +347,10 @@
                         <TextBlock
                             Margin="0,4,0,0"
                             VerticalAlignment="Center"
-                            FontSize="14">
-                            <Run
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Welcome back," />
-                            <Run
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="{Binding Username}" />
-                        </TextBlock>
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="14"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding ActivePageTitle, RelativeSource={RelativeSource AncestorType=Window}}" />
                     </StackPanel>
 
                     <StackPanel

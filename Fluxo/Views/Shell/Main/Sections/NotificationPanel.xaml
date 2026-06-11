@@ -13,17 +13,45 @@
                 BorderThickness="1"
                 CornerRadius="16">
                 <Grid>
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="12"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding Header}"
-                        TextWrapping="Wrap" />
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Header}"
+                                TextWrapping="Wrap" />
+
+                            <Border
+                                x:Name="NotificationCountBadge"
+                                Width="18"
+                                Height="18"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="9">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="10"
+                                    Foreground="{StaticResource Brush.Text.Primary.Dark}"
+                                    Text="{Binding Count}" />
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="9"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding LatestCreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                    </StackPanel>
 
                     <StackPanel
-                        Margin="0,8,0,0"
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Bottom"
+                        VerticalAlignment="Center"
                         Orientation="Horizontal">
                         <customControls:BalloonButton
                             Width="24"
@@ -50,14 +78,6 @@
                             ToolTip="Clear notification"
                             Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
-
-                    <TextBlock
-                        Margin="0,6,0,0"
-                        VerticalAlignment="Bottom"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="9"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="{Binding LatestCreatedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
                 </Grid>
             </Border>
         </DataTemplate>

@@ -68,7 +68,7 @@ public sealed class NotificationGroupingServiceTests
         Assert.Equal(NotificationGroupCategory.BudgetThreshold, second.Category);
         Assert.Equal(2, second.Count);
         Assert.Equal(now.AddMinutes(-10), second.LatestCreatedOn);
-        Assert.Contains("2", second.Header);
+        Assert.Equal("Budget Threshold", second.Header);
         Assert.Equal("2 pending items", second.Message);
     }
 

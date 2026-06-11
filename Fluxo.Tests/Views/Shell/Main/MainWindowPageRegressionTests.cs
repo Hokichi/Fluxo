@@ -128,6 +128,35 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
+    public void MainWindow_HeaderBindsToActivePageTitleInsteadOfUsernameGreeting()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml"));
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+
+        Assert.Contains("Text=\"{Binding ActivePageTitle", xaml);
+        Assert.DoesNotContain("Welcome back,", xaml);
+        Assert.DoesNotContain("Text=\"{Binding Username}\"", xaml);
+        Assert.Contains("ActivePageTitle = GetMainPageTitle(_activeMainPage);", source);
+        Assert.Contains("=> page switch", source);
+        Assert.Contains("MainPage.Dashboard => \"Dashboard\"", source);
+        Assert.Contains("MainPage.Analytics => \"Analytics\"", source);
+        Assert.Contains("MainPage.Calendar => \"Calendar\"", source);
+        Assert.Contains("MainPage.Ledger => \"Ledger\"", source);
+    }
+
+    [Fact]
+    public void NotificationPanel_RendersCountBadgeBesideGroupHeader()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Sections", "NotificationPanel.xaml"));
+
+        Assert.Contains("x:Name=\"NotificationCountBadge\"", xaml);
+        Assert.Contains("Background=\"{StaticResource Brush.Mint}\"", xaml);
+        Assert.Contains("Foreground=\"{StaticResource Brush.Text.Dark}\"", xaml);
+        Assert.Contains("Text=\"{Binding Count}\"", xaml);
+        Assert.Contains("Text=\"{Binding Header}\"", xaml);
+    }
+
+    [Fact]
     public void DaySpinnerControl_DisabledStateDimsWithoutReplacingTransparentBackground()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Controls", "DaySpinnerControl.xaml"));

@@ -133,7 +133,7 @@ public sealed class NotificationGroupingService : INotificationGroupingService
             _ => "Notification"
         };
 
-        return count == 1 ? label : $"{label} ({count})";
+        return label;
     }
 
     private static string BuildMessage(NotificationGroupCategory category, IReadOnlyList<NotificationVM> notifications)

@@ -45,6 +45,12 @@ public partial class MainWindow : Window, IPopupHost
         typeof(MainWindow),
         new PropertyMetadata(false));
 
+    public static readonly DependencyProperty ActivePageTitleProperty = DependencyProperty.Register(
+        nameof(ActivePageTitle),
+        typeof(string),
+        typeof(MainWindow),
+        new PropertyMetadata("Dashboard"));
+
     private enum MainPage
     {
         Dashboard,
@@ -95,6 +101,12 @@ public partial class MainWindow : Window, IPopupHost
     {
         get => (bool)GetValue(IsWindowLayoutMaximizedProperty);
         private set => SetValue(IsWindowLayoutMaximizedProperty, value);
+    }
+
+    public string ActivePageTitle
+    {
+        get => (string)GetValue(ActivePageTitleProperty);
+        private set => SetValue(ActivePageTitleProperty, value);
     }
 
     public MainWindow(
@@ -1141,6 +1153,7 @@ public partial class MainWindow : Window, IPopupHost
                     await TransitionToMainPageAsync(nextPage);
                     await PrepareMainPageContentAsync(page);
                     _activeMainPage = page;
+                    ActivePageTitle = GetMainPageTitle(_activeMainPage);
                     UpdateMainNavigationCheckedState(_activeMainPage);
                     UpdateHeaderDateSelectorEnabledState(_activeMainPage);
                 },
@@ -1316,6 +1329,15 @@ public partial class MainWindow : Window, IPopupHost
             _ => "Dashboard"
         };
     }
+
+    private static string GetMainPageTitle(MainPage page) => page switch
+    {
+        MainPage.Dashboard => "Dashboard",
+        MainPage.Analytics => "Analytics",
+        MainPage.Calendar => "Calendar",
+        MainPage.Ledger => "Ledger",
+        _ => "Dashboard"
+    };
 
     private static string GetMainPageLoadingMessage(MainPage page)
     {
