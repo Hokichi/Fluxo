@@ -161,10 +161,11 @@
                                                         FontSize="10"
                                                         Text="{Binding Tag.SelectionCount, RelativeSource={RelativeSource AncestorType=ComboBox}}">
                                                         <TextBlock.Foreground>
-                                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                                <Binding ElementName="SelectionCountBadge" Path="Background" />
-                                                                <Binding Source="{StaticResource Brush.Text.Primary}" />
-                                                            </MultiBinding>
+                                                            <Binding
+                                                                ElementName="SelectionCountBadge"
+                                                                Path="Background"
+                                                                Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
+                                                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
                                                         </TextBlock.Foreground>
                                                     </TextBlock>
                                                 </Border>
@@ -561,10 +562,11 @@
                                 FontSize="11"
                                 Text="{Binding TagName}">
                                 <TextBlock.Foreground>
-                                    <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                        <Binding ElementName="LedgerTransactionTagBadge" Path="Background" />
-                                        <Binding Source="{StaticResource Brush.Text.Primary}" />
-                                    </MultiBinding>
+                                    <Binding
+                                        ElementName="LedgerTransactionTagBadge"
+                                        Path="Background"
+                                        Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
+                                        ConverterParameter="{StaticResource Brush.Text.Primary}" />
                                 </TextBlock.Foreground>
                             </TextBlock>
                         </Border>

@@ -15,11 +15,13 @@ public sealed class DynamicForegroundStyleTests
         Assert.Contains("x:Name=\"SelectedTagPill\"", tagsTemplate);
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", tagsTemplate);
         Assert.Contains("ElementName=\"SelectedTagPill\"", tagsTemplate);
+        Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", tagsTemplate);
         Assert.Contains("Brush.Text.Primary", tagsTemplate);
 
         Assert.Contains("x:Name=\"SelectedPopupTagPill\"", popupTagsTemplate);
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", popupTagsTemplate);
         Assert.Contains("ElementName=\"SelectedPopupTagPill\"", popupTagsTemplate);
+        Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", popupTagsTemplate);
         Assert.Contains("Brush.Text.Primary", popupTagsTemplate);
     }
 
@@ -63,6 +65,7 @@ public sealed class DynamicForegroundStyleTests
         Assert.Contains("x:Name=\"LedgerTransactionTagBadge\"", xaml);
         Assert.Contains("ElementName=\"LedgerTransactionTagBadge\"", xaml);
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", xaml);
+        Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", xaml);
     }
 
     [Fact]
@@ -74,6 +77,7 @@ public sealed class DynamicForegroundStyleTests
         Assert.Contains("x:Name=\"HeaderSearchTagBadge\"", template);
         Assert.Contains("ElementName=\"HeaderSearchTagBadge\"", template);
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", template);
+        Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", template);
     }
 
     [Fact]
@@ -84,6 +88,8 @@ public sealed class DynamicForegroundStyleTests
 
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);
         Assert.Contains("RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
+        Assert.Contains("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", style);
+        Assert.Contains("Path=\"Foreground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
     }
 
     [Fact]

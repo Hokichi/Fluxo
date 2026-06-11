@@ -35,8 +35,11 @@ public sealed class BalloonButtonStyleTests
         var style = ReadDefaultBalloonButtonStyle();
 
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);
-        Assert.Contains("Path=\"ActiveBackground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
+        Assert.Matches(
+            new Regex("Path=\"ActiveBackground\"[\\s\\S]*RelativeSource=\"\\{RelativeSource TemplatedParent\\}\"", RegexOptions.Singleline),
+            style);
         Assert.Contains("Path=\"Foreground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
+        Assert.Contains("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", style);
         Assert.Contains("<Path.Fill>", style);
         Assert.Contains("<TextBlock.Foreground>", style);
     }

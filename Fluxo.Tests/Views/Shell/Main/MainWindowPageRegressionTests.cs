@@ -262,6 +262,7 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Background=\"{StaticResource Brush.Mint}\"", filterComboStyleSection);
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", filterComboStyleSection);
         Assert.Contains("ElementName=\"SelectionCountBadge\"", filterComboStyleSection);
+        Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", filterComboStyleSection);
         Assert.Contains("Brush.Text.Primary", filterComboStyleSection);
         Assert.Contains("Text=\"{Binding Tag.SelectionCount", filterComboStyleSection);
         Assert.Contains("ToolTip=\"{Binding Tag.SelectionToolTip", filterComboStyleSection);

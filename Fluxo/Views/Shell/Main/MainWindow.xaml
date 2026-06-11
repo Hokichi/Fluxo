@@ -243,10 +243,11 @@
                                         FontSize="10"
                                         Text="{Binding ExpenseTagName}">
                                         <TextBlock.Foreground>
-                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding ElementName="HeaderSearchTagBadge" Path="Background" />
-                                                <Binding Source="{StaticResource Brush.Text.Primary}" />
-                                            </MultiBinding>
+                                            <Binding
+                                                ElementName="HeaderSearchTagBadge"
+                                                Path="Background"
+                                                Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
+                                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
                                         </TextBlock.Foreground>
                                     </TextBlock>
                                 </Border>

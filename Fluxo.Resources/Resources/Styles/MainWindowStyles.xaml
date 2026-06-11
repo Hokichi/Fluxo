@@ -377,10 +377,11 @@
                         FontFamily="{StaticResource Bold}"
                         Text="{Binding Name}">
                         <TextBlock.Foreground>
-                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                <Binding ElementName="SelectedTagPill" Path="Background" />
-                                <Binding Source="{StaticResource Brush.Text.Primary}" />
-                            </MultiBinding>
+                            <Binding
+                                ElementName="SelectedTagPill"
+                                Path="Background"
+                                Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
+                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
                         </TextBlock.Foreground>
                     </TextBlock>
                 </StackPanel>
@@ -449,10 +450,11 @@
                         FontFamily="{StaticResource Bold}"
                         Text="{Binding Name}">
                         <TextBlock.Foreground>
-                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                <Binding ElementName="SelectedPopupTagPill" Path="Background" />
-                                <Binding Source="{StaticResource Brush.Text.Primary}" />
-                            </MultiBinding>
+                            <Binding
+                                ElementName="SelectedPopupTagPill"
+                                Path="Background"
+                                Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
+                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
                         </TextBlock.Foreground>
                     </TextBlock>
                 </StackPanel>
