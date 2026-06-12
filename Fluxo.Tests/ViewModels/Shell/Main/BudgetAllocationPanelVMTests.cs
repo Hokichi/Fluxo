@@ -93,6 +93,36 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
+    public void SelectedOtherTag_PromotesTagToVisibleStartAndMovesFifthTagToMore()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var vm = CreateVm(
+                messenger,
+                CreateExpenseLogsForTagPromotion(),
+                CreateTagsForTagPromotion(),
+                CreateSpendingSources());
+            vm.LoadAsync().GetAwaiter().GetResult();
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 1),
+                new DateTime(2026, 4, 30)));
+
+            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, vm.Tags.Select(tag => tag.Id).ToArray());
+            Assert.Equal(new[] { 6 }, vm.OtherTags.Select(tag => tag.Id).ToArray());
+
+            vm.SelectedOtherTag = vm.OtherTags.Single(tag => tag.Id == 6);
+
+            Assert.Equal(6, vm.SelectedTag?.Id);
+            Assert.Equal(new[] { 6, 1, 2, 3, 4 }, vm.Tags.Select(tag => tag.Id).ToArray());
+            Assert.Equal(new[] { 5 }, vm.OtherTags.Select(tag => tag.Id).ToArray());
+            Assert.Equal(6, vm.SelectedVisibleTag?.Id);
+            Assert.Null(vm.SelectedOtherTag);
+            Assert.True(vm.HasOtherTags);
+        });
+    }
+
+    [Fact]
     public void DateRangeMessage_ResetsSelectedTagToAllWhenTagFallsOutOfRange()
     {
         RunInSta(() =>
@@ -707,6 +737,36 @@ public class BudgetAllocationPanelVMTests
         AddLogs(logs, ref nextId, tags[4], 1, source);
         AddLogs(logs, ref nextId, tags[5], 1, source);
         AddLogs(logs, ref nextId, tags[6], 8, source);
+
+        return logs;
+    }
+
+    private static IReadOnlyList<ExpenseTagVM> CreateTagsForTagPromotion()
+    {
+        return
+        [
+            new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
+            new ExpenseTagVM { Id = 2, Name = "Transport", HexCode = "#06B6D4" },
+            new ExpenseTagVM { Id = 3, Name = "Dining", HexCode = "#F97316" },
+            new ExpenseTagVM { Id = 4, Name = "Bills", HexCode = "#0EA5E9" },
+            new ExpenseTagVM { Id = 5, Name = "Health", HexCode = "#10B981" },
+            new ExpenseTagVM { Id = 6, Name = "Pets", HexCode = "#A855F7" }
+        ];
+    }
+
+    private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogsForTagPromotion()
+    {
+        var tags = CreateTagsForTagPromotion().ToDictionary(tag => tag.Id);
+        var source = CreateSpendingSources().Single();
+        var logs = new List<ExpenseLogVM>();
+        var nextId = 1;
+
+        AddLogs(logs, ref nextId, tags[1], 6, source);
+        AddLogs(logs, ref nextId, tags[2], 5, source);
+        AddLogs(logs, ref nextId, tags[3], 4, source);
+        AddLogs(logs, ref nextId, tags[4], 3, source);
+        AddLogs(logs, ref nextId, tags[5], 2, source);
+        AddLogs(logs, ref nextId, tags[6], 1, source);
 
         return logs;
     }

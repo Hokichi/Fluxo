@@ -27,6 +27,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<LogMemoryActionAppliedMessage>
 {
     private const int BucketPageSize = 25;
+    private const int VisibleTagSlots = 5;
 
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
@@ -45,6 +46,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly IDialogService? _dialogService;
     private readonly IUiSettleAwaiter? _uiSettleAwaiter;
     private readonly SemaphoreSlim _filterFeedbackGate = new(1, 1);
+    private readonly List<ExpenseTagVM> _orderedTags = [];
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLogVM> _allIncomeLogs = [];
@@ -273,7 +275,13 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
-        SynchronizeTagSelections(value);
+        if (!_isSynchronizingTagSelections &&
+            value is not null &&
+            OtherTags.Any(tag => tag.Id == value.Id))
+            PromoteTagToVisibleStart(value);
+        else
+            SynchronizeTagSelections(value);
+
         OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
         ResetPaginationWindows();
 
@@ -670,6 +678,21 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             _isSynchronizingTagSelections = false;
         }
+    }
+
+    private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
+    {
+        var promotedTag = _orderedTags.FirstOrDefault(tag => tag.Id == selectedTag.Id) ?? selectedTag;
+        var reorderedTags = _orderedTags
+            .Where(tag => tag.Id != selectedTag.Id)
+            .Prepend(promotedTag)
+            .ToList();
+
+        _orderedTags.Clear();
+        _orderedTags.AddRange(reorderedTags);
+
+        RefreshTagCollections();
+        SynchronizeTagSelections(promotedTag);
     }
 
     private void QueueFilterRefreshWithFeedback(string message)
@@ -1094,14 +1117,22 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         var orderedTags = BuildOrderedRangeTags(visibleExpenseLogs).ToList();
 
-        Tags = new ObservableCollection<ExpenseTagVM>(orderedTags.Take(5));
-        OtherTags = new ObservableCollection<ExpenseTagVM>(orderedTags.Skip(5));
+        _orderedTags.Clear();
+        _orderedTags.AddRange(orderedTags);
+
+        RefreshTagCollections();
 
         if (SelectedTag is not null &&
             orderedTags.All(tag => tag.Id != SelectedTag.Id))
             SetSelectedTagInternal(null);
         else
             SynchronizeTagSelections(SelectedTag);
+    }
+
+    private void RefreshTagCollections()
+    {
+        Tags = new ObservableCollection<ExpenseTagVM>(_orderedTags.Take(VisibleTagSlots));
+        OtherTags = new ObservableCollection<ExpenseTagVM>(_orderedTags.Skip(VisibleTagSlots));
 
         OnPropertyChanged(nameof(HasOtherTags));
         OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
