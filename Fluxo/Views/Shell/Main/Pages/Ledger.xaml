@@ -837,6 +837,15 @@
             VerticalAlignment="Top"
             DataContext="{Binding ViewModeToggle}" />
 
+        <customControls:BalloonButton
+            Grid.Row="1"
+            HorizontalAlignment="Left"
+            ButtonIcon="{StaticResource Export}"
+            ButtonText="Export Data"
+            CornerRadius="8"
+            IconSize="16"
+            ShouldExpand="True" />
+
         <StackPanel
             Grid.Row="1"
             Margin="0,0,0,2"
