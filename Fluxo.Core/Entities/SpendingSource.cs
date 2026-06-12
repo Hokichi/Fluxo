@@ -18,4 +18,6 @@ public sealed class SpendingSource
     public bool ShowOnUI { get; set; }
     public bool IsEnabled { get; set; }
     public bool IsForDeletion { get; set; }
+
+    // TODO: Rename ShowOnUI to PinnedOnUI, then change the UI accordingly
 }

@@ -244,10 +244,10 @@
                                         Text="{Binding ExpenseTagName}">
                                         <TextBlock.Foreground>
                                             <Binding
-                                                ElementName="HeaderSearchTagBadge"
-                                                Path="Background"
                                                 Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
-                                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
+                                                ConverterParameter="{StaticResource Brush.Text.Primary}"
+                                                ElementName="HeaderSearchTagBadge"
+                                                Path="Background" />
                                         </TextBlock.Foreground>
                                     </TextBlock>
                                 </Border>

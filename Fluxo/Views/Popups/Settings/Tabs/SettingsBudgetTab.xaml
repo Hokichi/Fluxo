@@ -4,9 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
+    <!--  TODO: Split into 2 tabs: Allocation and Configuration. Also change name to "Budget Management"  -->
+    <!--  TODO: Might consider putting an offset to allocation recalculation time  -->
     <Border Style="{StaticResource PanelStyle}">
         <customControls:FadingScrollViewer>
-
             <Grid>
                 <StackPanel>
                     <StackPanel.Style>
@@ -324,4 +325,3 @@
         </customControls:FadingScrollViewer>
     </Border>
 </UserControl>
-

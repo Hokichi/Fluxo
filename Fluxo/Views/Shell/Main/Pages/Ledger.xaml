@@ -162,10 +162,10 @@
                                                         Text="{Binding Tag.SelectionCount, RelativeSource={RelativeSource AncestorType=ComboBox}}">
                                                         <TextBlock.Foreground>
                                                             <Binding
-                                                                ElementName="SelectionCountBadge"
-                                                                Path="Background"
                                                                 Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
-                                                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
+                                                                ConverterParameter="{StaticResource Brush.Text.Primary}"
+                                                                ElementName="SelectionCountBadge"
+                                                                Path="Background" />
                                                         </TextBlock.Foreground>
                                                     </TextBlock>
                                                 </Border>
@@ -563,10 +563,10 @@
                                 Text="{Binding TagName}">
                                 <TextBlock.Foreground>
                                     <Binding
-                                        ElementName="LedgerTransactionTagBadge"
-                                        Path="Background"
                                         Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
-                                        ConverterParameter="{StaticResource Brush.Text.Primary}" />
+                                        ConverterParameter="{StaticResource Brush.Text.Primary}"
+                                        ElementName="LedgerTransactionTagBadge"
+                                        Path="Background" />
                                 </TextBlock.Foreground>
                             </TextBlock>
                         </Border>
@@ -819,6 +819,8 @@
 
         <GroupStyle x:Key="LedgerGroupStyle" ContainerStyle="{StaticResource LedgerGroupItemStyle}" />
     </UserControl.Resources>
+
+    <!--  TODO: Implement an export button that exports the current view  -->
 
     <Grid Margin="24,0,24,0">
         <Grid.RowDefinitions>
