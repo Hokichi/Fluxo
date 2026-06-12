@@ -6,7 +6,7 @@ namespace Fluxo.Tests.Views.Styles;
 public sealed class DynamicForegroundStyleTests
 {
     [Fact]
-    public void SharedTagTemplates_BindSelectedForegroundToSelectedBackgroundBrightness()
+    public void SharedTagTemplates_BindSelectedForegroundToTagHexCode()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo.Resources", "Resources", "Styles", "MainWindowStyles.xaml"));
         var tagsTemplate = ExtractSection(xaml, "x:Key=\"Tags\"", "x:Key=\"PopupTagListViewItemStyle\"");
@@ -14,33 +14,35 @@ public sealed class DynamicForegroundStyleTests
 
         Assert.Contains("x:Name=\"SelectedTagPill\"", tagsTemplate);
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", tagsTemplate);
-        Assert.Contains("ElementName=\"SelectedTagPill\"", tagsTemplate);
+        Assert.Contains("Fill=\"{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}\"", tagsTemplate);
+        Assert.Contains("Path=\"HexCode\"", tagsTemplate);
+        Assert.DoesNotContain("ElementName=\"SelectedTagPill\"", tagsTemplate);
         Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", tagsTemplate);
         Assert.Contains("Brush.Text.Primary", tagsTemplate);
 
         Assert.Contains("x:Name=\"SelectedPopupTagPill\"", popupTagsTemplate);
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", popupTagsTemplate);
-        Assert.Contains("ElementName=\"SelectedPopupTagPill\"", popupTagsTemplate);
+        Assert.Contains("Fill=\"{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}\"", popupTagsTemplate);
+        Assert.Contains("Path=\"HexCode\"", popupTagsTemplate);
+        Assert.DoesNotContain("ElementName=\"SelectedPopupTagPill\"", popupTagsTemplate);
         Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", popupTagsTemplate);
         Assert.Contains("Brush.Text.Primary", popupTagsTemplate);
     }
 
     [Fact]
-    public void PopupTagStyles_BindSelectedForegroundToSelectedBackgroundBrightness()
+    public void PopupTagRadioStyle_UsesPrimaryTextWhenUnselectedAndHexCodeForegroundWhenSelected()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
-        var toggleStyle = ExtractSection(xaml, "x:Key=\"PopupTagToggleStyle\"", "x:Key=\"PopupTagItemToggleStyle\"");
-        var itemToggleStyle = ExtractSection(xaml, "x:Key=\"PopupTagItemToggleStyle\"", "x:Key=\"PopupTagItemRadioStyle\"");
         var radioStyle = ExtractSection(xaml, "x:Key=\"PopupTagItemRadioStyle\"", "x:Key=\"HeaderButtonStyle\"");
 
-        Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", toggleStyle);
-        Assert.Contains("RelativeSource=\"{RelativeSource TemplatedParent}\"", toggleStyle);
-
-        Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", itemToggleStyle);
-        Assert.Contains("x:Name=\"ColorDot\"", itemToggleStyle);
-
-        Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", radioStyle);
         Assert.Contains("x:Name=\"ColorDot\"", radioStyle);
+        Assert.Contains("x:Name=\"TagText\"", radioStyle);
+        Assert.Contains("Fill=\"{Binding HexCode}\"", radioStyle);
+        Assert.Contains("Foreground=\"{StaticResource Brush.Text.Primary}\"", radioStyle);
+        Assert.Contains("TargetName=\"ColorDot\" Property=\"Fill\" Value=\"{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}\"", radioStyle);
+        Assert.Contains("TargetName=\"TagText\" Property=\"Foreground\" Value=\"{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}\"", radioStyle);
+        Assert.DoesNotContain("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", radioStyle);
+        Assert.DoesNotContain("TargetName=\"ColorDot\" Property=\"Fill\" Value=\"{StaticResource Brush.Background.Surface}\"", radioStyle);
     }
 
     [Fact]

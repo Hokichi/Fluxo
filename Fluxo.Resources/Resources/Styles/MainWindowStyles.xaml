@@ -369,7 +369,7 @@
                     <Ellipse
                         Width="8"
                         Height="8"
-                        Fill="{Binding Background, ElementName=SelectedTagPill, Converter={StaticResource ForegroundForBackgroundBrushConverter}, ConverterParameter={StaticResource Brush.Text.Primary}}" />
+                        Fill="{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}" />
 
                     <TextBlock
                         Margin="8,0,0,0"
@@ -378,8 +378,7 @@
                         Text="{Binding Name}">
                         <TextBlock.Foreground>
                             <Binding
-                                ElementName="SelectedTagPill"
-                                Path="Background"
+                                Path="HexCode"
                                 Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
                                 ConverterParameter="{StaticResource Brush.Text.Primary}" />
                         </TextBlock.Foreground>
@@ -442,7 +441,7 @@
                     <Ellipse
                         Width="6"
                         Height="6"
-                        Fill="{Binding Background, ElementName=SelectedPopupTagPill, Converter={StaticResource ForegroundForBackgroundBrushConverter}, ConverterParameter={StaticResource Brush.Text.Primary}}" />
+                        Fill="{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}" />
 
                     <TextBlock
                         Margin="8,0,0,0"
@@ -451,8 +450,7 @@
                         Text="{Binding Name}">
                         <TextBlock.Foreground>
                             <Binding
-                                ElementName="SelectedPopupTagPill"
-                                Path="Background"
+                                Path="HexCode"
                                 Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
                                 ConverterParameter="{StaticResource Brush.Text.Primary}" />
                         </TextBlock.Foreground>

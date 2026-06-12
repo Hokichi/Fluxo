@@ -1137,24 +1137,20 @@
                                 VerticalAlignment="Center"
                                 Fill="{Binding HexCode}" />
                             <TextBlock
+                                x:Name="TagText"
                                 Margin="6,0,0,0"
                                 VerticalAlignment="Center"
                                 FontFamily="{TemplateBinding FontFamily}"
                                 FontSize="{TemplateBinding FontSize}"
-                                Text="{TemplateBinding Content}">
-                                <TextBlock.Foreground>
-                                    <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                        <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
-                                        <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
-                                    </MultiBinding>
-                                </TextBlock.Foreground>
-                            </TextBlock>
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{TemplateBinding Content}" />
                         </StackPanel>
                     </Border>
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="ColorDot" Property="Fill" Value="{StaticResource Brush.Background.Surface}" />
+                            <Setter TargetName="ColorDot" Property="Fill" Value="{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}" />
+                            <Setter TargetName="TagText" Property="Foreground" Value="{Binding HexCode, Converter={StaticResource ForegroundForBackgroundBrushConverter}}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
