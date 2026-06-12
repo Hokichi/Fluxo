@@ -32,6 +32,8 @@ public partial class SettingsBudgetTabVM : ObservableObject
     [ObservableProperty] private int _needsAllocationPercentage;
     [ObservableProperty] private OverspendPolicy _overspendPolicy = OverspendPolicy.Ignore;
     [ObservableProperty] private RolloverPolicy _rolloverPolicy = RolloverPolicy.None;
+    [ObservableProperty] private SettingsBudgetManagementPage _selectedBudgetManagementPage =
+        SettingsBudgetManagementPage.Allocation;
     [ObservableProperty] private int _wantsAllocationPercentage;
 
     public SettingsBudgetTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
@@ -50,6 +52,11 @@ public partial class SettingsBudgetTabVM : ObservableObject
     public decimal TotalBudgetAmount => _totalBudgetAmountProvider();
     public bool HasBudgetAllocationError => !string.IsNullOrWhiteSpace(BudgetAllocationErrorMessage);
     public bool HasSpendingSources { get; private set; }
+    public bool IsAllocationPageSelected =>
+        SelectedBudgetManagementPage == SettingsBudgetManagementPage.Allocation;
+
+    public bool IsConfigurationPageSelected =>
+        SelectedBudgetManagementPage == SettingsBudgetManagementPage.Configuration;
 
     public bool HasPendingChanges =>
         NeedsAllocationPercentage != _savedBudgetAllocation.Needs ||
@@ -229,6 +236,12 @@ public partial class SettingsBudgetTabVM : ObservableObject
     partial void OnOverspendPolicyChanged(OverspendPolicy value)
     {
         PublishPendingState();
+    }
+
+    partial void OnSelectedBudgetManagementPageChanged(SettingsBudgetManagementPage value)
+    {
+        OnPropertyChanged(nameof(IsAllocationPageSelected));
+        OnPropertyChanged(nameof(IsConfigurationPageSelected));
     }
 
     private string BuildAllocationAmountText(int percentage)

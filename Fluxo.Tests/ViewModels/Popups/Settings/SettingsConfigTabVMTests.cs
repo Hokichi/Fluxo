@@ -47,6 +47,27 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
+    public void BudgetTab_SelectedPage_DefaultsToAllocation()
+    {
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()));
+
+        Assert.Equal(SettingsBudgetManagementPage.Allocation, vm.SelectedBudgetManagementPage);
+        Assert.True(vm.IsAllocationPageSelected);
+        Assert.False(vm.IsConfigurationPageSelected);
+    }
+
+    [Fact]
+    public void BudgetTab_SelectedPage_WhenConfigurationSelected_UpdatesVisibilityState()
+    {
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()));
+
+        vm.SelectedBudgetManagementPage = SettingsBudgetManagementPage.Configuration;
+
+        Assert.False(vm.IsAllocationPageSelected);
+        Assert.True(vm.IsConfigurationPageSelected);
+    }
+
+    [Fact]
     public void BudgetTab_RevertChanges_RestoresLastSavedAllocation()
     {
         var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()));
