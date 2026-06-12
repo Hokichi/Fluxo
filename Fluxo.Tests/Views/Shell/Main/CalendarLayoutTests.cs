@@ -210,6 +210,19 @@ public sealed class CalendarLayoutTests
     }
 
     [Fact]
+    public void CalendarLayout_AnimatesMouseWheelCalendarScrollTowardTargetOffset()
+    {
+        var codeBehind = LoadCalendarCodeBehind();
+
+        Assert.Contains("CompositionTarget.Rendering += OnCalendarScrollRendering;", codeBehind);
+        Assert.Contains("CompositionTarget.Rendering -= OnCalendarScrollRendering;", codeBehind);
+        Assert.Contains("_targetCalendarScrollOffset -= e.Delta * MouseWheelPixelsPerDelta;", codeBehind);
+        Assert.Contains("StartCalendarScrollAnimation();", codeBehind);
+        Assert.Contains("1d - Math.Exp(-CalendarScrollSmoothing * elapsed.TotalSeconds)", codeBehind);
+        Assert.Contains("_calendarScrollOffset += distanceToTarget * progress;", codeBehind);
+    }
+
+    [Fact]
     public void CalendarLayout_KeepsRestoredSummaryGridFullWidth()
     {
         var xaml = LoadCalendarXaml();

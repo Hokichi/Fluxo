@@ -55,24 +55,25 @@ public sealed class CalendarVMTests
     }
 
     [Fact]
-    public void ShiftDown_WhenNextMonthIsOnlyPartiallyVisible_KeepsPreviousMonthBright()
+    public void ShiftDown_WhenNextMonthHasMoreVisibleDates_SwitchesBrightMonth()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
 
         vm.ShiftCalendarFrameRowsCommand.Execute(1);
         vm.ShiftCalendarFrameRowsCommand.Execute(1);
 
-        Assert.Equal("June 2026", vm.VisibleMonthLabel);
+        Assert.Equal("July 2026", vm.VisibleMonthLabel);
         var julyFirst = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 7, 1));
-        Assert.True(julyFirst.IsOutsideVisibleMonth);
+        Assert.False(julyFirst.IsOutsideVisibleMonth);
+        var juneThirtieth = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 6, 30));
+        Assert.True(juneThirtieth.IsOutsideVisibleMonth);
     }
 
     [Fact]
-    public void ShiftDown_WhenNextMonthIsFullyVisible_SwitchesBrightMonth()
+    public void ShiftDown_WhenNextMonthStaysDominant_KeepsBrightMonth()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
 
-        vm.ShiftCalendarFrameRowsCommand.Execute(1);
         vm.ShiftCalendarFrameRowsCommand.Execute(1);
         vm.ShiftCalendarFrameRowsCommand.Execute(1);
 
@@ -81,6 +82,36 @@ public sealed class CalendarVMTests
         Assert.False(julyFirst.IsOutsideVisibleMonth);
         var juneTwentyEighth = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 6, 28));
         Assert.True(juneTwentyEighth.IsOutsideVisibleMonth);
+    }
+
+    [Fact]
+    public void ShiftUp_WhenPreviousMonthHasMoreVisibleDates_SwitchesBrightMonth()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        vm.ShiftCalendarFrameRowsCommand.Execute(-1);
+        vm.ShiftCalendarFrameRowsCommand.Execute(-1);
+        vm.ShiftCalendarFrameRowsCommand.Execute(-1);
+
+        Assert.Equal("May 2026", vm.VisibleMonthLabel);
+        var mayThirtyFirst = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 5, 31));
+        Assert.False(mayThirtyFirst.IsOutsideVisibleMonth);
+        var juneFirst = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 6, 1));
+        Assert.True(juneFirst.IsOutsideVisibleMonth);
+    }
+
+    [Fact]
+    public void ShiftDown_WhenVisibleDatesAreTied_KeepsCurrentBrightMonth()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 2, 12));
+
+        vm.ShiftCalendarFrameRowsCommand.Execute(1);
+
+        Assert.Equal("February 2026", vm.VisibleMonthLabel);
+        var februaryTwentyEighth = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 2, 28));
+        Assert.False(februaryTwentyEighth.IsOutsideVisibleMonth);
+        var marchFirst = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 3, 1));
+        Assert.True(marchFirst.IsOutsideVisibleMonth);
     }
 
     [Fact]

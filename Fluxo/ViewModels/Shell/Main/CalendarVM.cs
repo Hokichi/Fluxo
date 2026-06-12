@@ -197,22 +197,7 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
 
     private void UpdateVisibleMonthFromFrame()
     {
-        if (IsMonthFullyVisible(_visibleMonth))
-            return;
-
-        var candidate = ResolveDominantVisibleMonth(_firstFrameWeekStart);
-        if (IsMonthFullyVisible(candidate))
-            _visibleMonth = candidate;
-    }
-
-    private bool IsMonthFullyVisible(DateOnly month)
-    {
-        var firstFrameDate = _firstFrameWeekStart;
-        var lastFrameDate = _firstFrameWeekStart.AddDays(FrameWeekCount * 7 - 1);
-        var firstMonthDate = new DateOnly(month.Year, month.Month, 1);
-        var lastMonthDate = firstMonthDate.AddMonths(1).AddDays(-1);
-
-        return firstMonthDate >= firstFrameDate && lastMonthDate <= lastFrameDate;
+        _visibleMonth = ResolveDominantVisibleMonth(_firstFrameWeekStart, _visibleMonth);
     }
 
     private static DateOnly StartOfWeek(DateOnly date)
@@ -221,10 +206,28 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         return date.AddDays(-offset);
     }
 
-    private static DateOnly ResolveDominantVisibleMonth(DateOnly firstVisibleWeekStart)
+    private static DateOnly ResolveDominantVisibleMonth(DateOnly firstVisibleWeekStart, DateOnly currentVisibleMonth)
     {
-        var midpoint = firstVisibleWeekStart.AddDays(20);
-        return new DateOnly(midpoint.Year, midpoint.Month, 1);
+        var currentMonth = new DateOnly(currentVisibleMonth.Year, currentVisibleMonth.Month, 1);
+        var visibleMonthCounts = Enumerable.Range(0, FrameWeekCount * 7)
+            .Select(offset => firstVisibleWeekStart.AddDays(offset))
+            .GroupBy(date => new DateOnly(date.Year, date.Month, 1))
+            .Select(group => new
+            {
+                Month = group.Key,
+                Count = group.Count()
+            })
+            .ToArray();
+        var highestVisibleDateCount = visibleMonthCounts.Max(group => group.Count);
+        var dominantMonths = visibleMonthCounts
+            .Where(group => group.Count == highestVisibleDateCount)
+            .Select(group => group.Month)
+            .Order()
+            .ToArray();
+
+        return dominantMonths.Contains(currentMonth)
+            ? currentMonth
+            : dominantMonths[0];
     }
 
     private static string FormatMoney(decimal value)
