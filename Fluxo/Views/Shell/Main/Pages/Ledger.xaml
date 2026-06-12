@@ -820,8 +820,6 @@
         <GroupStyle x:Key="LedgerGroupStyle" ContainerStyle="{StaticResource LedgerGroupItemStyle}" />
     </UserControl.Resources>
 
-    <!--  TODO: Implement an export button that exports the current view  -->
-
     <Grid Margin="24,0,24,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -843,7 +841,7 @@
             ButtonIcon="{StaticResource Export}"
             ButtonText="Export Data"
             Click="OnExportDataClick"
-            CornerRadius="8"    
+            CornerRadius="8"
             DefaultBackground="{StaticResource Brush.Mint}"
             HoveredBackground="{StaticResource Brush.Mint.Muted}"
             IconSize="16"
