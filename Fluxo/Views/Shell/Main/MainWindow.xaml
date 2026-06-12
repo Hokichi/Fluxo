@@ -569,7 +569,7 @@
                                             <TextBlock
                                                 Grid.Column="4"
                                                 Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+N" />
+                                                Text="" />
                                         </Grid>
                                     </Button>
 
@@ -718,7 +718,7 @@
                                             <TextBlock
                                                 Grid.Column="4"
                                                 Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+S" />
+                                                Text="Ctrl+," />
                                         </Grid>
                                     </Button>
                                 </StackPanel>
@@ -735,9 +735,10 @@
                             x:Name="HeaderQuickAddButton"
                             Padding="8,0"
                             ButtonIcon="{StaticResource PlusSolid}"
-                            ButtonText="New Transaction"
+                            ButtonText="New Transaction (Ctrl+N)"
                             Click="OnHeaderQuickAddButtonClick"
                             DefaultBackground="{StaticResource Brush.Mint}"
+                            ExpandedWidth="180"
                             Foreground="{StaticResource Brush.Text.Primary.Dark}"
                             HoveredBackground="{StaticResource Brush.Mint.Muted}"
                             ShouldExpand="True"

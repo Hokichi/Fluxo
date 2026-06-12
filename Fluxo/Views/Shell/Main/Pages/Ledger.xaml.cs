@@ -199,6 +199,16 @@ public partial class Ledger : UserControl
 
     private async void OnClearFiltersClick(object sender, RoutedEventArgs e)
     {
+        await ClearFiltersAsync();
+    }
+
+    public async void ClearFiltersFromShortcutAsync()
+    {
+        await ClearFiltersAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
         if (DataContext is not LedgerVM viewModel)
             return;
 
@@ -206,6 +216,16 @@ public partial class Ledger : UserControl
     }
 
     private async void OnExportDataClick(object sender, RoutedEventArgs e)
+    {
+        await ExportDataAsync();
+    }
+
+    public async void ExportDataFromShortcutAsync()
+    {
+        await ExportDataAsync();
+    }
+
+    private async Task ExportDataAsync()
     {
         if (DataContext is not LedgerVM viewModel || !viewModel.HasVisibleTransactions)
             return;
@@ -257,12 +277,31 @@ public partial class Ledger : UserControl
         if (DataContext is not LedgerVM viewModel)
             return;
 
+        var direction = viewModel.AmountSortDirection == LedgerAmountSortDirection.Descending
+            ? LedgerAmountSortDirection.Ascending
+            : LedgerAmountSortDirection.Descending;
+        await ApplyAmountSortDirectionAsync(direction);
+    }
+
+    public async void ApplyAmountSortDirectionFromShortcutAsync(LedgerAmountSortDirection direction)
+    {
+        await ApplyAmountSortDirectionAsync(direction);
+    }
+
+    private async Task ApplyAmountSortDirectionAsync(LedgerAmountSortDirection direction)
+    {
+        if (DataContext is not LedgerVM viewModel)
+            return;
+
         await _dialogService.ShowToastWhileAsync(
             "Ordering...",
             async () =>
             {
                 await Dispatcher.InvokeAsync(
-                    () => viewModel.ToggleAmountSortDirectionCommand.Execute(null),
+                    () =>
+                    {
+                        viewModel.AmountSortDirection = direction;
+                    },
                     DispatcherPriority.Render);
                 await Dispatcher.InvokeAsync(
                     () => LedgerTransactionsList.Items.Refresh(),

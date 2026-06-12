@@ -129,6 +129,28 @@ public partial class DaySpinnerVM : ObservableRecipient,
         return Task.CompletedTask;
     }
 
+    public async Task SelectAdjacentVisibleDayFromUserAsync(int offset, Window? owner = null)
+    {
+        if (_selectedMainContentViewMode == MainContentViewMode.AllTime || offset == 0)
+            return;
+
+        var selectedIndex = DaysOfWeek.IndexOf(SelectedDay);
+        if (selectedIndex < 0)
+        {
+            var selectedDate = SelectedDay.Date.Date;
+            selectedIndex = DaysOfWeek
+                .Select((day, index) => new { day, index })
+                .FirstOrDefault(item => item.day.Date.Date == selectedDate)
+                ?.index ?? -1;
+        }
+
+        var targetIndex = selectedIndex + offset;
+        if (targetIndex < 0 || targetIndex >= DaysOfWeek.Count)
+            return;
+
+        await SelectDayFromUserAsync(DaysOfWeek[targetIndex], owner);
+    }
+
     public async Task SelectDayFromUserAsync(DayOfWeekVM selectedDay, Window? owner = null)
     {
         ArgumentNullException.ThrowIfNull(selectedDay);

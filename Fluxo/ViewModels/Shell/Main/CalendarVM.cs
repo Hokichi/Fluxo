@@ -101,6 +101,7 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     public async Task SelectDateAsync(DateOnly date, CancellationToken cancellationToken = default)
     {
         SelectedDate = date;
+        EnsureDateVisible(date);
         RebuildVisibleWeeks();
 
         _loadCts?.Cancel();
@@ -129,6 +130,11 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
 
             loadCts.Dispose();
         }
+    }
+
+    public Task SelectRelativeDateAsync(int dayOffset, CancellationToken cancellationToken = default)
+    {
+        return SelectDateAsync(SelectedDate.AddDays(dayOffset), cancellationToken);
     }
 
     private bool IsCurrentLoad(int requestVersion, CancellationTokenSource loadCts)
@@ -193,6 +199,15 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
             if (_firstFrameWeekStart != targetFirstFrameWeekStart)
                 await _navigationDelayAsync(MonthNavigationStepDelay);
         }
+    }
+
+    private void EnsureDateVisible(DateOnly date)
+    {
+        while (date < _firstFrameWeekStart)
+            _firstFrameWeekStart = _firstFrameWeekStart.AddDays(-7);
+
+        while (date >= _firstFrameWeekStart.AddDays(FrameWeekCount * 7))
+            _firstFrameWeekStart = _firstFrameWeekStart.AddDays(7);
     }
 
     private void UpdateVisibleMonthFromFrame()

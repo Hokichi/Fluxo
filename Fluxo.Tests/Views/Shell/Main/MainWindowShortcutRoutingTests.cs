@@ -6,13 +6,22 @@ namespace Fluxo.Tests.Views.Shell.Main;
 public sealed class MainWindowShortcutRoutingTests
 {
     [Fact]
-    public void CtrlNShortcut_RoutesToQuickAddPopup()
+    public void CtrlNShortcut_RoutesToAddNewTransactionPopup()
     {
-        var filePath = Path.Combine(GetRepositoryRootPath(), "Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs");
-        var source = File.ReadAllText(filePath);
+        var source = ReadMainWindowSource();
 
-        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))", source);
-        Assert.Contains("OpenQuickAddPopup();", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenAddNewTransactionPopup();", source);
+    }
+
+    [Fact]
+    public void CtrlShiftNShortcut_RoutesToRecurringAddNewTransactionPopup()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenRecurringNewTransactionShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenRecurringAddNewTransactionPopup();", source);
+        Assert.Contains("popupViewModel.InitializeRecurringMode(isLocked: false);", source);
     }
 
     [Fact]
@@ -21,9 +30,42 @@ public sealed class MainWindowShortcutRoutingTests
         var source = ReadMainWindowSource();
 
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
-        Assert.Contains("_ = OpenAnalyticsPopupAsync();", source);
-        Assert.Contains("private async Task OpenAnalyticsPopupAsync()", source);
         Assert.Contains("await NavigateToMainPageAsync(MainPage.Analytics);", source);
+    }
+
+    [Fact]
+    public void MainPageShortcuts_NavigateToRequestedPage()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenDashboardShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("await NavigateToMainPageAsync(MainPage.Dashboard);", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenCalendarShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("await NavigateToMainPageAsync(MainPage.Calendar);", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenLedgerShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("await NavigateToMainPageAsync(MainPage.Ledger);", source);
+    }
+
+    [Fact]
+    public void SettingsShortcut_UsesCtrlCommaOnly()
+    {
+        var source = ReadMainWindowSource();
+        var xaml = ReadMainWindowXaml();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenSettingsShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenSettingsPopup();", source);
+        Assert.Contains("Text=\"Ctrl+,\"", xaml);
+        Assert.DoesNotContain("Text=\"Ctrl+S\"", xaml);
+        Assert.DoesNotContain("e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control", source);
+    }
+
+    [Fact]
+    public void RemovedSetupWizardShortcut_IsNotRouted()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.DoesNotContain("IsRunSetupWizardShortcut", source);
+        Assert.DoesNotContain("RunSetupWizardFromShortcutAsync", source);
     }
 
     [Fact]
@@ -44,7 +86,8 @@ public sealed class MainWindowShortcutRoutingTests
 
         Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
         Assert.Contains("e.Handled = true;", source);
-        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenRecurringNewTransactionShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused()", source);
@@ -59,7 +102,7 @@ public sealed class MainWindowShortcutRoutingTests
         var sourcesBranch = Slice(
             source,
             "if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)",
-            "if (MainWindowShortcutMatcher.IsRunSetupWizardShortcut(e.Key, Keyboard.Modifiers))");
+            "if (MainWindowShortcutMatcher.IsOpenAddSpendingSourceShortcut(e.Key, Keyboard.Modifiers))");
 
         Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", sourcesBranch);
         Assert.DoesNotContain("IsSufficientFundsActionGateLocked()", sourcesBranch);
@@ -67,17 +110,87 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
-    public void LockedShortcuts_SuppressQuickAdd()
+    public void LockedShortcuts_SuppressNewTransaction()
     {
         var source = ReadMainWindowSource();
 
-        var quickAddBranch = Slice(
+        var branch = Slice(
             source,
-            "if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))",
+            "if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut(e.Key, Keyboard.Modifiers))",
+            "if (MainWindowShortcutMatcher.IsOpenRecurringNewTransactionShortcut(e.Key, Keyboard.Modifiers))");
+
+        Assert.Contains("IsSufficientFundsActionGateLocked()", branch);
+        Assert.Contains("OpenAddNewTransactionPopup();", branch);
+    }
+
+    [Fact]
+    public void LockedShortcuts_SuppressRecurringNewTransaction()
+    {
+        var source = ReadMainWindowSource();
+
+        var branch = Slice(
+            source,
+            "if (MainWindowShortcutMatcher.IsOpenRecurringNewTransactionShortcut(e.Key, Keyboard.Modifiers))",
             "if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))");
 
-        Assert.Contains("IsSufficientFundsActionGateLocked()", quickAddBranch);
-        Assert.Contains("OpenQuickAddPopup();", quickAddBranch);
+        Assert.Contains("IsSufficientFundsActionGateLocked()", branch);
+        Assert.Contains("OpenRecurringAddNewTransactionPopup();", branch);
+    }
+
+    [Fact]
+    public void AdditionalPopupShortcuts_RouteToTargetPopups()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAddSpendingSourceShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenAddSpendingSourcePopup();", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAddSavingGoalShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenAddSavingGoalPopup();", source);
+    }
+
+    [Fact]
+    public void NotificationShortcut_TogglesHeaderNotificationPopup()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsToggleNotificationsShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("ToggleHeaderNotificationPopup();", source);
+    }
+
+    [Fact]
+    public void DashboardPeriodShortcuts_AreDashboardOnly()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("TryHandleDashboardPeriodShortcut(e.Key, Keyboard.Modifiers)", source);
+        Assert.Contains("if (_activeMainPage != MainPage.Dashboard)", source);
+        Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(-1, this);", source);
+        Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(1, this);", source);
+        Assert.Contains("_mainVM.DaySpinner.MoveToCurrentPeriodCommand.Execute(null);", source);
+    }
+
+    [Fact]
+    public void ViewModeShortcuts_TargetDashboardAndLedger()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("TryHandleViewModeShortcut(e.Key, Keyboard.Modifiers)", source);
+        Assert.Contains("_mainVM.Dashboard.ViewModeToggle", source);
+        Assert.Contains("_mainVM.Ledger?.ViewModeToggle", source);
+        Assert.Contains("SetSelectedMainContentViewFromUserAsync(viewMode, this)", source);
+    }
+
+    [Fact]
+    public void LedgerShortcuts_AreLedgerOnly()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("TryHandleLedgerShortcut(e.Key, Keyboard.Modifiers)", source);
+        Assert.Contains("if (_activeMainPage != MainPage.Ledger || _ledgerPageView is null)", source);
+        Assert.Contains("_ledgerPageView.ExportDataFromShortcutAsync();", source);
+        Assert.Contains("_ledgerPageView.ClearFiltersFromShortcutAsync();", source);
+        Assert.Contains("_ledgerPageView.ApplyAmountSortDirectionFromShortcutAsync(LedgerAmountSortDirection.Ascending);", source);
+        Assert.Contains("_ledgerPageView.ApplyAmountSortDirectionFromShortcutAsync(LedgerAmountSortDirection.Descending);", source);
     }
 
     [Fact]
@@ -108,10 +221,13 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("private void OnHeaderSearchButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private void OnHeaderQuickAddButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)", source);
+        Assert.Contains("OpenQuickAddPopup();", Slice(
+            source,
+            "private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)",
+            "private void OnHeaderMenuButtonMouseEnter(object sender, MouseEventArgs e)"));
         Assert.Contains("private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private async void OnAnalyticsNavigationClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private async Task NavigateToMainPageAsync(MainPage page)", source);
-        Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
         Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
     }
 
@@ -171,6 +287,7 @@ public sealed class MainWindowShortcutRoutingTests
 
         Assert.Contains("public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)", source);
         Assert.Contains("public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)", source);
+        Assert.Contains("private void OpenRecurringAddNewTransactionPopup()", source);
         Assert.Contains("public void OpenSpendingSourcesListPopup()", source);
         Assert.Contains("public void OpenAddSpendingSourcePopup()", source);
         Assert.Contains("public void OpenAnalyticsPopup()", source);

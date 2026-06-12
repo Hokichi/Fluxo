@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Fluxo.ViewModels.Shell.Main;
@@ -37,6 +38,7 @@ public partial class Calendar : UserControl
         Loaded += OnCalendarLoaded;
         SizeChanged += OnCalendarSizeChanged;
         Unloaded += OnUnloaded;
+        PreviewKeyDown += OnCalendarPreviewKeyDown;
     }
 
     public bool UseExpandedCalendarLayout
@@ -69,6 +71,35 @@ public partial class Calendar : UserControl
         e.Handled = true;
     }
 
+    private async void OnCalendarPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.None)
+            return;
+
+        switch (e.Key)
+        {
+            case Key.Left:
+                await _viewModel.SelectRelativeDateAsync(-1);
+                e.Handled = true;
+                break;
+
+            case Key.Right:
+                await _viewModel.SelectRelativeDateAsync(1);
+                e.Handled = true;
+                break;
+
+            case Key.Up:
+                await _viewModel.SelectRelativeDateAsync(-7);
+                e.Handled = true;
+                break;
+
+            case Key.Down:
+                await _viewModel.SelectRelativeDateAsync(7);
+                e.Handled = true;
+                break;
+        }
+    }
+
     private void OnCalendarLoaded(object sender, RoutedEventArgs e)
     {
         UpdateExpandedCalendarLayout();
@@ -87,6 +118,7 @@ public partial class Calendar : UserControl
         SizeChanged -= OnCalendarSizeChanged;
         CalendarWeekViewport.SizeChanged -= OnCalendarWeekViewportSizeChanged;
         Unloaded -= OnUnloaded;
+        PreviewKeyDown -= OnCalendarPreviewKeyDown;
         StopCalendarScrollAnimation();
         _viewModel.Dispose();
     }

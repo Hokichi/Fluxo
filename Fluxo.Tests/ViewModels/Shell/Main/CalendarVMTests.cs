@@ -196,6 +196,25 @@ public sealed class CalendarVMTests
         Assert.False(vm.HasNoRecurringTransactions);
     }
 
+    [Theory]
+    [InlineData(-1, 2026, 6, 11)]
+    [InlineData(1, 2026, 6, 13)]
+    [InlineData(-7, 2026, 6, 5)]
+    [InlineData(7, 2026, 6, 19)]
+    public async Task SelectRelativeDateAsync_SelectsDateRelativeToCurrentSelection(
+        int dayOffset,
+        int expectedYear,
+        int expectedMonth,
+        int expectedDay)
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        await vm.SelectRelativeDateAsync(dayOffset);
+
+        Assert.Equal(new DateOnly(expectedYear, expectedMonth, expectedDay), vm.SelectedDate);
+        Assert.Contains(vm.FrameWeeks.SelectMany(week => week.Days), day => day.Date == vm.SelectedDate && day.IsSelected);
+    }
+
     [Fact]
     public async Task SelectDate_WhenOlderLoadCompletesAfterNewerLoad_KeepsNewerDetails()
     {

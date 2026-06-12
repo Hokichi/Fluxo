@@ -23,6 +23,7 @@ using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell.Main;
 using Fluxo.Views.Popups;
 using Microsoft.Extensions.DependencyInjection;
 using Analytics = Fluxo.Views.Shell.Main.Pages.Analytics;
@@ -651,7 +652,7 @@ public partial class MainWindow : Window, IPopupHost
 
     // â”€â”€ Keyboard shortcuts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    private async void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (_isHeaderSearchExpanded && e.Key == Key.Escape)
         {
@@ -660,7 +661,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        if (MainWindowShortcutMatcher.IsOpenQuickAddShortcut(e.Key, Keyboard.Modifiers))
+        if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut(e.Key, Keyboard.Modifiers))
         {
             if (IsSufficientFundsActionGateLocked())
             {
@@ -668,7 +669,20 @@ public partial class MainWindow : Window, IPopupHost
                 return;
             }
 
-            OpenQuickAddPopup();
+            OpenAddNewTransactionPopup();
+            e.Handled = true;
+            return;
+        }
+
+        if (MainWindowShortcutMatcher.IsOpenRecurringNewTransactionShortcut(e.Key, Keyboard.Modifiers))
+        {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
+            OpenRecurringAddNewTransactionPopup();
             e.Handled = true;
             return;
         }
@@ -686,7 +700,7 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
+        if (MainWindowShortcutMatcher.IsOpenSettingsShortcut(e.Key, Keyboard.Modifiers))
         {
             OpenSettingsPopup();
             e.Handled = true;
@@ -700,9 +714,22 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        if (MainWindowShortcutMatcher.IsRunSetupWizardShortcut(e.Key, Keyboard.Modifiers))
+        if (MainWindowShortcutMatcher.IsOpenAddSpendingSourceShortcut(e.Key, Keyboard.Modifiers))
         {
-            RunSetupWizardFromShortcutAsync();
+            OpenAddSpendingSourcePopup();
+            e.Handled = true;
+            return;
+        }
+
+        if (MainWindowShortcutMatcher.IsOpenAddSavingGoalShortcut(e.Key, Keyboard.Modifiers))
+        {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
+            OpenAddSavingGoalPopup();
             e.Handled = true;
             return;
         }
@@ -728,7 +755,65 @@ public partial class MainWindow : Window, IPopupHost
                 return;
             }
 
-            _ = OpenAnalyticsPopupAsync();
+            await NavigateToMainPageAsync(MainPage.Analytics);
+            e.Handled = true;
+            return;
+        }
+
+        if (MainWindowShortcutMatcher.IsOpenDashboardShortcut(e.Key, Keyboard.Modifiers))
+        {
+            await NavigateToMainPageAsync(MainPage.Dashboard);
+            e.Handled = true;
+            return;
+        }
+
+        if (MainWindowShortcutMatcher.IsOpenCalendarShortcut(e.Key, Keyboard.Modifiers))
+        {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
+            await NavigateToMainPageAsync(MainPage.Calendar);
+            e.Handled = true;
+            return;
+        }
+
+        if (MainWindowShortcutMatcher.IsOpenLedgerShortcut(e.Key, Keyboard.Modifiers))
+        {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
+            await NavigateToMainPageAsync(MainPage.Ledger);
+            e.Handled = true;
+            return;
+        }
+
+        if (MainWindowShortcutMatcher.IsToggleNotificationsShortcut(e.Key, Keyboard.Modifiers))
+        {
+            ToggleHeaderNotificationPopup();
+            e.Handled = true;
+            return;
+        }
+
+        if (await TryHandleDashboardPeriodShortcut(e.Key, Keyboard.Modifiers))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (await TryHandleViewModeShortcut(e.Key, Keyboard.Modifiers))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (TryHandleLedgerShortcut(e.Key, Keyboard.Modifiers))
+        {
             e.Handled = true;
             return;
         }
@@ -761,16 +846,84 @@ public partial class MainWindow : Window, IPopupHost
         }
     }
 
-    private async void RunSetupWizardFromShortcutAsync()
+    private async Task<bool> TryHandleDashboardPeriodShortcut(Key key, ModifierKeys modifiers)
     {
-        if (FluxoMessageBox.Show(this,
-                "This will close the current window and open the setup wizard. Continue?",
-                "Run Setup Wizard",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question) != MessageBoxResult.Yes)
-            return;
+        if (_activeMainPage != MainPage.Dashboard)
+            return false;
 
-        await ((App)Application.Current).RunSetupWizardAsync();
+        if (MainWindowShortcutMatcher.IsNavigateDashboardNextPeriodShortcut(key, modifiers))
+        {
+            await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(-1, this);
+            return true;
+        }
+
+        if (MainWindowShortcutMatcher.IsNavigateDashboardPreviousPeriodShortcut(key, modifiers))
+        {
+            await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(1, this);
+            return true;
+        }
+
+        if (MainWindowShortcutMatcher.IsNavigateDashboardCurrentPeriodShortcut(key, modifiers))
+        {
+            _mainVM.DaySpinner.MoveToCurrentPeriodCommand.Execute(null);
+            return true;
+        }
+
+        return false;
+    }
+
+    private async Task<bool> TryHandleViewModeShortcut(Key key, ModifierKeys modifiers)
+    {
+        if (!MainWindowShortcutMatcher.TryGetViewModeShortcut(key, modifiers, out var viewMode))
+            return false;
+
+        var viewModeToggle = _activeMainPage switch
+        {
+            MainPage.Dashboard => _mainVM.Dashboard.ViewModeToggle,
+            MainPage.Ledger => _mainVM.Ledger?.ViewModeToggle,
+            _ => null
+        };
+
+        if (viewModeToggle is null)
+            return false;
+
+        await viewModeToggle.SetSelectedMainContentViewFromUserAsync(viewMode, this);
+        if (_activeMainPage == MainPage.Ledger)
+            ApplyMainWindowRangeToLedger();
+
+        return true;
+    }
+
+    private bool TryHandleLedgerShortcut(Key key, ModifierKeys modifiers)
+    {
+        if (_activeMainPage != MainPage.Ledger || _ledgerPageView is null)
+            return false;
+
+        if (MainWindowShortcutMatcher.IsLedgerExportShortcut(key, modifiers))
+        {
+            _ledgerPageView.ExportDataFromShortcutAsync();
+            return true;
+        }
+
+        if (MainWindowShortcutMatcher.IsLedgerClearFiltersShortcut(key, modifiers))
+        {
+            _ledgerPageView.ClearFiltersFromShortcutAsync();
+            return true;
+        }
+
+        if (MainWindowShortcutMatcher.IsLedgerAscendingSortShortcut(key, modifiers))
+        {
+            _ledgerPageView.ApplyAmountSortDirectionFromShortcutAsync(LedgerAmountSortDirection.Ascending);
+            return true;
+        }
+
+        if (MainWindowShortcutMatcher.IsLedgerDescendingSortShortcut(key, modifiers))
+        {
+            _ledgerPageView.ApplyAmountSortDirectionFromShortcutAsync(LedgerAmountSortDirection.Descending);
+            return true;
+        }
+
+        return false;
     }
 
     private void OnHeaderSearchButtonClick(object sender, RoutedEventArgs e)
@@ -790,6 +943,11 @@ public partial class MainWindow : Window, IPopupHost
     }
 
     private void OnHeaderNotificationButtonClick(object sender, RoutedEventArgs e)
+    {
+        ToggleHeaderNotificationPopup();
+    }
+
+    private void ToggleHeaderNotificationPopup()
     {
         HeaderNotificationPopup.IsOpen = !HeaderNotificationPopup.IsOpen;
     }
@@ -1104,6 +1262,18 @@ public partial class MainWindow : Window, IPopupHost
         if (draft is { } popupDraft)
             popupViewModel.InitializeFromDraft(popupDraft);
 
+        _dialogService.ShowAddNewTransaction(popupViewModel, this);
+    }
+
+    private void OpenRecurringAddNewTransactionPopup()
+    {
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popupViewModel = new QuickAddVM(_mainVM, appData);
+        popupViewModel.InitializeRecurringMode(isLocked: false);
         _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 

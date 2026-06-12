@@ -6,9 +6,7 @@
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
     <StackPanel>
-        <customControls:SegmentedToggleGroup
-            Width="360"
-            SelectedValue="{Binding SelectedMainContentViewMode, Mode=OneWay}">
+        <customControls:SegmentedToggleGroup Width="360" SelectedValue="{Binding SelectedMainContentViewMode, Mode=OneWay}">
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"
                 CommandParameter="{x:Static enums:MainContentViewMode.Daily}"
@@ -42,6 +40,7 @@
                 Value="{x:Static enums:MainContentViewMode.AllTime}" />
         </customControls:SegmentedToggleGroup>
 
+        <!--  TODO: Add ToastPopup upon navigating back  -->
         <Button
             Margin="0,4,0,0"
             HorizontalAlignment="Center"

@@ -193,6 +193,51 @@ public class DaySpinnerVMTests
         Assert.False(recipient.SpinnerStates[^1].IsAtCurrentPeriod);
     }
 
+    [Fact]
+    public async Task SelectAdjacentVisibleDayFromUserAsync_SelectsNextVisibleDayWithoutChangingPage()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+
+        var vm = new DaySpinnerVM(messenger);
+        messenger.Send(new ViewModeChangeMessage(MainContentViewMode.Daily));
+        var visibleDates = vm.DaysOfWeek.Select(day => day.Date).ToArray();
+        var firstVisibleDay = vm.DaysOfWeek[0];
+        vm.SelectedDay = firstVisibleDay;
+        recipient.DateRanges.Clear();
+
+        await vm.SelectAdjacentVisibleDayFromUserAsync(1);
+
+        Assert.Equal(vm.DaysOfWeek[1].Date, vm.SelectedDay.Date);
+        Assert.Equal(firstVisibleDay.Date.AddDays(1), vm.SelectedDay.Date);
+        Assert.Equal(visibleDates, vm.DaysOfWeek.Select(day => day.Date));
+        Assert.Single(recipient.DateRanges);
+        Assert.Equal(vm.SelectedDay.Date.Date, recipient.DateRanges[0].From);
+    }
+
+    [Fact]
+    public async Task SelectAdjacentVisibleDayFromUserAsync_DoesNotNavigateOutsideVisibleItems()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+
+        var vm = new DaySpinnerVM(messenger);
+        messenger.Send(new ViewModeChangeMessage(MainContentViewMode.Daily));
+        vm.SelectedDay = vm.DaysOfWeek[0];
+        recipient.DateRanges.Clear();
+
+        await vm.SelectAdjacentVisibleDayFromUserAsync(-1);
+
+        Assert.Equal(vm.DaysOfWeek[0].Date, vm.SelectedDay.Date);
+        Assert.Empty(recipient.DateRanges);
+    }
+
     private static int InvokeWeeklyPageOffset(DateTime today, DateTime referenceDate)
     {
         var method = typeof(DaySpinnerVM).GetMethod(

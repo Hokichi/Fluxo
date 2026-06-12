@@ -189,6 +189,21 @@ public partial class QuickSetupWizard : BasePopup
         Close();
     }
 
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            if (!_viewModel.IsFinalStep)
+            {
+                OnNextClick(this, new RoutedEventArgs(Button.ClickEvent));
+                e.Handled = true;
+                return;
+            }
+        }
+
+        base.OnPreviewKeyDown(e);
+    }
+
     public async void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
     {
         _dialogService.ShowAddSpendingSource(_viewModel.MiddlePage.SpendingSources.CreateAddViewModel(), this);

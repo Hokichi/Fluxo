@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -107,6 +108,71 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         {
             _isSelectingTab = false;
         }
+    }
+
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
+    {
+        if (!IsSettingsTextInputFocused())
+        {
+            switch (e.Key)
+            {
+                case Key.Up:
+                    _ = NavigateSettingsTabAsync(-1);
+                    e.Handled = true;
+                    return;
+
+                case Key.Down:
+                    _ = NavigateSettingsTabAsync(1);
+                    e.Handled = true;
+                    return;
+            }
+        }
+
+        base.OnPreviewKeyDown(e);
+    }
+
+    private async Task NavigateSettingsTabAsync(int offset)
+    {
+        if (_isSelectingTab)
+            return;
+
+        var tabs = GetOrderedTabButtons();
+        var currentTab = GetCheckedTabButton();
+        var currentIndex = Array.IndexOf(tabs, currentTab);
+        if (currentIndex < 0)
+            return;
+
+        var targetIndex = (currentIndex + offset + tabs.Length) % tabs.Length;
+        var targetTab = tabs[targetIndex];
+        if (ReferenceEquals(targetTab, currentTab))
+            return;
+
+        if (!await CanLeaveCurrentSettingsTabAsync())
+            return;
+
+        _isSelectingTab = true;
+        try
+        {
+            await CrossfadeSettingsTabAsync(targetTab);
+        }
+        finally
+        {
+            _isSelectingTab = false;
+        }
+    }
+
+    private RadioButton[] GetOrderedTabButtons()
+    {
+        return
+        [
+            SourcesTabButton,
+            BudgetTabButton,
+            FixedExpensesTabButton,
+            GoalsTabButton,
+            TagsTabButton,
+            PersonalizationTabButton,
+            AboutTabButton
+        ];
     }
 
     private async Task CrossfadeSettingsTabAsync(RadioButton targetTab)
@@ -371,6 +437,11 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
     {
         return Keyboard.FocusedElement is TextBox textBox &&
                ReferenceEquals(textBox.DataContext, _viewModel.PersonalizationTab);
+    }
+
+    private static bool IsSettingsTextInputFocused()
+    {
+        return Keyboard.FocusedElement is TextBoxBase or PasswordBox or ComboBox;
     }
 
     private void ShowMessage(string? message, string title)
