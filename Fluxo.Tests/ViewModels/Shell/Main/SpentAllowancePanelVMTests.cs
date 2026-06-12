@@ -87,12 +87,40 @@ public sealed class SpentAllowancePanelVMTests
         Assert.Equal(10m, vm.Allowance);
     }
 
+    [Fact]
+    public async Task DateRangeSelectionChanged_NetUsesIncomeAndExpensesForSelectedDay()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var selectedDay = new DateTime(2026, 6, 12);
+        var vm = CreateVm(
+            messenger,
+            [
+                CreateExpenseLog(1, 75m, selectedDay),
+                CreateExpenseLog(2, 40m, selectedDay.AddDays(-1))
+            ],
+            [CreateCheckingSource(balance: 1_000m)],
+            incomeLogs:
+            [
+                CreateIncomeLog(1, 125m, selectedDay),
+                CreateIncomeLog(2, 20m, selectedDay.AddDays(1))
+            ]);
+
+        await vm.LoadAsync();
+
+        messenger.Send(new DateRangeSelectionChangedMessage(selectedDay, selectedDay));
+
+        Assert.Equal(75m, vm.TotalSpent);
+        Assert.Equal(125m, vm.TotalEarned);
+        Assert.Equal(-50m, vm.Net);
+    }
+
     private static SpentAllowancePanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
         IReadOnlyList<SpendingSourceVM> spendingSources,
         BudgetAllocation? budgetAllocation = null,
-        Func<DateTime>? todayProvider = null)
+        Func<DateTime>? todayProvider = null,
+        IReadOnlyList<IncomeLog>? incomeLogs = null)
     {
         var expenseLogService = Substitute.For<IExpenseLogService>();
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -115,6 +143,10 @@ public sealed class SpentAllowancePanelVMTests
         budgetAllocationRepository.GetAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<BudgetAllocation?>(budgetAllocation ?? new BudgetAllocation()));
         unitOfWork.BudgetAllocation.Returns(budgetAllocationRepository);
+        var incomeLogRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IIncomeLogRepository>();
+        incomeLogRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(incomeLogs ?? []));
+        unitOfWork.IncomeLogs.Returns(incomeLogRepository);
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
@@ -139,6 +171,38 @@ public sealed class SpentAllowancePanelVMTests
             SpendingSourceType = SpendingSourceType.Checking,
             Balance = balance,
             IsEnabled = true
+        };
+    }
+
+    private static ExpenseLogVM CreateExpenseLog(int id, decimal amount, DateTime deductedOn)
+    {
+        return new ExpenseLogVM
+        {
+            Id = id,
+            Amount = amount,
+            DeductedOn = deductedOn,
+            Expense = new ExpenseVM
+            {
+                Id = id,
+                Name = $"Expense {id}",
+                Amount = amount,
+                ExpenseCategory = ExpenseCategory.Needs
+            },
+            SpendingSource = CreateCheckingSource(1_000m)
+        };
+    }
+
+    private static IncomeLog CreateIncomeLog(int id, decimal amount, DateTime addedOn)
+    {
+        return new IncomeLog
+        {
+            Id = id,
+            Name = $"Income {id}",
+            Amount = amount,
+            AddedOn = addedOn,
+            Notes = string.Empty,
+            SpendingSourceId = 1,
+            SpendingSource = new SpendingSource()
         };
     }
 }

@@ -28,6 +28,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
     private readonly Func<DateTime> _todayProvider;
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
+    private List<IncomeLog> _allIncomeLogs = [];
     private BudgetAllocation _budgetAllocation = new();
     private (DateTime From, DateTime To)? _selectedRange;
     private List<SpendingSourceVM> _spendingSources = [];
@@ -51,10 +52,17 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Net))]
     private decimal _totalSpent;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Net))]
+    private decimal _totalEarned;
+
+    [ObservableProperty]
     private decimal _allowance;
+
+    public decimal Net => TotalSpent - TotalEarned;
 
     public void Receive(DateRangeSelectionChangedMessage message)
     {
@@ -95,10 +103,14 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
             await _expenseLogService.GetAllAsync(cancellationToken));
         var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
             await _spendingSourceService.GetAllAsync(cancellationToken));
+        var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
 
         _allExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
             .OrderByDescending(log => log.DeductedOn)
+            .ToList();
+        _allIncomeLogs = incomeLogs
+            .OrderByDescending(log => log.AddedOn)
             .ToList();
         _spendingSources = spendingSources.ToList();
 
@@ -124,8 +136,12 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         var visibleExpenseLogs = _selectedRange is { } range
             ? _allExpenseLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
             : _allExpenseLogs;
+        var visibleIncomeLogs = _selectedRange is { } incomeRange
+            ? _allIncomeLogs.Where(log => log.AddedOn.Date >= incomeRange.From.Date && log.AddedOn.Date <= incomeRange.To.Date)
+            : _allIncomeLogs;
 
         TotalSpent = visibleExpenseLogs.Sum(log => log.Amount);
+        TotalEarned = visibleIncomeLogs.Sum(log => log.Amount);
 
         var totalIncomeAmount = _spendingSources.Where(source => source.IsEnabled).Sum(source => source.Balance);
         Allowance = BudgetAllocationCalculator.CalculateDailyAllowance(
@@ -246,5 +262,12 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
     {
         return await _dataOperationRunner.RunAsync(async (scope, ct) =>
             await scope.UnitOfWork.BudgetAllocation.GetAsync(ct) ?? new BudgetAllocation(), cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<IncomeLog>> LoadIncomeLogsAsync(CancellationToken cancellationToken)
+    {
+        return await _dataOperationRunner.RunAsync(
+            async (scope, ct) => await scope.UnitOfWork.IncomeLogs.GetAllAsync(ct),
+            cancellationToken);
     }
 }

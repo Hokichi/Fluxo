@@ -8,10 +8,12 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="16" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <Border
-            Width="160"
+            Width="120"
             Padding="24,12"
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="2"
@@ -59,6 +61,30 @@
                         Foreground="{StaticResource Brush.Text.Secondary}"
                         Text="/ day" />
                 </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <Border
+            Grid.Column="4"
+            Width="120"
+            Padding="24,12"
+            BorderBrush="{StaticResource Brush.Border.Subtle}"
+            BorderThickness="2"
+            CornerRadius="8">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock
+                    VerticalAlignment="Bottom"
+                    FontFamily="{StaticResource Light}"
+                    Foreground="{StaticResource Brush.Text.Muted}"
+                    Text="NET" />
+
+                <TextBlock
+                    Margin="0,8,0,0"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="18"
+                    Foreground="{Binding Net, Converter={StaticResource DifferenceToBrushConverter}}"
+                    Text="{Binding Net, Converter={StaticResource NumberWithCommasConverter}}"
+                    ToolTip="{Binding Net, Converter={StaticResource MoneyFullDisplayConverter}}" />
             </StackPanel>
         </Border>
     </Grid>
