@@ -59,7 +59,7 @@
                     GroupName="SettingsTabs"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource LockedSettingsTabButtonStyle}"
-                    Tag="Budget Allocation">
+                    Tag="Budget Management">
                     <components:Icon
                         Width="12"
                         Path="{StaticResource AccountBalanceWalletRound}"

@@ -35,7 +35,7 @@ public sealed class SettingsSpendingAmountGateTextTests
     }
 
     [Fact]
-    public void SettingsPopup_PutsSpendingSourcesBeforeBudgetAllocation()
+    public void SettingsPopup_PutsSpendingSourcesBeforeBudgetManagement()
     {
         var document = XDocument.Parse(File.ReadAllText(GetRepositoryFilePath(
             "Fluxo",
@@ -54,7 +54,7 @@ public sealed class SettingsSpendingAmountGateTextTests
         Assert.Equal(
             [
                 "Spending Sources",
-                "Budget Allocation",
+                "Budget Management",
                 "Recurring Transactions",
                 "Goals",
                 "Tags",
