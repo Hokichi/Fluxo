@@ -34,7 +34,7 @@ public partial class SettingsAboutTab : UserControl
                     {
                         FluxoMessageBox.Show(
                             Window.GetWindow(this),
-                            "Fluxo is up to date.",
+                            "fluxo is up to date.",
                             "Check for Updates",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
@@ -75,7 +75,7 @@ public partial class SettingsAboutTab : UserControl
             var update = await _viewModel.CheckForUpdatesAsync();
             if (update.Status == AppUpdateCheckStatus.UpToDate)
             {
-                await toast.UpdateMessageAsync("Fluxo is up to date.");
+                await toast.UpdateMessageAsync("fluxo is up to date.");
                 await Task.Delay(TimeSpan.FromSeconds(2));
             }
 
