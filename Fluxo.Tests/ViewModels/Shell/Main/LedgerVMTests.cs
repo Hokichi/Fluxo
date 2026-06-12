@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.ExceptionServices;
+using System.Text;
 using System.Windows.Data;
 using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
@@ -489,6 +490,70 @@ public sealed class LedgerVMTests
         });
     }
 
+    [Fact]
+    public void ExportCsv_UsesUtf8BomAndCurrentFilteredVisibleRows()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.SearchText = "flix";
+
+            var rows = GetVisibleExportRows(vm);
+            var bytes = BuildExportBytes(rows);
+
+            Assert.True(bytes.Take(3).SequenceEqual(new byte[] { 0xEF, 0xBB, 0xBF }));
+            Assert.Equal(
+                $"Date,Amount,Type,Tag{Environment.NewLine}2026-06-03,-15.99,Expense,Streaming{Environment.NewLine}",
+                DecodeUtf8BomCsv(bytes));
+        });
+    }
+
+    [Fact]
+    public void ExportCsv_FormatsSignedAmountsTypesAndBlankIncomeTags()
+    {
+        var bytes = BuildExportBytes(
+        [
+            new LedgerTransactionItemVM
+            {
+                Kind = LedgerTransactionKind.Income,
+                Amount = 2800m,
+                OccurredOn = new DateTime(2026, 6, 3),
+                TagName = "Ignored"
+            },
+            new LedgerTransactionItemVM
+            {
+                Kind = LedgerTransactionKind.Expense,
+                Amount = 67.5m,
+                OccurredOn = new DateTime(2026, 6, 4),
+                TagName = string.Empty
+            }
+        ]);
+
+        Assert.Equal(
+            $"Date,Amount,Type,Tag{Environment.NewLine}2026-06-03,2800.00,Income,{Environment.NewLine}2026-06-04,-67.50,Expense,{Environment.NewLine}",
+            DecodeUtf8BomCsv(bytes));
+    }
+
+    [Fact]
+    public void ExportCsv_EscapesCsvFields()
+    {
+        var bytes = BuildExportBytes(
+        [
+            new LedgerTransactionItemVM
+            {
+                Kind = LedgerTransactionKind.Expense,
+                Amount = 12.3m,
+                OccurredOn = new DateTime(2026, 6, 5),
+                TagName = "Food, \"Home\"\nNight"
+            }
+        ]);
+
+        Assert.Equal(
+            $"Date,Amount,Type,Tag{Environment.NewLine}2026-06-05,-12.30,Expense,\"Food, \"\"Home\"\"\nNight\"{Environment.NewLine}",
+            DecodeUtf8BomCsv(bytes));
+    }
+
     private static LedgerVM CreateVm(
         IExpenseLogService? expenseLogService = null,
         ISpendingSourceService? spendingSourceService = null,
@@ -717,6 +782,23 @@ public sealed class LedgerVMTests
     private static IReadOnlyList<LedgerTransactionItemVM> GetItems(ICollectionView view)
     {
         return view.Cast<LedgerTransactionItemVM>().ToList();
+    }
+
+    private static IReadOnlyList<LedgerTransactionItemVM> GetVisibleExportRows(LedgerVM vm)
+    {
+        return vm.GetVisibleTransactionsForExport();
+    }
+
+    private static byte[] BuildExportBytes(IReadOnlyList<LedgerTransactionItemVM> rows)
+    {
+        return LedgerCsvExport.BuildBytes(rows);
+    }
+
+    private static string DecodeUtf8BomCsv(byte[] bytes)
+    {
+        var preamble = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetPreamble();
+        Assert.True(bytes.Take(preamble.Length).SequenceEqual(preamble));
+        return Encoding.UTF8.GetString(bytes, preamble.Length, bytes.Length - preamble.Length);
     }
 
     private static void RunInSta(Action action)

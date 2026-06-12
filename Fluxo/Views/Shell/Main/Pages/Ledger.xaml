@@ -842,8 +842,12 @@
             HorizontalAlignment="Left"
             ButtonIcon="{StaticResource Export}"
             ButtonText="Export Data"
-            CornerRadius="8"
+            Click="OnExportDataClick"
+            CornerRadius="8"    
+            DefaultBackground="{StaticResource Brush.Mint}"
+            HoveredBackground="{StaticResource Brush.Mint.Muted}"
             IconSize="16"
+            IsEnabled="{Binding HasVisibleTransactions}"
             ShouldExpand="True" />
 
         <StackPanel

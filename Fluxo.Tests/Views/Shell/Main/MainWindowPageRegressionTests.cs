@@ -295,6 +295,29 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
+    public void Ledger_ExportButtonUsesVisibleRowsAndToastCsvHandler()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
+        var ledgerCsvExport = File.ReadAllText(RepositoryPaths.File("Fluxo", "ViewModels", "Shell", "Main", "LedgerCsvExport.cs"));
+        var exportButtonIndex = ledgerXaml.IndexOf("ButtonText=\"Export Data\"", StringComparison.Ordinal);
+
+        Assert.True(exportButtonIndex >= 0);
+        var buttonEndIndex = ledgerXaml.IndexOf("/>", exportButtonIndex, StringComparison.Ordinal);
+        Assert.True(buttonEndIndex > exportButtonIndex);
+        var button = ledgerXaml.Substring(exportButtonIndex, buttonEndIndex - exportButtonIndex);
+        Assert.Contains("Click=\"OnExportDataClick\"", button);
+        Assert.Contains("IsEnabled=\"{Binding HasVisibleTransactions}\"", button);
+
+        Assert.Contains("SaveFileDialog", ledgerCodeBehind);
+        Assert.Contains("fluxo_Ledger_", ledgerCsvExport);
+        Assert.Contains("yyyyMMdd-hhmmss", ledgerCsvExport);
+        Assert.Contains("\"Exporting ledger data...\"", ledgerCodeBehind);
+        Assert.Contains("GetVisibleTransactionsForExport", ledgerCodeBehind);
+        Assert.Contains("LedgerCsvExport.BuildBytes", ledgerCodeBehind);
+    }
+
+    [Fact]
     public void Ledger_UsesRequestedDisabledHoverAndDeleteDialogStates()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));

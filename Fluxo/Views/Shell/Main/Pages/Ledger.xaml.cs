@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -6,6 +7,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell.Main;
+using Microsoft.Win32;
 
 namespace Fluxo.Views.Shell.Main.Pages;
 
@@ -201,6 +203,37 @@ public partial class Ledger : UserControl
             return;
 
         await ShowFilterRefreshToastAsync(viewModel.ClearFilters);
+    }
+
+    private async void OnExportDataClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LedgerVM viewModel || !viewModel.HasVisibleTransactions)
+            return;
+
+        var dialog = new SaveFileDialog
+        {
+            AddExtension = true,
+            DefaultExt = ".csv",
+            FileName = LedgerCsvExport.BuildFileName(DateTime.Now),
+            Filter = "CSV files (*.csv)|*.csv"
+        };
+
+        var owner = Window.GetWindow(this);
+        if (dialog.ShowDialog(owner) != true)
+            return;
+
+        var transactions = viewModel.GetVisibleTransactionsForExport();
+        if (transactions.Count == 0)
+            return;
+
+        await _dialogService.ShowToastWhileAsync(
+            "Exporting ledger data...",
+            async () =>
+            {
+                var bytes = LedgerCsvExport.BuildBytes(transactions);
+                await File.WriteAllBytesAsync(dialog.FileName, bytes);
+            },
+            owner);
     }
 
     private Task ShowFilterRefreshToastAsync(Action refreshAction)

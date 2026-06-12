@@ -474,6 +474,11 @@ public partial class LedgerVM : ObservableRecipient,
         return true;
     }
 
+    public IReadOnlyList<LedgerTransactionItemVM> GetVisibleTransactionsForExport()
+    {
+        return TransactionsView.Cast<LedgerTransactionItemVM>().ToList();
+    }
+
     public void ClearFilters()
     {
         ResetFilter(TypeFilters);
