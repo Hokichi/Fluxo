@@ -9,7 +9,10 @@ namespace Fluxo.ViewModels.Shell.Main;
 
 public sealed partial class CalendarVM : ObservableObject, IDisposable
 {
+    private static readonly TimeSpan MonthNavigationStepDelay = TimeSpan.FromMilliseconds(45);
+
     private readonly ICalendarService _calendarService;
+    private readonly Func<TimeSpan, Task> _navigationDelayAsync;
     private readonly DateOnly _currentDate;
     private CancellationTokenSource? _loadCts;
     private int _loadRequestVersion;
@@ -33,9 +36,13 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     {
     }
 
-    internal CalendarVM(ICalendarService calendarService, DateTime currentDate)
+    internal CalendarVM(
+        ICalendarService calendarService,
+        DateTime currentDate,
+        Func<TimeSpan, Task>? navigationDelayAsync = null)
     {
         _calendarService = calendarService;
+        _navigationDelayAsync = navigationDelayAsync ?? Task.Delay;
         _currentDate = DateOnly.FromDateTime(currentDate.Date);
         SelectedDate = _currentDate;
         _visibleMonth = new DateOnly(SelectedDate.Year, SelectedDate.Month, 1);
@@ -68,15 +75,15 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void NavigateToPreviousMonth()
+    private async Task NavigateToPreviousMonth()
     {
-        SetVisibleMonth(_visibleMonth.AddMonths(-1));
+        await ScrollToVisibleMonthAsync(_visibleMonth.AddMonths(-1));
     }
 
     [RelayCommand]
-    private void NavigateToNextMonth()
+    private async Task NavigateToNextMonth()
     {
-        SetVisibleMonth(_visibleMonth.AddMonths(1));
+        await ScrollToVisibleMonthAsync(_visibleMonth.AddMonths(1));
     }
 
     public Task LoadAsync(CancellationToken cancellationToken = default)
@@ -162,11 +169,19 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         VisibleMonthLabel = _visibleMonth.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy", CultureInfo.InvariantCulture);
     }
 
-    private void SetVisibleMonth(DateOnly month)
+    private async Task ScrollToVisibleMonthAsync(DateOnly month)
     {
-        _visibleMonth = new DateOnly(month.Year, month.Month, 1);
-        _firstVisibleWeekStart = StartOfWeek(_visibleMonth);
-        RebuildVisibleWeeks();
+        var targetMonth = new DateOnly(month.Year, month.Month, 1);
+        var targetFirstVisibleWeekStart = StartOfWeek(targetMonth);
+
+        while (_firstVisibleWeekStart != targetFirstVisibleWeekStart)
+        {
+            var direction = targetFirstVisibleWeekStart.CompareTo(_firstVisibleWeekStart) > 0 ? 1 : -1;
+            ScrollCalendarRows(direction);
+
+            if (_firstVisibleWeekStart != targetFirstVisibleWeekStart)
+                await _navigationDelayAsync(MonthNavigationStepDelay);
+        }
     }
 
     private static DateOnly StartOfWeek(DateOnly date)

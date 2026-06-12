@@ -89,7 +89,7 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void StateChange_SetsWindowLayoutStateBeforeFadeInStarts()
+    public void StateChange_SetsWindowLayoutStateBeforeBoundsAnimationStarts()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
 
@@ -99,13 +99,14 @@ public sealed class MainWindowLayoutTests
         var animateToRestored = ExtractMethodBodyBySignature(source, "private void AnimateToRestored()");
         var animateStateChange = ExtractMethodBodyBySignature(source, "private void AnimateStateChange(Rect from, Rect to, bool maximizing)");
 
-        Assert.DoesNotContain("IsWindowLayoutMaximized = true;", animateToMaximized);
-        Assert.DoesNotContain("IsWindowLayoutMaximized = false;", animateToRestored);
-        Assert.Contains("FadeContentIn(() =>", animateStateChange);
         Assert.Contains("IsWindowLayoutMaximized = maximizing;", animateStateChange);
+        Assert.Contains("AnimateBounds(from, to, maximizing, () =>", animateStateChange);
         Assert.True(
             animateStateChange.IndexOf("IsWindowLayoutMaximized = maximizing;", StringComparison.Ordinal) <
-            animateStateChange.IndexOf("FadeContentIn(() =>", StringComparison.Ordinal));
+            animateStateChange.IndexOf("AnimateBounds(from, to, maximizing, () =>", StringComparison.Ordinal));
+        Assert.True(
+            animateStateChange.IndexOf("FadeContentOut(() =>", StringComparison.Ordinal) <
+            animateStateChange.IndexOf("IsWindowLayoutMaximized = maximizing;", StringComparison.Ordinal));
     }
 
     [Fact]

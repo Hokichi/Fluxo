@@ -495,10 +495,10 @@ public partial class MainWindow : Window, IPopupHost
         {
             RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
             RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
+            IsWindowLayoutMaximized = maximizing;
 
             AnimateBounds(from, to, maximizing, () =>
             {
-                IsWindowLayoutMaximized = maximizing;
                 FadeContentIn(() =>
                 {
                     _isStateChangeTransitionActive = false;

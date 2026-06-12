@@ -47,11 +47,11 @@ public sealed class CalendarVMTests
     }
 
     [Fact]
-    public void NavigateToNextMonth_FillsGridFromFirstWeekOfNextMonth()
+    public async Task NavigateToNextMonth_FillsGridFromFirstWeekOfNextMonth()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
 
-        vm.NavigateToNextMonthCommand.Execute(null);
+        await vm.NavigateToNextMonthCommand.ExecuteAsync(null);
 
         Assert.Equal("July 2026", vm.VisibleMonthLabel);
         Assert.Equal(new DateOnly(2026, 6, 28), vm.VisibleWeeks[0].Days[0].Date);
@@ -61,17 +61,43 @@ public sealed class CalendarVMTests
     }
 
     [Fact]
-    public void NavigateToPreviousMonth_FillsGridFromFirstWeekOfPreviousMonth()
+    public async Task NavigateToPreviousMonth_FillsGridFromFirstWeekOfPreviousMonth()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
 
-        vm.NavigateToPreviousMonthCommand.Execute(null);
+        await vm.NavigateToPreviousMonthCommand.ExecuteAsync(null);
 
         Assert.Equal("May 2026", vm.VisibleMonthLabel);
         Assert.Equal(new DateOnly(2026, 4, 26), vm.VisibleWeeks[0].Days[0].Date);
         Assert.Equal(new DateOnly(2026, 6, 6), vm.VisibleWeeks[5].Days[6].Date);
         Assert.True(vm.VisibleWeeks[0].Days[0].IsOutsideVisibleMonth);
         Assert.False(vm.VisibleWeeks[0].Days[5].IsOutsideVisibleMonth);
+    }
+
+    [Fact]
+    public async Task NavigateToNextMonth_ScrollsThroughIntermediateWeekStartsBeforeSettlingOnTargetMonth()
+    {
+        CalendarVM? vm = null;
+        var observedWeekStarts = new List<DateOnly>();
+        vm = CreateVm(
+            currentDate: new DateTime(2026, 6, 12),
+            navigationDelayAsync: _ =>
+            {
+                observedWeekStarts.Add(vm!.VisibleWeeks[0].Days[0].Date);
+                return Task.CompletedTask;
+            });
+
+        await vm.NavigateToNextMonthCommand.ExecuteAsync(null);
+
+        Assert.Equal(
+            [
+                new DateOnly(2026, 6, 7),
+                new DateOnly(2026, 6, 14),
+                new DateOnly(2026, 6, 21)
+            ],
+            observedWeekStarts);
+        Assert.Equal(new DateOnly(2026, 6, 28), vm.VisibleWeeks[0].Days[0].Date);
+        Assert.Equal("July 2026", vm.VisibleMonthLabel);
     }
 
     [Fact]
@@ -177,7 +203,9 @@ public sealed class CalendarVMTests
         Assert.False(vm.IsLoading);
     }
 
-    private static CalendarVM CreateVm(DateTime currentDate)
+    private static CalendarVM CreateVm(
+        DateTime currentDate,
+        Func<TimeSpan, Task>? navigationDelayAsync = null)
     {
         var service = Substitute.For<ICalendarService>();
         service.GetCalendarDayAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
@@ -190,7 +218,7 @@ public sealed class CalendarVMTests
                 [],
                 [])));
 
-        return new CalendarVM(service, currentDate);
+        return new CalendarVM(service, currentDate, navigationDelayAsync);
     }
 
     private static CalendarDto CreateDto(DateOnly date, decimal totalSpent)

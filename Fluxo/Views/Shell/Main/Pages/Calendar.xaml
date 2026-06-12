@@ -18,13 +18,13 @@
             <Setter Property="Background" Value="{StaticResource Brush.Background.Main}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="16" />
         </Style>
 
         <Style x:Key="CalendarColumnLayoutStyle" TargetType="Grid">
             <Setter Property="Width" Value="480" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <DataTrigger Binding="{Binding UseExpandedCalendarLayout, ElementName=CalendarRoot}" Value="True">
                     <Setter Property="Width" Value="570" />
                 </DataTrigger>
             </Style.Triggers>
@@ -37,7 +37,7 @@
             <Setter Property="Width" Value="480" />
             <Setter Property="Height" Value="480" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <DataTrigger Binding="{Binding UseExpandedCalendarLayout, ElementName=CalendarRoot}" Value="True">
                     <Setter Property="Width" Value="570" />
                     <Setter Property="Height" Value="570" />
                 </DataTrigger>
@@ -54,6 +54,28 @@
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        </Style>
+
+        <Style x:Key="CalendarListItemHoverBorderStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CalendarListItemsControlStyle" TargetType="ItemsControl">
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                    </Style>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style
@@ -83,7 +105,7 @@
         <Style x:Key="CalendarSummaryMaximizedVisibilityStyle" TargetType="Grid">
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <DataTrigger Binding="{Binding UseExpandedCalendarLayout, ElementName=CalendarRoot}" Value="True">
                     <Setter Property="Visibility" Value="Visible" />
                 </DataTrigger>
             </Style.Triggers>
@@ -92,7 +114,7 @@
         <Style x:Key="CalendarSummaryRestoredVisibilityStyle" TargetType="Grid">
             <Setter Property="Visibility" Value="Visible" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <DataTrigger Binding="{Binding UseExpandedCalendarLayout, ElementName=CalendarRoot}" Value="True">
                     <Setter Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
             </Style.Triggers>
@@ -205,37 +227,63 @@
         </DataTemplate>
 
         <DataTemplate x:Key="ExpenseItemTemplate">
-            <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel>
+            <Border Style="{StaticResource CalendarListItemHoverBorderStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Name}" />
+                        <TextBlock
+                            Margin="0,3,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding SpendingSourceName}" />
+                    </StackPanel>
                     <TextBlock
+                        Grid.Column="1"
                         FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding Name}" />
-                    <TextBlock
-                        Margin="0,3,0,0"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding SpendingSourceName}" />
-                </StackPanel>
-                <TextBlock
-                    Grid.Column="1"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Danger}"
-                    Text="{Binding AmountText}" />
-            </Grid>
+                        Foreground="{StaticResource Brush.Danger}"
+                        Text="{Binding AmountText}" />
+                </Grid>
+            </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="IncomeItemTemplate">
-            <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource CalendarListItemHoverBorderStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Name}" />
+                        <TextBlock
+                            Margin="0,3,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding SpendingSourceName}" />
+                    </StackPanel>
+                    <TextBlock
+                        Grid.Column="1"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Mint}"
+                        Text="{Binding AmountText}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="GoalDeadlineItemTemplate">
+            <Border Style="{StaticResource CalendarListItemHoverBorderStyle}">
                 <StackPanel>
                     <TextBlock
                         FontFamily="{StaticResource Bold}"
@@ -246,58 +294,40 @@
                         FontFamily="{StaticResource Medium}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding SpendingSourceName}" />
+                        Text="{Binding ProgressText}" />
                 </StackPanel>
-                <TextBlock
-                    Grid.Column="1"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Mint}"
-                    Text="{Binding AmountText}" />
-            </Grid>
-        </DataTemplate>
-
-        <DataTemplate x:Key="GoalDeadlineItemTemplate">
-            <StackPanel Margin="0,0,0,10">
-                <TextBlock
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="{Binding Name}" />
-                <TextBlock
-                    Margin="0,3,0,0"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="11"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="{Binding ProgressText}" />
-            </StackPanel>
+            </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="RecurringTransactionItemTemplate">
-            <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel>
+            <Border Style="{StaticResource CalendarListItemHoverBorderStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding Name}" />
+                        <TextBlock
+                            Margin="0,3,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}">
+                            <Run Text="{Binding TypeText}" />
+                            <Run Text=" - " />
+                            <Run Text="{Binding SourceName}" />
+                        </TextBlock>
+                    </StackPanel>
                     <TextBlock
+                        Grid.Column="1"
                         FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding Name}" />
-                    <TextBlock
-                        Margin="0,3,0,0"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Secondary}">
-                        <Run Text="{Binding TypeText}" />
-                        <Run Text=" - " />
-                        <Run Text="{Binding SourceName}" />
-                    </TextBlock>
-                </StackPanel>
-                <TextBlock
-                    Grid.Column="1"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Info}"
-                    Text="{Binding AmountText}" />
-            </Grid>
+                        Foreground="{StaticResource Brush.Info}"
+                        Text="{Binding AmountText}" />
+                </Grid>
+            </Border>
         </DataTemplate>
     </UserControl.Resources>
 
@@ -313,7 +343,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="10" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <Border Style="{StaticResource CalendarCardStyle}">
@@ -394,13 +424,13 @@
             <Grid Grid.Row="3">
                 <Grid Style="{StaticResource CalendarSummaryMaximizedVisibilityStyle}">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <Border Style="{StaticResource CalendarCardStyle}">
@@ -566,7 +596,10 @@
                             Margin="0,14,0,0"
                             VerticalScrollBarVisibility="Auto">
                             <Grid>
-                                <ItemsControl ItemTemplate="{StaticResource ExpenseItemTemplate}" ItemsSource="{Binding Expenses}" />
+                                <ItemsControl
+                                    ItemTemplate="{StaticResource ExpenseItemTemplate}"
+                                    ItemsSource="{Binding Expenses}"
+                                    Style="{StaticResource CalendarListItemsControlStyle}" />
                                 <TextBlock
                                     Style="{StaticResource CalendarNoDataTextStyle}"
                                     Text="No expenses for this date."
@@ -588,7 +621,10 @@
                             Margin="0,14,0,0"
                             VerticalScrollBarVisibility="Auto">
                             <Grid>
-                                <ItemsControl ItemTemplate="{StaticResource IncomeItemTemplate}" ItemsSource="{Binding Incomes}" />
+                                <ItemsControl
+                                    ItemTemplate="{StaticResource IncomeItemTemplate}"
+                                    ItemsSource="{Binding Incomes}"
+                                    Style="{StaticResource CalendarListItemsControlStyle}" />
                                 <TextBlock
                                     Style="{StaticResource CalendarNoDataTextStyle}"
                                     Text="No incomes for this date."
@@ -610,7 +646,10 @@
                             Margin="0,14,0,0"
                             VerticalScrollBarVisibility="Auto">
                             <Grid>
-                                <ItemsControl ItemTemplate="{StaticResource GoalDeadlineItemTemplate}" ItemsSource="{Binding GoalDeadlines}" />
+                                <ItemsControl
+                                    ItemTemplate="{StaticResource GoalDeadlineItemTemplate}"
+                                    ItemsSource="{Binding GoalDeadlines}"
+                                    Style="{StaticResource CalendarListItemsControlStyle}" />
                                 <TextBlock
                                     Style="{StaticResource CalendarNoDataTextStyle}"
                                     Text="No goal deadlines for this date."
@@ -635,7 +674,10 @@
                             Margin="0,14,0,0"
                             VerticalScrollBarVisibility="Auto">
                             <Grid>
-                                <ItemsControl ItemTemplate="{StaticResource RecurringTransactionItemTemplate}" ItemsSource="{Binding RecurringTransactions}" />
+                                <ItemsControl
+                                    ItemTemplate="{StaticResource RecurringTransactionItemTemplate}"
+                                    ItemsSource="{Binding RecurringTransactions}"
+                                    Style="{StaticResource CalendarListItemsControlStyle}" />
                                 <TextBlock
                                     Style="{StaticResource CalendarNoDataTextStyle}"
                                     Text="No recurring transactions for this date."

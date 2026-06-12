@@ -135,12 +135,27 @@ public sealed class CalendarLayoutTests
     public void CalendarLayout_UsesStackedSummaryCardsWhenWindowIsMaximized()
     {
         var xaml = LoadCalendarXaml();
+        var document = XDocument.Parse(xaml);
+        var presentation = document.Root!.Name.Namespace;
+        var maximizedSummaryGrid = document.Descendants(presentation + "Grid")
+            .Single(element => (string?)element.Attribute("Style") == "{StaticResource CalendarSummaryMaximizedVisibilityStyle}");
+        var rowDefinitions = maximizedSummaryGrid
+            .Element(presentation + "Grid.RowDefinitions")!
+            .Elements(presentation + "RowDefinition")
+            .Select(element => (string?)element.Attribute("Height") ?? string.Empty)
+            .ToArray();
+        var summaryCards = maximizedSummaryGrid
+            .Elements(presentation + "Border")
+            .Select(element => (string?)element.Attribute("Grid.Row") ?? "0")
+            .ToArray();
 
         Assert.Contains("x:Key=\"CalendarSummaryMaximizedVisibilityStyle\"", xaml);
-        Assert.Contains("Binding=\"{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}\" Value=\"True\"", xaml);
+        Assert.Contains("Binding=\"{Binding UseExpandedCalendarLayout, ElementName=CalendarRoot}\" Value=\"True\"", xaml);
         Assert.Contains("x:Key=\"CalendarSummaryInlineValueTextStyle\"", xaml);
         Assert.Contains("<Setter Property=\"Margin\" Value=\"12,0,0,0\" />", xaml);
         Assert.Contains("<Setter Property=\"HorizontalAlignment\" Value=\"Right\" />", xaml);
+        Assert.Equal(["*", "10", "*", "10", "*", "10", "*"], rowDefinitions);
+        Assert.Equal(["0", "2", "4", "6"], summaryCards);
     }
 
     [Fact]
@@ -154,7 +169,7 @@ public sealed class CalendarLayoutTests
         Assert.Contains("<Setter Property=\"Height\" Value=\"480\" />", xaml);
         Assert.Contains("<Setter Property=\"Width\" Value=\"570\" />", xaml);
         Assert.Contains("<Setter Property=\"Height\" Value=\"570\" />", xaml);
-        Assert.Contains("Binding=\"{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}\" Value=\"True\"", xaml);
+        Assert.Contains("Binding=\"{Binding UseExpandedCalendarLayout, ElementName=CalendarRoot}\" Value=\"True\"", xaml);
         Assert.Contains("Style=\"{StaticResource CalendarGridCardStyle}\"", xaml);
         Assert.Contains("Style=\"{StaticResource CalendarColumnLayoutStyle}\"", xaml);
     }
@@ -178,6 +193,60 @@ public sealed class CalendarLayoutTests
         Assert.Contains("x:Key=\"CalendarSummaryRestoredVisibilityStyle\"", xaml);
         Assert.Contains("<ColumnDefinition Width=\"*\" />", xaml);
         Assert.Contains("HorizontalAlignment=\"Stretch\"", xaml);
+    }
+
+    [Fact]
+    public void CalendarLayout_SummaryAreaUsesRemainingHeightToAvoidBottomClipping()
+    {
+        var xaml = LoadCalendarXaml();
+        var document = XDocument.Parse(xaml);
+        var presentation = document.Root!.Name.Namespace;
+        var layoutGrid = document.Root
+            .Elements(presentation + "Grid")
+            .Single(element => (string?)element.Attribute("Margin") == "12");
+        var leftColumn = layoutGrid
+            .Elements(presentation + "Grid")
+            .Single(element => element.Attribute("Grid.Column") is null);
+        var rowDefinitions = leftColumn
+            .Element(presentation + "Grid.RowDefinitions")!
+            .Elements(presentation + "RowDefinition")
+            .Select(element => (string?)element.Attribute("Height"))
+            .ToArray();
+
+        Assert.Equal("*", rowDefinitions[3]);
+    }
+
+    [Fact]
+    public void CalendarLayout_RightListItemsUseHoverBackground()
+    {
+        var xaml = LoadCalendarXaml();
+
+        Assert.Contains("x:Key=\"CalendarListItemHoverBorderStyle\"", xaml);
+        Assert.Contains("x:Key=\"CalendarListItemsControlStyle\"", xaml);
+        Assert.Contains("<Setter Property=\"HorizontalAlignment\" Value=\"Stretch\" />", xaml);
+        Assert.Contains("Property=\"IsMouseOver\" Value=\"True\"", xaml);
+        Assert.Contains("Property=\"Background\" Value=\"{StaticResource Brush.Background.Hover}\"", xaml);
+        Assert.Contains("Style=\"{StaticResource CalendarListItemHoverBorderStyle}\"", ExtractSection(xaml, "x:Key=\"ExpenseItemTemplate\"", "x:Key=\"IncomeItemTemplate\""));
+        Assert.Contains("Style=\"{StaticResource CalendarListItemHoverBorderStyle}\"", ExtractSection(xaml, "x:Key=\"IncomeItemTemplate\"", "x:Key=\"GoalDeadlineItemTemplate\""));
+        Assert.Contains("Style=\"{StaticResource CalendarListItemHoverBorderStyle}\"", ExtractSection(xaml, "x:Key=\"GoalDeadlineItemTemplate\"", "x:Key=\"RecurringTransactionItemTemplate\""));
+        Assert.Contains("Style=\"{StaticResource CalendarListItemHoverBorderStyle}\"", ExtractSection(xaml, "x:Key=\"RecurringTransactionItemTemplate\"", "</UserControl.Resources>"));
+        Assert.Equal(4, CountOccurrences(xaml, "Style=\"{StaticResource CalendarListItemsControlStyle}\""));
+    }
+
+    [Fact]
+    public void CalendarLayout_UsesPageSizeFallbackForExpandedLayout()
+    {
+        var xaml = LoadCalendarXaml();
+        var codeBehind = LoadCalendarCodeBehind();
+
+        Assert.Contains("UseExpandedCalendarLayoutProperty", codeBehind);
+        Assert.Contains("ExpandedLayoutMinWidth", codeBehind);
+        Assert.Contains("ActualWidth >= ExpandedLayoutMinWidth", codeBehind);
+        Assert.Contains("GetIsWindowLayoutMaximized()", codeBehind);
+        Assert.Contains("SizeChanged += OnCalendarSizeChanged;", codeBehind);
+        Assert.Contains("Loaded += OnCalendarLoaded;", codeBehind);
+        Assert.Contains("Binding=\"{Binding UseExpandedCalendarLayout, ElementName=CalendarRoot}\" Value=\"True\"", xaml);
+        Assert.DoesNotContain("Binding=\"{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType=Window}}\" Value=\"True\"", xaml);
     }
 
     [Fact]
@@ -238,21 +307,47 @@ public sealed class CalendarLayoutTests
         return content[start..(end + endMarker.Length)];
     }
 
+    private static int CountOccurrences(string content, string marker)
+    {
+        var count = 0;
+        var searchStart = 0;
+
+        while (true)
+        {
+            var index = content.IndexOf(marker, searchStart, StringComparison.Ordinal);
+            if (index < 0)
+                return count;
+
+            count++;
+            searchStart = index + marker.Length;
+        }
+    }
+
     private static string LoadCalendarXaml()
+    {
+        return File.ReadAllText(ResolveCalendarPath("Calendar.xaml"));
+    }
+
+    private static string LoadCalendarCodeBehind()
+    {
+        return File.ReadAllText(ResolveCalendarPath("Calendar.xaml.cs"));
+    }
+
+    private static string ResolveCalendarPath(string fileName)
     {
         var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
         while (currentDirectory is not null)
         {
             if (File.Exists(Path.Combine(currentDirectory.FullName, "Fluxo.slnx")))
             {
-                return File.ReadAllText(Path.Combine(
+                return Path.Combine(
                     currentDirectory.FullName,
                     "Fluxo",
                     "Views",
                     "Shell",
                     "Main",
                     "Pages",
-                    "Calendar.xaml"));
+                    fileName);
             }
 
             currentDirectory = currentDirectory.Parent;
