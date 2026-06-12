@@ -15,7 +15,10 @@ public sealed class CalendarLayoutTests
         Assert.Contains("x:Class=\"Fluxo.Views.Shell.Main.Pages.Calendar\"", xaml);
         Assert.Contains("<ColumnDefinition Width=\"Auto", xaml);
         Assert.Contains("<ColumnDefinition Width=\"*\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding VisibleWeeks}\"", xaml);
+        Assert.Contains("ItemsSource=\"{Binding BufferedWeeks}\"", xaml);
+        Assert.Contains("x:Name=\"CalendarWeekViewport\"", xaml);
+        Assert.Contains("ClipToBounds=\"True\"", xaml);
+        Assert.Contains("x:Name=\"CalendarWeekTranslateTransform\"", xaml);
         Assert.Contains("Command=\"{Binding DataContext.SelectDateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}\"", xaml);
     }
 
@@ -175,14 +178,35 @@ public sealed class CalendarLayoutTests
     }
 
     [Fact]
-    public void CalendarLayout_StretchesWeekRowsAndDateButtonsVertically()
+    public void CalendarLayout_StretchesBufferedWeekRowsAndDateButtonsVertically()
     {
         var xaml = LoadCalendarXaml();
 
-        Assert.Contains("<UniformGrid Rows=\"6\" />", xaml);
+        Assert.Contains("<UniformGrid Rows=\"10\" />", xaml);
         Assert.Contains("<UniformGrid Columns=\"7\" Rows=\"1\" />", xaml);
         Assert.Contains("<Setter Property=\"VerticalAlignment\" Value=\"Stretch\" />", xaml);
         Assert.Contains("VerticalAlignment=\"Stretch\"", xaml);
+    }
+
+    [Fact]
+    public void CalendarLayout_UpdatesBufferedWeekStackWhenViewportSizeIsKnown()
+    {
+        var xaml = LoadCalendarXaml();
+        var codeBehind = LoadCalendarCodeBehind();
+
+        Assert.Contains("x:Name=\"CalendarWeekViewport\"", xaml);
+        Assert.Contains("SizeChanged=\"OnCalendarWeekViewportSizeChanged\"", xaml);
+        Assert.Contains("x:Name=\"CalendarWeekSurface\"", xaml);
+        Assert.Contains("ClipToBounds=\"False\"", xaml);
+        Assert.Contains("Width=\"{Binding ActualWidth, ElementName=CalendarWeekViewport}\"", xaml);
+        Assert.Contains("private void OnCalendarWeekViewportSizeChanged(object sender, SizeChangedEventArgs e)", codeBehind);
+        Assert.Contains("QueueCalendarScrollOffsetReset();", codeBehind);
+        Assert.Contains("DispatcherPriority.Loaded", codeBehind);
+        Assert.Contains("CalendarWeekViewport.SizeChanged -= OnCalendarWeekViewportSizeChanged;", codeBehind);
+        Assert.Contains("private const int CalendarBufferWeekCount = 2;", codeBehind);
+        Assert.Contains("private const int CalendarBufferedWeekCount = CalendarFrameWeekCount + CalendarBufferWeekCount * 2;", codeBehind);
+        Assert.Contains("CalendarWeekItemsControl.Height = rowHeight * CalendarBufferedWeekCount;", codeBehind);
+        Assert.Contains("CalendarWeekTranslateTransform.Y = -(CalendarBufferWeekCount * rowHeight) - _calendarScrollOffset;", codeBehind);
     }
 
     [Fact]

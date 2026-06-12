@@ -399,25 +399,35 @@
                         <TextBlock Style="{StaticResource CalendarWeekHeaderLabelStyle}" Text="SAT" />
                     </UniformGrid>
 
-                    <ItemsControl
+                    <Grid
+                        x:Name="CalendarWeekViewport"
                         Grid.Row="1"
                         Margin="0,10,0,0"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        ItemTemplate="{StaticResource CalendarWeekTemplate}"
-                        ItemsSource="{Binding VisibleWeeks}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Rows="6" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style TargetType="ContentPresenter">
-                                <Setter Property="HorizontalAlignment" Value="Stretch" />
-                                <Setter Property="VerticalAlignment" Value="Stretch" />
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                    </ItemsControl>
+                        ClipToBounds="True"
+                        SizeChanged="OnCalendarWeekViewportSizeChanged">
+                        <Canvas x:Name="CalendarWeekSurface" ClipToBounds="False">
+                            <ItemsControl
+                                x:Name="CalendarWeekItemsControl"
+                                Width="{Binding ActualWidth, ElementName=CalendarWeekViewport}"
+                                ItemTemplate="{StaticResource CalendarWeekTemplate}"
+                                ItemsSource="{Binding BufferedWeeks}">
+                                <ItemsControl.RenderTransform>
+                                    <TranslateTransform x:Name="CalendarWeekTranslateTransform" />
+                                </ItemsControl.RenderTransform>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="10" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                        <Setter Property="VerticalAlignment" Value="Stretch" />
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                            </ItemsControl>
+                        </Canvas>
+                    </Grid>
                 </Grid>
             </Border>
 

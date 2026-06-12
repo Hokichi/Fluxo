@@ -10,40 +10,77 @@ namespace Fluxo.Tests.ViewModels.Shell.Main;
 public sealed class CalendarVMTests
 {
     [Fact]
-    public void Constructor_LoadsCurrentMonthFromFirstVisibleRow()
+    public void Constructor_LoadsCurrentMonthWithBufferedWeeks()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
 
         Assert.Equal(new DateOnly(2026, 6, 12), vm.SelectedDate);
         Assert.Equal("June 2026", vm.VisibleMonthLabel);
-        Assert.Equal(6, vm.VisibleWeeks.Count);
-        Assert.Equal(new DateOnly(2026, 5, 31), vm.VisibleWeeks[0].Days[0].Date);
-        Assert.Equal(new DateOnly(2026, 7, 11), vm.VisibleWeeks[5].Days[6].Date);
-        Assert.True(vm.VisibleWeeks[1].Days[5].IsSelected);
-        Assert.True(vm.VisibleWeeks[0].Days[0].IsOutsideVisibleMonth);
-        Assert.True(vm.VisibleWeeks[1].Days[5].IsCurrentDay);
+        Assert.Equal(10, vm.BufferedWeeks.Count);
+        Assert.Equal(6, vm.FrameWeeks.Count);
+        Assert.Equal(new DateOnly(2026, 5, 17), vm.BufferedWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 5, 31), vm.FrameWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 7, 11), vm.FrameWeeks[5].Days[6].Date);
+        Assert.Equal(new DateOnly(2026, 7, 12), vm.BufferedWeeks[8].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 7, 19), vm.BufferedWeeks[9].Days[0].Date);
+        Assert.True(vm.FrameWeeks[1].Days[5].IsSelected);
+        Assert.True(vm.FrameWeeks[0].Days[0].IsOutsideVisibleMonth);
+        Assert.True(vm.FrameWeeks[1].Days[5].IsCurrentDay);
     }
 
     [Fact]
-    public void ScrollDown_DropsFirstWeekAndAppendsNextWeek()
+    public void ShiftDown_DropsFirstFrameWeekAndAppendsNextFrameWeek()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
 
-        vm.ScrollCalendarRowsCommand.Execute(1);
+        vm.ShiftCalendarFrameRowsCommand.Execute(1);
 
-        Assert.Equal(new DateOnly(2026, 6, 7), vm.VisibleWeeks[0].Days[0].Date);
-        Assert.Equal(new DateOnly(2026, 7, 18), vm.VisibleWeeks[5].Days[6].Date);
+        Assert.Equal(new DateOnly(2026, 6, 7), vm.FrameWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 7, 18), vm.FrameWeeks[5].Days[6].Date);
+        Assert.Equal(new DateOnly(2026, 5, 24), vm.BufferedWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 7, 26), vm.BufferedWeeks[9].Days[0].Date);
     }
 
     [Fact]
-    public void ScrollUp_PrependsPreviousWeekAndDropsLastWeek()
+    public void ShiftUp_PrependsPreviousFrameWeekAndDropsLastFrameWeek()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
 
-        vm.ScrollCalendarRowsCommand.Execute(-1);
+        vm.ShiftCalendarFrameRowsCommand.Execute(-1);
 
-        Assert.Equal(new DateOnly(2026, 5, 24), vm.VisibleWeeks[0].Days[0].Date);
-        Assert.Equal(new DateOnly(2026, 7, 4), vm.VisibleWeeks[5].Days[6].Date);
+        Assert.Equal(new DateOnly(2026, 5, 24), vm.FrameWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 7, 4), vm.FrameWeeks[5].Days[6].Date);
+        Assert.Equal(new DateOnly(2026, 5, 10), vm.BufferedWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 7, 12), vm.BufferedWeeks[9].Days[0].Date);
+    }
+
+    [Fact]
+    public void ShiftDown_WhenNextMonthIsOnlyPartiallyVisible_KeepsPreviousMonthBright()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        vm.ShiftCalendarFrameRowsCommand.Execute(1);
+        vm.ShiftCalendarFrameRowsCommand.Execute(1);
+
+        Assert.Equal("June 2026", vm.VisibleMonthLabel);
+        var julyFirst = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 7, 1));
+        Assert.True(julyFirst.IsOutsideVisibleMonth);
+    }
+
+    [Fact]
+    public void ShiftDown_WhenNextMonthIsFullyVisible_SwitchesBrightMonth()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        vm.ShiftCalendarFrameRowsCommand.Execute(1);
+        vm.ShiftCalendarFrameRowsCommand.Execute(1);
+        vm.ShiftCalendarFrameRowsCommand.Execute(1);
+
+        Assert.Equal("July 2026", vm.VisibleMonthLabel);
+        var julyFirst = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 7, 1));
+        Assert.False(julyFirst.IsOutsideVisibleMonth);
+        var juneTwentyEighth = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 6, 28));
+        Assert.True(juneTwentyEighth.IsOutsideVisibleMonth);
     }
 
     [Fact]
@@ -54,10 +91,10 @@ public sealed class CalendarVMTests
         await vm.NavigateToNextMonthCommand.ExecuteAsync(null);
 
         Assert.Equal("July 2026", vm.VisibleMonthLabel);
-        Assert.Equal(new DateOnly(2026, 6, 28), vm.VisibleWeeks[0].Days[0].Date);
-        Assert.Equal(new DateOnly(2026, 8, 8), vm.VisibleWeeks[5].Days[6].Date);
-        Assert.True(vm.VisibleWeeks[0].Days[0].IsOutsideVisibleMonth);
-        Assert.False(vm.VisibleWeeks[0].Days[3].IsOutsideVisibleMonth);
+        Assert.Equal(new DateOnly(2026, 6, 28), vm.FrameWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 8, 8), vm.FrameWeeks[5].Days[6].Date);
+        Assert.True(vm.FrameWeeks[0].Days[0].IsOutsideVisibleMonth);
+        Assert.False(vm.FrameWeeks[0].Days[3].IsOutsideVisibleMonth);
     }
 
     [Fact]
@@ -68,10 +105,10 @@ public sealed class CalendarVMTests
         await vm.NavigateToPreviousMonthCommand.ExecuteAsync(null);
 
         Assert.Equal("May 2026", vm.VisibleMonthLabel);
-        Assert.Equal(new DateOnly(2026, 4, 26), vm.VisibleWeeks[0].Days[0].Date);
-        Assert.Equal(new DateOnly(2026, 6, 6), vm.VisibleWeeks[5].Days[6].Date);
-        Assert.True(vm.VisibleWeeks[0].Days[0].IsOutsideVisibleMonth);
-        Assert.False(vm.VisibleWeeks[0].Days[5].IsOutsideVisibleMonth);
+        Assert.Equal(new DateOnly(2026, 4, 26), vm.FrameWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 6, 6), vm.FrameWeeks[5].Days[6].Date);
+        Assert.True(vm.FrameWeeks[0].Days[0].IsOutsideVisibleMonth);
+        Assert.False(vm.FrameWeeks[0].Days[5].IsOutsideVisibleMonth);
     }
 
     [Fact]
@@ -83,7 +120,7 @@ public sealed class CalendarVMTests
             currentDate: new DateTime(2026, 6, 12),
             navigationDelayAsync: _ =>
             {
-                observedWeekStarts.Add(vm!.VisibleWeeks[0].Days[0].Date);
+                observedWeekStarts.Add(vm!.FrameWeeks[0].Days[0].Date);
                 return Task.CompletedTask;
             });
 
@@ -96,7 +133,7 @@ public sealed class CalendarVMTests
                 new DateOnly(2026, 6, 21)
             ],
             observedWeekStarts);
-        Assert.Equal(new DateOnly(2026, 6, 28), vm.VisibleWeeks[0].Days[0].Date);
+        Assert.Equal(new DateOnly(2026, 6, 28), vm.FrameWeeks[0].Days[0].Date);
         Assert.Equal("July 2026", vm.VisibleMonthLabel);
     }
 

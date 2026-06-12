@@ -10,13 +10,16 @@ namespace Fluxo.ViewModels.Shell.Main;
 public sealed partial class CalendarVM : ObservableObject, IDisposable
 {
     private static readonly TimeSpan MonthNavigationStepDelay = TimeSpan.FromMilliseconds(45);
+    private const int FrameWeekCount = 6;
+    private const int BufferWeekCount = 2;
+    private const int BufferedWeekCount = FrameWeekCount + BufferWeekCount * 2;
 
     private readonly ICalendarService _calendarService;
     private readonly Func<TimeSpan, Task> _navigationDelayAsync;
     private readonly DateOnly _currentDate;
     private CancellationTokenSource? _loadCts;
     private int _loadRequestVersion;
-    private DateOnly _firstVisibleWeekStart;
+    private DateOnly _firstFrameWeekStart;
     private DateOnly _visibleMonth;
 
     [ObservableProperty] private DateOnly _selectedDate;
@@ -46,11 +49,16 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         _currentDate = DateOnly.FromDateTime(currentDate.Date);
         SelectedDate = _currentDate;
         _visibleMonth = new DateOnly(SelectedDate.Year, SelectedDate.Month, 1);
-        _firstVisibleWeekStart = StartOfWeek(_visibleMonth);
+        _firstFrameWeekStart = StartOfWeek(_visibleMonth);
         RebuildVisibleWeeks();
     }
 
-    public ObservableCollection<CalendarWeekRow> VisibleWeeks { get; } = [];
+    public ObservableCollection<CalendarWeekRow> BufferedWeeks { get; } = [];
+
+    public IReadOnlyList<CalendarWeekRow> FrameWeeks => BufferedWeeks
+        .Skip(BufferWeekCount)
+        .Take(FrameWeekCount)
+        .ToArray();
 
     public bool HasNoExpenses => Expenses.Count == 0;
     public bool HasNoIncomes => Incomes.Count == 0;
@@ -64,13 +72,12 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ScrollCalendarRows(int delta)
+    private void ShiftCalendarFrameRows(int delta)
     {
         if (delta == 0)
             return;
 
-        _firstVisibleWeekStart = _firstVisibleWeekStart.AddDays(delta > 0 ? 7 : -7);
-        _visibleMonth = ResolveDominantVisibleMonth(_firstVisibleWeekStart);
+        _firstFrameWeekStart = _firstFrameWeekStart.AddDays(delta > 0 ? 7 : -7);
         RebuildVisibleWeeks();
     }
 
@@ -147,10 +154,13 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
 
     private void RebuildVisibleWeeks()
     {
-        VisibleWeeks.Clear();
-        for (var weekIndex = 0; weekIndex < 6; weekIndex++)
+        UpdateVisibleMonthFromFrame();
+
+        BufferedWeeks.Clear();
+        var firstBufferedWeekStart = _firstFrameWeekStart.AddDays(-BufferWeekCount * 7);
+        for (var weekIndex = 0; weekIndex < BufferedWeekCount; weekIndex++)
         {
-            var weekStart = _firstVisibleWeekStart.AddDays(weekIndex * 7);
+            var weekStart = firstBufferedWeekStart.AddDays(weekIndex * 7);
             var days = Enumerable.Range(0, 7)
                 .Select(offset =>
                 {
@@ -163,25 +173,46 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
                         date.Month != _visibleMonth.Month || date.Year != _visibleMonth.Year);
                 })
                 .ToArray();
-            VisibleWeeks.Add(new CalendarWeekRow(days));
+            BufferedWeeks.Add(new CalendarWeekRow(days));
         }
 
+        OnPropertyChanged(nameof(FrameWeeks));
         VisibleMonthLabel = _visibleMonth.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy", CultureInfo.InvariantCulture);
     }
 
     private async Task ScrollToVisibleMonthAsync(DateOnly month)
     {
         var targetMonth = new DateOnly(month.Year, month.Month, 1);
-        var targetFirstVisibleWeekStart = StartOfWeek(targetMonth);
+        var targetFirstFrameWeekStart = StartOfWeek(targetMonth);
 
-        while (_firstVisibleWeekStart != targetFirstVisibleWeekStart)
+        while (_firstFrameWeekStart != targetFirstFrameWeekStart)
         {
-            var direction = targetFirstVisibleWeekStart.CompareTo(_firstVisibleWeekStart) > 0 ? 1 : -1;
-            ScrollCalendarRows(direction);
+            var direction = targetFirstFrameWeekStart.CompareTo(_firstFrameWeekStart) > 0 ? 1 : -1;
+            ShiftCalendarFrameRows(direction);
 
-            if (_firstVisibleWeekStart != targetFirstVisibleWeekStart)
+            if (_firstFrameWeekStart != targetFirstFrameWeekStart)
                 await _navigationDelayAsync(MonthNavigationStepDelay);
         }
+    }
+
+    private void UpdateVisibleMonthFromFrame()
+    {
+        if (IsMonthFullyVisible(_visibleMonth))
+            return;
+
+        var candidate = ResolveDominantVisibleMonth(_firstFrameWeekStart);
+        if (IsMonthFullyVisible(candidate))
+            _visibleMonth = candidate;
+    }
+
+    private bool IsMonthFullyVisible(DateOnly month)
+    {
+        var firstFrameDate = _firstFrameWeekStart;
+        var lastFrameDate = _firstFrameWeekStart.AddDays(FrameWeekCount * 7 - 1);
+        var firstMonthDate = new DateOnly(month.Year, month.Month, 1);
+        var lastMonthDate = firstMonthDate.AddMonths(1).AddDays(-1);
+
+        return firstMonthDate >= firstFrameDate && lastMonthDate <= lastFrameDate;
     }
 
     private static DateOnly StartOfWeek(DateOnly date)
