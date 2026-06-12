@@ -210,9 +210,11 @@ public sealed class CalendarLayoutTests
     }
 
     [Fact]
-    public void CalendarLayout_AnimatesMouseWheelCalendarScrollTowardTargetOffset()
+    public void CalendarLayout_AnimatesMouseWheelCalendarScrollBeforeRecyclingRows()
     {
         var codeBehind = LoadCalendarCodeBehind();
+        var mouseWheelHandler = ExtractMethod(codeBehind, "private void OnCalendarMouseWheel");
+        var renderingHandler = ExtractMethod(codeBehind, "private void OnCalendarScrollRendering");
 
         Assert.Contains("CompositionTarget.Rendering += OnCalendarScrollRendering;", codeBehind);
         Assert.Contains("CompositionTarget.Rendering -= OnCalendarScrollRendering;", codeBehind);
@@ -220,6 +222,8 @@ public sealed class CalendarLayoutTests
         Assert.Contains("StartCalendarScrollAnimation();", codeBehind);
         Assert.Contains("1d - Math.Exp(-CalendarScrollSmoothing * elapsed.TotalSeconds)", codeBehind);
         Assert.Contains("_calendarScrollOffset += distanceToTarget * progress;", codeBehind);
+        Assert.DoesNotContain("NormalizeCalendar", mouseWheelHandler);
+        Assert.Contains("NormalizeCalendarScrollOffset(rowHeight);", renderingHandler);
     }
 
     [Fact]
@@ -342,6 +346,29 @@ public sealed class CalendarLayoutTests
         Assert.True(end >= 0, $"Could not find end marker '{endMarker}'.");
 
         return content[start..(end + endMarker.Length)];
+    }
+
+    private static string ExtractMethod(string content, string signature)
+    {
+        var start = content.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Could not find method '{signature}'.");
+
+        var bodyStart = content.IndexOf('{', start);
+        Assert.True(bodyStart >= 0, $"Could not find method body for '{signature}'.");
+
+        var depth = 0;
+        for (var index = bodyStart; index < content.Length; index++)
+        {
+            if (content[index] == '{')
+                depth++;
+            else if (content[index] == '}')
+                depth--;
+
+            if (depth == 0)
+                return content[start..(index + 1)];
+        }
+
+        throw new InvalidOperationException($"Could not parse method '{signature}'.");
     }
 
     private static int CountOccurrences(string content, string marker)

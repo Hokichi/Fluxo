@@ -19,7 +19,7 @@ public partial class Calendar : UserControl
     private const int CalendarBufferWeekCount = 2;
     private const int CalendarBufferedWeekCount = CalendarFrameWeekCount + CalendarBufferWeekCount * 2;
     private const double MouseWheelPixelsPerDelta = 48d / 120d;
-    private const double CalendarScrollSmoothing = 18d;
+    private const double CalendarScrollSmoothing = 10d;
     private const double CalendarScrollSettledThreshold = 0.5d;
     private readonly CalendarVM _viewModel;
     private readonly SemaphoreSlim _openPreparationGate = new(1, 1);
@@ -65,7 +65,6 @@ public partial class Calendar : UserControl
             return;
 
         _targetCalendarScrollOffset -= e.Delta * MouseWheelPixelsPerDelta;
-        NormalizeCalendarTargetScrollOffset(rowHeight);
         StartCalendarScrollAnimation();
         e.Handled = true;
     }
@@ -115,16 +114,16 @@ public partial class Calendar : UserControl
         return CalendarWeekViewport.ActualHeight / CalendarFrameWeekCount;
     }
 
-    private void NormalizeCalendarTargetScrollOffset(double rowHeight)
+    private void NormalizeCalendarScrollOffset(double rowHeight)
     {
-        while (_targetCalendarScrollOffset >= rowHeight)
+        while (_calendarScrollOffset >= rowHeight)
         {
             _viewModel.ShiftCalendarFrameRowsCommand.Execute(1);
             _targetCalendarScrollOffset -= rowHeight;
             _calendarScrollOffset -= rowHeight;
         }
 
-        while (_targetCalendarScrollOffset <= -rowHeight)
+        while (_calendarScrollOffset <= -rowHeight)
         {
             _viewModel.ShiftCalendarFrameRowsCommand.Execute(-1);
             _targetCalendarScrollOffset += rowHeight;
@@ -183,10 +182,15 @@ public partial class Calendar : UserControl
         if (elapsed <= TimeSpan.Zero)
             return;
 
+        var rowHeight = GetCalendarRowHeight();
+        if (rowHeight <= 0)
+            return;
+
         var distanceToTarget = _targetCalendarScrollOffset - _calendarScrollOffset;
         if (Math.Abs(distanceToTarget) <= CalendarScrollSettledThreshold)
         {
             _calendarScrollOffset = _targetCalendarScrollOffset;
+            NormalizeCalendarScrollOffset(rowHeight);
             ApplyCalendarScrollOffset();
             StopCalendarScrollAnimation();
             return;
@@ -194,6 +198,7 @@ public partial class Calendar : UserControl
 
         var progress = 1d - Math.Exp(-CalendarScrollSmoothing * elapsed.TotalSeconds);
         _calendarScrollOffset += distanceToTarget * progress;
+        NormalizeCalendarScrollOffset(rowHeight);
         ApplyCalendarScrollOffset();
     }
 
