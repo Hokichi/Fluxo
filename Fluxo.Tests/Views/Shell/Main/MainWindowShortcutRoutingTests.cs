@@ -134,7 +134,7 @@ public sealed class MainWindowShortcutRoutingTests
         var source = ReadMainWindowSource();
 
         Assert.Contains("private const double HeaderSearchCollapsedWidth", source);
-        Assert.Contains("private const double HeaderSearchExpandedWidth = 240", source);
+        Assert.Contains("private const double HeaderSearchExpandedWidth = 160", source);
         Assert.Contains("private void AnimateHeaderSearchInput(double targetWidth, double targetOpacity", source);
         Assert.Contains("new DoubleAnimation(currentWidth, targetWidth", source);
         Assert.Contains("HeaderSearchInputBorder.BeginAnimation(FrameworkElement.WidthProperty", source);

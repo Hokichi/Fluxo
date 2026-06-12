@@ -63,7 +63,7 @@ public partial class MainWindow : Window, IPopupHost
     private const int StateChangeDuration = 100; // ms
     private const int MainPageTransitionDuration = 300; // ms
     private const double HeaderSearchCollapsedWidth = 36;
-    private const double HeaderSearchExpandedWidth = 240;
+    private const double HeaderSearchExpandedWidth = 160;
     private const int HeaderSearchAnimationDuration = 160; // ms
 
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
@@ -1232,15 +1232,19 @@ public partial class MainWindow : Window, IPopupHost
             case MainPage.Dashboard:
                 EnsureDashboardPageLoaded();
                 return _dashboardPageView!;
+
             case MainPage.Analytics:
                 EnsureAnalyticsPageLoaded();
                 return _analyticsPageView!;
+
             case MainPage.Calendar:
                 EnsureCalendarPageLoaded();
                 return _calendarPageView!;
+
             case MainPage.Ledger:
                 EnsureLedgerPageLoaded();
                 return _ledgerPageView!;
+
             default:
                 EnsureDashboardPageLoaded();
                 return _dashboardPageView!;
@@ -1258,18 +1262,22 @@ public partial class MainWindow : Window, IPopupHost
                 else
                     await _mainVM.Dashboard.Initialize();
                 return;
+
             case MainPage.Analytics:
                 ApplyMainWindowRangeToAnalyticsIfBounded();
                 await _analyticsPageView!.PrepareForOpenAsync(showInternalToast: false);
                 return;
+
             case MainPage.Calendar:
                 await _calendarPageView!.PrepareForOpenAsync();
                 return;
+
             case MainPage.Ledger:
                 _ledgerPageView!.PublishViewMode();
                 ApplyMainWindowRangeToLedger();
                 await _ledgerPageView!.PrepareForOpenAsync();
                 return;
+
             default:
                 return;
         }
@@ -1822,4 +1830,3 @@ public partial class MainWindow : Window, IPopupHost
         public int Left, Top, Right, Bottom;
     }
 }
-
