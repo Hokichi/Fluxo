@@ -129,6 +129,42 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
+    public void HeaderSearchExpandCollapse_UsesAnimatedWidthAndOpacity()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("private const double HeaderSearchCollapsedWidth", source);
+        Assert.Contains("private const double HeaderSearchExpandedWidth = 240", source);
+        Assert.Contains("private void AnimateHeaderSearchInput(double targetWidth, double targetOpacity", source);
+        Assert.Contains("new DoubleAnimation(currentWidth, targetWidth", source);
+        Assert.Contains("HeaderSearchInputBorder.BeginAnimation(FrameworkElement.WidthProperty", source);
+        Assert.Contains("HeaderSearchInputBorder.BeginAnimation(UIElement.OpacityProperty", source);
+    }
+
+    [Fact]
+    public void HeaderSearchCollapse_ClearsTextAndResultsBeforeShrinkAnimation()
+    {
+        var source = ReadMainWindowSource();
+        var collapseMethod = Slice(
+            source,
+            "private void CollapseHeaderSearch()",
+            "private void UpdateHeaderSearchResults()");
+
+        Assert.True(
+            collapseMethod.IndexOf("HeaderSearchResultsPopup.IsOpen = false;", StringComparison.Ordinal) <
+            collapseMethod.IndexOf("AnimateHeaderSearchInput(HeaderSearchCollapsedWidth", StringComparison.Ordinal));
+        Assert.True(
+            collapseMethod.IndexOf("HeaderSearchBox.Text = string.Empty;", StringComparison.Ordinal) <
+            collapseMethod.IndexOf("AnimateHeaderSearchInput(HeaderSearchCollapsedWidth", StringComparison.Ordinal));
+        Assert.True(
+            collapseMethod.IndexOf("_headerSearchResults.Clear();", StringComparison.Ordinal) <
+            collapseMethod.IndexOf("AnimateHeaderSearchInput(HeaderSearchCollapsedWidth", StringComparison.Ordinal));
+        Assert.True(
+            collapseMethod.IndexOf("AnimateHeaderSearchInput(HeaderSearchCollapsedWidth", StringComparison.Ordinal) <
+            collapseMethod.IndexOf("HeaderSearchInputBorder.Visibility = Visibility.Collapsed;", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void PopupOpenMethods_AreGuardedBySpendingAmountGate()
     {
         var source = ReadMainWindowSource();

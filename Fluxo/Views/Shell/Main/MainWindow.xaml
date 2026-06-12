@@ -380,6 +380,7 @@
                             <Border
                                 x:Name="HeaderSearchInputBorder"
                                 Width="240"
+                                Opacity="0"
                                 Padding="10,6"
                                 Background="{StaticResource Brush.Background.Surface}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}"

@@ -62,6 +62,9 @@ public partial class MainWindow : Window, IPopupHost
     private const int FadeDuration = 180; // ms
     private const int StateChangeDuration = 100; // ms
     private const int MainPageTransitionDuration = 300; // ms
+    private const double HeaderSearchCollapsedWidth = 36;
+    private const double HeaderSearchExpandedWidth = 240;
+    private const int HeaderSearchAnimationDuration = 160; // ms
 
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new() { Interval = TimeSpan.FromMilliseconds(FadeDuration) };
@@ -84,6 +87,7 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isMainPageTransitionActive;
     private bool _isPreparingMainPage;
     private bool _isHeaderSearchExpanded;
+    private int _headerSearchAnimationGeneration;
     private EventHandler? _popupOverlayDeferredHideTickHandler;
     private MainPage _activeMainPage = MainPage.Dashboard;
     private IServiceScope? _dashboardPageScope;
@@ -841,8 +845,17 @@ public partial class MainWindow : Window, IPopupHost
         if (!_isHeaderSearchExpanded)
         {
             _isHeaderSearchExpanded = true;
+            var animationGeneration = ++_headerSearchAnimationGeneration;
             HeaderSearchButton.Visibility = Visibility.Collapsed;
             HeaderSearchInputBorder.Visibility = Visibility.Visible;
+            HeaderSearchInputBorder.IsHitTestVisible = true;
+            HeaderSearchInputBorder.Width = HeaderSearchCollapsedWidth;
+            HeaderSearchInputBorder.Opacity = 0;
+            AnimateHeaderSearchInput(HeaderSearchExpandedWidth, 1, () =>
+            {
+                if (animationGeneration == _headerSearchAnimationGeneration)
+                    HeaderSearchInputBorder.Width = HeaderSearchExpandedWidth;
+            });
         }
 
         HeaderSearchBox.Focus();
@@ -856,13 +869,48 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         _isHeaderSearchExpanded = false;
-        HeaderSearchButton.Visibility = Visibility.Visible;
-        HeaderSearchInputBorder.Visibility = Visibility.Collapsed;
+        var animationGeneration = ++_headerSearchAnimationGeneration;
         HeaderSearchResultsPopup.IsOpen = false;
         HeaderSearchNoResultsText.Visibility = Visibility.Collapsed;
         HeaderSearchBox.Text = string.Empty;
         WeakReferenceMessenger.Default.Send(new LedgerSearchTextChangedMessage(string.Empty));
         _headerSearchResults.Clear();
+        HeaderSearchInputBorder.IsHitTestVisible = false;
+        AnimateHeaderSearchInput(HeaderSearchCollapsedWidth, 0, () =>
+        {
+            if (animationGeneration != _headerSearchAnimationGeneration)
+                return;
+
+            HeaderSearchInputBorder.Visibility = Visibility.Collapsed;
+            HeaderSearchButton.Visibility = Visibility.Visible;
+            HeaderSearchInputBorder.Width = HeaderSearchExpandedWidth;
+            HeaderSearchInputBorder.Opacity = 0;
+        });
+    }
+
+    private void AnimateHeaderSearchInput(double targetWidth, double targetOpacity, Action? completed = null)
+    {
+        var duration = TimeSpan.FromMilliseconds(HeaderSearchAnimationDuration);
+        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var currentWidth = HeaderSearchInputBorder.ActualWidth > 0
+            ? HeaderSearchInputBorder.ActualWidth
+            : HeaderSearchInputBorder.Width;
+
+        var widthAnimation = new DoubleAnimation(currentWidth, targetWidth, duration)
+        {
+            EasingFunction = easing
+        };
+
+        var opacityAnimation = new DoubleAnimation(HeaderSearchInputBorder.Opacity, targetOpacity, duration)
+        {
+            EasingFunction = easing
+        };
+
+        if (completed is not null)
+            opacityAnimation.Completed += (_, _) => completed();
+
+        HeaderSearchInputBorder.BeginAnimation(FrameworkElement.WidthProperty, widthAnimation);
+        HeaderSearchInputBorder.BeginAnimation(UIElement.OpacityProperty, opacityAnimation);
     }
 
     private void UpdateHeaderSearchResults()
