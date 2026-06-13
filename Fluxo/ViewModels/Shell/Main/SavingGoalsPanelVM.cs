@@ -47,7 +47,6 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
     private int _navigationDirection;
 
     public ObservableCollection<SavingGoalVM> SavingGoals { get; } = [];
-    public ObservableCollection<SavingGoalCarouselDotVM> GoalDots { get; } = [];
     public int GoalStepCount => SavingGoals.Count;
     public int CurrentStepNumber => HasSavingGoals && CurrentGoalIndex >= 0 ? CurrentGoalIndex + 1 : 0;
 
@@ -90,7 +89,6 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
             CurrentGoalIndex = -1;
             CurrentGoal = null;
             NavigationDirection = 0;
-            GoalDots.Clear();
             return;
         }
 
@@ -190,6 +188,7 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
             CurrentGoalIndex = -1;
             CurrentGoal = null;
             NavigationDirection = 0;
+            UpdateActiveGoal();
             return;
         }
 
@@ -199,31 +198,12 @@ public partial class SavingGoalsPanelVM : ObservableRecipient, IRecipient<Dashbo
         CurrentGoalIndex = index;
         NavigationDirection = animateDirection;
         CurrentGoal = SavingGoals[index];
-        UpdateGoalDots();
+        UpdateActiveGoal();
     }
 
-    private void RebuildGoalDots()
+    private void UpdateActiveGoal()
     {
-        GoalDots.Clear();
-
         for (var index = 0; index < SavingGoals.Count; index++)
-        {
-            GoalDots.Add(new SavingGoalCarouselDotVM
-            {
-                IsActive = index == CurrentGoalIndex
-            });
-        }
-    }
-
-    private void UpdateGoalDots()
-    {
-        if (GoalDots.Count != SavingGoals.Count)
-        {
-            RebuildGoalDots();
-            return;
-        }
-
-        for (var index = 0; index < GoalDots.Count; index++)
-            GoalDots[index].IsActive = index == CurrentGoalIndex;
+            SavingGoals[index].IsActive = index == CurrentGoalIndex;
     }
 }

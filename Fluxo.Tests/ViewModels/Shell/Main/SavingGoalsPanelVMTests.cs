@@ -82,8 +82,11 @@ public class SavingGoalsPanelVMTests
         Assert.Equal(1, remainingGoal.Id);
         Assert.Equal(0, vm.CurrentGoalIndex);
         Assert.Equal(1, vm.CurrentGoal?.Id);
-        var activeDot = Assert.Single(vm.GoalDots, dot => dot.IsActive);
-        Assert.Equal(vm.GoalDots[0], activeDot);
+        Assert.Equal(1, vm.GoalStepCount);
+        Assert.Equal(1, vm.CurrentStepNumber);
+        var activeGoal = Assert.Single(vm.SavingGoals, goal => goal.IsActive);
+        Assert.Equal(remainingGoal, activeGoal);
+        Assert.Null(typeof(SavingGoalsPanelVM).GetProperty("GoalDots"));
     }
 
     [Fact]
@@ -96,9 +99,11 @@ public class SavingGoalsPanelVMTests
 
         Assert.Equal(2, vm.CurrentGoalIndex);
         Assert.Equal(3, vm.CurrentGoal?.Id);
+        Assert.Equal(3, vm.GoalStepCount);
+        Assert.Equal(3, vm.CurrentStepNumber);
         Assert.Equal(1, vm.NavigationDirection);
-        Assert.Equal(3, vm.GoalDots.Count);
-        Assert.True(vm.GoalDots[2].IsActive);
+        Assert.True(vm.SavingGoals[2].IsActive);
+        Assert.All(vm.SavingGoals.Where((_, index) => index != 2), goal => Assert.False(goal.IsActive));
     }
 
     [Fact]
@@ -112,9 +117,11 @@ public class SavingGoalsPanelVMTests
 
         Assert.Equal(0, vm.CurrentGoalIndex);
         Assert.Equal(1, vm.CurrentGoal?.Id);
+        Assert.Equal(2, vm.GoalStepCount);
+        Assert.Equal(1, vm.CurrentStepNumber);
         Assert.Equal(-1, vm.NavigationDirection);
-        Assert.True(vm.GoalDots[0].IsActive);
-        Assert.False(vm.GoalDots[1].IsActive);
+        Assert.True(vm.SavingGoals[0].IsActive);
+        Assert.False(vm.SavingGoals[1].IsActive);
     }
 
     private static SavingGoalsPanelVM CreateVm(IReadOnlyList<SavingGoalVM> goals)

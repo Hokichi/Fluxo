@@ -27,6 +27,12 @@ public sealed class SavingGoalsPanelLayoutTests
     {
         var xaml = File.ReadAllText(SavingGoalsPanelXamlPath);
 
+        Assert.Contains("customControls:StepNavigatorControl", xaml);
+        Assert.Contains("CurrentStep=\"{Binding CurrentStepNumber}\"", xaml);
+        Assert.Contains("StepCount=\"{Binding GoalStepCount}\"", xaml);
+        Assert.Contains("ShouldIndicateProgress=\"False\"", xaml);
+        Assert.Contains("ShouldPaginate=\"True\"", xaml);
+        Assert.DoesNotContain("GoalDots", xaml);
         Assert.Contains("OnAddSavingGoalClick", xaml);
         Assert.Contains("PlusSolid", xaml);
         Assert.Contains("SavingGoalActionBalloonButtonStyle", xaml);
