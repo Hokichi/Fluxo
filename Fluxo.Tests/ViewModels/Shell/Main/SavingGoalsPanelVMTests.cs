@@ -16,6 +16,56 @@ namespace Fluxo.Tests.ViewModels.Shell.Main;
 public class SavingGoalsPanelVMTests
 {
     [Fact]
+    public void WeeklyAverageText_UsesCurrentAmountOverCompletedWeeks()
+    {
+        var goal = new SavingGoalVM
+        {
+            CreatedOn = DateTime.Today.AddDays(-21),
+            CurrentAmount = 210m,
+            TargetAmount = 1000m
+        };
+
+        Assert.Equal("70", goal.WeeklyAverageText);
+    }
+
+    [Fact]
+    public void WeeklyAverageText_RoundsUp()
+    {
+        var goal = new SavingGoalVM
+        {
+            CreatedOn = DateTime.Today.AddDays(-14),
+            CurrentAmount = 101m,
+            TargetAmount = 1000m
+        };
+
+        Assert.Equal("51", goal.WeeklyAverageText);
+    }
+
+    [Fact]
+    public void WeeklyAverageText_ClampsNewGoalToOneWeek()
+    {
+        var goal = new SavingGoalVM
+        {
+            CreatedOn = DateTime.Today,
+            CurrentAmount = 125m,
+            TargetAmount = 1000m
+        };
+
+        Assert.Equal("125", goal.WeeklyAverageText);
+    }
+
+    [Fact]
+    public void EstimatedDeadlineText_ReturnsUndefinedWhenEndDateMissing()
+    {
+        var goal = new SavingGoalVM
+        {
+            SavingEndDate = null
+        };
+
+        Assert.Equal("Undefined", goal.EstimatedDeadlineText);
+    }
+
+    [Fact]
     public async Task LoadAsync_FiltersCompletedGoals()
     {
         var goals = new List<SavingGoalVM>

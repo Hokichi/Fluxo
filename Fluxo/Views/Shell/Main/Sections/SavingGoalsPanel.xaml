@@ -8,10 +8,161 @@
             x:Key="SavingGoalActionBalloonButtonStyle"
             BasedOn="{StaticResource ToolbarActionBalloonButtonStyle}"
             TargetType="{x:Type customControls:BalloonButton}">
-            <Setter Property="Width" Value="24" />
             <Setter Property="Height" Value="24" />
+            <Setter Property="ButtonSize" Value="24" />
             <Setter Property="IconSize" Value="11" />
         </Style>
+
+        <DataTemplate x:Key="SavingGoalTemplate">
+            <Border Margin="0,0,0,8" Padding="4,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="120" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Width="44" Height="44">
+                            <Canvas
+                                Width="56"
+                                Height="56"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <Ellipse
+                                    Canvas.Left="4"
+                                    Canvas.Top="4"
+                                    Width="48"
+                                    Height="48"
+                                    Stroke="{StaticResource Brush.Background.Surface}"
+                                    StrokeThickness="6" />
+                                <Path
+                                    Canvas.Left="6"
+                                    Canvas.Top="6"
+                                    Data="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=44}"
+                                    Stroke="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                                    StrokeEndLineCap="Round"
+                                    StrokeLineJoin="Round"
+                                    StrokeStartLineCap="Round"
+                                    StrokeThickness="6" />
+                            </Canvas>
+
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="10"
+                                Foreground="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                                Text="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, StringFormat={}{0:0%}}" />
+                        </Grid>
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="16"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Name}"
+                                TextTrimming="CharacterEllipsis" />
+
+                            <TextBlock
+                                Margin="0,6,0,0"
+                                FontSize="13"
+                                Foreground="{StaticResource Brush.Text.Secondary}">
+                                <Run
+                                    FontFamily="{StaticResource Black}"
+                                    Foreground="{Binding AnimatedProgressRatio, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource GoalProgressToBrushConverter}}"
+                                    Text="{Binding CurrentAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                                <Run FontFamily="{StaticResource Light}" Text="/" />
+                                <Run FontFamily="{StaticResource Light}" Text="{Binding TargetAmount, Converter={StaticResource NumberWithCommasConverter}}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border
+                        Grid.Column="2"
+                        Padding="8"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="10"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="Amount Left"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding AmountLeftText}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border
+                        Grid.Column="4"
+                        Padding="8"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="10"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="Weekly Average"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding WeeklyAverageText}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border
+                        Grid.Column="6"
+                        Padding="8"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="10"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="Estimated Deadline"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding EstimatedDeadlineText}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Border Style="{StaticResource DashboardPanelStyle}">
@@ -36,12 +187,34 @@
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Saving Goals" />
 
-                <customControls:BalloonButton
+                <StackPanel
                     Grid.Column="1"
-                    ButtonIcon="{StaticResource PlusSolid}"
-                    Click="OnAddSavingGoalClick"
-                    Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                    ToolTip="Add Saving Goal" />
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource Pen}"
+                        ButtonText="Edit Goal"
+                        Click="OnEditSavingGoalClick"
+                        ShouldExpand="True"
+                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                        ToolTip="Edit Goal" />
+
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource TrackChanges}"
+                        ButtonText="Add Funds"
+                        Click="OnAddGoalFundsClick"
+                        ShouldExpand="True"
+                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                        ToolTip="Update Funds" />
+
+                    <customControls:BalloonButton
+                        ButtonIcon="{StaticResource PlusSolid}"
+                        ButtonText="Add New Goal"
+                        Click="OnAddSavingGoalClick"
+                        ShouldExpand="True"
+                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                        ToolTip="Add Saving Goal" />
+                </StackPanel>
             </Grid>
 
             <TextBlock
@@ -64,6 +237,7 @@
                     PreviewMouseLeftButtonDown="OnCarouselViewportPreviewMouseLeftButtonDown"
                     PreviewMouseLeftButtonUp="OnCarouselViewportPreviewMouseLeftButtonUp"
                     PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
+
                     <ContentControl x:Name="CurrentGoalPresenter" ContentTemplate="{StaticResource SavingGoalTemplate}" />
 
                     <ContentControl
@@ -84,37 +258,36 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal">
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource AngleRight}"
-                        Click="OnNavigatePreviousClick"
-                        RenderTransformOrigin="0.5,0.5"
-                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Previous Goal"
-                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <customControls:BalloonButton.RenderTransform>
-                            <ScaleTransform ScaleX="-1" />
-                        </customControls:BalloonButton.RenderTransform>
-                    </customControls:BalloonButton>
-
-                    <customControls:BalloonButton
-                        Margin="8,0,0,0"
-                        ButtonIcon="{StaticResource AngleRight}"
-                        Click="OnNavigateNextClick"
-                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Next Goal"
-                        Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
+                <customControls:BalloonButton
+                    Grid.Column="0"
+                    ButtonIcon="{StaticResource AngleRight}"
+                    Click="OnNavigatePreviousClick"
+                    RenderTransformOrigin="0.5,0.5"
+                    Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                    ToolTip="Previous Goal"
+                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <customControls:BalloonButton.RenderTransform>
+                        <ScaleTransform ScaleX="-1" />
+                    </customControls:BalloonButton.RenderTransform>
+                </customControls:BalloonButton>
 
                 <customControls:StepNavigatorControl
-                    Grid.Column="2"
-                    Margin="0,0,8,0"
+                    Grid.Column="1"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     CurrentStep="{Binding CurrentStepNumber}"
                     PaginationCount="10"
                     ShouldIndicateProgress="False"
                     ShouldPaginate="True"
                     StepCount="{Binding GoalStepCount}"
+                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <customControls:BalloonButton
+                    Grid.Column="2"
+                    ButtonIcon="{StaticResource AngleRight}"
+                    Click="OnNavigateNextClick"
+                    Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                    ToolTip="Next Goal"
                     Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
         </Grid>

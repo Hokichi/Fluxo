@@ -940,6 +940,37 @@ public sealed class QuickAddVMValidationTests
         });
     }
 
+    [Fact]
+    public void SaveAsync_GoalUpdate_IncrementsCurrentAmount()
+    {
+        RunInSta(() =>
+        {
+            var goal = new SavingGoal
+            {
+                Id = 1,
+                Name = "Goal",
+                TargetAmount = 500m,
+                CurrentAmount = 100m
+            };
+            var appData = CreateAppData();
+            appData.GetSavingGoalByIdAsync(1, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<SavingGoal?>(goal));
+            var vm = CreateVm(
+                TransactionKind.Goal,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+            vm.SelectedGoal = new SavingGoalVM { Id = 1, Name = "Goal" };
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(125m, goal.CurrentAmount);
+            appData.Received(1).UpdateSavingGoal(goal);
+        });
+    }
+
     private static QuickAddVM CreateVm(
         TransactionKind kind,
         SpendingSourceVM source,

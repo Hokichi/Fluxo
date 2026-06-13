@@ -20,5 +20,7 @@ public partial class SavingGoalVM
     {
         OnPropertyChanged(nameof(ProgressRatio));
         OnPropertyChanged(nameof(ProgressPercentage));
+        OnPropertyChanged(nameof(AmountLeftText));
+        OnPropertyChanged(nameof(WeeklyAverageText));
     }
 }

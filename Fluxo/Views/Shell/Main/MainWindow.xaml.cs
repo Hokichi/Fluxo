@@ -1332,6 +1332,28 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowAddSavingGoal(this);
     }
 
+    public async void OpenEditSavingGoalPopup(int savingGoalId)
+    {
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var goal = await appData.GetSavingGoalByIdAsync(savingGoalId);
+        if (goal is null)
+            return;
+
+        _dialogService.ShowAddSavingGoal(new AddSavingGoalVM(_mainVM, appData)
+        {
+            EditingId = goal.Id,
+            NameText = goal.Name,
+            TargetAmountText = goal.TargetAmount,
+            CurrentAmountText = goal.CurrentAmount,
+            EndDate = goal.SavingEndDate,
+            HasDefiniteEndDate = goal.SavingEndDate.HasValue
+        }, this);
+    }
+
     public void OpenSettingsPopup()
     {
         _dialogService.ShowSettings(this);

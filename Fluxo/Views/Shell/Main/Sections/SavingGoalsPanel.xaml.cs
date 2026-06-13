@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Popups;
 using SavingGoalsPanelVM = Fluxo.ViewModels.Shell.Main.SavingGoalsPanelVM;
 
 namespace Fluxo.Views.Shell.Main.Sections;
@@ -119,6 +120,34 @@ public partial class SavingGoalsPanel : UserControl
     {
         if (Window.GetWindow(this) is global::Fluxo.Views.Shell.Main.MainWindow mainWindow)
             mainWindow.OpenAddSavingGoalPopup();
+    }
+
+    private void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: SavingGoalVM goal } ||
+            Window.GetWindow(this) is not global::Fluxo.Views.Shell.Main.MainWindow mainWindow)
+            return;
+
+        mainWindow.OpenEditSavingGoalPopup(goal.Id);
+    }
+
+    private void OnAddGoalFundsClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: SavingGoalVM goal } ||
+            Window.GetWindow(this) is not global::Fluxo.Views.Shell.Main.MainWindow mainWindow)
+            return;
+
+        mainWindow.OpenAddNewTransactionPopup(new QuickAddVM.QuickAddDraft(
+            false,
+            string.Empty,
+            0m,
+            null,
+            DateTime.Today,
+            string.Empty,
+            null,
+            null,
+            true,
+            goal.Id));
     }
 
     private void OnCarouselViewportPreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
