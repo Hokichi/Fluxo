@@ -124,7 +124,8 @@ public partial class SavingGoalsPanel : UserControl
 
     private void OnEditSavingGoalClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement { DataContext: SavingGoalVM goal } ||
+        var goal = _viewModel?.CurrentGoal;
+        if (goal is null ||
             Window.GetWindow(this) is not global::Fluxo.Views.Shell.Main.MainWindow mainWindow)
             return;
 
@@ -133,7 +134,8 @@ public partial class SavingGoalsPanel : UserControl
 
     private void OnAddGoalFundsClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement { DataContext: SavingGoalVM goal } ||
+        var goal = _viewModel?.CurrentGoal;
+        if (goal is null ||
             Window.GetWindow(this) is not global::Fluxo.Views.Shell.Main.MainWindow mainWindow)
             return;
 

@@ -14,14 +14,21 @@ public sealed class SavingGoalsPanelLayoutTests
         "Sections",
         "SavingGoalsPanel.xaml");
 
+    private static readonly string SavingGoalsPanelCodeBehindPath = RepositoryPaths.File(
+        "Fluxo",
+        "Views",
+        "Shell",
+        "Main",
+        "Sections",
+        "SavingGoalsPanel.xaml.cs");
+
     [Fact]
-    public void BottomActionBarExposesNavigationAndAddAction()
+    public void PanelExposesNavigationAndAddAction()
     {
         var xaml = File.ReadAllText(SavingGoalsPanelXamlPath);
 
         Assert.Contains("OnAddSavingGoalClick", xaml);
-        Assert.Contains("CircleWithPlus", xaml);
-        Assert.DoesNotContain("PlusSolid", xaml);
+        Assert.Contains("PlusSolid", xaml);
         Assert.Contains("SavingGoalActionBalloonButtonStyle", xaml);
         Assert.Contains("OnNavigatePreviousClick", xaml);
         Assert.Contains("OnNavigateNextClick", xaml);
@@ -32,18 +39,37 @@ public sealed class SavingGoalsPanelLayoutTests
     }
 
     [Fact]
-    public void SavingGoalTemplateExposesCompactMetricsAndActions()
+    public void SavingGoalTemplateExposesCompactMetrics()
     {
         var xaml = File.ReadAllText(SavingGoalsPanelXamlPath);
 
         Assert.Contains("Amount Left", xaml);
         Assert.Contains("Weekly Average", xaml);
         Assert.Contains("Estimated Deadline", xaml);
-        Assert.Contains("OnEditSavingGoalClick", xaml);
-        Assert.Contains("OnAddGoalFundsClick", xaml);
-        Assert.Contains("ButtonText=\"Edit Goal\"", xaml);
-        Assert.Contains("ButtonText=\"Add Funds\"", xaml);
         Assert.DoesNotContain(">saved<", xaml);
         Assert.DoesNotContain("target", xaml);
+    }
+
+    [Fact]
+    public void GoalActionButtonsLiveOutsideSavingGoalTemplate()
+    {
+        var xaml = File.ReadAllText(SavingGoalsPanelXamlPath);
+
+        var templateStart = xaml.IndexOf("<DataTemplate x:Key=\"SavingGoalTemplate\">", StringComparison.Ordinal);
+        var templateEnd = xaml.IndexOf("</DataTemplate>", templateStart, StringComparison.Ordinal);
+        var editAction = xaml.IndexOf("OnEditSavingGoalClick", StringComparison.Ordinal);
+        var fundsAction = xaml.IndexOf("OnAddGoalFundsClick", StringComparison.Ordinal);
+
+        Assert.True(editAction > templateEnd);
+        Assert.True(fundsAction > templateEnd);
+    }
+
+    [Fact]
+    public void HeaderGoalActionsUseCurrentGoal()
+    {
+        var source = File.ReadAllText(SavingGoalsPanelCodeBehindPath);
+
+        Assert.Contains("var goal = _viewModel?.CurrentGoal;", source);
+        Assert.DoesNotContain("DataContext: SavingGoalVM goal", source);
     }
 }
