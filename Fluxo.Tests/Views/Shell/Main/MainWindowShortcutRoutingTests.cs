@@ -158,6 +158,22 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
+    public void EscapeKey_ClosesHeaderNotificationPopupBeforeGlobalShortcuts()
+    {
+        var source = ReadMainWindowSource();
+        var keyDownMethod = Slice(
+            source,
+            "private async void OnPreviewKeyDown(object sender, KeyEventArgs e)",
+            "private static bool IsTextInputElementFocused()");
+
+        Assert.Contains("if (HeaderNotificationPopup.IsOpen && e.Key == Key.Escape)", keyDownMethod);
+        Assert.Contains("CloseHeaderNotificationPopup();", keyDownMethod);
+        Assert.True(
+            keyDownMethod.IndexOf("if (HeaderNotificationPopup.IsOpen && e.Key == Key.Escape)", StringComparison.Ordinal) <
+            keyDownMethod.IndexOf("if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void DashboardPeriodShortcuts_AreDashboardOnly()
     {
         var source = ReadMainWindowSource();
@@ -166,7 +182,7 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("if (_activeMainPage != MainPage.Dashboard)", source);
         Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(-1, this);", source);
         Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(1, this);", source);
-        Assert.Contains("_mainVM.DaySpinner.MoveToCurrentPeriodCommand.Execute(null);", source);
+        Assert.Contains("await _mainVM.Dashboard.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);", source);
     }
 
     [Fact]

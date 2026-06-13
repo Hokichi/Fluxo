@@ -224,7 +224,7 @@ public class PlanningPopupVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 500m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             }
         };
     }
@@ -251,7 +251,7 @@ public class PlanningPopupVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 1000m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             }
         };
     }
@@ -278,7 +278,7 @@ public class PlanningPopupVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 1000m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             }
         };
     }

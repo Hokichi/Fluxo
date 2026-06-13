@@ -38,6 +38,7 @@ public sealed class DataManagementVMOperationTests
         {
             Mode = DataManagementMode.Append
         };
+        vm.FilePath = "backup.json";
 
         await vm.StartAsync();
 
@@ -58,6 +59,7 @@ public sealed class DataManagementVMOperationTests
         service.OverwriteAsync("backup.json", Arg.Any<UserBackupSelection>(), Arg.Any<CancellationToken>())
             .Returns(UserBackupOperationResult.Failure("failed"));
         var vm = new DataManagementVM(service) { Mode = DataManagementMode.Overwrite };
+        vm.FilePath = "backup.json";
 
         await vm.StartAsync();
 

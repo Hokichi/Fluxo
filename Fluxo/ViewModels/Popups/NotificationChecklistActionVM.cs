@@ -96,7 +96,8 @@ public partial class NotificationChecklistActionVM : ObservableObject
                 Id = tag.Id,
                 Name = tag.Name,
                 HexCode = tag.HexCode,
-                IsSystemTag = tag.IsSystemTag
+                IsSystemTag = tag.IsSystemTag,
+                SpendingLimit = tag.SpendingLimit
             })
             .ToList();
 
@@ -111,7 +112,8 @@ public partial class NotificationChecklistActionVM : ObservableObject
                     Id = tag.Id,
                     Name = tag.Name,
                     HexCode = tag.HexCode,
-                    IsSystemTag = tag.IsSystemTag
+                    IsSystemTag = tag.IsSystemTag,
+                    SpendingLimit = tag.SpendingLimit
                 });
             }
 

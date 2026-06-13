@@ -1,8 +1,12 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Resources.Resources.Messages;
+using Fluxo.Services.Dialogs;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
+using NSubstitute;
+using System.Windows;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Shell.Main;
@@ -69,6 +73,41 @@ public class MainViewModeToggleVMTests
         Assert.False(vm.IsAtCurrentPeriod);
         Assert.True(vm.IsSpinnerVisible);
         Assert.Equal("Move to current week", vm.MoveToCurrentLabel);
+    }
+
+    [Fact]
+    public async Task MoveToCurrentPeriodFromUserAsync_UsesToastAndWaitsForUiReady()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var dialogService = Substitute.For<IDialogService>();
+        var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
+        var toastDelegateInvoked = false;
+        dialogService.ShowToastWhileAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<Task>>(),
+                Arg.Any<Window?>())
+            .Returns(async callInfo =>
+            {
+                toastDelegateInvoked = true;
+                await ((Func<Task>)callInfo[1])();
+            });
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, MoveToCurrentPeriodRequestedMessage>(
+            recipient,
+            static (target, message) => target.MoveRequests.Add(message));
+        var vm = new MainViewModeToggleVM(messenger, dialogService, uiSettleAwaiter);
+
+        await vm.MoveToCurrentPeriodFromUserAsync();
+
+        await dialogService.Received(1).ShowToastWhileAsync(
+            Arg.Is<string>(message => message.Contains("Loading", StringComparison.Ordinal)),
+            Arg.Any<Func<Task>>(),
+            Arg.Any<Window?>());
+        await uiSettleAwaiter.Received(1).WaitForUiReadyAsync(
+            Arg.Any<Window?>(),
+            Arg.Any<CancellationToken>());
+        Assert.True(toastDelegateInvoked);
+        Assert.Single(recipient.MoveRequests);
     }
 
     private sealed class MessageCaptureRecipient

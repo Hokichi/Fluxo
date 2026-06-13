@@ -97,6 +97,14 @@
                 <TextBlock
                     Margin="0,14,0,8"
                     Style="{StaticResource FieldLabelStyle}"
+                    Text="Spending Limit" />
+                <TextBox
+                    Style="{StaticResource RoundedTextInputStyle}"
+                    Text="{Binding SpendingLimitText, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock
+                    Margin="0,14,0,8"
+                    Style="{StaticResource FieldLabelStyle}"
                     Text="Color" />
                 <Grid>
                     <Grid.ColumnDefinitions>

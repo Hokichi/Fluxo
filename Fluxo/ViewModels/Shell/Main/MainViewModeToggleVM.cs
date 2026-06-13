@@ -59,6 +59,32 @@ public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<Spin
         Messenger.Send(new MoveToCurrentPeriodRequestedMessage());
     }
 
+    public async Task MoveToCurrentPeriodFromUserAsync(Window? owner = null)
+    {
+        if (_dialogService is null || _uiSettleAwaiter is null)
+        {
+            MoveToCurrentPeriod();
+            return;
+        }
+
+        await _viewModeTransitionGate.WaitAsync();
+        try
+        {
+            await _dialogService.ShowToastWhileAsync(
+                MainDataLoadingMessageFormatter.Build(SelectedMainContentViewMode, DateTime.Today),
+                async () =>
+                {
+                    MoveToCurrentPeriod();
+                    await _uiSettleAwaiter.WaitForUiReadyAsync(owner);
+                },
+                owner);
+        }
+        finally
+        {
+            _viewModeTransitionGate.Release();
+        }
+    }
+
     public void Receive(SpinnerPeriodStateChangedMessage message)
     {
         IsAtCurrentPeriod = message.Value.IsAtCurrentPeriod;

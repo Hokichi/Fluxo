@@ -319,6 +319,11 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return GoalsTab.ExecuteItemActionAsync(itemId, action);
     }
 
+    public Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode, string spendingLimitText)
+    {
+        return TagsTab.CreateTagAsync(name, hexCode, spendingLimitText);
+    }
+
     public Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode)
     {
         return TagsTab.CreateTagAsync(name, hexCode);

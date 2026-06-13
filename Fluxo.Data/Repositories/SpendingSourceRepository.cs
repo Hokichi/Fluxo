@@ -20,8 +20,8 @@ public sealed class SpendingSourceRepository(FluxoDbContext dbContext)
         if (filter.Type.HasValue)
             query = query.Where(s => s.SpendingSourceType == filter.Type);
 
-        if (filter.ShowOnUIOnly)
-            query = query.Where(s => s.ShowOnUI);
+        if (filter.PinnedOnUIOnly)
+            query = query.Where(s => s.PinnedOnUI);
 
         if (filter.EnabledOnly)
             query = query.Where(s => s.IsEnabled);

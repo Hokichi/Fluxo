@@ -10,12 +10,13 @@ using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
+using System.Globalization;
 
 namespace Fluxo.ViewModels.Popups.Settings;
 
 public readonly record struct SettingsTagDialogRequest(
     AddTagVM ViewModel,
-    Func<string, string, Task<SettingsOperationResult>> SaveTagAsync);
+    Func<string, string, string, Task<SettingsOperationResult>> SaveTagAsync);
 
 public partial class SettingsTagsTabVM : ObservableObject
 {
@@ -56,7 +57,7 @@ public partial class SettingsTagsTabVM : ObservableObject
         if (expenseTag is null || expenseTag.IsSystemTag)
             return null;
 
-        return new AddTagVM(expenseTag.Id, expenseTag.Name, expenseTag.HexCode);
+        return new AddTagVM(expenseTag.Id, expenseTag.Name, expenseTag.HexCode, expenseTag.SpendingLimit);
     }
 
     public async Task OpenEditTagAsync(int tagId)
@@ -68,7 +69,7 @@ public partial class SettingsTagsTabVM : ObservableObject
         _messenger.Send(new SettingsDialogRequestedMessage(
             new SettingsDialogRequest(
                 SettingsDialogRequestType.AddTag,
-                new SettingsTagDialogRequest(viewModel, (name, hexCode) => UpdateTagAsync(tagId, name, hexCode)))));
+                new SettingsTagDialogRequest(viewModel, (name, hexCode, spendingLimit) => UpdateTagAsync(tagId, name, hexCode, spendingLimit)))));
 
         await RefreshTagsAsync();
     }
@@ -82,11 +83,12 @@ public partial class SettingsTagsTabVM : ObservableObject
                 Id = item.Tag.Id,
                 Name = item.Tag.Name,
                 HexCode = item.Tag.HexCode,
-                IsSystemTag = item.Tag.IsSystemTag
+                IsSystemTag = item.Tag.IsSystemTag,
+                SpendingLimit = item.Tag.SpendingLimit
             }));
     }
 
-    public async Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode)
+    public async Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode, string spendingLimitText)
     {
         var trimmedName = (name ?? string.Empty).Trim();
         var normalizedHexCode = NormalizeHexColor(hexCode);
@@ -97,6 +99,9 @@ public partial class SettingsTagsTabVM : ObservableObject
         if (!IsHexColor(normalizedHexCode))
             return SettingsOperationResult.Failure("Please choose a valid tag color.");
 
+        if (!TryParseSpendingLimit(spendingLimitText, out var spendingLimit, out var spendingLimitError))
+            return SettingsOperationResult.Failure(spendingLimitError);
+
         try
         {
             var existingTags = await _appData.GetExpenseTagsAsync();
@@ -106,7 +111,8 @@ public partial class SettingsTagsTabVM : ObservableObject
             await _appData.AddExpenseTagAsync(new ExpenseTag
             {
                 Name = trimmedName,
-                HexCode = normalizedHexCode
+                HexCode = normalizedHexCode,
+                SpendingLimit = spendingLimit
             });
 
             await _appData.SaveChangesAsync();
@@ -124,6 +130,9 @@ public partial class SettingsTagsTabVM : ObservableObject
                 FluxoLogManager.CreateFailureMessage("create tag"));
         }
     }
+
+    public Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode) =>
+        CreateTagAsync(name, hexCode, string.Empty);
 
     public async Task<SettingsOperationResult> DeleteTagAsync(ExpenseTagVM tag)
     {
@@ -161,7 +170,7 @@ public partial class SettingsTagsTabVM : ObservableObject
         }
     }
 
-    public async Task<SettingsOperationResult> UpdateTagAsync(int tagId, string name, string hexCode)
+    public async Task<SettingsOperationResult> UpdateTagAsync(int tagId, string name, string hexCode, string spendingLimitText)
     {
         var trimmedName = (name ?? string.Empty).Trim();
         var normalizedHexCode = NormalizeHexColor(hexCode);
@@ -171,6 +180,9 @@ public partial class SettingsTagsTabVM : ObservableObject
 
         if (!IsHexColor(normalizedHexCode))
             return SettingsOperationResult.Failure("Please choose a valid tag color.");
+
+        if (!TryParseSpendingLimit(spendingLimitText, out var spendingLimit, out var spendingLimitError))
+            return SettingsOperationResult.Failure(spendingLimitError);
 
         try
         {
@@ -190,11 +202,13 @@ public partial class SettingsTagsTabVM : ObservableObject
             var beforeSnapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
             var hasNameChanged = !string.Equals(expenseTag.Name, trimmedName, StringComparison.Ordinal);
             var hasHexChanged = !string.Equals(expenseTag.HexCode, normalizedHexCode, StringComparison.OrdinalIgnoreCase);
-            if (!hasNameChanged && !hasHexChanged)
+            var hasSpendingLimitChanged = expenseTag.SpendingLimit != spendingLimit;
+            if (!hasNameChanged && !hasHexChanged && !hasSpendingLimitChanged)
                 return SettingsOperationResult.Success();
 
             expenseTag.Name = trimmedName;
             expenseTag.HexCode = normalizedHexCode;
+            expenseTag.SpendingLimit = spendingLimit;
             _appData.UpdateExpenseTag(expenseTag);
             await _appData.SaveChangesAsync();
 
@@ -215,6 +229,9 @@ public partial class SettingsTagsTabVM : ObservableObject
         }
     }
 
+    public Task<SettingsOperationResult> UpdateTagAsync(int tagId, string name, string hexCode) =>
+        UpdateTagAsync(tagId, name, hexCode, string.Empty);
+
     private static string NormalizeHexColor(string hexCode)
     {
         var normalized = (hexCode ?? string.Empty).Trim().TrimStart('#').ToUpperInvariant();
@@ -228,6 +245,25 @@ public partial class SettingsTagsTabVM : ObservableObject
                normalized[0] == '#' &&
                normalized.Skip(1).All(static character => char.IsDigit(character) ||
                                                           (character >= 'A' && character <= 'F'));
+    }
+
+    private static bool TryParseSpendingLimit(string? value, out decimal? spendingLimit, out string errorMessage)
+    {
+        spendingLimit = null;
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(value))
+            return true;
+
+        if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed) ||
+            parsed < 0m)
+        {
+            errorMessage = "Please enter a valid spending limit.";
+            return false;
+        }
+
+        spendingLimit = parsed == 0m ? null : parsed;
+        return true;
     }
 }
 

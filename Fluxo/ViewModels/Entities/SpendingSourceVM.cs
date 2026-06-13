@@ -17,7 +17,7 @@ public partial class SpendingSourceVM : ObservableObject
     [ObservableProperty] private decimal _moneyIn;
     [ObservableProperty] private decimal _moneyOut;
     [ObservableProperty] private string _name = string.Empty;
-    [ObservableProperty] private bool _showOnUI;
+    [ObservableProperty] private bool _pinnedOnUI;
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
     [ObservableProperty] private decimal _spentAmount;
     [ObservableProperty] private bool _isSelected;

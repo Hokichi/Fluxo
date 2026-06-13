@@ -71,7 +71,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
             ShowValidationMessage(result.ErrorMessage);
     }
 
-    private async void OnHideOrUnhideButtonClick(object sender, RoutedEventArgs e)
+    private async void OnPinOrUnpinButtonClick(object sender, RoutedEventArgs e)
     {
         var result = await _viewModel.ToggleVisibilityAsync();
         if (!result.IsSuccess)
@@ -89,7 +89,7 @@ public partial class SpendingSourceDetailPopup : BasePopup
             Name = _viewModel.NameText,
             SpendingSourceType = _viewModel.SpendingSourceType,
             IsEnabled = _viewModel.IsEnabled,
-            ShowOnUI = _viewModel.ShowOnUI
+            PinnedOnUI = _viewModel.PinnedOnUI
         }, _viewModel.AppData);
 
         _dialogService.ShowTransferFunds(transferVm, this);

@@ -158,9 +158,9 @@ public partial class SettingsGoalsTabVM : ObservableObject
 
                     break;
 
-                case SettingsBatchAction.Hide:
-                case SettingsBatchAction.Unhide:
-                    return SettingsOperationResult.Failure("Hide and unhide are no longer supported for goals.");
+                case SettingsBatchAction.Unpin:
+                case SettingsBatchAction.Pin:
+                    return SettingsOperationResult.Failure("Pin and unpin are not supported for goals.");
 
                 case SettingsBatchAction.Disable:
                 case SettingsBatchAction.Enable:

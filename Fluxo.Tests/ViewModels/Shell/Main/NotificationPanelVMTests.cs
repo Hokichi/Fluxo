@@ -222,6 +222,56 @@ public class NotificationPanelVMTests
             notification.Type.StartsWith("RecurringTransactionDue-10_", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task LoadAsync_TagSpendingLimitExceeded_DoesNotCreateTagLimitNotification()
+    {
+        var groceriesTag = new ExpenseTagVM
+        {
+            Id = 11,
+            Name = "Groceries",
+            HexCode = "#3FE0A1",
+            SpendingLimit = 100m
+        };
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs:
+            [
+                new ExpenseLogVM
+                {
+                    Id = 1,
+                    Amount = 80m,
+                    DeductedOn = DateTime.Today,
+                    Expense = new ExpenseVM
+                    {
+                        Id = 1,
+                        Name = "Market",
+                        ExpenseCategory = ExpenseCategory.Needs,
+                        ExpenseTag = groceriesTag
+                    }
+                },
+                new ExpenseLogVM
+                {
+                    Id = 2,
+                    Amount = 25m,
+                    DeductedOn = DateTime.Today,
+                    Expense = new ExpenseVM
+                    {
+                        Id = 2,
+                        Name = "Snacks",
+                        ExpenseCategory = ExpenseCategory.Wants,
+                        ExpenseTag = groceriesTag
+                    }
+                }
+            ],
+            spendingSources: [],
+            out _);
+
+        await vm.LoadAsync();
+
+        Assert.DoesNotContain(vm.Notifications, notification =>
+            notification.Type.StartsWith("TagSpendingLimit-11", StringComparison.Ordinal));
+    }
+
 
     [Fact]
     public async Task LoadAsync_CreatesNotificationForEachRecurringTransactionDueWithinReminderWindow()

@@ -23,4 +23,12 @@ public partial class MainViewModeToggleControl : UserControl
 
         await viewModel.SetSelectedMainContentViewFromUserAsync(viewMode, Window.GetWindow(this));
     }
+
+    private async void OnMoveToCurrentPeriodButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModeToggleVM viewModel)
+            return;
+
+        await viewModel.MoveToCurrentPeriodFromUserAsync(Window.GetWindow(this));
+    }
 }

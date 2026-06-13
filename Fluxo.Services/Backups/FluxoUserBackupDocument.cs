@@ -1,4 +1,5 @@
 using Fluxo.Core.Enums;
+using System.Text.Json.Serialization;
 
 namespace Fluxo.Services.Backups;
 
@@ -34,11 +35,24 @@ public sealed record BackupSpendingSource(
     int? MonthlyDueDate,
     int? DeductSourceBackupId,
     decimal? InterestRate,
-    bool ShowOnUI,
+    bool PinnedOnUI,
     bool IsEnabled,
-    bool IsForDeletion);
+    bool IsForDeletion)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("showOnUI")]
+    public bool? LegacyShowOnUI { get; init; }
 
-public sealed record BackupExpenseTag(int BackupId, string Name, string HexCode, bool IsSystemTag);
+    [JsonIgnore]
+    public bool RestoredPinnedOnUI => LegacyShowOnUI ?? PinnedOnUI;
+}
+
+public sealed record BackupExpenseTag(
+    int BackupId,
+    string Name,
+    string HexCode,
+    bool IsSystemTag,
+    decimal? SpendingLimit = null);
 
 public sealed record BackupSavingGoal(
     int BackupId,
@@ -86,4 +100,3 @@ public sealed record BackupRecurringTransaction(
     bool IsEnabled);
 
 public sealed record BackupUserSetting(string Name, string Value);
-

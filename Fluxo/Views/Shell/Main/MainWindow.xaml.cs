@@ -661,6 +661,13 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (HeaderNotificationPopup.IsOpen && e.Key == Key.Escape)
+        {
+            CloseHeaderNotificationPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut(e.Key, Keyboard.Modifiers))
         {
             if (IsSufficientFundsActionGateLocked())
@@ -865,7 +872,7 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsNavigateDashboardCurrentPeriodShortcut(key, modifiers))
         {
-            _mainVM.DaySpinner.MoveToCurrentPeriodCommand.Execute(null);
+            await _mainVM.Dashboard.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);
             return true;
         }
 
@@ -1596,9 +1603,9 @@ public partial class MainWindow : Window, IPopupHost
         await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Delete, true);
     }
 
-    public async Task ExecuteHideSpendingSourceActionAsync(SpendingSourceVM spendingSource)
+    public async Task ExecuteUnpinSpendingSourceActionAsync(SpendingSourceVM spendingSource)
     {
-        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Hide);
+        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Unpin);
     }
 
     public async Task ExecuteDisableSpendingSourceActionAsync(SpendingSourceVM spendingSource)

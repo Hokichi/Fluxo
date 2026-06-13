@@ -177,6 +177,121 @@ public sealed class UserBackupServiceAppendTests
     }
 
     [Fact]
+    public async Task AppendAsync_WhenTagsSelected_RestoresSpendingLimit()
+    {
+        var appendedTags = new List<ExpenseTag>();
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => appendedTags.ToList());
+        appData.AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var tag = call.Arg<ExpenseTag>();
+                tag.Id = 12;
+                appendedTags.Add(tag);
+                return Task.CompletedTask;
+            });
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(tempFile, """
+        {
+          "schemaVersion": 1,
+          "createdAt": "2026-05-26T00:00:00Z",
+          "includedEntities": [ "tags" ],
+          "entities": {
+            "tags": [
+              { "backupId": 1, "name": "Food", "hexCode": "#ffffff", "isSystemTag": false, "spendingLimit": 250 }
+            ]
+          }
+        }
+        """);
+
+        try
+        {
+            var service = new UserBackupService(appData);
+            var result = await service.AppendAsync(
+                tempFile,
+                new UserBackupSelection(new HashSet<DataManagementEntityKind>
+                {
+                    DataManagementEntityKind.Tags
+                }),
+                new Dictionary<string, DataManagementConflictDecision>());
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            var tag = Assert.Single(appendedTags);
+            Assert.Equal(250m, tag.SpendingLimit);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public async Task AppendAsync_WithLegacyShowOnUiBackup_RestoresPinnedOnUi()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => (IReadOnlyList<SpendingSource>)[]);
+
+        var appendedSources = new List<SpendingSource>();
+        appData.AddSpendingSourceAsync(Arg.Any<SpendingSource>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                appendedSources.Add(call.Arg<SpendingSource>());
+                return Task.CompletedTask;
+            });
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(tempFile, """
+        {
+          "schemaVersion": 1,
+          "createdAt": "2026-05-26T00:00:00Z",
+          "includedEntities": [ "spendingSources" ],
+          "entities": {
+            "spendingSources": [
+              {
+                "backupId": 1,
+                "name": "Wallet",
+                "spendingSourceType": "Cash",
+                "accountLimit": 0,
+                "maximumSpending": 0,
+                "minimumPayment": null,
+                "spentAmount": 0,
+                "balance": 40,
+                "monthlyDueDate": null,
+                "deductSourceBackupId": null,
+                "interestRate": null,
+                "showOnUI": true,
+                "isEnabled": true,
+                "isForDeletion": false
+              }
+            ]
+          }
+        }
+        """);
+
+        try
+        {
+            var service = new UserBackupService(appData);
+            var result = await service.AppendAsync(
+                tempFile,
+                new UserBackupSelection(new HashSet<DataManagementEntityKind>
+                {
+                    DataManagementEntityKind.SpendingSources
+                }),
+                new Dictionary<string, DataManagementConflictDecision>());
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            Assert.True(Assert.Single(appendedSources).PinnedOnUI);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
     public async Task AppendAsync_WhenUserSettingsSelected_SkipsLegacyBudgetAllocationSettings()
     {
         var appData = Substitute.For<IAppDataService>();
@@ -291,7 +406,7 @@ public sealed class UserBackupServiceAppendTests
                 "monthlyDueDate": null,
                 "deductSourceBackupId": null,
                 "interestRate": null,
-                "showOnUI": true,
+                "pinnedOnUI": true,
                 "isEnabled": true,
                 "isForDeletion": false
               }

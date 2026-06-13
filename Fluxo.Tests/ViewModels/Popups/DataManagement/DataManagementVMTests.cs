@@ -4,6 +4,7 @@ using Fluxo.ViewModels.Popups.DataManagement;
 using NSubstitute;
 using Xunit;
 using System.ComponentModel;
+using System.IO;
 
 namespace Fluxo.Tests.ViewModels.Popups.DataManagement;
 
@@ -96,5 +97,62 @@ public sealed class DataManagementVMTests
         Assert.Contains(nameof(DataManagementConflictItemVM.IsReplaceSelected), changedProperties);
         Assert.Contains(nameof(DataManagementConflictItemVM.IsAppendSelected), changedProperties);
         Assert.Contains(nameof(DataManagementConflictItemVM.IsIgnoreSelected), changedProperties);
+    }
+
+    [Theory]
+    [InlineData(DataManagementMode.Append)]
+    [InlineData(DataManagementMode.Overwrite)]
+    public void ChangingFromBackupToRestoreMode_ClearsFilePath(DataManagementMode mode)
+    {
+        var service = Substitute.For<IUserBackupService>();
+        service.BuildDefaultBackupPath(Arg.Any<DateTime>()).Returns("backup.json");
+        var vm = new DataManagementVM(service);
+
+        vm.Mode = mode;
+
+        Assert.Equal(string.Empty, vm.FilePath);
+    }
+
+    [Theory]
+    [InlineData(DataManagementMode.Append)]
+    [InlineData(DataManagementMode.Overwrite)]
+    public void ChangingBackToBackupMode_RestoresPreviousBackupFilePath(DataManagementMode mode)
+    {
+        var service = Substitute.For<IUserBackupService>();
+        service.BuildDefaultBackupPath(Arg.Any<DateTime>()).Returns("backup.json");
+        var vm = new DataManagementVM(service)
+        {
+            FilePath = "custom-backup.json"
+        };
+
+        vm.Mode = mode;
+        vm.FilePath = "restore.json";
+        vm.Mode = DataManagementMode.Backup;
+
+        Assert.Equal("custom-backup.json", vm.FilePath);
+    }
+
+    [Fact]
+    public async Task LoadManifestAsync_InvalidJson_DisablesEntitiesAndShowsInvalidJsonFile()
+    {
+        var service = Substitute.For<IUserBackupService>();
+        service.BuildDefaultBackupPath(Arg.Any<DateTime>()).Returns("backup.json");
+        service.ReadManifestAsync("broken.json", Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<UserBackupManifest>(new InvalidDataException("bad json")));
+        var vm = new DataManagementVM(service)
+        {
+            Mode = DataManagementMode.Append
+        };
+
+        await vm.LoadManifestAsync("broken.json");
+
+        Assert.Equal("broken.json", vm.FilePath);
+        Assert.True(vm.IsFileInvalid);
+        Assert.Equal("Invalid JSON file", vm.FileValidationMessage);
+        Assert.All(vm.Entities, entity =>
+        {
+            Assert.False(entity.IsEnabled);
+            Assert.False(entity.IsChecked);
+        });
     }
 }

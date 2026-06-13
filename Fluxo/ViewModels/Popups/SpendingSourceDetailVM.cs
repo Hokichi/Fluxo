@@ -33,7 +33,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
     [ObservableProperty] private decimal _primaryAmountText;
     [ObservableProperty] private int? _selectedDeductSource;
     private SpendingSourceDetailState _savedState = SpendingSourceDetailState.Empty;
-    [ObservableProperty] private bool _showOnUI = true;
+    [ObservableProperty] private bool _pinnedOnUI = true;
     [ObservableProperty] private SpendingSourceType _spendingSourceType;
     [ObservableProperty] private decimal _spentAmountText;
     [ObservableProperty] private decimal _trendMaximum = 1m;
@@ -80,11 +80,11 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
     public bool CanDelete => !IsEditing;
 
-    public bool CanHideOrUnhide => IsEnabled && !IsEditing;
+    public bool CanPinOrUnpin => IsEnabled && !IsEditing;
 
     public string EditButtonLabel => IsEditing ? "Save" : "Edit";
 
-    public bool IsHidden => !ShowOnUI;
+    public bool IsUnpinned => !PinnedOnUI;
 
     public bool HasRecentActivities => RecentActivities.Count > 0;
 
@@ -108,18 +108,18 @@ public partial class SpendingSourceDetailVM : ObservableObject
         OnPropertyChanged(nameof(CanTransfer));
         OnPropertyChanged(nameof(CanDelete));
         OnPropertyChanged(nameof(EditButtonLabel));
-        OnPropertyChanged(nameof(CanHideOrUnhide));
+        OnPropertyChanged(nameof(CanPinOrUnpin));
     }
 
-    partial void OnShowOnUIChanged(bool value)
+    partial void OnPinnedOnUIChanged(bool value)
     {
-        OnPropertyChanged(nameof(IsHidden));
+        OnPropertyChanged(nameof(IsUnpinned));
     }
 
     partial void OnIsEnabledChanged(bool value)
     {
         OnPropertyChanged(nameof(CanTransfer));
-        OnPropertyChanged(nameof(CanHideOrUnhide));
+        OnPropertyChanged(nameof(CanPinOrUnpin));
     }
 
     partial void OnSpendingSourceTypeChanged(SpendingSourceType value)
@@ -285,7 +285,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
 
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
-            spendingSource.ShowOnUI = !spendingSource.ShowOnUI;
+            spendingSource.PinnedOnUI = !spendingSource.PinnedOnUI;
             _appData.UpdateSpendingSource(spendingSource);
             await _appData.SaveChangesAsync();
 
@@ -331,7 +331,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
 
             spendingSource.IsEnabled = !spendingSource.IsEnabled;
-            spendingSource.ShowOnUI = spendingSource.IsEnabled;
+            spendingSource.PinnedOnUI = spendingSource.IsEnabled;
             _appData.UpdateSpendingSource(spendingSource);
             await _appData.SaveChangesAsync();
 
@@ -456,7 +456,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         MonthlyDueDateText = state.MonthlyDueDate?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         SelectedDeductSource = state.DeductSource;
         IsEnabled = state.IsEnabled;
-        ShowOnUI = state.ShowOnUI;
+        PinnedOnUI = state.PinnedOnUI;
     }
 
     private bool TryBuildInput(out SpendingSourceDetailState input, out string validationMessage)
@@ -525,7 +525,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             deductSource,
             interestRate,
             IsEnabled,
-            ShowOnUI);
+            PinnedOnUI);
 
         return true;
     }
@@ -542,7 +542,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         spendingSource.DeductSource = input.DeductSource;
         spendingSource.InterestRate = input.InterestRate;
         spendingSource.IsEnabled = input.IsEnabled;
-        spendingSource.ShowOnUI = ResolveShowOnUiFromEnabledState(previousIsEnabled, input.IsEnabled, input.ShowOnUI);
+        spendingSource.PinnedOnUI = ResolvePinnedOnUiFromEnabledState(previousIsEnabled, input.IsEnabled, input.PinnedOnUI);
 
         if (input.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
         {
@@ -573,7 +573,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
             spendingSource.DeductSource,
             spendingSource.InterestRate,
             spendingSource.IsEnabled,
-            spendingSource.ShowOnUI);
+            spendingSource.PinnedOnUI);
     }
 
     private async Task LoadDeductSourcesAsync()
@@ -682,13 +682,13 @@ public partial class SpendingSourceDetailVM : ObservableObject
             target.Add(item);
     }
 
-    private static bool ResolveShowOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedShowOnUi)
+    private static bool ResolvePinnedOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedPinnedOnUi)
     {
         if (!nextIsEnabled)
             return false;
 
         if (previousIsEnabled == nextIsEnabled)
-            return requestedShowOnUi;
+            return requestedPinnedOnUi;
 
         return true;
     }
@@ -718,7 +718,7 @@ public partial class SpendingSourceDetailVM : ObservableObject
         int? DeductSource,
         decimal? InterestRate,
         bool IsEnabled,
-        bool ShowOnUI)
+        bool PinnedOnUI)
     {
         public static SpendingSourceDetailState Empty => new(
             string.Empty,

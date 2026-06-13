@@ -1180,7 +1180,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             Id = source.Id,
             Name = source.Name,
             HexCode = source.HexCode,
-            IsSystemTag = source.IsSystemTag
+            IsSystemTag = source.IsSystemTag,
+            SpendingLimit = source.SpendingLimit
         };
     }
 
@@ -1234,7 +1235,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                     Id = snapshot.TagId,
                     Name = knownTag?.Name ?? existingTag?.Name ?? string.Empty,
                     HexCode = knownTag?.HexCode ?? existingTag?.HexCode ?? string.Empty,
-                    IsSystemTag = knownTag?.IsSystemTag ?? existingTag?.IsSystemTag ?? false
+                    IsSystemTag = knownTag?.IsSystemTag ?? existingTag?.IsSystemTag ?? false,
+                    SpendingLimit = knownTag?.SpendingLimit ?? existingTag?.SpendingLimit
                 }
             }
         };

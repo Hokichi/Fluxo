@@ -50,7 +50,7 @@ public sealed class AddSpendingSourceVMTests
             MinimumPayment = 5m,
             MonthlyDueDate = 15,
             DeductSource = 2,
-            ShowOnUI = false,
+            PinnedOnUI = false,
             IsEnabled = false
         };
 
@@ -65,7 +65,7 @@ public sealed class AddSpendingSourceVMTests
         Assert.Equal(5m, sut.MinimumPaymentText);
         Assert.Equal("15", sut.MonthlyDueDateText);
         Assert.Equal(2, sut.SelectedDeductSource);
-        Assert.False(sut.ShowOnUI);
+        Assert.False(sut.PinnedOnUI);
         Assert.False(sut.IsEnabled);
     }
 

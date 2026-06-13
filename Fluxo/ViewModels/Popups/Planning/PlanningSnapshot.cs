@@ -94,7 +94,8 @@ public sealed class PlanningSnapshot
             Id = source.Id,
             Name = source.Name,
             HexCode = source.HexCode,
-            IsSystemTag = source.IsSystemTag
+            IsSystemTag = source.IsSystemTag,
+            SpendingLimit = source.SpendingLimit
         };
     }
 
@@ -113,7 +114,7 @@ public sealed class PlanningSnapshot
             MonthlyDueDate = source.MonthlyDueDate,
             DeductSource = source.DeductSource,
             InterestRate = source.InterestRate,
-            ShowOnUI = source.ShowOnUI,
+            PinnedOnUI = source.PinnedOnUI,
             IsEnabled = source.IsEnabled,
             MoneyIn = source.MoneyIn,
             MoneyOut = source.MoneyOut,

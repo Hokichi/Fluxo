@@ -415,7 +415,7 @@ public sealed class NotificationActionServiceTests
                 existing.MonthlyDueDate = updated.MonthlyDueDate;
                 existing.DeductSource = updated.DeductSource;
                 existing.InterestRate = updated.InterestRate;
-                existing.ShowOnUI = updated.ShowOnUI;
+                existing.PinnedOnUI = updated.PinnedOnUI;
                 existing.IsEnabled = updated.IsEnabled;
                 existing.IsForDeletion = updated.IsForDeletion;
             });

@@ -143,6 +143,62 @@ public sealed class QuickAddVMValidationTests
     }
 
     [Fact]
+    public void AmountValidation_ForExpenseWarnsWhenTagSpendingLimitWouldBeExceeded()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var appData = CreateAppData(expenseLogs:
+            [
+                CreateExpenseLog("Groceries", 90m, tagId: 1, sourceId: source.Id)
+            ]);
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 5m, appData: appData);
+            vm.SelectedTag = new ExpenseTagVM
+            {
+                Id = 1,
+                Name = "General",
+                HexCode = "#22C55E",
+                SpendingLimit = 100m
+            };
+            vm.SelectedDate = DateTime.Today;
+            vm.ValidateAmountField();
+
+            vm.AmountText = 15m;
+
+            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.AmountText)),
+                error => error.ErrorMessage == "General spending limit exceeded.");
+        });
+    }
+
+    [Fact]
+    public void AmountValidation_ForExpenseClearsTagLimitErrorWhenAmountFitsLimit()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var appData = CreateAppData(expenseLogs:
+            [
+                CreateExpenseLog("Groceries", 90m, tagId: 1, sourceId: source.Id)
+            ]);
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 15m, appData: appData);
+            vm.SelectedTag = new ExpenseTagVM
+            {
+                Id = 1,
+                Name = "General",
+                HexCode = "#22C55E",
+                SpendingLimit = 100m
+            };
+            vm.SelectedDate = DateTime.Today;
+            vm.ValidateAmountField();
+
+            vm.AmountText = 5m;
+
+            Assert.DoesNotContain(vm.GetErrors(nameof(QuickAddVM.AmountText)),
+                error => error.ErrorMessage == "General spending limit exceeded.");
+        });
+    }
+
+    [Fact]
     public void ValidateNameField_DoesNotValidateAmountField()
     {
         RunInSta(() =>

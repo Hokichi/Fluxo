@@ -125,7 +125,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                         source.MonthlyDueDate,
                         deductBackupId,
                         source.InterestRate,
-                        source.ShowOnUI,
+                        source.PinnedOnUI,
                         source.IsEnabled,
                         source.IsForDeletion));
                 }
@@ -563,7 +563,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                     {
                         Name = backupTag.Name,
                         HexCode = backupTag.HexCode,
-                        IsSystemTag = backupTag.IsSystemTag
+                        IsSystemTag = backupTag.IsSystemTag,
+                        SpendingLimit = backupTag.SpendingLimit
                     };
 
                     await appData.AddExpenseTagAsync(newTag, cancellationToken);
@@ -576,6 +577,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 {
                     existingTag.HexCode = backupTag.HexCode;
                     existingTag.IsSystemTag = backupTag.IsSystemTag;
+                    existingTag.SpendingLimit = backupTag.SpendingLimit;
                     appData.UpdateExpenseTag(existingTag);
                 }
 
@@ -587,7 +589,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             {
                 Name = backupTag.Name,
                 HexCode = backupTag.HexCode,
-                IsSystemTag = backupTag.IsSystemTag
+                IsSystemTag = backupTag.IsSystemTag,
+                SpendingLimit = backupTag.SpendingLimit
             };
 
             await appData.AddExpenseTagAsync(insertedTag, cancellationToken);
@@ -639,7 +642,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                     existingSource.MonthlyDueDate = backupSource.MonthlyDueDate;
                     existingSource.DeductSource = null;
                     existingSource.InterestRate = backupSource.InterestRate;
-                    existingSource.ShowOnUI = backupSource.ShowOnUI;
+                    existingSource.PinnedOnUI = backupSource.RestoredPinnedOnUI;
                     existingSource.IsEnabled = backupSource.IsEnabled;
                     existingSource.IsForDeletion = backupSource.IsForDeletion;
                     appData.UpdateSpendingSource(existingSource);
@@ -662,7 +665,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 MonthlyDueDate = backupSource.MonthlyDueDate,
                 DeductSource = null,
                 InterestRate = backupSource.InterestRate,
-                ShowOnUI = backupSource.ShowOnUI,
+                PinnedOnUI = backupSource.RestoredPinnedOnUI,
                 IsEnabled = backupSource.IsEnabled,
                 IsForDeletion = backupSource.IsForDeletion
             };
@@ -982,7 +985,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 backupId,
                 tag.Name,
                 tag.HexCode,
-                tag.IsSystemTag));
+                tag.IsSystemTag,
+                tag.SpendingLimit));
         }
     }
 

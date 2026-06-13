@@ -241,7 +241,11 @@ public partial class QuickAddVM : ObservableValidator
         _ = RefreshTransactionNameSuggestionsAsync();
     }
     partial void OnNoteTextChanged(string value) => NotifyFormStateChanged();
-    partial void OnSelectedDateChanged(DateTime value) => NotifyFormStateChanged();
+    partial void OnSelectedDateChanged(DateTime value)
+    {
+        RefreshActiveValidation(nameof(AmountText));
+        NotifyFormStateChanged();
+    }
     partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
     partial void OnSelectedGoalChanged(SavingGoalVM? value) => NotifyFormStateChanged();
     partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value)
@@ -350,6 +354,7 @@ public partial class QuickAddVM : ObservableValidator
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
+        RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
 
         if (_isUpdatingTagCollections || value is null)
@@ -1478,6 +1483,9 @@ public partial class QuickAddVM : ObservableValidator
         if (message.Contains("account limit", StringComparison.OrdinalIgnoreCase))
             return "Account Limit";
 
+        if (message.Contains("spending limit", StringComparison.OrdinalIgnoreCase))
+            return "Tag Limit";
+
         return "Invalid Amount";
     }
 
@@ -1535,7 +1543,41 @@ public partial class QuickAddVM : ObservableValidator
         if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense, viewModel.IsGoal, value, viewModel.SelectedSpendingSource, out var validationMessage))
             return new ValidationResult(validationMessage);
 
+        if (!viewModel.TryValidateSpendingAmountAgainstTagLimit(value, out var tagLimitValidationMessage))
+            return new ValidationResult(tagLimitValidationMessage);
+
         return ValidationResult.Success;
+    }
+
+    private bool TryValidateSpendingAmountAgainstTagLimit(decimal amount, out string validationMessage)
+    {
+        validationMessage = string.Empty;
+
+        if (!IsExpense || IsRecurring || SelectedTag is not { SpendingLimit: > 0m } tag)
+            return true;
+
+        try
+        {
+            var allocation = _appData.GetBudgetAllocationAsync().GetAwaiter().GetResult();
+            var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(
+                allocation.AllocationPeriod,
+                SelectedDate.Date);
+            var currentTagSpending = _appData.GetExpenseLogsAsync().GetAwaiter().GetResult()
+                .Where(log => !log.IsForDeletion)
+                .Where(log => log.DeductedOn.Date >= currentPeriod.Start && log.DeductedOn.Date <= currentPeriod.End)
+                .Where(log => log.Expense?.ExpenseTagId == tag.Id || log.Expense?.ExpenseTag?.Id == tag.Id)
+                .Sum(log => log.Amount);
+
+            if (currentTagSpending + amount <= tag.SpendingLimit.Value)
+                return true;
+
+            validationMessage = $"{tag.Name} spending limit exceeded.";
+            return false;
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     public static ValidationResult? ValidateSelectedSpendingSource(SpendingSourceVM? value, ValidationContext validationContext)
@@ -1589,7 +1631,8 @@ public partial class QuickAddVM : ObservableValidator
                 Id = tag.Id,
                 Name = tag.Name,
                 HexCode = tag.HexCode,
-                IsSystemTag = false
+                IsSystemTag = false,
+                SpendingLimit = tag.SpendingLimit
             });
     }
 

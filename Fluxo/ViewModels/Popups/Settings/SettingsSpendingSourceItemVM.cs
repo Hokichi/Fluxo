@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 
@@ -31,7 +31,7 @@ public partial class SettingsSpendingSourceItemVM : ObservableObject
         MaximumSpending = spendingSource.MaximumSpending;
         MinimumPayment = spendingSource.MinimumPayment;
         IsEnabled = spendingSource.IsEnabled;
-        IsHidden = !spendingSource.ShowOnUI;
+        IsUnpinned = !spendingSource.PinnedOnUI;
     }
 
     public int Id { get; }
@@ -42,5 +42,5 @@ public partial class SettingsSpendingSourceItemVM : ObservableObject
     public decimal MaximumSpending { get; }
     public decimal? MinimumPayment { get; }
     public bool IsEnabled { get; }
-    public bool IsHidden { get; }
+    public bool IsUnpinned { get; }
 }

@@ -16,10 +16,16 @@ public sealed class ModelSchemaTests
         var model = dbContext.Model;
 
         var spendingSource = model.FindEntityType(typeof(SpendingSource))!;
+        Assert.NotNull(spendingSource.FindProperty(nameof(SpendingSource.PinnedOnUI)));
+        Assert.Null(spendingSource.FindProperty("ShowOnUI"));
         Assert.Equal("NUMERIC", spendingSource.FindProperty(nameof(SpendingSource.MaximumSpending))!.GetColumnType());
         Assert.False(spendingSource.FindProperty(nameof(SpendingSource.MaximumSpending))!.IsNullable);
         Assert.Equal("NUMERIC", spendingSource.FindProperty(nameof(SpendingSource.MinimumPayment))!.GetColumnType());
         Assert.True(spendingSource.FindProperty(nameof(SpendingSource.MinimumPayment))!.IsNullable);
+
+        var expenseTag = model.FindEntityType(typeof(ExpenseTag))!;
+        Assert.Equal("NUMERIC", expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.GetColumnType());
+        Assert.True(expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.IsNullable);
 
         var savingGoal = model.FindEntityType(typeof(SavingGoal))!;
         Assert.True(savingGoal.FindProperty(nameof(SavingGoal.SavingEndDate))!.IsNullable);
@@ -59,16 +65,23 @@ public sealed class ModelSchemaTests
         var source = new SpendingSource
         {
             MaximumSpending = 500m,
-            MinimumPayment = 25m
+            MinimumPayment = 25m,
+            PinnedOnUI = true
         };
         var sourceVm = new SpendingSourceVM
         {
             MaximumSpending = source.MaximumSpending,
-            MinimumPayment = source.MinimumPayment
+            MinimumPayment = source.MinimumPayment,
+            PinnedOnUI = source.PinnedOnUI
         };
 
         Assert.Equal(500m, sourceVm.MaximumSpending);
         Assert.Equal(25m, sourceVm.MinimumPayment);
+        Assert.True(sourceVm.PinnedOnUI);
+
+        var tag = new ExpenseTag { SpendingLimit = 250m };
+        var tagVm = new ExpenseTagVM { SpendingLimit = tag.SpendingLimit };
+        Assert.Equal(250m, tagVm.SpendingLimit);
 
         var goal = new SavingGoal { SavingEndDate = null };
         var goalVm = new SavingGoalVM

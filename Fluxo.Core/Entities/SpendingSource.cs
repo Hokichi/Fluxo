@@ -1,4 +1,4 @@
-﻿using Fluxo.Core.Enums;
+using Fluxo.Core.Enums;
 
 namespace Fluxo.Core.Entities;
 
@@ -15,9 +15,7 @@ public sealed class SpendingSource
     public int? MonthlyDueDate { get; set; }
     public int? DeductSource { get; set; }
     public decimal? InterestRate { get; set; }
-    public bool ShowOnUI { get; set; }
+    public bool PinnedOnUI { get; set; }
     public bool IsEnabled { get; set; }
     public bool IsForDeletion { get; set; }
-
-    // TODO: Rename ShowOnUI to PinnedOnUI, then change the UI accordingly
 }

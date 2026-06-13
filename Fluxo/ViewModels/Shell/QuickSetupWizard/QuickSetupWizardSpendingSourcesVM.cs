@@ -74,7 +74,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 MonthlyDueDate = source.MonthlyDueDate,
                 DeductSource = source.DeductSource,
                 InterestRate = source.InterestRate,
-                ShowOnUI = source.ShowOnUi,
+                PinnedOnUI = source.PinnedOnUi,
                 IsEnabled = source.IsEnabled
             })
             .ToList();
@@ -111,7 +111,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         };
         vm.NameText = source.Name;
         vm.SelectedSpendingSourceType = source.SpendingSourceType;
-        vm.ShowOnUI = source.ShowOnUi;
+        vm.PinnedOnUI = source.PinnedOnUi;
         vm.IsEnabled = source.IsEnabled;
 
         if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
@@ -201,7 +201,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 persisted.DeductSource = null;
                 persisted.InterestRate = draft.InterestRate;
                 persisted.IsEnabled = draft.IsEnabled;
-                persisted.ShowOnUI = ResolveShowOnUiFromEnabledState(previousIsEnabled, draft.IsEnabled, draft.ShowOnUi);
+                persisted.PinnedOnUI = ResolvePinnedOnUiFromEnabledState(previousIsEnabled, draft.IsEnabled, draft.PinnedOnUi);
                 appData.UpdateSpendingSource(persisted);
                 idMap[draft.Id] = persisted.Id;
             }
@@ -219,7 +219,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                     MonthlyDueDate = draft.MonthlyDueDate,
                     DeductSource = null,
                     InterestRate = draft.InterestRate,
-                    ShowOnUI = draft.ShowOnUi,
+                    PinnedOnUI = draft.PinnedOnUi,
                     IsEnabled = draft.IsEnabled
                 };
                 await appData.AddSpendingSourceAsync(created);
@@ -297,7 +297,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
                 source.MonthlyDueDate,
                 source.DeductSource,
                 source.InterestRate,
-                source.ShowOnUI,
+                source.PinnedOnUI,
                 source.IsEnabled);
         }
 
@@ -323,7 +323,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         var previousIsEnabled = _draftSources.TryGetValue(id, out var existingDraft)
             ? existingDraft.IsEnabled
             : input.IsEnabled;
-        var resolvedShowOnUi = ResolveShowOnUiFromEnabledState(previousIsEnabled, input.IsEnabled, input.ShowOnUI);
+        var resolvedPinnedOnUi = ResolvePinnedOnUiFromEnabledState(previousIsEnabled, input.IsEnabled, input.PinnedOnUI);
         _draftSources[id] = new QuickSetupWizardDraftSpendingSource(
             id,
             input.Name,
@@ -336,7 +336,7 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
             input.MonthlyDueDate,
             input.DeductSource,
             input.InterestRate,
-            resolvedShowOnUi,
+            resolvedPinnedOnUi,
             input.IsEnabled);
 
         if (id > 0)
@@ -369,13 +369,13 @@ public partial class QuickSetupWizardSpendingSourcesVM : ObservableObject
         PublishSnapshot();
     }
 
-    private static bool ResolveShowOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedShowOnUi)
+    private static bool ResolvePinnedOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedPinnedOnUi)
     {
         if (!nextIsEnabled)
             return false;
 
         if (previousIsEnabled == nextIsEnabled)
-            return requestedShowOnUi;
+            return requestedPinnedOnUi;
 
         return true;
     }

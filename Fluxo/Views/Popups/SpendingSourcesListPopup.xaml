@@ -130,7 +130,7 @@
                                         <Style.Triggers>
                                             <MultiDataTrigger>
                                                 <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding ShowOnUI}" Value="False" />
+                                                    <Condition Binding="{Binding PinnedOnUI}" Value="False" />
                                                     <Condition Binding="{Binding IsDisabled}" Value="False" />
                                                 </MultiDataTrigger.Conditions>
                                                 <Setter Property="Visibility" Value="Visible" />

@@ -190,8 +190,8 @@
                     <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                         <CheckBox
                             Margin="0,0,16,0"
-                            Content="Show on dashboard"
-                            IsChecked="{Binding ShowOnUI, Mode=TwoWay}"
+                            Content="Pinned on dashboard"
+                            IsChecked="{Binding PinnedOnUI, Mode=TwoWay}"
                             Style="{StaticResource ItemCheckBoxWithContentStyle}" />
                         <CheckBox
                             Content="Enabled"

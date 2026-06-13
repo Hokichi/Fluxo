@@ -13,6 +13,7 @@ public partial class DataManagementVM : ObservableObject
 {
     private readonly IUserBackupService _backupService;
     private readonly HashSet<DataManagementEntityKind> _manifestAvailableEntities = [];
+    private string _backupFilePath;
 
     [ObservableProperty] private DataManagementMode _mode = DataManagementMode.Backup;
     [ObservableProperty] private string _filePath = string.Empty;
@@ -21,11 +22,14 @@ public partial class DataManagementVM : ObservableObject
     [ObservableProperty] private string _operationDescription = string.Empty;
     [ObservableProperty] private string _resultMessage = string.Empty;
     [ObservableProperty] private bool _isResultSuccess;
+    [ObservableProperty] private bool _isFileInvalid;
+    [ObservableProperty] private string _fileValidationMessage = string.Empty;
 
     public DataManagementVM(IUserBackupService backupService)
     {
         _backupService = backupService;
-        FilePath = backupService.BuildDefaultBackupPath(DateTime.Now);
+        _backupFilePath = backupService.BuildDefaultBackupPath(DateTime.Now);
+        FilePath = _backupFilePath;
 
         Entities =
         [
@@ -97,11 +101,24 @@ public partial class DataManagementVM : ObservableObject
 
     public async Task LoadManifestAsync(string filePath)
     {
-        var manifest = await _backupService.ReadManifestAsync(filePath);
         FilePath = filePath;
         Conflicts.Clear();
-        ApplyManifest(manifest);
-        PageIndex = 0;
+
+        try
+        {
+            var manifest = await _backupService.ReadManifestAsync(filePath);
+            IsFileInvalid = false;
+            FileValidationMessage = string.Empty;
+            ApplyManifest(manifest);
+            PageIndex = 0;
+        }
+        catch (Exception exception) when (exception is InvalidDataException or IOException or System.Text.Json.JsonException)
+        {
+            IsFileInvalid = true;
+            FileValidationMessage = "Invalid JSON file";
+            DisableAllEntities();
+            PageIndex = 0;
+        }
     }
 
     [RelayCommand]
@@ -223,14 +240,38 @@ public partial class DataManagementVM : ObservableObject
         OnPropertyChanged(nameof(IsAppendSelected));
         OnPropertyChanged(nameof(IsOverwriteSelected));
         Conflicts.Clear();
+        IsFileInvalid = false;
+        FileValidationMessage = string.Empty;
 
         if (value == DataManagementMode.Backup)
+        {
+            FilePath = _backupFilePath;
             EnableAllEntities();
+        }
+        else
+            FilePath = string.Empty;
+    }
+
+    partial void OnFilePathChanged(string value)
+    {
+        if (Mode == DataManagementMode.Backup)
+            _backupFilePath = value;
     }
 
     private void OnSpendingSourcePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(DataManagementEntityOptionVM.IsChecked))
             ApplyDependencyRules();
+    }
+
+    private void DisableAllEntities()
+    {
+        _manifestAvailableEntities.Clear();
+
+        foreach (var entity in Entities)
+        {
+            entity.IsEnabled = false;
+            entity.IsChecked = false;
+        }
     }
 }

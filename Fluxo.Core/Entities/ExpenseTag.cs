@@ -6,6 +6,5 @@ public sealed class ExpenseTag
     public bool IsSystemTag { get; set; } = false;
     public string Name { get; set; }
     public string HexCode { get; set; }
-
-    // TODO: Add a per-tag spending limit
+    public decimal? SpendingLimit { get; set; }
 }

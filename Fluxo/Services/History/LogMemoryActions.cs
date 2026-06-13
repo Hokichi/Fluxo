@@ -19,7 +19,7 @@ public sealed record SpendingSourceMemorySnapshot(
     int? MonthlyDueDate,
     int? DeductSource,
     decimal? InterestRate,
-    bool ShowOnUI,
+    bool PinnedOnUI,
     bool IsEnabled)
 {
     public static SpendingSourceMemorySnapshot Create(SpendingSource spendingSource)
@@ -38,7 +38,7 @@ public sealed record SpendingSourceMemorySnapshot(
             spendingSource.MonthlyDueDate,
             spendingSource.DeductSource,
             spendingSource.InterestRate,
-            spendingSource.ShowOnUI,
+            spendingSource.PinnedOnUI,
             spendingSource.IsEnabled);
     }
 }
@@ -68,7 +68,8 @@ public sealed record ExpenseMemorySnapshot(
 public sealed record ExpenseTagMemorySnapshot(
     int ExpenseTagId,
     string Name,
-    string HexCode)
+    string HexCode,
+    decimal? SpendingLimit)
 {
     public static ExpenseTagMemorySnapshot Create(ExpenseTag expenseTag)
     {
@@ -77,7 +78,8 @@ public sealed record ExpenseTagMemorySnapshot(
         return new ExpenseTagMemorySnapshot(
             expenseTag.Id,
             expenseTag.Name,
-            expenseTag.HexCode);
+            expenseTag.HexCode,
+            expenseTag.SpendingLimit);
     }
 }
 
@@ -566,7 +568,7 @@ public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot s
             MonthlyDueDate = snapshot.MonthlyDueDate,
             DeductSource = snapshot.DeductSource,
             InterestRate = snapshot.InterestRate,
-            ShowOnUI = snapshot.ShowOnUI,
+            PinnedOnUI = snapshot.PinnedOnUI,
             IsEnabled = snapshot.IsEnabled
         };
 
@@ -608,7 +610,7 @@ public sealed class EditSpendingSourceMemoryAction(
         spendingSource.MonthlyDueDate = snapshot.MonthlyDueDate;
         spendingSource.DeductSource = snapshot.DeductSource;
         spendingSource.InterestRate = snapshot.InterestRate;
-        spendingSource.ShowOnUI = snapshot.ShowOnUI;
+        spendingSource.PinnedOnUI = snapshot.PinnedOnUI;
         spendingSource.IsEnabled = snapshot.IsEnabled;
 
         unitOfWork.SpendingSources.Update(spendingSource);
@@ -638,7 +640,7 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
             MonthlyDueDate = snapshot.MonthlyDueDate,
             DeductSource = snapshot.DeductSource,
             InterestRate = snapshot.InterestRate,
-            ShowOnUI = snapshot.ShowOnUI,
+            PinnedOnUI = snapshot.PinnedOnUI,
             IsEnabled = snapshot.IsEnabled
         };
 
@@ -747,7 +749,8 @@ public sealed class DeleteExpenseTagMemoryAction(ExpenseTagMemorySnapshot snapsh
         {
             Id = snapshot.ExpenseTagId,
             Name = snapshot.Name,
-            HexCode = snapshot.HexCode
+            HexCode = snapshot.HexCode,
+            SpendingLimit = snapshot.SpendingLimit
         };
 
         await unitOfWork.ExpenseTags.AddAsync(expenseTag, cancellationToken);
@@ -790,6 +793,7 @@ public sealed class EditExpenseTagMemoryAction(
 
         expenseTag.Name = snapshot.Name;
         expenseTag.HexCode = snapshot.HexCode;
+        expenseTag.SpendingLimit = snapshot.SpendingLimit;
         unitOfWork.ExpenseTags.Update(expenseTag);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

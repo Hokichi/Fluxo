@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 namespace Fluxo.ViewModels.Popups;
 
@@ -12,6 +13,7 @@ public partial class AddTagVM : ObservableObject
 
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _selectedColorHex = DefaultColor;
+    [ObservableProperty] private string _spendingLimitText = string.Empty;
 
     public ObservableCollection<TagColorOptionVM> ColorOptions { get; } =
     [
@@ -29,11 +31,14 @@ public partial class AddTagVM : ObservableObject
         new("Teal", "#14B8A6")
     ];
 
-    public AddTagVM(int? editingId = null, string? nameText = null, string? selectedColorHex = null)
+    public AddTagVM(int? editingId = null, string? nameText = null, string? selectedColorHex = null, decimal? spendingLimit = null)
     {
         _editingId = editingId;
         NameText = (nameText ?? string.Empty).Trim();
         SelectedColorHex = NormalizeHex(selectedColorHex ?? DefaultColor);
+        SpendingLimitText = spendingLimit.HasValue
+            ? spendingLimit.Value.ToString("0.##", CultureInfo.InvariantCulture)
+            : string.Empty;
         EnsureColorOptionExists(SelectedColorHex);
         _initialState = CaptureState();
     }
@@ -55,6 +60,7 @@ public partial class AddTagVM : ObservableObject
 
     partial void OnNameTextChanged(string value) => NotifyFormStateChanged();
     partial void OnSelectedColorHexChanged(string value) => NotifyFormStateChanged();
+    partial void OnSpendingLimitTextChanged(string value) => NotifyFormStateChanged();
 
     public void AddCustomColorToFront(string hexCode)
     {
@@ -67,7 +73,7 @@ public partial class AddTagVM : ObservableObject
     private FormState CaptureState()
     {
         var optionFingerprint = string.Join("|", ColorOptions.Select(option => option.HexCode));
-        return new FormState(NameText ?? string.Empty, SelectedColorHex ?? DefaultColor, optionFingerprint);
+        return new FormState(NameText ?? string.Empty, SelectedColorHex ?? DefaultColor, SpendingLimitText ?? string.Empty, optionFingerprint);
     }
 
     private void NotifyFormStateChanged()
@@ -102,7 +108,7 @@ public partial class AddTagVM : ObservableObject
             ColorOptions.RemoveAt(ColorOptions.Count - 1);
     }
 
-    private readonly record struct FormState(string NameText, string SelectedColorHex, string OptionFingerprint);
+    private readonly record struct FormState(string NameText, string SelectedColorHex, string SpendingLimitText, string OptionFingerprint);
 }
 
 public sealed record TagColorOptionVM(string Name, string HexCode);

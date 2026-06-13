@@ -10,7 +10,7 @@ namespace Fluxo.Views.Popups;
 public partial class AddTagPopup : BasePopup
 {
     private readonly IDialogService _dialogService;
-    private readonly Func<string, string, Task<SettingsOperationResult>> _saveTagAsync;
+    private readonly Func<string, string, string, Task<SettingsOperationResult>> _saveTagAsync;
     private readonly AddTagVM _viewModel;
 
     public AddTagPopup(SettingsTagsTabVM settingsViewModel, IDialogService dialogService)
@@ -20,7 +20,7 @@ public partial class AddTagPopup : BasePopup
 
     public AddTagPopup(
         IDialogService dialogService,
-        Func<string, string, Task<SettingsOperationResult>> saveTagAsync)
+        Func<string, string, string, Task<SettingsOperationResult>> saveTagAsync)
         : this(dialogService, new AddTagVM(), saveTagAsync)
     {
     }
@@ -28,7 +28,7 @@ public partial class AddTagPopup : BasePopup
     public AddTagPopup(
         IDialogService dialogService,
         AddTagVM viewModel,
-        Func<string, string, Task<SettingsOperationResult>> saveTagAsync)
+        Func<string, string, string, Task<SettingsOperationResult>> saveTagAsync)
     {
         InitializeComponent();
 
@@ -46,7 +46,7 @@ public partial class AddTagPopup : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
-        var result = await _saveTagAsync(_viewModel.NameText, _viewModel.SelectedColorHex);
+        var result = await _saveTagAsync(_viewModel.NameText, _viewModel.SelectedColorHex, _viewModel.SpendingLimitText);
         if (!result.IsSuccess)
         {
             ShowValidationMessage(result.ErrorMessage);

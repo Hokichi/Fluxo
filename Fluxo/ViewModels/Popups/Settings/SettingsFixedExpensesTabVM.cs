@@ -155,10 +155,10 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
                     }
                     break;
 
-                case SettingsBatchAction.Hide:
-                case SettingsBatchAction.Unhide:
+                case SettingsBatchAction.Unpin:
+                case SettingsBatchAction.Pin:
                     return SettingsOperationResult.Failure(
-                        "Hide and unhide are no longer supported for recurring transactions.");
+                        "Pin and unpin are not supported for recurring transactions.");
             }
 
             await _appData.SaveChangesAsync();

@@ -179,7 +179,7 @@ public class PlanningReportVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 500m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             }
         };
     }
@@ -210,7 +210,7 @@ public class PlanningReportVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 1000m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             }
         };
     }

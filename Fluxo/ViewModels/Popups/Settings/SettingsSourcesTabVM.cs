@@ -46,10 +46,10 @@ public partial class SettingsSourcesTabVM : ObservableObject
     public bool AreAllSpendingSourcesChecked => SpendingSources.Count > 0 && SpendingSources.All(item => item.IsChecked);
     public bool HasSpendingSources => SpendingSources.Count > 0;
 
-    public bool ShowSpendingSourceHideActionButton =>
-        IsSpendingSourceChecksEnabled && ShouldShowHideAction(SpendingSources);
-    public bool ShowSpendingSourceUnhideActionButton =>
-        IsSpendingSourceChecksEnabled && !ShouldShowHideAction(SpendingSources);
+    public bool ShowSpendingSourceUnpinActionButton =>
+        IsSpendingSourceChecksEnabled && ShouldShowUnpinAction(SpendingSources);
+    public bool ShowSpendingSourcePinActionButton =>
+        IsSpendingSourceChecksEnabled && !ShouldShowUnpinAction(SpendingSources);
     public bool ShowSpendingSourceDisableActionButton =>
         IsSpendingSourceChecksEnabled && ShouldShowDisableAction(SpendingSources);
     public bool ShowSpendingSourceEnableActionButton =>
@@ -120,7 +120,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     public bool ShouldWarnBeforeApplyingToAll(SettingsBatchAction action)
     {
-        if (action is not (SettingsBatchAction.Hide or SettingsBatchAction.Disable))
+        if (action is not (SettingsBatchAction.Unpin or SettingsBatchAction.Disable))
             return false;
 
         if (SpendingSources.Count == 0)
@@ -176,8 +176,8 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
                     break;
 
-                case SettingsBatchAction.Hide:
-                case SettingsBatchAction.Unhide:
+                case SettingsBatchAction.Unpin:
+                case SettingsBatchAction.Pin:
                 case SettingsBatchAction.Disable:
                 case SettingsBatchAction.Enable:
                     foreach (var selectedId in selectedIds)
@@ -191,22 +191,22 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
                         switch (action)
                         {
-                            case SettingsBatchAction.Hide when spendingSource.ShowOnUI:
-                                spendingSource.ShowOnUI = false;
+                            case SettingsBatchAction.Unpin when spendingSource.PinnedOnUI:
+                                spendingSource.PinnedOnUI = false;
                                 updated = true;
                                 break;
-                            case SettingsBatchAction.Unhide when !spendingSource.ShowOnUI && spendingSource.IsEnabled:
-                                spendingSource.ShowOnUI = true;
+                            case SettingsBatchAction.Pin when !spendingSource.PinnedOnUI && spendingSource.IsEnabled:
+                                spendingSource.PinnedOnUI = true;
                                 updated = true;
                                 break;
                             case SettingsBatchAction.Disable when spendingSource.IsEnabled:
                                 spendingSource.IsEnabled = false;
-                                spendingSource.ShowOnUI = false;
+                                spendingSource.PinnedOnUI = false;
                                 updated = true;
                                 break;
                             case SettingsBatchAction.Enable when !spendingSource.IsEnabled:
                                 spendingSource.IsEnabled = true;
-                                spendingSource.ShowOnUI = true;
+                                spendingSource.PinnedOnUI = true;
                                 updated = true;
                                 break;
                         }
@@ -260,7 +260,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
     public async Task RefreshSpendingSourcesAsync(bool resetPagination = false, int? keepVisibleItemId = null)
     {
         SettingsShared.ReplaceCollection(SpendingSources, (await _appData.GetSpendingSourcesAsync())
-            .OrderByDescending(source => source.ShowOnUI)
+            .OrderByDescending(source => source.PinnedOnUI)
             .ThenBy(source => source.Name)
             .Select(source => new SettingsSpendingSourceItemVM(source)));
 
@@ -329,8 +329,8 @@ public partial class SettingsSourcesTabVM : ObservableObject
     private void OnSelectionStateChanged()
     {
         OnPropertyChanged(nameof(AreAllSpendingSourcesChecked));
-        OnPropertyChanged(nameof(ShowSpendingSourceHideActionButton));
-        OnPropertyChanged(nameof(ShowSpendingSourceUnhideActionButton));
+        OnPropertyChanged(nameof(ShowSpendingSourceUnpinActionButton));
+        OnPropertyChanged(nameof(ShowSpendingSourcePinActionButton));
         OnPropertyChanged(nameof(ShowSpendingSourceDisableActionButton));
         OnPropertyChanged(nameof(ShowSpendingSourceEnableActionButton));
         OnPropertyChanged(nameof(ShowSpendingSourceCheckAllButton));
@@ -392,13 +392,13 @@ public partial class SettingsSourcesTabVM : ObservableObject
         HasMoreItems = SpendingSources.Count > _visibleSpendingSourceCount;
     }
 
-    private static bool ShouldShowHideAction(IReadOnlyCollection<SettingsSpendingSourceItemVM> items)
+    private static bool ShouldShowUnpinAction(IReadOnlyCollection<SettingsSpendingSourceItemVM> items)
     {
         if (items.Count == 0)
             return true;
 
         var scopedItems = GetScopedItems(items);
-        return scopedItems.Any(item => !item.IsHidden);
+        return scopedItems.Any(item => !item.IsUnpinned);
     }
 
     private static bool ShouldShowDisableAction(IReadOnlyCollection<SettingsSpendingSourceItemVM> items)

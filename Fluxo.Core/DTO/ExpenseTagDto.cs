@@ -6,4 +6,5 @@ public class ExpenseTagDto
     public bool IsSystemTag { get; set; } = false;
     public string Name { get; set; } = string.Empty;
     public string HexCode { get; set; } = string.Empty;
+    public decimal? SpendingLimit { get; set; }
 }

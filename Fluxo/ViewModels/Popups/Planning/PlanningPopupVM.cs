@@ -152,7 +152,8 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
             Id = tag.Id,
             Name = tag.Name,
             HexCode = tag.HexCode,
-            IsSystemTag = tag.IsSystemTag
+            IsSystemTag = tag.IsSystemTag,
+            SpendingLimit = tag.SpendingLimit
         };
     }
 
@@ -169,7 +170,7 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
             MonthlyDueDate = source.MonthlyDueDate,
             DeductSource = source.DeductSource,
             InterestRate = source.InterestRate,
-            ShowOnUI = source.ShowOnUI,
+            PinnedOnUI = source.PinnedOnUI,
             IsEnabled = source.IsEnabled
         };
     }

@@ -44,8 +44,8 @@ public partial class SettingsSourcesTab : UserControl
 
         if (_viewModel.ShouldWarnBeforeApplyingToAll(action) &&
             FluxoMessageBox.Show(Window.GetWindow(this),
-                action == SettingsBatchAction.Hide
-                    ? "This will hide all items in this section. Continue?"
+                action == SettingsBatchAction.Unpin
+                    ? "This will unpin all items in this section. Continue?"
                     : "This will disable all items in this section. Continue?",
                 "Settings",
                 MessageBoxButton.YesNo,

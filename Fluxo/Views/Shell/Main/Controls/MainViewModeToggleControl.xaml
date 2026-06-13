@@ -39,12 +39,10 @@
                 SelectOnClick="False"
                 Value="{x:Static enums:MainContentViewMode.AllTime}" />
         </customControls:SegmentedToggleGroup>
-
-        <!--  TODO: Add ToastPopup upon navigating back  -->
         <Button
             Margin="0,4,0,0"
             HorizontalAlignment="Center"
-            Command="{Binding MoveToCurrentPeriodCommand}"
+            Click="OnMoveToCurrentPeriodButtonClick"
             Content="{Binding MoveToCurrentLabel}"
             Cursor="Hand"
             Style="{StaticResource MoveToCurrentPeriodButtonStyle}" />

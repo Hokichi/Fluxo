@@ -14,7 +14,7 @@ public partial class SpendingSourcesListPopup : BasePopup
         InitializeComponent();
 
         SourcesList.ItemsSource = mainViewModel.BudgetPanel.SpendingSources
-            .OrderByDescending(source => source.ShowOnUI)
+            .OrderByDescending(source => source.PinnedOnUI)
             .ThenBy(source => source.Name)
             .ToList();
     }

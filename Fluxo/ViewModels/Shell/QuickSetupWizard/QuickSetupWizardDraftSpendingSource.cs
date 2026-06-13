@@ -14,5 +14,5 @@ public sealed record QuickSetupWizardDraftSpendingSource(
     int? MonthlyDueDate,
     int? DeductSource,
     decimal? InterestRate,
-    bool ShowOnUi,
+    bool PinnedOnUi,
     bool IsEnabled);

@@ -54,12 +54,6 @@
         </Style>
     </customControls:BasePopup.Resources>
 
-    <!--
-        TODO:
-        - Implement a verification against the JSON file: If the file has is invalid or corrupted, show "Invalid JSON file" and disable all checkboxes
-        - When switching from Backup to Append or Overwrite, clear the filepath TextBox.
-    -->
-
     <Grid
         Width="840"
         Height="320"
@@ -99,6 +93,13 @@
                             TextWrapping="Wrap"
                             Visibility="{Binding IsOverwriteSelected, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </Grid>
+                    <TextBlock
+                        Margin="0,0,0,8"
+                        FontFamily="{StaticResource Bold}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Danger}"
+                        Text="{Binding FileValidationMessage}"
+                        Visibility="{Binding IsFileInvalid, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />

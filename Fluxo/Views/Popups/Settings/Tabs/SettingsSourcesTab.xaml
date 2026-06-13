@@ -62,7 +62,7 @@
                                         <Style.Triggers>
                                             <MultiDataTrigger>
                                                 <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding IsHidden}" Value="True" />
+                                                    <Condition Binding="{Binding IsUnpinned}" Value="True" />
                                                     <Condition Binding="{Binding IsEnabled}" Value="True" />
                                                 </MultiDataTrigger.Conditions>
                                                 <Setter Property="Visibility" Value="Visible" />
@@ -102,16 +102,16 @@
                                 ButtonIcon="{StaticResource EyeOff}"
                                 Click="OnRowActionClick"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="SpendingSources:Hide"
-                                ToolTip="Hide"
-                                Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                Tag="SpendingSources:Unpin"
+                                ToolTip="Unpin"
+                                Visibility="{Binding IsUnpinned, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource Eye}"
                                 Click="OnRowActionClick"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="SpendingSources:Unhide"
-                                ToolTip="Unhide"
-                                Visibility="{Binding IsHidden, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Tag="SpendingSources:Pin"
+                                ToolTip="Pin"
+                                Visibility="{Binding IsUnpinned, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource LightningSlashFill}"
                                 Click="OnRowActionClick"
@@ -184,16 +184,16 @@
                         ButtonIcon="{StaticResource EyeOff}"
                         Click="OnBatchActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:Hide"
-                        ToolTip="Hide selected"
-                        Visibility="{Binding ShowSpendingSourceHideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Tag="SpendingSources:Unpin"
+                        ToolTip="Unpin selected"
+                        Visibility="{Binding ShowSpendingSourceUnpinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource Eye}"
                         Click="OnBatchActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:Unhide"
-                        ToolTip="Unhide selected"
-                        Visibility="{Binding ShowSpendingSourceUnhideActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Tag="SpendingSources:Pin"
+                        ToolTip="Pin selected"
+                        Visibility="{Binding ShowSpendingSourcePinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource LightningSlashFill}"
                         Click="OnBatchActionClick"

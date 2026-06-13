@@ -56,7 +56,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
     [ObservableProperty] private decimal _primaryAmountText;
     [ObservableProperty] private int? _selectedDeductSource;
     [ObservableProperty] private SpendingSourceType _selectedSpendingSourceType = SpendingSourceType.Checking;
-    [ObservableProperty] private bool _showOnUI = true;
+    [ObservableProperty] private bool _pinnedOnUI = true;
     [ObservableProperty]
     [CustomValidation(typeof(AddSpendingSourceVM), nameof(ValidateSpentAmountText))]
     private decimal _spentAmountText;
@@ -145,7 +145,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         EditingId = source.Id;
         NameText = source.Name;
         SelectedSpendingSourceType = source.SpendingSourceType;
-        ShowOnUI = source.ShowOnUI;
+        PinnedOnUI = source.PinnedOnUI;
         IsEnabled = source.IsEnabled;
 
         if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
@@ -183,7 +183,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         NameText = string.Empty;
         PrimaryAmountText = 0m;
         SelectedSpendingSourceType = SpendingSourceType.Checking;
-        ShowOnUI = true;
+        PinnedOnUI = true;
         SpentAmountText = 0m;
         SelectedDeductSource = null;
         ResetValidationState();
@@ -251,8 +251,8 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     partial void OnIsEnabledChanged(bool value)
     {
-        if (ShowOnUI != value)
-            ShowOnUI = value;
+        if (PinnedOnUI != value)
+            PinnedOnUI = value;
 
         NotifyFormStateChanged();
     }
@@ -288,7 +288,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
 
     partial void OnSelectedDeductSourceChanged(int? value) => NotifyFormStateChanged();
 
-    partial void OnShowOnUIChanged(bool value) => NotifyFormStateChanged();
+    partial void OnPinnedOnUIChanged(bool value) => NotifyFormStateChanged();
 
     partial void OnSpentAmountTextChanged(decimal value)
     {
@@ -418,7 +418,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
                 spendingSource.MonthlyDueDate = input.MonthlyDueDate;
                 spendingSource.DeductSource = input.DeductSource;
                 spendingSource.InterestRate = input.InterestRate;
-                spendingSource.ShowOnUI = ResolveShowOnUiFromEnabledState(spendingSource.IsEnabled, input.IsEnabled, input.ShowOnUI);
+                spendingSource.PinnedOnUI = ResolvePinnedOnUiFromEnabledState(spendingSource.IsEnabled, input.IsEnabled, input.PinnedOnUI);
                 spendingSource.IsEnabled = input.IsEnabled;
                 _appData.UpdateSpendingSource(spendingSource);
             }
@@ -436,7 +436,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
                     MonthlyDueDate = input.MonthlyDueDate,
                     DeductSource = input.DeductSource,
                     InterestRate = input.InterestRate,
-                    ShowOnUI = ResolveShowOnUiForCreation(input.IsEnabled, input.ShowOnUI),
+                    PinnedOnUI = ResolvePinnedOnUiForCreation(input.IsEnabled, input.PinnedOnUI),
                     IsEnabled = input.IsEnabled
                 };
                 await _appData.AddSpendingSourceAsync(spendingSource);
@@ -738,7 +738,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
             monthlyDueDate,
             IsCreditLike ? SelectedDeductSource : null,
             interestRate,
-            ShowOnUI,
+            PinnedOnUI,
             IsEnabled);
 
         return true;
@@ -784,18 +784,18 @@ public partial class AddSpendingSourceVM : ObservableValidator
         return (value ?? string.Empty).Trim();
     }
 
-    private static bool ResolveShowOnUiForCreation(bool isEnabled, bool requestedShowOnUi)
+    private static bool ResolvePinnedOnUiForCreation(bool isEnabled, bool requestedPinnedOnUi)
     {
-        return isEnabled && requestedShowOnUi;
+        return isEnabled && requestedPinnedOnUi;
     }
 
-    private static bool ResolveShowOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedShowOnUi)
+    private static bool ResolvePinnedOnUiFromEnabledState(bool previousIsEnabled, bool nextIsEnabled, bool requestedPinnedOnUi)
     {
         if (!nextIsEnabled)
             return false;
 
         if (previousIsEnabled == nextIsEnabled)
-            return requestedShowOnUi;
+            return requestedPinnedOnUi;
 
         return true;
     }
@@ -942,7 +942,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
             AccountLimitText,
             MinimumPaymentText,
             ApyText,
-            ShowOnUI,
+            PinnedOnUI,
             IsEnabled);
     }
 
@@ -1071,7 +1071,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         int? MonthlyDueDate,
         int? DeductSource,
         decimal? InterestRate,
-        bool ShowOnUI,
+        bool PinnedOnUI,
         bool IsEnabled);
 
     private readonly record struct FormState(
@@ -1081,7 +1081,7 @@ public partial class AddSpendingSourceVM : ObservableValidator
         decimal AccountLimitText,
         decimal MinimumPaymentText,
         decimal ApyText,
-        bool ShowOnUI,
+        bool PinnedOnUI,
         bool IsEnabled);
 
     public readonly record struct DeductSourceOption(

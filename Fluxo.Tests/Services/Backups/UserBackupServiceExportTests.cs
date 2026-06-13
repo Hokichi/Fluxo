@@ -59,6 +59,38 @@ public sealed class UserBackupServiceExportTests
     }
 
     [Fact]
+    public async Task BackupAsync_WhenTagsSelected_IncludesSpendingLimit()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
+            .Returns([new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff", SpendingLimit = 250m }]);
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        var service = new UserBackupService(appData);
+
+        try
+        {
+            var result = await service.BackupAsync(new UserBackupSelection(new HashSet<DataManagementEntityKind>
+            {
+                DataManagementEntityKind.Tags
+            }), tempFile);
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            var json = await File.ReadAllTextAsync(tempFile);
+            var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
+            Assert.NotNull(document);
+
+            var tag = Assert.Single(document.Entities.Tags);
+            Assert.Equal(250m, tag.SpendingLimit);
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
     public async Task BackupAsync_WhenDeductSourceAppearsAfterDependent_MapsDeductSourceByBackupId()
     {
         var appData = Substitute.For<IAppDataService>();

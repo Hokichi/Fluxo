@@ -242,7 +242,7 @@ public class BudgetAllocationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 1825m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             };
             var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), [source]);
 
@@ -268,7 +268,7 @@ public class BudgetAllocationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 2000m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             };
             var vm = CreateVm(messenger, [], CreateTags(), [source]);
             vm.LoadAsync().GetAwaiter().GetResult();
@@ -306,7 +306,7 @@ public class BudgetAllocationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 2100m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             };
             var vm = CreateVm(messenger, [], CreateTags(), [source]);
 
@@ -332,7 +332,7 @@ public class BudgetAllocationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 17_660_000m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             };
             var vm = CreateVm(
                 messenger,
@@ -369,7 +369,7 @@ public class BudgetAllocationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 2000m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             };
             var vm = CreateVm(messenger, [], CreateTags(), [source]);
             vm.LoadAsync().GetAwaiter().GetResult();
@@ -615,7 +615,7 @@ public class BudgetAllocationPanelVMTests
             SpendingSourceType = SpendingSourceType.Checking,
             Balance = 2000m,
             IsEnabled = true,
-            ShowOnUI = true
+            PinnedOnUI = true
         };
 
         return
@@ -685,7 +685,7 @@ public class BudgetAllocationPanelVMTests
                 SpendingSourceType = SpendingSourceType.Checking,
                 Balance = 1825m,
                 IsEnabled = true,
-                ShowOnUI = true
+                PinnedOnUI = true
             }
         ];
     }

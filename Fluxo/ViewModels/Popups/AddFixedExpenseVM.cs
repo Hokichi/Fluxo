@@ -186,7 +186,8 @@ public partial class AddFixedExpenseVM : ObservableObject
                     Id = tag.Id,
                     Name = tag.Name,
                     HexCode = tag.HexCode,
-                    IsSystemTag = tag.IsSystemTag
+                    IsSystemTag = tag.IsSystemTag,
+                    SpendingLimit = tag.SpendingLimit
                 })
                 .ToList();
         }
@@ -215,7 +216,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         NotifyFormStateChanged();
     }
 
-    public async Task<SettingsOperationResult> CreateDraftTagAsync(string name, string hexCode)
+    public async Task<SettingsOperationResult> CreateDraftTagAsync(string name, string hexCode, string spendingLimitText)
     {
         if (_createDraftTagAsync is null)
             return SettingsOperationResult.Failure("Unable to add a tag right now.");

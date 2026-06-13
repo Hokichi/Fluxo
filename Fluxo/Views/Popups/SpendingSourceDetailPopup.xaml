@@ -541,16 +541,16 @@
                             IsEnabled="{Binding CanTransfer}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Transfer funds" />
-                        <customControls:BalloonButton Click="OnHideOrUnhideButtonClick" IsEnabled="{Binding CanHideOrUnhide}">
+                        <customControls:BalloonButton Click="OnPinOrUnpinButtonClick" IsEnabled="{Binding CanPinOrUnpin}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
                                     <Setter Property="ButtonIcon" Value="{StaticResource EyeOff}" />
                                     <Setter Property="HoveredBackground" Value="{StaticResource Brush.Primary.Hover}" />
-                                    <Setter Property="ToolTip" Value="Hide source" />
+                                    <Setter Property="ToolTip" Value="Unpin source" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsHidden}" Value="True">
+                                        <DataTrigger Binding="{Binding IsUnpinned}" Value="True">
                                             <Setter Property="ButtonIcon" Value="{StaticResource Eye}" />
-                                            <Setter Property="ToolTip" Value="Unhide source" />
+                                            <Setter Property="ToolTip" Value="Pin source" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

@@ -149,7 +149,7 @@ public sealed class SpendingSourceDetailVMTests
             SpendingSourceType = type,
             Balance = balance,
             IsEnabled = isEnabled,
-            ShowOnUI = true
+            PinnedOnUI = true
         };
     }
 }
