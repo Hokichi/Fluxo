@@ -25,6 +25,7 @@ using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
 using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Analytics = Fluxo.Views.Shell.Main.Pages.Analytics;
 using Calendar = Fluxo.Views.Shell.Main.Pages.Calendar;
@@ -668,6 +669,19 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (MainWindowShortcutMatcher.IsOpenQuickAccessShortcut(e.Key, Keyboard.Modifiers))
+        {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
+            OpenQuickAddPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut(e.Key, Keyboard.Modifiers))
         {
             if (IsSufficientFundsActionGateLocked())
@@ -1272,7 +1286,7 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 
-    private void OpenRecurringAddNewTransactionPopup()
+    public void OpenRecurringAddNewTransactionPopup()
     {
         if (IsSufficientFundsActionGateLocked())
             return;
@@ -1323,9 +1337,18 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowSettings(this);
     }
 
-    public void OpenQuickSetupWizardPopup()
+    public async void OpenQuickSetupWizardPopup()
     {
-        _dialogService.ShowQuickSetupWizard(this);
+        using var scope = _serviceProvider.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<SettingsPersonalizationTabVM>();
+        await SettingsSetupWizardFlow.RunAsync(this, viewModel);
+    }
+
+    public async Task CheckForUpdatesFromQuickAccessAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<SettingsPersonalizationTabVM>();
+        await SettingsUpdateCheckFlow.CheckForUpdatesAsync(this, viewModel);
     }
 
     public void OpenPlanningPopup()

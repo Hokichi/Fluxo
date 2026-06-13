@@ -65,17 +65,8 @@ public partial class SettingsPersonalizationTab : UserControl
 
     private async void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not Fluxo.ViewModels.Popups.Settings.SettingsPersonalizationTabVM viewModel)
-            return;
-
-        if (Fluxo.Resources.CustomControls.FluxoMessageBox.Show(Window.GetWindow(this),
-                "This will close the current window and open the setup wizard. Continue?",
-                "Run Setup Wizard",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question) != MessageBoxResult.Yes)
-            return;
-
-        viewModel.RequestClosePopup();
-        await ((App)Application.Current).RunSetupWizardAsync();
+        await SettingsSetupWizardFlow.RunAsync(
+            Window.GetWindow(this),
+            DataContext as Fluxo.ViewModels.Popups.Settings.SettingsPersonalizationTabVM);
     }
 }

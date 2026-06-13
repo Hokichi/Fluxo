@@ -15,6 +15,15 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
+    public void CtrlQShortcut_RoutesToQuickAccessPopup()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenQuickAccessShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenQuickAddPopup();", source);
+    }
+
+    [Fact]
     public void CtrlShiftNShortcut_RoutesToRecurringAddNewTransactionPopup()
     {
         var source = ReadMainWindowSource();
@@ -66,6 +75,18 @@ public sealed class MainWindowShortcutRoutingTests
 
         Assert.DoesNotContain("IsRunSetupWizardShortcut", source);
         Assert.DoesNotContain("RunSetupWizardFromShortcutAsync", source);
+    }
+
+    [Fact]
+    public void PlanningShortcut_RemainsRoutedAfterMenuRemoval()
+    {
+        var source = ReadMainWindowSource();
+        var xaml = ReadMainWindowXaml();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenPlanningShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenPlanningPopup();", source);
+        Assert.DoesNotContain("x:Name=\"PlanningMenuButton\"", xaml);
+        Assert.DoesNotContain("Click=\"OnPlanningButtonClick\"", xaml);
     }
 
     [Fact]
@@ -303,7 +324,7 @@ public sealed class MainWindowShortcutRoutingTests
 
         Assert.Contains("public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)", source);
         Assert.Contains("public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)", source);
-        Assert.Contains("private void OpenRecurringAddNewTransactionPopup()", source);
+        Assert.Contains("public void OpenRecurringAddNewTransactionPopup()", source);
         Assert.Contains("public void OpenSpendingSourcesListPopup()", source);
         Assert.Contains("public void OpenAddSpendingSourcePopup()", source);
         Assert.Contains("public void OpenAnalyticsPopup()", source);

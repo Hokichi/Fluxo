@@ -13,12 +13,11 @@ public sealed class SettingsAboutTabUpdateToastTests
             "Views",
             "Popups",
             "Settings",
-            "Tabs",
-            "SettingsAboutTab.xaml.cs"));
+            "SettingsUpdateCheckFlow.cs"));
 
-        Assert.Contains("private async Task<AppUpdateCheckResult> CheckForUpdatesWithOptionalToastAsync(SettingsPopup? ownerPopup)", source);
+        Assert.Contains("private static async Task<AppUpdateCheckResult> CheckForUpdatesWithOptionalToastAsync(", source);
         Assert.Contains("ownerPopup.ShowToastWhileAsync(\"Checking for updates\", async toast =>", source);
-        Assert.Contains("await toast.UpdateMessageAsync(\"Fluxo is up to date.\");", source);
+        Assert.Contains("await toast.UpdateMessageAsync(\"fluxo is up to date.\");", source);
         Assert.Contains("await Task.Delay(TimeSpan.FromSeconds(2));", source);
     }
 
@@ -30,10 +29,9 @@ public sealed class SettingsAboutTabUpdateToastTests
             "Views",
             "Popups",
             "Settings",
-            "Tabs",
-            "SettingsAboutTab.xaml.cs"));
+            "SettingsUpdateCheckFlow.cs"));
 
-        var handlerBody = ExtractMethodBody(source, "OnCheckForUpdatesClick");
+        var handlerBody = ExtractMethodBody(source, "CheckForUpdatesAsync");
 
         Assert.Contains("case AppUpdateCheckStatus.UpToDate:", handlerBody);
         Assert.Contains("if (ownerPopup is null)", handlerBody);

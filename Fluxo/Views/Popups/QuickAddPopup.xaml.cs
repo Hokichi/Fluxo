@@ -27,6 +27,36 @@ public partial class QuickAddPopup : BasePopup
         OpenSelectedPopup(mainWindow => mainWindow.OpenAddSavingGoalPopup());
     }
 
+    private void OnRunSetupWizardClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenQuickSetupWizardPopup());
+    }
+
+    private void OnCheckForUpdatesClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => _ = mainWindow.CheckForUpdatesFromQuickAccessAsync());
+    }
+
+    private void OnNewRecurringTransactionClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenRecurringAddNewTransactionPopup());
+    }
+
+    private void OnViewSpendingSourcesClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenSpendingSourcesListPopup());
+    }
+
+    private void OnStartPlanningModeClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenPlanningPopup());
+    }
+
+    private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenSettingsPopup());
+    }
+
     private void OpenSelectedPopup(Action<MainWindow> openPopupAction)
     {
         if (Owner is not MainWindow ownerWindow)

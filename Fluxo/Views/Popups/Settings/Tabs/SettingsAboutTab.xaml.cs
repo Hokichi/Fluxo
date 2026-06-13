@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using Fluxo.Resources.Resources.Messages;
-using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.Popups;
+using Fluxo.Views.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 
@@ -24,63 +24,13 @@ public partial class SettingsAboutTab : UserControl
         CheckForUpdatesButton.IsEnabled = false;
         try
         {
-            var ownerPopup = Window.GetWindow(this) as SettingsPopup;
-            var update = await CheckForUpdatesWithOptionalToastAsync(ownerPopup);
-
-            switch (update.Status)
-            {
-                case AppUpdateCheckStatus.UpToDate:
-                    if (ownerPopup is null)
-                    {
-                        FluxoMessageBox.Show(
-                            Window.GetWindow(this),
-                            "fluxo is up to date.",
-                            "Check for Updates",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                    }
-
-                    return;
-
-                case AppUpdateCheckStatus.Error:
-                    FluxoMessageBox.Show(
-                        Window.GetWindow(this),
-                        update.ErrorMessage ?? "Unable to check for updates.",
-                        "Check for Updates",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                case AppUpdateCheckStatus.UpdateAvailable:
-                    await _viewModel.HandleAvailableUpdateAsync(update, Window.GetWindow(this));
-                    return;
-            }
+            await SettingsUpdateCheckFlow.CheckForUpdatesAsync(Window.GetWindow(this), _viewModel);
         }
         finally
         {
             if (Application.Current is not null)
                 CheckForUpdatesButton.IsEnabled = true;
         }
-    }
-
-    private async Task<AppUpdateCheckResult> CheckForUpdatesWithOptionalToastAsync(SettingsPopup? ownerPopup)
-    {
-        if (_viewModel is null)
-            return AppUpdateCheckResult.Error("Unable to check for updates.");
-
-        if (ownerPopup is null)
-            return await _viewModel.CheckForUpdatesAsync();
-
-        return await ownerPopup.ShowToastWhileAsync("Checking for updates", async toast =>
-        {
-            var update = await _viewModel.CheckForUpdatesAsync();
-            if (update.Status == AppUpdateCheckStatus.UpToDate)
-            {
-                await toast.UpdateMessageAsync("fluxo is up to date.");
-                await Task.Delay(TimeSpan.FromSeconds(2));
-            }
-
-            return update;
-        });
     }
 
     private async void OnResetAllSettingsClick(object sender, RoutedEventArgs e)

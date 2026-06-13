@@ -82,11 +82,11 @@ The dashboard includes:
 
 ## Adding Transactions
 
-Use Quick Add when you want to record something immediately.
+Use Quick Access when you want to open common Fluxo actions immediately.
 
-![Fluxo quick add screenshot placeholder](docs/images/fluxo-quick-add.png)
+![Fluxo quick access screenshot placeholder](docs/images/fluxo-quick-add.png)
 
-Quick Add supports three common entries:
+Quick Access includes common creation, setup, update, planning, source, and settings actions.
 
 - **Expense**: money spent from a source, assigned to a category and tag.
 - **Income**: money added to a cash, checking, or saving source.

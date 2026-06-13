@@ -130,6 +130,19 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void HeaderMenu_ExposesQuickAccessAndRemovesPlanning()
+    {
+        var xaml = MainWindowXaml.Value;
+        var xamlDocument = MainWindowXamlDocument.Value;
+
+        AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
+        Assert.Contains("Text=\"Quick Access\"", xaml);
+        Assert.Contains("Text=\"Ctrl+Q\"", xaml);
+        Assert.DoesNotContain("x:Name=\"PlanningMenuButton\"", xaml);
+        Assert.DoesNotContain("Text=\"Planning\"", xaml);
+    }
+
+    [Fact]
     public void HeaderNotifications_ExposeBellPopupWithNotificationPanel()
     {
         var xaml = MainWindowXaml.Value;

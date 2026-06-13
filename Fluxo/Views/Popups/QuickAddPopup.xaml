@@ -6,7 +6,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    PopupTitle="Quick Add"
+    PopupTitle="Quick Access"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>
@@ -15,8 +15,8 @@
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Width" Value="240" />
-            <Setter Property="Height" Value="120" />
+            <Setter Property="Width" Value="236" />
+            <Setter Property="Height" Value="112" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
@@ -116,11 +116,11 @@
     </customControls:BasePopup.Resources>
 
     <customControls:SpacedUniformGrid
-        Width="500"
-        Height="260"
+        Width="760"
+        Height="380"
         Margin="40,6,40,24"
         HorizontalAlignment="Center"
-        Columns="2"
+        Columns="3"
         HorizontalGap="16"
         VerticalGap="16">
         <Button
@@ -211,6 +211,192 @@
                     FontSize="11"
                     Foreground="{DynamicResource Brush.Text.Secondary}"
                     Text="Set a target and track progress."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Button>
+
+        <Button
+            x:Name="RunSetupWizardQuickAddButton"
+            Click="OnRunSetupWizardClick"
+            Style="{StaticResource QuickAddTileButtonStyle}">
+            <StackPanel VerticalAlignment="Center">
+                <components:Icon
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center"
+                    Path="{StaticResource RocketSolid}"
+                    Color="{DynamicResource Brush.Mint}" />
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="Run Setup Wizard"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Medium}"
+                    FontSize="11"
+                    Foreground="{DynamicResource Brush.Text.Secondary}"
+                    Text="Revisit guided setup."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Button>
+
+        <Button
+            x:Name="CheckForUpdatesQuickAddButton"
+            Click="OnCheckForUpdatesClick"
+            Style="{StaticResource QuickAddTileButtonStyle}">
+            <StackPanel VerticalAlignment="Center">
+                <components:Icon
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center"
+                    Path="{StaticResource UpdateOutline}"
+                    Color="{DynamicResource Brush.Mint}" />
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="Check for updates"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Medium}"
+                    FontSize="11"
+                    Foreground="{DynamicResource Brush.Text.Secondary}"
+                    Text="Look for a newer version."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Button>
+
+        <Button
+            x:Name="NewRecurringTransactionQuickAddButton"
+            Click="OnNewRecurringTransactionClick"
+            Style="{StaticResource LockedDisabledQuickAddTileButtonStyle}">
+            <StackPanel VerticalAlignment="Center">
+                <components:Icon
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center"
+                    Path="{StaticResource Calendar}"
+                    Color="{DynamicResource Brush.Mint}" />
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="New Recurring Transaction"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Medium}"
+                    FontSize="11"
+                    Foreground="{DynamicResource Brush.Text.Secondary}"
+                    Text="Schedule repeating money flow."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Button>
+
+        <Button
+            x:Name="ViewSpendingSourcesQuickAddButton"
+            Click="OnViewSpendingSourcesClick"
+            Style="{StaticResource QuickAddTileButtonStyle}">
+            <StackPanel VerticalAlignment="Center">
+                <components:Icon
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center"
+                    Path="{StaticResource Bank}"
+                    Color="{DynamicResource Brush.Mint}" />
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="View Spending Sources"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Medium}"
+                    FontSize="11"
+                    Foreground="{DynamicResource Brush.Text.Secondary}"
+                    Text="Review accounts and wallets."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Button>
+
+        <Button
+            x:Name="StartPlanningModeQuickAddButton"
+            Click="OnStartPlanningModeClick"
+            Style="{StaticResource LockedDisabledQuickAddTileButtonStyle}">
+            <StackPanel VerticalAlignment="Center">
+                <components:Icon
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center"
+                    Path="{StaticResource PlusSolid}"
+                    Color="{DynamicResource Brush.Mint}" />
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="Start Planning Mode"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Medium}"
+                    FontSize="11"
+                    Foreground="{DynamicResource Brush.Text.Secondary}"
+                    Text="Plan future cash movement."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Button>
+
+        <Button
+            x:Name="OpenSettingsQuickAddButton"
+            Click="OnOpenSettingsClick"
+            Style="{StaticResource QuickAddTileButtonStyle}">
+            <StackPanel VerticalAlignment="Center">
+                <components:Icon
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center"
+                    Path="{StaticResource Cog}"
+                    Color="{DynamicResource Brush.Mint}" />
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="Open Settings"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Medium}"
+                    FontSize="11"
+                    Foreground="{DynamicResource Brush.Text.Secondary}"
+                    Text="Adjust app preferences."
                     TextAlignment="Center"
                     TextWrapping="Wrap" />
             </StackPanel>

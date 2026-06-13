@@ -19,15 +19,23 @@ public sealed class QuickAddPopupLayoutTests
         "QuickAddPopup.xaml.cs");
 
     [Fact]
-    public void SufficientFundsActionGate_DisablesTransactionAndSavingGoalTilesOnly()
+    public void SufficientFundsActionGate_DisablesOnlyFundDependentTiles()
     {
         var xaml = File.ReadAllText(PopupXamlPath);
 
+        Assert.Contains("PopupTitle=\"Quick Access\"", xaml);
+        Assert.Contains("Columns=\"3\"", xaml);
         Assert.Contains("x:Key=\"LockedDisabledQuickAddTileButtonStyle\"", xaml);
         Assert.Contains("x:Name=\"NewSpendingSourceQuickAddButton\"", xaml);
         Assert.Contains("x:Name=\"NewTransactionQuickAddButton\"", xaml);
         Assert.Contains("x:Name=\"NewSavingGoalQuickAddButton\"", xaml);
-        Assert.Equal(2, xaml.Split("Style=\"{StaticResource LockedDisabledQuickAddTileButtonStyle}\"").Length - 1);
+        Assert.Contains("x:Name=\"RunSetupWizardQuickAddButton\"", xaml);
+        Assert.Contains("x:Name=\"CheckForUpdatesQuickAddButton\"", xaml);
+        Assert.Contains("x:Name=\"NewRecurringTransactionQuickAddButton\"", xaml);
+        Assert.Contains("x:Name=\"ViewSpendingSourcesQuickAddButton\"", xaml);
+        Assert.Contains("x:Name=\"StartPlanningModeQuickAddButton\"", xaml);
+        Assert.Contains("x:Name=\"OpenSettingsQuickAddButton\"", xaml);
+        Assert.Equal(4, xaml.Split("Style=\"{StaticResource LockedDisabledQuickAddTileButtonStyle}\"").Length - 1);
         Assert.Contains("Style=\"{StaticResource QuickAddTileButtonStyle}\"", xaml);
         Assert.Contains("<DataTrigger Binding=\"{Binding IsSufficientFundsActionGateLocked}\" Value=\"True\">", xaml);
         Assert.Contains("<Setter Property=\"IsEnabled\" Value=\"False\" />", xaml);
@@ -40,5 +48,24 @@ public sealed class QuickAddPopupLayoutTests
 
         Assert.Contains("QuickAddPopup(MainVM mainViewModel)", source);
         Assert.Contains("DataContext = mainViewModel;", source);
+    }
+
+    [Fact]
+    public void PopupRoutesNewActionsThroughMainWindow()
+    {
+        var source = File.ReadAllText(PopupCodeBehindPath);
+
+        Assert.Contains("OnRunSetupWizardClick", source);
+        Assert.Contains("mainWindow.OpenQuickSetupWizardPopup()", source);
+        Assert.Contains("OnCheckForUpdatesClick", source);
+        Assert.Contains("mainWindow.CheckForUpdatesFromQuickAccessAsync()", source);
+        Assert.Contains("OnNewRecurringTransactionClick", source);
+        Assert.Contains("mainWindow.OpenRecurringAddNewTransactionPopup()", source);
+        Assert.Contains("OnViewSpendingSourcesClick", source);
+        Assert.Contains("mainWindow.OpenSpendingSourcesListPopup()", source);
+        Assert.Contains("OnStartPlanningModeClick", source);
+        Assert.Contains("mainWindow.OpenPlanningPopup()", source);
+        Assert.Contains("OnOpenSettingsClick", source);
+        Assert.Contains("mainWindow.OpenSettingsPopup()", source);
     }
 }

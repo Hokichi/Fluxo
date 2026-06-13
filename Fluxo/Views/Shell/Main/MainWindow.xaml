@@ -565,11 +565,11 @@
                                                 VerticalAlignment="Center"
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Add" />
+                                                Text="Quick Access" />
                                             <TextBlock
                                                 Grid.Column="4"
                                                 Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="" />
+                                                Text="Ctrl+Q" />
                                         </Grid>
                                     </Button>
 
@@ -600,36 +600,6 @@
                                                 Grid.Column="4"
                                                 Style="{StaticResource HeaderMenuShortcutTextStyle}"
                                                 Text="Ctrl+L" />
-                                        </Grid>
-                                    </Button>
-
-                                    <Button
-                                        x:Name="PlanningMenuButton"
-                                        Click="OnPlanningButtonClick"
-                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <components:Icon
-                                                Width="14"
-                                                Height="14"
-                                                Path="{StaticResource PlusSolid}"
-                                                Color="{StaticResource Brush.Warning}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Planning" />
-                                            <TextBlock
-                                                Grid.Column="4"
-                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+P" />
                                         </Grid>
                                     </Button>
 
