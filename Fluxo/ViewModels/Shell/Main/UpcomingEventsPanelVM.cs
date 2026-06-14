@@ -1,0 +1,163 @@
+using System.Collections.ObjectModel;
+using System.Globalization;
+using AutoMapper;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.DTO;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Resources.Resources.Messages;
+using Fluxo.ViewModels.Entities;
+
+namespace Fluxo.ViewModels.Shell.Main;
+
+public partial class UpcomingEventsPanelVM : ObservableRecipient, IRecipient<DashboardDataInvalidatedMessage>
+{
+    private const int UpcomingWindowDays = 14;
+    private readonly IDataOperationRunner _dataOperationRunner;
+    private readonly IMapper _mapper;
+    private readonly Func<DateTime> _todayProvider;
+    private readonly SemaphoreSlim _reloadGate = new(1, 1);
+
+    public UpcomingEventsPanelVM(
+        IDataOperationRunner dataOperationRunner,
+        IMapper mapper,
+        Func<DateTime>? todayProvider = null,
+        IMessenger? messenger = null)
+        : base(messenger ?? WeakReferenceMessenger.Default)
+    {
+        _dataOperationRunner = dataOperationRunner;
+        _mapper = mapper;
+        _todayProvider = todayProvider ?? (() => DateTime.Today);
+        IsActive = true;
+    }
+
+    [ObservableProperty]
+    private bool _hasEvents;
+
+    public ObservableCollection<UpcomingEventItemVM> Events { get; } = [];
+
+    public void Receive(DashboardDataInvalidatedMessage message)
+    {
+        if (!message.Value.HasFlag(DashboardDataInvalidationScope.All) &&
+            !message.Value.HasFlag(DashboardDataInvalidationScope.Notifications) &&
+            !message.Value.HasFlag(DashboardDataInvalidationScope.SavingGoals))
+        {
+            return;
+        }
+
+        _ = ReloadFromServicesAsync();
+    }
+
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        var snapshot = await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            var recurring = await scope.UnitOfWork.RecurringTransactions.GetAllAsync(ct);
+            var goals = await scope.UnitOfWork.SavingGoals.GetAllAsync(ct);
+            return new UpcomingEventsSnapshot(recurring, goals);
+        }, cancellationToken);
+
+        var recurringDtos = _mapper.Map<IReadOnlyList<RecurringTransactionDto>>(snapshot.RecurringTransactions);
+        var recurringTransactions = _mapper.Map<IReadOnlyList<RecurringTransactionVM>>(recurringDtos);
+        var today = DateOnly.FromDateTime(_todayProvider().Date);
+        var endDate = today.AddDays(UpcomingWindowDays);
+
+        var events = BuildRecurringEvents(recurringTransactions, today, endDate)
+            .Concat(BuildGoalDeadlineEvents(snapshot.SavingGoals, today, endDate))
+            .OrderBy(item => item.Date)
+            .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        Events.Clear();
+        foreach (var item in events)
+            Events.Add(item);
+
+        HasEvents = Events.Count > 0;
+    }
+
+    private async Task ReloadFromServicesAsync()
+    {
+        await _reloadGate.WaitAsync();
+
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            _reloadGate.Release();
+        }
+    }
+
+    private static IEnumerable<UpcomingEventItemVM> BuildRecurringEvents(
+        IEnumerable<RecurringTransactionVM> recurringTransactions,
+        DateOnly today,
+        DateOnly endDate)
+    {
+        foreach (var transaction in recurringTransactions.Where(transaction => transaction.IsEnabled))
+        {
+            var dueDate = NotificationPanelVM.ResolveRecurringTransactionDueDate(
+                transaction,
+                today.ToDateTime(TimeOnly.MinValue));
+            if (!dueDate.HasValue)
+                continue;
+
+            var eventDate = DateOnly.FromDateTime(dueDate.Value.Date);
+            if (eventDate < today || eventDate > endDate)
+                continue;
+
+            yield return new UpcomingEventItemVM(
+                eventDate,
+                transaction.Name,
+                FormatAmount(transaction.Amount),
+                ResolveRecurringEventTypeText(transaction));
+        }
+    }
+
+    private static IEnumerable<UpcomingEventItemVM> BuildGoalDeadlineEvents(
+        IEnumerable<SavingGoal> savingGoals,
+        DateOnly today,
+        DateOnly endDate)
+    {
+        foreach (var goal in savingGoals.Where(goal =>
+                     goal.SavingEndDate.HasValue &&
+                     goal.TargetAmount > 0m &&
+                     goal.CurrentAmount < goal.TargetAmount))
+        {
+            var deadline = DateOnly.FromDateTime(goal.SavingEndDate!.Value.Date);
+            if (deadline < today || deadline > endDate)
+                continue;
+
+            var amountLeft = Math.Max(goal.TargetAmount - goal.CurrentAmount, 0m);
+            yield return new UpcomingEventItemVM(
+                deadline,
+                $"{goal.Name} deadline",
+                $"{FormatAmount(amountLeft)} left from {FormatAmount(goal.TargetAmount)}",
+                "Goal Deadline");
+        }
+    }
+
+    private static string ResolveRecurringEventTypeText(RecurringTransactionVM transaction)
+    {
+        return transaction.Type switch
+        {
+            RecurringTransactionType.Income => "Income",
+            RecurringTransactionType.GoalUpdate => "Goal",
+            RecurringTransactionType.Expense when transaction.Source.SpendingSourceType is
+                SpendingSourceType.Credit or SpendingSourceType.BNPL => "Payment",
+            RecurringTransactionType.Expense => "Expense",
+            _ => "Event"
+        };
+    }
+
+    private static string FormatAmount(decimal amount)
+    {
+        return amount.ToString("N0", CultureInfo.InvariantCulture);
+    }
+
+    private sealed record UpcomingEventsSnapshot(
+        IReadOnlyList<RecurringTransaction> RecurringTransactions,
+        IReadOnlyList<SavingGoal> SavingGoals);
+}

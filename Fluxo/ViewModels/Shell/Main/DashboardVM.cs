@@ -17,12 +17,14 @@ public partial class DashboardVM : ObservableObject
         BudgetAllocationPanelVM budgetPanel,
         SpentAllowancePanelVM spentAllowancePanel,
         SavingGoalsPanelVM savingGoalsPanel,
+        UpcomingEventsPanelVM upcomingEventsPanel,
         MainViewModeToggleVM viewModeToggle)
     {
         NotificationPanel = notificationPanel;
         BudgetPanel = budgetPanel;
         SpentAllowancePanel = spentAllowancePanel;
         SavingGoalsPanel = savingGoalsPanel;
+        UpcomingEventsPanel = upcomingEventsPanel;
         ViewModeToggle = viewModeToggle;
     }
 
@@ -32,6 +34,7 @@ public partial class DashboardVM : ObservableObject
     public BudgetAllocationPanelVM BudgetPanel { get; }
     public SpentAllowancePanelVM SpentAllowancePanel { get; }
     public SavingGoalsPanelVM SavingGoalsPanel { get; }
+    public UpcomingEventsPanelVM UpcomingEventsPanel { get; }
     public MainViewModeToggleVM ViewModeToggle { get; }
 
     public ObservableCollection<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
@@ -63,6 +66,9 @@ public partial class DashboardVM : ObservableObject
         await SavingGoalsPanel.LoadAsync();
         await betweenStagesAsync();
 
+        await UpcomingEventsPanel.LoadAsync();
+        await betweenStagesAsync();
+
         ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
             ViewModeToggle.SelectedMainContentViewMode);
         _isInitialized = true;
@@ -77,7 +83,8 @@ public partial class DashboardVM : ObservableObject
         await Task.WhenAll(
             SpentAllowancePanel.LoadAsync(),
             NotificationPanel.LoadAsync(),
-            SavingGoalsPanel.LoadAsync());
+            SavingGoalsPanel.LoadAsync(),
+            UpcomingEventsPanel.LoadAsync());
     }
 
     public static bool ShouldLockDashboardForSpendingAmount(

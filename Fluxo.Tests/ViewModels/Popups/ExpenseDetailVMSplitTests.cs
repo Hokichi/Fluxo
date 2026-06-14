@@ -661,6 +661,7 @@ public sealed class ExpenseDetailVMSplitTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(runner, mapper, messenger),
+            new UpcomingEventsPanelVM(runner, mapper, messenger: messenger),
             new MainViewModeToggleVM(messenger));
         var main = new MainVM(
             runner,

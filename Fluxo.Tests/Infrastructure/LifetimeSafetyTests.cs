@@ -14,6 +14,7 @@ public sealed class LifetimeSafetyTests
         AssertConstructorIsSafe(typeof(BudgetAllocationPanelVM));
         AssertConstructorIsSafe(typeof(NotificationPanelVM));
         AssertConstructorIsSafe(typeof(SavingGoalsPanelVM));
+        AssertConstructorIsSafe(typeof(UpcomingEventsPanelVM));
         AssertConstructorIsSafe(typeof(MainWindow));
     }
 

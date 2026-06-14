@@ -36,6 +36,7 @@ using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 using NotificationPanelVM = Fluxo.ViewModels.Shell.Main.NotificationPanelVM;
 using SavingGoalsPanelVM = Fluxo.ViewModels.Shell.Main.SavingGoalsPanelVM;
 using SpentAllowancePanelVM = Fluxo.ViewModels.Shell.Main.SpentAllowancePanelVM;
+using UpcomingEventsPanelVM = Fluxo.ViewModels.Shell.Main.UpcomingEventsPanelVM;
 using QuickSetupWizardVM = Fluxo.ViewModels.Shell.QuickSetupWizard.QuickSetupWizardVM;
 
 namespace Fluxo.Extensions;
@@ -84,6 +85,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SpentAllowancePanelVM>();
         services.AddSingleton<NotificationPanelVM>();
         services.AddSingleton<SavingGoalsPanelVM>();
+        services.AddSingleton<UpcomingEventsPanelVM>();
         services.AddSingleton<LedgerVM>();
         services.AddSingleton<DayOfWeekVM>();
         services.AddTransient<ExpenseVM>();

@@ -42,6 +42,7 @@ public partial class MainVM : ObservableRecipient
     public Main.BudgetAllocationPanelVM BudgetPanel => Dashboard.BudgetPanel;
     public Main.SpentAllowancePanelVM SpentAllowancePanel => Dashboard.SpentAllowancePanel;
     public Main.SavingGoalsPanelVM SavingGoalsPanel => Dashboard.SavingGoalsPanel;
+    public Main.UpcomingEventsPanelVM UpcomingEventsPanel => Dashboard.UpcomingEventsPanel;
     public Main.DaySpinnerVM DaySpinner { get; }
     public Main.LedgerVM? Ledger { get; }
 

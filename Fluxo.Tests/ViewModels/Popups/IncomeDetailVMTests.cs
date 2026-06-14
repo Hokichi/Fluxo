@@ -165,6 +165,7 @@ public sealed class IncomeDetailVMTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(dataOperationRunner, mapper, messenger),
+            new UpcomingEventsPanelVM(dataOperationRunner, mapper, messenger: messenger),
             new MainViewModeToggleVM(messenger));
         var main = new MainVM(
             dataOperationRunner,

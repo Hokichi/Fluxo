@@ -341,7 +341,8 @@ public sealed class MainWindowLayoutTests
         AssertElementHasName(dashboardXamlDocument, "BudgetAllocationPanel", "BudgetAllocationPanelHost");
         AssertElementHasName(dashboardXamlDocument, "SavingGoalsPanel", "SavingGoalsPanelHost");
         Assert.DoesNotContain("NotificationPanelHost", dashboardXaml);
-        AssertElementHasNameAndStyle(dashboardXamlDocument, "Border", "NotificationPanelPlaceholder", "DashboardPanelStyle");
+        Assert.DoesNotContain("NotificationPanelPlaceholder", dashboardXaml);
+        AssertElementHasName(dashboardXamlDocument, "UpcomingEventsPanel", "UpcomingEventsPanelHost");
         AssertElementHasName(dashboardXamlDocument, "FadingScrollViewer", "DashboardSpendingSourcesScrollViewer");
         AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollLeftButton");
         AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollRightButton");

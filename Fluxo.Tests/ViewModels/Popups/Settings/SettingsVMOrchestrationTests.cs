@@ -142,6 +142,7 @@ public sealed class SettingsVMOrchestrationTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(dataOperationRunner, mapper, messenger),
+            new UpcomingEventsPanelVM(dataOperationRunner, mapper, messenger: messenger),
             new MainViewModeToggleVM(messenger));
 
         return new MainVM(

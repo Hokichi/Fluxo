@@ -1118,6 +1118,7 @@ public sealed class QuickAddVMValidationTests
                 mapper,
                 messenger),
             new SavingGoalsPanelVM(dataOperationRunner, mapper, messenger),
+            new UpcomingEventsPanelVM(dataOperationRunner, mapper, messenger: messenger),
             new MainViewModeToggleVM(messenger));
         var main = new MainVM(
             dataOperationRunner,
