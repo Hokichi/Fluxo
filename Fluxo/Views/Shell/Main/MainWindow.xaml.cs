@@ -134,6 +134,7 @@ public partial class MainWindow : Window, IPopupHost
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
         UpdateHistoryAvailability();
 
+        Loaded += OnLoaded;
         Loaded += async (_, _) =>
         {
             if (!_hasInitializedDashboardPanels)
@@ -265,6 +266,67 @@ public partial class MainWindow : Window, IPopupHost
             animation.Completed += (_, _) => onCompleted();
 
         element.BeginAnimation(OpacityProperty, animation);
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+
+        EnableRoundedCorners(hwnd);
+        EnableDarkMode(hwnd);
+        EnableAcrylic(hwnd);
+    }
+
+    // --- P/Invoke ---
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(
+        IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmExtendFrameIntoClientArea(
+        IntPtr hwnd, ref Margins margins);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Margins
+    {
+        public int Left, Right, Top, Bottom;
+    }
+
+    // --- DWM constants ---
+
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
+
+    private const int DWMWCP_ROUND = 2; // Rounded corners
+    private const int DWMSBT_TRANSIENTWINDOW = 3; // Acrylic blur
+
+    // ---
+
+    private static void EnableRoundedCorners(IntPtr hwnd)
+    {
+        int pref = DWMWCP_ROUND;
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+            ref pref, sizeof(int));
+    }
+
+    private static void EnableDarkMode(IntPtr hwnd)
+    {
+        int useDarkMode = 1;
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE,
+            ref useDarkMode, sizeof(int));
+    }
+
+    private static void EnableAcrylic(IntPtr hwnd)
+    {
+        // Extend DWM frame over the entire client area
+        var margins = new Margins { Left = -1, Right = -1, Top = -1, Bottom = -1 };
+        DwmExtendFrameIntoClientArea(hwnd, ref margins);
+
+        // Tell DWM to use the Acrylic backdrop
+        int backdrop = DWMSBT_TRANSIENTWINDOW;
+        DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE,
+            ref backdrop, sizeof(int));
     }
 
     // â”€â”€ SystemCommand handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

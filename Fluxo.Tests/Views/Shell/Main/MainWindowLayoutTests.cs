@@ -89,6 +89,27 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void AcrylicBackdrop_ForcesDwmDarkModeBeforeApplyingBackdrop()
+    {
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+
+        Assert.Contains("private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;", source);
+
+        var onLoaded = ExtractMethodBodyBySignature(source, "private void OnLoaded(object sender, RoutedEventArgs e)");
+        var enableDarkModeIndex = onLoaded.IndexOf("EnableDarkMode(hwnd);", StringComparison.Ordinal);
+        var enableAcrylicIndex = onLoaded.IndexOf("EnableAcrylic(hwnd);", StringComparison.Ordinal);
+
+        Assert.True(enableDarkModeIndex >= 0);
+        Assert.True(enableAcrylicIndex >= 0);
+        Assert.True(enableDarkModeIndex < enableAcrylicIndex);
+
+        var enableDarkMode = ExtractMethodBodyBySignature(source, "private static void EnableDarkMode(IntPtr hwnd)");
+
+        Assert.Contains("int useDarkMode = 1;", enableDarkMode);
+        Assert.Contains("DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE", enableDarkMode);
+    }
+
+    [Fact]
     public void StateChange_SetsWindowLayoutStateBeforeBoundsAnimationStarts()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
