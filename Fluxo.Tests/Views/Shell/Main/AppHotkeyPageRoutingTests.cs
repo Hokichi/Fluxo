@@ -29,6 +29,22 @@ public sealed class AppHotkeyPageRoutingTests
     }
 
     [Fact]
+    public void Calendar_CtrlHomeSelectsTodayAndResetsScroll()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Shell",
+            "Main",
+            "Pages",
+            "Calendar.xaml.cs"));
+
+        Assert.Contains("if (e.Key == Key.Home && Keyboard.Modifiers == ModifierKeys.Control)", source);
+        Assert.Contains("ResetCalendarScrollOffset();", source);
+        Assert.Contains("await _viewModel.SelectCurrentDateAsync();", source);
+    }
+
+    [Fact]
     public void Settings_UpDownNavigateTabs()
     {
         var source = File.ReadAllText(RepositoryPaths.File(
@@ -43,6 +59,30 @@ public sealed class AppHotkeyPageRoutingTests
         Assert.Contains("case Key.Down:", source);
         Assert.Contains("NavigateSettingsTabAsync(-1);", source);
         Assert.Contains("NavigateSettingsTabAsync(1);", source);
+    }
+
+    [Fact]
+    public void Settings_LeftRightMovesFocusBetweenSideMenuAndContent()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Popups",
+            "Settings",
+            "SettingsPopup.xaml.cs"));
+        var xaml = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Popups",
+            "Settings",
+            "SettingsPopup.xaml"));
+
+        Assert.Contains("x:Name=\"SettingsSideMenu\"", xaml);
+        Assert.Contains("x:Name=\"SettingsContentHost\"", xaml);
+        Assert.Contains("case Key.Right when IsFocusWithin(SettingsSideMenu):", source);
+        Assert.Contains("FocusActiveSettingsContent();", source);
+        Assert.Contains("case Key.Left when IsFocusWithin(SettingsContentHost):", source);
+        Assert.Contains("FocusSettingsSideMenu();", source);
     }
 
     [Fact]

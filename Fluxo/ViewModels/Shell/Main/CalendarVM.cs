@@ -138,6 +138,13 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         return SelectDateAsync(SelectedDate.AddDays(dayOffset), cancellationToken);
     }
 
+    public Task SelectCurrentDateAsync(CancellationToken cancellationToken = default)
+    {
+        _visibleMonth = GetMonthStart(_currentDate);
+        _firstFrameWeekStart = StartOfWeek(_visibleMonth);
+        return SelectDateAsync(_currentDate, cancellationToken);
+    }
+
     private bool IsCurrentLoad(int requestVersion, CancellationTokenSource loadCts)
     {
         return requestVersion == _loadRequestVersion && ReferenceEquals(_loadCts, loadCts);

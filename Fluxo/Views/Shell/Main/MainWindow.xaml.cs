@@ -768,6 +768,13 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (MainWindowShortcutMatcher.IsOpenDataManagementShortcut(e.Key, Keyboard.Modifiers))
+        {
+            OpenDataManagementPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))
         {
             if (IsSufficientFundsActionGateLocked())
@@ -872,13 +879,13 @@ public partial class MainWindow : Window, IPopupHost
         if (_activeMainPage != MainPage.Dashboard)
             return false;
 
-        if (MainWindowShortcutMatcher.IsNavigateDashboardNextPeriodShortcut(key, modifiers))
+        if (MainWindowShortcutMatcher.IsNavigateDashboardPreviousPeriodShortcut(key, modifiers))
         {
             await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(-1, this);
             return true;
         }
 
-        if (MainWindowShortcutMatcher.IsNavigateDashboardPreviousPeriodShortcut(key, modifiers))
+        if (MainWindowShortcutMatcher.IsNavigateDashboardNextPeriodShortcut(key, modifiers))
         {
             await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(1, this);
             return true;
@@ -1357,6 +1364,11 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenSettingsPopup()
     {
         _dialogService.ShowSettings(this);
+    }
+
+    public void OpenDataManagementPopup()
+    {
+        _dialogService.ShowDataManagement(this);
     }
 
     public async void OpenQuickSetupWizardPopup()

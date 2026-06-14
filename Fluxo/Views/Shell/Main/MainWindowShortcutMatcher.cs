@@ -60,12 +60,12 @@ public static class MainWindowShortcutMatcher
         return key == Key.N && modifiers == (ModifierKeys.Control | ModifierKeys.Alt);
     }
 
-    public static bool IsNavigateDashboardNextPeriodShortcut(Key key, ModifierKeys modifiers)
+    public static bool IsNavigateDashboardPreviousPeriodShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.Left && modifiers == ModifierKeys.Control;
     }
 
-    public static bool IsNavigateDashboardPreviousPeriodShortcut(Key key, ModifierKeys modifiers)
+    public static bool IsNavigateDashboardNextPeriodShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.Right && modifiers == ModifierKeys.Control;
     }
@@ -116,6 +116,11 @@ public static class MainWindowShortcutMatcher
     public static bool IsOpenAddSavingGoalShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.G && modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
+    }
+
+    public static bool IsOpenDataManagementShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.B && modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
     }
 
     public static bool IsLedgerExportShortcut(Key key, ModifierKeys modifiers)

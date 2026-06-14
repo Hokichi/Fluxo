@@ -41,6 +41,13 @@ public partial class IncomeDetailPopup : BasePopup
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
+        if (e.Key == Key.D && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            OnCloneButtonClick();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.Enter && NoteRichTextBox.IsKeyboardFocusWithin)
             return;
 

@@ -239,6 +239,19 @@ public sealed class CalendarVMTests
     }
 
     [Fact]
+    public async Task SelectCurrentDateAsync_SelectsTodayAndRestoresCurrentMonthFrame()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+        await vm.NavigateToNextMonthCommand.ExecuteAsync(null);
+
+        await vm.SelectCurrentDateAsync();
+
+        Assert.Equal(new DateOnly(2026, 6, 12), vm.SelectedDate);
+        Assert.Equal("June 2026", vm.VisibleMonthLabel);
+        Assert.Equal(new DateOnly(2026, 5, 31), vm.FrameWeeks[0].Days[0].Date);
+    }
+
+    [Fact]
     public async Task SelectDate_WhenSelectedDateIsInDifferentMonth_BrightensSelectedMonth()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 5));

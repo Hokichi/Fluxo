@@ -167,6 +167,8 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("OpenAddSpendingSourcePopup();", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAddSavingGoalShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("OpenAddSavingGoalPopup();", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenDataManagementShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenDataManagementPopup();", source);
     }
 
     [Fact]
@@ -204,6 +206,8 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(-1, this);", source);
         Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(1, this);", source);
         Assert.Contains("await _mainVM.Dashboard.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);", source);
+        Assert.Contains("IsNavigateDashboardPreviousPeriodShortcut(key, modifiers)", source);
+        Assert.Contains("IsNavigateDashboardNextPeriodShortcut(key, modifiers)", source);
     }
 
     [Fact]

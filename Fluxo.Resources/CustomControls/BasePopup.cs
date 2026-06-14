@@ -305,7 +305,7 @@ public class BasePopup : Window, IPopupHost
                 e.Handled = true;
                 break;
 
-            case Key.Enter when Keyboard.Modifiers == ModifierKeys.Shift:
+            case Key.S when Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift):
                 if (ShowSaveAndCreateNewButton && IsSaveAndCreateNewButtonEnabled)
                 {
                     OnSaveAndCreateNewButtonClick();
@@ -314,7 +314,7 @@ public class BasePopup : Window, IPopupHost
 
                 break;
 
-            case Key.Enter when Keyboard.Modifiers == ModifierKeys.None:
+            case Key.S when Keyboard.Modifiers == ModifierKeys.Control:
                 if (ShowApplyButton)
                 {
                     OnApplyButtonClick();

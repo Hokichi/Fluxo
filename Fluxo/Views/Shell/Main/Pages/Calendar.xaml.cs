@@ -74,6 +74,14 @@ public partial class Calendar : UserControl
 
     private async void OnCalendarPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Home && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            ResetCalendarScrollOffset();
+            await _viewModel.SelectCurrentDateAsync();
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers != ModifierKeys.None)
             return;
 

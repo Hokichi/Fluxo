@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
@@ -116,6 +117,16 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         {
             switch (e.Key)
             {
+                case Key.Right when IsFocusWithin(SettingsSideMenu):
+                    FocusActiveSettingsContent();
+                    e.Handled = true;
+                    return;
+
+                case Key.Left when IsFocusWithin(SettingsContentHost):
+                    FocusSettingsSideMenu();
+                    e.Handled = true;
+                    return;
+
                 case Key.Up:
                     _ = NavigateSettingsTabAsync(-1);
                     e.Handled = true;
@@ -129,6 +140,58 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         }
 
         base.OnPreviewKeyDown(e);
+    }
+
+    private void FocusActiveSettingsContent()
+    {
+        var activeContent = GetCheckedTabButton() is { } currentTab
+            ? GetContentForTab(currentTab)
+            : null;
+
+        if (activeContent is null)
+            return;
+
+        if (!FocusFirstFocusableDescendant(activeContent))
+            SettingsContentHost.Focus();
+    }
+
+    private void FocusSettingsSideMenu()
+    {
+        var targetTab = GetCheckedTabButton() ?? SourcesTabButton;
+        targetTab.Focus();
+    }
+
+    private static bool IsFocusWithin(DependencyObject container)
+    {
+        return Keyboard.FocusedElement is DependencyObject focusedElement &&
+               IsDescendantOf(focusedElement, container);
+    }
+
+    private static bool FocusFirstFocusableDescendant(DependencyObject container)
+    {
+        if (container is UIElement { Focusable: true, IsEnabled: true, IsVisible: true } element &&
+            element.Focus())
+        {
+            return true;
+        }
+
+        var childCount = VisualTreeHelper.GetChildrenCount(container);
+        for (var index = 0; index < childCount; index++)
+        {
+            if (FocusFirstFocusableDescendant(VisualTreeHelper.GetChild(container, index)))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsDescendantOf(DependencyObject element, DependencyObject ancestor)
+    {
+        for (var current = element; current is not null; current = VisualTreeHelper.GetParent(current))
+            if (ReferenceEquals(current, ancestor))
+                return true;
+
+        return false;
     }
 
     private async Task NavigateSettingsTabAsync(int offset)

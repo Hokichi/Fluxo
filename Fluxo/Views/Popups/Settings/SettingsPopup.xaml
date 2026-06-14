@@ -39,7 +39,9 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border Style="{StaticResource PanelStyle}">
+        <Border
+            x:Name="SettingsSideMenu"
+            Style="{StaticResource PanelStyle}">
             <StackPanel>
                 <RadioButton
                     x:Name="SourcesTabButton"
@@ -128,7 +130,10 @@
             </StackPanel>
         </Border>
 
-        <Grid Grid.Column="2">
+        <Grid
+            x:Name="SettingsContentHost"
+            Grid.Column="2"
+            Focusable="True">
             <tabs:SettingsBudgetTab
                 x:Name="BudgetTabContent"
                 DataContext="{Binding BudgetTab}"

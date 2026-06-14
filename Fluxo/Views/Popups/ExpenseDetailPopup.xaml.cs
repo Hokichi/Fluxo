@@ -143,6 +143,17 @@ public partial class ExpenseDetailPopup : BasePopup
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
+        if (e.Key == Key.D && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            if (ShowCloneButton)
+            {
+                OnCloneButtonClick();
+                e.Handled = true;
+            }
+
+            return;
+        }
+
         if (e.Key == Key.Enter && NoteRichTextBox.IsKeyboardFocusWithin)
             return;
 

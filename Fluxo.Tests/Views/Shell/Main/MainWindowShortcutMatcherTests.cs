@@ -163,16 +163,16 @@ public class MainWindowShortcutMatcherTests
 
     [Theory]
     [InlineData(Key.Left, ModifierKeys.Control)]
-    public void IsNavigateDashboardNextPeriodShortcut_ReturnsTrue_ForCtrlLeft(Key key, ModifierKeys modifiers)
+    public void IsNavigateDashboardPreviousPeriodShortcut_ReturnsTrue_ForCtrlLeft(Key key, ModifierKeys modifiers)
     {
-        Assert.True(MainWindowShortcutMatcher.IsNavigateDashboardNextPeriodShortcut(key, modifiers));
+        Assert.True(MainWindowShortcutMatcher.IsNavigateDashboardPreviousPeriodShortcut(key, modifiers));
     }
 
     [Theory]
     [InlineData(Key.Right, ModifierKeys.Control)]
-    public void IsNavigateDashboardPreviousPeriodShortcut_ReturnsTrue_ForCtrlRight(Key key, ModifierKeys modifiers)
+    public void IsNavigateDashboardNextPeriodShortcut_ReturnsTrue_ForCtrlRight(Key key, ModifierKeys modifiers)
     {
-        Assert.True(MainWindowShortcutMatcher.IsNavigateDashboardPreviousPeriodShortcut(key, modifiers));
+        Assert.True(MainWindowShortcutMatcher.IsNavigateDashboardNextPeriodShortcut(key, modifiers));
     }
 
     [Theory]
@@ -246,6 +246,13 @@ public class MainWindowShortcutMatcherTests
     public void IsLedgerDescendingSortShortcut_ReturnsTrue_ForCtrlDown(Key key, ModifierKeys modifiers)
     {
         Assert.True(MainWindowShortcutMatcher.IsLedgerDescendingSortShortcut(key, modifiers));
+    }
+
+    [Theory]
+    [InlineData(Key.B, ModifierKeys.Control | ModifierKeys.Shift)]
+    public void IsOpenDataManagementShortcut_ReturnsTrue_ForCtrlShiftB(Key key, ModifierKeys modifiers)
+    {
+        Assert.True(MainWindowShortcutMatcher.IsOpenDataManagementShortcut(key, modifiers));
     }
 
     [Fact]
