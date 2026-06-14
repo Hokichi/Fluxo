@@ -24,6 +24,29 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
+    public void CtrlSlashShortcut_RoutesToHotkeysOverviewPopup()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenHotkeysOverviewShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenHotkeysOverviewPopup();", source);
+    }
+
+    [Fact]
+    public void HeaderMenu_IncludesHotkeysItem()
+    {
+        var source = ReadMainWindowSource();
+        var xaml = ReadMainWindowXaml();
+
+        Assert.Contains("Click=\"OnHotkeysButtonClick\"", xaml);
+        Assert.Contains("Path=\"{StaticResource KeyboardBoxFill}\"", xaml);
+        Assert.Contains("Text=\"Hotkeys\"", xaml);
+        Assert.Contains("Text=\"Ctrl+/\"", xaml);
+        Assert.Contains("private void OnHotkeysButtonClick(object sender, RoutedEventArgs e)", source);
+        Assert.Contains("OpenHotkeysOverviewPopup();", source);
+    }
+
+    [Fact]
     public void CtrlShiftNShortcut_RoutesToRecurringAddNewTransactionPopup()
     {
         var source = ReadMainWindowSource();

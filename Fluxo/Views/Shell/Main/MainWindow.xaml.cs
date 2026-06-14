@@ -669,6 +669,13 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (MainWindowShortcutMatcher.IsOpenHotkeysOverviewShortcut(e.Key, Keyboard.Modifiers))
+        {
+            OpenHotkeysOverviewPopup();
+            e.Handled = true;
+            return;
+        }
+
         if (MainWindowShortcutMatcher.IsOpenQuickAccessShortcut(e.Key, Keyboard.Modifiers))
         {
             if (IsSufficientFundsActionGateLocked())
@@ -1150,6 +1157,12 @@ public partial class MainWindow : Window, IPopupHost
         OpenQuickAddPopup();
     }
 
+    private void OnHotkeysButtonClick(object sender, RoutedEventArgs e)
+    {
+        CloseHeaderMenu();
+        OpenHotkeysOverviewPopup();
+    }
+
     private void OnHeaderMenuButtonMouseEnter(object sender, MouseEventArgs e)
     {
         _isPointerOverHeaderMenuButton = true;
@@ -1364,6 +1377,11 @@ public partial class MainWindow : Window, IPopupHost
     public void OpenSettingsPopup()
     {
         _dialogService.ShowSettings(this);
+    }
+
+    public void OpenHotkeysOverviewPopup()
+    {
+        _dialogService.ShowHotkeysOverview(this);
     }
 
     public void OpenDataManagementPopup()

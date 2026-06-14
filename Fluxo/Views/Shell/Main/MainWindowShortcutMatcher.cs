@@ -30,6 +30,11 @@ public static class MainWindowShortcutMatcher
         return key == Key.Q && modifiers == ModifierKeys.Control;
     }
 
+    public static bool IsOpenHotkeysOverviewShortcut(Key key, ModifierKeys modifiers)
+    {
+        return (key is Key.OemQuestion or Key.Divide) && modifiers == ModifierKeys.Control;
+    }
+
     public static bool IsOpenRecurringNewTransactionShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.N && modifiers == (ModifierKeys.Control | ModifierKeys.Shift);

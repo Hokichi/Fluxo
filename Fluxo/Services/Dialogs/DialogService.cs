@@ -40,6 +40,11 @@ public sealed class DialogService : IDialogService
         return ShowScopedDialog<QuickAddPopup>(owner);
     }
 
+    public bool? ShowHotkeysOverview(Window? owner = null)
+    {
+        return ShowScopedDialog<HotkeysOverviewPopup>(owner);
+    }
+
     public bool? ShowSpendingSourcesList(Window? owner = null)
     {
         return ShowScopedDialog<SpendingSourcesListPopup>(owner);

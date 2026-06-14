@@ -63,6 +63,27 @@ public class MainWindowShortcutMatcherTests
         Assert.False(isShortcut);
     }
 
+    [Theory]
+    [InlineData(Key.OemQuestion, ModifierKeys.Control)]
+    [InlineData(Key.Divide, ModifierKeys.Control)]
+    public void IsOpenHotkeysOverviewShortcut_ReturnsTrue_ForCtrlSlash(Key key, ModifierKeys modifiers)
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenHotkeysOverviewShortcut(key, modifiers);
+
+        Assert.True(isShortcut);
+    }
+
+    [Theory]
+    [InlineData(Key.OemQuestion, ModifierKeys.None)]
+    [InlineData(Key.OemQuestion, ModifierKeys.Control | ModifierKeys.Shift)]
+    [InlineData(Key.H, ModifierKeys.Control)]
+    public void IsOpenHotkeysOverviewShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
+    {
+        var isShortcut = MainWindowShortcutMatcher.IsOpenHotkeysOverviewShortcut(key, modifiers);
+
+        Assert.False(isShortcut);
+    }
+
     [Fact]
     public void IsOpenAnalyticsShortcut_ReturnsTrue_ForCtrl2()
     {
