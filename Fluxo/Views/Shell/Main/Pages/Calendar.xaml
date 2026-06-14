@@ -10,7 +10,6 @@
     d:DataContext="{d:DesignInstance Type=main:CalendarVM}"
     d:DesignHeight="810"
     d:DesignWidth="1440"
-
     Focusable="True"
     mc:Ignorable="d">
 
@@ -332,6 +331,12 @@
             </Border>
         </DataTemplate>
     </UserControl.Resources>
+
+    <!--
+        TODO:
+        - Implement new brightening logic when navigating with keyboard: brighten if navigated date was dimmed
+        - Remove $ from amount text
+    -->
 
     <Grid Margin="12">
         <Grid.ColumnDefinitions>

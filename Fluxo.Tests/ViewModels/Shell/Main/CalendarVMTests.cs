@@ -216,6 +216,20 @@ public sealed class CalendarVMTests
     }
 
     [Fact]
+    public async Task SelectDate_WhenSelectedDateIsInDifferentMonth_BrightensSelectedMonth()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 5));
+
+        await vm.SelectDateAsync(new DateOnly(2026, 5, 29));
+
+        Assert.Equal("May 2026", vm.VisibleMonthLabel);
+        var mayTwentyNinth = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 5, 29));
+        Assert.False(mayTwentyNinth.IsOutsideVisibleMonth);
+        var juneFirst = vm.FrameWeeks.SelectMany(week => week.Days).Single(day => day.Date == new DateOnly(2026, 6, 1));
+        Assert.True(juneFirst.IsOutsideVisibleMonth);
+    }
+
+    [Fact]
     public async Task SelectDate_WhenOlderLoadCompletesAfterNewerLoad_KeepsNewerDetails()
     {
         var olderDate = new DateOnly(2026, 6, 12);

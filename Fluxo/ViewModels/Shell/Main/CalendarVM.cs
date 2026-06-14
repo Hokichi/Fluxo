@@ -102,7 +102,8 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     {
         SelectedDate = date;
         EnsureDateVisible(date);
-        RebuildVisibleWeeks();
+        _visibleMonth = GetMonthStart(date);
+        RebuildVisibleWeeks(updateVisibleMonthFromFrame: false);
 
         _loadCts?.Cancel();
         var loadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -158,9 +159,10 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasNoRecurringTransactions));
     }
 
-    private void RebuildVisibleWeeks()
+    private void RebuildVisibleWeeks(bool updateVisibleMonthFromFrame = true)
     {
-        UpdateVisibleMonthFromFrame();
+        if (updateVisibleMonthFromFrame)
+            UpdateVisibleMonthFromFrame();
 
         BufferedWeeks.Clear();
         var firstBufferedWeekStart = _firstFrameWeekStart.AddDays(-BufferWeekCount * 7);
@@ -188,7 +190,7 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
 
     private async Task ScrollToVisibleMonthAsync(DateOnly month)
     {
-        var targetMonth = new DateOnly(month.Year, month.Month, 1);
+        var targetMonth = GetMonthStart(month);
         var targetFirstFrameWeekStart = StartOfWeek(targetMonth);
 
         while (_firstFrameWeekStart != targetFirstFrameWeekStart)
@@ -219,6 +221,11 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     {
         var offset = (int)date.DayOfWeek;
         return date.AddDays(-offset);
+    }
+
+    private static DateOnly GetMonthStart(DateOnly date)
+    {
+        return new DateOnly(date.Year, date.Month, 1);
     }
 
     private static DateOnly ResolveDominantVisibleMonth(DateOnly firstVisibleWeekStart, DateOnly currentVisibleMonth)
