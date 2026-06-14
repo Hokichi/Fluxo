@@ -62,7 +62,7 @@ public class SavingGoalsPanelVMTests
             SavingEndDate = null
         };
 
-        Assert.Equal("Undefined", goal.EstimatedDeadlineText);
+        Assert.Equal("Indefinite", goal.EstimatedDeadlineText);
     }
 
     [Fact]

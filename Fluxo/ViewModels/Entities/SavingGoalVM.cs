@@ -16,7 +16,7 @@ public partial class SavingGoalVM : ObservableObject
 
     public string AmountLeftText => FormatMoneyAmount(RemainingAmount);
     public string WeeklyAverageText => FormatMoneyAmount(Math.Ceiling(CurrentAmount / GetElapsedCompletedWeeks()));
-    public string EstimatedDeadlineText => SavingEndDate?.ToString("MMM d, yyyy", CultureInfo.CurrentCulture) ?? "Undefined";
+    public string EstimatedDeadlineText => SavingEndDate?.ToString("MMM d, yyyy", CultureInfo.CurrentCulture) ?? "Indefinite";
 
     partial void OnCurrentAmountChanged(decimal oldValue, decimal newValue)
     {
