@@ -196,6 +196,29 @@ public sealed class CalendarVMTests
         Assert.False(vm.HasNoRecurringTransactions);
     }
 
+    [Fact]
+    public async Task SelectDate_ListItemAmountTextDoesNotIncludeCurrencySymbol()
+    {
+        var service = Substitute.For<ICalendarService>();
+        service.GetCalendarDayAsync(new DateOnly(2026, 6, 12), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CalendarDto(
+                new DateOnly(2026, 6, 12),
+                92m,
+                450m,
+                [new CalendarExpenseItem(1, "Groceries", 74m, "Checking", "Food")],
+                [new CalendarIncomeItem(2, "Freelance", 450m, "Checking")],
+                [new CalendarGoalDeadlineItem(4, "Vacation", 1250m, 5000m, new DateTime(2026, 6, 12))],
+                [new CalendarRecurringTransactionItem(3, "Rent", 1200m, RecurringTransactionType.Expense, RecurringPeriod.Monthly, 12, "Checking")])));
+        var vm = new CalendarVM(service, new DateTime(2026, 6, 1));
+
+        await vm.SelectDateAsync(new DateOnly(2026, 6, 12));
+
+        Assert.Equal("74", vm.Expenses.Single().AmountText);
+        Assert.Equal("450", vm.Incomes.Single().AmountText);
+        Assert.Equal("1,250 / 5,000", vm.GoalDeadlines.Single().ProgressText);
+        Assert.Equal("1,200", vm.RecurringTransactions.Single().AmountText);
+    }
+
     [Theory]
     [InlineData(-1, 2026, 6, 11)]
     [InlineData(1, 2026, 6, 13)]

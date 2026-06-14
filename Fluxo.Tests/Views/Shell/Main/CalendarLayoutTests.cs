@@ -210,6 +210,23 @@ public sealed class CalendarLayoutTests
     }
 
     [Fact]
+    public void CalendarLayout_FocusesScrollableCalendarForKeyboardNavigation()
+    {
+        var xaml = LoadCalendarXaml();
+        var codeBehind = LoadCalendarCodeBehind();
+        var dayTemplate = ExtractSection(xaml, "x:Key=\"CalendarDayTemplate\"", "x:Key=\"CalendarWeekTemplate\"");
+
+        Assert.Contains("Focusable=\"True\"", xaml);
+        Assert.Contains("x:Name=\"CalendarWeekViewport\"", xaml);
+        Assert.Contains("FocusCalendarKeyboardTarget();", codeBehind);
+        Assert.Contains("Keyboard.Focus(CalendarWeekViewport);", codeBehind);
+        Assert.Contains("Click=\"OnCalendarDayButtonClick\"", dayTemplate);
+        Assert.Contains("Focusable=\"False\"", dayTemplate);
+        Assert.Contains("private void OnCalendarDayButtonClick(object sender, RoutedEventArgs e)", codeBehind);
+        Assert.Contains("DispatcherPriority.Input", codeBehind);
+    }
+
+    [Fact]
     public void CalendarLayout_AnimatesMouseWheelCalendarScrollBeforeRecyclingRows()
     {
         var codeBehind = LoadCalendarCodeBehind();

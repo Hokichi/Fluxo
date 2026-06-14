@@ -279,7 +279,7 @@ public sealed record CalendarExpenseListItem(
     string SpendingSourceName,
     string? TagName)
 {
-    public string AmountText => $"${Amount:N0}";
+    public string AmountText => $"{Amount:N0}";
 }
 
 public sealed record CalendarIncomeListItem(
@@ -287,7 +287,7 @@ public sealed record CalendarIncomeListItem(
     decimal Amount,
     string SpendingSourceName)
 {
-    public string AmountText => $"${Amount:N0}";
+    public string AmountText => $"{Amount:N0}";
 }
 
 public sealed record CalendarGoalDeadlineListItem(
@@ -295,7 +295,7 @@ public sealed record CalendarGoalDeadlineListItem(
     decimal CurrentAmount,
     decimal TargetAmount)
 {
-    public string ProgressText => $"${CurrentAmount:N0} / ${TargetAmount:N0}";
+    public string ProgressText => $"{CurrentAmount:N0} / {TargetAmount:N0}";
 }
 
 public sealed record CalendarRecurringTransactionListItem(
@@ -304,5 +304,5 @@ public sealed record CalendarRecurringTransactionListItem(
     string TypeText,
     string SourceName)
 {
-    public string AmountText => $"${Amount:N0}";
+    public string AmountText => $"{Amount:N0}";
 }

@@ -53,6 +53,7 @@ public partial class Calendar : UserControl
         try
         {
             await _viewModel.LoadAsync(cancellationToken);
+            QueueCalendarKeyboardFocus();
         }
         finally
         {
@@ -104,6 +105,12 @@ public partial class Calendar : UserControl
     {
         UpdateExpandedCalendarLayout();
         QueueCalendarScrollOffsetReset();
+        QueueCalendarKeyboardFocus();
+    }
+
+    private void OnCalendarDayButtonClick(object sender, RoutedEventArgs e)
+    {
+        QueueCalendarKeyboardFocus();
     }
 
     private void OnCalendarSizeChanged(object sender, SizeChangedEventArgs e)
@@ -247,5 +254,24 @@ public partial class Calendar : UserControl
                 ResetCalendarScrollOffset();
             },
             DispatcherPriority.Loaded);
+    }
+
+    private void QueueCalendarKeyboardFocus()
+    {
+        Dispatcher.BeginInvoke(
+            () =>
+            {
+                FocusCalendarKeyboardTarget();
+            },
+            DispatcherPriority.Input);
+    }
+
+    private void FocusCalendarKeyboardTarget()
+    {
+        if (!IsVisible)
+            return;
+
+        CalendarWeekViewport.Focus();
+        Keyboard.Focus(CalendarWeekViewport);
     }
 }
