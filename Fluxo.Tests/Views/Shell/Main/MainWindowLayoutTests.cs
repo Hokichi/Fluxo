@@ -245,7 +245,7 @@ public sealed class MainWindowLayoutTests
 
         Assert.NotNull(quickAddButton);
         Assert.Equal("{StaticResource PlusSolid}", (string?)quickAddButton!.Attribute("ButtonIcon"));
-        Assert.Equal("New Transaction (Ctrl+N)", (string?)quickAddButton.Attribute("ButtonText"));
+        Assert.Equal("New Transaction", (string?)quickAddButton.Attribute("ButtonText"));
         Assert.Equal("{StaticResource Brush.Mint}", (string?)quickAddButton.Attribute("DefaultBackground"));
         Assert.Equal("180", (string?)quickAddButton.Attribute("ExpandedWidth"));
         Assert.Equal("{StaticResource Brush.Mint.Muted}", (string?)quickAddButton.Attribute("HoveredBackground"));
