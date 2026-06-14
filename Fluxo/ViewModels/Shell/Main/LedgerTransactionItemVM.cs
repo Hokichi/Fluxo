@@ -12,6 +12,7 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     [ObservableProperty] private bool _isDisabledByAnotherEdit;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isLastVisibleInGroup;
+    [ObservableProperty] private bool _isSelectedForBatch;
     [ObservableProperty] private bool _isTagPopupOpen;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private string _spendingSourceName = string.Empty;

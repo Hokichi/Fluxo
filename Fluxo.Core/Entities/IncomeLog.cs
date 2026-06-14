@@ -9,4 +9,5 @@ public sealed class IncomeLog
     public decimal Amount { get; set; }
     public DateTime AddedOn { get; set; }
     public string Notes { get; set; }
+    public bool IsForDeletion { get; set; }
 }

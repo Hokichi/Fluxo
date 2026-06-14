@@ -445,7 +445,8 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4" />
                         <ColumnDefinition Width="6" />
-                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="1.5*" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="130" />
@@ -454,7 +455,7 @@
 
                     <Border
                         x:Name="RowSeparator"
-                        Grid.ColumnSpan="7"
+                        Grid.ColumnSpan="8"
                         Height="1"
                         VerticalAlignment="Bottom"
                         Background="{StaticResource Brush.Border.Subtle}">
@@ -545,8 +546,17 @@
                         </Border>
                     </StackPanel>
 
-                    <Grid
+                    <CheckBox
                         Grid.Column="3"
+                        Margin="12,0,0,0"
+                        VerticalAlignment="Center"
+                        Click="OnBatchSelectionCheckBoxClick"
+                        IsChecked="{Binding IsSelectedForBatch, Mode=TwoWay}"
+                        Style="{StaticResource ItemCheckBoxStyle}"
+                        Visibility="{Binding DataContext.IsSelectionModeEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                    <Grid
+                        Grid.Column="4"
                         MaxWidth="160"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center">
@@ -607,7 +617,7 @@
                     </Grid>
 
                     <Border
-                        Grid.Column="4"
+                        Grid.Column="5"
                         MaxWidth="180"
                         Padding="8,3"
                         HorizontalAlignment="Left"
@@ -624,7 +634,7 @@
                     </Border>
 
                     <TextBlock
-                        Grid.Column="5"
+                        Grid.Column="6"
                         Margin="0,8,8,8"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
@@ -645,7 +655,7 @@
                     </TextBlock>
 
                     <customControls:MoneyTextBox
-                        Grid.Column="5"
+                        Grid.Column="6"
                         Margin="0,8,8,8"
                         VerticalContentAlignment="Center"
                         FontFamily="{StaticResource Bold}"
@@ -656,7 +666,7 @@
 
                     <Border
                         x:Name="RowActions"
-                        Grid.Column="6"
+                        Grid.Column="7"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Background="Transparent">
@@ -683,7 +693,7 @@
                             <customControls:BalloonButton
                                 Width="30"
                                 Height="30"
-                                ButtonIcon="{StaticResource CircleMinusSolid}"
+                                ButtonIcon="{StaticResource Delete}"
                                 Click="OnRemoveTransactionClick"
                                 CommandParameter="{Binding}"
                                 HoveredBackground="{StaticResource Brush.Danger}"
@@ -691,6 +701,16 @@
                                 IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
                                 Style="{StaticResource HeaderButtonStyle}" />
                         </StackPanel>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="IsEnabled" Value="True" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.IsSelectionModeEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                     </Border>
                 </Grid>
                 <Border.Style>
@@ -835,18 +855,77 @@
             VerticalAlignment="Top"
             DataContext="{Binding ViewModeToggle}" />
 
-        <customControls:BalloonButton
-            Grid.Row="1"
-            HorizontalAlignment="Left"
-            ButtonIcon="{StaticResource Export}"
-            ButtonText="Export Data"
-            Click="OnExportDataClick"
-            CornerRadius="8"
-            DefaultBackground="{StaticResource Brush.Mint}"
-            HoveredBackground="{StaticResource Brush.Mint.Muted}"
-            IconSize="16"
-            IsEnabled="{Binding HasVisibleTransactions}"
-            ShouldExpand="True" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <customControls:BalloonButton
+                HorizontalAlignment="Left"
+                ButtonIcon="{StaticResource Export}"
+                ButtonText="Export Data"
+                Click="OnExportDataClick"
+                CornerRadius="8"
+                DefaultBackground="{StaticResource Brush.Mint}"
+                HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                IconSize="12"
+                IsEnabled="{Binding HasVisibleTransactions}"
+                ShouldExpand="True" />
+            <customControls:BalloonButton
+                Margin="8,0,0,0"
+                HorizontalAlignment="Left"
+                ButtonText="{Binding SelectionModeButtonText}"
+                Click="OnSelectionModeClick"
+                CornerRadius="8"
+                DefaultBackground="{StaticResource Brush.Mint}"
+                HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                IconSize="12"
+                IsEnabled="{Binding HasVisibleTransactions}"
+                ShouldExpand="True">
+                <customControls:BalloonButton.Style>
+                    <Style BasedOn="{StaticResource {x:Type customControls:BalloonButton}}" TargetType="customControls:BalloonButton">
+                        <Setter Property="ButtonIcon" Value="{StaticResource EnableChecks}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSelectionModeEnabled}" Value="True">
+                                <Setter Property="ButtonIcon" Value="{StaticResource DisableChecks}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </customControls:BalloonButton.Style>
+            </customControls:BalloonButton>
+            <customControls:BalloonButton
+                Margin="8,0,0,0"
+                HorizontalAlignment="Left"
+                ButtonText="{Binding CheckAllButtonText}"
+                Click="OnToggleVisibleBatchSelectionClick"
+                CornerRadius="8"
+                DefaultBackground="{StaticResource Brush.Mint}"
+                HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                IconSize="12"
+                IsEnabled="{Binding HasVisibleTransactions}"
+                ShouldExpand="True"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
+                <customControls:BalloonButton.Style>
+                    <Style BasedOn="{StaticResource {x:Type customControls:BalloonButton}}" TargetType="customControls:BalloonButton">
+                        <Setter Property="ButtonIcon" Value="{StaticResource CheckAll}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding AreAllVisibleTransactionsSelected}" Value="True">
+                                <Setter Property="ButtonIcon" Value="{StaticResource UncheckAll}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </customControls:BalloonButton.Style>
+            </customControls:BalloonButton>
+            <customControls:BalloonButton
+                Margin="8,0,0,0"
+                HorizontalAlignment="Left"
+                ButtonIcon="{StaticResource Delete}"
+                ButtonText="{Binding DeleteSelectedButtonText}"
+                Click="OnRemoveSelectedTransactionsClick"
+                CornerRadius="8"
+                DefaultBackground="{StaticResource Brush.Mint}"
+                HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                IconSize="12"
+                IsEnabled="{Binding HasSelectedVisibleTransactions}"
+                ShouldExpand="True"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+        </StackPanel>
 
         <StackPanel
             Grid.Row="1"
@@ -944,6 +1023,7 @@
             <ComboBox
                 Grid.Column="0"
                 DropDownClosed="OnFilterDropDownClosed"
+                IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}"
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding TypeFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
@@ -955,11 +1035,23 @@
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding SpendingSourceFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
-                Tag="{Binding SpendingSourceFilterPresentation}" />
+                Tag="{Binding SpendingSourceFilterPresentation}"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+            <ComboBox
+                Grid.Column="1"
+                Margin="8,0,0,0"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding BatchSpendingSourceOptions}"
+                SelectedValue="{Binding SelectedBatchSpendingSourceId, Mode=TwoWay}"
+                SelectedValuePath="Value"
+                Style="{StaticResource LedgerGroupingComboStyle}"
+                Tag="{Binding BatchSpendingSourceSelectionText}"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
             <ComboBox
                 Grid.Column="2"
                 Margin="8,0,0,0"
                 DropDownClosed="OnFilterDropDownClosed"
+                IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}"
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding CategoryFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
@@ -971,14 +1063,34 @@
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                 ItemsSource="{Binding TagFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
-                Tag="{Binding TagFilterPresentation}" />
+                Tag="{Binding TagFilterPresentation}"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+            <ComboBox
+                Grid.Column="3"
+                Margin="8,0,0,0"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding BatchTagOptions}"
+                SelectedValue="{Binding SelectedBatchTagId, Mode=TwoWay}"
+                SelectedValuePath="Value"
+                Style="{StaticResource LedgerGroupingComboStyle}"
+                Tag="{Binding BatchTagSelectionText}"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
             <customControls:BalloonButton
                 Grid.Column="5"
                 ButtonIcon="{StaticResource Ban}"
                 ButtonSize="34"
                 Click="OnClearFiltersClick"
                 IconSize="14"
-                Style="{StaticResource HeaderButtonStyle}" />
+                Style="{StaticResource HeaderButtonStyle}"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+            <customControls:BalloonButton
+                Grid.Column="5"
+                ButtonIcon="{StaticResource Check}"
+                ButtonSize="34"
+                Click="OnApplyBatchUpdatesClick"
+                IconSize="14"
+                Style="{StaticResource HeaderButtonStyle}"
+                Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
             <Border
                 Grid.Column="6"
                 Width="1"
@@ -989,6 +1101,7 @@
                 x:Name="LedgerGroupingComboBox"
                 Grid.Column="7"
                 Margin="8,0,0,0"
+                IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}"
                 ItemTemplate="{StaticResource LedgerGroupingModeTemplate}"
                 ItemsSource="{Binding GroupingModes}"
                 SelectedItem="{Binding SelectedGroupingMode, Mode=OneWay}"
@@ -999,7 +1112,8 @@
                 Grid.Column="8"
                 ButtonSize="34"
                 Click="OnOrderingButtonClick"
-                IconSize="14">
+                IconSize="14"
+                IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}">
                 <customControls:BalloonButton.Style>
                     <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
                         <Setter Property="ButtonIcon" Value="{StaticResource ArrowDownWideNarrow}" />

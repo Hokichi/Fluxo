@@ -9,4 +9,5 @@ public class IncomeLogDto
     public decimal Amount { get; set; }
     public DateTime AddedOn { get; set; }
     public string Notes { get; set; } = string.Empty;
+    public bool IsForDeletion { get; set; }
 }

@@ -231,6 +231,55 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void ToggleSelectionMode_ChecksVisibleTransactionsAndSelectedExportUsesOnlyCheckedRows()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.SearchText = "flix";
+
+            vm.ToggleSelectionModeCommand.Execute(null);
+
+            var visible = GetItems(vm.TransactionsView);
+            var item = Assert.Single(visible);
+            Assert.True(vm.IsSelectionModeEnabled);
+            Assert.True(item.IsSelectedForBatch);
+            Assert.True(vm.AreAllVisibleTransactionsSelected);
+            Assert.True(vm.HasSelectedVisibleTransactions);
+            Assert.Equal("Uncheck All", vm.CheckAllButtonText);
+
+            item.IsSelectedForBatch = false;
+            vm.RefreshBatchSelectionState();
+
+            Assert.False(vm.HasSelectedVisibleTransactions);
+            Assert.Equal("Check All", vm.CheckAllButtonText);
+            Assert.Empty(vm.GetVisibleTransactionsForExport());
+        });
+    }
+
+    [Fact]
+    public void ToggleVisibleBatchSelection_UnchecksAllOnlyWhenAllVisibleRowsAreChecked()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm();
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.ToggleSelectionModeCommand.Execute(null);
+
+            vm.ToggleVisibleBatchSelectionCommand.Execute(null);
+
+            Assert.All(GetItems(vm.TransactionsView), item => Assert.False(item.IsSelectedForBatch));
+            Assert.Equal("Check All", vm.CheckAllButtonText);
+
+            vm.ToggleVisibleBatchSelectionCommand.Execute(null);
+
+            Assert.All(GetItems(vm.TransactionsView), item => Assert.True(item.IsSelectedForBatch));
+            Assert.Equal("Uncheck All", vm.CheckAllButtonText);
+        });
+    }
+
+    [Fact]
     public void DateRangeMessage_ReloadsPeriodDataButSearchDoesNot()
     {
         RunInSta(() =>
@@ -448,6 +497,77 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void BatchSelectionPreview_UpdatesCheckedRowsOnlyWithoutSaving()
+    {
+        RunInSta(() =>
+        {
+            var unitOfWork = CreateUnitOfWork();
+            var vm = CreateVm(unitOfWork: unitOfWork);
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.ToggleSelectionModeCommand.Execute(null);
+            var grocery = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+            var salary = GetItems(vm.TransactionsView).Single(item => item.Name == "June Salary");
+            salary.IsSelectedForBatch = false;
+            vm.RefreshBatchSelectionState();
+
+            vm.SelectedBatchSpendingSourceId = 2;
+            vm.SelectedBatchTagId = 2;
+
+            Assert.Equal(2, grocery.SpendingSourceId);
+            Assert.Equal("Citibank Credit", grocery.SpendingSourceName);
+            Assert.Equal(2, grocery.TagId);
+            Assert.Equal("Streaming", grocery.TagName);
+            Assert.Equal(1, salary.SpendingSourceId);
+            unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void ApplyBatchTransactionUpdates_PersistsSelectedSourceAndTagThenReloads()
+    {
+        RunInSta(() =>
+        {
+            var unitOfWork = CreateUnitOfWork();
+            var vm = CreateVm(unitOfWork: unitOfWork);
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.ToggleSelectionModeCommand.Execute(null);
+
+            vm.SelectedBatchSpendingSourceId = 2;
+            vm.SelectedBatchTagId = 2;
+            vm.ApplyBatchTransactionUpdatesCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+
+            unitOfWork.ExpenseLogs.Received(1).Update(Arg.Is<ExpenseLog>(log =>
+                log.Id == 1 &&
+                log.SpendingSourceId == 2 &&
+                log.Expense.SpendingSourceId == 2 &&
+                log.Expense.ExpenseTagId == 2));
+            unitOfWork.IncomeLogs.Received(1).Update(Arg.Is<IncomeLog>(log =>
+                log.Id == 10 &&
+                log.SpendingSourceId == 2));
+            unitOfWork.Received().SaveChangesAsync(Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void RemoveSelectedTransactions_MarksSelectedExpenseAndIncomeForDeletion()
+    {
+        RunInSta(() =>
+        {
+            var unitOfWork = CreateUnitOfWork();
+            var vm = CreateVm(unitOfWork: unitOfWork);
+            vm.LoadAsync().GetAwaiter().GetResult();
+            vm.ToggleSelectionModeCommand.Execute(null);
+
+            vm.RemoveSelectedTransactionsCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+
+            unitOfWork.ExpenseLogs.Received(1).Update(Arg.Is<ExpenseLog>(log => log.Id == 1 && log.IsForDeletion));
+            unitOfWork.IncomeLogs.Received(1).Update(Arg.Is<IncomeLog>(log => log.Id == 10 && log.IsForDeletion));
+            Assert.DoesNotContain(GetItems(vm.TransactionsView), item => item.Name == "FreshMart Grocery");
+            Assert.DoesNotContain(GetItems(vm.TransactionsView), item => item.Name == "June Salary");
+        });
+    }
+
+    [Fact]
     public void RemoveTransactionCommand_RemovesIncomeAndRecordsMemoryAction()
     {
         RunInSta(() =>
@@ -601,6 +721,10 @@ public sealed class LedgerVMTests
         var expenseLogs = Substitute.For<IExpenseLogRepository>();
         expenseLogs.GetByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(expenseLog);
+        expenseLogs.GetByIdAsync(2, Arg.Any<CancellationToken>())
+            .Returns(CreateNetflixExpenseLog());
+        expenseLogs.GetByIdAsync(3, Arg.Any<CancellationToken>())
+            .Returns(CreateGoalExpenseLog());
         unitOfWork.ExpenseLogs.Returns(expenseLogs);
 
         var expenses = Substitute.For<IExpenseRepository>();
@@ -662,6 +786,64 @@ public sealed class LedgerVMTests
             Expense = expense,
             Amount = expense.Amount,
             DeductedOn = new DateTime(2026, 6, 3, 9, 15, 0),
+            Notes = string.Empty,
+            SpendingSourceId = source.Id,
+            SpendingSource = source
+        };
+    }
+
+    private static ExpenseLog CreateNetflixExpenseLog()
+    {
+        var source = CreateCreditSource();
+        var tag = new ExpenseTag { Id = 2, Name = "Streaming", HexCode = "#D97936" };
+        var expense = new Expense
+        {
+            Id = 2,
+            Name = "Netflix",
+            Amount = 15.99m,
+            ExpenseCategory = ExpenseCategory.Wants,
+            SpendingSourceId = source.Id,
+            SpendingSource = source,
+            ExpenseTagId = tag.Id,
+            ExpenseTag = tag
+        };
+
+        return new ExpenseLog
+        {
+            Id = 2,
+            ExpenseId = expense.Id,
+            Expense = expense,
+            Amount = expense.Amount,
+            DeductedOn = new DateTime(2026, 6, 3, 11, 30, 0),
+            Notes = "Recurring transaction",
+            SpendingSourceId = source.Id,
+            SpendingSource = source
+        };
+    }
+
+    private static ExpenseLog CreateGoalExpenseLog()
+    {
+        var source = CreateCheckingSource();
+        var tag = new ExpenseTag { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
+        var expense = new Expense
+        {
+            Id = 3,
+            Name = "Vacation Goal",
+            Amount = 100m,
+            ExpenseCategory = ExpenseCategory.Savings,
+            SpendingSourceId = source.Id,
+            SpendingSource = source,
+            ExpenseTagId = tag.Id,
+            ExpenseTag = tag
+        };
+
+        return new ExpenseLog
+        {
+            Id = 3,
+            ExpenseId = expense.Id,
+            Expense = expense,
+            Amount = expense.Amount,
+            DeductedOn = new DateTime(2026, 6, 2, 8, 0, 0),
             Notes = string.Empty,
             SpendingSourceId = source.Id,
             SpendingSource = source

@@ -11,7 +11,9 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
 {
     public override async Task<IReadOnlyList<IncomeLog>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await QueryWithNavigations().ToListAsync(cancellationToken);
+        return await QueryWithNavigations()
+            .Where(log => !log.IsForDeletion)
+            .ToListAsync(cancellationToken);
     }
 
     public override async Task<IncomeLog?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -26,7 +28,8 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
     public async Task<IReadOnlyList<IncomeLog>> SearchAsync(IncomeLogFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var query = QueryWithNavigations();
+        var query = QueryWithNavigations()
+            .Where(log => !log.IsForDeletion);
 
         if (filter.SpendingSource is not null)
             query = query.Where(log => log.SpendingSourceId == filter.SpendingSource.Id);
@@ -38,6 +41,14 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
             query = query.Where(log => log.AddedOn <= filter.EndDate);
 
         return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<IncomeLog>> GetMarkedForDeletionAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await QueryWithNavigations()
+            .Where(log => log.IsForDeletion)
+            .ToListAsync(cancellationToken);
     }
 
     private IQueryable<IncomeLog> QueryWithNavigations()

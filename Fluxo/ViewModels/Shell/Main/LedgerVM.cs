@@ -29,6 +29,7 @@ public partial class LedgerVM : ObservableRecipient,
     private readonly ISpendingSourceService _spendingSourceService;
     private readonly ITagService _tagService;
     private readonly ObservableCollection<LedgerTransactionItemVM> _transactions = [];
+    private readonly Dictionary<(LedgerTransactionKind Kind, int Id), BatchPreviewSnapshot> _batchPreviewSnapshots = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private LedgerFilterSelectionSnapshot _appliedFilterSelection = LedgerFilterSelectionSnapshot.Empty;
     private bool _isApplyingExternalRange;
@@ -47,6 +48,11 @@ public partial class LedgerVM : ObservableRecipient,
     [ObservableProperty] private decimal _netAmount;
     [ObservableProperty] private bool _hasTransactions;
     [ObservableProperty] private bool _hasVisibleTransactions;
+    [ObservableProperty] private bool _isSelectionModeEnabled;
+    [ObservableProperty] private bool _hasSelectedVisibleTransactions;
+    [ObservableProperty] private bool _areAllVisibleTransactionsSelected;
+    [ObservableProperty] private int? _selectedBatchSpendingSourceId;
+    [ObservableProperty] private int? _selectedBatchTagId;
     [ObservableProperty] private LedgerTransactionItemVM? _editingTransaction;
 
     public LedgerVM(
@@ -115,6 +121,10 @@ public partial class LedgerVM : ObservableRecipient,
     public ObservableCollection<LedgerFilterOption<ExpenseCategory>> CategoryFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> TagFilters { get; } = [];
     public ObservableCollection<ExpenseTagVM> EditableTags { get; } = [];
+    public IReadOnlyList<LedgerFilterOption<int>> BatchSpendingSourceOptions =>
+        SpendingSourceFilters.Where(option => !option.IsAll).ToList();
+    public IReadOnlyList<LedgerFilterOption<int>> BatchTagOptions =>
+        TagFilters.Where(option => !option.IsAll).ToList();
     public bool HasPendingFilterChanges => CaptureFilterSelectionSnapshot() != _appliedFilterSelection;
     public LedgerFilterSelectionPresentation TypeFilterPresentation { get; }
     public LedgerFilterSelectionPresentation SpendingSourceFilterPresentation { get; }
@@ -128,6 +138,15 @@ public partial class LedgerVM : ObservableRecipient,
     public string? SpendingSourceFilterSelectionToolTip => BuildSpecificSelectionToolTip(SpendingSourceFilters);
     public string? CategoryFilterSelectionToolTip => BuildSpecificSelectionToolTip(CategoryFilters);
     public string? TagFilterSelectionToolTip => BuildSpecificSelectionToolTip(TagFilters);
+    public string SelectionModeButtonText => IsSelectionModeEnabled ? "Disable Selection" : "Enable Selection";
+    public string CheckAllButtonText => AreAllVisibleTransactionsSelected ? "Uncheck All" : "Check All";
+    public string DeleteSelectedButtonText => AreAllVisibleTransactionsSelected ? "Delete All" : "Delete Selected";
+    public string BatchSpendingSourceSelectionText => SelectedBatchSpendingSourceId is { } sourceId
+        ? BatchSpendingSourceOptions.FirstOrDefault(option => option.Value == sourceId)?.Label ?? string.Empty
+        : string.Empty;
+    public string BatchTagSelectionText => SelectedBatchTagId is { } tagId
+        ? BatchTagOptions.FirstOrDefault(option => option.Value == tagId)?.Label ?? string.Empty
+        : string.Empty;
     public IReadOnlyList<LedgerGroupingMode> GroupingModes { get; } =
     [
         LedgerGroupingMode.None,
@@ -241,6 +260,39 @@ public partial class LedgerVM : ObservableRecipient,
         }
     }
 
+    [RelayCommand]
+    private void ToggleSelectionMode()
+    {
+        var shouldEnable = !IsSelectionModeEnabled;
+        if (!shouldEnable)
+            RestoreAllBatchPreviewSnapshots();
+
+        IsSelectionModeEnabled = shouldEnable;
+        SelectedBatchSpendingSourceId = null;
+        SelectedBatchTagId = null;
+        if (IsSelectionModeEnabled)
+            _batchPreviewSnapshots.Clear();
+
+        foreach (var transaction in _transactions)
+            transaction.IsSelectedForBatch = IsSelectionModeEnabled && TransactionsView.Contains(transaction);
+
+        RefreshBatchSelectionState();
+        RefreshEditDisabledState();
+    }
+
+    [RelayCommand]
+    private void ToggleVisibleBatchSelection()
+    {
+        var visibleTransactions = GetVisibleTransactions();
+        var shouldCheck = visibleTransactions.Count > 0 &&
+                          !visibleTransactions.All(transaction => transaction.IsSelectedForBatch);
+
+        foreach (var transaction in visibleTransactions)
+            transaction.IsSelectedForBatch = shouldCheck;
+
+        RefreshBatchSelectionState();
+    }
+
     partial void OnSearchTextChanged(string value)
     {
         TransactionsView.Refresh();
@@ -275,6 +327,23 @@ public partial class LedgerVM : ObservableRecipient,
     {
         UpdateSortAndGroups();
         RefreshVisibleTransactionState();
+    }
+
+    partial void OnIsSelectionModeEnabledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SelectionModeButtonText));
+    }
+
+    partial void OnSelectedBatchSpendingSourceIdChanged(int? value)
+    {
+        OnPropertyChanged(nameof(BatchSpendingSourceSelectionText));
+        ApplyBatchPreview();
+    }
+
+    partial void OnSelectedBatchTagIdChanged(int? value)
+    {
+        OnPropertyChanged(nameof(BatchTagSelectionText));
+        ApplyBatchPreview();
     }
 
     private async Task ReloadPeriodAsync(CancellationToken cancellationToken)
@@ -402,6 +471,10 @@ public partial class LedgerVM : ObservableRecipient,
                 .ToList());
 
         _appliedFilterSelection = CaptureFilterSelectionSnapshot();
+        OnPropertyChanged(nameof(BatchSpendingSourceOptions));
+        OnPropertyChanged(nameof(BatchTagOptions));
+        OnPropertyChanged(nameof(BatchSpendingSourceSelectionText));
+        OnPropertyChanged(nameof(BatchTagSelectionText));
         RefreshAllFilterSelectionPresentations();
     }
 
@@ -476,7 +549,138 @@ public partial class LedgerVM : ObservableRecipient,
 
     public IReadOnlyList<LedgerTransactionItemVM> GetVisibleTransactionsForExport()
     {
-        return TransactionsView.Cast<LedgerTransactionItemVM>().ToList();
+        var visibleTransactions = GetVisibleTransactions();
+        return IsSelectionModeEnabled
+            ? visibleTransactions.Where(transaction => transaction.IsSelectedForBatch).ToList()
+            : visibleTransactions;
+    }
+
+    public void RefreshBatchSelectionState()
+    {
+        var visibleTransactions = GetVisibleTransactions();
+        HasSelectedVisibleTransactions = visibleTransactions.Any(transaction => transaction.IsSelectedForBatch);
+        AreAllVisibleTransactionsSelected = visibleTransactions.Count > 0 &&
+                                            visibleTransactions.All(transaction => transaction.IsSelectedForBatch);
+        OnPropertyChanged(nameof(CheckAllButtonText));
+        OnPropertyChanged(nameof(DeleteSelectedButtonText));
+        ApplyBatchPreview();
+    }
+
+    [RelayCommand]
+    private async Task ApplyBatchTransactionUpdatesAsync()
+    {
+        var selectedTransactions = GetSelectedVisibleBatchTransactions();
+        if (selectedTransactions.Count == 0 ||
+            (SelectedBatchSpendingSourceId is null && SelectedBatchTagId is null))
+        {
+            return;
+        }
+
+        await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            SpendingSource? targetSource = null;
+            if (SelectedBatchSpendingSourceId is { } sourceId)
+                targetSource = await scope.UnitOfWork.SpendingSources.GetByIdAsync(sourceId, ct);
+
+            ExpenseTag? targetTag = null;
+            if (SelectedBatchTagId is { } tagId)
+                targetTag = await scope.UnitOfWork.ExpenseTags.GetByIdAsync(tagId, ct);
+
+            foreach (var transaction in selectedTransactions)
+            {
+                if (transaction.Kind == LedgerTransactionKind.Expense)
+                {
+                    var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
+                    if (expenseLog?.Expense is null)
+                        continue;
+
+                    if (targetSource is not null)
+                    {
+                        expenseLog.SpendingSource = targetSource;
+                        expenseLog.SpendingSourceId = targetSource.Id;
+                        expenseLog.Expense.SpendingSource = targetSource;
+                        expenseLog.Expense.SpendingSourceId = targetSource.Id;
+                    }
+
+                    if (targetTag is not null && !transaction.IsGoal)
+                    {
+                        expenseLog.Expense.ExpenseTag = targetTag;
+                        expenseLog.Expense.ExpenseTagId = targetTag.Id;
+                    }
+
+                    scope.UnitOfWork.Expenses.Update(expenseLog.Expense);
+                    scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
+                    continue;
+                }
+
+                if (targetSource is null)
+                    continue;
+
+                var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
+                if (incomeLog is null)
+                    continue;
+
+                incomeLog.SpendingSource = targetSource;
+                incomeLog.SpendingSourceId = targetSource.Id;
+                scope.UnitOfWork.IncomeLogs.Update(incomeLog);
+            }
+
+            await scope.UnitOfWork.SaveChangesAsync(ct);
+        });
+
+        _batchPreviewSnapshots.Clear();
+        SelectedBatchSpendingSourceId = null;
+        SelectedBatchTagId = null;
+        await LoadAsync();
+        if (IsSelectionModeEnabled)
+        {
+            foreach (var transaction in GetVisibleTransactions())
+                transaction.IsSelectedForBatch = true;
+            RefreshBatchSelectionState();
+        }
+    }
+
+    [RelayCommand]
+    private async Task RemoveSelectedTransactionsAsync()
+    {
+        var selectedTransactions = GetSelectedVisibleBatchTransactions();
+        if (selectedTransactions.Count == 0)
+            return;
+
+        await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        {
+            foreach (var transaction in selectedTransactions)
+            {
+                if (transaction.Kind == LedgerTransactionKind.Expense)
+                {
+                    var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
+                    if (expenseLog is null)
+                        continue;
+
+                    expenseLog.IsForDeletion = true;
+                    scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
+                    continue;
+                }
+
+                var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
+                if (incomeLog is null)
+                    continue;
+
+                incomeLog.IsForDeletion = true;
+                scope.UnitOfWork.IncomeLogs.Update(incomeLog);
+            }
+
+            await scope.UnitOfWork.SaveChangesAsync(ct);
+        });
+
+        foreach (var transaction in selectedTransactions)
+            _transactions.Remove(transaction);
+
+        _batchPreviewSnapshots.Clear();
+        HasTransactions = _transactions.Count > 0;
+        RefreshSummaries();
+        TransactionsView.Refresh();
+        RefreshVisibleTransactionState();
     }
 
     public void ClearFilters()
@@ -949,7 +1153,8 @@ public partial class LedgerVM : ObservableRecipient,
                 return null;
 
             var result = IncomeLogMemorySnapshot.Create(incomeLog);
-            scope.UnitOfWork.IncomeLogs.Remove(incomeLog);
+            incomeLog.IsForDeletion = true;
+            scope.UnitOfWork.IncomeLogs.Update(incomeLog);
             await scope.UnitOfWork.SaveChangesAsync(ct);
             return result;
         });
@@ -1007,13 +1212,14 @@ public partial class LedgerVM : ObservableRecipient,
         foreach (var transaction in _transactions)
             transaction.IsLastVisibleInGroup = false;
 
-        var visibleTransactions = TransactionsView.Cast<LedgerTransactionItemVM>().ToList();
+        var visibleTransactions = GetVisibleTransactions();
         HasVisibleTransactions = visibleTransactions.Count > 0;
 
         if (SelectedGroupingMode == LedgerGroupingMode.None)
         {
             if (visibleTransactions.LastOrDefault() is { } lastTransaction)
                 lastTransaction.IsLastVisibleInGroup = true;
+            RefreshBatchSelectionState();
             return;
         }
 
@@ -1022,6 +1228,97 @@ public partial class LedgerVM : ObservableRecipient,
             if (group.LastOrDefault() is { } lastTransaction)
                 lastTransaction.IsLastVisibleInGroup = true;
         }
+
+        RefreshBatchSelectionState();
+    }
+
+    private IReadOnlyList<LedgerTransactionItemVM> GetVisibleTransactions()
+    {
+        return TransactionsView.Cast<LedgerTransactionItemVM>().ToList();
+    }
+
+    private IReadOnlyList<LedgerTransactionItemVM> GetSelectedVisibleBatchTransactions()
+    {
+        return GetVisibleTransactions()
+            .Where(transaction => transaction.IsSelectedForBatch)
+            .ToList();
+    }
+
+    private void ApplyBatchPreview()
+    {
+        if (!IsSelectionModeEnabled)
+            return;
+
+        if (SelectedBatchSpendingSourceId is null && SelectedBatchTagId is null)
+        {
+            RestoreAllBatchPreviewSnapshots();
+            return;
+        }
+
+        var visibleTransactions = GetVisibleTransactions();
+        foreach (var transaction in visibleTransactions.Where(transaction => !transaction.IsSelectedForBatch))
+            RestoreBatchPreviewSnapshot(transaction);
+
+        foreach (var transaction in visibleTransactions.Where(transaction => transaction.IsSelectedForBatch))
+        {
+            CaptureBatchPreviewSnapshot(transaction);
+
+            if (SelectedBatchSpendingSourceId is { } sourceId)
+            {
+                transaction.SpendingSourceId = sourceId;
+                transaction.SpendingSourceName = SpendingSourceFilters
+                    .FirstOrDefault(option => !option.IsAll && option.Value == sourceId)
+                    ?.Label ?? transaction.SpendingSourceName;
+            }
+
+            if (SelectedBatchTagId is { } tagId &&
+                transaction.Kind == LedgerTransactionKind.Expense &&
+                !transaction.IsGoal)
+            {
+                transaction.TagId = tagId;
+                transaction.TagName = TagFilters
+                    .FirstOrDefault(option => !option.IsAll && option.Value == tagId)
+                    ?.Label ?? transaction.TagName;
+                transaction.TagHexCode = EditableTags
+                    .FirstOrDefault(tag => tag.Id == tagId)
+                    ?.HexCode ?? transaction.TagHexCode;
+            }
+        }
+    }
+
+    private void CaptureBatchPreviewSnapshot(LedgerTransactionItemVM transaction)
+    {
+        var key = (transaction.Kind, transaction.Id);
+        if (_batchPreviewSnapshots.ContainsKey(key))
+            return;
+
+        _batchPreviewSnapshots[key] = new BatchPreviewSnapshot(
+            transaction.SpendingSourceId,
+            transaction.SpendingSourceName,
+            transaction.TagId,
+            transaction.TagName,
+            transaction.TagHexCode);
+    }
+
+    private void RestoreAllBatchPreviewSnapshots()
+    {
+        foreach (var transaction in _transactions)
+            RestoreBatchPreviewSnapshot(transaction);
+
+        _batchPreviewSnapshots.Clear();
+    }
+
+    private void RestoreBatchPreviewSnapshot(LedgerTransactionItemVM transaction)
+    {
+        var key = (transaction.Kind, transaction.Id);
+        if (!_batchPreviewSnapshots.Remove(key, out var snapshot))
+            return;
+
+        transaction.SpendingSourceId = snapshot.SpendingSourceId;
+        transaction.SpendingSourceName = snapshot.SpendingSourceName;
+        transaction.TagId = snapshot.TagId;
+        transaction.TagName = snapshot.TagName;
+        transaction.TagHexCode = snapshot.TagHexCode;
     }
 
     private string GetVisibleGroupKey(LedgerTransactionItemVM transaction)
@@ -1119,6 +1416,13 @@ public partial class LedgerVM : ObservableRecipient,
     {
         public static LedgerFilterSelectionSnapshot Empty { get; } = new(string.Empty, string.Empty, string.Empty, string.Empty);
     }
+
+    private readonly record struct BatchPreviewSnapshot(
+        int SpendingSourceId,
+        string SpendingSourceName,
+        int TagId,
+        string TagName,
+        string TagHexCode);
 }
 
 public sealed class LedgerGroupingModeDisplayConverter : IValueConverter

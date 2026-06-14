@@ -220,6 +220,61 @@ public partial class Ledger : UserControl
         await ExportDataAsync();
     }
 
+    private void OnSelectionModeClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is LedgerVM viewModel)
+            viewModel.ToggleSelectionModeCommand.Execute(null);
+    }
+
+    private void OnToggleVisibleBatchSelectionClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is LedgerVM viewModel)
+            viewModel.ToggleVisibleBatchSelectionCommand.Execute(null);
+    }
+
+    private void OnBatchSelectionCheckBoxClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is LedgerVM viewModel)
+            viewModel.RefreshBatchSelectionState();
+    }
+
+    private async void OnApplyBatchUpdatesClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LedgerVM viewModel)
+            return;
+
+        await _dialogService.ShowToastWhileAsync(
+            "Updating transactions",
+            async () =>
+            {
+                await viewModel.ApplyBatchTransactionUpdatesCommand.ExecuteAsync(null);
+                await Dispatcher.InvokeAsync(
+                    () => LedgerTransactionsList.Items.Refresh(),
+                    DispatcherPriority.ContextIdle);
+            },
+            Window.GetWindow(this));
+    }
+
+    private async void OnRemoveSelectedTransactionsClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LedgerVM viewModel || !viewModel.HasSelectedVisibleTransactions)
+            return;
+
+        var count = viewModel.TransactionsView.Cast<LedgerTransactionItemVM>()
+            .Count(transaction => transaction.IsSelectedForBatch);
+        var result = FluxoMessageBox.Show(
+            Window.GetWindow(this),
+            $"Delete {count} selected transaction{(count == 1 ? string.Empty : "s")}?",
+            "Ledger",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        await viewModel.RemoveSelectedTransactionsCommand.ExecuteAsync(null);
+    }
+
     public async void ExportDataFromShortcutAsync()
     {
         await ExportDataAsync();
@@ -228,6 +283,10 @@ public partial class Ledger : UserControl
     private async Task ExportDataAsync()
     {
         if (DataContext is not LedgerVM viewModel || !viewModel.HasVisibleTransactions)
+            return;
+
+        var transactions = viewModel.GetVisibleTransactionsForExport();
+        if (transactions.Count == 0)
             return;
 
         var dialog = new SaveFileDialog
@@ -240,10 +299,6 @@ public partial class Ledger : UserControl
 
         var owner = Window.GetWindow(this);
         if (dialog.ShowDialog(owner) != true)
-            return;
-
-        var transactions = viewModel.GetVisibleTransactionsForExport();
-        if (transactions.Count == 0)
             return;
 
         await _dialogService.ShowToastWhileAsync(

@@ -1,3 +1,4 @@
+using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Data.Context;
@@ -26,6 +27,9 @@ public sealed class ModelSchemaTests
         var expenseTag = model.FindEntityType(typeof(ExpenseTag))!;
         Assert.Equal("NUMERIC", expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.GetColumnType());
         Assert.True(expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.IsNullable);
+
+        var incomeLog = model.FindEntityType(typeof(IncomeLog))!;
+        Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsForDeletion))!.IsNullable);
 
         var savingGoal = model.FindEntityType(typeof(SavingGoal))!;
         Assert.True(savingGoal.FindProperty(nameof(SavingGoal.SavingEndDate))!.IsNullable);
@@ -82,6 +86,10 @@ public sealed class ModelSchemaTests
         var tag = new ExpenseTag { SpendingLimit = 250m };
         var tagVm = new ExpenseTagVM { SpendingLimit = tag.SpendingLimit };
         Assert.Equal(250m, tagVm.SpendingLimit);
+
+        var incomeLog = new IncomeLog { IsForDeletion = true };
+        var incomeLogDto = new IncomeLogDto { IsForDeletion = incomeLog.IsForDeletion };
+        Assert.True(incomeLogDto.IsForDeletion);
 
         var goal = new SavingGoal { SavingEndDate = null };
         var goalVm = new SavingGoalVM

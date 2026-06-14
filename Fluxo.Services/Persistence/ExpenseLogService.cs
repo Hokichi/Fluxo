@@ -54,9 +54,18 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
         await dataOperationRunner.RunAsync("cleanup terminated expense logs", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
+            var markedIncomeLogs = await unitOfWork.IncomeLogs.GetMarkedForDeletionAsync(ct);
+            foreach (var incomeLog in markedIncomeLogs)
+                unitOfWork.IncomeLogs.Remove(incomeLog);
+
             var markedLogs = await unitOfWork.ExpenseLogs.GetMarkedForDeletionAsync(ct);
             if (markedLogs.Count == 0)
+            {
+                if (markedIncomeLogs.Count > 0)
+                    await unitOfWork.SaveChangesAsync(ct);
+
                 return;
+            }
 
             var expenseIds = markedLogs.Select(l => l.ExpenseId).Distinct().ToList();
 
