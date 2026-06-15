@@ -245,12 +245,6 @@
                     PreviewMouseMove="OnCarouselViewportPreviewMouseMove">
 
                     <ContentControl x:Name="CurrentGoalPresenter" ContentTemplate="{StaticResource SavingGoalTemplate}" />
-
-                    <ContentControl
-                        x:Name="IncomingGoalPresenter"
-                        ContentTemplate="{StaticResource SavingGoalTemplate}"
-                        IsHitTestVisible="False"
-                        Visibility="Collapsed" />
                 </Grid>
             </Grid>
 

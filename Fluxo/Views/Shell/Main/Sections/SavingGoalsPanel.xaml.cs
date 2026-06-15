@@ -11,7 +11,7 @@ namespace Fluxo.Views.Shell.Main.Sections;
 public partial class SavingGoalsPanel : UserControl
 {
     private const double SwipeDistanceThreshold = 48;
-    private static readonly TimeSpan GoalTransitionDuration = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan GoalProgressTransitionDuration = TimeSpan.FromMilliseconds(300);
     private static readonly IEasingFunction GoalTransitionEasing = new CubicEase { EasingMode = EasingMode.EaseOut };
     private bool _isAnimating;
     private bool _isSwipeTracking;
@@ -206,41 +206,27 @@ public partial class SavingGoalsPanel : UserControl
             return;
         }
 
-        RunFadeAnimation(_displayedGoal, incomingGoal);
+        RunGoalProgressTransition(_displayedGoal, incomingGoal);
     }
 
     private void SyncCurrentGoalWithoutAnimation()
     {
         _isAnimating = false;
         BeginAnimation(AnimatedProgressRatioProperty, null);
-        CurrentGoalPresenter.BeginAnimation(OpacityProperty, null);
-        IncomingGoalPresenter.BeginAnimation(OpacityProperty, null);
-
-        CurrentGoalPresenter.Opacity = 1;
-        IncomingGoalPresenter.Opacity = 0;
-
         _displayedGoal = _viewModel?.CurrentGoal;
         AttachDisplayedGoalProgressTracking(_displayedGoal);
         AnimatedProgressRatio = _displayedGoal is null ? 0d : (double)_displayedGoal.ProgressRatio;
         CurrentGoalPresenter.Content = _displayedGoal;
-
-        IncomingGoalPresenter.Content = null;
-        IncomingGoalPresenter.Visibility = Visibility.Collapsed;
     }
 
-    private void RunFadeAnimation(SavingGoalVM outgoingGoal, SavingGoalVM incomingGoal)
+    private void RunGoalProgressTransition(SavingGoalVM outgoingGoal, SavingGoalVM incomingGoal)
     {
         _isAnimating = true;
 
         var outgoingProgressRatio = (double)outgoingGoal.ProgressRatio;
         var incomingProgressRatio = (double)incomingGoal.ProgressRatio;
 
-        CurrentGoalPresenter.Content = outgoingGoal;
-        CurrentGoalPresenter.Opacity = 1;
-
-        IncomingGoalPresenter.Content = incomingGoal;
-        IncomingGoalPresenter.Visibility = Visibility.Visible;
-        IncomingGoalPresenter.Opacity = 0;
+        CurrentGoalPresenter.Content = incomingGoal;
 
         BeginAnimation(AnimatedProgressRatioProperty, null);
         AnimatedProgressRatio = incomingProgressRatio;
@@ -249,30 +235,12 @@ public partial class SavingGoalsPanel : UserControl
         {
             From = outgoingProgressRatio,
             To = incomingProgressRatio,
-            Duration = GoalTransitionDuration * 3,
+            Duration = GoalProgressTransitionDuration,
             EasingFunction = GoalTransitionEasing,
             FillBehavior = FillBehavior.Stop
         };
 
-        var outgoingAnimation = new DoubleAnimation
-        {
-            From = 1,
-            To = 0,
-            Duration = GoalTransitionDuration,
-            EasingFunction = GoalTransitionEasing,
-            FillBehavior = FillBehavior.Stop
-        };
-
-        var incomingAnimation = new DoubleAnimation
-        {
-            From = 0,
-            To = 1,
-            Duration = GoalTransitionDuration,
-            EasingFunction = GoalTransitionEasing,
-            FillBehavior = FillBehavior.Stop
-        };
-
-        outgoingAnimation.Completed += (_, _) =>
+        progressAnimation.Completed += (_, _) =>
         {
             _isAnimating = false;
             _displayedGoal = incomingGoal;
@@ -280,20 +248,10 @@ public partial class SavingGoalsPanel : UserControl
 
             BeginAnimation(AnimatedProgressRatioProperty, null);
             AnimatedProgressRatio = incomingProgressRatio;
-            CurrentGoalPresenter.BeginAnimation(OpacityProperty, null);
-            IncomingGoalPresenter.BeginAnimation(OpacityProperty, null);
-
-            CurrentGoalPresenter.Opacity = 1;
-            IncomingGoalPresenter.Opacity = 0;
-
             CurrentGoalPresenter.Content = incomingGoal;
-            IncomingGoalPresenter.Content = null;
-            IncomingGoalPresenter.Visibility = Visibility.Collapsed;
         };
 
         BeginAnimation(AnimatedProgressRatioProperty, progressAnimation);
-        CurrentGoalPresenter.BeginAnimation(OpacityProperty, outgoingAnimation);
-        IncomingGoalPresenter.BeginAnimation(OpacityProperty, incomingAnimation);
     }
 
     private void AttachDisplayedGoalProgressTracking(SavingGoalVM? goal)

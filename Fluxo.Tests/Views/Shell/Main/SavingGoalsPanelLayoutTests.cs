@@ -78,4 +78,14 @@ public sealed class SavingGoalsPanelLayoutTests
         Assert.Contains("var goal = _viewModel?.CurrentGoal;", source);
         Assert.DoesNotContain("DataContext: SavingGoalVM goal", source);
     }
+
+    [Fact]
+    public void GoalNavigationDoesNotCrossfadeGoalContent()
+    {
+        var source = File.ReadAllText(SavingGoalsPanelCodeBehindPath);
+
+        Assert.Contains("BeginAnimation(AnimatedProgressRatioProperty, progressAnimation)", source);
+        Assert.DoesNotContain("CurrentGoalPresenter.BeginAnimation(OpacityProperty", source);
+        Assert.DoesNotContain("IncomingGoalPresenter.BeginAnimation(OpacityProperty", source);
+    }
 }
