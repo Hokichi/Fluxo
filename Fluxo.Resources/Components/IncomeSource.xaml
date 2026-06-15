@@ -258,7 +258,7 @@
                             <components:Icon
                                 Width="14"
                                 Height="14"
-                                Path="{StaticResource BookDollar}"
+                                Path="{StaticResource MoneyExchange}"
                                 Color="{StaticResource Brush.Warning}" />
                             <TextBlock
                                 Grid.Column="2"

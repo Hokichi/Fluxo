@@ -562,7 +562,7 @@
                                             <components:Icon
                                                 Width="14"
                                                 Height="14"
-                                                Path="{StaticResource PlusSolid}"
+                                                Path="{StaticResource Grid2x2Plus}"
                                                 Color="{StaticResource Brush.Mint}" />
                                             <TextBlock
                                                 Grid.Column="2"

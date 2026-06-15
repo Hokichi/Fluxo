@@ -503,7 +503,6 @@ public partial class MainWindow : Window, IPopupHost
             preRestoreWidth,
             preRestoreHeight);
 
-        RootBorder.CornerRadius = new CornerRadius(16);
         RootBorder.BorderThickness = new Thickness(1);
 
         Left = anchoredRestoreBounds.Left;
@@ -557,7 +556,6 @@ public partial class MainWindow : Window, IPopupHost
 
         FadeContentOut(() =>
         {
-            RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(16);
             RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
             IsWindowLayoutMaximized = maximizing;
 
