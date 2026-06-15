@@ -147,6 +147,7 @@ public partial class MainWindow : Window, IPopupHost
             MainPageHost.Content = _dashboardPageView;
             UpdateMainNavigationCheckedState(_activeMainPage);
             UpdateHeaderDateSelectorEnabledState(_activeMainPage);
+            UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
             FadeIn();
@@ -901,6 +902,12 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (await TryHandleLedgerPeriodShortcut(e.Key, Keyboard.Modifiers))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (await TryHandleViewModeShortcut(e.Key, Keyboard.Modifiers))
         {
             e.Handled = true;
@@ -960,11 +967,30 @@ public partial class MainWindow : Window, IPopupHost
 
         if (MainWindowShortcutMatcher.IsNavigateDashboardCurrentPeriodShortcut(key, modifiers))
         {
+            if (_mainVM.Dashboard.ViewModeToggle.IsAtCurrentPeriod)
+                return true;
+
             await _mainVM.Dashboard.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);
             return true;
         }
 
         return false;
+    }
+
+    private async Task<bool> TryHandleLedgerPeriodShortcut(Key key, ModifierKeys modifiers)
+    {
+        if (_activeMainPage != MainPage.Ledger || _mainVM.Ledger is null)
+            return false;
+
+        if (!MainWindowShortcutMatcher.IsNavigateDashboardCurrentPeriodShortcut(key, modifiers))
+            return false;
+
+        if (_mainVM.Ledger.ViewModeToggle.IsAtCurrentPeriod)
+            return true;
+
+        await _mainVM.Ledger.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);
+        ApplyMainWindowRangeToLedger();
+        return true;
     }
 
     private async Task<bool> TryHandleViewModeShortcut(Key key, ModifierKeys modifiers)
@@ -1517,6 +1543,7 @@ public partial class MainWindow : Window, IPopupHost
                     ActivePageTitle = GetMainPageTitle(_activeMainPage);
                     UpdateMainNavigationCheckedState(_activeMainPage);
                     UpdateHeaderDateSelectorEnabledState(_activeMainPage);
+                    UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);
                 },
                 this);
         }
@@ -1685,6 +1712,11 @@ public partial class MainWindow : Window, IPopupHost
     private void UpdateHeaderDateSelectorEnabledState(MainPage page)
     {
         DaySpinnerControlHost.IsEnabled = page is not MainPage.Analytics and not MainPage.Calendar;
+    }
+
+    private void UpdateHeaderDaySpinnerPagePolicy(MainPage page)
+    {
+        _mainVM.DaySpinner.AllowFuturePeriodNavigation = page == MainPage.Dashboard;
     }
 
     private static string GetMainPageLabel(MainPage page)

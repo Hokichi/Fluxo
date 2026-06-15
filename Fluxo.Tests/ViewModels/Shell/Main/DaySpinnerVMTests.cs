@@ -173,6 +173,78 @@ public class DaySpinnerVMTests
     }
 
     [Fact]
+    public void NavigateSpinnerForward_WhenFutureNavigationAllowed_MovesIntoFuturePage()
+    {
+        var vm = new DaySpinnerVM
+        {
+            AllowFuturePeriodNavigation = true
+        };
+        var initialDates = vm.DaysOfWeek.Select(day => day.Date).ToArray();
+
+        vm.NavigateSpinnerForwardCommand.Execute(null);
+
+        Assert.NotEqual(initialDates, vm.DaysOfWeek.Select(day => day.Date));
+        Assert.True(vm.CanNavigateForward);
+        Assert.All(vm.DaysOfWeek, day => Assert.False(day.IsSelected));
+        Assert.False(vm.IsAtCurrentPeriod);
+    }
+
+    [Fact]
+    public void NavigateSpinnerForward_WhenFutureNavigationDisabled_DoesNotMoveIntoFuturePage()
+    {
+        var vm = new DaySpinnerVM();
+        var initialDates = vm.DaysOfWeek.Select(day => day.Date).ToArray();
+
+        vm.NavigateSpinnerForwardCommand.Execute(null);
+
+        Assert.Equal(initialDates, vm.DaysOfWeek.Select(day => day.Date));
+        Assert.False(vm.CanNavigateForward);
+    }
+
+    [Fact]
+    public async Task SelectAdjacentVisibleDayFromUserAsync_WhenFutureNavigationDisabled_DoesNotSelectFuturePeriod()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+        var vm = new DaySpinnerVM(messenger);
+        var today = DateTime.Today;
+        var currentDay = vm.DaysOfWeek.Single(day => day.Date.Date == today);
+        vm.SelectedDay = currentDay;
+        recipient.DateRanges.Clear();
+
+        await vm.SelectAdjacentVisibleDayFromUserAsync(1);
+
+        Assert.Equal(today, vm.SelectedDay.Date.Date);
+        Assert.Empty(recipient.DateRanges);
+    }
+
+    [Fact]
+    public async Task SelectAdjacentVisibleDayFromUserAsync_WhenFutureNavigationAllowed_SelectsFuturePeriod()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+        var vm = new DaySpinnerVM(messenger)
+        {
+            AllowFuturePeriodNavigation = true
+        };
+        var today = DateTime.Today;
+        var currentDay = vm.DaysOfWeek.Single(day => day.Date.Date == today);
+        vm.SelectedDay = currentDay;
+        recipient.DateRanges.Clear();
+
+        await vm.SelectAdjacentVisibleDayFromUserAsync(1);
+
+        Assert.Equal(today.AddDays(1), vm.SelectedDay.Date.Date);
+        Assert.Single(recipient.DateRanges);
+    }
+
+    [Fact]
     public void SelectingNonCurrentDay_PublishesSpinnerStateWithIsAtCurrentPeriodFalse()
     {
         var messenger = new WeakReferenceMessenger();
@@ -203,6 +275,7 @@ public class DaySpinnerVMTests
             static (target, message) => target.DateRanges.Add(message.Value));
 
         var vm = new DaySpinnerVM(messenger);
+        vm.AllowFuturePeriodNavigation = true;
         messenger.Send(new ViewModeChangeMessage(MainContentViewMode.Daily));
         var visibleDates = vm.DaysOfWeek.Select(day => day.Date).ToArray();
         var firstVisibleDay = vm.DaysOfWeek[0];

@@ -61,6 +61,9 @@ public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<Spin
 
     public async Task MoveToCurrentPeriodFromUserAsync(Window? owner = null)
     {
+        if (IsAtCurrentPeriod)
+            return;
+
         if (_dialogService is null || _uiSettleAwaiter is null)
         {
             MoveToCurrentPeriod();

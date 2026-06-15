@@ -128,6 +128,17 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
+    public void MainWindow_ConfiguresHeaderDaySpinnerFutureNavigationByPage()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+
+        Assert.Contains("UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);", source);
+        Assert.Contains("private void UpdateHeaderDaySpinnerPagePolicy(MainPage page)", source);
+        Assert.Contains("_mainVM.DaySpinner.AllowFuturePeriodNavigation = page == MainPage.Dashboard;", source);
+        Assert.Contains("UpdateHeaderDateSelectorEnabledState(_activeMainPage);", source);
+    }
+
+    [Fact]
     public void MainWindow_HeaderBindsToActivePageTitleInsteadOfUsernameGreeting()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml"));
@@ -151,7 +162,7 @@ public sealed class MainWindowPageRegressionTests
 
         Assert.Contains("x:Name=\"NotificationCountBadge\"", xaml);
         Assert.Contains("Background=\"{StaticResource Brush.Mint}\"", xaml);
-        Assert.Contains("Foreground=\"{StaticResource Brush.Text.Dark}\"", xaml);
+        Assert.Contains("Foreground=\"{StaticResource Brush.Text.Primary.Dark}\"", xaml);
         Assert.Contains("Text=\"{Binding Count}\"", xaml);
         Assert.Contains("Text=\"{Binding Header}\"", xaml);
     }
@@ -216,6 +227,23 @@ public sealed class MainWindowPageRegressionTests
         Assert.DoesNotContain("DataContext=\"{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}\"", ledgerXaml);
         Assert.Contains("x:Name=\"LedgerFiltersRow\"", ledgerXaml);
         Assert.Contains("IsEnabled=\"{Binding HasTransactions}\"", ledgerXaml);
+    }
+
+    [Fact]
+    public void Ledger_ViewModeToggleIsTopOverlayAndContentUsesFixedTopOffset()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var rootGrid = ExtractSection(ledgerXaml, "<Grid Margin=\"24,0,24,0\">", "</UserControl>");
+        var toggleIndex = rootGrid.IndexOf("<controls:MainViewModeToggleControl", StringComparison.Ordinal);
+        var contentIndex = rootGrid.IndexOf("x:Name=\"LedgerContentGrid\"", StringComparison.Ordinal);
+
+        Assert.True(toggleIndex >= 0);
+        Assert.True(contentIndex > toggleIndex);
+        Assert.Contains("HorizontalAlignment=\"Center\"", rootGrid);
+        Assert.Contains("VerticalAlignment=\"Top\"", rootGrid);
+        Assert.Contains("x:Name=\"LedgerContentGrid\"", rootGrid);
+        Assert.Contains("Margin=\"0,48,0,0\"", rootGrid);
+        Assert.DoesNotContain("Margin=\"0,16\"", rootGrid);
     }
 
     [Fact]

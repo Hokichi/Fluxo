@@ -64,6 +64,7 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
     public bool HasNoIncomes => Incomes.Count == 0;
     public bool HasNoGoalDeadlines => GoalDeadlines.Count == 0;
     public bool HasNoRecurringTransactions => RecurringTransactions.Count == 0;
+    public bool IsAtCurrentDay => SelectedDate == _currentDate;
 
     [RelayCommand]
     private async Task SelectDate(CalendarDayItem day)
@@ -140,9 +141,17 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
 
     public Task SelectCurrentDateAsync(CancellationToken cancellationToken = default)
     {
+        if (IsAtCurrentDay)
+            return Task.CompletedTask;
+
         _visibleMonth = GetMonthStart(_currentDate);
         _firstFrameWeekStart = StartOfWeek(_visibleMonth);
         return SelectDateAsync(_currentDate, cancellationToken);
+    }
+
+    partial void OnSelectedDateChanged(DateOnly value)
+    {
+        OnPropertyChanged(nameof(IsAtCurrentDay));
     }
 
     private bool IsCurrentLoad(int requestVersion, CancellationTokenSource loadCts)

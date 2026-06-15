@@ -220,17 +220,43 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
-    public void DashboardPeriodShortcuts_AreDashboardOnly()
+    public void DashboardPeriodShortcuts_AreDashboardOnlyAndCurrentShortcutNoOpsWhenCurrent()
     {
         var source = ReadMainWindowSource();
+        var method = Slice(
+            source,
+            "private async Task<bool> TryHandleDashboardPeriodShortcut",
+            "private async Task<bool> TryHandleLedgerPeriodShortcut");
 
         Assert.Contains("TryHandleDashboardPeriodShortcut(e.Key, Keyboard.Modifiers)", source);
-        Assert.Contains("if (_activeMainPage != MainPage.Dashboard)", source);
-        Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(-1, this);", source);
-        Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(1, this);", source);
-        Assert.Contains("await _mainVM.Dashboard.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);", source);
-        Assert.Contains("IsNavigateDashboardPreviousPeriodShortcut(key, modifiers)", source);
-        Assert.Contains("IsNavigateDashboardNextPeriodShortcut(key, modifiers)", source);
+        Assert.Contains("if (_activeMainPage != MainPage.Dashboard)", method);
+        Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(-1, this);", method);
+        Assert.Contains("await _mainVM.DaySpinner.SelectAdjacentVisibleDayFromUserAsync(1, this);", method);
+        Assert.Contains("if (_mainVM.Dashboard.ViewModeToggle.IsAtCurrentPeriod)", method);
+        Assert.Contains("await _mainVM.Dashboard.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);", method);
+        Assert.Contains("IsNavigateDashboardPreviousPeriodShortcut(key, modifiers)", method);
+        Assert.Contains("IsNavigateDashboardNextPeriodShortcut(key, modifiers)", method);
+    }
+
+    [Fact]
+    public void LedgerCurrentPeriodShortcut_IsLedgerOnlyAndAppliesCurrentRange()
+    {
+        var source = ReadMainWindowSource();
+        var keyDownMethod = Slice(
+            source,
+            "private async void OnPreviewKeyDown(object sender, KeyEventArgs e)",
+            "private async Task<bool> TryHandleDashboardPeriodShortcut");
+        var method = Slice(
+            source,
+            "private async Task<bool> TryHandleLedgerPeriodShortcut",
+            "private async Task<bool> TryHandleViewModeShortcut");
+
+        Assert.Contains("TryHandleLedgerPeriodShortcut(e.Key, Keyboard.Modifiers)", keyDownMethod);
+        Assert.Contains("if (_activeMainPage != MainPage.Ledger || _mainVM.Ledger is null)", method);
+        Assert.Contains("IsNavigateDashboardCurrentPeriodShortcut(key, modifiers)", method);
+        Assert.Contains("if (_mainVM.Ledger.ViewModeToggle.IsAtCurrentPeriod)", method);
+        Assert.Contains("await _mainVM.Ledger.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);", method);
+        Assert.Contains("ApplyMainWindowRangeToLedger();", method);
     }
 
     [Fact]

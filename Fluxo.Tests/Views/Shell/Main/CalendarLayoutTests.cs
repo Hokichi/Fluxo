@@ -93,7 +93,7 @@ public sealed class CalendarLayoutTests
     }
 
     [Fact]
-    public void CalendarLayout_MonthHeaderContainsBalloonMonthNavigationButtons()
+    public void CalendarLayout_MonthHeaderContainsBalloonMonthNavigationButtonsAndTodayButton()
     {
         var xaml = LoadCalendarXaml();
         var document = XDocument.Parse(xaml);
@@ -107,12 +107,37 @@ public sealed class CalendarLayoutTests
         var monthHeader = leftColumn
             .Elements(presentation + "Border")
             .Single(element => element.Attribute("Grid.Row") is null);
+        var icons = monthHeader.Descendants().Attributes("ButtonIcon").Select(attribute => attribute.Value).ToArray();
 
         AssertTextExists(monthHeader, "{Binding VisibleMonthLabel}");
-        Assert.Contains(monthHeader.Descendants().Attributes("ButtonIcon"), attribute => attribute.Value == "{StaticResource AngleUp}");
-        Assert.Contains(monthHeader.Descendants().Attributes("ButtonIcon"), attribute => attribute.Value == "{StaticResource AngleDown}");
+        Assert.Contains("{StaticResource AngleUp}", icons);
+        Assert.Contains("{StaticResource CalendarTodayOutline}", icons);
+        Assert.Contains("{StaticResource AngleDown}", icons);
+        Assert.True(
+            Array.IndexOf(icons, "{StaticResource AngleUp}") <
+            Array.IndexOf(icons, "{StaticResource CalendarTodayOutline}"));
+        Assert.True(
+            Array.IndexOf(icons, "{StaticResource CalendarTodayOutline}") <
+            Array.IndexOf(icons, "{StaticResource AngleDown}"));
         Assert.Contains(monthHeader.Descendants().Attributes("Command"), attribute => attribute.Value.Contains("NavigateToPreviousMonthCommand", StringComparison.Ordinal));
+        Assert.Contains(monthHeader.Descendants().Attributes("Click"), attribute => attribute.Value == "OnCalendarTodayButtonClick");
         Assert.Contains(monthHeader.Descendants().Attributes("Command"), attribute => attribute.Value.Contains("NavigateToNextMonthCommand", StringComparison.Ordinal));
+        Assert.Contains(monthHeader.Descendants().Attributes("IsEnabled"), attribute => attribute.Value.Contains("IsAtCurrentDay", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void CalendarLayout_CtrlHomeAndTodayButtonShareCurrentDayNavigationHelper()
+    {
+        var codeBehind = LoadCalendarCodeBehind();
+        var keyHandler = ExtractMethod(codeBehind, "private async void OnCalendarPreviewKeyDown");
+        var todayHandler = ExtractMethod(codeBehind, "private async void OnCalendarTodayButtonClick");
+        var helper = ExtractMethod(codeBehind, "private async Task NavigateToCurrentDateFromUserAsync");
+
+        Assert.Contains("await NavigateToCurrentDateFromUserAsync();", keyHandler);
+        Assert.Contains("await NavigateToCurrentDateFromUserAsync();", todayHandler);
+        Assert.Contains("if (_viewModel.IsAtCurrentDay)", helper);
+        Assert.Contains("ResetCalendarScrollOffset();", helper);
+        Assert.Contains("await _viewModel.SelectCurrentDateAsync();", helper);
     }
 
     [Fact]

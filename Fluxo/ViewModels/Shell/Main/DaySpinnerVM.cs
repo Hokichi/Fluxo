@@ -53,6 +53,9 @@ public partial class DaySpinnerVM : ObservableRecipient,
     [ObservableProperty]
     private bool _isAtCurrentPeriod = true;
 
+    [ObservableProperty]
+    private bool _allowFuturePeriodNavigation;
+
     public string MoveToCurrentLabel => _selectedMainContentViewMode switch
     {
         MainContentViewMode.Daily => "Move to today",
@@ -122,7 +125,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
         if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
             return Task.CompletedTask;
 
-        if (_spinnerPageOffset >= 0)
+        if (_spinnerPageOffset >= 0 && !AllowFuturePeriodNavigation)
             return Task.CompletedTask;
 
         NavigateSpinnerForwardCore();
@@ -148,7 +151,11 @@ public partial class DaySpinnerVM : ObservableRecipient,
         if (targetIndex < 0 || targetIndex >= DaysOfWeek.Count)
             return;
 
-        await SelectDayFromUserAsync(DaysOfWeek[targetIndex], owner);
+        var targetDay = DaysOfWeek[targetIndex];
+        if (!AllowFuturePeriodNavigation && IsFuturePeriod(targetDay.Date))
+            return;
+
+        await SelectDayFromUserAsync(targetDay, owner);
     }
 
     public async Task SelectDayFromUserAsync(DayOfWeekVM selectedDay, Window? owner = null)
@@ -205,13 +212,14 @@ public partial class DaySpinnerVM : ObservableRecipient,
     private void BuildSpinnerForMode(DateTime referenceDate, bool publishSelection)
     {
         ComputeSpinnerOffset(referenceDate);
-        CanNavigateForward = _spinnerPageOffset < 0;
         BuildSpinnerItems();
 
         if (publishSelection)
             SelectSpinnerItemForDate(referenceDate);
         else
             SelectFirstSpinnerItem(publishSelection: false);
+
+        CanNavigateForward = AllowFuturePeriodNavigation || _spinnerPageOffset < 0;
     }
 
     private void PublishSelectedRange(DateTime selectedDate)
@@ -432,11 +440,11 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     private void NavigateSpinnerForwardCore()
     {
-        if (_spinnerPageOffset >= 0)
+        if (_spinnerPageOffset >= 0 && !AllowFuturePeriodNavigation)
             return;
 
         _spinnerPageOffset++;
-        CanNavigateForward = _spinnerPageOffset < 0;
+        CanNavigateForward = AllowFuturePeriodNavigation || _spinnerPageOffset < 0;
         BuildSpinnerItems();
         SyncVisibleSelectionAfterNavigation();
     }
@@ -479,6 +487,25 @@ public partial class DaySpinnerVM : ObservableRecipient,
             MainContentViewMode.Monthly => date.Year == today.Year && date.Month == today.Month,
             _ => false
         };
+    }
+
+    private bool IsFuturePeriod(DateTime selectedDate)
+    {
+        var today = DateTime.Today;
+        var date = selectedDate.Date;
+
+        return _selectedMainContentViewMode switch
+        {
+            MainContentViewMode.Daily => date > today,
+            MainContentViewMode.Weekly => date > GetMonday(today),
+            MainContentViewMode.Monthly => date.Year > today.Year || date.Year == today.Year && date.Month > today.Month,
+            _ => false
+        };
+    }
+
+    partial void OnAllowFuturePeriodNavigationChanged(bool value)
+    {
+        CanNavigateForward = value || _spinnerPageOffset < 0;
     }
 
     private void PublishSpinnerPeriodState()

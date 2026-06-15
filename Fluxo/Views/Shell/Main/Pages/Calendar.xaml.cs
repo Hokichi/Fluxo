@@ -76,8 +76,7 @@ public partial class Calendar : UserControl
     {
         if (e.Key == Key.Home && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            ResetCalendarScrollOffset();
-            await _viewModel.SelectCurrentDateAsync();
+            await NavigateToCurrentDateFromUserAsync();
             e.Handled = true;
             return;
         }
@@ -119,6 +118,11 @@ public partial class Calendar : UserControl
     private void OnCalendarDayButtonClick(object sender, RoutedEventArgs e)
     {
         QueueCalendarKeyboardFocus();
+    }
+
+    private async void OnCalendarTodayButtonClick(object sender, RoutedEventArgs e)
+    {
+        await NavigateToCurrentDateFromUserAsync();
     }
 
     private void OnCalendarSizeChanged(object sender, SizeChangedEventArgs e)
@@ -194,6 +198,15 @@ public partial class Calendar : UserControl
         _targetCalendarScrollOffset = 0;
         _calendarScrollOffset = 0;
         ApplyCalendarScrollOffset();
+    }
+
+    private async Task NavigateToCurrentDateFromUserAsync()
+    {
+        if (_viewModel.IsAtCurrentDay)
+            return;
+
+        ResetCalendarScrollOffset();
+        await _viewModel.SelectCurrentDateAsync();
     }
 
     private void StartCalendarScrollAnimation()

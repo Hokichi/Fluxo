@@ -91,10 +91,10 @@
                 <Setter Property="Effect">
                     <Setter.Value>
                         <DropShadowEffect
-                            BlurRadius="24"
-                            Opacity="0.4"
+                            BlurRadius="5"
+                            Opacity="0.5"
                             ShadowDepth="0"
-                            Color="{StaticResource Color.Background.Surface}" />
+                            Color="{StaticResource Color.Mint}" />
                     </Setter.Value>
                 </Setter>
             </Style>

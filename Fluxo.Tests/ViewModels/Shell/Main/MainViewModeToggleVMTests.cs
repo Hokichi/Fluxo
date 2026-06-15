@@ -96,6 +96,10 @@ public class MainViewModeToggleVMTests
             recipient,
             static (target, message) => target.MoveRequests.Add(message));
         var vm = new MainViewModeToggleVM(messenger, dialogService, uiSettleAwaiter);
+        messenger.Send(new SpinnerPeriodStateChangedMessage(new SpinnerPeriodState(
+            IsAtCurrentPeriod: false,
+            IsSpinnerVisible: true,
+            MoveToCurrentLabel: "Move to today")));
 
         await vm.MoveToCurrentPeriodFromUserAsync();
 
@@ -108,6 +112,53 @@ public class MainViewModeToggleVMTests
             Arg.Any<CancellationToken>());
         Assert.True(toastDelegateInvoked);
         Assert.Single(recipient.MoveRequests);
+    }
+
+    [Fact]
+    public async Task MoveToCurrentPeriodFromUserAsync_WhenAlreadyCurrent_DoesNotShowToastOrPublishMoveRequest()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var dialogService = Substitute.For<IDialogService>();
+        var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, MoveToCurrentPeriodRequestedMessage>(
+            recipient,
+            static (target, message) => target.MoveRequests.Add(message));
+        var vm = new MainViewModeToggleVM(messenger, dialogService, uiSettleAwaiter);
+        messenger.Send(new SpinnerPeriodStateChangedMessage(new SpinnerPeriodState(
+            IsAtCurrentPeriod: true,
+            IsSpinnerVisible: true,
+            MoveToCurrentLabel: "Move to today")));
+
+        await vm.MoveToCurrentPeriodFromUserAsync();
+
+        await dialogService.DidNotReceive().ShowToastWhileAsync(
+            Arg.Any<string>(),
+            Arg.Any<Func<Task>>(),
+            Arg.Any<Window?>());
+        await uiSettleAwaiter.DidNotReceive().WaitForUiReadyAsync(
+            Arg.Any<Window?>(),
+            Arg.Any<CancellationToken>());
+        Assert.Empty(recipient.MoveRequests);
+    }
+
+    [Fact]
+    public async Task MoveToCurrentPeriodFromUserAsync_WithoutServices_WhenAlreadyCurrent_DoesNotPublishMoveRequest()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, MoveToCurrentPeriodRequestedMessage>(
+            recipient,
+            static (target, message) => target.MoveRequests.Add(message));
+        var vm = new MainViewModeToggleVM(messenger);
+        messenger.Send(new SpinnerPeriodStateChangedMessage(new SpinnerPeriodState(
+            IsAtCurrentPeriod: true,
+            IsSpinnerVisible: true,
+            MoveToCurrentLabel: "Move to today")));
+
+        await vm.MoveToCurrentPeriodFromUserAsync();
+
+        Assert.Empty(recipient.MoveRequests);
     }
 
     private sealed class MessageCaptureRecipient

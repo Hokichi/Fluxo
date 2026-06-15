@@ -242,13 +242,50 @@ public sealed class CalendarVMTests
     public async Task SelectCurrentDateAsync_SelectsTodayAndRestoresCurrentMonthFrame()
     {
         var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
-        await vm.NavigateToNextMonthCommand.ExecuteAsync(null);
+        await vm.SelectDateAsync(new DateOnly(2026, 7, 15));
 
         await vm.SelectCurrentDateAsync();
 
         Assert.Equal(new DateOnly(2026, 6, 12), vm.SelectedDate);
         Assert.Equal("June 2026", vm.VisibleMonthLabel);
         Assert.Equal(new DateOnly(2026, 5, 31), vm.FrameWeeks[0].Days[0].Date);
+    }
+
+    [Fact]
+    public void Constructor_WhenSelectedDateIsCurrentDate_IsAtCurrentDay()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        Assert.True(vm.IsAtCurrentDay);
+    }
+
+    [Fact]
+    public async Task SelectDate_WhenSelectedDateChanges_UpdatesIsAtCurrentDay()
+    {
+        var vm = CreateVm(currentDate: new DateTime(2026, 6, 12));
+
+        await vm.SelectDateAsync(new DateOnly(2026, 6, 13));
+
+        Assert.False(vm.IsAtCurrentDay);
+
+        await vm.SelectDateAsync(new DateOnly(2026, 6, 12));
+
+        Assert.True(vm.IsAtCurrentDay);
+    }
+
+    [Fact]
+    public async Task SelectCurrentDateAsync_WhenAlreadyCurrent_DoesNotReloadCalendarData()
+    {
+        var service = Substitute.For<ICalendarService>();
+        service.GetCalendarDayAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(call => Task.FromResult(CreateDto(call.Arg<DateOnly>(), totalSpent: 0m)));
+        var vm = new CalendarVM(service, new DateTime(2026, 6, 12));
+
+        await vm.SelectCurrentDateAsync();
+
+        await service.DidNotReceive().GetCalendarDayAsync(
+            Arg.Any<DateOnly>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

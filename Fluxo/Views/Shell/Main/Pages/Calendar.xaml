@@ -373,6 +373,12 @@
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             ToolTip="Previous month" />
                         <customControls:BalloonButton
+                            ButtonIcon="{StaticResource CalendarTodayOutline}"
+                            Click="OnCalendarTodayButtonClick"
+                            IsEnabled="{Binding IsAtCurrentDay, Converter={StaticResource BoolNegationConverter}}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            ToolTip="Today" />
+                        <customControls:BalloonButton
                             ButtonIcon="{StaticResource AngleDown}"
                             Command="{Binding NavigateToNextMonthCommand}"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
