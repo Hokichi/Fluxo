@@ -17,13 +17,13 @@
             <Border Margin="0,0,0,8" Padding="4,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="2*" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="8" />
-                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="8" />
-                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
                     <Grid>
