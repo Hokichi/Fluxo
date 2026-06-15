@@ -36,6 +36,8 @@ public interface IDialogService
 
     bool? ShowTransferFunds(TransferFundsVM viewModel, Window? owner = null);
 
+    bool? ShowAccountReconciliation(AccountReconciliationVM viewModel, Window? owner = null);
+
     bool? ShowAddSpendingSource(Window? owner = null);
 
     bool? ShowAddSpendingSource(AddSpendingSourceVM viewModel, Window? owner = null);

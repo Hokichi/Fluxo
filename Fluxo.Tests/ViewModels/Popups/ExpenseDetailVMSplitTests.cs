@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.ExceptionServices;
 using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -396,6 +397,39 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
+    public void SaveAsync_FromSplitMode_RemovesBudgetReconciliationOriginalBeforeAddingReplacements()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, _) = CreateVmWithDependencies(amount: 100m, isBudgetReconciliation: true);
+            vm.BeginSplitMode();
+            vm.NameText = "Remainder";
+            vm.AddSplitRow();
+            vm.SplitRows[0].NameText = "Groceries";
+            vm.SplitRows[0].AmountText = 30m;
+
+            var result = vm.SaveAsync().GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).RemoveExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10));
+            appData.Received(1).RemoveExpense(Arg.Is<Expense>(expense => expense.Id == 20));
+            appData.DidNotReceive().UpdateExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10 && log.IsForDeletion));
+
+            Received.InOrder(() =>
+            {
+                appData.RemoveExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10));
+                appData.RemoveExpense(Arg.Is<Expense>(expense => expense.Id == 20));
+                _ = appData.AddExpenseAsync(
+                    Arg.Is<Expense>(expense => expense.Amount == 70m),
+                    Arg.Any<CancellationToken>());
+                _ = appData.AddExpenseAsync(
+                    Arg.Is<Expense>(expense => expense.Amount == 30m),
+                    Arg.Any<CancellationToken>());
+            });
+        });
+    }
+
+    [Fact]
     public void SaveAsync_FromSplitMode_WithParentRemainder_UpdatesParentAndAddsSplitExpenses()
     {
         RunInSta(() =>
@@ -507,7 +541,9 @@ public sealed class ExpenseDetailVMSplitTests
         return CreateVmWithDependencies(amount).Vm;
     }
 
-    private static (ExpenseDetailVM Vm, IAppDataService AppData, SpendingSource PersistedSource) CreateVmWithDependencies(decimal amount = 100m)
+    private static (ExpenseDetailVM Vm, IAppDataService AppData, SpendingSource PersistedSource) CreateVmWithDependencies(
+        decimal amount = 100m,
+        bool isBudgetReconciliation = false)
     {
         var source = new SpendingSourceVM
         {
@@ -547,9 +583,9 @@ public sealed class ExpenseDetailVMSplitTests
         var persistedTag = new ExpenseTag
         {
             Id = 1,
-            Name = "General",
-            HexCode = "#22C55E",
-            IsSystemTag = false
+            Name = isBudgetReconciliation ? SystemExpenseTags.BudgetReconciliationName : "General",
+            HexCode = isBudgetReconciliation ? SystemExpenseTags.BudgetReconciliationHexCode : "#22C55E",
+            IsSystemTag = isBudgetReconciliation
         };
 
         var persistedExpense = new Expense
@@ -576,7 +612,7 @@ public sealed class ExpenseDetailVMSplitTests
             Notes = "Original note"
         };
 
-        appData.GetExpenseLogByIdAsync(10, Arg.Any<CancellationToken>())
+        appData.GetExpenseLogByLogIdAsync(10, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<ExpenseLog?>(persistedLog));
         appData.GetSpendingSourceByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<SpendingSource?>(persistedSource));

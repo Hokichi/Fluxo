@@ -18,9 +18,30 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 {
     private static readonly IReadOnlyList<ExpenseTag> RequiredDeleteAllDataSystemTags =
     [
-        new() { Name = "Balance Update", HexCode = "#a3e5d6", IsSystemTag = true },
-        new() { Name = "Goal Update", HexCode = "#eaabf2", IsSystemTag = true },
-        new() { Name = "Data Restoration", HexCode = "#123456", IsSystemTag = true }
+        new()
+        {
+            Name = SystemExpenseTags.BalanceUpdateName,
+            HexCode = SystemExpenseTags.BalanceUpdateHexCode,
+            IsSystemTag = true
+        },
+        new()
+        {
+            Name = SystemExpenseTags.GoalUpdateName,
+            HexCode = SystemExpenseTags.GoalUpdateHexCode,
+            IsSystemTag = true
+        },
+        new()
+        {
+            Name = SystemExpenseTags.DataRestorationName,
+            HexCode = SystemExpenseTags.DataRestorationHexCode,
+            IsSystemTag = true
+        },
+        new()
+        {
+            Name = SystemExpenseTags.BudgetReconciliationName,
+            HexCode = SystemExpenseTags.BudgetReconciliationHexCode,
+            IsSystemTag = true
+        }
     ];
 
     private static readonly IReadOnlyDictionary<string, string> SettingsDefaultsAfterDeletion =

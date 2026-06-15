@@ -69,6 +69,16 @@ public partial class IncomeSource : UserControl
         WindowMethodInvoker.TryInvoke(this, "OpenTransferFundsPopup", DataContext);
     }
 
+    private void OnReconciliationActionClick(object sender, RoutedEventArgs e)
+    {
+        CloseActionsPopup();
+
+        if (DataContext is null)
+            return;
+
+        WindowMethodInvoker.TryInvoke(this, "OpenAccountReconciliationPopup", DataContext);
+    }
+
     private async Task ExecuteAsyncAction(string methodName)
     {
         CloseActionsPopup();

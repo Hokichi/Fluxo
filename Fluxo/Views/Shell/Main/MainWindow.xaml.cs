@@ -1763,6 +1763,32 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowTransferFunds(transferVm, this);
     }
 
+    public void OpenAccountReconciliationPopup(SpendingSourceVM spendingSource)
+    {
+        ArgumentNullException.ThrowIfNull(spendingSource);
+
+        if (!spendingSource.CanReconcile)
+            return;
+
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var reconciliationVm = new AccountReconciliationVM(
+            _mainVM.BudgetPanel.SpendingSources,
+            spendingSource,
+            appData,
+            _mainVM.ReloadCurrentDataAsync);
+        _dialogService.ShowAccountReconciliation(reconciliationVm, this);
+    }
+
+    public async void OpenExpenseDetailPopupForEditing(ExpenseLogVM expenseLog)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, appData);
+        await popupViewModel.BeginEditingAsync();
+        _dialogService.ShowExpenseDetail(popupViewModel, this);
+    }
+
     private void ApplyMainWindowRangeToAnalyticsIfBounded()
     {
         if (_analyticsPageView is null)

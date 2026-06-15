@@ -1,4 +1,5 @@
 using Fluxo.Core.Interfaces;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
@@ -17,6 +18,7 @@ namespace Fluxo.Tests.Infrastructure;
 public sealed class DataRestorationTagMigrationTests
 {
     private const string SeedDataRestorationMigrationId = "20260526050040_SeedDataRestorationTag";
+    private const string SeedBudgetReconciliationMigrationId = "20260615023523_SeedBudgetReconciliationTag";
 
     [Fact]
     public async Task MigrateDatabaseAsync_SeedsDataRestorationTag()
@@ -63,6 +65,54 @@ public sealed class DataRestorationTagMigrationTests
         }
     }
 
+    [Fact]
+    public async Task MigrateDatabaseAsync_SeedsBudgetReconciliationTag()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(tempDirectory, "fluxo.db");
+
+        try
+        {
+            Directory.CreateDirectory(tempDirectory);
+            using var serviceProvider = CreateServiceProvider(databasePath);
+            var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
+
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+            await InsertNonSystemTagAsync(
+                databasePath,
+                SystemExpenseTags.BudgetReconciliationName,
+                "#123456");
+            await RemoveMigrationHistoryEntryAsync(databasePath, SeedBudgetReconciliationMigrationId);
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+
+            var options = new DbContextOptionsBuilder<FluxoDbContext>()
+                .UseSqlite($"Data Source={databasePath}")
+                .Options;
+            await using var dbContext = new FluxoDbContext(options);
+
+            var tags = await dbContext.ExpenseTags
+                .Where(tag => tag.Name == SystemExpenseTags.BudgetReconciliationName)
+                .ToListAsync();
+
+            var systemTag = tags.SingleOrDefault(tag => tag.IsSystemTag);
+            Assert.NotNull(systemTag);
+            Assert.Equal(SystemExpenseTags.BudgetReconciliationHexCode, systemTag.HexCode);
+
+            var customTag = tags.SingleOrDefault(tag => !tag.IsSystemTag);
+            Assert.NotNull(customTag);
+            Assert.Equal("#123456", customTag.HexCode);
+
+            Assert.Equal(2, tags.Count);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static ServiceProvider CreateServiceProvider(string databasePath)
     {
         var services = new ServiceCollection();
@@ -91,7 +141,12 @@ public sealed class DataRestorationTagMigrationTests
         return services.BuildServiceProvider();
     }
 
-    private static async Task RemoveMigrationHistoryEntryAsync(string databasePath)
+    private static Task RemoveMigrationHistoryEntryAsync(string databasePath)
+    {
+        return RemoveMigrationHistoryEntryAsync(databasePath, SeedDataRestorationMigrationId);
+    }
+
+    private static async Task RemoveMigrationHistoryEntryAsync(string databasePath, string migrationId)
     {
         await using var connection = new SqliteConnection($"Data Source={databasePath}");
         await connection.OpenAsync();
@@ -101,11 +156,16 @@ public sealed class DataRestorationTagMigrationTests
                               DELETE FROM "__EFMigrationsHistory"
                               WHERE "MigrationId" = $migrationId;
                               """;
-        command.Parameters.AddWithValue("$migrationId", SeedDataRestorationMigrationId);
+        command.Parameters.AddWithValue("$migrationId", migrationId);
         await command.ExecuteNonQueryAsync();
     }
 
     private static async Task InsertNonSystemDataRestorationTagAsync(string databasePath)
+    {
+        await InsertNonSystemTagAsync(databasePath, "Data Restoration", "#123456");
+    }
+
+    private static async Task InsertNonSystemTagAsync(string databasePath, string name, string hexCode)
     {
         await using var connection = new SqliteConnection($"Data Source={databasePath}");
         await connection.OpenAsync();
@@ -113,8 +173,10 @@ public sealed class DataRestorationTagMigrationTests
         await using var command = connection.CreateCommand();
         command.CommandText = """
                               INSERT INTO ExpenseTags (Name, HexCode, IsSystemTag)
-                              VALUES ('Data Restoration', '#123456', 0);
+                              VALUES ($name, $hexCode, 0);
                               """;
+        command.Parameters.AddWithValue("$name", name);
+        command.Parameters.AddWithValue("$hexCode", hexCode);
         await command.ExecuteNonQueryAsync();
     }
 }

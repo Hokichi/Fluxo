@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
@@ -269,7 +270,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
         try
         {
-            var expenseLog = await _appData.GetExpenseLogByIdAsync(_expenseLog.Id);
+            var expenseLog = await _appData.GetExpenseLogByLogIdAsync(_expenseLog.Id);
             if (expenseLog?.Expense is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
 
@@ -510,7 +511,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
         try
         {
-            var originalLog = await _appData.GetExpenseLogByIdAsync(_expenseLog.Id);
+            var originalLog = await _appData.GetExpenseLogByLogIdAsync(_expenseLog.Id);
             if (originalLog?.Expense is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
 
@@ -563,8 +564,16 @@ public partial class ExpenseDetailVM : ObservableObject
             }
             else
             {
-                originalLog.IsForDeletion = true;
-                _appData.UpdateExpenseLog(originalLog);
+                if (IsBudgetReconciliationExpenseLog(originalLog))
+                {
+                    _appData.RemoveExpenseLog(originalLog);
+                    _appData.RemoveExpense(originalLog.Expense);
+                }
+                else
+                {
+                    originalLog.IsForDeletion = true;
+                    _appData.UpdateExpenseLog(originalLog);
+                }
             }
 
             var createdLogs = new List<(Expense Expense, ExpenseLog ExpenseLog, ExpenseTag Tag)>(splitEntries.Count);
@@ -771,6 +780,13 @@ public partial class ExpenseDetailVM : ObservableObject
         }
 
         spendingSource.Balance -= amount;
+    }
+
+    private static bool IsBudgetReconciliationExpenseLog(ExpenseLog expenseLog)
+    {
+        var tag = expenseLog.Expense?.ExpenseTag;
+        return tag is { IsSystemTag: true } &&
+               string.Equals(tag.Name, SystemExpenseTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase);
     }
 
     private static void RevertExpenseFromSpendingSource(SpendingSource spendingSource, decimal amount)

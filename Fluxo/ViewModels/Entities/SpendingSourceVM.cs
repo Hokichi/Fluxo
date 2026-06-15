@@ -34,6 +34,7 @@ public partial class SpendingSourceVM : ObservableObject
 
     public bool CanTransferOut => SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL);
     public bool CanTransfer => IsEnabled && CanTransferOut;
+    public bool CanReconcile => SpendingSourceType is not (SpendingSourceType.BNPL or SpendingSourceType.Saving);
 
     public decimal PrimaryAmount => SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
         ? SpentAmount
@@ -79,6 +80,7 @@ public partial class SpendingSourceVM : ObservableObject
         OnPropertyChanged(nameof(IsSaving));
         OnPropertyChanged(nameof(CanTransferOut));
         OnPropertyChanged(nameof(CanTransfer));
+        OnPropertyChanged(nameof(CanReconcile));
         OnPropertyChanged(nameof(PrimaryAmount));
         OnPropertyChanged(nameof(PrimaryAmountLabel));
         OnPropertyChanged(nameof(TypeDisplayName));

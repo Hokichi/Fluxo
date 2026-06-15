@@ -109,6 +109,11 @@ public sealed class DialogService : IDialogService
         return ShowDialog(new TransferFundsPopup(viewModel), owner);
     }
 
+    public bool? ShowAccountReconciliation(AccountReconciliationVM viewModel, Window? owner = null)
+    {
+        return ShowDialog(new AccountReconciliationPopup(viewModel), owner);
+    }
+
     public bool? ShowAddSpendingSource(Window? owner = null)
     {
         return ShowScopedDialog<AddSpendingSourcePopup>(owner);

@@ -244,6 +244,30 @@
                                 Text="Transfer" />
                         </Grid>
                     </Button>
+
+                    <Button
+                        Click="OnReconciliationActionClick"
+                        Style="{StaticResource HeaderMenuActionButtonStyle}"
+                        Visibility="{Binding CanReconcile, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource BookDollar}"
+                                Color="{StaticResource Brush.Warning}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Reconciliation" />
+                        </Grid>
+                    </Button>
                 </StackPanel>
             </Border>
         </Popup>

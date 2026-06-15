@@ -255,20 +255,27 @@ public sealed class SettingsVMMaintenancePolicyTests
 
         await appData.Received(1).AddExpenseTagAsync(
             Arg.Is<ExpenseTag>(tag =>
-                tag.Name == "Balance Update" &&
-                tag.HexCode == "#a3e5d6" &&
+                tag.Name == SystemExpenseTags.BalanceUpdateName &&
+                tag.HexCode == SystemExpenseTags.BalanceUpdateHexCode &&
                 tag.IsSystemTag),
             Arg.Any<CancellationToken>());
 
         await appData.Received(1).AddExpenseTagAsync(
             Arg.Is<ExpenseTag>(tag =>
-                tag.Name == "Data Restoration" &&
-                tag.HexCode == "#123456" &&
+                tag.Name == SystemExpenseTags.DataRestorationName &&
+                tag.HexCode == SystemExpenseTags.DataRestorationHexCode &&
+                tag.IsSystemTag),
+            Arg.Any<CancellationToken>());
+
+        await appData.Received(1).AddExpenseTagAsync(
+            Arg.Is<ExpenseTag>(tag =>
+                tag.Name == SystemExpenseTags.BudgetReconciliationName &&
+                tag.HexCode == SystemExpenseTags.BudgetReconciliationHexCode &&
                 tag.IsSystemTag),
             Arg.Any<CancellationToken>());
 
         await appData.DidNotReceive().AddExpenseTagAsync(
-            Arg.Is<ExpenseTag>(tag => tag.Name == "Goal Update"),
+            Arg.Is<ExpenseTag>(tag => tag.Name == SystemExpenseTags.GoalUpdateName),
             Arg.Any<CancellationToken>());
     }
 
@@ -279,7 +286,7 @@ public sealed class SettingsVMMaintenancePolicyTests
         var dataRestorationTag = new ExpenseTag
         {
             Id = 3,
-            Name = "Data Restoration",
+            Name = SystemExpenseTags.DataRestorationName,
             HexCode = "#e9c178",
             IsSystemTag = true
         };
@@ -288,8 +295,8 @@ public sealed class SettingsVMMaintenancePolicyTests
 
         appData.Received(1).UpdateExpenseTag(Arg.Is<ExpenseTag>(tag =>
             tag.Id == dataRestorationTag.Id &&
-            tag.Name == "Data Restoration" &&
-            tag.HexCode == "#123456" &&
+            tag.Name == SystemExpenseTags.DataRestorationName &&
+            tag.HexCode == SystemExpenseTags.DataRestorationHexCode &&
             tag.IsSystemTag));
     }
 }
