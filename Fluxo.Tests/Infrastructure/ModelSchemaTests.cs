@@ -47,6 +47,9 @@ public sealed class ModelSchemaTests
         Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.WantsThreshold))!.IsNullable);
         Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.InvestThreshold))!.IsNullable);
         Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.AllocationPeriod))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.PeriodStart))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.CurrentPeriodIndex))!.IsNullable);
+        Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.LastRolloverPeriodStart))!.IsNullable);
         Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.RolloverPolicy))!.IsNullable);
         Assert.False(budgetAllocation.FindProperty(nameof(BudgetAllocation.OverspendPolicy))!.IsNullable);
         Assert.Equal("NUMERIC", budgetAllocation.FindProperty(nameof(BudgetAllocation.AllocationLimit))!.GetColumnType());

@@ -39,6 +39,7 @@ public partial class App : Application
     private const string StartupTrayArgument = "--startup-tray";
     private const string RestartTrayArgument = "--startup--tray";
     private readonly IDataOperationRunner _dataOperationRunner;
+    private readonly IBudgetAllocationPeriodSyncService _budgetAllocationPeriodSyncService;
     private readonly IExpenseLogService _expenseLogService;
     private readonly MainVM _mainVM;
     private readonly IStartupRegistrationService _startupRegistrationService;
@@ -72,6 +73,7 @@ public partial class App : Application
 
         _mainVM = _serviceProvider.GetRequiredService<MainVM>();
         _dataOperationRunner = _serviceProvider.GetRequiredService<IDataOperationRunner>();
+        _budgetAllocationPeriodSyncService = _serviceProvider.GetRequiredService<IBudgetAllocationPeriodSyncService>();
         _expenseLogService = _serviceProvider.GetRequiredService<IExpenseLogService>();
         _startupRegistrationService = _serviceProvider.GetRequiredService<IStartupRegistrationService>();
         _startupUpdateNotificationService = _serviceProvider.GetRequiredService<IStartupUpdateNotificationService>();
@@ -121,6 +123,7 @@ public partial class App : Application
         FluxoDbContextFactory.EnsureDatabaseDirectoryExists();
         await BackupDatabaseOnStartupAsync();
         await MigrateDatabaseAsync(_dataOperationRunner);
+        await SyncBudgetAllocationPeriodAsync();
         await InitializeLoggingAsync();
 
         try
@@ -719,19 +722,32 @@ public partial class App : Application
                 "WantsThreshold",
                 "InvestThreshold",
                 "AllocationPeriod",
+                "PeriodStart",
+                "CurrentPeriodIndex",
+                "LastRolloverPeriodStart",
                 "AllocationLimit",
                 "NeedsDebt",
                 "WantsDebt",
                 "InvestDebt",
                 "RolloverPolicy",
                 "OverspendPolicy")
-            SELECT 50, 30, 20, 2, 0, 0, 0, 0, 0, 0
+            SELECT 50, 30, 20, 2, 1, 1, '0001-01-01 00:00:00', 0, 0, 0, 0, 0, 0
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM "BudgetAllocation"
             );
             """,
             cancellationToken);
+    }
+
+    private async Task SyncBudgetAllocationPeriodAsync()
+    {
+        await _dataOperationRunner.RunAsync(
+            "sync budget allocation period",
+            async (scope, ct) =>
+            {
+                await _budgetAllocationPeriodSyncService.SyncAsync(scope.UnitOfWork, ct);
+            });
     }
 
     private static async Task<List<string>> TryGetAppliedMigrationsAsync(

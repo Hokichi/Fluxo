@@ -1,12 +1,47 @@
 using Fluxo.Core.Budgeting;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
+using System.Globalization;
 using Xunit;
 
 namespace Fluxo.Tests.Budgeting;
 
 public class BudgetAllocationCalculatorTests
 {
+    [Theory]
+    [InlineData(AllocationPeriod.Weekly, 0, 1)]
+    [InlineData(AllocationPeriod.Weekly, 8, 7)]
+    [InlineData(AllocationPeriod.Biweekly, 9, 7)]
+    [InlineData(AllocationPeriod.Monthly, 31, 28)]
+    [InlineData(AllocationPeriod.Quarterly, 4, 3)]
+    [InlineData(AllocationPeriod.Yearly, 13, 12)]
+    public void ClampPeriodStart_UsesAllocationPeriodBounds(
+        AllocationPeriod period,
+        int value,
+        int expected)
+    {
+        Assert.Equal(expected, BudgetAllocationPeriodRules.ClampPeriodStart(period, value));
+    }
+
+    [Theory]
+    [InlineData(AllocationPeriod.Weekly, "2026-06-15", 1)]
+    [InlineData(AllocationPeriod.Weekly, "2026-06-21", 7)]
+    [InlineData(AllocationPeriod.Biweekly, "2026-01-12", 1)]
+    [InlineData(AllocationPeriod.Biweekly, "2026-01-25", 14)]
+    [InlineData(AllocationPeriod.Monthly, "2026-02-28", 28)]
+    [InlineData(AllocationPeriod.Monthly, "2026-03-31", 28)]
+    [InlineData(AllocationPeriod.Quarterly, "2026-05-10", 2)]
+    [InlineData(AllocationPeriod.Yearly, "2026-12-10", 12)]
+    public void ResolveCurrentPeriodIndex_ReturnsExpectedIndex(
+        AllocationPeriod period,
+        string dateText,
+        int expected)
+    {
+        Assert.Equal(expected, BudgetAllocationPeriodRules.ResolveCurrentPeriodIndex(
+            period,
+            DateTime.Parse(dateText, CultureInfo.InvariantCulture)));
+    }
+
     [Fact]
     public void ResolveCurrentPeriod_MonthlyForFebruary2026_ReturnsFullMonth()
     {
@@ -17,6 +52,43 @@ public class BudgetAllocationCalculatorTests
         Assert.Equal(new DateTime(2026, 2, 1), period.Start);
         Assert.Equal(new DateTime(2026, 2, 28), period.End);
         Assert.Equal(28, period.DayCount);
+    }
+
+    [Fact]
+    public void ResolveCurrentPeriod_MonthlyPeriodStart10_ReturnsCrossMonthPeriod()
+    {
+        var period = BudgetAllocationCalculator.ResolveCurrentPeriod(
+            AllocationPeriod.Monthly,
+            new DateTime(2026, 2, 9),
+            periodStart: 10);
+
+        Assert.Equal(new DateTime(2026, 1, 10), period.Start);
+        Assert.Equal(new DateTime(2026, 2, 9), period.End);
+    }
+
+    [Fact]
+    public void CalculateSnapshot_UsesAllocationPeriodStartForCurrentAndPreviousPeriods()
+    {
+        var allocation = new BudgetAllocation
+        {
+            AllocationLimit = 1000m,
+            NeedsThreshold = 50,
+            WantsThreshold = 30,
+            InvestThreshold = 20,
+            AllocationPeriod = AllocationPeriod.Monthly,
+            PeriodStart = 10
+        };
+
+        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
+            allocation,
+            new Dictionary<ExpenseCategory, decimal>(),
+            new Dictionary<ExpenseCategory, decimal>(),
+            new DateTime(2026, 2, 15));
+
+        Assert.Equal(new DateTime(2026, 2, 10), snapshot.CurrentPeriod.Start);
+        Assert.Equal(new DateTime(2026, 3, 9), snapshot.CurrentPeriod.End);
+        Assert.Equal(new DateTime(2026, 1, 10), snapshot.PreviousPeriod.Start);
+        Assert.Equal(new DateTime(2026, 2, 9), snapshot.PreviousPeriod.End);
     }
 
     [Fact]

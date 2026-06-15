@@ -1,6 +1,7 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Budgeting;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
@@ -22,6 +23,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         20,
         0m,
         AllocationPeriod.Monthly,
+        1,
         RolloverPolicy.None,
         OverspendPolicy.Ignore);
 
@@ -31,6 +33,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
     [ObservableProperty] private int _investAllocationPercentage;
     [ObservableProperty] private int _needsAllocationPercentage;
     [ObservableProperty] private OverspendPolicy _overspendPolicy = OverspendPolicy.Ignore;
+    [ObservableProperty] private int _periodStart = 1;
     [ObservableProperty] private RolloverPolicy _rolloverPolicy = RolloverPolicy.None;
     [ObservableProperty] private SettingsBudgetManagementPage _selectedBudgetManagementPage =
         SettingsBudgetManagementPage.Allocation;
@@ -50,6 +53,40 @@ public partial class SettingsBudgetTabVM : ObservableObject
     }
 
     public decimal TotalBudgetAmount => _totalBudgetAmountProvider();
+    public IReadOnlyList<PeriodStartOption> WeekdayPeriodStartOptions { get; } =
+    [
+        new(1, "Monday"),
+        new(2, "Tuesday"),
+        new(3, "Wednesday"),
+        new(4, "Thursday"),
+        new(5, "Friday"),
+        new(6, "Saturday"),
+        new(7, "Sunday")
+    ];
+
+    public IReadOnlyList<PeriodStartOption> QuarterlyPeriodStartOptions { get; } =
+    [
+        new(1, "Month 1"),
+        new(2, "Month 2"),
+        new(3, "Month 3")
+    ];
+
+    public IReadOnlyList<PeriodStartOption> YearlyPeriodStartOptions { get; } =
+    [
+        new(1, "January"),
+        new(2, "February"),
+        new(3, "March"),
+        new(4, "April"),
+        new(5, "May"),
+        new(6, "June"),
+        new(7, "July"),
+        new(8, "August"),
+        new(9, "September"),
+        new(10, "October"),
+        new(11, "November"),
+        new(12, "December")
+    ];
+
     public bool HasBudgetAllocationError => !string.IsNullOrWhiteSpace(BudgetAllocationErrorMessage);
     public bool HasSpendingSources { get; private set; }
     public bool IsAllocationPageSelected =>
@@ -58,12 +95,20 @@ public partial class SettingsBudgetTabVM : ObservableObject
     public bool IsConfigurationPageSelected =>
         SelectedBudgetManagementPage == SettingsBudgetManagementPage.Configuration;
 
+    public bool IsWeekdayPeriodStartVisible =>
+        AllocationPeriod is AllocationPeriod.Weekly or AllocationPeriod.Biweekly;
+
+    public bool IsMonthlyPeriodStartVisible => AllocationPeriod == AllocationPeriod.Monthly;
+    public bool IsQuarterlyPeriodStartVisible => AllocationPeriod == AllocationPeriod.Quarterly;
+    public bool IsYearlyPeriodStartVisible => AllocationPeriod == AllocationPeriod.Yearly;
+
     public bool HasPendingChanges =>
         NeedsAllocationPercentage != _savedBudgetAllocation.Needs ||
         WantsAllocationPercentage != _savedBudgetAllocation.Wants ||
         InvestAllocationPercentage != _savedBudgetAllocation.Invest ||
         AllocationLimit != _savedBudgetAllocation.AllocationLimit ||
         AllocationPeriod != _savedBudgetAllocation.AllocationPeriod ||
+        PeriodStart != _savedBudgetAllocation.PeriodStart ||
         RolloverPolicy != _savedBudgetAllocation.RolloverPolicy ||
         OverspendPolicy != _savedBudgetAllocation.OverspendPolicy;
 
@@ -86,6 +131,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
             InvestAllocationPercentage = allocation.InvestThreshold;
             AllocationLimit = allocation.AllocationLimit;
             AllocationPeriod = allocation.AllocationPeriod;
+            PeriodStart = BudgetAllocationPeriodRules.ClampPeriodStart(AllocationPeriod, allocation.PeriodStart);
             RolloverPolicy = allocation.RolloverPolicy;
             OverspendPolicy = allocation.OverspendPolicy;
 
@@ -95,6 +141,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
                 InvestAllocationPercentage,
                 AllocationLimit,
                 AllocationPeriod,
+                PeriodStart,
                 RolloverPolicy,
                 OverspendPolicy);
 
@@ -126,6 +173,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         allocation.InvestThreshold = InvestAllocationPercentage;
         allocation.AllocationLimit = AllocationLimit;
         allocation.AllocationPeriod = AllocationPeriod;
+        allocation.PeriodStart = BudgetAllocationPeriodRules.ClampPeriodStart(AllocationPeriod, PeriodStart);
         allocation.RolloverPolicy = RolloverPolicy;
         allocation.OverspendPolicy = OverspendPolicy;
         _appData.UpdateBudgetAllocation(allocation);
@@ -141,6 +189,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
             InvestAllocationPercentage,
             AllocationLimit,
             AllocationPeriod,
+            PeriodStart,
             RolloverPolicy,
             OverspendPolicy);
         PublishPendingState();
@@ -159,6 +208,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         InvestAllocationPercentage = _savedBudgetAllocation.Invest;
         AllocationLimit = _savedBudgetAllocation.AllocationLimit;
         AllocationPeriod = _savedBudgetAllocation.AllocationPeriod;
+        PeriodStart = _savedBudgetAllocation.PeriodStart;
         RolloverPolicy = _savedBudgetAllocation.RolloverPolicy;
         OverspendPolicy = _savedBudgetAllocation.OverspendPolicy;
         ValidateBudgetAllocation();
@@ -225,6 +275,23 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     partial void OnAllocationPeriodChanged(AllocationPeriod value)
     {
+        PeriodStart = BudgetAllocationPeriodRules.ClampPeriodStart(value, PeriodStart);
+        OnPropertyChanged(nameof(IsWeekdayPeriodStartVisible));
+        OnPropertyChanged(nameof(IsMonthlyPeriodStartVisible));
+        OnPropertyChanged(nameof(IsQuarterlyPeriodStartVisible));
+        OnPropertyChanged(nameof(IsYearlyPeriodStartVisible));
+        PublishPendingState();
+    }
+
+    partial void OnPeriodStartChanged(int value)
+    {
+        var clamped = BudgetAllocationPeriodRules.ClampPeriodStart(AllocationPeriod, value);
+        if (clamped != value)
+        {
+            PeriodStart = clamped;
+            return;
+        }
+
         PublishPendingState();
     }
 
@@ -286,5 +353,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         _messenger.Send(new SettingsPendingChangesChangedMessage(
             new SettingsPendingChangesChanged(SettingsTabKey.Budget, HasPendingChanges)));
     }
+
+    public sealed record PeriodStartOption(int Value, string Label);
 }
 

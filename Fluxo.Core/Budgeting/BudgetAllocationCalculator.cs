@@ -5,31 +5,20 @@ namespace Fluxo.Core.Budgeting;
 
 public static class BudgetAllocationCalculator
 {
-    private static readonly DateTime BiweeklyAnchor = new(2001, 1, 1);
-
-    public static BudgetAllocationPeriod ResolveCurrentPeriod(AllocationPeriod period, DateTime today)
+    public static BudgetAllocationPeriod ResolveCurrentPeriod(
+        AllocationPeriod period,
+        DateTime today,
+        int periodStart = 1)
     {
-        var date = today.Date;
-
-        return period switch
-        {
-            AllocationPeriod.Weekly => ResolveWeeklyPeriod(date),
-            AllocationPeriod.Biweekly => ResolveBiweeklyPeriod(date),
-            AllocationPeriod.Monthly => ResolveMonthlyPeriod(date),
-            AllocationPeriod.Quarterly => ResolveQuarterlyPeriod(date),
-            AllocationPeriod.Yearly => ResolveYearlyPeriod(date),
-            _ => ResolveMonthlyPeriod(date)
-        };
+        return BudgetAllocationPeriodRules.ResolveCurrentPeriod(period, today, periodStart);
     }
 
-    public static BudgetAllocationPeriod ResolvePreviousPeriod(AllocationPeriod period, DateTime today)
+    public static BudgetAllocationPeriod ResolvePreviousPeriod(
+        AllocationPeriod period,
+        DateTime today,
+        int periodStart = 1)
     {
-        var current = ResolveCurrentPeriod(period, today);
-
-        if (period == AllocationPeriod.Biweekly)
-            return new BudgetAllocationPeriod(current.Start.AddDays(-14), current.Start.AddDays(-1));
-
-        return ResolveCurrentPeriod(period, current.Start.AddDays(-1));
+        return BudgetAllocationPeriodRules.ResolvePreviousPeriod(period, today, periodStart);
     }
 
     public static decimal CalculateDailyAllowance(
@@ -37,7 +26,7 @@ public static class BudgetAllocationCalculator
         DateTime today,
         decimal fallbackBudgetBase = 0m)
     {
-        var period = ResolveCurrentPeriod(allocation.AllocationPeriod, today);
+        var period = ResolveCurrentPeriod(allocation.AllocationPeriod, today, allocation.PeriodStart);
 
         if (period.DayCount <= 0)
             return 0m;
@@ -52,8 +41,8 @@ public static class BudgetAllocationCalculator
         DateTime today,
         decimal fallbackBudgetBase = 0m)
     {
-        var currentPeriod = ResolveCurrentPeriod(allocation.AllocationPeriod, today);
-        var previousPeriod = ResolvePreviousPeriod(allocation.AllocationPeriod, today);
+        var currentPeriod = ResolveCurrentPeriod(allocation.AllocationPeriod, today, allocation.PeriodStart);
+        var previousPeriod = ResolvePreviousPeriod(allocation.AllocationPeriod, today, allocation.PeriodStart);
         var budgetBase = ResolveBudgetBase(allocation, fallbackBudgetBase);
 
         var needsBase = CalculateBaseAllocation(budgetBase, allocation.NeedsThreshold);
@@ -107,44 +96,6 @@ public static class BudgetAllocationCalculator
     public static decimal CalculateSoftDebtDelta(decimal remainingBudget, decimal expenseAmount)
     {
         return Math.Max(0m, expenseAmount - Math.Max(0m, remainingBudget));
-    }
-
-    private static BudgetAllocationPeriod ResolveWeeklyPeriod(DateTime date)
-    {
-        var daysSinceMonday = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-        var start = date.AddDays(-daysSinceMonday);
-
-        return new BudgetAllocationPeriod(start, start.AddDays(6));
-    }
-
-    private static BudgetAllocationPeriod ResolveBiweeklyPeriod(DateTime date)
-    {
-        var periodIndex = (int)Math.Floor((date - BiweeklyAnchor).TotalDays / 14d);
-        var start = BiweeklyAnchor.AddDays(periodIndex * 14);
-
-        return new BudgetAllocationPeriod(start, start.AddDays(13));
-    }
-
-    private static BudgetAllocationPeriod ResolveMonthlyPeriod(DateTime date)
-    {
-        var start = new DateTime(date.Year, date.Month, 1);
-
-        return new BudgetAllocationPeriod(start, start.AddMonths(1).AddDays(-1));
-    }
-
-    private static BudgetAllocationPeriod ResolveQuarterlyPeriod(DateTime date)
-    {
-        var startMonth = ((date.Month - 1) / 3 * 3) + 1;
-        var start = new DateTime(date.Year, startMonth, 1);
-
-        return new BudgetAllocationPeriod(start, start.AddMonths(3).AddDays(-1));
-    }
-
-    private static BudgetAllocationPeriod ResolveYearlyPeriod(DateTime date)
-    {
-        var start = new DateTime(date.Year, 1, 1);
-
-        return new BudgetAllocationPeriod(start, new DateTime(date.Year, 12, 31));
     }
 
     private static decimal ResolveBudgetBase(BudgetAllocation allocation, decimal fallbackBudgetBase)

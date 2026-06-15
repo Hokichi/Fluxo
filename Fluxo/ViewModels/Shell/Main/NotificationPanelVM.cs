@@ -406,8 +406,14 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (!_isBudgetThresholdNotifEnabled)
             yield break;
 
-        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today);
-        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today);
+        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(
+            _budgetAllocation.AllocationPeriod,
+            DateTime.Today,
+            _budgetAllocation.PeriodStart);
+        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(
+            _budgetAllocation.AllocationPeriod,
+            DateTime.Today,
+            _budgetAllocation.PeriodStart);
         var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
             _budgetAllocation,
             CalculateSpentByCategory(currentPeriod),

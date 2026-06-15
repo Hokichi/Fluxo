@@ -19,6 +19,7 @@ public sealed class AppDatabaseMigrationTests
 {
     private const string MoveRecurringPeriodMigrationId = "20260520090000_MoveRecurringPeriodToRecurringTransactions";
     private const string AddBudgetAllocationMigrationId = "20260602084415_AddBudgetAllocation";
+    private const string AddBudgetAllocationPeriodStartMigrationId = "20260615051332_AddBudgetAllocationPeriodStart";
 
     [Fact]
     public async Task MigrateDatabaseAsync_WhenDatabaseFileDoesNotExist_CreatesCurrentSchemaAndSeedsMigrationHistory()
@@ -48,6 +49,9 @@ public sealed class AppDatabaseMigrationTests
             Assert.Equal(30, budgetAllocation.WantsThreshold);
             Assert.Equal(20, budgetAllocation.InvestThreshold);
             Assert.Equal(AllocationPeriod.Monthly, budgetAllocation.AllocationPeriod);
+            Assert.Equal(1, budgetAllocation.PeriodStart);
+            Assert.InRange(budgetAllocation.CurrentPeriodIndex, 1, 28);
+            Assert.Equal(DateTime.MinValue, budgetAllocation.LastRolloverPeriodStart);
             Assert.Equal(0m, budgetAllocation.AllocationLimit);
             Assert.Equal(RolloverPolicy.None, budgetAllocation.RolloverPolicy);
             Assert.Equal(OverspendPolicy.Ignore, budgetAllocation.OverspendPolicy);
@@ -95,6 +99,9 @@ public sealed class AppDatabaseMigrationTests
             Assert.Equal(35, budgetAllocation.WantsThreshold);
             Assert.Equal(20, budgetAllocation.InvestThreshold);
             Assert.Equal(AllocationPeriod.Quarterly, budgetAllocation.AllocationPeriod);
+            Assert.Equal(1, budgetAllocation.PeriodStart);
+            Assert.InRange(budgetAllocation.CurrentPeriodIndex, 1, 28);
+            Assert.Equal(DateTime.MinValue, budgetAllocation.LastRolloverPeriodStart);
             Assert.Equal(0m, budgetAllocation.AllocationLimit);
             Assert.Equal(RolloverPolicy.None, budgetAllocation.RolloverPolicy);
             Assert.Equal(OverspendPolicy.Ignore, budgetAllocation.OverspendPolicy);
@@ -214,10 +221,9 @@ public sealed class AppDatabaseMigrationTests
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
         var migrationsToSeed = dbContext.Database.GetMigrations()
-            .Where(migrationId => !string.Equals(
-                migrationId,
-                AddBudgetAllocationMigrationId,
-                StringComparison.Ordinal))
+            .Where(migrationId =>
+                !string.Equals(migrationId, AddBudgetAllocationMigrationId, StringComparison.Ordinal) &&
+                !string.Equals(migrationId, AddBudgetAllocationPeriodStartMigrationId, StringComparison.Ordinal))
             .ToList();
 
         foreach (var migrationId in migrationsToSeed)

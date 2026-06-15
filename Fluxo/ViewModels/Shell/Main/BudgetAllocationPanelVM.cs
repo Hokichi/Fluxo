@@ -535,8 +535,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         var totalIncomeAmount = CalculateBudgetAvailableBase();
         var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
             _budgetAllocation,
-            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolveCurrentPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today)),
-            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolvePreviousPeriod(_budgetAllocation.AllocationPeriod, DateTime.Today)),
+            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolveCurrentPeriod(
+                _budgetAllocation.AllocationPeriod,
+                DateTime.Today,
+                _budgetAllocation.PeriodStart)),
+            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolvePreviousPeriod(
+                _budgetAllocation.AllocationPeriod,
+                DateTime.Today,
+                _budgetAllocation.PeriodStart)),
             DateTime.Today,
             totalIncomeAmount);
 
@@ -572,6 +578,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private decimal CalculateBudgetAvailableBase()
     {
+        if (_budgetAllocation.AllocationLimit > 0m)
+            return _budgetAllocation.AllocationLimit;
+
         var balanceBackedSourceIds = _spendingSources
             .Where(IsBalanceBackedSource)
             .Select(source => source.Id)

@@ -115,6 +115,37 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
+    public async Task BudgetTab_LoadAsync_LoadsPeriodStart()
+    {
+        var unitOfWork = new NullUnitOfWork
+        {
+            BudgetAllocationEntity = new BudgetAllocation
+            {
+                PeriodStart = 5,
+                AllocationPeriod = AllocationPeriod.Monthly
+            }
+        };
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(unitOfWork));
+
+        await vm.LoadAsync();
+
+        Assert.Equal(5, vm.PeriodStart);
+    }
+
+    [Fact]
+    public void BudgetTab_ChangingAllocationPeriod_ClampsPeriodStart()
+    {
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()))
+        {
+            PeriodStart = 28
+        };
+
+        vm.AllocationPeriod = AllocationPeriod.Quarterly;
+
+        Assert.Equal(3, vm.PeriodStart);
+    }
+
+    [Fact]
     public async Task BudgetTab_AllocationAmountText_UsesAllocationLimit()
     {
         var unitOfWork = new NullUnitOfWork
@@ -195,6 +226,22 @@ public sealed class SettingsConfigTabVMTests
         Assert.Equal(AllocationPeriod.Yearly, unitOfWork.BudgetAllocationEntity.AllocationPeriod);
         Assert.Equal(RolloverPolicy.Pooled, unitOfWork.BudgetAllocationEntity.RolloverPolicy);
         Assert.Equal(OverspendPolicy.SoftDebt, unitOfWork.BudgetAllocationEntity.OverspendPolicy);
+    }
+
+    [Fact]
+    public async Task BudgetTab_BuildApplyChangesAsync_UpdatesPeriodStart()
+    {
+        var unitOfWork = new NullUnitOfWork();
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(unitOfWork));
+        await vm.LoadAsync();
+
+        vm.AllocationPeriod = AllocationPeriod.Yearly;
+        vm.PeriodStart = 12;
+
+        var (result, _) = await vm.BuildApplyChangesAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(12, unitOfWork.BudgetAllocationEntity!.PeriodStart);
     }
 
     [Fact]

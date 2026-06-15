@@ -9,6 +9,9 @@ public sealed class BudgetAllocation
     public int WantsThreshold { get; set; } = 30;
     public int InvestThreshold { get; set; } = 20;
     public AllocationPeriod AllocationPeriod { get; set; } = AllocationPeriod.Monthly;
+    public int PeriodStart { get; set; } = 1;
+    public int CurrentPeriodIndex { get; set; } = 1;
+    public DateTime LastRolloverPeriodStart { get; set; } = DateTime.MinValue;
     public decimal AllocationLimit { get; set; }
     public decimal NeedsDebt { get; set; }
     public decimal WantsDebt { get; set; }

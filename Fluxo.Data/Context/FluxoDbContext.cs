@@ -196,6 +196,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(allocation => allocation.WantsThreshold).IsRequired();
         entity.Property(allocation => allocation.InvestThreshold).IsRequired();
         entity.Property(allocation => allocation.AllocationPeriod).IsRequired();
+        entity.Property(allocation => allocation.PeriodStart).IsRequired();
+        entity.Property(allocation => allocation.CurrentPeriodIndex).IsRequired();
+        entity.Property(allocation => allocation.LastRolloverPeriodStart).IsRequired();
         entity.Property(allocation => allocation.AllocationLimit).HasColumnType("NUMERIC");
         entity.Property(allocation => allocation.NeedsDebt).HasColumnType("NUMERIC");
         entity.Property(allocation => allocation.WantsDebt).HasColumnType("NUMERIC");

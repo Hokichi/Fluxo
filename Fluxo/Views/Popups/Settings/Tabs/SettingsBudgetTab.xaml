@@ -285,6 +285,48 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="220" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Period Start" />
+                            <Grid Grid.Column="1">
+                                <ComboBox
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding WeekdayPeriodStartOptions}"
+                                    SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding IsWeekdayPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <customControls:NumericUpDown
+                                    LowerLimit="1"
+                                    UpperLimit="28"
+                                    Value="{Binding PeriodStart, Mode=TwoWay}"
+                                    Visibility="{Binding IsMonthlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ComboBox
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding QuarterlyPeriodStartOptions}"
+                                    SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding IsQuarterlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ComboBox
+                                    DisplayMemberPath="Label"
+                                    ItemsSource="{Binding YearlyPeriodStartOptions}"
+                                    SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding IsYearlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource RowCardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="300" />
                             </Grid.ColumnDefinitions>
                             <TextBlock

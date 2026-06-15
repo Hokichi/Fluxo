@@ -846,8 +846,14 @@ public partial class QuickAddVM : ObservableValidator
         DateTime allocationDate)
     {
         var expenseLogs = await _appData.GetExpenseLogsAsync();
-        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(allocation.AllocationPeriod, allocationDate);
-        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(allocation.AllocationPeriod, allocationDate);
+        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(
+            allocation.AllocationPeriod,
+            allocationDate,
+            allocation.PeriodStart);
+        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(
+            allocation.AllocationPeriod,
+            allocationDate,
+            allocation.PeriodStart);
 
         return BudgetAllocationCalculator.CalculateSnapshot(
             allocation,
@@ -1561,7 +1567,8 @@ public partial class QuickAddVM : ObservableValidator
             var allocation = _appData.GetBudgetAllocationAsync().GetAwaiter().GetResult();
             var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(
                 allocation.AllocationPeriod,
-                SelectedDate.Date);
+                SelectedDate.Date,
+                allocation.PeriodStart);
             var currentTagSpending = _appData.GetExpenseLogsAsync().GetAwaiter().GetResult()
                 .Where(log => !log.IsForDeletion)
                 .Where(log => log.DeductedOn.Date >= currentPeriod.Start && log.DeductedOn.Date <= currentPeriod.End)

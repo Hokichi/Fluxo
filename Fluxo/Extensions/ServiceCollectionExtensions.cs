@@ -60,6 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAnalyticsService, AnalyticsService>();
         services.AddTransient<ICalendarService, CalendarService>();
         services.AddScoped<IAppDataService, AppDataService>();
+        services.AddTransient<IBudgetAllocationPeriodSyncService, BudgetAllocationPeriodSyncService>();
         services.AddTransient<IUserBackupService, UserBackupService>();
 
         return services;

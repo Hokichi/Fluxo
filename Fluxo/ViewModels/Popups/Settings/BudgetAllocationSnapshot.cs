@@ -8,5 +8,6 @@ public readonly record struct BudgetAllocationSnapshot(
     int Invest,
     decimal AllocationLimit,
     AllocationPeriod AllocationPeriod,
+    int PeriodStart,
     RolloverPolicy RolloverPolicy,
     OverspendPolicy OverspendPolicy);
