@@ -77,6 +77,22 @@ public sealed class AddNewTransactionHistoryBuilderTests
         Assert.False(result[0].IsPinned);
     }
 
+    [Fact]
+    public void BuildGoalUpdateHistory_ReturnsOnlyPastUpdatesForSelectedGoalNewestFirst()
+    {
+        var selectedOlder = CreateGoalUpdateLog(id: 1, goalName: "Vacation", amount: 10m, date: DateTime.Today.AddDays(-2));
+        var selectedNewer = CreateGoalUpdateLog(id: 2, goalName: "Vacation", amount: 15m, date: DateTime.Today);
+        var otherGoal = CreateGoalUpdateLog(id: 3, goalName: "Emergency", amount: 20m, date: DateTime.Today.AddDays(-1));
+        var normalExpense = CreateExpenseLog(id: 4, name: "Vacation", amount: 5m, date: DateTime.Today, isPinned: false);
+
+        var result = AddNewTransactionHistoryBuilder.BuildGoalUpdateHistory(
+            [selectedOlder, selectedNewer, otherGoal, normalExpense],
+            "Vacation");
+
+        Assert.Equal([2, 1], result.Select(item => item.Id));
+        Assert.All(result, item => Assert.False(item.IsPinned));
+    }
+
     private static ExpenseLog CreateExpenseLog(
         int id,
         string name,
@@ -129,6 +145,39 @@ public sealed class AddNewTransactionHistoryBuilderTests
             IsPinned = isPinned,
             SpendingSourceId = 10,
             SpendingSource = new SpendingSource { Id = 10, Name = "Checking" }
+        };
+    }
+
+    private static ExpenseLog CreateGoalUpdateLog(
+        int id,
+        string goalName,
+        decimal amount,
+        DateTime date)
+    {
+        return new ExpenseLog
+        {
+            Id = id,
+            Amount = amount,
+            DeductedOn = date,
+            Notes = $"Goal update for {goalName}",
+            IsPinned = false,
+            SpendingSourceId = 10,
+            SpendingSource = new SpendingSource { Id = 10, Name = "Checking" },
+            Expense = new Expense
+            {
+                Id = id + 100,
+                Name = $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {goalName}",
+                Amount = amount,
+                ExpenseCategory = ExpenseCategory.Savings,
+                ExpenseTagId = 20,
+                ExpenseTag = new ExpenseTag
+                {
+                    Id = 20,
+                    Name = GoalUpdateTransactionSupport.GoalUpdateTagName,
+                    HexCode = GoalUpdateTransactionSupport.GoalUpdateTagColor,
+                    IsSystemTag = false
+                }
+            }
         };
     }
 }

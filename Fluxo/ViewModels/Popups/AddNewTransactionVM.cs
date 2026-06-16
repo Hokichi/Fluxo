@@ -151,7 +151,12 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowDateSelector => !IsRecurring;
     public string DateOrRecurrenceLabel => IsRecurring ? "Recurrence" : "Date";
     public bool CanToggleRecurring => !IsRecurringModeLocked;
-    public bool CanUseHistory => !IsGoal;
+    public bool CanUseHistory => true;
+    public bool CanEditTransactionName => !IsGoal;
+    public bool CanEditCategory => IsExpense;
+    public bool CanEditTags => IsExpense;
+    public bool ShowNoteField => !IsGoal;
+    public bool ShowGoalField => IsGoal;
     public string NameValidationHint => GetValidationHint(nameof(NameText));
     public string AmountValidationHint => GetValidationHint(nameof(AmountText));
 
@@ -256,7 +261,14 @@ public partial class AddNewTransactionVM : ObservableValidator
         NotifyFormStateChanged();
     }
     partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
-    partial void OnSelectedGoalChanged(SavingGoalVM? value) => NotifyFormStateChanged();
+    partial void OnSelectedGoalChanged(SavingGoalVM? value)
+    {
+        ResetHistoryLists();
+        if (IsHistoryOpen)
+            _ = LoadHistoryAsync();
+
+        NotifyFormStateChanged();
+    }
     partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value)
     {
         RefreshActiveValidation(nameof(AmountText));
@@ -314,6 +326,11 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         OnPropertyChanged(nameof(IsIncome));
         OnPropertyChanged(nameof(CanUseHistory));
+        OnPropertyChanged(nameof(CanEditTransactionName));
+        OnPropertyChanged(nameof(CanEditCategory));
+        OnPropertyChanged(nameof(CanEditTags));
+        OnPropertyChanged(nameof(ShowNoteField));
+        OnPropertyChanged(nameof(ShowGoalField));
 
         if (!value || IsGoal)
             IsMoreTagsOpen = false;
@@ -335,12 +352,14 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         OnPropertyChanged(nameof(IsIncome));
         OnPropertyChanged(nameof(CanUseHistory));
+        OnPropertyChanged(nameof(CanEditTransactionName));
+        OnPropertyChanged(nameof(CanEditCategory));
+        OnPropertyChanged(nameof(CanEditTags));
+        OnPropertyChanged(nameof(ShowNoteField));
+        OnPropertyChanged(nameof(ShowGoalField));
 
         if (value)
-        {
             IsMoreTagsOpen = false;
-            IsHistoryOpen = false;
-        }
 
         RefreshSpendingSources();
         ClearNameValidation();
@@ -1464,6 +1483,16 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         try
         {
+            if (IsGoal)
+            {
+                var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+                PinnedHistory.Reset([]);
+                TransactionHistory.Reset(SelectedGoal is null
+                    ? []
+                    : AddNewTransactionHistoryBuilder.BuildGoalUpdateHistory(expenseLogs, SelectedGoal.Name));
+                return;
+            }
+
             if (IsExpense)
             {
                 var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
@@ -1493,8 +1522,14 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private void ApplyHistoryItem(AddNewTransactionHistoryItemVM item)
     {
-        IsExpense = item.IsExpense;
-        IsGoal = false;
+        if (item.IsGoalUpdate)
+            IsGoal = true;
+        else
+        {
+            IsExpense = item.IsExpense;
+            IsGoal = false;
+        }
+
         NameText = item.Name;
         AmountText = item.Amount;
         NoteText = item.Note;

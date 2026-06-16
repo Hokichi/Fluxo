@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 
@@ -68,6 +69,10 @@ public class BasePopup : Window, IPopupHost
 
     public static readonly DependencyProperty ShowHistoryButtonProperty =
         DependencyProperty.Register(nameof(ShowHistoryButton), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty IsHistoryOpenProperty =
+        DependencyProperty.Register(nameof(IsHistoryOpen), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
     public static readonly DependencyProperty ShowSplitButtonProperty =
@@ -204,6 +209,12 @@ public class BasePopup : Window, IPopupHost
         set => SetValue(ShowHistoryButtonProperty, value);
     }
 
+    public bool IsHistoryOpen
+    {
+        get => (bool)GetValue(IsHistoryOpenProperty);
+        set => SetValue(IsHistoryOpenProperty, value);
+    }
+
     public bool ShowSplitButton
     {
         get => (bool)GetValue(ShowSplitButtonProperty);
@@ -250,7 +261,7 @@ public class BasePopup : Window, IPopupHost
 
     private void WireButton(string partName, Action<RoutedEventArgs> handler)
     {
-        if (GetTemplateChild(partName) is BalloonButton btn)
+        if (GetTemplateChild(partName) is ButtonBase btn)
             btn.Click += (_, e) => handler(e);
     }
 

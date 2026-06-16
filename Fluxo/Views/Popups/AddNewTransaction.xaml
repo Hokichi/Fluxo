@@ -7,6 +7,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    IsHistoryOpen="{Binding IsHistoryOpen, Mode=TwoWay}"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add New Transaction"
@@ -167,7 +168,7 @@
         </Style>
 
         <DataTemplate x:Key="TransactionHistoryItemTemplate">
-            <Grid Width="260">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -305,7 +306,7 @@
                 Grid.Row="1"
                 Grid.Column="0"
                 Margin="0,16,0,0">
-                <StackPanel Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
                     <StackPanel>
                         <Grid Style="{StaticResource FieldHeaderGridStyle}">
                             <Grid.ColumnDefinitions>
@@ -336,6 +337,7 @@
                             <TextBox
                                 x:Name="ExpenseNameTextBox"
                                 GotKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
+                                IsEnabled="{Binding CanEditTransactionName}"
                                 LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -443,14 +445,27 @@
 
                         <StackPanel Grid.Column="0">
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Category" />
-                            <ComboBox
-                                x:Name="ExpenseCategoryComboBox"
-                                DisplayMemberPath="Label"
-                                ItemContainerStyle="{StaticResource ExpenseCategoryComboBoxItemStyle}"
-                                ItemsSource="{Binding ExpenseCategories}"
-                                SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
-                                SelectedValuePath="Value"
-                                Style="{StaticResource FluxoComboBoxStyle}" />
+                            <Grid>
+                                <ComboBox
+                                    x:Name="ExpenseCategoryComboBox"
+                                    DisplayMemberPath="Label"
+                                    IsEnabled="{Binding CanEditCategory}"
+                                    ItemContainerStyle="{StaticResource ExpenseCategoryComboBoxItemStyle}"
+                                    ItemsSource="{Binding ExpenseCategories}"
+                                    SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding CanEditCategory, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <Border
+                                    MinHeight="38"
+                                    Background="{DynamicResource Brush.Background.Surface}"
+                                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    IsEnabled="False"
+                                    Opacity="0.4"
+                                    Visibility="{Binding CanEditCategory, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                            </Grid>
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
@@ -469,7 +484,7 @@
                     </Grid>
                 </StackPanel>
 
-                <StackPanel Visibility="{Binding IsIncome, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel Visibility="Collapsed">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -612,7 +627,7 @@
                     </Grid>
                 </StackPanel>
 
-                <StackPanel Visibility="{Binding IsGoal, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel Visibility="Collapsed">
                     <StackPanel>
                         <Grid Style="{StaticResource FieldHeaderGridStyle}">
                             <TextBlock
@@ -697,7 +712,7 @@
                 Grid.Row="2"
                 Grid.Column="0"
                 Margin="0,16,0,0"
-                Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
+                IsEnabled="{Binding CanEditTags}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
                 <DockPanel x:Name="TagsDockPanel" LastChildFill="False">
                     <Button
@@ -776,39 +791,44 @@
                 Grid.Row="3"
                 Grid.Column="0"
                 Margin="0,16,0,0">
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
-                        <Setter Property="Visibility" Value="Visible" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsGoal}" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Style>
-                <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Note" />
-                <Border Style="{StaticResource PopupFieldBorderStyle}">
-                    <RichTextBox
-                        x:Name="NoteRichTextBox"
-                        MinHeight="120"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        CaretBrush="{DynamicResource Brush.Text.Primary}"
-                        FontFamily="{DynamicResource Regular}"
-                        FontSize="13"
-                        Foreground="{DynamicResource Brush.Text.Primary}"
-                        TextChanged="OnNoteTextChanged"
-                        VerticalScrollBarVisibility="Auto" />
-                </Border>
+                <StackPanel Visibility="{Binding ShowNoteField, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Note" />
+                    <Border Style="{StaticResource PopupFieldBorderStyle}">
+                        <RichTextBox
+                            x:Name="NoteRichTextBox"
+                            MinHeight="120"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            CaretBrush="{DynamicResource Brush.Text.Primary}"
+                            FontFamily="{DynamicResource Regular}"
+                            FontSize="13"
+                            Foreground="{DynamicResource Brush.Text.Primary}"
+                            TextChanged="OnNoteTextChanged"
+                            VerticalScrollBarVisibility="Auto" />
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding ShowGoalField, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Goal" />
+                    <ComboBox
+                        x:Name="SharedGoalComboBox"
+                        VerticalAlignment="Top"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding Goals}"
+                        SelectedItem="{Binding SelectedGoal, Mode=TwoWay}"
+                        Style="{StaticResource FluxoComboBoxStyle}" />
+                </StackPanel>
             </StackPanel>
 
             <Grid
+                x:Name="HistoryPanel"
                 Grid.Row="0"
                 Grid.RowSpan="4"
                 Grid.Column="2"
+                MaxHeight="520"
                 Visibility="{Binding IsHistoryOpen, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                     <RowDefinition Height="16" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
@@ -826,30 +846,30 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Pinned" />
-                    <Grid Grid.Row="1">
-                        <customControls:FadingScrollViewer MaxHeight="240" VerticalScrollBarVisibility="Auto">
-                            <ListBox
-                                behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding PinnedHistory.HasMoreItems}"
-                                behaviors:ScrollOnDemandBehavior.IsEnabled="True"
-                                behaviors:ScrollOnDemandBehavior.IsLoading="False"
-                                behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding PinnedHistory.LoadMoreCommand}"
-                                ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
-                                ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
-                                ItemsSource="{Binding PinnedHistory.Items}"
-                                PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
-                                SelectedItem="{Binding SelectedPinnedHistoryItem, Mode=TwoWay}"
-                                Style="{StaticResource TransactionHistoryListBoxStyle}" />
-                        </customControls:FadingScrollViewer>
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontFamily="{DynamicResource Regular}"
-                            FontSize="12"
-                            Foreground="{DynamicResource Brush.Text.Muted}"
-                            Text="No pinned items"
-                            Visibility="{Binding PinnedHistory.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    </Grid>
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Pinned" />
+                        <Grid Grid.Row="1">
+                            <customControls:FadingScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                <ListBox
+                                    behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding PinnedHistory.HasMoreItems}"
+                                    behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                                    behaviors:ScrollOnDemandBehavior.IsLoading="False"
+                                    behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding PinnedHistory.LoadMoreCommand}"
+                                    ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
+                                    ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
+                                    ItemsSource="{Binding PinnedHistory.Items}"
+                                    PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
+                                    SelectedItem="{Binding SelectedPinnedHistoryItem, Mode=TwoWay}"
+                                    Style="{StaticResource TransactionHistoryListBoxStyle}" />
+                            </customControls:FadingScrollViewer>
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontFamily="{DynamicResource Regular}"
+                                FontSize="12"
+                                Foreground="{DynamicResource Brush.Text.Muted}"
+                                Text="No pinned items"
+                                Visibility="{Binding PinnedHistory.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </Grid>
                     </Grid>
                 </Border>
 
@@ -865,25 +885,21 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                    <TextBlock
-                        Style="{StaticResource SectionLabelStyle}"
-                        Text="History" />
-                    <customControls:FadingScrollViewer
-                        Grid.Row="1"
-                        MaxHeight="300"
-                        VerticalScrollBarVisibility="Hidden">
-                        <ListBox
-                            behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"
-                            behaviors:ScrollOnDemandBehavior.IsEnabled="True"
-                            behaviors:ScrollOnDemandBehavior.IsLoading="False"
-                            behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding TransactionHistory.LoadMoreCommand}"
-                            ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
-                            ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
-                            ItemsSource="{Binding TransactionHistory.Items}"
-                            PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
-                            SelectedItem="{Binding SelectedHistoryItem, Mode=TwoWay}"
-                            Style="{StaticResource TransactionHistoryListBoxStyle}" />
-                    </customControls:FadingScrollViewer>
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="History" />
+                        <customControls:FadingScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+                            <ListBox
+                                Width="360"
+                                behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"
+                                behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                                behaviors:ScrollOnDemandBehavior.IsLoading="False"
+                                behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding TransactionHistory.LoadMoreCommand}"
+                                ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
+                                ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
+                                ItemsSource="{Binding TransactionHistory.Items}"
+                                PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
+                                SelectedItem="{Binding SelectedHistoryItem, Mode=TwoWay}"
+                                Style="{StaticResource TransactionHistoryListBoxStyle}" />
+                        </customControls:FadingScrollViewer>
                     </Grid>
                 </Border>
             </Grid>

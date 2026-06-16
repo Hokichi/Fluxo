@@ -19,6 +19,18 @@ public sealed class BasePopupHistoryButtonTests
     }
 
     [Fact]
+    public void BasePopup_DefinesIsHistoryOpenDependencyPropertyAndClrAccessor()
+    {
+        var source = File.ReadAllText(ResolveBasePopupPath());
+
+        Assert.Contains("public static readonly DependencyProperty IsHistoryOpenProperty =", source);
+        Assert.Contains("DependencyProperty.Register(nameof(IsHistoryOpen), typeof(bool), typeof(BasePopup),", source);
+        Assert.Contains("public bool IsHistoryOpen", source);
+        Assert.Contains("get => (bool)GetValue(IsHistoryOpenProperty);", source);
+        Assert.Contains("set => SetValue(IsHistoryOpenProperty, value);", source);
+    }
+
+    [Fact]
     public void OnApplyTemplate_WiresHistoryButtonToVirtualHandler()
     {
         var source = File.ReadAllText(ResolveBasePopupPath());
@@ -40,9 +52,13 @@ public sealed class BasePopupHistoryButtonTests
     {
         var source = File.ReadAllText(ResolvePopupStylesPath());
 
+        Assert.Contains("<c:BalloonCheckBox", source);
         Assert.Contains("x:Name=\"PART_HistoryButton\"", source);
         Assert.Contains("ButtonIcon=\"{StaticResource History}\"", source);
         Assert.Contains("ButtonText=\"Show History\"", source);
+        Assert.Contains("CheckedBackground=\"{StaticResource Brush.Mint}\"", source);
+        Assert.Contains("IsChecked=\"{TemplateBinding IsHistoryOpen}\"", source);
+        Assert.Contains("TargetName=\"PART_HistoryButton\" Property=\"ButtonText\" Value=\"Hide History\"", source);
         Assert.Contains("Visibility=\"{TemplateBinding ShowHistoryButton,", source);
         Assert.Contains("PopupBoolToVisibility", source);
     }

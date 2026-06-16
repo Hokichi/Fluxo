@@ -68,8 +68,18 @@ public sealed class BalloonButtonStyleTests
         var style = xaml[styleStart..nextStyleStart];
 
         Assert.Contains("<Setter Property=\"ButtonSize\" Value=\"28\" />", style);
-        Assert.Contains("<Setter Property=\"ExpandedWidth\" Value=\"96\" />", style);
+        Assert.DoesNotContain("ExpandedWidth", style);
         Assert.DoesNotContain("<Setter Property=\"Padding\"", style);
+    }
+
+    [Fact]
+    public void BalloonButton_NoLongerExposesExpandedWidthOverride()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo.Resources", "CustomControls", "BalloonButton.cs"));
+        var xaml = ReadButtonStylesXaml();
+
+        Assert.DoesNotContain("ExpandedWidth", source);
+        Assert.DoesNotContain("ExpandedWidth", xaml);
     }
 
     [Fact]

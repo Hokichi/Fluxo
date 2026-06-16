@@ -171,17 +171,11 @@ public partial class AddNewTransaction : BasePopup
     {
         if (_viewModel.IsGoal)
         {
-            GoalAmountTextBox.Focus();
+            ExpenseAmountTextBox.Focus();
             return;
         }
 
-        if (_viewModel.IsExpense)
-        {
-            ExpenseNameTextBox.Focus();
-            return;
-        }
-
-        IncomeNameTextBox.Focus();
+        ExpenseNameTextBox.Focus();
     }
 
     private void SyncNoteDocumentFromViewModel()
@@ -343,13 +337,10 @@ public partial class AddNewTransaction : BasePopup
     private void SyncNameSuggestionsPopupState()
     {
         var shouldShow = IsLoaded && _viewModel.HasTransactionNameSuggestions && !_viewModel.IsGoal;
-        var isExpenseNameSuggestionFocused =
+        var isNameSuggestionFocused =
             ExpenseNameTextBox.IsKeyboardFocusWithin || ExpenseNameSuggestionsListBox.IsKeyboardFocusWithin;
-        var isIncomeNameSuggestionFocused =
-            IncomeNameTextBox.IsKeyboardFocusWithin || IncomeNameSuggestionsListBox.IsKeyboardFocusWithin;
 
-        ExpenseNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsExpense && isExpenseNameSuggestionFocused;
-        IncomeNameSuggestionsPopup.IsOpen = shouldShow && _viewModel.IsIncome && isIncomeNameSuggestionFocused;
+        ExpenseNameSuggestionsPopup.IsOpen = shouldShow && isNameSuggestionFocused;
     }
 
     private void OnTransactionNameTextBoxFocusChanged(object sender, KeyboardFocusChangedEventArgs e)

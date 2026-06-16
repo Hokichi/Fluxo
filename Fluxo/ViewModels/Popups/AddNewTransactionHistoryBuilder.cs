@@ -74,6 +74,38 @@ public static class AddNewTransactionHistoryBuilder
             .ToList();
     }
 
+    public static IReadOnlyList<AddNewTransactionHistoryItemVM> BuildGoalUpdateHistory(
+        IEnumerable<ExpenseLog> expenseLogs,
+        string goalName,
+        int pageSize = int.MaxValue)
+    {
+        var expectedName = BuildGoalUpdateName(goalName);
+        return expenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => IsGoalUpdateLog(log))
+            .Where(log => string.Equals(log.Expense?.Name, expectedName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(log => log.DeductedOn)
+            .ThenByDescending(log => log.Id)
+            .Take(pageSize)
+            .Select(log => new AddNewTransactionHistoryItemVM
+            {
+                Id = log.Id,
+                IsExpense = false,
+                IsGoalUpdate = true,
+                Name = log.Expense?.Name ?? GoalUpdateTransactionSupport.GoalUpdateTagName,
+                Amount = log.Amount,
+                SpendingSourceId = log.SpendingSourceId,
+                SpendingSourceName = log.SpendingSource?.Name ?? log.Expense?.SpendingSource?.Name ?? string.Empty,
+                Note = log.Notes ?? string.Empty,
+                Date = log.DeductedOn,
+                Category = ExpenseCategory.Savings,
+                TagId = log.Expense?.ExpenseTagId,
+                TagHexCode = log.Expense?.ExpenseTag?.HexCode,
+                IsPinned = false
+            })
+            .ToList();
+    }
+
     private static IEnumerable<AddNewTransactionHistoryItemVM> ProjectExpenses(
         IEnumerable<ExpenseLog> expenseLogs,
         bool isPinned)
@@ -133,6 +165,23 @@ public static class AddNewTransactionHistoryBuilder
     private static string NormalizeName(string value)
     {
         return value.Trim().ToUpperInvariant();
+    }
+
+    private static bool IsGoalUpdateLog(ExpenseLog log)
+    {
+        var tagName = log.Expense?.ExpenseTag?.Name;
+        var expenseName = log.Expense?.Name;
+        return string.Equals(tagName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(expenseName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
+               expenseName?.StartsWith($"{GoalUpdateTransactionSupport.GoalUpdateTagName}:", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static string BuildGoalUpdateName(string goalName)
+    {
+        var trimmedGoalName = goalName.Trim();
+        return string.IsNullOrWhiteSpace(trimmedGoalName)
+            ? GoalUpdateTransactionSupport.GoalUpdateTagName
+            : $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {trimmedGoalName}";
     }
 
     private sealed record ExpenseKey(

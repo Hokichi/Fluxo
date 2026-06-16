@@ -81,6 +81,32 @@ public sealed class AddNewTransactionSuggestionStyleTests
     }
 
     [Fact]
+    public void TransactionMode_UsesSharedLayoutAndKeepsHistoryAvailableForGoalUpdates()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
+
+        Assert.Contains("IsHistoryOpen=\"{Binding IsHistoryOpen, Mode=TwoWay}\"", xaml);
+        Assert.DoesNotContain("Visibility=\"{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.DoesNotContain("Visibility=\"{Binding IsIncome, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.DoesNotContain("Visibility=\"{Binding IsGoal, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.Contains("IsEnabled=\"{Binding CanEditCategory}\"", xaml);
+        Assert.Contains("IsEnabled=\"{Binding CanEditTags}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding ShowNoteField, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding ShowGoalField, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+    }
+
+    [Fact]
+    public void TransactionHistoryPanel_UsesEqualFixedHeightCards()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
+
+        Assert.Contains("x:Name=\"HistoryPanel\"", xaml);
+        Assert.Contains("<RowDefinition Height=\"*\" />", xaml);
+        Assert.Contains("MaxHeight=\"520\"", xaml);
+        Assert.Equal(2, xaml.Split("MaxHeight=\"220\"").Length - 1);
+    }
+
+    [Fact]
     public void NameFieldsValidateOnLostFocus_AmountFieldsValidateOnTextChangedAndLostFocus()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));

@@ -23,6 +23,16 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
     }
 
     [Fact]
+    public void BalloonCheckBox_NoLongerExposesExpandedWidthOverride()
+    {
+        var source = File.ReadAllText(ResolveBalloonCheckBoxPath());
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
+
+        Assert.DoesNotContain("ExpandedWidth", source);
+        Assert.DoesNotContain("ExpandedWidth", xaml);
+    }
+
+    [Fact]
     public void BalloonCheckBox_UsesCheckedBackgroundWhenCheckedAndNotHovered()
     {
         RunOnStaThread(() =>

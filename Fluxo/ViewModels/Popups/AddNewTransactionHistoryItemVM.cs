@@ -7,6 +7,7 @@ public sealed partial class AddNewTransactionHistoryItemVM : ObservableObject
 {
     public int Id { get; init; }
     public bool IsExpense { get; init; }
+    public bool IsGoalUpdate { get; init; }
     public string Name { get; init; } = string.Empty;
     public decimal Amount { get; init; }
     public int SpendingSourceId { get; init; }

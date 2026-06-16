@@ -48,7 +48,7 @@ public sealed class BalloonButtonDependencyPropertyTests
     }
 
     [Fact]
-    public void BalloonButton_DefinesButtonSizeAndExpandedWidthDependencyProperties()
+    public void BalloonButton_DefinesButtonSizeDependencyProperty()
     {
         var source = File.ReadAllText(ResolveBalloonButtonPath());
 
@@ -58,12 +58,7 @@ public sealed class BalloonButtonDependencyPropertyTests
         Assert.Contains("get => (double)GetValue(ButtonSizeProperty);", source);
         Assert.Contains("set => SetValue(ButtonSizeProperty, value);", source);
 
-        Assert.Contains("public static readonly DependencyProperty ExpandedWidthProperty =", source);
-        Assert.Contains("DependencyProperty.Register(nameof(ExpandedWidth), typeof(double), typeof(BalloonButton),", source);
-        Assert.Contains("new PropertyMetadata(double.NaN", source);
-        Assert.Contains("public double ExpandedWidth", source);
-        Assert.Contains("get => (double)GetValue(ExpandedWidthProperty);", source);
-        Assert.Contains("set => SetValue(ExpandedWidthProperty, value);", source);
+        Assert.DoesNotContain("ExpandedWidth", source);
     }
 
     [Fact]
@@ -95,9 +90,9 @@ public sealed class BalloonButtonDependencyPropertyTests
     }
 
     [Fact]
-    public void BalloonButton_CalculatesAutoExpandedWidthFromTextAndChrome()
+    public void BalloonButton_CalculatesAutoOpenWidthFromTextAndChrome()
     {
-        var width = BalloonButton.CalculateAutoExpandedWidth(
+        var width = BalloonButton.CalculateAutoOpenWidth(
             buttonSize: 28,
             iconSize: 8,
             padding: new Thickness(6, 0, 10, 0),
@@ -108,91 +103,44 @@ public sealed class BalloonButtonDependencyPropertyTests
     }
 
     [Fact]
-    public void BalloonButton_UsesExplicitExpandedWidth_WhenItFitsContent()
+    public void BalloonButton_UsesButtonSizeAsMinimumOpenWidth()
     {
-        Assert.Equal(120, BalloonButton.ResolveExpandedWidth(120, 28, 94));
+        Assert.Equal(28, BalloonButton.ResolveOpenWidth(28, 20));
     }
 
     [Fact]
-    public void BalloonButton_GrowsPastExplicitExpandedWidth_WhenContentNeedsMoreSpace()
+    public void BalloonButton_UsesAutoOpenWidth_WhenContentNeedsMoreSpace()
     {
-        Assert.Equal(150, BalloonButton.ResolveExpandedWidth(120, 28, 150));
+        Assert.Equal(150, BalloonButton.ResolveOpenWidth(28, 150));
     }
 
     [Fact]
-    public void BalloonButton_UsesAutoExpandedWidth_WhenExpandedWidthIsUnset()
+    public void BalloonButton_UsesAutoOpenWidth()
     {
-        Assert.Equal(94, BalloonButton.ResolveExpandedWidth(double.NaN, 28, 94));
+        Assert.Equal(94, BalloonButton.ResolveOpenWidth(28, 94));
     }
 
     [Fact]
-    public void BalloonButton_IgnoresStyleExpandedWidth_WhenShouldShowTextNeedsMoreSpace()
+    public void BalloonButton_MeasuresShouldShowTextContent()
     {
         RunOnStaThread(() =>
         {
-            var style = new Style(typeof(BalloonButton));
-            style.Setters.Add(new Setter(BalloonButton.ExpandedWidthProperty, 96.0));
-
             var button = new BalloonButton
             {
                 ButtonSize = 28,
                 ButtonText = "New Transaction",
-                FontSize = 12,
-                IconSize = 18,
-                Padding = new Thickness(6, 0, 10, 0),
-                ShouldShowText = true,
-                Style = style
-            };
-
-            Assert.True(button.GetEffectiveExpandedWidth() > 96);
-        });
-    }
-
-    [Fact]
-    public void BalloonButton_IgnoresStyleExpandedWidth_WhenExpansionNeedsMoreSpace()
-    {
-        RunOnStaThread(() =>
-        {
-            var style = new Style(typeof(BalloonButton));
-            style.Setters.Add(new Setter(BalloonButton.ExpandedWidthProperty, 96.0));
-
-            var button = new BalloonButton
-            {
-                ButtonSize = 28,
-                ButtonText = "New Transaction",
-                FontSize = 12,
-                IconSize = 18,
-                Padding = new Thickness(6, 0, 10, 0),
-                ShouldExpand = true,
-                Style = style
-            };
-
-            Assert.True(button.GetEffectiveExpandedWidth() > 96);
-        });
-    }
-
-    [Fact]
-    public void BalloonButton_UsesLocalExpandedWidth_WhenShouldShowTextContentFits()
-    {
-        RunOnStaThread(() =>
-        {
-            var button = new BalloonButton
-            {
-                ButtonSize = 28,
-                ButtonText = "New",
-                ExpandedWidth = 120,
                 FontSize = 12,
                 IconSize = 18,
                 Padding = new Thickness(6, 0, 10, 0),
                 ShouldShowText = true
             };
 
-            Assert.Equal(120, button.GetEffectiveExpandedWidth());
+            Assert.True(button.GetEffectiveOpenWidth() > 96);
         });
     }
 
     [Fact]
-    public void BalloonButton_GrowsPastLocalExpandedWidth_WhenShouldShowTextNeedsMoreSpace()
+    public void BalloonButton_MeasuresExpansionContent()
     {
         RunOnStaThread(() =>
         {
@@ -200,14 +148,13 @@ public sealed class BalloonButtonDependencyPropertyTests
             {
                 ButtonSize = 28,
                 ButtonText = "New Transaction",
-                ExpandedWidth = 96,
                 FontSize = 12,
                 IconSize = 18,
                 Padding = new Thickness(6, 0, 10, 0),
-                ShouldShowText = true
+                ShouldExpand = true
             };
 
-            Assert.True(button.GetEffectiveExpandedWidth() > 96);
+            Assert.True(button.GetEffectiveOpenWidth() > 96);
         });
     }
 

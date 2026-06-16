@@ -1018,7 +1018,7 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
-    public void GoalUpdate_DisablesHistoryAndClearsOpenState()
+    public void GoalUpdate_KeepsHistoryAvailableAndOpen()
     {
         RunInSta(() =>
         {
@@ -1027,8 +1027,32 @@ public sealed class AddNewTransactionVMValidationTests
 
             vm.IsGoal = true;
 
-            Assert.False(vm.CanUseHistory);
-            Assert.False(vm.IsHistoryOpen);
+            Assert.True(vm.CanUseHistory);
+            Assert.True(vm.IsHistoryOpen);
+        });
+    }
+
+    [Fact]
+    public void LoadHistoryAsync_ForGoalUpdateKeepsPinnedEmptyAndLoadsSameGoalHistory()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData(expenseLogs:
+            [
+                CreateExpenseLog("Goal Update: Goal", 25m, sourceId: 1, tagId: 99, tagName: "Goal Update"),
+                CreateExpenseLog("Goal Update: Other", 30m, sourceId: 1, tagId: 99, tagName: "Goal Update")
+            ]);
+            var vm = CreateVm(
+                TransactionKind.Goal,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                appData: appData);
+
+            vm.LoadHistoryAsync().GetAwaiter().GetResult();
+
+            Assert.Empty(vm.PinnedHistory.Items);
+            var item = Assert.Single(vm.TransactionHistory.Items);
+            Assert.Equal("Goal Update: Goal", item.Name);
         });
     }
 
