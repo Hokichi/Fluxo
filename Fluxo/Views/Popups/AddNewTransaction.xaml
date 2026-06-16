@@ -267,7 +267,7 @@
                     <Setter Property="Width" Value="560" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsHistoryOpen}" Value="True">
-                            <Setter Property="Width" Value="880" />
+                            <Setter Property="Width" Value="Auto" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -275,7 +275,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="560" />
                 <ColumnDefinition Width="20" />
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -301,15 +301,28 @@
                 </customControls:SegmentedToggleGroup>
             </StackPanel>
 
-            <Grid Grid.Row="1" Grid.Column="0" Margin="0,16,0,0">
+            <Grid
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="0,16,0,0">
                 <StackPanel Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel>
                         <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
                             <TextBlock
                                 Margin="0"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Name" />
-                            <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding NameValidationHint}" />
+                            <TextBlock
+                                Grid.Column="0"
+                                Style="{StaticResource FieldValidationHintStyle}"
+                                Text="{Binding NameValidationHint}" />
                         </Grid>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -330,16 +343,24 @@
                                 ButtonIcon="{StaticResource RegularRepeat}"
                                 ButtonSize="38"
                                 ButtonText="Recurring"
+                                CheckedBackground="{StaticResource Brush.Info}"
+                                CornerRadius="12"
+                                DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                IconSize="14"
                                 IsChecked="{Binding IsRecurring, Mode=TwoWay}"
                                 IsEnabled="{Binding CanToggleRecurring}"
-                                ToolTip="Recurring" />
+                                ToolTip="Set as Recurring" />
                             <customControls:BalloonCheckBox
                                 Grid.Column="4"
                                 ButtonIcon="{StaticResource Pin}"
                                 ButtonSize="38"
                                 ButtonText="Pinned"
+                                CheckedBackground="{StaticResource Brush.Info}"
+                                CornerRadius="12"
+                                DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                IconSize="14"
                                 IsChecked="{Binding IsPinned, Mode=TwoWay}"
-                                ToolTip="Pinned" />
+                                ToolTip="Pin transaction" />
                         </Grid>
                         <Popup
                             x:Name="ExpenseNameSuggestionsPopup"
@@ -457,11 +478,21 @@
 
                         <StackPanel Grid.Column="0">
                             <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <TextBlock
                                     Margin="0"
                                     Style="{StaticResource SectionLabelStyle}"
                                     Text="Name" />
-                                <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding NameValidationHint}" />
+                                <TextBlock
+                                    Grid.Column="0"
+                                    Style="{StaticResource FieldValidationHintStyle}"
+                                    Text="{Binding NameValidationHint}" />
                             </Grid>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -740,7 +771,10 @@
                 </Popup>
             </StackPanel>
 
-            <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,16,0,0">
+            <StackPanel
+                Grid.Row="3"
+                Grid.Column="0"
+                Margin="0,16,0,0">
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Visible" />
@@ -786,21 +820,29 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Pinned" />
-                    <customControls:FadingScrollViewer
-                        Grid.Row="1"
-                        MaxHeight="240"
-                        VerticalScrollBarVisibility="Auto">
-                        <ListBox
-                            behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding PinnedHistory.HasMoreItems}"
-                            behaviors:ScrollOnDemandBehavior.IsEnabled="True"
-                            behaviors:ScrollOnDemandBehavior.IsLoading="False"
-                            behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding PinnedHistory.LoadMoreCommand}"
-                            ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
-                            ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
-                            ItemsSource="{Binding PinnedHistory.Items}"
-                            SelectedItem="{Binding SelectedPinnedHistoryItem, Mode=TwoWay}"
-                            Style="{StaticResource TransactionHistoryListBoxStyle}" />
-                    </customControls:FadingScrollViewer>
+                    <Grid Grid.Row="1">
+                        <customControls:FadingScrollViewer MaxHeight="240" VerticalScrollBarVisibility="Auto">
+                            <ListBox
+                                behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding PinnedHistory.HasMoreItems}"
+                                behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                                behaviors:ScrollOnDemandBehavior.IsLoading="False"
+                                behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding PinnedHistory.LoadMoreCommand}"
+                                ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
+                                ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
+                                ItemsSource="{Binding PinnedHistory.Items}"
+                                PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
+                                SelectedItem="{Binding SelectedPinnedHistoryItem, Mode=TwoWay}"
+                                Style="{StaticResource TransactionHistoryListBoxStyle}" />
+                        </customControls:FadingScrollViewer>
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="{DynamicResource Regular}"
+                            FontSize="12"
+                            Foreground="{DynamicResource Brush.Text.Muted}"
+                            Text="No pinned items"
+                            Visibility="{Binding PinnedHistory.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </Grid>
 
                     <TextBlock
                         Grid.Row="3"
@@ -809,7 +851,7 @@
                     <customControls:FadingScrollViewer
                         Grid.Row="4"
                         MaxHeight="300"
-                        VerticalScrollBarVisibility="Auto">
+                        VerticalScrollBarVisibility="Hidden">
                         <ListBox
                             behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"
                             behaviors:ScrollOnDemandBehavior.IsEnabled="True"
@@ -818,6 +860,7 @@
                             ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
                             ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
                             ItemsSource="{Binding TransactionHistory.Items}"
+                            PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
                             SelectedItem="{Binding SelectedHistoryItem, Mode=TwoWay}"
                             Style="{StaticResource TransactionHistoryListBoxStyle}" />
                     </customControls:FadingScrollViewer>

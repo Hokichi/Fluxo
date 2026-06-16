@@ -21,6 +21,7 @@ public sealed partial class AddNewTransactionHistoryListVM : ObservableObject
     public IRelayCommand LoadMoreCommand { get; }
 
     public bool HasMoreItems => _loadedCount < _source.Count;
+    public bool IsEmpty => Items.Count == 0;
 
     public void Reset(IReadOnlyList<AddNewTransactionHistoryItemVM> source)
     {
@@ -28,6 +29,7 @@ public sealed partial class AddNewTransactionHistoryListVM : ObservableObject
         _loadedCount = 0;
         Items.Clear();
         LoadMore();
+        OnPropertyChanged(nameof(IsEmpty));
     }
 
     private void LoadMore()
@@ -45,6 +47,7 @@ public sealed partial class AddNewTransactionHistoryListVM : ObservableObject
 
         _loadedCount += nextItems.Count;
         OnPropertyChanged(nameof(HasMoreItems));
+        OnPropertyChanged(nameof(IsEmpty));
         LoadMoreCommand.NotifyCanExecuteChanged();
     }
 }

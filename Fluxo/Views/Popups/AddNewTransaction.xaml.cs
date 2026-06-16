@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
@@ -254,6 +255,20 @@ public partial class AddNewTransaction : BasePopup
         SyncNameSuggestionsPopupState();
     }
 
+    private void OnHistoryListPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is not DependencyObject source)
+            return;
+
+        var scrollViewer = FindAncestor<ScrollViewer>(source);
+        if (scrollViewer is null)
+            return;
+
+        var wheelSteps = e.Delta / (double)Mouse.MouseWheelDeltaForOneLine;
+        scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - wheelSteps * 48d);
+        e.Handled = true;
+    }
+
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(AddNewTransactionVM.HasTransactionNameSuggestions) or
@@ -404,6 +419,21 @@ public partial class AddNewTransaction : BasePopup
         }
 
         return false;
+    }
+
+    private static T? FindAncestor<T>(DependencyObject source)
+        where T : DependencyObject
+    {
+        var current = VisualTreeHelper.GetParent(source);
+        while (current is not null)
+        {
+            if (current is T match)
+                return match;
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private bool CanShowMoreTagsPopup()
