@@ -94,11 +94,104 @@
         </Style.Triggers>
     </Style>
 
+    <Style TargetType="{x:Type c:BalloonCheckBox}">
+        <Setter Property="CheckedBackground" Value="{StaticResource Brush.Mint}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type c:BalloonCheckBox}">
+                    <Grid>
+                        <!--  Balloon shape  -->
+                        <Path x:Name="PART_Shape" Fill="{TemplateBinding DefaultBackground}" />
+                        <!--  Pressed overlay shares geometry with PART_Shape via code-behind  -->
+                        <Path
+                            x:Name="PART_Overlay"
+                            Fill="Black"
+                            IsHitTestVisible="False"
+                            Opacity="0" />
+                        <!--  Content area, inset by Padding to clear the bulging edges  -->
+                        <Grid
+                            x:Name="PART_ContentHost"
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            ClipToBounds="True">
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Grid
+                                    x:Name="PART_IconSlot"
+                                    Width="{TemplateBinding IconSize}"
+                                    VerticalAlignment="Center">
+                                    <Path
+                                        x:Name="PART_Icon"
+                                        Width="{TemplateBinding IconSize}"
+                                        Height="{TemplateBinding IconSize}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        IsHitTestVisible="False"
+                                        Stretch="Uniform">
+                                        <Path.Fill>
+                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                            </MultiBinding>
+                                        </Path.Fill>
+                                    </Path>
+                                </Grid>
+                                <Border
+                                    x:Name="PART_TextReveal"
+                                    Width="0"
+                                    ClipToBounds="True"
+                                    Opacity="0">
+                                    <TextBlock
+                                        x:Name="PART_ButtonText"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Bold}"
+                                        FontSize="{TemplateBinding FontSize}"
+                                        Opacity="0"
+                                        Text="{TemplateBinding ButtonText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap">
+                                        <TextBlock.Foreground>
+                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                            </MultiBinding>
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="PART_Overlay" Property="Opacity" Value="0.3" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.4" />
+                <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <Style
         x:Key="MainWindowBalloonButtonChromeStyle"
         BasedOn="{StaticResource {x:Type c:BalloonButton}}"
         TargetType="{x:Type c:BalloonButton}">
         <Setter Property="ButtonSize" Value="28" />
+        <Setter Property="ExpandedWidth" Value="96" />
         <Setter Property="Margin" Value="8,0,0,0" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="CurveHeight" Value="8" />
