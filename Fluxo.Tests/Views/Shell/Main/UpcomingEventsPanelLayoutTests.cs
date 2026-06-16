@@ -62,4 +62,16 @@ public class UpcomingEventsPanelLayoutTests
         Assert.Contains("SourceName=\"UpcomingEventItemSurface\" Property=\"IsMouseOver\" Value=\"True\"", xaml);
         Assert.Contains("TargetName=\"UpcomingEventItemSurface\"", xaml);
     }
+
+    [Fact]
+    public void UpcomingEventsPanel_CalculatesItemHeightFromScrollViewport()
+    {
+        var xaml = File.ReadAllText(PanelPath);
+        var codeBehind = File.ReadAllText(PanelPath.Replace(".xaml", ".xaml.cs"));
+
+        Assert.Contains("Height=\"{Binding UpcomingEventItemHeight, RelativeSource={RelativeSource AncestorType=UserControl}}\"", xaml);
+        Assert.Contains("SizeChanged=\"OnUpcomingEventsScrollViewerSizeChanged\"", xaml);
+        Assert.Contains("const double VisibleItemCount = 2d;", codeBehind);
+        Assert.Contains("UpcomingEventItemHeight = Math.Max(0d, (UpcomingEventsScrollViewer.ActualHeight - ItemGap) / VisibleItemCount);", codeBehind);
+    }
 }

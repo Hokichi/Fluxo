@@ -6,6 +6,7 @@
         <DataTemplate x:Key="UpcomingEventItemTemplate">
             <Border
                 x:Name="UpcomingEventItemSurface"
+                Height="{Binding UpcomingEventItemHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 Margin="0,0,0,10"
                 Padding="8"
                 Background="Transparent"
@@ -110,6 +111,7 @@
                 <ScrollViewer
                     x:Name="UpcomingEventsScrollViewer"
                     HorizontalScrollBarVisibility="Disabled"
+                    SizeChanged="OnUpcomingEventsScrollViewerSizeChanged"
                     VerticalScrollBarVisibility="Auto">
                     <ItemsControl
                         ItemTemplate="{StaticResource UpcomingEventItemTemplate}"
