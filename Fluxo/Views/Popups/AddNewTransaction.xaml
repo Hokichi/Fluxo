@@ -158,7 +158,7 @@
                                 <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Mint}" />
+                                <Setter TargetName="ItemBackground" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -321,6 +321,7 @@
                                 Text="Name" />
                             <TextBlock
                                 Grid.Column="0"
+                                Margin="0,0,80,0"
                                 Style="{StaticResource FieldValidationHintStyle}"
                                 Text="{Binding NameValidationHint}" />
                         </Grid>
@@ -801,24 +802,30 @@
                 </Border>
             </StackPanel>
 
-            <Border
+            <Grid
                 Grid.Row="0"
                 Grid.RowSpan="4"
                 Grid.Column="2"
-                Padding="12"
-                Background="{DynamicResource Brush.Background.Surface}"
-                BorderBrush="{DynamicResource Brush.Border.Subtle}"
-                BorderThickness="1"
-                CornerRadius="12"
                 Visibility="{Binding IsHistoryOpen, Converter={StaticResource BoolToVisibilityConverter}}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="16" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border
+                    Grid.Row="0"
+                    Padding="12"
+                    Background="{DynamicResource Brush.Background.Surface}"
+                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
                     <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Pinned" />
                     <Grid Grid.Row="1">
                         <customControls:FadingScrollViewer MaxHeight="240" VerticalScrollBarVisibility="Auto">
@@ -843,13 +850,26 @@
                             Text="No pinned items"
                             Visibility="{Binding PinnedHistory.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </Grid>
+                    </Grid>
+                </Border>
 
+                <Border
+                    Grid.Row="2"
+                    Padding="12"
+                    Background="{DynamicResource Brush.Background.Surface}"
+                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
                     <TextBlock
-                        Grid.Row="3"
                         Style="{StaticResource SectionLabelStyle}"
                         Text="History" />
                     <customControls:FadingScrollViewer
-                        Grid.Row="4"
+                        Grid.Row="1"
                         MaxHeight="300"
                         VerticalScrollBarVisibility="Hidden">
                         <ListBox
@@ -864,8 +884,9 @@
                             SelectedItem="{Binding SelectedHistoryItem, Mode=TwoWay}"
                             Style="{StaticResource TransactionHistoryListBoxStyle}" />
                     </customControls:FadingScrollViewer>
-                </Grid>
-            </Border>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
     </Border>
 </customControls:BasePopup>
