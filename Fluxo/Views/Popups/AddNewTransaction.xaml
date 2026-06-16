@@ -712,7 +712,7 @@
                 Grid.Row="2"
                 Grid.Column="0"
                 Margin="0,16,0,0"
-                IsEnabled="{Binding CanEditTags}">
+                Visibility="{Binding CanEditTags, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
                 <DockPanel x:Name="TagsDockPanel" LastChildFill="False">
                     <Button
@@ -888,7 +888,7 @@
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="History" />
                         <customControls:FadingScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
                             <ListBox
-                                Width="360"
+                                Width="320"
                                 behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"
                                 behaviors:ScrollOnDemandBehavior.IsEnabled="True"
                                 behaviors:ScrollOnDemandBehavior.IsLoading="False"
