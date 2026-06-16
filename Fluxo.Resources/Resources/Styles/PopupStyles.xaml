@@ -52,6 +52,17 @@
                                     HorizontalAlignment="Right"
                                     Orientation="Horizontal">
 
+                                    <!--  History  -->
+                                    <c:BalloonButton
+                                        x:Name="PART_HistoryButton"
+                                        ButtonIcon="{StaticResource History}"
+                                        ButtonText="Show History"
+                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        ShouldExpand="True"
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        Visibility="{TemplateBinding ShowHistoryButton,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+
                                     <!--  Clone  -->
                                     <c:BalloonButton
                                         x:Name="PART_CloneButton"

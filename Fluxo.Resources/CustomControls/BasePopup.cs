@@ -66,6 +66,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(ShowCloneButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty ShowHistoryButtonProperty =
+        DependencyProperty.Register(nameof(ShowHistoryButton), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
     public static readonly DependencyProperty ShowSplitButtonProperty =
         DependencyProperty.Register(nameof(ShowSplitButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
@@ -194,6 +198,12 @@ public class BasePopup : Window, IPopupHost
         set => SetValue(ShowCloneButtonProperty, value);
     }
 
+    public bool ShowHistoryButton
+    {
+        get => (bool)GetValue(ShowHistoryButtonProperty);
+        set => SetValue(ShowHistoryButtonProperty, value);
+    }
+
     public bool ShowSplitButton
     {
         get => (bool)GetValue(ShowSplitButtonProperty);
@@ -230,6 +240,7 @@ public class BasePopup : Window, IPopupHost
         WireButton("PART_EditButton", _ => OnEditButtonClick());
         WireButton("PART_DeleteButton", _ => OnDeleteButtonClick());
         WireButton("PART_CloneButton", _ => OnCloneButtonClick());
+        WireButton("PART_HistoryButton", _ => OnHistoryButtonClick());
         WireButton("PART_SplitButton", _ => OnSplitButtonClick());
         WireButton("PART_CancelButton", _ => OnCancelButtonClick());
 
@@ -281,6 +292,10 @@ public class BasePopup : Window, IPopupHost
     }
 
     protected virtual void OnCloneButtonClick()
+    {
+    }
+
+    protected virtual void OnHistoryButtonClick()
     {
     }
 
