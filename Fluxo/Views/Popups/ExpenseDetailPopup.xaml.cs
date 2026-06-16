@@ -117,7 +117,7 @@ public partial class ExpenseDetailPopup : BasePopup
 
     protected override void OnCloneButtonClick()
     {
-        var draft = _viewModel.CreateQuickAddDraft();
+        var draft = _viewModel.CreateAddNewTransactionDraft();
         var ownerWindow = Owner as MainWindow;
 
         CloseForPopupHandoff();

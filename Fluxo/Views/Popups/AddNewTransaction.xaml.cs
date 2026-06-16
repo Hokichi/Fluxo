@@ -27,14 +27,14 @@ public partial class AddNewTransaction : BasePopup
 
     private readonly IDialogService _dialogService;
     private readonly SettingsTagsTabVM _settingsTagsTabViewModel;
-    private readonly QuickAddVM _viewModel;
+    private readonly AddNewTransactionVM _viewModel;
     private bool _isHandlingAddTagSelection;
     private readonly DispatcherTimer _moreTagsHoverCloseTimer;
     private MoreTagsPopupLifecycleState _moreTagsPopupState = MoreTagsPopupLifecycleState.Closed;
     private bool _isSyncingNoteDocument;
 
     public AddNewTransaction(
-        QuickAddVM viewModel,
+        AddNewTransactionVM viewModel,
         IDialogService dialogService,
         SettingsTagsTabVM settingsTagsTabViewModel)
     {
@@ -235,7 +235,7 @@ public partial class AddNewTransaction : BasePopup
         if (sender is not ListBox listBox)
             return;
 
-        if (listBox.SelectedItem is not QuickAddVM.QuickAddTransactionSuggestion suggestion)
+        if (listBox.SelectedItem is not AddNewTransactionVM.AddNewTransactionSuggestion suggestion)
             return;
 
         _viewModel.ApplyTransactionNameSuggestion(suggestion);
@@ -246,10 +246,10 @@ public partial class AddNewTransaction : BasePopup
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(QuickAddVM.HasTransactionNameSuggestions) or
-            nameof(QuickAddVM.IsExpense) or
-            nameof(QuickAddVM.IsGoal) or
-            nameof(QuickAddVM.IsIncome))
+        if (e.PropertyName is nameof(AddNewTransactionVM.HasTransactionNameSuggestions) or
+            nameof(AddNewTransactionVM.IsExpense) or
+            nameof(AddNewTransactionVM.IsGoal) or
+            nameof(AddNewTransactionVM.IsIncome))
             SyncNameSuggestionsPopupState();
     }
 

@@ -375,8 +375,8 @@ public sealed class MainWindowShortcutRoutingTests
     {
         var source = ReadMainWindowSource();
 
-        Assert.Contains("public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)", source);
-        Assert.Contains("public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)", source);
+        Assert.Contains("public void OpenQuickAddPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)", source);
+        Assert.Contains("public void OpenAddNewTransactionPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)", source);
         Assert.Contains("public void OpenRecurringAddNewTransactionPopup()", source);
         Assert.Contains("public void OpenSpendingSourcesListPopup()", source);
         Assert.Contains("public void OpenAddSpendingSourcePopup()", source);

@@ -60,7 +60,7 @@ public partial class IncomeDetailPopup : BasePopup
         if (ownerWindow is null)
             return;
 
-        var draft = _viewModel.CreateQuickAddDraft();
+        var draft = _viewModel.CreateAddNewTransactionDraft();
         CloseForPopupHandoff();
         ownerWindow.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenAddNewTransactionPopup(draft)));
     }

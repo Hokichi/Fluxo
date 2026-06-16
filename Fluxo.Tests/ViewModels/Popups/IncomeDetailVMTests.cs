@@ -69,7 +69,7 @@ public sealed class IncomeDetailVMTests
     }
 
     [Fact]
-    public async Task CreateQuickAddDraft_UsesDisplayedIncomeValues()
+    public async Task CreateAddNewTransactionDraft_UsesDisplayedIncomeValues()
     {
         await RunInStaAsync(() =>
         {
@@ -79,7 +79,7 @@ public sealed class IncomeDetailVMTests
                 name: "Salary",
                 notes: "Monthly salary");
 
-            var draft = vm.CreateQuickAddDraft();
+            var draft = vm.CreateAddNewTransactionDraft();
 
             Assert.False(draft.IsExpense);
             Assert.Equal("Salary", draft.Name);

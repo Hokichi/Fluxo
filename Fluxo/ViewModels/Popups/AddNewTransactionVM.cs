@@ -18,7 +18,7 @@ using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups;
 
-public partial class QuickAddVM : ObservableValidator
+public partial class AddNewTransactionVM : ObservableValidator
 {
     private const int DefaultVisibleTagSlots = 4;
     private const int MaxNameLength = 256;
@@ -29,7 +29,7 @@ public partial class QuickAddVM : ObservableValidator
 
     private readonly List<SpendingSourceVM> _availableSpendingSources = [];
     private readonly IReadOnlyList<SpendingSourceVM>? _spendingSourcesOverride;
-    private readonly Func<RecurringDraftSaveInput, Task<QuickAddSubmissionResult>>? _saveRecurringDraftAsync;
+    private readonly Func<RecurringDraftSaveInput, Task<AddNewTransactionSubmissionResult>>? _saveRecurringDraftAsync;
     private readonly List<SavingGoalVM> _orderedGoals = [];
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
@@ -41,7 +41,7 @@ public partial class QuickAddVM : ObservableValidator
     private int _transactionNameSuggestionRequestVersion;
 
     [ObservableProperty]
-    [CustomValidation(typeof(QuickAddVM), nameof(ValidateAmountText))]
+    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateAmountText))]
     private decimal _amountText;
     [ObservableProperty] private bool _isExpense = true;
     [ObservableProperty] private bool _isGoal;
@@ -50,7 +50,7 @@ public partial class QuickAddVM : ObservableValidator
     private bool _isUpdatingTagCollections;
     private int _visibleTagSlots = DefaultVisibleTagSlots;
     [ObservableProperty]
-    [CustomValidation(typeof(QuickAddVM), nameof(ValidateNameText))]
+    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateNameText))]
     private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
@@ -58,28 +58,28 @@ public partial class QuickAddVM : ObservableValidator
     [ObservableProperty] private RecurringPeriod _selectedRecurringPeriod = RecurringPeriod.Monthly;
     [ObservableProperty]
     [NotifyDataErrorInfo]
-    [CustomValidation(typeof(QuickAddVM), nameof(ValidateRecurringTimeText))]
+    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateRecurringTimeText))]
     private string _recurringTimeText = string.Empty;
     [ObservableProperty] private bool _isRecurringModeLocked;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
     [ObservableProperty]
     [NotifyDataErrorInfo]
-    [CustomValidation(typeof(QuickAddVM), nameof(ValidateSelectedGoal))]
+    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedGoal))]
     private SavingGoalVM? _selectedGoal;
     [ObservableProperty]
     [NotifyDataErrorInfo]
-    [CustomValidation(typeof(QuickAddVM), nameof(ValidateSelectedSpendingSource))]
+    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedSpendingSource))]
     private SpendingSourceVM? _selectedSpendingSource;
     [ObservableProperty]
     [NotifyDataErrorInfo]
-    [CustomValidation(typeof(QuickAddVM), nameof(ValidateSelectedTag))]
+    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedTag))]
     private ExpenseTagVM? _selectedTag;
 
-    public QuickAddVM(
+    public AddNewTransactionVM(
         MainVM mainViewModel,
         IAppDataService appData,
         IReadOnlyList<SpendingSourceVM>? spendingSourcesOverride = null,
-        Func<RecurringDraftSaveInput, Task<QuickAddSubmissionResult>>? saveRecurringDraftAsync = null)
+        Func<RecurringDraftSaveInput, Task<AddNewTransactionSubmissionResult>>? saveRecurringDraftAsync = null)
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
@@ -116,7 +116,7 @@ public partial class QuickAddVM : ObservableValidator
     public ObservableCollection<SavingGoalVM> Goals { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
-    public ObservableCollection<QuickAddTransactionSuggestion> TransactionNameSuggestions { get; } = [];
+    public ObservableCollection<AddNewTransactionSuggestion> TransactionNameSuggestions { get; } = [];
     public IReadOnlyList<RecurringPeriod> RecurringPeriods { get; } =
     [
         RecurringPeriod.None,
@@ -274,7 +274,7 @@ public partial class QuickAddVM : ObservableValidator
         ValidateAmountField();
     }
 
-    public void InitializeFromDraft(QuickAddDraft draft)
+    public void InitializeFromDraft(AddNewTransactionDraft draft)
     {
         ReloadChoicesFromMainViewModel();
 
@@ -332,7 +332,7 @@ public partial class QuickAddVM : ObservableValidator
         NotifyFormStateChanged();
     }
 
-    public void ApplyTransactionNameSuggestion(QuickAddTransactionSuggestion suggestion)
+    public void ApplyTransactionNameSuggestion(AddNewTransactionSuggestion suggestion)
     {
         NameText = suggestion.Name;
         AmountText = suggestion.Amount;
@@ -366,13 +366,13 @@ public partial class QuickAddVM : ObservableValidator
         IsMoreTagsOpen = false;
     }
 
-    public async Task<QuickAddSubmissionResult> SaveAsync(bool resetAfterSave)
+    public async Task<AddNewTransactionSubmissionResult> SaveAsync(bool resetAfterSave)
     {
         if (IsSaving)
-            return QuickAddSubmissionResult.Failure("A transaction is already being saved.");
+            return AddNewTransactionSubmissionResult.Failure("A transaction is already being saved.");
 
         if (!TryBuildTransactionInput(out var input, out var validationMessage))
-            return QuickAddSubmissionResult.Failure(validationMessage);
+            return AddNewTransactionSubmissionResult.Failure(validationMessage);
 
         IsSaving = true;
 
@@ -381,7 +381,7 @@ public partial class QuickAddVM : ObservableValidator
             if (input.IsRecurring && _saveRecurringDraftAsync is not null)
             {
                 if (!TryNormalizeRecurringTime(input.RecurringPeriod, input.RecurringTimeText, out var recurringTime))
-                    return QuickAddSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
+                    return AddNewTransactionSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
 
                 var recurringType = input.IsGoal
                     ? RecurringTransactionType.GoalUpdate
@@ -412,22 +412,22 @@ public partial class QuickAddVM : ObservableValidator
                     ResetForm(true);
                 }
 
-                return QuickAddSubmissionResult.Success();
+                return AddNewTransactionSubmissionResult.Success();
             }
 
             var spendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
             if (spendingSource is null)
-                return QuickAddSubmissionResult.Failure("Please select a valid spending source.");
+                return AddNewTransactionSubmissionResult.Failure("Please select a valid spending source.");
 
             if (!TryValidateSpendingAmountAgainstSource(input.IsExpense, input.IsGoal, input.Amount, spendingSource, out var spendingValidationMessage))
-                return QuickAddSubmissionResult.Failure(spendingValidationMessage);
+                return AddNewTransactionSubmissionResult.Failure(spendingValidationMessage);
 
             var invalidationScope = DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications;
 
             if (input.IsRecurring)
             {
                 if (!TryNormalizeRecurringTime(input.RecurringPeriod, input.RecurringTimeText, out var recurringTime))
-                    return QuickAddSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
+                    return AddNewTransactionSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
 
                 var recurringType = input.IsGoal
                     ? RecurringTransactionType.GoalUpdate
@@ -467,14 +467,14 @@ public partial class QuickAddVM : ObservableValidator
             else if (input.IsGoal)
             {
                 if (input.GoalId is null)
-                    return QuickAddSubmissionResult.Failure("Please choose a goal.");
+                    return AddNewTransactionSubmissionResult.Failure("Please choose a goal.");
 
                 if (!GoalUpdateTransactionSupport.IsEligibleGoalSourceType(spendingSource.SpendingSourceType))
-                    return QuickAddSubmissionResult.Failure("Goal updates can only be taken from Cash or Checking.");
+                    return AddNewTransactionSubmissionResult.Failure("Goal updates can only be taken from Cash or Checking.");
 
                 var goal = await _appData.GetSavingGoalByIdAsync(input.GoalId.Value);
                 if (goal is null)
-                    return QuickAddSubmissionResult.Failure("Please select a valid goal.");
+                    return AddNewTransactionSubmissionResult.Failure("Please select a valid goal.");
 
                 var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(
                     ExpenseCategory.Savings,
@@ -532,7 +532,7 @@ public partial class QuickAddVM : ObservableValidator
             {
                 var expenseTag = await _appData.GetExpenseTagByIdAsync(input.TagId!.Value);
                 if (expenseTag is null)
-                    return QuickAddSubmissionResult.Failure("Please select a valid tag.");
+                    return AddNewTransactionSubmissionResult.Failure("Please select a valid tag.");
 
                 var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(input.Category!.Value, input.Amount, input.Date);
                 if (!budgetPolicyResult.IsSuccess)
@@ -614,12 +614,12 @@ public partial class QuickAddVM : ObservableValidator
                 ResetForm(true);
             }
 
-            return QuickAddSubmissionResult.Success();
+            return AddNewTransactionSubmissionResult.Success();
         }
         catch (Exception exception)
         {
             FluxoLogManager.LogError(exception, "Unable to save quick-add transaction.");
-            return QuickAddSubmissionResult.Failure(FluxoLogManager.CreateFailureMessage("save transaction"));
+            return AddNewTransactionSubmissionResult.Failure(FluxoLogManager.CreateFailureMessage("save transaction"));
         }
         finally
         {
@@ -809,14 +809,14 @@ public partial class QuickAddVM : ObservableValidator
         }
     }
 
-    private async Task<QuickAddSubmissionResult> ApplyExpenseBudgetPolicyAsync(
+    private async Task<AddNewTransactionSubmissionResult> ApplyExpenseBudgetPolicyAsync(
         ExpenseCategory category,
         decimal amount,
         DateTime expenseDate)
     {
         var allocation = await _appData.GetBudgetAllocationAsync();
         if (allocation.OverspendPolicy == OverspendPolicy.Ignore)
-            return QuickAddSubmissionResult.Success();
+            return AddNewTransactionSubmissionResult.Success();
 
         var snapshot = await BuildBudgetAllocationSnapshotAsync(allocation, expenseDate);
         var categoryState = GetCategoryState(snapshot, category);
@@ -824,7 +824,7 @@ public partial class QuickAddVM : ObservableValidator
         if (allocation.OverspendPolicy == OverspendPolicy.HardStop &&
             BudgetAllocationCalculator.WouldHardStop(categoryState, amount))
         {
-            return QuickAddSubmissionResult.Failure(
+            return AddNewTransactionSubmissionResult.Failure(
                 $"{GetExpenseCategoryLabel(category)} budget is exhausted for this allocation period.");
         }
 
@@ -838,7 +838,7 @@ public partial class QuickAddVM : ObservableValidator
             }
         }
 
-        return QuickAddSubmissionResult.Success();
+        return AddNewTransactionSubmissionResult.Success();
     }
 
     private async Task<BudgetAllocationSnapshot> BuildBudgetAllocationSnapshotAsync(
@@ -1133,7 +1133,7 @@ public partial class QuickAddVM : ObservableValidator
         OnPropertyChanged(nameof(HasTransactionNameSuggestions));
     }
 
-    internal static IEnumerable<QuickAddTransactionSuggestion> BuildTransactionNameSuggestions(
+    internal static IEnumerable<AddNewTransactionSuggestion> BuildTransactionNameSuggestions(
         IEnumerable<ExpenseLog> expenseLogs,
         IEnumerable<IncomeLog> incomeLogs,
         bool isExpense,
@@ -1148,7 +1148,7 @@ public partial class QuickAddVM : ObservableValidator
             : BuildIncomeTransactionNameSuggestions(incomeLogs, normalizedQuery);
     }
 
-    private static IEnumerable<QuickAddTransactionSuggestion> BuildExpenseTransactionNameSuggestions(
+    private static IEnumerable<AddNewTransactionSuggestion> BuildExpenseTransactionNameSuggestions(
         IEnumerable<ExpenseLog> expenseLogs,
         string query)
     {
@@ -1157,7 +1157,7 @@ public partial class QuickAddVM : ObservableValidator
             .Where(log => !string.IsNullOrWhiteSpace(log.Expense?.Name))
             .Where(log => log.Expense.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(log => log.DeductedOn)
-            .Select(log => new QuickAddTransactionSuggestion(
+            .Select(log => new AddNewTransactionSuggestion(
                 log.Expense.Name,
                 log.Amount,
                 log.SpendingSourceId,
@@ -1168,7 +1168,7 @@ public partial class QuickAddVM : ObservableValidator
                 null));
     }
 
-    private static IEnumerable<QuickAddTransactionSuggestion> BuildIncomeTransactionNameSuggestions(
+    private static IEnumerable<AddNewTransactionSuggestion> BuildIncomeTransactionNameSuggestions(
         IEnumerable<IncomeLog> incomeLogs,
         string query)
     {
@@ -1176,7 +1176,7 @@ public partial class QuickAddVM : ObservableValidator
             .Where(log => !string.IsNullOrWhiteSpace(log.Name))
             .Where(log => log.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(log => log.AddedOn)
-            .Select(log => new QuickAddTransactionSuggestion(
+            .Select(log => new AddNewTransactionSuggestion(
                 log.Name,
                 log.Amount,
                 log.SpendingSourceId,
@@ -1519,7 +1519,7 @@ public partial class QuickAddVM : ObservableValidator
 
     public static ValidationResult? ValidateNameText(string value, ValidationContext validationContext)
     {
-        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
         if (viewModel.IsGoal)
             return ValidationResult.Success;
 
@@ -1539,7 +1539,7 @@ public partial class QuickAddVM : ObservableValidator
 
     public static ValidationResult? ValidateAmountText(decimal value, ValidationContext validationContext)
     {
-        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
         if (value <= 0m)
             return new ValidationResult("Please enter a valid amount greater than zero.");
 
@@ -1597,7 +1597,7 @@ public partial class QuickAddVM : ObservableValidator
 
     public static ValidationResult? ValidateSelectedTag(ExpenseTagVM? value, ValidationContext validationContext)
     {
-        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
         if (!viewModel.IsExpense)
             return ValidationResult.Success;
 
@@ -1608,7 +1608,7 @@ public partial class QuickAddVM : ObservableValidator
 
     public static ValidationResult? ValidateSelectedGoal(SavingGoalVM? value, ValidationContext validationContext)
     {
-        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
         if (!viewModel.IsGoal)
             return ValidationResult.Success;
 
@@ -1619,7 +1619,7 @@ public partial class QuickAddVM : ObservableValidator
 
     public static ValidationResult? ValidateRecurringTimeText(string value, ValidationContext validationContext)
     {
-        var viewModel = (QuickAddVM)validationContext.ObjectInstance;
+        var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
         if (!viewModel.IsRecurring || viewModel.SelectedRecurringPeriod == RecurringPeriod.None)
             return ValidationResult.Success;
 
@@ -1690,7 +1690,7 @@ public partial class QuickAddVM : ObservableValidator
         private bool _isEnabled = true;
     }
 
-    public sealed record QuickAddTransactionSuggestion(
+    public sealed record AddNewTransactionSuggestion(
         string Name,
         decimal Amount,
         int SpendingSourceId,
@@ -1700,20 +1700,20 @@ public partial class QuickAddVM : ObservableValidator
         int? TagId,
         DateTime? Date);
 
-    public readonly record struct QuickAddSubmissionResult(bool IsSuccess, string? ErrorMessage)
+    public readonly record struct AddNewTransactionSubmissionResult(bool IsSuccess, string? ErrorMessage)
     {
-        public static QuickAddSubmissionResult Success()
+        public static AddNewTransactionSubmissionResult Success()
         {
-            return new QuickAddSubmissionResult(true, null);
+            return new AddNewTransactionSubmissionResult(true, null);
         }
 
-        public static QuickAddSubmissionResult Failure(string? errorMessage)
+        public static AddNewTransactionSubmissionResult Failure(string? errorMessage)
         {
-            return new QuickAddSubmissionResult(false, errorMessage);
+            return new AddNewTransactionSubmissionResult(false, errorMessage);
         }
     }
 
-    public readonly record struct QuickAddDraft(
+    public readonly record struct AddNewTransactionDraft(
         bool IsExpense,
         string Name,
         decimal AmountText,

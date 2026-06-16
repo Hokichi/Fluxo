@@ -78,7 +78,7 @@ public sealed class DialogService : IDialogService
         return ShowDialog(popup, owner);
     }
 
-    public bool? ShowAddNewTransaction(QuickAddVM viewModel, Window? owner = null)
+    public bool? ShowAddNewTransaction(AddNewTransactionVM viewModel, Window? owner = null)
     {
         using var scope = _serviceProvider.CreateScope();
         var popup = ActivatorUtilities.CreateInstance<AddNewTransaction>(scope.ServiceProvider, viewModel);

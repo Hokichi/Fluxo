@@ -219,7 +219,7 @@ public partial class ExpenseDetailVM : ObservableObject
         }
 
         var selectedTagId = SelectedTag?.Id;
-        var persistedTags = QuickAddVM.ProjectNonSystemTags(allTags).ToList();
+        var persistedTags = AddNewTransactionVM.ProjectNonSystemTags(allTags).ToList();
         if (persistedTags.Count == 0)
             return;
 
@@ -232,9 +232,9 @@ public partial class ExpenseDetailVM : ObservableObject
             : _orderedTags.FirstOrDefault(tag => tag.Id == selectedTagId.Value) ?? _orderedTags.FirstOrDefault();
     }
 
-    public QuickAddVM.QuickAddDraft CreateQuickAddDraft()
+    public AddNewTransactionVM.AddNewTransactionDraft CreateAddNewTransactionDraft()
     {
-        return new QuickAddVM.QuickAddDraft(
+        return new AddNewTransactionVM.AddNewTransactionDraft(
             true,
             NameText,
             AmountText,

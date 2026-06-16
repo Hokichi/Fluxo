@@ -26,7 +26,7 @@ public interface IDialogService
 
     bool? ShowPlanningReport(PlanningSnapshot snapshot, Window? owner = null);
 
-    bool? ShowAddNewTransaction(QuickAddVM viewModel, Window? owner = null);
+    bool? ShowAddNewTransaction(AddNewTransactionVM viewModel, Window? owner = null);
 
     bool? ShowExpenseDetail(ExpenseDetailVM viewModel, Window? owner = null);
 

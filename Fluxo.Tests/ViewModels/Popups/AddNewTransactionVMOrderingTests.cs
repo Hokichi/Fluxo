@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
 
-public class QuickAddVMOrderingTests
+public class AddNewTransactionVMOrderingTests
 {
     [Fact]
     public void ProjectNonSystemTags_FiltersSystemTags_AndOrdersByName()
@@ -18,7 +18,7 @@ public class QuickAddVMOrderingTests
             new ExpenseTag { Id = 3, Name = "System", HexCode = "#333333", IsSystemTag = true }
         };
 
-        var projected = QuickAddVM.ProjectNonSystemTags(tags).ToList();
+        var projected = AddNewTransactionVM.ProjectNonSystemTags(tags).ToList();
 
         Assert.Collection(projected,
             first =>
@@ -53,8 +53,8 @@ public class QuickAddVMOrderingTests
         };
 
         var ordered = sources
-            .OrderBy(QuickAddVM.GetSpendingSourceTypeSortOrder)
-            .ThenByDescending(QuickAddVM.GetSpendingSourceWithinTypeSortValue)
+            .OrderBy(AddNewTransactionVM.GetSpendingSourceTypeSortOrder)
+            .ThenByDescending(AddNewTransactionVM.GetSpendingSourceWithinTypeSortValue)
             .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
             .Select(source => source.Id)
             .ToList();
@@ -111,7 +111,7 @@ public class QuickAddVMOrderingTests
             }
         };
 
-        var suggestions = QuickAddVM.BuildTransactionNameSuggestions(logs, [], isExpense: true, query: "gro").ToList();
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions(logs, [], isExpense: true, query: "gro").ToList();
 
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Market Groceries", suggestion.Name);
@@ -151,7 +151,7 @@ public class QuickAddVMOrderingTests
             }
         };
 
-        var suggestions = QuickAddVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sal").ToList();
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sal").ToList();
 
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Monthly Salary", suggestion.Name);
@@ -180,7 +180,7 @@ public class QuickAddVMOrderingTests
             }
         };
 
-        var suggestions = QuickAddVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sa");
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sa");
 
         Assert.Empty(suggestions);
     }
@@ -192,7 +192,7 @@ public class QuickAddVMOrderingTests
     [InlineData(RecurringPeriod.Monthly, "28", 28)]
     public void TryNormalizeRecurringTime_AcceptsValidValues(RecurringPeriod period, string text, int expected)
     {
-        var result = QuickAddVM.TryNormalizeRecurringTime(period, text, out var recurringTime);
+        var result = AddNewTransactionVM.TryNormalizeRecurringTime(period, text, out var recurringTime);
 
         Assert.True(result);
         Assert.Equal(expected, recurringTime);
@@ -205,7 +205,7 @@ public class QuickAddVMOrderingTests
     [InlineData(RecurringPeriod.Monthly, "0")]
     public void TryNormalizeRecurringTime_RejectsInvalidValues(RecurringPeriod period, string text)
     {
-        var result = QuickAddVM.TryNormalizeRecurringTime(period, text, out _);
+        var result = AddNewTransactionVM.TryNormalizeRecurringTime(period, text, out _);
 
         Assert.False(result);
     }

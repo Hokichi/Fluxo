@@ -438,7 +438,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return SourcesTab.CreateAddSpendingSourceViewModel();
     }
 
-    public QuickAddVM CreateAddFixedExpenseViewModel()
+    public AddNewTransactionVM CreateAddFixedExpenseViewModel()
     {
         return FixedExpensesTab.CreateAddFixedExpenseViewModel();
     }

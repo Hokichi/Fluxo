@@ -48,10 +48,10 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         _spendingSources = spendingSources;
     }
 
-    public QuickAddVM CreateAddViewModel()
+    public AddNewTransactionVM CreateAddViewModel()
     {
         var spendingSourcesVm = GetSpendingSourcesOrThrow();
-        var vm = new QuickAddVM(
+        var vm = new AddNewTransactionVM(
             _mainViewModel,
             _appData,
             spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
@@ -60,13 +60,13 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         return vm;
     }
 
-    public async Task<QuickAddVM> CreateEditViewModelAsync(int id)
+    public async Task<AddNewTransactionVM> CreateEditViewModelAsync(int id)
     {
         if (!_isLoaded)
             await LoadDraftExpensesAsync();
 
         var spendingSourcesVm = GetSpendingSourcesOrThrow();
-        var vm = new QuickAddVM(
+        var vm = new AddNewTransactionVM(
             _mainViewModel,
             _appData,
             spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
@@ -74,7 +74,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
         if (_draftExpenses.TryGetValue(id, out var draft))
         {
-            vm.InitializeFromRecurringDraft(new QuickAddVM.RecurringDraftSnapshot(
+            vm.InitializeFromRecurringDraft(new AddNewTransactionVM.RecurringDraftSnapshot(
                 draft.Id > 0 ? draft.Id : null,
                 RecurringTransactionType.Expense,
                 draft.Name,
@@ -232,12 +232,12 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         return Task.FromResult(AddFixedExpenseVM.AddFixedExpenseResult.Success(true));
     }
 
-    private Task<QuickAddVM.QuickAddSubmissionResult> SaveDraftRecurringTransactionAsync(
-        QuickAddVM.RecurringDraftSaveInput input)
+    private Task<AddNewTransactionVM.AddNewTransactionSubmissionResult> SaveDraftRecurringTransactionAsync(
+        AddNewTransactionVM.RecurringDraftSaveInput input)
     {
         if (input.Type != RecurringTransactionType.Expense)
         {
-            return Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Failure(
+            return Task.FromResult(AddNewTransactionVM.AddNewTransactionSubmissionResult.Failure(
                 "Startup Wizard recurring transactions currently support expenses only."));
         }
 
@@ -260,7 +260,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             _removedPersistedIds.Remove(id);
 
         RefreshProjectionAndPublish();
-        return Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Success());
+        return Task.FromResult(AddNewTransactionVM.AddNewTransactionSubmissionResult.Success());
     }
 
     private string ResolveDraftTagName(int? tagId)

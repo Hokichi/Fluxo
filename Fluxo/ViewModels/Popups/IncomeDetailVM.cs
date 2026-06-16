@@ -39,9 +39,9 @@ public partial class IncomeDetailVM : ObservableObject
     public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
     public ICollectionView SpendingSourcesView { get; }
 
-    public QuickAddVM.QuickAddDraft CreateQuickAddDraft()
+    public AddNewTransactionVM.AddNewTransactionDraft CreateAddNewTransactionDraft()
     {
-        return new QuickAddVM.QuickAddDraft(
+        return new AddNewTransactionVM.AddNewTransactionDraft(
             false,
             NameText,
             AmountText,

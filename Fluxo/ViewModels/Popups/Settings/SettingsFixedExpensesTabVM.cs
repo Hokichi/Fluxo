@@ -58,16 +58,16 @@ public partial class SettingsFixedExpensesTabVM : ObservableObject
         IsFixedExpenseChecksEnabled = false;
     }
 
-    public QuickAddVM CreateAddFixedExpenseViewModel()
+    public AddNewTransactionVM CreateAddFixedExpenseViewModel()
     {
-        var viewModel = new QuickAddVM(_mainViewModel, _appData);
+        var viewModel = new AddNewTransactionVM(_mainViewModel, _appData);
         viewModel.InitializeRecurringMode(isLocked: true);
         return viewModel;
     }
 
-    public async Task<QuickAddVM?> CreateEditFixedExpenseViewModelAsync(int fixedExpenseId)
+    public async Task<AddNewTransactionVM?> CreateEditFixedExpenseViewModelAsync(int fixedExpenseId)
     {
-        var viewModel = new QuickAddVM(_mainViewModel, _appData);
+        var viewModel = new AddNewTransactionVM(_mainViewModel, _appData);
         await viewModel.EnsureTagsLoadedAsync();
         return await viewModel.InitializeFromRecurringTransactionAsync(fixedExpenseId) ? viewModel : null;
     }

@@ -139,7 +139,7 @@ public partial class SavingGoalsPanel : UserControl
             Window.GetWindow(this) is not global::Fluxo.Views.Shell.Main.MainWindow mainWindow)
             return;
 
-        mainWindow.OpenAddNewTransactionPopup(new QuickAddVM.QuickAddDraft(
+        mainWindow.OpenAddNewTransactionPopup(new AddNewTransactionVM.AddNewTransactionDraft(
             false,
             string.Empty,
             0m,

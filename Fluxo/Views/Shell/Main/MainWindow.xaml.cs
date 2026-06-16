@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -187,7 +187,7 @@ public partial class MainWindow : Window, IPopupHost
         }
     }
 
-    // â”€â”€ Fade helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Fade helpers ────────────────────────────────────────────────
 
     private void FadeIn(Action? onCompleted = null)
     {
@@ -330,7 +330,7 @@ public partial class MainWindow : Window, IPopupHost
             ref backdrop, sizeof(int));
     }
 
-    // â”€â”€ SystemCommand handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── SystemCommand handlers ───────────────────────────────────────
 
     private void OnCloseWindow(object sender, ExecutedRoutedEventArgs e)
     {
@@ -625,7 +625,7 @@ public partial class MainWindow : Window, IPopupHost
         BeginAnimation(HeightProperty, null);
     }
 
-    // â”€â”€ Monitor work area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Monitor work area ───────────────────────────────────────────
 
     private Rect GetMonitorWorkArea()
     {
@@ -651,7 +651,7 @@ public partial class MainWindow : Window, IPopupHost
     [DllImport("user32.dll")]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
-    // â”€â”€ Shared UI helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Shared UI helpers ───────────────────────────────────────────
 
     private async Task InitializeDashboardPanelsAsync()
     {
@@ -712,7 +712,7 @@ public partial class MainWindow : Window, IPopupHost
         return false;
     }
 
-    // â”€â”€ Keyboard shortcuts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Keyboard shortcuts ────────────────────────────────────────────
 
     private async void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
@@ -1348,7 +1348,7 @@ public partial class MainWindow : Window, IPopupHost
         OpenAddSpendingSourcePopup();
     }
 
-    public void OpenQuickAddPopup(QuickAddVM.QuickAddDraft? draft = null)
+    public void OpenQuickAddPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)
     {
         if (draft is { } popupDraft)
         {
@@ -1367,7 +1367,7 @@ public partial class MainWindow : Window, IPopupHost
 
     public void OpenAddNewTransactionPopupForCategory(ExpenseCategory category)
     {
-        OpenAddNewTransactionPopup(new QuickAddVM.QuickAddDraft(
+        OpenAddNewTransactionPopup(new AddNewTransactionVM.AddNewTransactionDraft(
             true,
             string.Empty,
             0m,
@@ -1378,14 +1378,14 @@ public partial class MainWindow : Window, IPopupHost
             null));
     }
 
-    public void OpenAddNewTransactionPopup(QuickAddVM.QuickAddDraft? draft = null)
+    public void OpenAddNewTransactionPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)
     {
         if (IsSufficientFundsActionGateLocked())
             return;
 
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var popupViewModel = new QuickAddVM(_mainVM, appData);
+        var popupViewModel = new AddNewTransactionVM(_mainVM, appData);
         if (draft is { } popupDraft)
             popupViewModel.InitializeFromDraft(popupDraft);
 
@@ -1399,7 +1399,7 @@ public partial class MainWindow : Window, IPopupHost
 
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var popupViewModel = new QuickAddVM(_mainVM, appData);
+        var popupViewModel = new AddNewTransactionVM(_mainVM, appData);
         popupViewModel.InitializeRecurringMode(isLocked: false);
         _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
@@ -1892,7 +1892,7 @@ public partial class MainWindow : Window, IPopupHost
         _isPreparingMainPage = false;
     }
 
-    // â”€â”€ Popup overlay & blur â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Popup overlay & blur ────────────────────────────────────────
 
     public void BeginPopupHandoff()
     {

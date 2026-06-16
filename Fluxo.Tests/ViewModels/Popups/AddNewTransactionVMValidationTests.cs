@@ -17,7 +17,7 @@ using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
 
-public sealed class QuickAddVMValidationTests
+public sealed class AddNewTransactionVMValidationTests
 {
     [Theory]
     [InlineData(false)]
@@ -71,7 +71,7 @@ public sealed class QuickAddVMValidationTests
     {
         RunInSta(() =>
         {
-            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
 
             Assert.False(vm.HasErrors);
             Assert.False(vm.CanSave);
@@ -85,7 +85,7 @@ public sealed class QuickAddVMValidationTests
     {
         RunInSta(() =>
         {
-            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
 
             vm.NameText = "Coffee";
             vm.AmountText = 5m;
@@ -102,12 +102,12 @@ public sealed class QuickAddVMValidationTests
     {
         RunInSta(() =>
         {
-            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
 
             vm.ValidateAmountField();
 
-            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.NameText)));
-            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.AmountText)), error => error.ErrorMessage == "Please enter a valid amount greater than zero.");
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.NameText)));
+            Assert.Contains(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)), error => error.ErrorMessage == "Please enter a valid amount greater than zero.");
             Assert.Equal(string.Empty, vm.NameValidationHint);
             Assert.Equal("Invalid Amount", vm.AmountValidationHint);
         });
@@ -118,18 +118,18 @@ public sealed class QuickAddVMValidationTests
     {
         RunInSta(() =>
         {
-            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
             var amountErrorsChangedCount = 0;
             vm.ErrorsChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(QuickAddVM.AmountText))
+                if (e.PropertyName == nameof(AddNewTransactionVM.AmountText))
                     amountErrorsChangedCount++;
             };
 
             vm.ActivateAmountValidation();
             var countAfterActivation = amountErrorsChangedCount;
 
-            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.AmountText)), error => error.ErrorMessage == "Please enter a valid amount greater than zero.");
+            Assert.Contains(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)), error => error.ErrorMessage == "Please enter a valid amount greater than zero.");
             Assert.Equal("Invalid Amount", vm.AmountValidationHint);
 
             vm.ActivateAmountValidation();
@@ -137,7 +137,7 @@ public sealed class QuickAddVMValidationTests
 
             vm.AmountText = 10m;
 
-            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.AmountText)));
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)));
             Assert.Equal(string.Empty, vm.AmountValidationHint);
         });
     }
@@ -165,7 +165,7 @@ public sealed class QuickAddVMValidationTests
 
             vm.AmountText = 15m;
 
-            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.AmountText)),
+            Assert.Contains(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)),
                 error => error.ErrorMessage == "General spending limit exceeded.");
         });
     }
@@ -193,7 +193,7 @@ public sealed class QuickAddVMValidationTests
 
             vm.AmountText = 5m;
 
-            Assert.DoesNotContain(vm.GetErrors(nameof(QuickAddVM.AmountText)),
+            Assert.DoesNotContain(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)),
                 error => error.ErrorMessage == "General spending limit exceeded.");
         });
     }
@@ -203,12 +203,12 @@ public sealed class QuickAddVMValidationTests
     {
         RunInSta(() =>
         {
-            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
 
             vm.ValidateNameField();
 
-            Assert.Contains(vm.GetErrors(nameof(QuickAddVM.NameText)), error => error.ErrorMessage == "Please enter a name.");
-            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.AmountText)));
+            Assert.Contains(vm.GetErrors(nameof(AddNewTransactionVM.NameText)), error => error.ErrorMessage == "Please enter a name.");
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)));
             Assert.Equal("Required", vm.NameValidationHint);
             Assert.Equal(string.Empty, vm.AmountValidationHint);
         });
@@ -228,7 +228,7 @@ public sealed class QuickAddVMValidationTests
 
             vm.IsIncome = true;
 
-            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.NameText)));
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.NameText)));
             Assert.Equal(string.Empty, vm.NameValidationHint);
         });
     }
@@ -247,7 +247,7 @@ public sealed class QuickAddVMValidationTests
                 Balance = 100m,
                 IsEnabled = true
             };
-            var vm = new QuickAddVM(CreateMainViewModel([lowBalance, highBalance]), CreateAppData());
+            var vm = new AddNewTransactionVM(CreateMainViewModel([lowBalance, highBalance]), CreateAppData());
             vm.SelectedSpendingSource = lowBalance;
             vm.AmountText = 30m;
             vm.ValidateAmountField();
@@ -256,7 +256,7 @@ public sealed class QuickAddVMValidationTests
 
             vm.SelectedSpendingSource = highBalance;
 
-            Assert.Empty(vm.GetErrors(nameof(QuickAddVM.AmountText)));
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)));
             Assert.Equal(string.Empty, vm.AmountValidationHint);
         });
     }
@@ -266,7 +266,7 @@ public sealed class QuickAddVMValidationTests
     {
         RunInSta(() =>
         {
-            var vm = new QuickAddVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
             vm.BeginChangeTracking();
 
             vm.SelectedDate = vm.SelectedDate.AddDays(1);
@@ -693,7 +693,7 @@ public sealed class QuickAddVMValidationTests
                 IsEnabled = true
             };
 
-            var vm = new QuickAddVM(
+            var vm = new AddNewTransactionVM(
                 CreateMainViewModel([persistedSource]),
                 CreateAppData(),
                 spendingSourcesOverride: [temporarySource]);
@@ -722,15 +722,15 @@ public sealed class QuickAddVMValidationTests
             appData.GetSpendingSourceByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<SpendingSource?>(null));
 
-            QuickAddVM.RecurringDraftSaveInput? captured = null;
-            var vm = new QuickAddVM(
+            AddNewTransactionVM.RecurringDraftSaveInput? captured = null;
+            var vm = new AddNewTransactionVM(
                 CreateMainViewModel([CreateCheckingSource(balance: 100m)]),
                 appData,
                 spendingSourcesOverride: [temporarySource],
                 saveRecurringDraftAsync: input =>
                 {
                     captured = input;
-                    return Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Success());
+                    return Task.FromResult(AddNewTransactionVM.AddNewTransactionSubmissionResult.Success());
                 });
 
             vm.IsExpense = true;
@@ -768,14 +768,14 @@ public sealed class QuickAddVMValidationTests
                 OverspendPolicy = OverspendPolicy.HardStop
             };
             var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 30m));
-            QuickAddVM.RecurringDraftSaveInput? captured = null;
-            var vm = new QuickAddVM(
+            AddNewTransactionVM.RecurringDraftSaveInput? captured = null;
+            var vm = new AddNewTransactionVM(
                 CreateMainViewModel([source]),
                 appData,
                 saveRecurringDraftAsync: input =>
                 {
                     captured = input;
-                    return Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Success());
+                    return Task.FromResult(AddNewTransactionVM.AddNewTransactionSubmissionResult.Success());
                 });
             vm.IsExpense = true;
             vm.IsRecurring = true;
@@ -810,10 +810,10 @@ public sealed class QuickAddVMValidationTests
                 OverspendPolicy = OverspendPolicy.SoftDebt
             };
             var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 30m));
-            var vm = new QuickAddVM(
+            var vm = new AddNewTransactionVM(
                 CreateMainViewModel([source]),
                 appData,
-                saveRecurringDraftAsync: _ => Task.FromResult(QuickAddVM.QuickAddSubmissionResult.Success()));
+                saveRecurringDraftAsync: _ => Task.FromResult(AddNewTransactionVM.AddNewTransactionSubmissionResult.Success()));
             vm.IsExpense = true;
             vm.IsRecurring = true;
             vm.NameText = "Subscription";
@@ -971,7 +971,7 @@ public sealed class QuickAddVMValidationTests
         });
     }
 
-    private static QuickAddVM CreateVm(
+    private static AddNewTransactionVM CreateVm(
         TransactionKind kind,
         SpendingSourceVM source,
         bool isRecurring,
@@ -983,7 +983,7 @@ public sealed class QuickAddVMValidationTests
     {
         var main = CreateMainViewModel([source]);
         var data = appData ?? CreateAppData();
-        var vm = new QuickAddVM(main, data);
+        var vm = new AddNewTransactionVM(main, data);
 
         switch (kind)
         {

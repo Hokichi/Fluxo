@@ -96,7 +96,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SavingGoalVM>();
         services.AddTransient<SpendingSourceVM>();
         services.AddTransient<UserSettingsVM>();
-        services.AddTransient<QuickAddVM>();
+        services.AddTransient<AddNewTransactionVM>();
         services.AddTransient<AddSpendingSourceVM>();
         services.AddTransient<AddSavingGoalVM>();
         services.AddTransient<NotificationChecklistActionVM>();
