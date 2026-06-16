@@ -594,6 +594,12 @@ public class BudgetAllocationPanelVMTests
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
         mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
         mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns(tags);
+        var allocationData = new AllocationDataVM(
+            expenseLogService,
+            spendingSourceService,
+            dataOperationRunner,
+            mapper,
+            messenger);
 
         return new BudgetAllocationPanelVM(
             expenseLogService,
@@ -601,7 +607,8 @@ public class BudgetAllocationPanelVMTests
             tagService,
             dataOperationRunner,
             mapper,
-            messenger);
+            messenger,
+            allocationData: allocationData);
     }
 
     private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogs()

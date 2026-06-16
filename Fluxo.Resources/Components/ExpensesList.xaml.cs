@@ -16,21 +16,6 @@ public partial class ExpensesList : UserControl
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
         nameof(Title), typeof(string), typeof(ExpensesList), new PropertyMetadata(default(string)));
 
-    public static readonly DependencyProperty SpentAmountProperty = DependencyProperty.Register(
-        nameof(SpentAmount), typeof(decimal), typeof(ExpensesList), new PropertyMetadata(default(decimal)));
-
-    public static readonly DependencyProperty TotalAmountProperty = DependencyProperty.Register(
-        nameof(TotalAmount), typeof(decimal), typeof(ExpensesList), new PropertyMetadata(default(decimal)));
-
-    public static readonly DependencyProperty RemainingAmountProperty = DependencyProperty.Register(
-        nameof(RemainingAmount), typeof(decimal), typeof(ExpensesList), new PropertyMetadata(default(decimal)));
-
-    public static readonly DependencyProperty AllocationProperty = DependencyProperty.Register(
-        nameof(Allocation), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
-
-    public static readonly DependencyProperty PercentageProperty = DependencyProperty.Register(
-        nameof(Percentage), typeof(int), typeof(ExpensesList), new PropertyMetadata(default(int)));
-
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(ICollectionView), typeof(ExpensesList),
         new PropertyMetadata(default(ICollectionView)));
@@ -73,37 +58,6 @@ public partial class ExpensesList : UserControl
     {
         get => (string)GetValue(TitleProperty);
         set => SetValue(TitleProperty, value);
-    }
-
-    public decimal SpentAmount
-    {
-        get => (decimal)GetValue(SpentAmountProperty);
-        set => SetValue(SpentAmountProperty, value);
-    }
-
-    public decimal TotalAmount
-    {
-        get => (decimal)GetValue(TotalAmountProperty);
-        set => SetValue(TotalAmountProperty, value);
-    }
-
-
-    public decimal RemainingAmount
-    {
-        get => (decimal)GetValue(RemainingAmountProperty);
-        set => SetValue(RemainingAmountProperty, value);
-    }
-
-    public int Allocation
-    {
-        get => (int)GetValue(AllocationProperty);
-        set => SetValue(AllocationProperty, value);
-    }
-
-    public int Percentage
-    {
-        get => (int)GetValue(PercentageProperty);
-        set => SetValue(PercentageProperty, value);
     }
 
     public ICollectionView ItemsSource

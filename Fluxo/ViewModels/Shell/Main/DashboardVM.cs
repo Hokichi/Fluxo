@@ -18,9 +18,11 @@ public partial class DashboardVM : ObservableObject
         SpentAllowancePanelVM spentAllowancePanel,
         SavingGoalsPanelVM savingGoalsPanel,
         UpcomingEventsPanelVM upcomingEventsPanel,
-        MainViewModeToggleVM viewModeToggle)
+        MainViewModeToggleVM viewModeToggle,
+        AllocationDataVM? allocationData = null)
     {
         NotificationPanel = notificationPanel;
+        AllocationData = allocationData;
         BudgetPanel = budgetPanel;
         SpentAllowancePanel = spentAllowancePanel;
         SavingGoalsPanel = savingGoalsPanel;
@@ -31,6 +33,7 @@ public partial class DashboardVM : ObservableObject
     public bool IsInitialized => _isInitialized;
 
     public NotificationPanelVM NotificationPanel { get; }
+    public AllocationDataVM? AllocationData { get; }
     public BudgetAllocationPanelVM BudgetPanel { get; }
     public SpentAllowancePanelVM SpentAllowancePanel { get; }
     public SavingGoalsPanelVM SavingGoalsPanel { get; }
@@ -57,6 +60,12 @@ public partial class DashboardVM : ObservableObject
         RefreshSpendingAmountGateStates();
         await betweenStagesAsync();
 
+        if (AllocationData is not null)
+        {
+            await AllocationData.LoadAsync();
+            await betweenStagesAsync();
+        }
+
         await SpentAllowancePanel.LoadAsync();
         await betweenStagesAsync();
 
@@ -78,6 +87,8 @@ public partial class DashboardVM : ObservableObject
     public async Task ReloadCurrentDataAsync()
     {
         await BudgetPanel.LoadAsync();
+        if (AllocationData is not null)
+            await AllocationData.LoadAsync();
         RefreshSpendingAmountGateStates();
 
         await Task.WhenAll(

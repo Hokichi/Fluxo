@@ -194,7 +194,6 @@
 
             <components:ExpensesList
                 Title="NEEDS"
-                Allocation="{Binding NeedsAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Needs}"
                 EmptyActionClick="OnEmptyExpenseActionClick"
@@ -205,16 +204,11 @@
                 IsLoading="{Binding IsNeedsLoading}"
                 ItemsSource="{Binding Needs}"
                 LoadMoreCommand="{Binding LoadMoreNeedsCommand}"
-                Percentage="{Binding NeedsPercentage}"
-                RemainingAmount="{Binding NeedsRemaining}"
-                SpentAmount="{Binding NeedsSpent}"
-                Style="{StaticResource BudgetAllocationExpensesListStyle}"
-                TotalAmount="{Binding NeedsAvailable}" />
+                Style="{StaticResource BudgetAllocationExpensesListStyle}" />
 
             <components:ExpensesList
                 Title="WANTS"
                 Grid.Column="2"
-                Allocation="{Binding WantsAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Wants}"
                 EmptyActionClick="OnEmptyExpenseActionClick"
@@ -225,16 +219,11 @@
                 IsLoading="{Binding IsWantsLoading}"
                 ItemsSource="{Binding Wants}"
                 LoadMoreCommand="{Binding LoadMoreWantsCommand}"
-                Percentage="{Binding WantsPercentage}"
-                RemainingAmount="{Binding WantsRemaining}"
-                SpentAmount="{Binding WantsSpent}"
-                Style="{StaticResource BudgetAllocationExpensesListStyle}"
-                TotalAmount="{Binding WantsAvailable}" />
+                Style="{StaticResource BudgetAllocationExpensesListStyle}" />
 
             <components:ExpensesList
                 Title="INVEST"
                 Grid.Column="4"
-                Allocation="{Binding InvestAllocationPercentage}"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Investments}"
                 EmptyActionClick="OnEmptyExpenseActionClick"
@@ -245,11 +234,7 @@
                 IsLoading="{Binding IsInvestLoading}"
                 ItemsSource="{Binding Invest}"
                 LoadMoreCommand="{Binding LoadMoreInvestCommand}"
-                Percentage="{Binding InvestPercentage}"
-                RemainingAmount="{Binding InvestRemaining}"
-                SpentAmount="{Binding InvestSpent}"
-                Style="{StaticResource BudgetAllocationExpensesListStyle}"
-                TotalAmount="{Binding InvestAvailable}" />
+                Style="{StaticResource BudgetAllocationExpensesListStyle}" />
         </Grid>
     </Grid>
 </UserControl>

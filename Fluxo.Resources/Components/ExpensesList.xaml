@@ -267,115 +267,24 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid>
-            <Grid
-                Grid.RowSpan="2"
-                Width="80"
-                Height="80"
-                Margin="0,4,8,0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top">
-                <Canvas
-                    Width="80"
-                    Height="80"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
-                    <Ellipse
-                        Canvas.Left="8"
-                        Canvas.Top="8"
-                        Width="64"
-                        Height="64"
-                        Stroke="{StaticResource Brush.Background.Elevated}"
-                        StrokeThickness="6" />
-                    <Path
-                        Canvas.Left="11"
-                        Canvas.Top="11"
-                        Data="{Binding Percentage, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource ProgressToArcGeometryConverter}, ConverterParameter=58}"
-                        Stroke="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                        StrokeEndLineCap="Round"
-                        StrokeLineJoin="Round"
-                        StrokeStartLineCap="Round"
-                        StrokeThickness="6" />
-                </Canvas>
+        <StackPanel
+            x:Name="ExpenseListCompactHeader"
+            Margin="12,0,12,0"
+            Orientation="Horizontal">
+            <Ellipse
+                Width="8"
+                Height="8"
+                Margin="0,2,0,0"
+                Fill="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
 
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="12"
-                    Foreground="{StaticResource Brush.Text.Primary}">
-                    <Run Text="{Binding Percentage, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, StringFormat={}{0}%}" />
-                </TextBlock>
-            </Grid>
-
-            <StackPanel>
-                <Border Height="80" Padding="12,8">
-                    <StackPanel Height="56" VerticalAlignment="Center">
-                        <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
-                            <Ellipse
-                                Width="8"
-                                Height="8"
-                                Margin="0,2,0,0"
-                                Fill="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
-
-                            <TextBlock
-                                Margin="12,2,0,0"
-                                VerticalAlignment="Center"
-                                FontFamily="{StaticResource ExtraBold}"
-                                FontSize="14"
-                                Foreground="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                                Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
-
-                            <Border
-                                Height="24"
-                                Margin="12,0,0,8"
-                                Padding="12,0"
-                                Background="{StaticResource Brush.Background.Surface}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="2"
-                                CornerRadius="4">
-                                <TextBlock
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Light}"
-                                    Foreground="{StaticResource Brush.Text.Secondary}">
-                                    <Run Text="{Binding Allocation, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, StringFormat={}{0}%}" />
-                                    <Run Text="alloc" />
-                                </TextBlock>
-                            </Border>
-                        </StackPanel>
-
-                        <TextBlock Margin="0,0,0,-8" VerticalAlignment="Bottom">
-                            <Run
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="24"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="{Binding SpentAmount, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                            <Run
-                                FontFamily="{StaticResource Regular}"
-                                FontSize="16"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="/" />
-                            <Run
-                                FontFamily="{StaticResource Regular}"
-                                FontSize="16"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding TotalAmount, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-
-                <TextBlock
-                    Margin="12,0,0,0"
-                    VerticalAlignment="Bottom"
-                    FontFamily="{StaticResource Light}"
-                    FontSize="12"
-                    Foreground="{StaticResource Brush.Text.Muted}">
-                    <Run Text="{Binding RemainingAmount, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                    <Run Text="remaining" />
-                </TextBlock>
-            </StackPanel>
-        </Grid>
+            <TextBlock
+                Margin="12,2,0,0"
+                VerticalAlignment="Center"
+                FontFamily="{StaticResource ExtraBold}"
+                FontSize="14"
+                Foreground="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
+        </StackPanel>
 
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>

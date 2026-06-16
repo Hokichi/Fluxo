@@ -33,6 +33,21 @@ public sealed class ExpensesListEmptyActionTests
         Assert.Contains("private void OnEmptyActionButtonClick(object sender, RoutedEventArgs e)", source);
     }
 
+    [Fact]
+    public void ExpensesList_UsesCompactDotAndNameHeader()
+    {
+        var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
+        var source = File.ReadAllText(ResolveExpensesListCodeBehindPath());
+
+        Assert.Contains("x:Name=\"ExpenseListCompactHeader\"", xaml);
+        Assert.Contains("Text=\"{Binding Title", xaml);
+        Assert.Contains("Fill=\"{Binding DotColor", xaml);
+        Assert.DoesNotContain("alloc", xaml);
+        Assert.DoesNotContain("ProgressToArcGeometryConverter", xaml);
+        Assert.DoesNotContain("SpentAmountProperty", source);
+        Assert.DoesNotContain("RemainingAmountProperty", source);
+    }
+
     private static string ResolveExpensesListXamlPath() =>
         ResolveRepositoryFile("Fluxo.Resources", "Components", "ExpensesList.xaml");
 

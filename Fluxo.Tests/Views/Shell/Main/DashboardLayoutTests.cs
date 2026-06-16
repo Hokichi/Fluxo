@@ -21,4 +21,25 @@ public class DashboardLayoutTests
         Assert.Contains("DataContext=\"{Binding UpcomingEventsPanel}\"", xaml);
         Assert.DoesNotContain("x:Name=\"NotificationPanelPlaceholder\"", xaml);
     }
+
+    [Fact]
+    public void Dashboard_PlacesAllocationDataBesideAllowanceAboveSpendingSources()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Shell",
+            "Main",
+            "Pages",
+            "Dashboard.xaml"));
+
+        var allocationIndex = xaml.IndexOf("x:Name=\"AllocationDataHost\"", StringComparison.Ordinal);
+        var allowanceIndex = xaml.IndexOf("x:Name=\"SpentAllowancePanelHost\"", StringComparison.Ordinal);
+        var sourcesIndex = xaml.IndexOf("x:Name=\"DashboardSpendingSourcesScrollViewer\"", StringComparison.Ordinal);
+
+        Assert.True(allocationIndex >= 0);
+        Assert.True(allowanceIndex > allocationIndex);
+        Assert.True(sourcesIndex > allowanceIndex);
+        Assert.Contains("DataContext=\"{Binding AllocationData}\"", xaml);
+    }
 }

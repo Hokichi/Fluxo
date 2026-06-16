@@ -5,7 +5,6 @@ using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Fluxo.Core.Budgeting;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
@@ -47,6 +46,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly IUiSettleAwaiter? _uiSettleAwaiter;
     private readonly SemaphoreSlim _filterFeedbackGate = new(1, 1);
     private readonly List<ExpenseTagVM> _orderedTags = [];
+    private readonly AllocationDataVM? _allocationData;
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLogVM> _allIncomeLogs = [];
@@ -66,7 +66,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         IMapper mapper,
         IMessenger? messenger = null,
         IDialogService? dialogService = null,
-        IUiSettleAwaiter? uiSettleAwaiter = null)
+        IUiSettleAwaiter? uiSettleAwaiter = null,
+        AllocationDataVM? allocationData = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseLogService = expenseLogService;
@@ -76,51 +77,41 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         _mapper = mapper;
         _dialogService = dialogService;
         _uiSettleAwaiter = uiSettleAwaiter;
+        _allocationData = allocationData;
+
+        if (_allocationData is not null)
+            _allocationData.PropertyChanged += OnAllocationDataPropertyChanged;
 
         Initialize();
     }
 
-    [ObservableProperty]
-    private decimal _totalSpent;
+    public decimal TotalSpent => _allocationData?.TotalSpent ?? 0m;
 
-    [ObservableProperty]
-    private int _dailyAllowance;
+    public int DailyAllowance => _allocationData?.DailyAllowance ?? 0;
 
-    [ObservableProperty]
-    private decimal _needsAvailable;
+    public decimal NeedsAvailable => _allocationData?.NeedsAvailable ?? 0m;
 
-    [ObservableProperty]
-    private decimal _wantsAvailable;
+    public decimal WantsAvailable => _allocationData?.WantsAvailable ?? 0m;
 
-    [ObservableProperty]
-    private decimal _investAvailable;
+    public decimal InvestAvailable => _allocationData?.InvestAvailable ?? 0m;
 
-    [ObservableProperty]
-    private decimal _needsSpent;
+    public decimal NeedsSpent => _allocationData?.NeedsSpent ?? 0m;
 
-    [ObservableProperty]
-    private decimal _wantsSpent;
+    public decimal WantsSpent => _allocationData?.WantsSpent ?? 0m;
 
-    [ObservableProperty]
-    private decimal _investSpent;
+    public decimal InvestSpent => _allocationData?.InvestSpent ?? 0m;
 
-    [ObservableProperty]
-    private decimal _needsRemaining;
+    public decimal NeedsRemaining => _allocationData?.NeedsRemaining ?? 0m;
 
-    [ObservableProperty]
-    private decimal _wantsRemaining;
+    public decimal WantsRemaining => _allocationData?.WantsRemaining ?? 0m;
 
-    [ObservableProperty]
-    private decimal _investRemaining;
+    public decimal InvestRemaining => _allocationData?.InvestRemaining ?? 0m;
 
-    [ObservableProperty]
-    private int _needsPercentage;
+    public int NeedsPercentage => _allocationData?.NeedsPercentage ?? 0;
 
-    [ObservableProperty]
-    private int _wantsPercentage;
+    public int WantsPercentage => _allocationData?.WantsPercentage ?? 0;
 
-    [ObservableProperty]
-    private int _investPercentage;
+    public int InvestPercentage => _allocationData?.InvestPercentage ?? 0;
 
     [ObservableProperty]
     private ICollectionView _needs = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
@@ -197,7 +188,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public ObservableCollection<SpendingSourceVM> SpendingSources => _spendingSources;
 
-    public decimal TotalIncomeAmount => CalculateBudgetAvailableBase();
+    public decimal TotalIncomeAmount => _allocationData?.TotalIncomeAmount ?? 0m;
 
     public IReadOnlyList<ExpenseLogVM> GetAllExpenseLogs() => _allExpenseLogs.ToList();
 
@@ -257,6 +248,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             .OrderByDescending(log => log.AddedOn)
             .ToList();
 
+        if (_allocationData is not null)
+            await _allocationData.LoadAsync(cancellationToken);
+
         _spendingSources.Clear();
         foreach (var source in spendingSources)
             _spendingSources.Add(source);
@@ -268,7 +262,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             SynchronizeSpendingSourceSelections(SelectedSpendingSourceId);
 
         CacheKnownTags(tags);
-        RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs();
         RefreshSourceDifferences();
     }
@@ -528,75 +521,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         Needs.Filter = FilterNeedsExpenseLog;
         Wants.Filter = FilterWantsExpenseLog;
         Invest.Filter = FilterInvestExpenseLog;
-    }
-
-    private void RefreshBudgetMetrics()
-    {
-        var totalIncomeAmount = CalculateBudgetAvailableBase();
-        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
-            _budgetAllocation,
-            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolveCurrentPeriod(
-                _budgetAllocation.AllocationPeriod,
-                DateTime.Today,
-                _budgetAllocation.PeriodStart)),
-            CalculateSpentByCategory(snapshotPeriod: BudgetAllocationCalculator.ResolvePreviousPeriod(
-                _budgetAllocation.AllocationPeriod,
-                DateTime.Today,
-                _budgetAllocation.PeriodStart)),
-            DateTime.Today,
-            totalIncomeAmount);
-
-        NeedsAvailable = snapshot.Needs.Available;
-        WantsAvailable = snapshot.Wants.Available;
-        InvestAvailable = snapshot.Invest.Available;
-
-        NeedsSpent = snapshot.Needs.Spent;
-        WantsSpent = snapshot.Wants.Spent;
-        InvestSpent = snapshot.Invest.Spent;
-
-        TotalSpent = NeedsSpent + WantsSpent + InvestSpent;
-
-        NeedsRemaining = snapshot.Needs.Remaining;
-        WantsRemaining = snapshot.Wants.Remaining;
-        InvestRemaining = snapshot.Invest.Remaining;
-
-        NeedsPercentage = snapshot.Needs.Percentage;
-        WantsPercentage = snapshot.Wants.Percentage;
-        InvestPercentage = snapshot.Invest.Percentage;
-        DailyAllowance = (int)snapshot.DailyAllowance;
-    }
-
-    private IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(BudgetAllocationPeriod snapshotPeriod)
-    {
-        return _allExpenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.DeductedOn.Date >= snapshotPeriod.Start && log.DeductedOn.Date <= snapshotPeriod.End)
-            .Where(log => log.Expense is not null)
-            .GroupBy(log => log.Expense!.ExpenseCategory)
-            .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
-    }
-
-    private decimal CalculateBudgetAvailableBase()
-    {
-        if (_budgetAllocation.AllocationLimit > 0m)
-            return _budgetAllocation.AllocationLimit;
-
-        var balanceBackedSourceIds = _spendingSources
-            .Where(IsBalanceBackedSource)
-            .Select(source => source.Id)
-            .ToHashSet();
-
-        var balanceBackedExpenseAmount = _allExpenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.SpendingSource is { } source && balanceBackedSourceIds.Contains(source.Id))
-            .Sum(log => log.Amount);
-
-        return _spendingSources.Sum(source => source.Balance) + balanceBackedExpenseAmount;
-    }
-
-    private static bool IsBalanceBackedSource(SpendingSourceVM source)
-    {
-        return source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL);
     }
 
     private async Task<BudgetAllocation> LoadBudgetAllocationAsync(CancellationToken cancellationToken)
@@ -871,14 +795,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             UpsertIncomeLog(snapshot);
             ApplyIncomeToTrackedSource(snapshot);
             AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, -snapshot.Amount);
-            RefreshBudgetMetrics();
             return;
         }
 
         RemoveIncomeLog(snapshot.IncomeLogId);
         RestoreIncomeFromTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, snapshot.Amount);
-        RefreshBudgetMetrics();
     }
 
     private void ApplyEditedExpenseAction(EditExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
@@ -904,7 +826,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         ApplyIncomeToTrackedSource(target);
         AdjustSourceDifference(previous.SpendingSourceId, previous.AddedOn, previous.Amount);
         AdjustSourceDifference(target.SpendingSourceId, target.AddedOn, -target.Amount);
-        RefreshBudgetMetrics();
     }
 
     private void ApplyDeletedExpenseAction(DeleteExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
@@ -936,14 +857,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             RemoveIncomeLog(snapshot.IncomeLogId);
             RestoreIncomeFromTrackedSource(snapshot);
             AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, snapshot.Amount);
-            RefreshBudgetMetrics();
             return;
         }
 
         UpsertIncomeLog(snapshot);
         ApplyIncomeToTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, -snapshot.Amount);
-        RefreshBudgetMetrics();
     }
 
     private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
@@ -1069,8 +988,13 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
 
-        RefreshBudgetMetrics();
         ApplyVisibleExpenseLogs(resetPaginationWindows: false);
+    }
+
+    private void OnAllocationDataPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(e.PropertyName))
+            OnPropertyChanged(e.PropertyName);
     }
 
     private bool CanLoadMoreNeeds()

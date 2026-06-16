@@ -25,6 +25,7 @@ using Fluxo.Views.Shell.Main.Pages;
 using Fluxo.Views.Shell.Wizard;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using AllocationDataVM = Fluxo.ViewModels.Shell.Main.AllocationDataVM;
 using AnalyticsVM = Fluxo.ViewModels.Shell.Main.AnalyticsVM;
 using BudgetAllocationPanelVM = Fluxo.ViewModels.Shell.Main.BudgetAllocationPanelVM;
 using CalendarVM = Fluxo.ViewModels.Shell.Main.CalendarVM;
@@ -82,6 +83,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DashboardVM>();
         services.AddSingleton<DaySpinnerVM>();
         services.AddTransient<MainViewModeToggleVM>();
+        services.AddSingleton<AllocationDataVM>();
         services.AddSingleton<BudgetAllocationPanelVM>();
         services.AddSingleton<SpentAllowancePanelVM>();
         services.AddSingleton<NotificationPanelVM>();
