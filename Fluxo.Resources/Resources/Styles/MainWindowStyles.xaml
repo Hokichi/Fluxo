@@ -18,7 +18,7 @@
             </Setter.Value>
         </Setter>
         <Style.Triggers>
-            <DataTrigger Binding="{Binding ShowOnUI}" Value="False">
+            <DataTrigger Binding="{Binding PinnedOnUI}" Value="False">
                 <Setter Property="Margin" Value="0" />
             </DataTrigger>
         </Style.Triggers>
@@ -80,7 +80,6 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="16" />
     </Style>
-
 
     <DataTemplate x:Key="SavingGoalTemplate">
         <Border Margin="0,0,0,8" Padding="12,0">
@@ -158,8 +157,6 @@
             </Grid>
         </Border>
     </DataTemplate>
-
-
 
     <Style x:Key="DaysOfWeekStyle" TargetType="ListViewItem">
         <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
@@ -460,4 +457,3 @@
         </Grid>
     </DataTemplate>
 </ResourceDictionary>
-

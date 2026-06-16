@@ -90,7 +90,7 @@
                                     <!--  Delete  -->
                                     <c:BalloonButton
                                         x:Name="PART_DeleteButton"
-                                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                                        ButtonIcon="{StaticResource Delete}"
                                         ButtonText="Delete"
                                         HoveredBackground="{StaticResource Brush.Danger}"
                                         ShouldExpand="True"

@@ -94,7 +94,7 @@
                         </Border.Clip>
                         <Border
                             x:Name="ExpenseItemBGBorder"
-                            Background="Transparent"
+                            Background="{StaticResource Brush.Background.Hover}"
                             ClipToBounds="True"
                             CornerRadius="12">
                             <Border.RenderTransform>

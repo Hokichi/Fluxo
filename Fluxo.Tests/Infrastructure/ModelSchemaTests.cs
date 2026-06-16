@@ -18,7 +18,7 @@ public sealed class ModelSchemaTests
 
         var spendingSource = model.FindEntityType(typeof(SpendingSource))!;
         Assert.NotNull(spendingSource.FindProperty(nameof(SpendingSource.PinnedOnUI)));
-        Assert.Null(spendingSource.FindProperty("ShowOnUI"));
+        Assert.Null(spendingSource.FindProperty("PinnedOnUI"));
         Assert.Equal("NUMERIC", spendingSource.FindProperty(nameof(SpendingSource.MaximumSpending))!.GetColumnType());
         Assert.False(spendingSource.FindProperty(nameof(SpendingSource.MaximumSpending))!.IsNullable);
         Assert.Equal("NUMERIC", spendingSource.FindProperty(nameof(SpendingSource.MinimumPayment))!.GetColumnType());

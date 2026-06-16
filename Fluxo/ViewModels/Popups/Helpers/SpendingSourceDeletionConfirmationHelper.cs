@@ -25,9 +25,9 @@ public static class SpendingSourceDeletionConfirmationHelper
     public static string BuildDeleteConfirmationMessage(string sourceName, bool isOnlyFunctioningSource)
     {
         if (isOnlyFunctioningSource)
-            return $"{sourceName} is the only available source. Deleting it will lock the application. Proceed to delete {sourceName} and all of its data?\n**THIS ACTION CANNOT BE UNDONE**";
+            return $"{sourceName} is the only available source. Deleting it will lock the application. Proceed to delete {sourceName} and all of its data?\n\n**THIS ACTION CANNOT BE UNDONE**";
 
-        return $"Delete {sourceName} and all of its data?\n**THIS ACTION CANNOT BE UNDONE**";
+        return $"Delete {sourceName} and all of its data?\n\n**THIS ACTION CANNOT BE UNDONE**";
     }
 
     public static bool IsOnlyFunctioningSource(IEnumerable<SpendingSource> sources, int sourceId)

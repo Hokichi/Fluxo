@@ -52,7 +52,7 @@ public sealed class HotkeysOverviewPopupTests
         Assert.Contains("<StackPanel Orientation=\"Vertical\" />", xaml);
         Assert.Contains("<Expander", xaml);
         Assert.Contains("Header=\"{Binding Name}\"", xaml);
-        Assert.Contains("IsExpanded=\"True\"", xaml);
+        Assert.Contains("Property=\"IsExpanded\" Value=\"True\"", xaml);
     }
 
     [Fact]
