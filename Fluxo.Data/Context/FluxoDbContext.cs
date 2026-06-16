@@ -60,6 +60,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.Property(log => log.Amount).HasColumnType("NUMERIC");
         entity.Property(log => log.IsForDeletion);
+        entity.Property(log => log.IsPinned).HasDefaultValue(false);
         entity.Property(log => log.Notes).IsRequired();
 
         entity.HasOne(log => log.Expense)
@@ -83,6 +84,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(log => log.Amount).HasColumnType("NUMERIC");
         entity.Property(log => log.Notes).IsRequired();
         entity.Property(log => log.IsForDeletion);
+        entity.Property(log => log.IsPinned).HasDefaultValue(false);
 
         entity.HasOne(log => log.SpendingSource)
             .WithMany()

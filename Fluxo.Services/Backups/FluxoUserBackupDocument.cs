@@ -77,7 +77,8 @@ public sealed record BackupExpenseLog(
     decimal Amount,
     DateTime DeductedOn,
     string Notes,
-    bool IsForDeletion);
+    bool IsForDeletion,
+    bool IsPinned = false);
 
 public sealed record BackupIncomeLog(
     int BackupId,
@@ -85,7 +86,8 @@ public sealed record BackupIncomeLog(
     string Name,
     decimal Amount,
     DateTime AddedOn,
-    string Notes);
+    string Notes,
+    bool IsPinned = false);
 
 public sealed record BackupRecurringTransaction(
     int BackupId,

@@ -10,4 +10,5 @@ public sealed class IncomeLog
     public DateTime AddedOn { get; set; }
     public string Notes { get; set; }
     public bool IsForDeletion { get; set; }
+    public bool IsPinned { get; set; }
 }

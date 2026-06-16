@@ -11,4 +11,5 @@ public class ExpenseLogDto
     public DateTime DeductedOn { get; set; }
     public string Notes { get; set; } = string.Empty;
     public bool IsForDeletion { get; set; }
+    public bool IsPinned { get; set; }
 }

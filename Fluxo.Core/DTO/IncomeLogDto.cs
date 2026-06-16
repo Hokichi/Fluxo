@@ -10,4 +10,5 @@ public class IncomeLogDto
     public DateTime AddedOn { get; set; }
     public string Notes { get; set; } = string.Empty;
     public bool IsForDeletion { get; set; }
+    public bool IsPinned { get; set; }
 }

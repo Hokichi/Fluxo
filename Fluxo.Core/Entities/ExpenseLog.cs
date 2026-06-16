@@ -11,4 +11,5 @@ public sealed class ExpenseLog
     public DateTime DeductedOn { get; set; }
     public string Notes { get; set; }
     public bool IsForDeletion { get; set; }
+    public bool IsPinned { get; set; }
 }

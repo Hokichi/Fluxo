@@ -799,7 +799,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 Amount = backupExpenseLog.Amount,
                 DeductedOn = backupExpenseLog.DeductedOn,
                 Notes = backupExpenseLog.Notes,
-                IsForDeletion = backupExpenseLog.IsForDeletion
+                IsForDeletion = backupExpenseLog.IsForDeletion,
+                IsPinned = backupExpenseLog.IsPinned
             }, cancellationToken);
         }
     }
@@ -824,7 +825,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 Name = backupIncome.Name,
                 Amount = backupIncome.Amount,
                 AddedOn = backupIncome.AddedOn,
-                Notes = backupIncome.Notes
+                Notes = backupIncome.Notes,
+                IsPinned = backupIncome.IsPinned
             }, cancellationToken);
         }
     }
@@ -1071,7 +1073,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 log.Amount,
                 log.DeductedOn,
                 log.Notes,
-                log.IsForDeletion));
+                log.IsForDeletion,
+                log.IsPinned));
         }
     }
 
@@ -1092,7 +1095,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 log.Name,
                 log.Amount,
                 log.AddedOn,
-                log.Notes));
+                log.Notes,
+                log.IsPinned));
         }
     }
 

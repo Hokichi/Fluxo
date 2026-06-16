@@ -28,8 +28,14 @@ public sealed class ModelSchemaTests
         Assert.Equal("NUMERIC", expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.GetColumnType());
         Assert.True(expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.IsNullable);
 
+        var expenseLog = model.FindEntityType(typeof(ExpenseLog))!;
+        Assert.False(expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.IsNullable);
+        Assert.Equal(false, expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.GetDefaultValue());
+
         var incomeLog = model.FindEntityType(typeof(IncomeLog))!;
         Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsForDeletion))!.IsNullable);
+        Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.IsNullable);
+        Assert.Equal(false, incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.GetDefaultValue());
 
         var savingGoal = model.FindEntityType(typeof(SavingGoal))!;
         Assert.True(savingGoal.FindProperty(nameof(SavingGoal.SavingEndDate))!.IsNullable);
@@ -90,9 +96,18 @@ public sealed class ModelSchemaTests
         var tagVm = new ExpenseTagVM { SpendingLimit = tag.SpendingLimit };
         Assert.Equal(250m, tagVm.SpendingLimit);
 
-        var incomeLog = new IncomeLog { IsForDeletion = true };
-        var incomeLogDto = new IncomeLogDto { IsForDeletion = incomeLog.IsForDeletion };
+        var expenseLog = new ExpenseLog { IsPinned = true };
+        var expenseLogDto = new ExpenseLogDto { IsPinned = expenseLog.IsPinned };
+        var expenseLogVm = new ExpenseLogVM { IsPinned = expenseLog.IsPinned };
+        Assert.True(expenseLogDto.IsPinned);
+        Assert.True(expenseLogVm.IsPinned);
+
+        var incomeLog = new IncomeLog { IsForDeletion = true, IsPinned = true };
+        var incomeLogDto = new IncomeLogDto { IsForDeletion = incomeLog.IsForDeletion, IsPinned = incomeLog.IsPinned };
+        var incomeLogVm = new IncomeLogVM { IsPinned = incomeLog.IsPinned };
         Assert.True(incomeLogDto.IsForDeletion);
+        Assert.True(incomeLogDto.IsPinned);
+        Assert.True(incomeLogVm.IsPinned);
 
         var goal = new SavingGoal { SavingEndDate = null };
         var goalVm = new SavingGoalVM

@@ -9,6 +9,7 @@ public partial class ExpenseLogVM : ObservableObject
     [ObservableProperty] private ExpenseVM _expense = new();
     [ObservableProperty] private int _id;
     [ObservableProperty] private bool _isForDeletion;
+    [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private string _notes = string.Empty;
     [ObservableProperty] private SpendingSourceVM _spendingSource = new();
 }
