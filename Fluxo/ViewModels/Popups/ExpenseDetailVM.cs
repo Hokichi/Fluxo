@@ -26,6 +26,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly IAppDataService _appData;
 
     [ObservableProperty] private decimal _amountText;
+    [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isSplitMode;
     [ObservableProperty] private bool _isMoreTagsOpen;
@@ -39,7 +40,7 @@ public partial class ExpenseDetailVM : ObservableObject
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private string _popupTitle = "Expense Detail";
 
-    private ExpenseDetailSavedState _savedState = new(string.Empty, 0m, string.Empty, DateTime.Today,
+    private ExpenseDetailSavedState _savedState = new(string.Empty, 0m, false, string.Empty, DateTime.Today,
         ExpenseCategory.Needs, 0, 0);
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
@@ -311,6 +312,7 @@ public partial class ExpenseDetailVM : ObservableObject
             expense.ExpenseTag = expenseTag;
 
             expenseLog.Amount = input.Amount;
+            expenseLog.IsPinned = input.IsPinned;
             expenseLog.DeductedOn = input.Date;
             expenseLog.Notes = input.Note;
             expenseLog.SpendingSource = newSpendingSource;
@@ -326,6 +328,7 @@ public partial class ExpenseDetailVM : ObservableObject
             _savedState = new ExpenseDetailSavedState(
                 resolvedName,
                 input.Amount,
+                input.IsPinned,
                 input.Note,
                 input.Date,
                 input.Category,
@@ -366,6 +369,43 @@ public partial class ExpenseDetailVM : ObservableObject
         return GetChangedFields(input, _savedState) != ExpenseDetailChangedFields.None;
     }
 
+    public async Task<ExpenseDetailSaveResult> DeleteAsync()
+    {
+        if (IsSaving)
+            return ExpenseDetailSaveResult.Failure("This expense is already being saved.");
+
+        IsSaving = true;
+        try
+        {
+            var expenseLog = await _appData.GetExpenseLogByLogIdAsync(_expenseLog.Id);
+            if (expenseLog is null)
+                return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
+
+            var snapshot = ExpenseLogMemorySnapshot.Create(expenseLog);
+            if (expenseLog.SpendingSource is { } spendingSource)
+            {
+                RevertExpenseFromSpendingSource(spendingSource, expenseLog.Amount);
+                _appData.UpdateSpendingSource(spendingSource);
+            }
+
+            _appData.RemoveExpenseLog(expenseLog);
+            await _appData.SaveChangesAsync();
+
+            WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(snapshot)));
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.Budget));
+            return ExpenseDetailSaveResult.Success();
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogError(exception, "Unable to delete expense detail.");
+            return ExpenseDetailSaveResult.Failure(FluxoLogManager.CreateFailureMessage("delete expense"));
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
     public void SetVisibleTagSlots(int visibleTagSlots)
     {
         var normalizedSlots = Math.Max(0, visibleTagSlots);
@@ -380,6 +420,7 @@ public partial class ExpenseDetailVM : ObservableObject
     {
         AmountText = _savedState.Amount;
         NameText = _savedState.Name;
+        IsPinned = _savedState.IsPinned;
         NoteText = _savedState.Note;
         SelectedDate = _savedState.Date == default ? DateTime.Today : _savedState.Date.Date;
         SelectedExpenseCategory = _savedState.Category;
@@ -417,6 +458,7 @@ public partial class ExpenseDetailVM : ObservableObject
         input = new ExpenseDetailInput(
             NameText.Trim(),
             AmountText,
+            IsPinned,
             SelectedSpendingSource.Id,
             SelectedDate.Date,
             NoteText.Trim(),
@@ -553,6 +595,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 parentExpense.ExpenseTagId = parentTag.Id;
 
                 originalLog.Amount = AmountText;
+                originalLog.IsPinned = IsPinned;
                 originalLog.DeductedOn = SelectedDate.Date;
                 originalLog.Notes = NoteText.Trim();
                 originalLog.IsForDeletion = false;
@@ -638,6 +681,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 _savedState = new ExpenseDetailSavedState(
                     BuildExpenseName(NameText.Trim(), NoteText.Trim(), SelectedTag?.Name ?? string.Empty),
                     AmountText,
+                    IsPinned,
                     NoteText.Trim(),
                     SelectedDate.Date,
                     SelectedExpenseCategory,
@@ -650,6 +694,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 _savedState = new ExpenseDetailSavedState(
                     BuildExpenseName(primary.Input.Name, primary.Input.Note, primary.Tag.Name),
                     primary.Input.Amount,
+                    IsPinned,
                     primary.Input.Note,
                     primary.Input.Date,
                     primary.Input.Category,
@@ -813,6 +858,7 @@ public partial class ExpenseDetailVM : ObservableObject
         return new ExpenseDetailSavedState(
             expenseLog.Expense?.Name?.Trim() ?? string.Empty,
             expenseLog.Amount,
+            expenseLog.IsPinned,
             expenseLog.Notes?.Trim() ?? string.Empty,
             expenseLog.DeductedOn == default ? DateTime.Today : expenseLog.DeductedOn.Date,
             expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
@@ -840,6 +886,9 @@ public partial class ExpenseDetailVM : ObservableObject
 
         if (input.Amount != savedState.Amount)
             changedFields |= ExpenseDetailChangedFields.Amount;
+
+        if (input.IsPinned != savedState.IsPinned)
+            changedFields |= ExpenseDetailChangedFields.Pin;
 
         if (input.Date.Date != savedState.Date.Date)
             changedFields |= ExpenseDetailChangedFields.Date;
@@ -910,6 +959,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly record struct ExpenseDetailInput(
         string Name,
         decimal Amount,
+        bool IsPinned,
         int SpendingSourceId,
         DateTime Date,
         string Note,
@@ -927,6 +977,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly record struct ExpenseDetailSavedState(
         string Name,
         decimal Amount,
+        bool IsPinned,
         string Note,
         DateTime Date,
         ExpenseCategory Category,

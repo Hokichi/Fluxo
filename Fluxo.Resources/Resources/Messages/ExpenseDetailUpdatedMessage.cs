@@ -10,7 +10,8 @@ public enum ExpenseDetailChangedFields
     Category = 1 << 3,
     SpendingSource = 1 << 4,
     Tag = 1 << 5,
-    Note = 1 << 6
+    Note = 1 << 6,
+    Pin = 1 << 7
 }
 
 public sealed class ExpenseDetailUpdatedMessage(ExpenseDetailUpdate value)

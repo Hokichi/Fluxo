@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     PopupTitle="Expense Detail"
     ShowCloneButton="True"
+    ShowDeleteButton="True"
     ShowEditButton="True"
     ShowSplitButton="{Binding ShowSplitButton}"
     mc:Ignorable="d">
@@ -196,7 +197,47 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0">
+            <StackPanel
+                x:Name="NormalExpenseNamePinPanel"
+                Grid.Row="0"
+                Visibility="{Binding ShowNormalExpenseFields, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                    <TextBlock
+                        Margin="0"
+                        Style="{StaticResource SectionLabelStyle}"
+                        Text="Name" />
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox
+                        x:Name="ExpenseNameTextBox"
+                        IsReadOnly="{Binding AreFieldsReadOnly}"
+                        Style="{StaticResource RoundedTextInputStyle}"
+                        Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <customControls:BalloonCheckBox
+                        x:Name="ExpensePinButton"
+                        Grid.Column="2"
+                        ButtonIcon="{StaticResource Pin}"
+                        ButtonSize="38"
+                        ButtonText="Pinned"
+                        CheckedBackground="{StaticResource Brush.Info}"
+                        CornerRadius="12"
+                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        IconSize="14"
+                        IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                        IsEnabled="{Binding CanEditFields}"
+                        ToolTip="Pin transaction" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel
+                x:Name="SplitExpenseAmountPanel"
+                Grid.Row="0"
+                Visibility="{Binding IsSplitMode, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid Style="{StaticResource FieldHeaderGridStyle}">
                     <TextBlock
                         Margin="0"
@@ -209,7 +250,7 @@
                 </Grid>
                 <Border Style="{StaticResource SplitParentAmountHighlightBorderStyle}">
                     <customControls:MoneyTextBox
-                        x:Name="ExpenseAmountTextBox"
+                        x:Name="SplitExpenseAmountTextBox"
                         IsReadOnly="{Binding AreFieldsReadOnly}"
                         Style="{StaticResource RoundedMoneyTextInputStyle}"
                         Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
@@ -235,12 +276,14 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0">
-                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Name" />
-                        <TextBox
-                            x:Name="ExpenseNameTextBox"
-                            IsReadOnly="{Binding AreFieldsReadOnly}"
-                            Style="{StaticResource RoundedTextInputStyle}"
-                            Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
+                        <Border Style="{StaticResource SplitParentAmountHighlightBorderStyle}">
+                            <customControls:MoneyTextBox
+                                x:Name="ExpenseAmountTextBox"
+                                IsReadOnly="{Binding AreFieldsReadOnly}"
+                                Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                        </Border>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">

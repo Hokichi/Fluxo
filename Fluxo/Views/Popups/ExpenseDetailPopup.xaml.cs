@@ -125,12 +125,38 @@ public partial class ExpenseDetailPopup : BasePopup
         ownerWindow?.Dispatcher.BeginInvoke(new Action(() => ownerWindow.OpenAddNewTransactionPopup(draft)));
     }
 
+    protected override async void OnDeleteButtonClick()
+    {
+        if (_viewModel.IsEditing || _viewModel.IsSplitMode)
+            return;
+
+        var confirmation = FluxoMessageBox.Show(
+            this,
+            "Delete this expense?",
+            "Expense Detail",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmation != MessageBoxResult.Yes)
+            return;
+
+        var result = await _viewModel.DeleteAsync();
+        if (!result.IsSuccess)
+        {
+            ShowValidationMessage(result.ErrorMessage);
+            return;
+        }
+
+        _allowClose = true;
+        Close();
+    }
+
     protected override void OnSplitButtonClick()
     {
         _viewModel.BeginSplitMode();
         UpdateButtonStates();
         SyncMoreTagsPopupState();
-        ExpenseAmountTextBox.Focus();
+        SplitExpenseAmountTextBox.Focus();
     }
 
     protected override void OnCancelButtonClick()
@@ -253,6 +279,7 @@ public partial class ExpenseDetailPopup : BasePopup
     private void UpdateButtonStates()
     {
         ShowEditButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
+        ShowDeleteButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
         ShowSaveButton = _viewModel.IsEditing;
         ShowCloneButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
         ShowCancelButton = _viewModel.IsEditing;

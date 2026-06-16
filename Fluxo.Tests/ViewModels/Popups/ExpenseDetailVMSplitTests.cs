@@ -74,6 +74,54 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
+    public void SaveAsync_NormalMode_PersistsPinnedState()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, _) = CreateVmWithDependencies();
+            vm.BeginEditingAsync().GetAwaiter().GetResult();
+            vm.IsPinned = true;
+
+            var result = vm.SaveAsync().GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).UpdateExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10 && log.IsPinned));
+        });
+    }
+
+    [Fact]
+    public void DeleteAsync_RemovesExpenseLogAndRecordsHistory()
+    {
+        RunInSta(() =>
+        {
+            var recipient = new MessageCaptureRecipient();
+            WeakReferenceMessenger.Default.Register<MessageCaptureRecipient, RecordLogMemoryMessage>(
+                recipient,
+                static (target, message) => target.RecordLogMemoryMessages.Add(message));
+
+            try
+            {
+                var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
+
+                var result = vm.DeleteAsync().GetAwaiter().GetResult();
+
+                Assert.True(result.IsSuccess);
+                Assert.Equal(1_100m, persistedSource.Balance);
+                appData.Received(1).RemoveExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10));
+                appData.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+                Assert.Contains(
+                    recipient.RecordLogMemoryMessages,
+                    message => message.Value is DeleteExpenseLogMemoryAction action &&
+                               action.Snapshot?.ExpenseLogId == 10);
+            }
+            finally
+            {
+                WeakReferenceMessenger.Default.UnregisterAll(recipient);
+            }
+        });
+    }
+
+    [Fact]
     public void CancelEditing_FromSplitMode_RestoresOriginalAmountAndLeavesSplitMode()
     {
         RunInSta(() =>

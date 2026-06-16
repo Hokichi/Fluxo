@@ -28,7 +28,7 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.Contains("ShowSplitButton=\"{Binding ShowSplitButton}\"", xaml);
         Assert.Contains("protected override void OnSplitButtonClick()", codeBehind);
         Assert.Contains("_viewModel.BeginSplitMode();", codeBehind);
-        Assert.Contains("ExpenseAmountTextBox.Focus();", codeBehind);
+        Assert.Contains("SplitExpenseAmountTextBox.Focus();", codeBehind);
         Assert.Contains("ShowSplitButton = _viewModel.ShowSplitButton;", codeBehind);
         Assert.Contains("_viewModel.CanCloseSplitModeWithoutSaving", codeBehind);
         Assert.Contains("_viewModel.RequiresEmptySplitConfirmationOnClose", codeBehind);
@@ -51,10 +51,9 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.Contains("Click=\"OnRemoveSplitRowClick\"", xaml);
         Assert.Contains("Split amounts exceed the original expense amount.", xaml);
         Assert.Contains("x:Key=\"SplitRowTagToggleStyle\"", xaml);
-        Assert.Contains("HorizontalAlignment=\"Center\"", xaml);
         Assert.Contains("x:Name=\"SplitRowsHeaderGrid\"", xaml);
 
-        var addExpenseButtonIndex = xaml.IndexOf("Content=\"Add Expense\"", StringComparison.Ordinal);
+        var addExpenseButtonIndex = xaml.IndexOf("Content=\"Add Sub-expense\"", StringComparison.Ordinal);
         var splitRowsHeaderIndex = xaml.IndexOf("x:Name=\"SplitRowsHeaderGrid\"", StringComparison.Ordinal);
         var splitRowsItemsIndex = xaml.IndexOf("x:Name=\"SplitRowsItemsControl\"", StringComparison.Ordinal);
         Assert.True(addExpenseButtonIndex >= 0);
@@ -62,6 +61,25 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.True(splitRowsItemsIndex >= 0);
         Assert.True(addExpenseButtonIndex < splitRowsHeaderIndex);
         Assert.True(addExpenseButtonIndex < splitRowsItemsIndex);
+    }
+
+    [Fact]
+    public void ExpenseDetailPopup_NormalLayout_PutsNameAndPinAboveAmount()
+    {
+        var xaml = File.ReadAllText(PopupXamlPath);
+        var codeBehind = File.ReadAllText(PopupCodeBehindPath);
+
+        var namePanelIndex = xaml.IndexOf("x:Name=\"NormalExpenseNamePinPanel\"", StringComparison.Ordinal);
+        var pinIndex = xaml.IndexOf("x:Name=\"ExpensePinButton\"", StringComparison.Ordinal);
+        var amountIndex = xaml.IndexOf("x:Name=\"ExpenseAmountTextBox\"", StringComparison.Ordinal);
+
+        Assert.True(namePanelIndex >= 0);
+        Assert.True(pinIndex > namePanelIndex);
+        Assert.True(amountIndex > pinIndex);
+        Assert.Contains("ButtonIcon=\"{StaticResource Pin}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsPinned, Mode=TwoWay}\"", xaml);
+        Assert.Contains("ShowDeleteButton=\"True\"", xaml);
+        Assert.Contains("protected override async void OnDeleteButtonClick()", codeBehind);
     }
 
     [Fact]
