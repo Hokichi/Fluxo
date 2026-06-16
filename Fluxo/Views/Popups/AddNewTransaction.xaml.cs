@@ -100,6 +100,16 @@ public partial class AddNewTransaction : BasePopup
         FocusPrimaryInput();
     }
 
+    protected override async void OnHistoryButtonClick()
+    {
+        if (!_viewModel.CanUseHistory)
+            return;
+
+        _viewModel.IsHistoryOpen = !_viewModel.IsHistoryOpen;
+        if (_viewModel.IsHistoryOpen)
+            await _viewModel.LoadHistoryAsync();
+    }
+
     private async Task<bool> ShouldSaveCurrentTransactionAsync()
     {
         if (!await _viewModel.HasSimilarTransactionAsync())
@@ -251,6 +261,13 @@ public partial class AddNewTransaction : BasePopup
             nameof(AddNewTransactionVM.IsGoal) or
             nameof(AddNewTransactionVM.IsIncome))
             SyncNameSuggestionsPopupState();
+
+        if (e.PropertyName is nameof(AddNewTransactionVM.SelectedPinnedHistoryItem) or
+            nameof(AddNewTransactionVM.SelectedHistoryItem))
+        {
+            SyncNoteDocumentFromViewModel();
+            FocusPrimaryInput();
+        }
     }
 
     private void OnMoreTagsButtonChecked(object sender, RoutedEventArgs e) => TryOpenMoreTagsPopup();

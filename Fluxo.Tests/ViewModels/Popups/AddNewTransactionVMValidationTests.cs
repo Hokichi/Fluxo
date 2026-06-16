@@ -971,6 +971,101 @@ public sealed class AddNewTransactionVMValidationTests
         });
     }
 
+    [Fact]
+    public void SaveAsync_Expense_PersistsPinnedState()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+            vm.IsPinned = true;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddExpenseLogAsync(
+                Arg.Is<ExpenseLog>(log => log.IsPinned),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_Income_PersistsPinnedState()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Income,
+                CreateCheckingSource(balance: 0m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+            vm.IsPinned = true;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddIncomeLogAsync(
+                Arg.Is<IncomeLog>(log => log.IsPinned),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void GoalUpdate_DisablesHistoryAndClearsOpenState()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
+            vm.IsHistoryOpen = true;
+
+            vm.IsGoal = true;
+
+            Assert.False(vm.CanUseHistory);
+            Assert.False(vm.IsHistoryOpen);
+        });
+    }
+
+    [Fact]
+    public void SelectingHistoryItem_FillsFieldsAndKeepsRecurringToggle()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: true);
+            var item = new AddNewTransactionHistoryItemVM
+            {
+                Id = 10,
+                IsExpense = true,
+                Name = "Coffee",
+                Amount = 4.5m,
+                SpendingSourceId = source.Id,
+                SpendingSourceName = source.Name,
+                Note = "morning",
+                Date = new DateTime(2026, 6, 1),
+                Category = ExpenseCategory.Wants,
+                TagId = vm.SelectedTag?.Id,
+                IsPinned = true
+            };
+
+            vm.SelectedHistoryItem = item;
+
+            Assert.Equal("Coffee", vm.NameText);
+            Assert.Equal(4.5m, vm.AmountText);
+            Assert.Equal("morning", vm.NoteText);
+            Assert.Equal(new DateTime(2026, 6, 1), vm.SelectedDate);
+            Assert.True(vm.IsPinned);
+            Assert.True(vm.IsRecurring);
+            Assert.Same(source, vm.SelectedSpendingSource);
+        });
+    }
+
     private static AddNewTransactionVM CreateVm(
         TransactionKind kind,
         SpendingSourceVM source,
@@ -1059,6 +1154,8 @@ public sealed class AddNewTransactionVMValidationTests
         appData.AddExpenseAsync(Arg.Any<Expense>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         appData.AddExpenseLogAsync(Arg.Any<ExpenseLog>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.AddIncomeLogAsync(Arg.Any<IncomeLog>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         appData.AddRecurringTransactionAsync(Arg.Any<RecurringTransaction>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);

@@ -2,6 +2,7 @@
     x:Class="Fluxo.Views.Popups.AddNewTransaction"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:Fluxo.Resources.Behaviors;assembly=Fluxo.Resources"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -9,6 +10,7 @@
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Add New Transaction"
+    ShowHistoryButton="{Binding CanUseHistory}"
     ShowSaveAndCreateNewButton="True"
     ShowSaveButton="True"
     mc:Ignorable="d">
@@ -126,6 +128,90 @@
             </Setter>
         </Style>
 
+        <Style x:Key="TransactionHistoryListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+        </Style>
+
+        <Style x:Key="TransactionHistoryListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="ItemBackground"
+                            Padding="10,8"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Mint}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="TransactionHistoryItemTemplate">
+            <Grid Width="260">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Ellipse
+                    Width="8"
+                    Height="8"
+                    Margin="0,5,10,0"
+                    VerticalAlignment="Top"
+                    Fill="{Binding TagHexCode, FallbackValue={StaticResource Brush.Mint}, TargetNullValue={StaticResource Brush.Mint}}" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock
+                        FontFamily="{DynamicResource Bold}"
+                        FontSize="13"
+                        Foreground="{DynamicResource Brush.Text.Primary}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,3,0,0"
+                        FontFamily="{DynamicResource Regular}"
+                        FontSize="11"
+                        Foreground="{DynamicResource Brush.Text.Muted}"
+                        Text="{Binding SpendingSourceName}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Margin="12,0,0,0">
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontFamily="{DynamicResource Bold}"
+                        FontSize="13"
+                        Foreground="{DynamicResource Brush.Text.Primary}"
+                        Text="{Binding Amount, StringFormat={}{0:N2}}" />
+                    <TextBlock
+                        Margin="0,3,0,0"
+                        HorizontalAlignment="Right"
+                        FontFamily="{DynamicResource Regular}"
+                        FontSize="11"
+                        Foreground="{DynamicResource Brush.Text.Muted}"
+                        Text="{Binding Date, Converter={StaticResource DateTimeToRelativeDateConverter}}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
         <Style
             x:Key="ExpenseCategoryComboBoxItemStyle"
             BasedOn="{StaticResource FluxoComboBoxItemStyle}"
@@ -133,6 +219,9 @@
             <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
             <Setter Property="Opacity" Value="1" />
             <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4" />
+                </Trigger>
                 <DataTrigger Binding="{Binding IsEnabled}" Value="False">
                     <Setter Property="Opacity" Value="0.45" />
                 </DataTrigger>
@@ -172,7 +261,22 @@
     </customControls:BasePopup.Resources>
 
     <Border Padding="20,4,20,20">
-        <Grid Width="560">
+        <Grid>
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Width" Value="560" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsHistoryOpen}" Value="True">
+                            <Setter Property="Width" Value="880" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="560" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="300" />
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -180,7 +284,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0">
+            <StackPanel Grid.Row="0" Grid.Column="0">
                 <customControls:SegmentedToggleGroup Width="400" HorizontalAlignment="Center">
                     <customControls:SegmentedToggleOption
                         x:Name="ExpenseRadioButton"
@@ -197,7 +301,7 @@
                 </customControls:SegmentedToggleGroup>
             </StackPanel>
 
-            <Grid Grid.Row="1" Margin="0,16,0,0">
+            <Grid Grid.Row="1" Grid.Column="0" Margin="0,16,0,0">
                 <StackPanel Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel>
                         <Grid Style="{StaticResource FieldHeaderGridStyle}">
@@ -207,12 +311,36 @@
                                 Text="Name" />
                             <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding NameValidationHint}" />
                         </Grid>
-                        <TextBox
-                            x:Name="ExpenseNameTextBox"
-                            GotKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
-                            LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
-                            Style="{StaticResource RoundedTextInputStyle}"
-                            Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="ExpenseNameTextBox"
+                                GotKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
+                                LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
+                                Style="{StaticResource RoundedTextInputStyle}"
+                                Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <customControls:BalloonCheckBox
+                                Grid.Column="2"
+                                ButtonIcon="{StaticResource RegularRepeat}"
+                                ButtonSize="38"
+                                ButtonText="Recurring"
+                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                IsEnabled="{Binding CanToggleRecurring}"
+                                ToolTip="Recurring" />
+                            <customControls:BalloonCheckBox
+                                Grid.Column="4"
+                                ButtonIcon="{StaticResource Pin}"
+                                ButtonSize="38"
+                                ButtonText="Pinned"
+                                IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                                ToolTip="Pinned" />
+                        </Grid>
                         <Popup
                             x:Name="ExpenseNameSuggestionsPopup"
                             AllowsTransparency="True"
@@ -335,12 +463,36 @@
                                     Text="Name" />
                                 <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding NameValidationHint}" />
                             </Grid>
-                            <TextBox
-                                x:Name="IncomeNameTextBox"
-                                GotKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
-                                LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
-                                Style="{StaticResource RoundedTextInputStyle}"
-                                Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    x:Name="IncomeNameTextBox"
+                                    GotKeyboardFocus="OnTransactionNameTextBoxFocusChanged"
+                                    LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
+                                    Style="{StaticResource RoundedTextInputStyle}"
+                                    Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <customControls:BalloonCheckBox
+                                    Grid.Column="2"
+                                    ButtonIcon="{StaticResource RegularRepeat}"
+                                    ButtonSize="38"
+                                    ButtonText="Recurring"
+                                    IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                    IsEnabled="{Binding CanToggleRecurring}"
+                                    ToolTip="Recurring" />
+                                <customControls:BalloonCheckBox
+                                    Grid.Column="4"
+                                    ButtonIcon="{StaticResource Pin}"
+                                    ButtonSize="38"
+                                    ButtonText="Pinned"
+                                    IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                                    ToolTip="Pinned" />
+                            </Grid>
                             <Popup
                                 x:Name="IncomeNameSuggestionsPopup"
                                 AllowsTransparency="True"
@@ -511,6 +663,7 @@
             <StackPanel
                 x:Name="TagsPanel"
                 Grid.Row="2"
+                Grid.Column="0"
                 Margin="0,16,0,0"
                 Visibility="{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
@@ -587,7 +740,7 @@
                 </Popup>
             </StackPanel>
 
-            <StackPanel Grid.Row="3" Margin="0,16,0,0">
+            <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,16,0,0">
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Visible" />
@@ -613,6 +766,63 @@
                         VerticalScrollBarVisibility="Auto" />
                 </Border>
             </StackPanel>
+
+            <Border
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Grid.Column="2"
+                Padding="12"
+                Background="{DynamicResource Brush.Background.Surface}"
+                BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="{Binding IsHistoryOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Pinned" />
+                    <customControls:FadingScrollViewer
+                        Grid.Row="1"
+                        MaxHeight="240"
+                        VerticalScrollBarVisibility="Auto">
+                        <ListBox
+                            behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding PinnedHistory.HasMoreItems}"
+                            behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                            behaviors:ScrollOnDemandBehavior.IsLoading="False"
+                            behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding PinnedHistory.LoadMoreCommand}"
+                            ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
+                            ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
+                            ItemsSource="{Binding PinnedHistory.Items}"
+                            SelectedItem="{Binding SelectedPinnedHistoryItem, Mode=TwoWay}"
+                            Style="{StaticResource TransactionHistoryListBoxStyle}" />
+                    </customControls:FadingScrollViewer>
+
+                    <TextBlock
+                        Grid.Row="3"
+                        Style="{StaticResource SectionLabelStyle}"
+                        Text="History" />
+                    <customControls:FadingScrollViewer
+                        Grid.Row="4"
+                        MaxHeight="300"
+                        VerticalScrollBarVisibility="Auto">
+                        <ListBox
+                            behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"
+                            behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                            behaviors:ScrollOnDemandBehavior.IsLoading="False"
+                            behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding TransactionHistory.LoadMoreCommand}"
+                            ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
+                            ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
+                            ItemsSource="{Binding TransactionHistory.Items}"
+                            SelectedItem="{Binding SelectedHistoryItem, Mode=TwoWay}"
+                            Style="{StaticResource TransactionHistoryListBoxStyle}" />
+                    </customControls:FadingScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </customControls:BasePopup>

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Budgeting;
 using Fluxo.Core.Entities;
@@ -55,6 +56,10 @@ public partial class AddNewTransactionVM : ObservableValidator
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private bool _isRecurring;
+    [ObservableProperty] private bool _isPinned;
+    [ObservableProperty] private bool _isHistoryOpen;
+    [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedPinnedHistoryItem;
+    [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedHistoryItem;
     [ObservableProperty] private RecurringPeriod _selectedRecurringPeriod = RecurringPeriod.Monthly;
     [ObservableProperty]
     [NotifyDataErrorInfo]
@@ -117,6 +122,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
     public ObservableCollection<AddNewTransactionSuggestion> TransactionNameSuggestions { get; } = [];
+    public AddNewTransactionHistoryListVM PinnedHistory { get; } = new();
+    public AddNewTransactionHistoryListVM TransactionHistory { get; } = new();
     public IReadOnlyList<RecurringPeriod> RecurringPeriods { get; } =
     [
         RecurringPeriod.None,
@@ -144,6 +151,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowDateSelector => !IsRecurring;
     public string DateOrRecurrenceLabel => IsRecurring ? "Recurrence" : "Date";
     public bool CanToggleRecurring => !IsRecurringModeLocked;
+    public bool CanUseHistory => !IsGoal;
     public string NameValidationHint => GetValidationHint(nameof(NameText));
     public string AmountValidationHint => GetValidationHint(nameof(AmountText));
 
@@ -232,6 +240,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
     partial void OnRecurringTimeTextChanged(string value) => NotifyFormStateChanged();
     partial void OnIsRecurringModeLockedChanged(bool value) => OnPropertyChanged(nameof(CanToggleRecurring));
+    partial void OnIsPinnedChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
     partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
     partial void OnNameTextChanged(string value)
@@ -304,6 +313,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsGoal = false;
 
         OnPropertyChanged(nameof(IsIncome));
+        OnPropertyChanged(nameof(CanUseHistory));
 
         if (!value || IsGoal)
             IsMoreTagsOpen = false;
@@ -312,6 +322,9 @@ public partial class AddNewTransactionVM : ObservableValidator
         ClearNameValidation();
         RefreshActiveValidation(nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
+        ResetHistoryLists();
+        if (IsHistoryOpen)
+            _ = LoadHistoryAsync();
         NotifyFormStateChanged();
     }
 
@@ -321,15 +334,40 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsExpense = false;
 
         OnPropertyChanged(nameof(IsIncome));
+        OnPropertyChanged(nameof(CanUseHistory));
 
         if (value)
+        {
             IsMoreTagsOpen = false;
+            IsHistoryOpen = false;
+        }
 
         RefreshSpendingSources();
         ClearNameValidation();
         RefreshActiveValidation(nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
+        ResetHistoryLists();
+        if (IsHistoryOpen)
+            _ = LoadHistoryAsync();
         NotifyFormStateChanged();
+    }
+
+    partial void OnSelectedPinnedHistoryItemChanged(AddNewTransactionHistoryItemVM? value)
+    {
+        if (value is null)
+            return;
+
+        SelectedHistoryItem = null;
+        ApplyHistoryItem(value);
+    }
+
+    partial void OnSelectedHistoryItemChanged(AddNewTransactionHistoryItemVM? value)
+    {
+        if (value is null)
+            return;
+
+        SelectedPinnedHistoryItem = null;
+        ApplyHistoryItem(value);
     }
 
     public void ApplyTransactionNameSuggestion(AddNewTransactionSuggestion suggestion)
@@ -500,7 +538,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     DeductedOn = input.Date,
                     Notes = $"Goal update for {goal.Name}",
                     IsForDeletion = false,
-                    SpendingSourceId = spendingSource.Id
+                    SpendingSourceId = spendingSource.Id,
+                    IsPinned = false
                 };
 
                 goal.CurrentAmount += input.Amount;
@@ -554,7 +593,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     DeductedOn = input.Date,
                     Notes = input.Note,
                     IsForDeletion = false,
-                    SpendingSourceId = spendingSource.Id
+                    SpendingSourceId = spendingSource.Id,
+                    IsPinned = input.IsPinned
                 };
 
                 await _appData.AddExpenseAsync(expense);
@@ -585,7 +625,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Amount = input.Amount,
                     AddedOn = input.Date,
                     Notes = input.Note,
-                    SpendingSourceId = spendingSource.Id
+                    SpendingSourceId = spendingSource.Id,
+                    IsPinned = input.IsPinned
                 };
 
                 await _appData.AddIncomeLogAsync(incomeLog);
@@ -678,6 +719,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         NoteText = string.Empty;
         SelectedDate = DateTime.Today;
         IsRecurring = false;
+        IsPinned = false;
         IsRecurringModeLocked = false;
         SelectedRecurringPeriod = RecurringPeriod.Monthly;
         RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
@@ -749,6 +791,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsExpense,
             IsGoal,
             IsRecurring,
+            IsPinned,
             _editingRecurringTransactionId,
             SelectedRecurringPeriod,
             NameText.Trim(),
@@ -1374,6 +1417,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsExpense,
             IsGoal,
             IsRecurring,
+            IsPinned,
             SelectedRecurringPeriod,
             NameText ?? string.Empty,
             AmountText,
@@ -1407,6 +1451,68 @@ public partial class AddNewTransactionVM : ObservableValidator
     private static bool HasPendingTransactionInputValue(PendingTransactionInputState state)
     {
         return !string.IsNullOrWhiteSpace(state.NameText) || state.AmountText > 0m;
+    }
+
+    [RelayCommand]
+    public async Task LoadHistoryAsync(CancellationToken cancellationToken = default)
+    {
+        if (!CanUseHistory)
+        {
+            ResetHistoryLists();
+            return;
+        }
+
+        try
+        {
+            if (IsExpense)
+            {
+                var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+                PinnedHistory.Reset(AddNewTransactionHistoryBuilder.BuildPinnedExpenses(expenseLogs));
+                TransactionHistory.Reset(AddNewTransactionHistoryBuilder.BuildExpenseHistory(expenseLogs));
+                return;
+            }
+
+            var incomeLogs = await _appData.GetIncomeLogsAsync(cancellationToken);
+            PinnedHistory.Reset(AddNewTransactionHistoryBuilder.BuildPinnedIncomes(incomeLogs));
+            TransactionHistory.Reset(AddNewTransactionHistoryBuilder.BuildIncomeHistory(incomeLogs));
+        }
+        catch (Exception exception)
+        {
+            FluxoLogManager.LogError(exception, "Unable to load add transaction history.");
+            ResetHistoryLists();
+        }
+    }
+
+    private void ResetHistoryLists()
+    {
+        SelectedPinnedHistoryItem = null;
+        SelectedHistoryItem = null;
+        PinnedHistory.Reset([]);
+        TransactionHistory.Reset([]);
+    }
+
+    private void ApplyHistoryItem(AddNewTransactionHistoryItemVM item)
+    {
+        IsExpense = item.IsExpense;
+        IsGoal = false;
+        NameText = item.Name;
+        AmountText = item.Amount;
+        NoteText = item.Note;
+        SelectedDate = item.Date.Date;
+        IsPinned = item.IsPinned;
+        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == item.SpendingSourceId) ??
+                                 SelectedSpendingSource;
+
+        if (item.IsExpense)
+        {
+            SelectedExpenseCategory = item.Category ?? SelectedExpenseCategory;
+            SelectedTag = item.TagId is int tagId
+                ? _orderedTags.FirstOrDefault(tag => tag.Id == tagId) ?? SelectedTag
+                : SelectedTag;
+        }
+
+        ClearTransactionNameSuggestions();
+        NotifyFormStateChanged();
     }
 
     private bool IsCurrentInputValid()
@@ -1751,6 +1857,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsExpense,
         bool IsGoal,
         bool IsRecurring,
+        bool IsPinned,
         int? EditingRecurringTransactionId,
         RecurringPeriod RecurringPeriod,
         string Name,
@@ -1767,6 +1874,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsExpense,
         bool IsGoal,
         bool IsRecurring,
+        bool IsPinned,
         RecurringPeriod SelectedRecurringPeriod,
         string NameText,
         decimal AmountText,
