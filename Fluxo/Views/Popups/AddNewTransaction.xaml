@@ -195,60 +195,6 @@
                         Content="Goal Update"
                         IsSelected="{Binding IsGoal, Mode=TwoWay}" />
                 </customControls:SegmentedToggleGroup>
-
-                <Border
-                    Width="400"
-                    Height="32"
-                    Margin="0,12,0,0"
-                    Background="{StaticResource Brush.Background.Surface}"
-                    CornerRadius="16">
-                    <CheckBox
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                        IsEnabled="{Binding CanToggleRecurring}">
-                        <CheckBox.Template>
-                            <ControlTemplate TargetType="CheckBox">
-                                <Grid>
-                                    <Border
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="16"
-                                        Opacity="{TemplateBinding Opacity}" />
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{TemplateBinding Foreground}"
-                                        Text="Set as recurring" />
-                                </Grid>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource Brush.Mint.Muted}" />
-                                        <Setter Property="Opacity" Value="0.6" />
-                                    </Trigger>
-                                    <Trigger Property="IsChecked" Value="True">
-                                        <Setter Property="BorderThickness" Value="2" />
-                                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
-                                        <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
-                                        <Setter Property="Background" Value="Transparent" />
-                                        <Setter Property="Opacity" Value="1" />
-                                    </Trigger>
-                                    <Trigger Property="IsChecked" Value="False">
-                                        <Setter Property="BorderThickness" Value="0" />
-                                        <Setter Property="Background" Value="Transparent" />
-                                        <Setter Property="Opacity" Value="1" />
-                                    </Trigger>
-                                    <Trigger Property="IsEnabled" Value="False">
-                                        <Setter Property="Opacity" Value="0.4" />
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </CheckBox.Template>
-                    </CheckBox>
-                </Border>
             </StackPanel>
 
             <Grid Grid.Row="1" Margin="0,16,0,0">
