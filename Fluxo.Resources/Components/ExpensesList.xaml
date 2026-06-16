@@ -55,7 +55,7 @@
                         Height="32"
                         Margin="0,0,8,0"
                         VerticalAlignment="Center"
-                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                        ButtonIcon="{StaticResource Delete}"
                         Command="{Binding DeleteCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
                         CommandParameter="{Binding}"
                         DefaultBackground="{StaticResource Brush.Background.Surface}"
@@ -209,20 +209,10 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <Border
-                                    x:Name="ExpenseTagBorder"
-                                    Grid.Column="0"
-                                    Width="1"
-                                    Margin="0,0,12,0"
-                                    Padding="4"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Stretch"
-                                    Background="{Binding Expense.ExpenseTag.HexCode}" />
-
                                 <StackPanel
                                     Grid.Column="1"
                                     MinWidth="0"
-                                    Margin="0,0,8,0"
+                                    Margin="8,0"
                                     HorizontalAlignment="Stretch">
                                     <TextBlock
                                         MinWidth="0"
