@@ -48,6 +48,17 @@ public sealed class ExpensesListEmptyActionTests
         Assert.DoesNotContain("RemainingAmountProperty", source);
     }
 
+    [Fact]
+    public void ExpensesList_ItemsUseTransparentBackgroundAndTagColorStrip()
+    {
+        var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
+
+        Assert.Contains("Background=\"Transparent\"", xaml);
+        Assert.Contains("Background=\"{Binding Expense.ExpenseTag.HexCode", xaml);
+        Assert.DoesNotContain("Background=\"{Binding DotColor", xaml);
+        Assert.DoesNotContain("Background=\"{StaticResource Brush.Background.Hover}\"", xaml);
+    }
+
     private static string ResolveExpensesListXamlPath() =>
         ResolveRepositoryFile("Fluxo.Resources", "Components", "ExpensesList.xaml");
 

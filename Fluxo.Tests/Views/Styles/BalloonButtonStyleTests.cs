@@ -83,6 +83,38 @@ public sealed class BalloonButtonStyleTests
     }
 
     [Fact]
+    public void SwipeRevealContainer_CollapsesInactiveActionsAndUsesTransparentContentBackground()
+    {
+        var xaml = ReadButtonStylesXaml();
+        var styleStart = xaml.IndexOf("<Style TargetType=\"{x:Type c:SwipeRevealContainer}\"", StringComparison.Ordinal);
+        Assert.True(styleStart >= 0);
+
+        var nextStyleStart = xaml.IndexOf("<Style x:Key=\"PopupTextButtonStyle\"", styleStart, StringComparison.Ordinal);
+        Assert.True(nextStyleStart > styleStart);
+
+        var style = xaml[styleStart..nextStyleStart];
+
+        Assert.Contains("IsLeftContentRevealed", style);
+        Assert.Contains("IsRightContentRevealed", style);
+        Assert.Contains("<Setter Property=\"Visibility\" Value=\"Collapsed\" />", style);
+        Assert.Contains("<DoubleAnimation", style);
+        Assert.Contains("x:Name=\"PART_ContentBorder\" Background=\"Transparent\"", style);
+    }
+
+    [Fact]
+    public void SwipeRevealContainer_RightClickRevealsRightContent()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo.Resources",
+            "CustomControls",
+            "SwipeRevealContainer.cs"));
+
+        Assert.Contains("OnPreviewMouseRightButtonDown", source);
+        Assert.Contains("AnimateTo(-RevealWidth)", source);
+        Assert.Contains("IsRightContentRevealed = targetX < 0", source);
+    }
+
+    [Fact]
     public void DetailActionBalloonButtonStyle_UsesButtonSizeForSquareOverride()
     {
         var xaml = ReadButtonStylesXaml();

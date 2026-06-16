@@ -31,6 +31,14 @@ public class SwipeRevealContainer : ContentControl
         DependencyProperty.Register(nameof(IsRevealed), typeof(bool), typeof(SwipeRevealContainer),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsLeftContentRevealedProperty =
+        DependencyProperty.Register(nameof(IsLeftContentRevealed), typeof(bool), typeof(SwipeRevealContainer),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty IsRightContentRevealedProperty =
+        DependencyProperty.Register(nameof(IsRightContentRevealed), typeof(bool), typeof(SwipeRevealContainer),
+            new PropertyMetadata(false));
+
     private static SwipeRevealContainer? _currentlyRevealed;
     private readonly TranslateTransform _translateTransform = new();
 
@@ -62,6 +70,18 @@ public class SwipeRevealContainer : ContentControl
     {
         get => (bool)GetValue(IsRevealedProperty);
         set => SetValue(IsRevealedProperty, value);
+    }
+
+    public bool IsLeftContentRevealed
+    {
+        get => (bool)GetValue(IsLeftContentRevealedProperty);
+        set => SetValue(IsLeftContentRevealedProperty, value);
+    }
+
+    public bool IsRightContentRevealed
+    {
+        get => (bool)GetValue(IsRightContentRevealedProperty);
+        set => SetValue(IsRightContentRevealedProperty, value);
     }
 
     public override void OnApplyTemplate()
@@ -155,6 +175,17 @@ public class SwipeRevealContainer : ContentControl
         e.Handled = true;
     }
 
+    protected override void OnPreviewMouseRightButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseRightButtonDown(e);
+
+        if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<Button>(source) is not null)
+            return;
+
+        AnimateTo(-RevealWidth);
+        e.Handled = true;
+    }
+
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
@@ -193,6 +224,8 @@ public class SwipeRevealContainer : ContentControl
         _translateTransform.BeginAnimation(TranslateTransform.XProperty, animation);
         _currentOffset = targetX;
         IsRevealed = targetX != 0;
+        IsLeftContentRevealed = targetX > 0;
+        IsRightContentRevealed = targetX < 0;
 
         _currentlyRevealed = targetX != 0 ? this : null;
     }

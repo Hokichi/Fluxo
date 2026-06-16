@@ -217,16 +217,64 @@
                         <ContentPresenter
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Content="{TemplateBinding LeftContent}" />
+                            Content="{TemplateBinding LeftContent}">
+                            <ContentPresenter.Style>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Opacity" Value="0" />
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLeftContentRevealed, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Setter Property="Opacity" Value="1" />
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            From="0"
+                                                            To="1"
+                                                            Duration="0:0:0.16" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentPresenter.Style>
+                        </ContentPresenter>
 
                         <!--  Right action (revealed on swipe left)  -->
                         <ContentPresenter
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            Content="{TemplateBinding RightContent}" />
+                            Content="{TemplateBinding RightContent}">
+                            <ContentPresenter.Style>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Opacity" Value="0" />
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRightContentRevealed, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Setter Property="Opacity" Value="1" />
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            From="0"
+                                                            To="1"
+                                                            Duration="0:0:0.16" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentPresenter.Style>
+                        </ContentPresenter>
 
                         <!--  Main slideable content  -->
-                        <Border x:Name="PART_ContentBorder" Background="{StaticResource Brush.Background.Main}">
+                        <Border x:Name="PART_ContentBorder" Background="Transparent">
                             <ContentPresenter Content="{TemplateBinding Content}" />
                         </Border>
                     </Grid>
