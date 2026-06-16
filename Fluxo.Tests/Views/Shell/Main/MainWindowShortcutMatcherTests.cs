@@ -45,14 +45,15 @@ public class MainWindowShortcutMatcherTests
     }
 
     [Fact]
-    public void IsOpenQuickAccessShortcut_ReturnsTrue_ForCtrlQ()
+    public void IsOpenQuickAccessShortcut_ReturnsTrue_ForCtrlK()
     {
-        var isShortcut = MainWindowShortcutMatcher.IsOpenQuickAccessShortcut(Key.Q, ModifierKeys.Control);
+        var isShortcut = MainWindowShortcutMatcher.IsOpenQuickAccessShortcut(Key.K, ModifierKeys.Control);
 
         Assert.True(isShortcut);
     }
 
     [Theory]
+    [InlineData(Key.Q, ModifierKeys.Control)]
     [InlineData(Key.Q, ModifierKeys.None)]
     [InlineData(Key.Q, ModifierKeys.Control | ModifierKeys.Shift)]
     [InlineData(Key.W, ModifierKeys.Control)]

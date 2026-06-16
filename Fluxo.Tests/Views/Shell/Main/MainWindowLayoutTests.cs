@@ -158,7 +158,8 @@ public sealed class MainWindowLayoutTests
 
         AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
         Assert.Contains("Text=\"Quick Access\"", xaml);
-        Assert.Contains("Text=\"Ctrl+Q\"", xaml);
+        Assert.Contains("Text=\"Ctrl+K\"", xaml);
+        Assert.DoesNotContain("Text=\"Ctrl+Q\"", xaml);
         Assert.DoesNotContain("x:Name=\"PlanningMenuButton\"", xaml);
         Assert.DoesNotContain("Text=\"Planning\"", xaml);
     }
@@ -317,8 +318,8 @@ public sealed class MainWindowLayoutTests
             .ToArray();
 
         Assert.Equal(2, actionButtons.Length);
-        AssertBalloonButtonExpandsWithText(actionButtons[0], "Resolve");
-        AssertBalloonButtonExpandsWithText(actionButtons[1], "Clear notification");
+        AssertBalloonButtonExpandsWithText(actionButtons[0], "Process");
+        AssertBalloonButtonExpandsWithText(actionButtons[1], "Clear");
     }
 
     [Fact]

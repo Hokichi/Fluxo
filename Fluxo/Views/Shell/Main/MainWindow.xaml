@@ -573,7 +573,7 @@
                                             <TextBlock
                                                 Grid.Column="4"
                                                 Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+Q" />
+                                                Text="Ctrl+K" />
                                         </Grid>
                                     </Button>
 

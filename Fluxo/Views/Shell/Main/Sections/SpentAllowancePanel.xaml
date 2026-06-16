@@ -49,9 +49,9 @@
                     VerticalAlignment="Center"
                     FontFamily="{StaticResource Bold}"
                     FontSize="18"
-                    Foreground="{Binding Net, Converter={StaticResource DifferenceToBrushConverter}}"
-                    Text="{Binding Net, Converter={StaticResource NumberWithCommasConverter}}"
-                    ToolTip="{Binding Net, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                    Foreground="{Binding TotalEarned, Converter={StaticResource DifferenceToBrushConverter}}"
+                    Text="{Binding TotalEarned, Converter={StaticResource NumberWithCommasConverter}}"
+                    ToolTip="{Binding TotalEarned, Converter={StaticResource MoneyFullDisplayConverter}}" />
             </Grid>
         </Border>
 

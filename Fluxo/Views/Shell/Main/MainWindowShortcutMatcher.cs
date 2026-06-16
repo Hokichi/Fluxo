@@ -27,7 +27,7 @@ public static class MainWindowShortcutMatcher
 
     public static bool IsOpenQuickAccessShortcut(Key key, ModifierKeys modifiers)
     {
-        return key == Key.Q && modifiers == ModifierKeys.Control;
+        return key == Key.K && modifiers == ModifierKeys.Control;
     }
 
     public static bool IsOpenHotkeysOverviewShortcut(Key key, ModifierKeys modifiers)
