@@ -75,10 +75,14 @@
 
     <Style x:Key="DashboardPanelStyle" TargetType="Border">
         <Setter Property="Padding" Value="16" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <SolidColorBrush Opacity="0.3" Color="{StaticResource Color.Background.Elevated}" />
+            </Setter.Value>
+        </Setter>
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="BorderThickness" Value="1.5" />
+        <Setter Property="CornerRadius" Value="8" />
     </Style>
 
     <DataTemplate x:Key="SavingGoalTemplate">
@@ -375,9 +379,9 @@
                         Text="{Binding Name}">
                         <TextBlock.Foreground>
                             <Binding
-                                Path="HexCode"
                                 Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
-                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
+                                ConverterParameter="{StaticResource Brush.Text.Primary}"
+                                Path="HexCode" />
                         </TextBlock.Foreground>
                     </TextBlock>
                 </StackPanel>
@@ -447,9 +451,9 @@
                         Text="{Binding Name}">
                         <TextBlock.Foreground>
                             <Binding
-                                Path="HexCode"
                                 Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
-                                ConverterParameter="{StaticResource Brush.Text.Primary}" />
+                                ConverterParameter="{StaticResource Brush.Text.Primary}"
+                                Path="HexCode" />
                         </TextBlock.Foreground>
                     </TextBlock>
                 </StackPanel>

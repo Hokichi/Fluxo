@@ -45,7 +45,7 @@
                                     Canvas.Top="4"
                                     Width="48"
                                     Height="48"
-                                    Stroke="{StaticResource Brush.Background.Surface}"
+                                    Stroke="{StaticResource Brush.Background.Hover}"
                                     StrokeThickness="6" />
                                 <Path
                                     Canvas.Left="6"

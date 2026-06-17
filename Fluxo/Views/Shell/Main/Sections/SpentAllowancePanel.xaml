@@ -9,14 +9,7 @@
         VerticalAlignment="Center"
         HorizontalGap="8"
         VerticalGap="8">
-        <Border
-            Padding="12,8"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
-            BorderThickness="2"
-            CornerRadius="8">
-            <Border.Background>
-                <SolidColorBrush Opacity="0.5" Color="{StaticResource Color.Background.Elevated}" />
-            </Border.Background>
+        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"
@@ -35,14 +28,7 @@
             </Grid>
         </Border>
 
-        <Border
-            Padding="12,8"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
-            BorderThickness="2"
-            CornerRadius="8">
-            <Border.Background>
-                <SolidColorBrush Opacity="0.5" Color="{StaticResource Color.Background.Elevated}" />
-            </Border.Background>
+        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"
@@ -61,14 +47,7 @@
             </Grid>
         </Border>
 
-        <Border
-            Padding="12,8"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
-            BorderThickness="2"
-            CornerRadius="8">
-            <Border.Background>
-                <SolidColorBrush Opacity="0.5" Color="{StaticResource Color.Background.Elevated}" />
-            </Border.Background>
+        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"
@@ -94,14 +73,7 @@
             </Grid>
         </Border>
 
-        <Border
-            Padding="12,8"
-            BorderBrush="{StaticResource Brush.Border.Subtle}"
-            BorderThickness="2"
-            CornerRadius="8">
-            <Border.Background>
-                <SolidColorBrush Opacity="0.3" Color="{StaticResource Color.Background.Elevated}" />
-            </Border.Background>
+        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"

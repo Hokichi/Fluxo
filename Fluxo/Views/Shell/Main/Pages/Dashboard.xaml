@@ -61,7 +61,7 @@
             VerticalAlignment="Top"
             DataContext="{Binding ViewModeToggle}" />
 
-        <Grid x:Name="MainContentGrid" Margin="0,48,0,0">
+        <Grid x:Name="MainContentGrid" Margin="0,60,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -72,7 +72,7 @@
             <Grid Grid.Row="1" Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 

@@ -20,13 +20,6 @@
     WindowStyle="None"
     mc:Ignorable="d">
 
-    <WindowChrome.WindowChrome>
-        <WindowChrome
-            CaptionHeight="32"
-            GlassFrameThickness="-1"
-            ResizeBorderThickness="6" />
-    </WindowChrome.WindowChrome>
-
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" Executed="OnCloseWindow" />
         <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" Executed="OnMinimizeWindow" />
@@ -289,10 +282,13 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" MouseMove="MainWindow_OnMouseMove">
-        <Border.Background>
-            <SolidColorBrush Opacity="0.9" Color="{StaticResource Color.Background.Main}" />
-        </Border.Background>
+    <Border
+        x:Name="RootBorder"
+        Background="{StaticResource Brush.Background.Main}"
+        BorderBrush="{StaticResource Brush.Border.Subtle}"
+        BorderThickness="1"
+        CornerRadius="8"
+        MouseMove="MainWindow_OnMouseMove">
         <Grid>
             <Grid x:Name="ContentGrid" Margin="0,16,0,0">
                 <Grid.RowDefinitions>

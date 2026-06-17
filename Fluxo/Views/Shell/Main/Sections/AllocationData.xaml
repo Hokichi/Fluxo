@@ -3,14 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Border
-        Padding="16,12,8,12"
-        BorderBrush="{StaticResource Brush.Border.Subtle}"
-        BorderThickness="2"
-        CornerRadius="8">
-        <Border.Background>
-            <SolidColorBrush Opacity="0.5" Color="{StaticResource Color.Background.Elevated}" />
-        </Border.Background>
+    <Border Padding="16,12,8,12" Style="{StaticResource DashboardPanelStyle}">
         <Grid VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />

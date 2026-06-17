@@ -23,8 +23,8 @@
                     </Grid.ColumnDefinitions>
 
                     <Border
-                        Width="44"
-                        Height="48"
+                        Width="40"
+                        Height="40"
                         Background="{StaticResource Brush.Background.Surface}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
@@ -113,9 +113,7 @@
                     HorizontalScrollBarVisibility="Disabled"
                     SizeChanged="OnUpcomingEventsScrollViewerSizeChanged"
                     VerticalScrollBarVisibility="Auto">
-                    <ItemsControl
-                        ItemTemplate="{StaticResource UpcomingEventItemTemplate}"
-                        ItemsSource="{Binding Events}" />
+                    <ItemsControl ItemTemplate="{StaticResource UpcomingEventItemTemplate}" ItemsSource="{Binding Events}" />
                 </ScrollViewer>
 
                 <TextBlock
