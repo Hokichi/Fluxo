@@ -245,6 +245,33 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
+    public async Task BudgetTab_BuildApplyChangesAsync_WhenRolloverPolicyChangesToEnabled_MarksCurrentPeriod()
+    {
+        var unitOfWork = new NullUnitOfWork
+        {
+            BudgetAllocationEntity = new BudgetAllocation
+            {
+                AllocationPeriod = AllocationPeriod.Monthly,
+                PeriodStart = 10,
+                RolloverPolicy = RolloverPolicy.None,
+                LastRolloverPeriodStart = DateTime.MinValue
+            }
+        };
+        var vm = new SettingsBudgetTabVM(
+            () => 1000m,
+            new AppDataService(unitOfWork),
+            todayProvider: () => new DateTime(2026, 2, 15));
+        await vm.LoadAsync();
+
+        vm.RolloverPolicy = RolloverPolicy.Pooled;
+
+        var (result, _) = await vm.BuildApplyChangesAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new DateTime(2026, 2, 10), unitOfWork.BudgetAllocationEntity!.LastRolloverPeriodStart);
+    }
+
+    [Fact]
     public void BudgetTab_ChangingConfiguration_PublishesPendingState()
     {
         var messenger = new WeakReferenceMessenger();

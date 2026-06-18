@@ -50,7 +50,7 @@ public sealed class BudgetAllocationPeriodSyncServiceTests
     }
 
     [Fact]
-    public async Task SyncAsync_WhenCurrentIndexEqualsPeriodStart_StoresRolloverPeriodMarkerOnce()
+    public async Task SyncAsync_WhenCurrentIndexEqualsPeriodStart_DoesNotMoveRolloverPeriodMarker()
     {
         var unitOfWork = new TestUnitOfWork
         {
@@ -58,16 +58,16 @@ public sealed class BudgetAllocationPeriodSyncServiceTests
             {
                 AllocationPeriod = AllocationPeriod.Monthly,
                 PeriodStart = 10,
-                LastRolloverPeriodStart = DateTime.MinValue
+                CurrentPeriodIndex = 10,
+                LastRolloverPeriodStart = new DateTime(2026, 1, 10)
             }
         };
         var service = new BudgetAllocationPeriodSyncService(() => new DateTime(2026, 2, 10));
 
         await service.SyncAsync(unitOfWork);
-        await service.SyncAsync(unitOfWork);
 
-        Assert.Equal(new DateTime(2026, 2, 10), unitOfWork.BudgetAllocationEntity!.LastRolloverPeriodStart);
-        Assert.Equal(1, unitOfWork.SaveCallCount);
+        Assert.Equal(new DateTime(2026, 1, 10), unitOfWork.BudgetAllocationEntity!.LastRolloverPeriodStart);
+        Assert.Equal(0, unitOfWork.SaveCallCount);
     }
 
     private sealed class TestUnitOfWork : IUnitOfWork

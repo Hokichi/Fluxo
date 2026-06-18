@@ -2,6 +2,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Budgeting;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
@@ -14,6 +15,7 @@ namespace Fluxo.ViewModels.Popups.Settings;
 public partial class SettingsBudgetTabVM : ObservableObject
 {
     private readonly Func<decimal> _totalBudgetAmountProvider;
+    private readonly Func<DateTime> _todayProvider;
     private readonly IMessenger _messenger;
     private readonly IAppDataService _appData;
     private bool _suppressPendingStatePublish;
@@ -39,17 +41,25 @@ public partial class SettingsBudgetTabVM : ObservableObject
         SettingsBudgetManagementPage.Allocation;
     [ObservableProperty] private int _wantsAllocationPercentage;
 
-    public SettingsBudgetTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
-        : this(() => mainViewModel.BudgetPanel.TotalIncomeAmount, appData, messenger)
+    public SettingsBudgetTabVM(
+        MainVM mainViewModel,
+        IAppDataService appData,
+        IMessenger? messenger = null,
+        Func<DateTime>? todayProvider = null)
+        : this(() => mainViewModel.BudgetPanel.TotalIncomeAmount, appData, messenger, todayProvider)
     {
     }
 
-    public SettingsBudgetTabVM(Func<decimal> totalBudgetAmountProvider, IAppDataService appData,
-        IMessenger? messenger = null)
+    public SettingsBudgetTabVM(
+        Func<decimal> totalBudgetAmountProvider,
+        IAppDataService appData,
+        IMessenger? messenger = null,
+        Func<DateTime>? todayProvider = null)
     {
         _totalBudgetAmountProvider = totalBudgetAmountProvider;
         _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
+        _todayProvider = todayProvider ?? (() => DateTime.Today);
     }
 
     public decimal TotalBudgetAmount => _totalBudgetAmountProvider();
@@ -176,6 +186,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         allocation.PeriodStart = BudgetAllocationPeriodRules.ClampPeriodStart(AllocationPeriod, PeriodStart);
         allocation.RolloverPolicy = RolloverPolicy;
         allocation.OverspendPolicy = OverspendPolicy;
+        MarkCurrentPeriodWhenRolloverPolicyChangesToEnabled(allocation);
         _appData.UpdateBudgetAllocation(allocation);
 
         return (SettingsOperationResult.Success(), []);
@@ -352,6 +363,19 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
         _messenger.Send(new SettingsPendingChangesChangedMessage(
             new SettingsPendingChangesChanged(SettingsTabKey.Budget, HasPendingChanges)));
+    }
+
+    private void MarkCurrentPeriodWhenRolloverPolicyChangesToEnabled(BudgetAllocation allocation)
+    {
+        if (RolloverPolicy == RolloverPolicy.None ||
+            RolloverPolicy == _savedBudgetAllocation.RolloverPolicy)
+            return;
+
+        var currentPeriod = BudgetAllocationPeriodRules.ResolveCurrentPeriod(
+            allocation.AllocationPeriod,
+            _todayProvider().Date,
+            allocation.PeriodStart);
+        allocation.LastRolloverPeriodStart = currentPeriod.Start;
     }
 
     public sealed record PeriodStartOption(int Value, string Label);

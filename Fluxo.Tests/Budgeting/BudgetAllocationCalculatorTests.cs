@@ -137,6 +137,66 @@ public class BudgetAllocationCalculatorTests
     }
 
     [Fact]
+    public void CalculateSnapshot_RolloverMarkerForCurrentPeriod_SkipsRollover()
+    {
+        var allocation = new BudgetAllocation
+        {
+            AllocationLimit = 1000m,
+            NeedsThreshold = 50,
+            WantsThreshold = 30,
+            InvestThreshold = 20,
+            RolloverPolicy = RolloverPolicy.Matching,
+            LastRolloverPeriodStart = new DateTime(2026, 2, 1)
+        };
+        Dictionary<ExpenseCategory, decimal> previousSpent = new()
+        {
+            [ExpenseCategory.Needs] = 450m,
+            [ExpenseCategory.Wants] = 250m,
+            [ExpenseCategory.Savings] = 100m
+        };
+
+        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
+            allocation,
+            new Dictionary<ExpenseCategory, decimal>(),
+            previousSpent,
+            new DateTime(2026, 2, 10));
+
+        Assert.Equal(500m, snapshot.Needs.Available);
+        Assert.Equal(300m, snapshot.Wants.Available);
+        Assert.Equal(200m, snapshot.Invest.Available);
+    }
+
+    [Fact]
+    public void CalculateSnapshot_RolloverMarkerBeforeCurrentPeriod_AppliesRollover()
+    {
+        var allocation = new BudgetAllocation
+        {
+            AllocationLimit = 1000m,
+            NeedsThreshold = 50,
+            WantsThreshold = 30,
+            InvestThreshold = 20,
+            RolloverPolicy = RolloverPolicy.Matching,
+            LastRolloverPeriodStart = new DateTime(2026, 1, 1)
+        };
+        Dictionary<ExpenseCategory, decimal> previousSpent = new()
+        {
+            [ExpenseCategory.Needs] = 450m,
+            [ExpenseCategory.Wants] = 250m,
+            [ExpenseCategory.Savings] = 100m
+        };
+
+        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
+            allocation,
+            new Dictionary<ExpenseCategory, decimal>(),
+            previousSpent,
+            new DateTime(2026, 2, 10));
+
+        Assert.Equal(550m, snapshot.Needs.Available);
+        Assert.Equal(350m, snapshot.Wants.Available);
+        Assert.Equal(300m, snapshot.Invest.Available);
+    }
+
+    [Fact]
     public void CalculateSoftDebtDelta_WhenRemainingIsAlreadyNegative_ReturnsFullExpenseAmount()
     {
         var delta = BudgetAllocationCalculator.CalculateSoftDebtDelta(-20m, 15m);

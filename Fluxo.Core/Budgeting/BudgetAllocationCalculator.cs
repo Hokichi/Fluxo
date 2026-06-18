@@ -49,8 +49,12 @@ public static class BudgetAllocationCalculator
         var wantsBase = CalculateBaseAllocation(budgetBase, allocation.WantsThreshold);
         var investBase = CalculateBaseAllocation(budgetBase, allocation.InvestThreshold);
 
+        var rolloverPolicy = ShouldApplyRollover(allocation, currentPeriod)
+            ? allocation.RolloverPolicy
+            : RolloverPolicy.None;
+
         var rollovers = CalculateRollovers(
-            allocation.RolloverPolicy,
+            rolloverPolicy,
             previousPeriodSpentByCategory,
             needsBase,
             wantsBase,
@@ -134,6 +138,12 @@ public static class BudgetAllocationCalculator
             CalculateBaseAllocation(pool, needsThreshold),
             CalculateBaseAllocation(pool, wantsThreshold),
             CalculateBaseAllocation(pool, investThreshold));
+    }
+
+    private static bool ShouldApplyRollover(BudgetAllocation allocation, BudgetAllocationPeriod currentPeriod)
+    {
+        return allocation.RolloverPolicy != RolloverPolicy.None &&
+               allocation.LastRolloverPeriodStart.Date < currentPeriod.Start;
     }
 
     private static BudgetAllocationCategoryState CreateCategoryState(

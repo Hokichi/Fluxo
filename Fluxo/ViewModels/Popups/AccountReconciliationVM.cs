@@ -59,6 +59,8 @@ public partial class AccountReconciliationVM : ObservableObject
 
     public ICollectionView AccountsView { get; }
 
+    public bool CanSave => !IsSaving && AmountText > 0m && SelectedAccount is not null;
+
     public static bool CanReconcile(AccountVM source)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -249,6 +251,21 @@ public partial class AccountReconciliationVM : ObservableObject
         }
 
         account.Balance -= amount;
+    }
+
+    partial void OnAmountTextChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(CanSave));
+    }
+
+    partial void OnIsSavingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanSave));
+    }
+
+    partial void OnSelectedAccountChanged(AccountVM? value)
+    {
+        OnPropertyChanged(nameof(CanSave));
     }
 
     public readonly record struct AccountReconciliationSaveResult(

@@ -190,7 +190,7 @@
     </customControls:BasePopup.Resources>
 
     <Border Padding="20,4,20,20">
-        <Grid Width="800">
+        <Grid Width="640">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />

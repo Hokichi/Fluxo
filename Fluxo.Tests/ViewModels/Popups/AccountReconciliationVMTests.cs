@@ -132,6 +132,27 @@ public sealed class AccountReconciliationVMTests
         await appData.Received(1).AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public void CanSave_IsFalseUntilAmountIsGreaterThanZero()
+    {
+        var sources = CreateSourceViewModels();
+        var appData = Substitute.For<IAppDataService>();
+        var changedProperties = new List<string?>();
+        var vm = new AccountReconciliationVM(sources, sources[2], appData, () => Task.CompletedTask);
+        vm.PropertyChanged += (_, args) => changedProperties.Add(args.PropertyName);
+
+        Assert.False(vm.CanSave);
+
+        vm.AmountText = 1m;
+
+        Assert.True(vm.CanSave);
+        Assert.Contains(nameof(AccountReconciliationVM.CanSave), changedProperties);
+
+        vm.AmountText = 0m;
+
+        Assert.False(vm.CanSave);
+    }
+
     private static IReadOnlyList<AccountVM> CreateSourceViewModels()
     {
         return

@@ -5,6 +5,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     Width="600"
     Height="300"
+    IsSaveButtonEnabled="{Binding CanSave}"
     PopupTitle="Account Reconciliation"
     ShowSaveButton="True">
 

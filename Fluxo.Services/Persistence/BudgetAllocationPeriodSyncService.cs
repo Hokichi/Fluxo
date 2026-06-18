@@ -26,11 +26,6 @@ public sealed class BudgetAllocationPeriodSyncService(Func<DateTime>? todayProvi
         var currentIndex = BudgetAllocationPeriodRules.ResolveCurrentPeriodIndex(
             allocation.AllocationPeriod,
             today);
-        var currentPeriod = BudgetAllocationPeriodRules.ResolveCurrentPeriod(
-            allocation.AllocationPeriod,
-            today,
-            clampedStart);
-
         var changed = false;
         if (allocation.PeriodStart != clampedStart)
         {
@@ -41,13 +36,6 @@ public sealed class BudgetAllocationPeriodSyncService(Func<DateTime>? todayProvi
         if (allocation.CurrentPeriodIndex != currentIndex)
         {
             allocation.CurrentPeriodIndex = currentIndex;
-            changed = true;
-        }
-
-        if (currentIndex == clampedStart &&
-            allocation.LastRolloverPeriodStart.Date != currentPeriod.Start)
-        {
-            allocation.LastRolloverPeriodStart = currentPeriod.Start;
             changed = true;
         }
 
