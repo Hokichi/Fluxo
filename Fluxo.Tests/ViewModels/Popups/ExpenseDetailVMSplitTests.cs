@@ -90,6 +90,53 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
+    public void LoadChildTransactionsAsync_LoadsChildrenForCurrentParentOnly()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, persistedSource) = CreateVmWithDependencies();
+            var tag = new ExpenseTag { Id = 1, Name = "General", HexCode = "#22C55E" };
+            appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(
+                [
+                    new ExpenseLog
+                    {
+                        Id = 200,
+                        ParentLogId = 10,
+                        Amount = 35m,
+                        DeductedOn = new DateTime(2026, 5, 31),
+                        Notes = "Child note",
+                        Account = persistedSource,
+                        Expense = new Expense
+                        {
+                            Name = "Groceries",
+                            ExpenseCategory = ExpenseCategory.Needs,
+                            ExpenseTag = tag
+                        }
+                    },
+                    new ExpenseLog
+                    {
+                        Id = 201,
+                        ParentLogId = 99,
+                        Amount = 15m,
+                        DeductedOn = new DateTime(2026, 5, 31),
+                        Account = persistedSource,
+                        Expense = new Expense { Name = "Other parent", ExpenseTag = tag }
+                    }
+                ]));
+
+            vm.LoadChildTransactionsAsync().GetAwaiter().GetResult();
+
+            var child = Assert.Single(vm.ChildTransactions);
+            Assert.True(vm.HasChildTransactions);
+            Assert.Equal(916, vm.DetailPopupWidth);
+            Assert.Equal("Groceries", child.Name);
+            Assert.Equal(35m, child.Amount);
+            Assert.Equal("General", child.TagName);
+        });
+    }
+
+    [Fact]
     public void DeleteAsync_RemovesExpenseLogAndRecordsHistory()
     {
         RunInSta(() =>
@@ -556,6 +603,8 @@ public sealed class ExpenseDetailVMSplitTests
                 new ExpenseTag { Id = 1, Name = "General", HexCode = "#22C55E", IsSystemTag = false },
                 new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false }
             ]));
+        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([]));
 
         var persistedSource = new Account
         {

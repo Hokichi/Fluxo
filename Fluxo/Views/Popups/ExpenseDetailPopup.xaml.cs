@@ -70,8 +70,9 @@ public partial class ExpenseDetailPopup : BasePopup
         };
         _viewModel.PropertyChanged += _viewModelPropertyChangedHandler;
 
-        Loaded += (_, _) =>
+        Loaded += async (_, _) =>
         {
+            await _viewModel.LoadChildTransactionsAsync();
             SyncNoteDocumentFromViewModel();
             UpdateButtonStates();
             RecalculateTagLayout();

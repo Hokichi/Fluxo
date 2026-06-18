@@ -74,6 +74,7 @@ public partial class ExpenseDetailVM : ObservableObject
     public ObservableCollection<AccountVM> Accounts { get; } = [];
     public ICollectionView AccountsView { get; }
     public ObservableCollection<ExpenseSplitRowVM> SplitRows { get; } = [];
+    public ObservableCollection<ExpenseDetailChildTransactionVM> ChildTransactions { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
 
@@ -83,6 +84,8 @@ public partial class ExpenseDetailVM : ObservableObject
     public bool HasSplitRows => SplitRows.Count > 0;
     public bool HasSplitRowsWithAmounts => SplitRows.Any(row => row.HasAmount);
     public bool HasSplitRowsWithoutAmounts => SplitRows.Count > 0 && SplitRows.All(row => !row.HasAmount);
+    public bool HasChildTransactions => ChildTransactions.Count > 0;
+    public int DetailPopupWidth => HasChildTransactions ? 916 : 640;
     public bool ShowSplitButton => !IsSplitMode;
     public bool ShowNormalExpenseFields => !IsSplitMode;
     public IEnumerable<ExpenseTagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
@@ -177,6 +180,24 @@ public partial class ExpenseDetailVM : ObservableObject
         SplitRows.Remove(row);
         NotifySplitRowStateChanged();
         RecalculateSplitRemainder(SplitRows.LastOrDefault());
+    }
+
+    public async Task LoadChildTransactionsAsync(CancellationToken cancellationToken = default)
+    {
+        var childTransactions = (await _appData.GetExpenseLogsAsync(cancellationToken))
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId == _expenseLog.Id)
+            .OrderByDescending(log => log.DeductedOn)
+            .ThenBy(log => log.Expense?.Name ?? "Expense", StringComparer.OrdinalIgnoreCase)
+            .Select(ProjectChildTransaction)
+            .ToList();
+
+        ChildTransactions.Clear();
+        foreach (var childTransaction in childTransactions)
+            ChildTransactions.Add(childTransaction);
+
+        OnPropertyChanged(nameof(HasChildTransactions));
+        OnPropertyChanged(nameof(DetailPopupWidth));
     }
 
     public void ClearSplitMode()
@@ -608,6 +629,7 @@ public partial class ExpenseDetailVM : ObservableObject
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _mainViewModel.ReloadCurrentDataAsync();
+            await LoadChildTransactionsAsync();
 
             IsEditing = false;
             ClearSplitMode();
@@ -721,6 +743,22 @@ public partial class ExpenseDetailVM : ObservableObject
         return string.IsNullOrWhiteSpace(firstMeaningfulLine)
             ? fallbackName
             : firstMeaningfulLine;
+    }
+
+    private static ExpenseDetailChildTransactionVM ProjectChildTransaction(ExpenseLog log)
+    {
+        return new ExpenseDetailChildTransactionVM
+        {
+            Id = log.Id,
+            Name = log.Expense?.Name ?? "Expense",
+            Amount = log.Amount,
+            DeductedOn = log.DeductedOn,
+            Category = log.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
+            AccountName = log.Account?.Name ?? string.Empty,
+            TagName = log.Expense?.ExpenseTag?.Name ?? string.Empty,
+            TagHexCode = log.Expense?.ExpenseTag?.HexCode ?? string.Empty,
+            Notes = log.Notes
+        };
     }
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)

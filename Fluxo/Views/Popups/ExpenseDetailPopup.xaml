@@ -187,10 +187,92 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <DataTemplate x:Key="ChildTransactionItemTemplate">
+            <Border
+                Margin="0,0,0,10"
+                Padding="10"
+                Background="{DynamicResource Brush.Background.Surface}"
+                BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            FontFamily="{DynamicResource Bold}"
+                            FontSize="12"
+                            Foreground="{DynamicResource Brush.Text.Primary}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="8,0,0,0"
+                            FontFamily="{DynamicResource Bold}"
+                            FontSize="12"
+                            Foreground="{DynamicResource Brush.Danger}"
+                            Text="{Binding Amount, StringFormat={}{0:#,##0}}" />
+                    </Grid>
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,6,0,0"
+                        FontFamily="{DynamicResource Medium}"
+                        FontSize="11"
+                        Foreground="{DynamicResource Brush.Text.Muted}"
+                        Text="{Binding DeductedOn, StringFormat={}{0:MMM d, yyyy}}" />
+
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="0,8,0,0"
+                        Orientation="Horizontal">
+                        <Border
+                            MaxWidth="96"
+                            Padding="8,2"
+                            Background="{Binding TagHexCode}"
+                            CornerRadius="8">
+                            <TextBlock
+                                FontFamily="{DynamicResource Bold}"
+                                FontSize="10"
+                                Text="{Binding TagName}"
+                                TextTrimming="CharacterEllipsis">
+                                <TextBlock.Foreground>
+                                    <Binding
+                                        Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
+                                        ConverterParameter="{StaticResource Brush.Text.Primary}"
+                                        Path="Background"
+                                        RelativeSource="{RelativeSource AncestorType=Border}" />
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                        </Border>
+                        <TextBlock
+                            Margin="8,2,0,0"
+                            FontFamily="{DynamicResource Medium}"
+                            FontSize="10"
+                            Foreground="{DynamicResource Brush.Text.Muted}"
+                            Text="{Binding CategoryLabel}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </customControls:BasePopup.Resources>
 
     <Border Padding="20,4,20,20">
-        <Grid Width="640">
+        <Grid Width="{Binding DetailPopupWidth}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="640" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="260" />
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -578,6 +660,34 @@
                 Grid.RowSpan="3"
                 Background="Transparent"
                 Visibility="{Binding CanEditFields, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+
+            <Border
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Grid.Column="2"
+                Padding="12"
+                Background="{DynamicResource Brush.Background.Elevated}"
+                BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="{Binding HasChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock
+                        FontFamily="{DynamicResource Bold}"
+                        FontSize="12"
+                        Foreground="{DynamicResource Brush.Text.Primary}"
+                        Text="Child Transactions" />
+                    <ScrollViewer
+                        MaxHeight="520"
+                        Margin="0,12,0,0"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <ItemsControl
+                            ItemTemplate="{StaticResource ChildTransactionItemTemplate}"
+                            ItemsSource="{Binding ChildTransactions}" />
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
         </Grid>
     </Border>
 </customControls:BasePopup>

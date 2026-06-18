@@ -96,4 +96,20 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.Contains("Tag=\"{Binding SelectedTag.HexCode}\"", xaml);
         Assert.Contains("PlacementTarget=\"{Binding ElementName=SplitRowTagToggleButton}\"", xaml);
     }
+
+    [Fact]
+    public void ExpenseDetailPopup_ChildTransactionsPanel_IsRightSideScrollableList()
+    {
+        var xaml = File.ReadAllText(PopupXamlPath);
+        var codeBehind = File.ReadAllText(PopupCodeBehindPath);
+
+        Assert.Contains("Width=\"{Binding DetailPopupWidth}\"", xaml);
+        Assert.Contains("x:Key=\"ChildTransactionItemTemplate\"", xaml);
+        Assert.Contains("Grid.Column=\"2\"", xaml);
+        Assert.Contains("Text=\"Child Transactions\"", xaml);
+        Assert.Contains("ItemsSource=\"{Binding ChildTransactions}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding HasChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.Contains("VerticalScrollBarVisibility=\"Auto\"", xaml);
+        Assert.Contains("await _viewModel.LoadChildTransactionsAsync();", codeBehind);
+    }
 }
