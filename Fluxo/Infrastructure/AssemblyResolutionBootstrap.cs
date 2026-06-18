@@ -1,6 +1,7 @@
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Loader;
 
 namespace Fluxo.Infrastructure;
 
@@ -12,11 +13,26 @@ internal static class AssemblyResolutionBootstrap
     internal static void Initialize()
     {
         AppDomain.CurrentDomain.AssemblyResolve += ResolveFromOrganizedOutputFolders;
+        AssemblyLoadContext.Default.Resolving += ResolveLoadContextFromOrganizedOutputFolders;
+    }
+
+    private static Assembly? ResolveLoadContextFromOrganizedOutputFolders(
+        AssemblyLoadContext loadContext,
+        AssemblyName assemblyName)
+    {
+        var candidatePath = FindAssemblyPath(assemblyName.Name);
+        return candidatePath is null ? null : loadContext.LoadFromAssemblyPath(candidatePath);
     }
 
     private static Assembly? ResolveFromOrganizedOutputFolders(object? _, ResolveEventArgs args)
     {
-        var assemblyName = new AssemblyName(args.Name).Name;
+        var assemblyName = new AssemblyName(args.Name);
+        var candidatePath = FindAssemblyPath(assemblyName.Name);
+        return candidatePath is null ? null : Assembly.LoadFrom(candidatePath);
+    }
+
+    private static string? FindAssemblyPath(string? assemblyName)
+    {
         if (string.IsNullOrWhiteSpace(assemblyName))
             return null;
 
@@ -27,7 +43,7 @@ internal static class AssemblyResolutionBootstrap
         {
             var candidatePath = Path.Combine(baseDir, folder, fileName);
             if (File.Exists(candidatePath))
-                return Assembly.LoadFrom(candidatePath);
+                return candidatePath;
         }
 
         return null;

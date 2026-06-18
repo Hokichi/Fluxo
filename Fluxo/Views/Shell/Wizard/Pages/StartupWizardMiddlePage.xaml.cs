@@ -14,6 +14,11 @@ public partial class QuickSetupWizardMiddlePage : UserControl
     public UIElement ContentColumnElement => ContentColumn;
     public UIElement StepContentElement => StepContent;
 
+    public void ScrollCurrentStepToTop()
+    {
+        MiddleStepScrollViewer.ScrollToVerticalOffset(0);
+    }
+
     public Border? GetStripeForStep(int stepIndex) => stepIndex switch
     {
         2 => Step1Stripe,

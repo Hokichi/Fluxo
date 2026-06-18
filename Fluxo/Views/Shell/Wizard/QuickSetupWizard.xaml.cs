@@ -420,6 +420,7 @@ public partial class QuickSetupWizard : BasePopup
 
                 changeStep();
                 SyncStripeOpacities();
+                ScrollCurrentStepToTop();
 
                 var toContent = GetContentElementForStep(_viewModel.CurrentStepIndex);
                 if (toContent is not null)
@@ -436,6 +437,7 @@ public partial class QuickSetupWizard : BasePopup
                 await FadeElementAsync(ContentContainer, 1, 0);
                 changeStep();
                 SyncStripeOpacities();
+                ScrollCurrentStepToTop();
                 await FadeElementAsync(ContentContainer, 0, 1);
             }
             else
@@ -446,6 +448,7 @@ public partial class QuickSetupWizard : BasePopup
 
                 changeStep();
                 SyncStripeOpacities();
+                ScrollCurrentStepToTop();
 
                 if (middleContent is not null)
                     await FadeElementAsync(middleContent, 0, 1);
@@ -478,6 +481,7 @@ public partial class QuickSetupWizard : BasePopup
 
                 var result = await changeStepAsync();
                 SyncStripeOpacities();
+                ScrollCurrentStepToTop();
 
                 var toContent = GetContentElementForStep(_viewModel.CurrentStepIndex);
                 if (toContent is not null)
@@ -494,6 +498,7 @@ public partial class QuickSetupWizard : BasePopup
                 await FadeElementAsync(ContentContainer, 1, 0);
                 var result = await changeStepAsync();
                 SyncStripeOpacities();
+                ScrollCurrentStepToTop();
                 await FadeElementAsync(ContentContainer, 0, 1);
                 return result;
             }
@@ -505,6 +510,7 @@ public partial class QuickSetupWizard : BasePopup
 
                 var result = await changeStepAsync();
                 SyncStripeOpacities();
+                ScrollCurrentStepToTop();
 
                 if (middleContent is not null)
                     await FadeElementAsync(middleContent, 0, 1);
@@ -533,6 +539,11 @@ public partial class QuickSetupWizard : BasePopup
             stripe.BeginAnimation(OpacityProperty, null);
             stripe.Opacity = i == _viewModel.CurrentStepIndex ? 1 : 0;
         }
+    }
+
+    private void ScrollCurrentStepToTop()
+    {
+        MiddleStepPage?.ScrollCurrentStepToTop();
     }
 
     private Task FadeElementAsync(UIElement element, double from, double to)

@@ -424,6 +424,7 @@
                             Visibility="{Binding IsStep4Active, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
                     <customControls:FadingScrollViewer
+                        x:Name="MiddleStepScrollViewer"
                         Grid.Row="2"
                         Margin="0,12,0,0"
                         VerticalScrollBarVisibility="Auto">

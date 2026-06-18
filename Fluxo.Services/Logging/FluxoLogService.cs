@@ -1,6 +1,7 @@
 using Fluxo.Core.Interfaces.Services;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Display;
 using System.Globalization;
 using System.IO;
 
@@ -51,7 +52,17 @@ public static class FluxoLogManager
     private const string DefaultUsername = "User";
     private const string AppDirectoryName = "fluxo";
     private const string LogsDirectoryName = "logs";
+    private const string DbLogsDirectoryName = "db";
+    private const string IssuesLogsDirectoryName = "issues";
+    private const string OthersLogsDirectoryName = "others";
     private const string DateFormat = "MMddyyyy";
+    private const string LogCategoryPropertyName = "FluxoLogCategory";
+    private const string DatabaseLogCategory = "db";
+    private const string IssuesLogCategory = "issues";
+    private const string OthersLogCategory = "others";
+    private static readonly MessageTemplateTextFormatter ExceptionFormatter = new(
+        "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+        CultureInfo.InvariantCulture);
 
     public static string CurrentLogFileName { get; private set; } = BuildFileName(DefaultUsername, DateTime.Now);
 
@@ -62,42 +73,80 @@ public static class FluxoLogManager
         CurrentLogFileName = BuildFileName(username, now);
 
         var logsDirectory = GetLogsDirectoryPath();
+        var dbLogsDirectory = GetDbLogsDirectoryPath();
+        var issuesLogsDirectory = GetIssuesLogsDirectoryPath();
+        var othersLogsDirectory = GetOthersLogsDirectoryPath();
         Directory.CreateDirectory(logsDirectory);
-        var fullLogPath = Path.Combine(logsDirectory, CurrentLogFileName);
+        Directory.CreateDirectory(dbLogsDirectory);
+        Directory.CreateDirectory(issuesLogsDirectory);
+        Directory.CreateDirectory(othersLogsDirectory);
+
+        var dbLogPath = Path.Combine(dbLogsDirectory, CurrentLogFileName);
+        var issuesLogPath = Path.Combine(issuesLogsDirectory, CurrentLogFileName);
+        var othersLogPath = Path.Combine(othersLogsDirectory, CurrentLogFileName);
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.File(
-                path: fullLogPath,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
-                shared: true)
+            .WriteTo.Logger(logger => logger
+                .Filter.ByIncludingOnly(logEvent => HasLogCategory(logEvent, DatabaseLogCategory))
+                .WriteTo.File(
+                    path: dbLogPath,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+                    shared: true))
+            .WriteTo.Logger(logger => logger
+                .Filter.ByIncludingOnly(logEvent => HasLogCategory(logEvent, IssuesLogCategory))
+                .WriteTo.File(
+                    path: issuesLogPath,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+                    shared: true))
+            .WriteTo.Logger(logger => logger
+                .Filter.ByIncludingOnly(logEvent => HasLogCategory(logEvent, OthersLogCategory))
+                .WriteTo.File(
+                    path: othersLogPath,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+                    shared: true))
             .CreateLogger();
 
-        Log.Information("Fluxo logging initialized to {LogFileName}.", CurrentLogFileName);
+        ForCategory(OthersLogCategory).Information("Fluxo logging initialized to {LogFileName}.", CurrentLogFileName);
     }
 
     public static string GetLogsDirectoryPath()
     {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        if (string.IsNullOrWhiteSpace(localAppData))
+            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
         return Path.Combine(localAppData, AppDirectoryName, LogsDirectoryName);
     }
 
+    public static string GetDbLogsDirectoryPath() => Path.Combine(GetLogsDirectoryPath(), DbLogsDirectoryName);
+
+    public static string GetIssuesLogsDirectoryPath() => Path.Combine(GetLogsDirectoryPath(), IssuesLogsDirectoryName);
+
+    public static string GetOthersLogsDirectoryPath() => Path.Combine(GetLogsDirectoryPath(), OthersLogsDirectoryName);
+
     public static void LogError(Exception exception, string message)
     {
-        Log.Error(exception, "{Message}", message);
+        CurrentLogFileName = WriteExceptionLogFile(exception, message);
+        ForCategory(IssuesLogCategory).Error(exception, "{Message}", message);
     }
 
     public static void LogWarning(Exception exception, string message)
     {
-        Log.Warning(exception, "{Message}", message);
+        CurrentLogFileName = WriteExceptionLogFile(exception, message);
+        ForCategory(IssuesLogCategory).Warning(exception, "{Message}", message);
     }
 
     public static void LogInformation(string message)
     {
-        Log.Information("{Message}", message);
+        var category = message.StartsWith("EF Core:", StringComparison.OrdinalIgnoreCase)
+            ? DatabaseLogCategory
+            : OthersLogCategory;
+
+        ForCategory(category).Information("{Message}", message);
     }
 
     public static string CreateFailureMessage(string performedProcess)
@@ -125,6 +174,39 @@ public static class FluxoLogManager
     private static string BuildFileName(string username, DateTime date)
     {
         return $"{username}{date.ToString(DateFormat, CultureInfo.InvariantCulture)}.log";
+    }
+
+    private static ILogger ForCategory(string category)
+    {
+        return Log.ForContext(LogCategoryPropertyName, category);
+    }
+
+    private static bool HasLogCategory(LogEvent logEvent, string category)
+    {
+        return logEvent.Properties.TryGetValue(LogCategoryPropertyName, out var value) &&
+               string.Equals(value.ToString().Trim('"'), category, StringComparison.Ordinal);
+    }
+
+    private static string WriteExceptionLogFile(Exception exception, string message)
+    {
+        var now = DateTime.Now;
+        var exceptionFileName = $"fluxo_exception_{now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.log";
+        var exceptionDirectory = GetIssuesLogsDirectoryPath();
+        Directory.CreateDirectory(exceptionDirectory);
+        var exceptionPath = Path.Combine(exceptionDirectory, exceptionFileName);
+
+        var logEvent = new LogEvent(
+            DateTimeOffset.Now,
+            LogEventLevel.Error,
+            exception,
+            new Serilog.Parsing.MessageTemplateParser().Parse("{Message}"),
+            [new LogEventProperty("Message", new Serilog.Events.ScalarValue(message))]);
+
+        using var writer = new StreamWriter(exceptionPath, append: true);
+        ExceptionFormatter.Format(logEvent, writer);
+        writer.WriteLine();
+
+        return exceptionFileName;
     }
 
     private static string SanitizeUsername(string? username)

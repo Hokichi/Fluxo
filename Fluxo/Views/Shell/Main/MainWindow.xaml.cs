@@ -405,9 +405,9 @@ public partial class MainWindow : Window, IPopupHost
         _isMaximized = true;
         UpdateExpandRestoreButtonIcon();
 
-        var workArea = GetMonitorWorkArea();
-        _currentBounds = workArea;
-        AnimateStateChange(from, workArea, true);
+        var maximizedBounds = GetMonitorBounds();
+        _currentBounds = maximizedBounds;
+        AnimateStateChange(from, maximizedBounds, true);
     }
 
     private void AnimateToRestored()
@@ -581,6 +581,24 @@ public partial class MainWindow : Window, IPopupHost
             info.rcWork.Top * fromDevice.M22,
             (info.rcWork.Right - info.rcWork.Left) * fromDevice.M11,
             (info.rcWork.Bottom - info.rcWork.Top) * fromDevice.M22);
+    }
+
+    private Rect GetMonitorBounds()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        var monitor = MonitorFromWindow(hwnd, 2 /* MONITOR_DEFAULTTONEAREST */);
+        var info = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+        GetMonitorInfo(monitor, ref info);
+
+        var source = PresentationSource.FromVisual(this);
+        var fromDevice = source?.CompositionTarget?.TransformFromDevice
+                         ?? Matrix.Identity;
+
+        return new Rect(
+            info.rcMonitor.Left * fromDevice.M11,
+            info.rcMonitor.Top * fromDevice.M22,
+            (info.rcMonitor.Right - info.rcMonitor.Left) * fromDevice.M11,
+            (info.rcMonitor.Bottom - info.rcMonitor.Top) * fromDevice.M22);
     }
 
     [DllImport("user32.dll")]

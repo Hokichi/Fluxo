@@ -38,6 +38,14 @@ public partial class App : Application
 {
     private const string StartupTrayArgument = "--startup-tray";
     private const string RestartTrayArgument = "--startup--tray";
+
+    private enum StartupStageState
+    {
+        Started,
+        Completed,
+        Failed
+    }
+
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IBudgetAllocationPeriodSyncService _budgetAllocationPeriodSyncService;
     private readonly IExpenseLogService _expenseLogService;
@@ -61,6 +69,7 @@ public partial class App : Application
 
     public App()
     {
+        InitializeBootstrapLogging();
         RegisterGlobalExceptionHandlers();
 
         var services = new ServiceCollection();
@@ -86,10 +95,12 @@ public partial class App : Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        LogStartupStage("single-instance check", StartupStageState.Started);
         _singleInstanceCoordinator ??= new SingleInstanceCoordinator();
         var shouldContinueStartup = SingleInstanceStartupPolicy.ShouldContinueStartup(
             _singleInstanceCoordinator,
             OnPrimaryActivationRequested);
+        LogStartupStage("single-instance check", StartupStageState.Completed);
 
         if (!shouldContinueStartup)
         {
@@ -101,33 +112,25 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         _launchInTrayMode = IsTrayLaunchMode(e.Args);
 
-        // Serilog must be ready before IDataOperationRunner runs (it logs failures). Default username until DB exists.
         try
         {
-            FluxoLogManager.Initialize("User");
-        }
-        catch (Exception exception)
-        {
-            try
-            {
-                FluxoLogManager.LogFailureForProcess(
-                    exception,
-                    "bootstrap Serilog before database initialization");
-            }
-            catch
-            {
-                // Startup continues; later InitializeLoggingAsync may still configure logging.
-            }
-        }
+            LogStartupStage("database directory", StartupStageState.Started);
+            FluxoDbContextFactory.EnsureDatabaseDirectoryExists();
+            LogStartupStage("database directory", StartupStageState.Completed);
+            LogStartupStage("database backup", StartupStageState.Started);
+            await BackupDatabaseOnStartupAsync();
+            LogStartupStage("database backup", StartupStageState.Completed);
+            LogStartupStage("database migration", StartupStageState.Started);
+            await MigrateDatabaseAsync(_dataOperationRunner);
+            LogStartupStage("database migration", StartupStageState.Completed);
+            LogStartupStage("budget allocation period sync", StartupStageState.Started);
+            await SyncBudgetAllocationPeriodAsync();
+            LogStartupStage("budget allocation period sync", StartupStageState.Completed);
+            LogStartupStage("username logging initialization", StartupStageState.Started);
+            await InitializeLoggingAsync();
+            LogStartupStage("username logging initialization", StartupStageState.Completed);
 
-        FluxoDbContextFactory.EnsureDatabaseDirectoryExists();
-        await BackupDatabaseOnStartupAsync();
-        await MigrateDatabaseAsync(_dataOperationRunner);
-        await SyncBudgetAllocationPeriodAsync();
-        await InitializeLoggingAsync();
-
-        try
-        {
+            LogStartupStage("startup loader", StartupStageState.Started);
             var loaderPopup = new StartupLoaderPopup();
             bool isFirstRun;
 
@@ -135,32 +138,48 @@ public partial class App : Application
             {
                 loaderPopup.Show();
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                LogStartupStage("first-run setting", StartupStageState.Started);
                 isFirstRun = await EnsureFirstRunSettingAsync(_dataOperationRunner);
+                LogStartupStage("first-run setting", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                LogStartupStage("post-termination cleanup", StartupStageState.Started);
                 await _expenseLogService.PostTerminationCleanupAsync();
+                LogStartupStage("post-termination cleanup", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                LogStartupStage("startup registration sync", StartupStageState.Started);
                 await SyncRunAtStartupRegistrationAsync();
+                LogStartupStage("startup registration sync", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
+                LogStartupStage("startup update check", StartupStageState.Started);
                 await _startupUpdateNotificationService.CheckAndSyncAsync();
+                LogStartupStage("startup update check", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
 
                 if (!isFirstRun)
+                {
+                    LogStartupStage("main view model initialization", StartupStageState.Started);
                     await _mainVM.InitializeWithStartupStagesAsync(() =>
                         _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup));
+                    LogStartupStage("main view model initialization", StartupStageState.Completed);
+                }
             }
             finally
             {
                 loaderPopup.CloseLoader();
+                LogStartupStage("startup loader", StartupStageState.Completed);
             }
 
             if (isFirstRun)
             {
+                LogStartupStage("startup wizard", StartupStageState.Started);
                 using var wizardScope = _serviceProvider!.CreateScope();
                 var wizard = wizardScope.ServiceProvider.GetRequiredService<QuickSetupWizard>();
                 wizard.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 wizard.ShowDialog();
+                LogStartupStage("startup wizard", StartupStageState.Completed);
             }
 
+            LogStartupStage("main window", StartupStageState.Started);
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
@@ -192,9 +211,12 @@ public partial class App : Application
                     mainWindow.Show();
                 }
             }
+
+            LogStartupStage("main window", StartupStageState.Completed);
         }
         catch (Exception exception)
         {
+            LogStartupStage("startup failure", StartupStageState.Failed);
             FluxoLogManager.LogError(exception, "Unable to start Fluxo.");
 
             if (_serviceProvider?.GetService<IDialogService>() is { } dialogService)
@@ -1286,6 +1308,31 @@ public partial class App : Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+    }
+
+    private static void InitializeBootstrapLogging()
+    {
+        try
+        {
+            FluxoLogManager.Initialize("User");
+            LogStartupStage("bootstrap logging", StartupStageState.Completed);
+        }
+        catch
+        {
+            // No UI or DI exists yet. Startup continues so later handlers can report failures.
+        }
+    }
+
+    private static void LogStartupStage(string stage, StartupStageState state)
+    {
+        try
+        {
+            FluxoLogManager.LogInformation($"Startup {state}: {stage}");
+        }
+        catch
+        {
+            // Startup diagnostics must never become the startup failure.
+        }
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
