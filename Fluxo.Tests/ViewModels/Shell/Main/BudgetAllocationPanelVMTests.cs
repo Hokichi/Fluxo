@@ -394,6 +394,85 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
+    public void LoadAsync_BudgetMetricsExcludeSplitParentLogsAndIncludeChildLogs()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var source = new AccountVM
+            {
+                Id = 1,
+                Name = "Checking",
+                AccountType = AccountType.Checking,
+                Balance = 1000m,
+                IsEnabled = true,
+                PinnedOnUI = true
+            };
+            var splitParent = new ExpenseLogVM
+            {
+                Id = 1,
+                Amount = 100m,
+                DeductedOn = DateTime.Today,
+                Expense = new ExpenseVM
+                {
+                    Id = 10,
+                    Name = "Split parent",
+                    ExpenseCategory = ExpenseCategory.Needs,
+                    ExpenseTag = new ExpenseTagVM { Id = 1, Name = "Parent", HexCode = "#22C55E" }
+                },
+                Account = source
+            };
+            var wantsChild = new ExpenseLogVM
+            {
+                Id = 2,
+                ParentLogId = 1,
+                Amount = 40m,
+                DeductedOn = DateTime.Today,
+                Expense = new ExpenseVM
+                {
+                    Id = 11,
+                    Name = "Wants split",
+                    ExpenseCategory = ExpenseCategory.Wants,
+                    ExpenseTag = new ExpenseTagVM { Id = 2, Name = "Wants", HexCode = "#F97316" }
+                },
+                Account = source
+            };
+            var savingsChild = new ExpenseLogVM
+            {
+                Id = 3,
+                ParentLogId = 1,
+                Amount = 60m,
+                DeductedOn = DateTime.Today,
+                Expense = new ExpenseVM
+                {
+                    Id = 12,
+                    Name = "Savings split",
+                    ExpenseCategory = ExpenseCategory.Savings,
+                    ExpenseTag = new ExpenseTagVM { Id = 3, Name = "Savings", HexCode = "#0EA5E9" }
+                },
+                Account = source
+            };
+            var vm = CreateVm(
+                messenger,
+                [splitParent, wantsChild, savingsChild],
+                CreateTags(),
+                [source]);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(0m, vm.NeedsSpent);
+            Assert.Equal(40m, vm.WantsSpent);
+            Assert.Equal(60m, vm.InvestSpent);
+            Assert.Equal(100m, vm.TotalSpent);
+            Assert.Collection(
+                GetItems(vm.Needs),
+                item => Assert.Equal(1, item.Id));
+            Assert.Empty(GetItems(vm.Wants));
+            Assert.Empty(GetItems(vm.Invest));
+        });
+    }
+
+    [Fact]
     public void RecordLogMemoryMessage_AddIncomeUpdatesAvailableValuesWithoutReload()
     {
         RunInSta(() =>

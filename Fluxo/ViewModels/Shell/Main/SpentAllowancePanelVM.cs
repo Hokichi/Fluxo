@@ -107,7 +107,6 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
         _allExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
         _allIncomeLogs = incomeLogs
@@ -134,9 +133,10 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private void RefreshMetrics()
     {
+        var budgetEffectiveLogs = BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs);
         var visibleExpenseLogs = _selectedRange is { } range
-            ? _allExpenseLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
-            : _allExpenseLogs;
+            ? budgetEffectiveLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
+            : budgetEffectiveLogs;
         var visibleIncomeLogs = _selectedRange is { } incomeRange
             ? _allIncomeLogs.Where(log => log.AddedOn.Date >= incomeRange.From.Date && log.AddedOn.Date <= incomeRange.To.Date)
             : _allIncomeLogs;

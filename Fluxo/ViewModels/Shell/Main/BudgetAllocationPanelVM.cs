@@ -257,7 +257,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
         _allExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
         _allIncomeLogs = incomeLogs
@@ -552,9 +551,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void ApplyVisibleExpenseLogs(bool resetPaginationWindows = true)
     {
+        var topLevelLogs = _allExpenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null);
         var visibleExpenseLogs = (_selectedRange is { } range
-            ? _allExpenseLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
-            : _allExpenseLogs)
+            ? topLevelLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
+            : topLevelLogs)
             .ToList();
 
         ReplaceExpenseLogs(
@@ -1003,7 +1005,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         _allExpenseLogs = _allExpenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
 
@@ -1094,7 +1095,6 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         return visibleExpenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
             .Select(log => log.Expense?.ExpenseTag)
             .Where(tag => tag is { Id: > 0 })
             .GroupBy(tag => tag!.Id)

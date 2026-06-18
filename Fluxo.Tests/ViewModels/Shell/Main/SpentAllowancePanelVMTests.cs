@@ -116,7 +116,7 @@ public sealed class SpentAllowancePanelVMTests
     }
 
     [Fact]
-    public async Task LoadAsync_TotalSpent_ExcludesChildExpenseLogs()
+    public async Task LoadAsync_TotalSpent_ExcludesSplitParentLogsAndIncludesChildExpenseLogs()
     {
         var messenger = new WeakReferenceMessenger();
         var selectedDay = new DateTime(2026, 6, 12);
@@ -130,7 +130,7 @@ public sealed class SpentAllowancePanelVMTests
 
         await vm.LoadAsync();
 
-        Assert.Equal(100m, vm.TotalSpent);
+        Assert.Equal(40m, vm.TotalSpent);
     }
 
     private static SpentAllowancePanelVM CreateVm(

@@ -115,7 +115,6 @@ public partial class AllocationDataVM : ObservableRecipient,
         _allExpenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
                 await _expenseLogService.GetAllAsync(cancellationToken))
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
         _allIncomeLogs = (await LoadIncomeLogsAsync(cancellationToken))
@@ -243,9 +242,7 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     private IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(BudgetAllocationPeriod snapshotPeriod)
     {
-        return _allExpenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
+        return BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs)
             .Where(log => log.DeductedOn.Date >= snapshotPeriod.Start && log.DeductedOn.Date <= snapshotPeriod.End)
             .Where(log => log.Expense is not null)
             .GroupBy(log => log.Expense!.ExpenseCategory)
@@ -262,9 +259,7 @@ public partial class AllocationDataVM : ObservableRecipient,
             .Select(source => source.Id)
             .ToHashSet();
 
-        var balanceBackedExpenseAmount = _allExpenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
+        var balanceBackedExpenseAmount = BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs)
             .Where(log => log.Account is { } source && balanceBackedSourceIds.Contains(source.Id))
             .Sum(log => log.Amount);
 

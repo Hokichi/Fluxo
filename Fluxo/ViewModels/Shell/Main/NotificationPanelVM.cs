@@ -256,7 +256,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken))
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
             .ToList();
         _accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
@@ -447,9 +446,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(BudgetAllocationPeriod period)
     {
-        return _expenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null)
+        return BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_expenseLogs)
             .Where(log => log.DeductedOn.Date >= period.Start && log.DeductedOn.Date <= period.End)
             .Where(log => log.Expense is not null)
             .GroupBy(log => log.Expense!.ExpenseCategory)
