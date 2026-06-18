@@ -115,6 +115,24 @@ public sealed class SpentAllowancePanelVMTests
         Assert.Equal(50m, vm.Net);
     }
 
+    [Fact]
+    public async Task LoadAsync_TotalSpent_ExcludesChildExpenseLogs()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var selectedDay = new DateTime(2026, 6, 12);
+        var vm = CreateVm(
+            messenger,
+            [
+                CreateExpenseLog(1, 100m, selectedDay),
+                CreateExpenseLog(2, 40m, selectedDay, parentLogId: 1)
+            ],
+            [CreateCheckingSource(balance: 1_000m)]);
+
+        await vm.LoadAsync();
+
+        Assert.Equal(100m, vm.TotalSpent);
+    }
+
     private static SpentAllowancePanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
@@ -175,11 +193,12 @@ public sealed class SpentAllowancePanelVMTests
         };
     }
 
-    private static ExpenseLogVM CreateExpenseLog(int id, decimal amount, DateTime deductedOn)
+    private static ExpenseLogVM CreateExpenseLog(int id, decimal amount, DateTime deductedOn, int? parentLogId = null)
     {
         return new ExpenseLogVM
         {
             Id = id,
+            ParentLogId = parentLogId,
             Amount = amount,
             DeductedOn = deductedOn,
             Expense = new ExpenseVM

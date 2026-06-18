@@ -44,6 +44,16 @@ public sealed class CalendarServiceTests
                 IsForDeletion = false,
                 Expense = new Expense { Name = "Different day" },
                 Account = new Account { Name = "Checking" }
+            },
+            new ExpenseLog
+            {
+                Id = 10,
+                ParentLogId = 1,
+                Amount = 25m,
+                DeductedOn = new DateTime(2026, 6, 12, 11, 0, 0),
+                IsForDeletion = false,
+                Expense = new Expense { Name = "Child split" },
+                Account = new Account { Name = "Checking" }
             }
         ]);
 

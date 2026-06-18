@@ -107,6 +107,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
         _allExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
         _allIncomeLogs = incomeLogs

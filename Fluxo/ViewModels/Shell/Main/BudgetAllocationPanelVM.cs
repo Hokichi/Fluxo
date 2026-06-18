@@ -257,6 +257,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
         _allExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
         _allIncomeLogs = incomeLogs
@@ -736,7 +737,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private IEnumerable<ExpenseLogVM> EnumerateVisibleExpenseLogs()
     {
-        var source = _allExpenseLogs.Where(log => !log.IsForDeletion);
+        var source = _allExpenseLogs
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null);
         if (_selectedRange is not { } range)
             return source;
 
@@ -1000,6 +1003,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         _allExpenseLogs = _allExpenseLogs
             .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null)
             .OrderByDescending(log => log.DeductedOn)
             .ToList();
 
@@ -1090,6 +1094,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         return visibleExpenseLogs
             .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null)
             .Select(log => log.Expense?.ExpenseTag)
             .Where(tag => tag is { Id: > 0 })
             .GroupBy(tag => tag!.Id)

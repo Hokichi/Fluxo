@@ -26,7 +26,10 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
             var toDate = to.ToDateTime(TimeOnly.MaxValue);
 
             var expenseInPeriod = expenseLogs
-                .Where(log => !log.IsForDeletion && log.DeductedOn >= fromDate && log.DeductedOn <= toDate)
+                .Where(log => !log.IsForDeletion &&
+                              log.ParentLogId is null &&
+                              log.DeductedOn >= fromDate &&
+                              log.DeductedOn <= toDate)
                 .ToList();
 
             var incomeInPeriod = incomeLogs

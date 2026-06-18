@@ -255,7 +255,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
                     await scope.UnitOfWork.RecurringTransactions.GetAllAsync(ct), cancellationToken)));
         _expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken))
-            .Where(log => !log.IsForDeletion).ToList();
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null)
+            .ToList();
         _accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
         _savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(
@@ -447,6 +449,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     {
         return _expenseLogs
             .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId is null)
             .Where(log => log.DeductedOn.Date >= period.Start && log.DeductedOn.Date <= period.End)
             .Where(log => log.Expense is not null)
             .GroupBy(log => log.Expense!.ExpenseCategory)

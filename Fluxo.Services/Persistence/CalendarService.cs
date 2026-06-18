@@ -23,7 +23,7 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
             var recurringTransactions = await unitOfWork.RecurringTransactions.GetAllAsync(ct);
 
             var expenses = expenseLogs
-                .Where(log => !log.IsForDeletion && log.DeductedOn.Date == selectedDate)
+                .Where(log => !log.IsForDeletion && log.ParentLogId is null && log.DeductedOn.Date == selectedDate)
                 .OrderByDescending(log => log.DeductedOn)
                 .ThenBy(log => log.Id)
                 .Select(log => new CalendarExpenseItem(

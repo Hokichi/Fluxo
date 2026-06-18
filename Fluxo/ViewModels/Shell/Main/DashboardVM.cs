@@ -118,7 +118,7 @@ public partial class DashboardVM : ObservableObject
         var hasUsableFunds = accounts
             .Where(source => source.IsEnabled)
             .Any(HasUsableFunds);
-        var hasActiveExpenseLogs = expenseLogs.Any(log => !log.IsForDeletion);
+        var hasActiveExpenseLogs = expenseLogs.Any(log => !log.IsForDeletion && log.ParentLogId is null);
 
         return !hasUsableFunds && !hasActiveExpenseLogs;
     }
