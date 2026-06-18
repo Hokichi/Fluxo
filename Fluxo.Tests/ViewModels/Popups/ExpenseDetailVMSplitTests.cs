@@ -129,6 +129,7 @@ public sealed class ExpenseDetailVMSplitTests
             var vm = CreateVm(amount: 100m);
             vm.BeginSplitMode();
             vm.AddSplitRow();
+            vm.SplitRows[0].AmountText = 25m;
             vm.SplitRows[0].AmountText = 30m;
 
             Assert.Equal(70m, vm.AmountText);
@@ -238,6 +239,7 @@ public sealed class ExpenseDetailVMSplitTests
             var vm = CreateVm(amount: 100m);
             vm.BeginSplitMode();
             vm.AddSplitRow();
+            vm.SplitRows[0].AmountText = 25m;
 
             var result = vm.SaveAsync().GetAwaiter().GetResult();
 
@@ -255,6 +257,7 @@ public sealed class ExpenseDetailVMSplitTests
             var vm = CreateVm(amount: 100m);
             vm.BeginSplitMode();
             vm.AddSplitRow();
+            vm.SplitRows[0].AmountText = 25m;
             vm.NameText = "Updated expense";
 
             var result = vm.SaveAsync().GetAwaiter().GetResult();
@@ -306,7 +309,7 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
-    public void SaveAsync_FromSplitMode_RequiresSplitTotalToMatchOriginalAmount()
+    public void SaveAsync_FromSplitMode_RejectsSplitRowsAboveOriginalAmount()
     {
         RunInSta(() =>
         {
@@ -314,20 +317,19 @@ public sealed class ExpenseDetailVMSplitTests
             vm.BeginSplitMode();
             vm.AddSplitRow();
             vm.SplitRows[0].NameText = "Groceries";
-            vm.SplitRows[0].AmountText = 30m;
-            vm.AmountText = 60m;
+            vm.SplitRows[0].AmountText = 130m;
 
             var result = vm.SaveAsync().GetAwaiter().GetResult();
 
             Assert.False(result.IsSuccess);
-            Assert.Equal("Split total must match the original expense amount.", result.ErrorMessage);
+            Assert.Equal("Split amounts exceed the original expense amount.", result.ErrorMessage);
             appData.DidNotReceive().UpdateExpenseLog(Arg.Any<ExpenseLog>());
             appData.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
         });
     }
 
     [Fact]
-    public void SaveAsync_FromSplitMode_DeletesOriginalAndAddsReplacementExpenses()
+    public void SaveAsync_FromSplitMode_KeepsParentFullAmountAndAddsChildExpenses()
     {
         RunInSta(() =>
         {
@@ -338,10 +340,8 @@ public sealed class ExpenseDetailVMSplitTests
 
             try
             {
-            var (vm, appData, _) = CreateVmWithDependencies(amount: 100m);
+            var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
             vm.BeginSplitMode();
-            vm.NameText = "Remainder";
-            vm.NoteText = "Remainder note";
             vm.AddSplitRow();
             vm.SplitRows[0].NameText = "Groceries";
             vm.SplitRows[0].AmountText = 30m;
@@ -356,49 +356,22 @@ public sealed class ExpenseDetailVMSplitTests
             Assert.False(vm.IsSplitMode);
             Assert.Empty(vm.SplitRows);
 
-            appData.Received(1).UpdateExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10 && log.IsForDeletion));
             appData.DidNotReceive().RemoveExpenseLog(Arg.Any<ExpenseLog>());
             appData.DidNotReceive().RemoveExpense(Arg.Any<Expense>());
+            appData.DidNotReceive().UpdateExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10 && log.IsForDeletion));
+            appData.DidNotReceive().UpdateAccount(Arg.Any<Account>());
+            Assert.Equal(1_000m, persistedSource.Balance);
 
-            appData.Received(1).UpdateAccount(Arg.Is<Account>(source =>
-                source.Id == 1 &&
-                source.Balance == 1000m));
-
-            _ = appData.Received(1).AddExpenseAsync(
-                Arg.Is<Expense>(expense =>
-                    expense.Amount == 50m &&
-                    expense.ExpenseCategory == ExpenseCategory.Needs &&
-                    expense.ExpenseTagId == 1),
-                Arg.Any<CancellationToken>());
-            _ = appData.Received(1).AddExpenseAsync(
-                Arg.Is<Expense>(expense =>
-                    expense.Amount == 30m &&
-                    expense.ExpenseCategory == ExpenseCategory.Needs &&
-                    expense.ExpenseTagId == 1),
-                Arg.Any<CancellationToken>());
-            _ = appData.Received(1).AddExpenseAsync(
-                Arg.Is<Expense>(expense =>
-                    expense.Amount == 20m &&
-                    expense.ExpenseCategory == ExpenseCategory.Needs &&
-                    expense.ExpenseTagId == 1),
-                Arg.Any<CancellationToken>());
-
-            _ = appData.Received(1).AddExpenseLogAsync(
-                Arg.Is<ExpenseLog>(log =>
-                    log.Amount == 50m &&
-                    log.Notes == "Remainder note" &&
-                    log.AccountId == 1),
-                Arg.Any<CancellationToken>());
             _ = appData.Received(1).AddExpenseLogAsync(
                 Arg.Is<ExpenseLog>(log =>
                     log.Amount == 30m &&
-                    log.Notes == string.Empty &&
+                    log.ParentLogId == 10 &&
                     log.AccountId == 1),
                 Arg.Any<CancellationToken>());
             _ = appData.Received(1).AddExpenseLogAsync(
                 Arg.Is<ExpenseLog>(log =>
                     log.Amount == 20m &&
-                    log.Notes == string.Empty &&
+                    log.ParentLogId == 10 &&
                     log.AccountId == 1),
                 Arg.Any<CancellationToken>());
 
@@ -407,25 +380,15 @@ public sealed class ExpenseDetailVMSplitTests
             Assert.Single(recipient.RecordLogMemoryMessages);
             var composite = Assert.IsType<CompositeLogMemoryAction>(recipient.RecordLogMemoryMessages[0].Value);
             Assert.Equal("Split expense", composite.Description);
-            Assert.Equal(4, composite.Actions.Count);
-
-            var deleteAction = Assert.IsType<DeleteExpenseLogMemoryAction>(composite.Actions[0]);
-            Assert.NotNull(deleteAction.Snapshot);
-            Assert.Equal(10, deleteAction.Snapshot!.ExpenseLogId);
-
-            var addActions = composite.Actions.Skip(1).Select(Assert.IsType<AddExpenseLogMemoryAction>).ToList();
-            Assert.Equal(3, addActions.Count);
+            var addActions = composite.Actions.Select(Assert.IsType<AddExpenseLogMemoryAction>).ToList();
+            Assert.Equal(2, addActions.Count);
             Assert.All(addActions, action => Assert.False(action.ShouldAdjustAccountTotals));
             Assert.All(addActions, action => Assert.True(action.Snapshot.ExpenseId > 0));
             Assert.All(addActions, action => Assert.True(action.Snapshot.ExpenseLogId > 0));
             Assert.All(addActions, action => Assert.Equal(1, action.Snapshot.TagId));
+            Assert.All(addActions, action => Assert.Equal(10, action.Snapshot.ParentLogId));
             Assert.All(addActions, action => Assert.Equal(new DateTime(2026, 5, 31), action.Snapshot.DeductedOn));
 
-            Assert.Contains(addActions, action =>
-                action.Snapshot.Amount == 50m &&
-                action.Snapshot.ExpenseName == "Remainder" &&
-                action.Snapshot.Notes == "Remainder note" &&
-                !action.Snapshot.IsForDeletion);
             Assert.Contains(addActions, action =>
                 action.Snapshot.Amount == 30m &&
                 action.Snapshot.ExpenseName == "Groceries" &&
@@ -445,7 +408,7 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
-    public void SaveAsync_FromSplitMode_RemovesBudgetReconciliationOriginalBeforeAddingReplacements()
+    public void SaveAsync_FromSplitMode_KeepsBudgetReconciliationParent()
     {
         RunInSta(() =>
         {
@@ -459,26 +422,17 @@ public sealed class ExpenseDetailVMSplitTests
             var result = vm.SaveAsync().GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
-            appData.Received(1).RemoveExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10));
-            appData.Received(1).RemoveExpense(Arg.Is<Expense>(expense => expense.Id == 20));
+            appData.DidNotReceive().RemoveExpenseLog(Arg.Any<ExpenseLog>());
+            appData.DidNotReceive().RemoveExpense(Arg.Any<Expense>());
             appData.DidNotReceive().UpdateExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10 && log.IsForDeletion));
-
-            Received.InOrder(() =>
-            {
-                appData.RemoveExpenseLog(Arg.Is<ExpenseLog>(log => log.Id == 10));
-                appData.RemoveExpense(Arg.Is<Expense>(expense => expense.Id == 20));
-                _ = appData.AddExpenseAsync(
-                    Arg.Is<Expense>(expense => expense.Amount == 70m),
-                    Arg.Any<CancellationToken>());
-                _ = appData.AddExpenseAsync(
-                    Arg.Is<Expense>(expense => expense.Amount == 30m),
-                    Arg.Any<CancellationToken>());
-            });
+            _ = appData.Received(1).AddExpenseLogAsync(
+                Arg.Is<ExpenseLog>(log => log.Amount == 30m && log.ParentLogId == 10),
+                Arg.Any<CancellationToken>());
         });
     }
 
     [Fact]
-    public void SaveAsync_FromSplitMode_WithParentRemainder_UpdatesParentAndAddsSplitExpenses()
+    public void SaveAsync_FromSplitMode_WithLegacyRemainderFlag_KeepsParentFullAmountAndAddsSplitExpenses()
     {
         RunInSta(() =>
         {
@@ -508,17 +462,9 @@ public sealed class ExpenseDetailVMSplitTests
                 Assert.False(vm.IsSplitMode);
                 Assert.Empty(vm.SplitRows);
 
-                appData.Received(1).UpdateExpenseLog(Arg.Is<ExpenseLog>(log =>
-                    log.Id == 10 &&
-                    !log.IsForDeletion &&
-                    log.Amount == 50m &&
-                    log.Notes == "Remainder note"));
                 appData.DidNotReceive().RemoveExpenseLog(Arg.Any<ExpenseLog>());
                 appData.DidNotReceive().RemoveExpense(Arg.Any<Expense>());
-
-                appData.Received(1).UpdateAccount(Arg.Is<Account>(source =>
-                    source.Id == 1 &&
-                    source.Balance == 1000m));
+                appData.DidNotReceive().UpdateAccount(Arg.Any<Account>());
 
                 _ = appData.Received(1).AddExpenseAsync(
                     Arg.Is<Expense>(expense =>
@@ -539,18 +485,10 @@ public sealed class ExpenseDetailVMSplitTests
                 Assert.Single(recipient.RecordLogMemoryMessages);
                 var composite = Assert.IsType<CompositeLogMemoryAction>(recipient.RecordLogMemoryMessages[0].Value);
                 Assert.Equal("Split expense", composite.Description);
-                Assert.Equal(3, composite.Actions.Count);
-
-                var editAction = Assert.IsType<EditExpenseLogMemoryAction>(composite.Actions[0]);
-                Assert.Equal(10, editAction.Before.ExpenseLogId);
-                Assert.Equal(50m, editAction.After.Amount);
-                Assert.Equal(ExpenseCategory.Wants, editAction.After.ExpenseCategory);
-                Assert.Equal("Remainder", editAction.After.ExpenseName);
-                Assert.Equal("Remainder note", editAction.After.Notes);
-
-                var addActions = composite.Actions.Skip(1).Select(Assert.IsType<AddExpenseLogMemoryAction>).ToList();
+                var addActions = composite.Actions.Select(Assert.IsType<AddExpenseLogMemoryAction>).ToList();
                 Assert.Equal(2, addActions.Count);
                 Assert.All(addActions, action => Assert.False(action.ShouldAdjustAccountTotals));
+                Assert.All(addActions, action => Assert.Equal(10, action.Snapshot.ParentLogId));
                 Assert.Contains(addActions, action =>
                     action.Snapshot.Amount == 30m &&
                     action.Snapshot.ExpenseName == "Groceries");

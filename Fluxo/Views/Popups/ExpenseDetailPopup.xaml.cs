@@ -573,23 +573,7 @@ public partial class ExpenseDetailPopup : BasePopup
 
     private async Task<ExpenseDetailVM.ExpenseDetailSaveResult?> TrySaveWithSplitRemainderConfirmationAsync()
     {
-        var keepParentExpenseWhenRemainder = false;
-        if (_viewModel.IsSplitMode && _viewModel.HasSplitRowsWithAmounts && _viewModel.HasSplitParentRemainder)
-        {
-            var confirmation = FluxoMessageBox.Show(
-                this,
-                "Keep the remaining amount in this expense and create split expenses for the rows?",
-                "Expense Detail",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (confirmation != MessageBoxResult.Yes)
-                return null;
-
-            keepParentExpenseWhenRemainder = true;
-        }
-
-        return await _viewModel.SaveAsync(keepParentExpenseWhenRemainder);
+        return await _viewModel.SaveAsync();
     }
 
 }
