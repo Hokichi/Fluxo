@@ -1766,6 +1766,13 @@ public partial class MainWindow : Window, IPopupHost
         if (selectedMode == MainContentViewMode.AllTime)
             return;
 
+        if (selectedMode == MainContentViewMode.AllocationPeriod)
+        {
+            var allocationRange = _mainVM.BudgetPanel.GetCurrentAllocationPeriodRange(DateTime.Today);
+            _analyticsPageView.ApplyOpenRange(allocationRange.From, allocationRange.To);
+            return;
+        }
+
         var selectedDate = _mainVM.DaySpinner.SelectedDay.Date;
         if (selectedDate == default)
             selectedDate = DateTime.Today;
@@ -1783,6 +1790,13 @@ public partial class MainWindow : Window, IPopupHost
         if (selectedMode == MainContentViewMode.AllTime)
         {
             _ledgerPageView.ApplyAllTimeRange();
+            return;
+        }
+
+        if (selectedMode == MainContentViewMode.AllocationPeriod)
+        {
+            var allocationRange = _mainVM.BudgetPanel.GetCurrentAllocationPeriodRange(DateTime.Today);
+            _ledgerPageView.ApplyOpenRange(allocationRange.From, allocationRange.To);
             return;
         }
 

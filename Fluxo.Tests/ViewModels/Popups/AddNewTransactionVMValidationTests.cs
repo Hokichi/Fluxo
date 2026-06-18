@@ -19,6 +19,94 @@ namespace Fluxo.Tests.ViewModels.Popups;
 
 public sealed class AddNewTransactionVMValidationTests
 {
+    [Fact]
+    public void Constructor_UsesAddNewTransactionPurposeByDefault()
+    {
+        RunInSta(() =>
+        {
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+
+            Assert.Equal("Add New Transaction", vm.PopupTitle);
+            Assert.True(vm.CanChangeTransactionType);
+            Assert.True(vm.CanPinTransaction);
+        });
+    }
+
+    [Fact]
+    public void InitializeRecurringMode_UsesRecurringCreatePurposeAndDisablesPin()
+    {
+        RunInSta(() =>
+        {
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+
+            vm.InitializeRecurringMode(isLocked: false);
+
+            Assert.Equal("Add Recurring Transaction", vm.PopupTitle);
+            Assert.True(vm.CanChangeTransactionType);
+            Assert.False(vm.CanPinTransaction);
+        });
+    }
+
+    [Fact]
+    public void InitializeFromRecurringTransaction_UsesEditPurposeAndLocksTransactionType()
+    {
+        RunInSta(() =>
+        {
+            var recurring = new RecurringTransaction
+            {
+                Id = 42,
+                Name = "Rent",
+                Amount = 120m,
+                Type = RecurringTransactionType.Expense,
+                SourceId = 1,
+                TagId = 1,
+                Category = ExpenseCategory.Needs,
+                RecurringPeriod = RecurringPeriod.Monthly,
+                RecurringTime = 5,
+                IsEnabled = true
+            };
+            var appData = CreateAppData();
+            appData.GetRecurringTransactionByIdAsync(42, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<RecurringTransaction?>(recurring));
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), appData);
+
+            var initialized = vm.InitializeFromRecurringTransactionAsync(42).GetAwaiter().GetResult();
+
+            Assert.True(initialized);
+            Assert.Equal("Edit Recurring Transaction", vm.PopupTitle);
+            Assert.False(vm.CanChangeTransactionType);
+            Assert.False(vm.CanPinTransaction);
+            Assert.Equal(ExpenseCategory.Needs, vm.SelectedExpenseCategory);
+        });
+    }
+
+    [Fact]
+    public void SwitchingToGoalUpdate_AutoSetsNameFromSelectedGoal()
+    {
+        RunInSta(() =>
+        {
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+
+            vm.IsGoal = true;
+
+            Assert.Equal("Goal Update for Goal", vm.NameText);
+        });
+    }
+
+    [Fact]
+    public void ChangingSelectedGoal_RefreshesGoalUpdateName()
+    {
+        RunInSta(() =>
+        {
+            var vm = new AddNewTransactionVM(CreateMainViewModel([CreateCheckingSource(balance: 500m)]), CreateAppData());
+            vm.IsGoal = true;
+
+            vm.SelectedGoal = new SavingGoalVM { Id = 2, Name = "Emergency Fund" };
+
+            Assert.Equal("Goal Update for Emergency Fund", vm.NameText);
+        });
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -748,6 +836,7 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.Equal(RecurringTransactionType.Expense, captured.Value.Type);
             Assert.Equal(-7, captured.Value.AccountId);
             Assert.Equal(50m, captured.Value.Amount);
+            Assert.Equal(ExpenseCategory.Needs, captured.Value.Category);
             appData.DidNotReceiveWithAnyArgs().GetAccountByIdAsync(default, default);
         });
     }
@@ -790,6 +879,7 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.True(result.IsSuccess);
             Assert.True(captured.HasValue);
             Assert.Equal(RecurringTransactionType.Expense, captured.Value.Type);
+            Assert.Equal(ExpenseCategory.Wants, captured.Value.Category);
             appData.DidNotReceive().UpdateBudgetAllocation(Arg.Any<BudgetAllocation>());
         });
     }
@@ -990,6 +1080,51 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.True(result.IsSuccess);
             appData.Received(1).AddExpenseLogAsync(
                 Arg.Is<ExpenseLog>(log => log.IsPinned),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_RecurringExpense_PersistsCategory()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: true,
+                amount: 25m,
+                appData: appData);
+            vm.SelectedExpenseCategory = ExpenseCategory.Wants;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddRecurringTransactionAsync(
+                Arg.Is<RecurringTransaction>(transaction => transaction.Category == ExpenseCategory.Wants),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_RecurringIncome_ClearsCategory()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Income,
+                CreateCheckingSource(balance: 0m),
+                isRecurring: true,
+                amount: 25m,
+                appData: appData);
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddRecurringTransactionAsync(
+                Arg.Is<RecurringTransaction>(transaction => transaction.Category == null),
                 Arg.Any<CancellationToken>());
         });
     }

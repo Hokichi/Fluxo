@@ -6,6 +6,23 @@ namespace Fluxo.Tests.Views.Popups;
 public sealed class AddNewTransactionSuggestionStyleTests
 {
     [Fact]
+    public void PopupTitle_BindsToViewModelPurpose()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
+
+        Assert.Contains("PopupTitle=\"{Binding PopupTitle}\"", xaml);
+    }
+
+    [Fact]
+    public void TransactionTypeToggleAndPin_BindToPurposeCapability()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
+
+        Assert.Contains("IsEnabled=\"{Binding CanChangeTransactionType}\"", xaml);
+        Assert.Contains("IsEnabled=\"{Binding CanPinTransaction}\"", xaml);
+    }
+
+    [Fact]
     public void TransactionTypeSelector_UsesSharedSegmentedToggleGroup()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));

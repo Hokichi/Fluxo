@@ -457,6 +457,7 @@ public partial class AddAccountVM : ObservableValidator
                     RecurringPeriod = RecurringPeriod.Monthly,
                     RecurringTime = account.MonthlyDueDate.Value,
                     Type = RecurringTransactionType.Expense,
+                    Category = ExpenseCategory.Needs,
                     SourceId = account.DeductSource.Value,
                     TagId = paymentTag?.Id,
                     GoalId = null,

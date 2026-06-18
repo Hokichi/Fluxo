@@ -44,6 +44,8 @@ public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<Spin
 
     public bool IsMonthlyViewSelected => SelectedMainContentViewMode == MainContentViewMode.Monthly;
 
+    public bool IsAllocationPeriodViewSelected => SelectedMainContentViewMode == MainContentViewMode.AllocationPeriod;
+
     public bool IsAllTimeViewSelected => SelectedMainContentViewMode == MainContentViewMode.AllTime;
 
     [RelayCommand]
@@ -129,6 +131,7 @@ public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<Spin
         OnPropertyChanged(nameof(IsDailyViewSelected));
         OnPropertyChanged(nameof(IsWeeklyViewSelected));
         OnPropertyChanged(nameof(IsMonthlyViewSelected));
+        OnPropertyChanged(nameof(IsAllocationPeriodViewSelected));
         OnPropertyChanged(nameof(IsAllTimeViewSelected));
     }
 }

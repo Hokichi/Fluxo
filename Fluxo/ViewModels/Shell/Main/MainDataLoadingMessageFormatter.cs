@@ -13,6 +13,9 @@ internal static class MainDataLoadingMessageFormatter
         if (viewMode == MainContentViewMode.AllTime)
             return "Loading all-time data";
 
+        if (viewMode == MainContentViewMode.AllocationPeriod)
+            return "Loading allocation period data";
+
         var range = DateRangeResolver.Resolve(selectedDate, viewMode);
         return viewMode switch
         {

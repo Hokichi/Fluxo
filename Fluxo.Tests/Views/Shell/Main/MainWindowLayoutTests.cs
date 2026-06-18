@@ -131,6 +131,19 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
+    public void RootBorder_HasDarkOuterGlowAndStateChangeDoesNotMutateCornerRadius()
+    {
+        var xaml = MainWindowXaml.Value;
+        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
+
+        Assert.Contains("x:Name=\"RootBorder\"", xaml);
+        Assert.Contains("<DropShadowEffect", xaml);
+        Assert.Contains("Color=\"Black\"", xaml);
+        Assert.Contains("ShadowDepth=\"0\"", xaml);
+        Assert.DoesNotContain("RootBorder.CornerRadius", source);
+    }
+
+    [Fact]
     public void SpendingAmountGate_HideMarkers_ArePresent()
     {
         var xamlDocument = MainWindowXamlDocument.Value;

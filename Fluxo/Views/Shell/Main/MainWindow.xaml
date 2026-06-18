@@ -289,6 +289,13 @@
         BorderThickness="1"
         CornerRadius="8"
         MouseMove="MainWindow_OnMouseMove">
+        <Border.Effect>
+            <DropShadowEffect
+                BlurRadius="26"
+                Color="Black"
+                Opacity="0.65"
+                ShadowDepth="0" />
+        </Border.Effect>
         <Grid>
             <Grid x:Name="ContentGrid" Margin="0,16,0,0">
                 <Grid.RowDefinitions>

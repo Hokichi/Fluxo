@@ -10,7 +10,7 @@
     IsHistoryOpen="{Binding IsHistoryOpen, Mode=TwoWay}"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
-    PopupTitle="Add New Transaction"
+    PopupTitle="{Binding PopupTitle}"
     ShowHistoryButton="{Binding CanUseHistory}"
     ShowSaveAndCreateNewButton="True"
     ShowSaveButton="True"
@@ -286,7 +286,10 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Grid.Column="0">
-                <customControls:SegmentedToggleGroup Width="400" HorizontalAlignment="Center">
+                <customControls:SegmentedToggleGroup
+                    Width="400"
+                    HorizontalAlignment="Center"
+                    IsEnabled="{Binding CanChangeTransactionType}">
                     <customControls:SegmentedToggleOption
                         x:Name="ExpenseRadioButton"
                         Content="Expense"
@@ -363,6 +366,7 @@
                                 DefaultBackground="{StaticResource Brush.Background.Surface}"
                                 IconSize="14"
                                 IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                                IsEnabled="{Binding CanPinTransaction}"
                                 ToolTip="Pin transaction" />
                         </Grid>
                         <Popup
@@ -538,6 +542,7 @@
                                     ButtonSize="38"
                                     ButtonText="Pinned"
                                     IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                                    IsEnabled="{Binding CanPinTransaction}"
                                     ToolTip="Pinned" />
                             </Grid>
                             <Popup
@@ -712,6 +717,7 @@
                 Grid.Row="2"
                 Grid.Column="0"
                 Margin="0,16,0,0"
+                IsEnabled="{Binding CanEditTags}"
                 Visibility="{Binding CanEditTags, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
                 <DockPanel x:Name="TagsDockPanel" LastChildFill="False">
@@ -886,7 +892,10 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="History" />
-                        <customControls:FadingScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+                        <customControls:FadingScrollViewer
+                            Grid.Row="1"
+                            MaxHeight="220"
+                            VerticalScrollBarVisibility="Hidden">
                             <ListBox
                                 Width="320"
                                 behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"

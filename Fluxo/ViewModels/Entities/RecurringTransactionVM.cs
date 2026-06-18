@@ -11,6 +11,7 @@ public partial class RecurringTransactionVM : ObservableObject
     [ObservableProperty] private RecurringPeriod _recurringPeriod;
     [ObservableProperty] private int _recurringTime;
     [ObservableProperty] private RecurringTransactionType _type;
+    [ObservableProperty] private ExpenseCategory? _category;
     [ObservableProperty] private AccountVM _source = new();
     [ObservableProperty] private ExpenseTagVM? _tag;
     [ObservableProperty] private SavingGoalVM? _goal;

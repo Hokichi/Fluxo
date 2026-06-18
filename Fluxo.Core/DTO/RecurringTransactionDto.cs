@@ -10,6 +10,7 @@ public sealed class RecurringTransactionDto
     public RecurringPeriod RecurringPeriod { get; set; }
     public int RecurringTime { get; set; }
     public RecurringTransactionType Type { get; set; }
+    public ExpenseCategory? Category { get; set; }
     public int SourceId { get; set; }
     public int? TagId { get; set; }
     public int? GoalId { get; set; }

@@ -39,6 +39,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     private bool _isChangeTrackingInitialized;
     private bool _isAmountValidationActive;
     private bool _isNameValidationActive;
+    private TransactionPopupPurpose _popupPurpose = TransactionPopupPurpose.AddNewTransaction;
+    private bool _isTransactionTypeLocked;
     private int _transactionNameSuggestionRequestVersion;
 
     [ObservableProperty]
@@ -155,6 +157,14 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool CanEditTransactionName => !IsGoal;
     public bool CanEditCategory => IsExpense;
     public bool CanEditTags => IsExpense;
+    public bool CanChangeTransactionType => !_isTransactionTypeLocked;
+    public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && !IsRecurring;
+    public string PopupTitle => _popupPurpose switch
+    {
+        TransactionPopupPurpose.AddRecurringTransaction => "Add Recurring Transaction",
+        TransactionPopupPurpose.EditRecurringTransaction => "Edit Recurring Transaction",
+        _ => "Add New Transaction"
+    };
     public bool ShowNoteField => !IsGoal;
     public bool ShowGoalField => IsGoal;
     public string NameValidationHint => GetValidationHint(nameof(NameText));
@@ -227,12 +237,16 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (value && string.IsNullOrWhiteSpace(RecurringTimeText))
             RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
 
+        if (!CanPinTransaction)
+            IsPinned = false;
+
         OnPropertyChanged(nameof(ShowRecurringDayInput));
         OnPropertyChanged(nameof(ShowRecurringNoneInput));
         OnPropertyChanged(nameof(ShowRecurringWeekdayInput));
         OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
         OnPropertyChanged(nameof(ShowDateSelector));
         OnPropertyChanged(nameof(DateOrRecurrenceLabel));
+        OnPropertyChanged(nameof(CanPinTransaction));
         NotifyFormStateChanged();
     }
     partial void OnSelectedRecurringPeriodChanged(RecurringPeriod value)
@@ -263,6 +277,9 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
     partial void OnSelectedGoalChanged(SavingGoalVM? value)
     {
+        if (IsGoal)
+            SyncGoalUpdateName();
+
         ResetHistoryLists();
         if (IsHistoryOpen)
             _ = LoadHistoryAsync();
@@ -359,7 +376,10 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowGoalField));
 
         if (value)
+        {
             IsMoreTagsOpen = false;
+            SyncGoalUpdateName();
+        }
 
         RefreshAccounts();
         ClearNameValidation();
@@ -458,6 +478,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     input.RecurringPeriod,
                     recurringTime,
                     input.AccountId,
+                    input.IsExpense ? input.Category : null,
                     input.TagId,
                     input.GoalId));
                 if (!draftSaveResult.IsSuccess)
@@ -509,6 +530,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 recurring.RecurringPeriod = input.RecurringPeriod;
                 recurring.RecurringTime = recurringTime;
                 recurring.Type = recurringType;
+                recurring.Category = input.IsExpense ? input.Category : null;
                 recurring.SourceId = input.AccountId;
                 recurring.TagId = input.IsExpense ? input.TagId : null;
                 recurring.GoalId = input.IsGoal ? input.GoalId : null;
@@ -740,6 +762,9 @@ public partial class AddNewTransactionVM : ObservableValidator
         IsRecurring = false;
         IsPinned = false;
         IsRecurringModeLocked = false;
+        _isTransactionTypeLocked = false;
+        SetPopupPurpose(TransactionPopupPurpose.AddNewTransaction);
+        OnPropertyChanged(nameof(CanChangeTransactionType));
         SelectedRecurringPeriod = RecurringPeriod.Monthly;
         RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
         SelectedExpenseCategory = ExpenseCategory.Needs;
@@ -1045,6 +1070,14 @@ public partial class AddNewTransactionVM : ObservableValidator
         return string.IsNullOrWhiteSpace(trimmedGoalName)
             ? GoalUpdateTransactionSupport.GoalUpdateTagName
             : $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {trimmedGoalName}";
+    }
+
+    private static string BuildGoalUpdateDisplayName(string goalName)
+    {
+        var trimmedGoalName = goalName.Trim();
+        return string.IsNullOrWhiteSpace(trimmedGoalName)
+            ? GoalUpdateTransactionSupport.GoalUpdateTagName
+            : $"{GoalUpdateTransactionSupport.GoalUpdateTagName} for {trimmedGoalName}";
     }
 
     private async Task<string> ResolveSimilarTransactionNameAsync(
@@ -1874,6 +1907,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RecurringPeriod RecurringPeriod,
         int RecurringTime,
         int AccountId,
+        ExpenseCategory? Category,
         int? TagId,
         int? GoalId);
 
@@ -1885,6 +1919,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RecurringPeriod RecurringPeriod,
         int RecurringTime,
         int AccountId,
+        ExpenseCategory? Category,
         int? TagId,
         int? GoalId);
 
@@ -1929,6 +1964,9 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     public void InitializeRecurringMode(bool isLocked)
     {
+        SetPopupPurpose(TransactionPopupPurpose.AddRecurringTransaction);
+        _isTransactionTypeLocked = isLocked;
+        OnPropertyChanged(nameof(CanChangeTransactionType));
         IsRecurringModeLocked = isLocked;
         IsRecurring = true;
     }
@@ -1940,12 +1978,16 @@ public partial class AddNewTransactionVM : ObservableValidator
             return false;
 
         _editingRecurringTransactionId = recurring.Id;
+        SetPopupPurpose(TransactionPopupPurpose.EditRecurringTransaction);
+        _isTransactionTypeLocked = true;
+        OnPropertyChanged(nameof(CanChangeTransactionType));
         IsRecurringModeLocked = true;
         IsRecurring = true;
         IsExpense = recurring.Type == RecurringTransactionType.Expense;
         IsGoal = recurring.Type == RecurringTransactionType.GoalUpdate;
         NameText = recurring.Name;
         AmountText = recurring.Amount;
+        SelectedExpenseCategory = recurring.Category ?? ExpenseCategory.Needs;
         SelectedRecurringPeriod = recurring.RecurringPeriod;
         RecurringTimeText = recurring.RecurringPeriod == RecurringPeriod.None
             ? string.Empty
@@ -1959,12 +2001,18 @@ public partial class AddNewTransactionVM : ObservableValidator
     public void InitializeFromRecurringDraft(RecurringDraftSnapshot draft)
     {
         _editingRecurringTransactionId = draft.EditingRecurringTransactionId;
+        SetPopupPurpose(draft.EditingRecurringTransactionId is > 0
+            ? TransactionPopupPurpose.EditRecurringTransaction
+            : TransactionPopupPurpose.AddRecurringTransaction);
+        _isTransactionTypeLocked = true;
+        OnPropertyChanged(nameof(CanChangeTransactionType));
         IsRecurringModeLocked = true;
         IsRecurring = true;
         IsExpense = draft.Type == RecurringTransactionType.Expense;
         IsGoal = draft.Type == RecurringTransactionType.GoalUpdate;
         NameText = draft.Name;
         AmountText = draft.Amount;
+        SelectedExpenseCategory = draft.Category ?? ExpenseCategory.Needs;
         SelectedRecurringPeriod = draft.RecurringPeriod;
         RecurringTimeText = draft.RecurringPeriod == RecurringPeriod.None
             ? string.Empty
@@ -2018,4 +2066,32 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     public sealed record RecurringTimeOption(string Label, string Value);
+
+    private enum TransactionPopupPurpose
+    {
+        AddNewTransaction,
+        AddRecurringTransaction,
+        EditRecurringTransaction
+    }
+
+    private void SetPopupPurpose(TransactionPopupPurpose purpose)
+    {
+        if (_popupPurpose == purpose)
+            return;
+
+        _popupPurpose = purpose;
+        if (!CanPinTransaction)
+            IsPinned = false;
+
+        OnPropertyChanged(nameof(PopupTitle));
+        OnPropertyChanged(nameof(CanPinTransaction));
+    }
+
+    private void SyncGoalUpdateName()
+    {
+        if (SelectedGoal is not { } goal || string.IsNullOrWhiteSpace(goal.Name))
+            return;
+
+        NameText = BuildGoalUpdateDisplayName(goal.Name);
+    }
 }

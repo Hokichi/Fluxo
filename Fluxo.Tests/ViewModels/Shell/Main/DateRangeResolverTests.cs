@@ -1,4 +1,5 @@
 using Fluxo.Core.Enums;
+using Fluxo.Core.Entities;
 using Fluxo.ViewModels.Shell;
 using Fluxo.ViewModels.Shell.Main;
 using Xunit;
@@ -79,5 +80,21 @@ public class DateRangeResolverTests
 
         Assert.Throws<InvalidOperationException>(() =>
             DateRangeResolver.Resolve(selected, MainContentViewMode.AllTime));
+    }
+
+    [Fact]
+    public void ResolveAllocationPeriod_UsesCurrentBudgetAllocationPeriod()
+    {
+        var today = new DateTime(2026, 6, 18);
+        var budgetAllocation = new BudgetAllocation
+        {
+            AllocationPeriod = AllocationPeriod.Monthly,
+            PeriodStart = 15
+        };
+
+        var result = DateRangeResolver.ResolveAllocationPeriod(today, budgetAllocation);
+
+        Assert.Equal(new DateTime(2026, 6, 15), result.From);
+        Assert.Equal(new DateTime(2026, 7, 14), result.To);
     }
 }

@@ -1,3 +1,5 @@
+using Fluxo.Core.Budgeting;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 
 namespace Fluxo.ViewModels.Shell.Main;
@@ -18,10 +20,24 @@ public static class DateRangeResolver
             MainContentViewMode.Monthly => new DateRange(
                 CreateDate(date.Year, date.Month, 1, date.Kind),
                 CreateDate(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month), date.Kind)),
+            MainContentViewMode.AllocationPeriod => throw new InvalidOperationException(
+                "Allocation-period view requires a budget allocation."),
             MainContentViewMode.AllTime => throw new InvalidOperationException(
                 "All-time view does not have a bounded date range."),
             _ => throw new InvalidOperationException($"Unsupported view mode: {viewMode}.")
         };
+    }
+
+    public static DateRange ResolveAllocationPeriod(DateTime today, BudgetAllocation budgetAllocation)
+    {
+        ArgumentNullException.ThrowIfNull(budgetAllocation);
+
+        var period = BudgetAllocationPeriodRules.ResolveCurrentPeriod(
+            budgetAllocation.AllocationPeriod,
+            today,
+            budgetAllocation.PeriodStart);
+
+        return new DateRange(period.Start, period.End);
     }
 
     private static DateTime GetStartOfWeek(DateTime date)

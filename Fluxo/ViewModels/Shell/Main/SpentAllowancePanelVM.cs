@@ -62,7 +62,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
     [ObservableProperty]
     private decimal _allowance;
 
-    public decimal Net => TotalSpent - TotalEarned;
+    public decimal Net => TotalEarned - TotalSpent;
 
     public void Receive(DateRangeSelectionChangedMessage message)
     {

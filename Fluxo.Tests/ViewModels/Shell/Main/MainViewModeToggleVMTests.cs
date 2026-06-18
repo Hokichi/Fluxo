@@ -41,6 +41,22 @@ public class MainViewModeToggleVMTests
         Assert.False(vm.IsDailyViewSelected);
         Assert.False(vm.IsWeeklyViewSelected);
         Assert.True(vm.IsMonthlyViewSelected);
+        Assert.False(vm.IsAllocationPeriodViewSelected);
+        Assert.False(vm.IsAllTimeViewSelected);
+    }
+
+    [Fact]
+    public void SetSelectedMainContentViewCommand_UpdatesAllocationPeriodSelectionFlag()
+    {
+        var vm = new MainViewModeToggleVM();
+
+        vm.SetSelectedMainContentViewCommand.Execute(MainContentViewMode.AllocationPeriod);
+
+        Assert.Equal(MainContentViewMode.AllocationPeriod, vm.SelectedMainContentViewMode);
+        Assert.False(vm.IsDailyViewSelected);
+        Assert.False(vm.IsWeeklyViewSelected);
+        Assert.False(vm.IsMonthlyViewSelected);
+        Assert.True(vm.IsAllocationPeriodViewSelected);
         Assert.False(vm.IsAllTimeViewSelected);
     }
 

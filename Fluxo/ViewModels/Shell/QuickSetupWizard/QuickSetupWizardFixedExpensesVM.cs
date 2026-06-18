@@ -82,6 +82,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 draft.RecurringPeriod,
                 draft.RecurringTime,
                 draft.AccountId,
+                draft.Category,
                 draft.ExpenseTagId > 0 ? draft.ExpenseTagId : null,
                 null));
             return vm;
@@ -191,7 +192,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 expense.Id,
                 expense.Name,
                 expense.Amount,
-                ExpenseCategory.Needs,
+                expense.Category ?? ExpenseCategory.Needs,
                 expense.SourceId,
                 expense.RecurringPeriod,
                 expense.RecurringTime,
@@ -248,7 +249,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             id,
             input.Name,
             input.Amount,
-            ExpenseCategory.Needs,
+            input.Category ?? ExpenseCategory.Needs,
             input.AccountId,
             input.RecurringPeriod,
             input.RecurringTime,

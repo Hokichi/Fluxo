@@ -61,6 +61,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
         MainContentViewMode.Daily => "Move to today",
         MainContentViewMode.Weekly => "Move to current week",
         MainContentViewMode.Monthly => "Move to current month",
+        MainContentViewMode.AllocationPeriod => string.Empty,
         _ => string.Empty
     };
 
@@ -69,14 +70,14 @@ public partial class DaySpinnerVM : ObservableRecipient,
         _selectedMainContentViewMode = message.Value;
         OnPropertyChanged(nameof(MoveToCurrentLabel));
 
-        if (message.Value == MainContentViewMode.AllTime)
+        if (message.Value is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod)
         {
             _suppressSelectionPublishing = true;
             try
             {
                 IsSpinnerVisible = true;
                 IsSpinnerEnabled = false;
-                IsAtCurrentPeriod = false;
+                IsAtCurrentPeriod = message.Value == MainContentViewMode.AllocationPeriod;
                 CanNavigateForward = false;
                 _spinnerPageOffset = 0;
             }
@@ -86,7 +87,8 @@ public partial class DaySpinnerVM : ObservableRecipient,
             }
 
             PublishSpinnerPeriodState();
-            Messenger.Send(new AllTimeViewModeMessage());
+            if (message.Value == MainContentViewMode.AllTime)
+                Messenger.Send(new AllTimeViewModeMessage());
             return;
         }
 
@@ -102,9 +104,10 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     public void PublishCurrentSelection()
     {
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+        if (_selectedMainContentViewMode is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod)
         {
-            Messenger.Send(new AllTimeViewModeMessage());
+            if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+                Messenger.Send(new AllTimeViewModeMessage());
             return;
         }
 
@@ -113,7 +116,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     public Task NavigateSpinnerBackFromUserAsync(Window? owner = null)
     {
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+        if (_selectedMainContentViewMode is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod)
             return Task.CompletedTask;
 
         NavigateSpinnerBackCore();
@@ -122,7 +125,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     public Task NavigateSpinnerForwardFromUserAsync(Window? owner = null)
     {
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+        if (_selectedMainContentViewMode is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod)
             return Task.CompletedTask;
 
         if (_spinnerPageOffset >= 0 && !AllowFuturePeriodNavigation)
@@ -134,7 +137,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     public async Task SelectAdjacentVisibleDayFromUserAsync(int offset, Window? owner = null)
     {
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime || offset == 0)
+        if (_selectedMainContentViewMode is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod || offset == 0)
             return;
 
         var selectedIndex = DaysOfWeek.IndexOf(SelectedDay);
@@ -162,7 +165,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
     {
         ArgumentNullException.ThrowIfNull(selectedDay);
 
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+        if (_selectedMainContentViewMode is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod)
             return;
 
         await RunSpinnerInteractionWithFeedbackAsync(
@@ -224,7 +227,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     private void PublishSelectedRange(DateTime selectedDate)
     {
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+        if (_selectedMainContentViewMode is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod)
             return;
 
         var range = DateRangeResolver.Resolve(selectedDate, _selectedMainContentViewMode);
@@ -424,7 +427,7 @@ public partial class DaySpinnerVM : ObservableRecipient,
 
     private void MoveToCurrentPeriodCore()
     {
-        if (_selectedMainContentViewMode == MainContentViewMode.AllTime)
+        if (_selectedMainContentViewMode is MainContentViewMode.AllTime or MainContentViewMode.AllocationPeriod)
             return;
 
         BuildSpinnerForMode(DateTime.Today, publishSelection: true);

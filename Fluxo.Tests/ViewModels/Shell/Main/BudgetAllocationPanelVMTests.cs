@@ -45,6 +45,42 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
+    public void AllocationPeriodViewMode_PublishesCurrentAllocationPeriodRange()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var recipient = new MessageCaptureRecipient();
+            messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+                recipient,
+                static (target, message) => target.DateRanges.Add(message.Value));
+            var vm = CreateVm(
+                messenger,
+                CreateExpenseLogs(),
+                CreateTags(),
+                CreateAccounts(),
+                budgetAllocation: new BudgetAllocation
+                {
+                    AllocationPeriod = AllocationPeriod.Monthly,
+                    PeriodStart = 15
+                });
+            vm.LoadAsync().GetAwaiter().GetResult();
+            recipient.DateRanges.Clear();
+
+            messenger.Send(new ViewModeChangeMessage(MainContentViewMode.AllocationPeriod));
+
+            Assert.Single(recipient.DateRanges);
+            var expected = DateRangeResolver.ResolveAllocationPeriod(DateTime.Today, new BudgetAllocation
+            {
+                AllocationPeriod = AllocationPeriod.Monthly,
+                PeriodStart = 15
+            });
+            Assert.Equal(expected.From, recipient.DateRanges[0].From);
+            Assert.Equal(expected.To, recipient.DateRanges[0].To);
+        });
+    }
+
+    [Fact]
     public void SelectedTag_FiltersVisibleItemsAcrossBuckets()
     {
         RunInSta(() =>
@@ -825,5 +861,10 @@ public class BudgetAllocationPanelVMTests
 
         if (failure is not null)
             ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+
+    private sealed class MessageCaptureRecipient
+    {
+        public List<(DateTime From, DateTime To)> DateRanges { get; } = [];
     }
 }

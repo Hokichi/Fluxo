@@ -111,7 +111,7 @@ public sealed class SpentAllowancePanelVMTests
 
         Assert.Equal(75m, vm.TotalSpent);
         Assert.Equal(125m, vm.TotalEarned);
-        Assert.Equal(-50m, vm.Net);
+        Assert.Equal(50m, vm.Net);
     }
 
     private static SpentAllowancePanelVM CreateVm(

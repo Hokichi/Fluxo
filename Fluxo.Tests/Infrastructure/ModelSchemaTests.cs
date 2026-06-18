@@ -45,6 +45,7 @@ public sealed class ModelSchemaTests
         var recurringTransaction = model.FindEntityType(typeof(RecurringTransaction))!;
         Assert.False(recurringTransaction.FindProperty("RecurringPeriod")!.IsNullable);
         Assert.False(recurringTransaction.FindProperty("RecurringTime")!.IsNullable);
+        Assert.True(recurringTransaction.FindProperty(nameof(RecurringTransaction.Category))!.IsNullable);
         Assert.Null(recurringTransaction.FindProperty("RecurringDate"));
 
         var budgetAllocation = model.FindEntityType(typeof(BudgetAllocation))!;
@@ -120,18 +121,26 @@ public sealed class ModelSchemaTests
         var recurringTransaction = new RecurringTransaction
         {
             RecurringPeriod = RecurringPeriod.Biweekly,
-            RecurringTime = 5
+            RecurringTime = 5,
+            Category = ExpenseCategory.Wants
+        };
+        var recurringTransactionDto = new RecurringTransactionDto
+        {
+            Category = recurringTransaction.Category
         };
         var recurringTransactionVm = new RecurringTransactionVM
         {
             RecurringPeriod = recurringTransaction.RecurringPeriod,
-            RecurringTime = recurringTransaction.RecurringTime
+            RecurringTime = recurringTransaction.RecurringTime,
+            Category = recurringTransaction.Category
         };
 
         Assert.Null(typeof(SavingGoal).GetProperty("RecurringPeriod"));
         Assert.Null(typeof(SavingGoalVM).GetProperty("RecurringPeriod"));
+        Assert.Equal(ExpenseCategory.Wants, recurringTransactionDto.Category);
         Assert.Equal(RecurringPeriod.Biweekly, recurringTransactionVm.RecurringPeriod);
         Assert.Equal(5, recurringTransactionVm.RecurringTime);
+        Assert.Equal(ExpenseCategory.Wants, recurringTransactionVm.Category);
     }
 
     [Fact]

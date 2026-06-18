@@ -58,6 +58,29 @@ public class DaySpinnerVMTests
     }
 
     [Fact]
+    public void AllocationPeriodMode_DisablesSpinnerWithoutPublishingDateRange()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var recipient = new MessageCaptureRecipient();
+        messenger.Register<MessageCaptureRecipient, DateRangeSelectionChangedMessage>(
+            recipient,
+            static (target, message) => target.DateRanges.Add(message.Value));
+
+        var vm = new DaySpinnerVM(messenger);
+        var visibleDates = vm.DaysOfWeek.Select(day => day.Date).ToArray();
+        var selectedDate = vm.SelectedDay.Date;
+
+        messenger.Send(new ViewModeChangeMessage(MainContentViewMode.AllocationPeriod));
+
+        Assert.True(vm.IsSpinnerVisible);
+        Assert.False(vm.IsSpinnerEnabled);
+        Assert.False(vm.CanNavigateForward);
+        Assert.Equal(visibleDates, vm.DaysOfWeek.Select(day => day.Date));
+        Assert.Equal(selectedDate, vm.SelectedDay.Date);
+        Assert.Empty(recipient.DateRanges);
+    }
+
+    [Fact]
     public void WeeklyMode_WhenSelectedSunday_PublishesMondayToSundayRange()
     {
         var messenger = new WeakReferenceMessenger();

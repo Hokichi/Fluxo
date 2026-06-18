@@ -6,7 +6,7 @@
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
     <StackPanel>
-        <customControls:SegmentedToggleGroup Width="360" SelectedValue="{Binding SelectedMainContentViewMode, Mode=OneWay}">
+        <customControls:SegmentedToggleGroup Width="470" SelectedValue="{Binding SelectedMainContentViewMode, Mode=OneWay}">
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"
                 CommandParameter="{x:Static enums:MainContentViewMode.Daily}"
@@ -30,6 +30,14 @@
                 IsSelected="{Binding IsMonthlyViewSelected, Mode=OneWay}"
                 SelectOnClick="False"
                 Value="{x:Static enums:MainContentViewMode.Monthly}" />
+
+            <customControls:SegmentedToggleOption
+                Click="OnViewModeButtonClick"
+                CommandParameter="{x:Static enums:MainContentViewMode.AllocationPeriod}"
+                Content="Allocation Period"
+                IsSelected="{Binding IsAllocationPeriodViewSelected, Mode=OneWay}"
+                SelectOnClick="False"
+                Value="{x:Static enums:MainContentViewMode.AllocationPeriod}" />
 
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"

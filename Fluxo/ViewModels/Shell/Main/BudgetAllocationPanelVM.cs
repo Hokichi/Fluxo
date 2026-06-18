@@ -21,6 +21,7 @@ namespace Fluxo.ViewModels.Shell.Main;
 public partial class BudgetAllocationPanelVM : ObservableRecipient,
     IRecipient<DateRangeSelectionChangedMessage>,
     IRecipient<AllTimeViewModeMessage>,
+    IRecipient<ViewModeChangeMessage>,
     IRecipient<DashboardDataInvalidatedMessage>,
     IRecipient<RecordLogMemoryMessage>,
     IRecipient<LogMemoryActionAppliedMessage>
@@ -194,6 +195,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public IReadOnlyList<IncomeLogVM> GetAllIncomeLogs() => _allIncomeLogs.ToList();
 
+    public DateRange GetCurrentAllocationPeriodRange(DateTime today)
+    {
+        return DateRangeResolver.ResolveAllocationPeriod(today, _budgetAllocation);
+    }
+
     public void Receive(DateRangeSelectionChangedMessage message)
     {
         _selectedRange = message.Value;
@@ -204,6 +210,15 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     {
         _selectedRange = null;
         RefreshRangeScopedData();
+    }
+
+    public void Receive(ViewModeChangeMessage message)
+    {
+        if (message.Value != MainContentViewMode.AllocationPeriod)
+            return;
+
+        var range = GetCurrentAllocationPeriodRange(DateTime.Today);
+        Messenger.Send(new DateRangeSelectionChangedMessage(range.From, range.To));
     }
 
     public void Receive(DashboardDataInvalidatedMessage message)
