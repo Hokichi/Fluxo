@@ -456,6 +456,7 @@ public partial class AllocationDataVM : ObservableRecipient,
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
+            ParentLogId = snapshot.ParentLogId,
             Expense = new ExpenseVM
             {
                 Id = snapshot.ExpenseId,

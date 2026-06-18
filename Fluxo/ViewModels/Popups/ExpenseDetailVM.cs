@@ -659,7 +659,8 @@ public partial class ExpenseDetailVM : ObservableObject
                 entry.Tag.Id,
                 entry.ExpenseLog.DeductedOn,
                 entry.ExpenseLog.Notes,
-                entry.ExpenseLog.IsForDeletion)).ToList();
+                entry.ExpenseLog.IsForDeletion,
+                entry.ExpenseLog.ParentLogId)).ToList();
 
             var historyActions = new List<ILogMemoryAction>();
             if (keptParentSnapshot is null)

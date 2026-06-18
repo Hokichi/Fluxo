@@ -136,7 +136,8 @@ public partial class TransferFundsVM : ObservableObject
                             expenseTag.Id,
                             expenseLog.DeductedOn,
                             expenseLog.Notes,
-                            expenseLog.IsForDeletion)),
+                            expenseLog.IsForDeletion,
+                            expenseLog.ParentLogId)),
                         new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
                             incomeLog.Id,
                             target.Id,

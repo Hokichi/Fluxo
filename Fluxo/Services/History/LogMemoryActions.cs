@@ -137,7 +137,8 @@ public sealed record ExpenseLogMemorySnapshot(
     int TagId,
     DateTime DeductedOn,
     string Notes,
-    bool IsForDeletion)
+    bool IsForDeletion,
+    int? ParentLogId)
 {
     public static ExpenseLogMemorySnapshot Create(ExpenseLog expenseLog)
     {
@@ -156,7 +157,8 @@ public sealed record ExpenseLogMemorySnapshot(
             expenseLog.Expense.ExpenseTag.Id,
             expenseLog.DeductedOn,
             expenseLog.Notes,
-            expenseLog.IsForDeletion);
+            expenseLog.IsForDeletion,
+            expenseLog.ParentLogId);
     }
 }
 
@@ -250,7 +252,8 @@ public sealed class AddExpenseLogMemoryAction(
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
-            AccountId = snapshot.AccountId
+            AccountId = snapshot.AccountId,
+            ParentLogId = snapshot.ParentLogId
         };
 
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
@@ -480,6 +483,7 @@ public sealed class EditExpenseLogMemoryAction(
         expenseLog.Notes = snapshot.Notes;
         expenseLog.IsForDeletion = snapshot.IsForDeletion;
         expenseLog.Account = targetAccount;
+        expenseLog.ParentLogId = snapshot.ParentLogId;
 
         unitOfWork.Expenses.Update(expenseLog.Expense);
         unitOfWork.ExpenseLogs.Update(expenseLog);

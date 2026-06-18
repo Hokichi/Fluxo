@@ -5,6 +5,7 @@ public class ExpenseLogDto
     public int Id { get; set; }
     public int ExpenseId { get; set; }
     public int AccountId { get; set; }
+    public int? ParentLogId { get; set; }
     public ExpenseDto Expense { get; set; } = new();
     public AccountDto Account { get; set; } = new();
     public decimal Amount { get; set; }

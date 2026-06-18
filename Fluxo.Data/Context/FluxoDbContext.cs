@@ -62,6 +62,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(log => log.IsForDeletion);
         entity.Property(log => log.IsPinned).HasDefaultValue(false);
         entity.Property(log => log.Notes).IsRequired();
+        entity.Property(log => log.ParentLogId);
 
         entity.HasOne(log => log.Expense)
             .WithMany()
@@ -71,6 +72,11 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.HasOne(log => log.Account)
             .WithMany()
             .HasForeignKey(log => log.AccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(log => log.ParentLog)
+            .WithMany()
+            .HasForeignKey(log => log.ParentLogId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 

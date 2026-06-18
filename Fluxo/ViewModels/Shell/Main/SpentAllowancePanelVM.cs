@@ -242,6 +242,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
+            ParentLogId = snapshot.ParentLogId,
             Account = new AccountVM
             {
                 Id = snapshot.AccountId,

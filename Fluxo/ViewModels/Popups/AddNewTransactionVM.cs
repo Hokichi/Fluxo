@@ -604,7 +604,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                         goalUpdateTag.Id,
                         expenseLog.DeductedOn,
                         expenseLog.Notes,
-                        expenseLog.IsForDeletion))));
+                        expenseLog.IsForDeletion,
+                        expenseLog.ParentLogId))));
 
                 invalidationScope |= DashboardDataInvalidationScope.SavingGoals;
             }
@@ -656,7 +657,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                         expenseTag.Id,
                         expenseLog.DeductedOn,
                         expenseLog.Notes,
-                        expenseLog.IsForDeletion))));
+                        expenseLog.IsForDeletion,
+                        expenseLog.ParentLogId))));
             }
             else
             {

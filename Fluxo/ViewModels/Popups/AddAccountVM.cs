@@ -601,7 +601,8 @@ public partial class AddAccountVM : ObservableValidator
             balanceUpdateTag.Id,
             expenseLog.DeductedOn,
             expenseLog.Notes,
-            expenseLog.IsForDeletion);
+            expenseLog.IsForDeletion,
+            expenseLog.ParentLogId);
     }
 
     private bool TryBuildInput(

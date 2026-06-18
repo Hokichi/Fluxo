@@ -127,7 +127,8 @@ public partial class AccountReconciliationVM : ObservableObject
                     reconciliationTag.Id,
                     expenseLog.DeductedOn,
                     expenseLog.Notes,
-                    expenseLog.IsForDeletion))));
+                    expenseLog.IsForDeletion,
+                    expenseLog.ParentLogId))));
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _reloadCurrentDataAsync();

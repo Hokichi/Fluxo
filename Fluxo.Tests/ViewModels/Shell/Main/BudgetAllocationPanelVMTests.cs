@@ -320,7 +320,8 @@ public class BudgetAllocationPanelVMTests
                     TagId: 1,
                     DeductedOn: DateTime.Today,
                     Notes: string.Empty,
-                    IsForDeletion: false))));
+                    IsForDeletion: false,
+                    ParentLogId: null))));
 
             Assert.Equal(2000m, vm.TotalIncomeAmount);
             Assert.Equal(1000m, vm.NeedsAvailable);
@@ -555,7 +556,8 @@ public class BudgetAllocationPanelVMTests
                 TagId: 1,
                 DeductedOn: new DateTime(2026, 4, 10),
                 Notes: string.Empty,
-                IsForDeletion: false);
+                IsForDeletion: false,
+                ParentLogId: null);
 
             var after = before with
             {

@@ -61,7 +61,8 @@ public sealed class SpentAllowancePanelVMTests
                 TagId: 0,
                 DeductedOn: expenseLog.DeductedOn,
                 Notes: "groceries",
-                IsForDeletion: false))));
+                IsForDeletion: false,
+                ParentLogId: null))));
 
         Assert.Equal(0m, vm.TotalSpent);
         Assert.Equal(36.67m, vm.Allowance);

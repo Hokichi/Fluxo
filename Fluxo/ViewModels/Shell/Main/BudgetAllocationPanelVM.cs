@@ -1145,7 +1145,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             expenseLog.Expense?.ExpenseTag?.Id ?? 0,
             expenseLog.DeductedOn,
             expenseLog.Notes,
-            expenseLog.IsForDeletion);
+            expenseLog.IsForDeletion,
+            expenseLog.ParentLogId);
     }
 
     private ExpenseLogVM ToExpenseLogVm(ExpenseLogMemorySnapshot snapshot, ExpenseLogVM? existing)
@@ -1166,6 +1167,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
+            ParentLogId = snapshot.ParentLogId,
             Account = new AccountVM
             {
                 Id = snapshot.AccountId,

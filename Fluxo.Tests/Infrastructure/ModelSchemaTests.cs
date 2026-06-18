@@ -31,6 +31,13 @@ public sealed class ModelSchemaTests
         var expenseLog = model.FindEntityType(typeof(ExpenseLog))!;
         Assert.False(expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.IsNullable);
         Assert.Equal(false, expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.GetDefaultValue());
+        var parentLogId = expenseLog.FindProperty(nameof(ExpenseLog.ParentLogId));
+        Assert.NotNull(parentLogId);
+        Assert.True(parentLogId!.IsNullable);
+        Assert.Contains(expenseLog.GetForeignKeys(), foreignKey =>
+            foreignKey.Properties.Any(property => property.Name == nameof(ExpenseLog.ParentLogId)) &&
+            foreignKey.PrincipalEntityType.ClrType == typeof(ExpenseLog) &&
+            foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
 
         var incomeLog = model.FindEntityType(typeof(IncomeLog))!;
         Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsForDeletion))!.IsNullable);
@@ -97,11 +104,13 @@ public sealed class ModelSchemaTests
         var tagVm = new ExpenseTagVM { SpendingLimit = tag.SpendingLimit };
         Assert.Equal(250m, tagVm.SpendingLimit);
 
-        var expenseLog = new ExpenseLog { IsPinned = true };
-        var expenseLogDto = new ExpenseLogDto { IsPinned = expenseLog.IsPinned };
-        var expenseLogVm = new ExpenseLogVM { IsPinned = expenseLog.IsPinned };
+        var expenseLog = new ExpenseLog { IsPinned = true, ParentLogId = 10 };
+        var expenseLogDto = new ExpenseLogDto { IsPinned = expenseLog.IsPinned, ParentLogId = expenseLog.ParentLogId };
+        var expenseLogVm = new ExpenseLogVM { IsPinned = expenseLog.IsPinned, ParentLogId = expenseLogDto.ParentLogId };
         Assert.True(expenseLogDto.IsPinned);
         Assert.True(expenseLogVm.IsPinned);
+        Assert.Equal(10, expenseLogDto.ParentLogId);
+        Assert.Equal(10, expenseLogVm.ParentLogId);
 
         var incomeLog = new IncomeLog { IsForDeletion = true, IsPinned = true };
         var incomeLogDto = new IncomeLogDto { IsForDeletion = incomeLog.IsForDeletion, IsPinned = incomeLog.IsPinned };
