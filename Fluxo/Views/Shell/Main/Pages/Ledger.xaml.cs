@@ -1,7 +1,9 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
@@ -74,6 +76,32 @@ public partial class Ledger : UserControl
             return;
 
         _ = viewModel.RemoveTransactionCommand.ExecuteAsync(transaction);
+    }
+
+    private void OnLedgerRowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel ||
+            !transaction.HasChildTransactions ||
+            IsInteractiveLedgerRowElement(e.OriginalSource as DependencyObject))
+        {
+            return;
+        }
+
+        viewModel.ToggleChildTransactionsCommand.Execute(transaction);
+    }
+
+    private static bool IsInteractiveLedgerRowElement(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is TextBox or ButtonBase or CheckBox or ComboBox or ListBox or Popup)
+                return true;
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 
     private void OnFilterOptionPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

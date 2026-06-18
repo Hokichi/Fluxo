@@ -435,12 +435,14 @@
             <WrapPanel />
         </ItemsPanelTemplate>
 
-        <DataTemplate x:Key="LedgerRowTemplate">
+        <DataTemplate x:Key="LedgerChildRowTemplate">
             <Border
-                x:Name="RowRoot"
                 MinHeight="48"
                 Padding="0"
                 Background="Transparent">
+                <Border.RenderTransform>
+                    <TranslateTransform />
+                </Border.RenderTransform>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4" />
@@ -452,24 +454,6 @@
                         <ColumnDefinition Width="130" />
                         <ColumnDefinition Width="0.5*" />
                     </Grid.ColumnDefinitions>
-
-                    <Border
-                        x:Name="RowSeparator"
-                        Grid.ColumnSpan="8"
-                        Height="1"
-                        VerticalAlignment="Bottom"
-                        Background="{StaticResource Brush.Border.Subtle}">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsLastVisibleInGroup}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
 
                     <Border
                         Grid.Column="0"
@@ -545,15 +529,6 @@
                             </Border.Style>
                         </Border>
                     </StackPanel>
-
-                    <CheckBox
-                        Grid.Column="3"
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Center"
-                        Click="OnBatchSelectionCheckBoxClick"
-                        IsChecked="{Binding IsSelectedForBatch, Mode=TwoWay}"
-                        Style="{StaticResource ItemCheckBoxStyle}"
-                        Visibility="{Binding DataContext.IsSelectionModeEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <Grid
                         Grid.Column="4"
@@ -664,54 +639,6 @@
                         Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-                    <Border
-                        x:Name="RowActions"
-                        Grid.Column="7"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Background="Transparent">
-                        <StackPanel Margin="0,0,8,0" Orientation="Horizontal">
-                            <customControls:BalloonButton
-                                Width="30"
-                                Height="30"
-                                Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}"
-                                IconSize="12">
-                                <customControls:BalloonButton.Style>
-                                    <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
-                                        <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
-                                        <Setter Property="ToolTip" Value="Edit" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                                                <Setter Property="ButtonIcon" Value="{StaticResource Check}" />
-                                                <Setter Property="ToolTip" Value="Save" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </customControls:BalloonButton.Style>
-                            </customControls:BalloonButton>
-                            <customControls:BalloonButton
-                                Width="30"
-                                Height="30"
-                                ButtonIcon="{StaticResource Delete}"
-                                Click="OnRemoveTransactionClick"
-                                CommandParameter="{Binding}"
-                                HoveredBackground="{StaticResource Brush.Danger}"
-                                IconSize="12"
-                                IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
-                                Style="{StaticResource HeaderButtonStyle}" />
-                        </StackPanel>
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="IsEnabled" Value="True" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding DataContext.IsSelectionModeEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
                 </Grid>
                 <Border.Style>
                     <Style TargetType="Border">
@@ -730,6 +657,334 @@
                     </Style>
                 </Border.Style>
             </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LedgerRowTemplate">
+            <StackPanel>
+                <Border
+                    x:Name="RowRoot"
+                    MinHeight="48"
+                    Padding="0"
+                    Background="Transparent"
+                    PreviewMouseLeftButtonDown="OnLedgerRowPreviewMouseLeftButtonDown">
+                    <Border.RenderTransform>
+                        <TranslateTransform />
+                    </Border.RenderTransform>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="1.5*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="130" />
+                            <ColumnDefinition Width="0.5*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                            x:Name="RowSeparator"
+                            Grid.ColumnSpan="8"
+                            Height="1"
+                            VerticalAlignment="Bottom"
+                            Background="{StaticResource Brush.Border.Subtle}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLastVisibleInGroup}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+
+                        <Border
+                            Grid.Column="0"
+                            Margin="0,8"
+                            CornerRadius="0,4,4,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Category.Needs}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CategoryLabel}" Value="Wants">
+                                            <Setter Property="Background" Value="{StaticResource Brush.Category.Wants}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding CategoryLabel}" Value="Invest">
+                                            <Setter Property="Background" Value="{StaticResource Brush.Category.Investments}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+
+                        <StackPanel
+                            Grid.Column="2"
+                            Margin="0,8"
+                            Orientation="Horizontal">
+                            <TextBox
+                                MinWidth="120"
+                                VerticalContentAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="13"
+                                Style="{StaticResource LedgerEditableTextBoxStyle}"
+                                Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Border
+                                Margin="8,4,0,0"
+                                Padding="8,3"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource Brush.Background.Hover}"
+                                CornerRadius="4">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="9"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="GOAL" />
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsGoal}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                            <Border
+                                Margin="6,0,0,0"
+                                Padding="5,1"
+                                Background="#FFEBD2"
+                                CornerRadius="4">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="9"
+                                    Foreground="#7A4A00"
+                                    Text="RECURRING" />
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRecurring}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                        </StackPanel>
+
+                        <CheckBox
+                            Grid.Column="3"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="OnBatchSelectionCheckBoxClick"
+                            IsChecked="{Binding IsSelectedForBatch, Mode=TwoWay}"
+                            Style="{StaticResource ItemCheckBoxStyle}"
+                            Visibility="{Binding DataContext.IsSelectionModeEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                        <Grid
+                            Grid.Column="4"
+                            MaxWidth="160"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                            <Border
+                                x:Name="LedgerTransactionTagBadge"
+                                Padding="8,2"
+                                Background="{Binding TagHexCode}"
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                PreviewMouseLeftButtonDown="OnTransactionTagPreviewMouseLeftButtonDown">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="11"
+                                    Text="{Binding TagName}">
+                                    <TextBlock.Foreground>
+                                        <Binding
+                                            Converter="{StaticResource ForegroundForBackgroundBrushConverter}"
+                                            ConverterParameter="{StaticResource Brush.Text.Primary}"
+                                            ElementName="LedgerTransactionTagBadge"
+                                            Path="Background" />
+                                    </TextBlock.Foreground>
+                                </TextBlock>
+                            </Border>
+
+                            <Popup
+                                x:Name="LedgerEditTagPopup"
+                                AllowsTransparency="True"
+                                IsOpen="{Binding IsTagPopupOpen, Mode=TwoWay}"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding ElementName=LedgerTransactionTagBadge}"
+                                PopupAnimation="Fade"
+                                StaysOpen="False"
+                                VerticalOffset="8">
+                                <Border
+                                    MaxWidth="360"
+                                    Padding="12"
+                                    Background="{StaticResource Brush.Background.Elevated}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                    <StackPanel>
+                                        <TextBlock
+                                            Margin="0,0,0,10"
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="12"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            Text="More Tags" />
+                                        <ListBox
+                                            ItemContainerStyle="{StaticResource LedgerEditTagListBoxItemStyle}"
+                                            ItemTemplate="{StaticResource LedgerEditTagTemplate}"
+                                            ItemsPanel="{StaticResource LedgerEditTagItemsPanelTemplate}"
+                                            ItemsSource="{Binding DataContext.EditableTags, ElementName=LedgerRoot}"
+                                            SelectionChanged="OnEditTagSelectionChanged"
+                                            Style="{StaticResource LedgerEditTagListBoxStyle}" />
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+                        </Grid>
+
+                        <Border
+                            Grid.Column="5"
+                            MaxWidth="180"
+                            Padding="8,3"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{StaticResource Brush.Background.Hover}"
+                            CornerRadius="8"
+                            Cursor="Hand"
+                            PreviewMouseLeftButtonDown="OnTransactionAccountPreviewMouseLeftButtonDown">
+                            <TextBlock
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="11"
+                                Foreground="{StaticResource Brush.Mint}"
+                                Text="{Binding AccountName}" />
+                        </Border>
+
+                        <TextBlock
+                            Grid.Column="6"
+                            Margin="0,8,8,8"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Text="{Binding SignedAmount, StringFormat={}{0:+#,##0;-#,##0;$0}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                    <Setter Property="Visibility" Value="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Kind}" Value="{x:Static main:LedgerTransactionKind.Income}">
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <customControls:MoneyTextBox
+                            Grid.Column="6"
+                            Margin="0,8,8,8"
+                            VerticalContentAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
+                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
+                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                        <Border
+                            x:Name="RowActions"
+                            Grid.Column="7"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Background="Transparent">
+                            <StackPanel Margin="0,0,8,0" Orientation="Horizontal">
+                                <customControls:BalloonButton
+                                    Width="30"
+                                    Height="30"
+                                    Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    IconSize="12">
+                                    <customControls:BalloonButton.Style>
+                                        <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
+                                            <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
+                                            <Setter Property="ToolTip" Value="Edit" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                    <Setter Property="ButtonIcon" Value="{StaticResource Check}" />
+                                                    <Setter Property="ToolTip" Value="Save" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </customControls:BalloonButton.Style>
+                                </customControls:BalloonButton>
+                                <customControls:BalloonButton
+                                    Width="30"
+                                    Height="30"
+                                    ButtonIcon="{StaticResource Delete}"
+                                    Click="OnRemoveTransactionClick"
+                                    CommandParameter="{Binding}"
+                                    HoveredBackground="{StaticResource Brush.Danger}"
+                                    IconSize="12"
+                                    IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
+                                    Style="{StaticResource HeaderButtonStyle}" />
+                            </StackPanel>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsSelectionModeEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                    </Grid>
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="IsHitTestVisible" Value="True" />
+                            <Setter Property="Opacity" Value="1" />
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation
+                                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                    To="3"
+                                                    Duration="0:0:0.12" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation
+                                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                    To="0"
+                                                    Duration="0:0:0.12" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.ExitActions>
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </Trigger>
+                                <DataTrigger Binding="{Binding IsDisabledByAnotherEdit}" Value="True">
+                                    <Setter Property="IsHitTestVisible" Value="False" />
+                                    <Setter Property="Opacity" Value="0.4" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
+                <ItemsControl
+                    Margin="18,0,0,0"
+                    ItemTemplate="{StaticResource LedgerChildRowTemplate}"
+                    ItemsSource="{Binding ChildTransactions}"
+                    Visibility="{Binding IsChildrenExpanded, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </StackPanel>
         </DataTemplate>
 
         <Style x:Key="LedgerGroupItemStyle" TargetType="GroupItem">

@@ -221,6 +221,15 @@ public partial class LedgerVM : ObservableRecipient,
     }
 
     [RelayCommand]
+    private void ToggleChildTransactions(LedgerTransactionItemVM? transaction)
+    {
+        if (transaction is null || !transaction.HasChildTransactions || transaction.IsEditing)
+            return;
+
+        transaction.IsChildrenExpanded = !transaction.IsChildrenExpanded;
+    }
+
+    [RelayCommand]
     private async Task EditTransactionAsync(LedgerTransactionItemVM? transaction)
     {
         if (transaction is null || transaction.IsGoal)
@@ -348,8 +357,14 @@ public partial class LedgerVM : ObservableRecipient,
 
     private async Task ReloadPeriodAsync(CancellationToken cancellationToken)
     {
-        var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
-            await _expenseLogService.GetAllAsync(cancellationToken));
+        var expenseLogDtos = (await _expenseLogService.GetAllAsync(cancellationToken)).ToList();
+        var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(expenseLogDtos).ToList();
+        for (var i = 0; i < expenseLogs.Count && i < expenseLogDtos.Count; i++)
+        {
+            expenseLogs[i].Id = expenseLogDtos[i].Id;
+            expenseLogs[i].ParentLogId = expenseLogDtos[i].ParentLogId;
+        }
+
         var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
         var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
@@ -359,10 +374,36 @@ public partial class LedgerVM : ObservableRecipient,
         EditingTransaction = null;
         RebuildFilters(accounts, tags);
 
-        var projected = expenseLogs
+        var activeExpenseLogs = expenseLogs
             .Where(log => !log.IsForDeletion)
+            .ToList();
+        var childExpenseRowsByParentId = activeExpenseLogs
+            .Where(log => log.ParentLogId is not null)
+            .GroupBy(log => log.ParentLogId!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .OrderByDescending(log => log.DeductedOn)
+                    .ThenBy(log => log.Expense?.Name ?? "Expense", StringComparer.OrdinalIgnoreCase)
+                    .Select(log => ProjectExpense(log, isChildTransaction: true))
+                    .ToList());
+
+        var projectedExpenses = activeExpenseLogs
+            .Where(log => log.ParentLogId is null)
             .Where(IsInSelectedRange)
-            .Select(ProjectExpense)
+            .Select(log => ProjectExpense(log))
+            .ToList();
+        foreach (var expense in projectedExpenses)
+        {
+            if (!childExpenseRowsByParentId.TryGetValue(expense.Id, out var childExpenses))
+                continue;
+
+            foreach (var childExpense in childExpenses)
+                expense.ChildTransactions.Add(childExpense);
+            expense.RefreshChildTransactionState();
+        }
+
+        var projected = projectedExpenses
             .Concat(incomeLogs.Where(IsInSelectedRange).Select(ProjectIncome))
             .OrderByDescending(item => item.OccurredOn)
             .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
@@ -940,7 +981,7 @@ public partial class LedgerVM : ObservableRecipient,
                log.AddedOn.Date >= range.From.Date && log.AddedOn.Date <= range.To.Date;
     }
 
-    private static LedgerTransactionItemVM ProjectExpense(ExpenseLogVM log)
+    private static LedgerTransactionItemVM ProjectExpense(ExpenseLogVM log, bool isChildTransaction = false)
     {
         var tagName = log.Expense?.ExpenseTag?.Name ?? string.Empty;
         return new LedgerTransactionItemVM
@@ -951,6 +992,8 @@ public partial class LedgerVM : ObservableRecipient,
             Amount = log.Amount,
             OccurredOn = log.DeductedOn,
             Category = log.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
+            ParentLogId = log.ParentLogId,
+            IsChildTransaction = isChildTransaction,
             AccountId = log.Account?.Id ?? 0,
             AccountName = log.Account?.Name ?? string.Empty,
             TagId = log.Expense?.ExpenseTag?.Id ?? 0,

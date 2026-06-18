@@ -363,8 +363,24 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Property=\"IsHitTestVisible\" Value=\"False\"", rowTemplateSection);
         Assert.Contains("CommandParameter=\"{Binding}\"", rowTemplateSection);
         Assert.Contains("IsEnabled=\"{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}\"", rowTemplateSection);
+        Assert.Contains("Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.X)\"", rowTemplateSection);
+        Assert.Contains("To=\"3\"", rowTemplateSection);
         Assert.Contains("FluxoMessageBox.Show", ledgerCodeBehind);
         Assert.DoesNotContain("= MessageBox.Show", ledgerCodeBehind);
+    }
+
+    [Fact]
+    public void Ledger_RowTemplateExpandsChildTransactionsUnderParentRows()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
+        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
+
+        Assert.Contains("PreviewMouseLeftButtonDown=\"OnLedgerRowPreviewMouseLeftButtonDown\"", rowTemplateSection);
+        Assert.Contains("ItemsSource=\"{Binding ChildTransactions}\"", rowTemplateSection);
+        Assert.Contains("Visibility=\"{Binding IsChildrenExpanded, Converter={StaticResource BoolToVisibilityConverter}}\"", rowTemplateSection);
+        Assert.Contains("LedgerChildRowTemplate", rowTemplateSection);
+        Assert.Contains("ToggleChildTransactionsCommand", ledgerCodeBehind);
     }
 
     [Fact]

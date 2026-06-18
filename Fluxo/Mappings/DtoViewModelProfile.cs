@@ -9,7 +9,10 @@ public sealed class DtoViewModelProfile : Profile
     public DtoViewModelProfile()
     {
         CreateMap<ExpenseDto, ExpenseVM>().ReverseMap();
-        CreateMap<ExpenseLogDto, ExpenseLogVM>().ReverseMap();
+        CreateMap<ExpenseLogDto, ExpenseLogVM>()
+            .ForMember(dest => dest.ParentLogId, opt => opt.MapFrom(src => src.ParentLogId))
+            .ReverseMap()
+            .ForMember(dest => dest.ParentLogId, opt => opt.MapFrom(src => src.ParentLogId));
         CreateMap<IncomeLogDto, IncomeLogVM>().ReverseMap();
         CreateMap<ExpenseTagDto, ExpenseTagVM>().ReverseMap();
         CreateMap<SavingGoalDto, SavingGoalVM>().ReverseMap();

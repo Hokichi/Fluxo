@@ -419,6 +419,50 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void LoadAsync_HidesChildExpenseLogsInsideParentRowsAndExcludesThemFromSummary()
+    {
+        RunInSta(() =>
+        {
+            var expenseLogs = CreateExpenseLogs()
+                .Concat(
+                [
+                    CreateExpenseLog(
+                        4,
+                        "Grocery produce split",
+                        12.25m,
+                        new DateTime(2026, 6, 3, 10, 0, 0),
+                        ExpenseCategory.Needs,
+                        new ExpenseTagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" },
+                        new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true },
+                        parentLogId: 1)
+                ])
+                .ToList();
+            Assert.Equal(1, expenseLogs.Single(log => log.Id == 4).ParentLogId);
+            var expenseLogService = Substitute.For<IExpenseLogService>();
+            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(expenseLogs);
+            var vm = CreateVm(expenseLogService: expenseLogService);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+
+            var items = GetItems(vm.TransactionsView);
+            Assert.Equal(4, items.Count);
+            Assert.DoesNotContain(items, item => item.Name == "Grocery produce split");
+            var grocery = items.Single(item => item.Name == "FreshMart Grocery");
+            Assert.Equal(1, grocery.Id);
+            var child = Assert.Single(grocery.ChildTransactions);
+            Assert.True(grocery.HasChildTransactions);
+            Assert.True(child.IsChildTransaction);
+            Assert.Equal(1, child.ParentLogId);
+            Assert.Equal(83.49m, vm.SpentAmount);
+
+            vm.ToggleChildTransactionsCommand.Execute(grocery);
+
+            Assert.True(grocery.IsChildrenExpanded);
+        });
+    }
+
+    [Fact]
     public void EditTransactionCommand_TogglesThenCommitsExpenseEdit()
     {
         RunInSta(() =>
@@ -681,17 +725,26 @@ public sealed class LedgerVMTests
         IUnitOfWork? unitOfWork = null,
         IMessenger? messenger = null)
     {
-        expenseLogService ??= Substitute.For<IExpenseLogService>();
-        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(CreateExpenseLogs());
+        if (expenseLogService is null)
+        {
+            expenseLogService = Substitute.For<IExpenseLogService>();
+            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(CreateExpenseLogs());
+        }
 
-        accountService ??= Substitute.For<IAccountService>();
-        accountService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(CreateAccounts());
+        if (accountService is null)
+        {
+            accountService = Substitute.For<IAccountService>();
+            accountService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(CreateAccounts());
+        }
 
-        tagService ??= Substitute.For<ITagService>();
-        tagService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(CreateTags());
+        if (tagService is null)
+        {
+            tagService = Substitute.For<ITagService>();
+            tagService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(CreateTags());
+        }
 
         unitOfWork ??= CreateUnitOfWork();
 
@@ -896,7 +949,8 @@ public sealed class LedgerVMTests
         ExpenseCategory category,
         ExpenseTagDto tag,
         AccountDto source,
-        string notes = "")
+        string notes = "",
+        int? parentLogId = null)
     {
         return new ExpenseLogDto
         {
@@ -904,6 +958,7 @@ public sealed class LedgerVMTests
             Amount = amount,
             DeductedOn = deductedOn,
             Notes = notes,
+            ParentLogId = parentLogId,
             Expense = new ExpenseDto
             {
                 Id = id,
