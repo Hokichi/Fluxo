@@ -6,30 +6,30 @@ namespace Fluxo.Tests.Views.Popups.Settings;
 public sealed class SettingsSourcesPinTerminologyTests
 {
     [Fact]
-    public void SpendingSourceSettings_UsesPinUnpinActionNames()
+    public void AccountSettings_UsesPinUnpinActionNames()
     {
         var root = GetRepositoryRootPath();
         var xaml = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsSourcesTab.xaml"));
         var codeBehind = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsSourcesTab.xaml.cs"));
         var viewModel = File.ReadAllText(Path.Combine(root, "Fluxo", "ViewModels", "Popups", "Settings", "SettingsSourcesTabVM.cs"));
 
-        Assert.Contains("SpendingSources:Unpin", xaml);
-        Assert.Contains("SpendingSources:Pin", xaml);
-        Assert.DoesNotContain("SpendingSources:Hide", xaml);
-        Assert.DoesNotContain("SpendingSources:Unhide", xaml);
+        Assert.Contains("Accounts:Unpin", xaml);
+        Assert.Contains("Accounts:Pin", xaml);
+        Assert.DoesNotContain("Accounts:Hide", xaml);
+        Assert.DoesNotContain("Accounts:Unhide", xaml);
         Assert.DoesNotContain("SettingsBatchAction.Hide", codeBehind);
         Assert.DoesNotContain("SettingsBatchAction.Unhide", codeBehind);
-        Assert.DoesNotContain("ShowSpendingSourceHideActionButton", viewModel);
-        Assert.DoesNotContain("ShowSpendingSourceUnhideActionButton", viewModel);
+        Assert.DoesNotContain("ShowAccountHideActionButton", viewModel);
+        Assert.DoesNotContain("ShowAccountUnhideActionButton", viewModel);
     }
 
     [Fact]
-    public void SpendingSourceDetail_UsesPinUnpinActionNames()
+    public void AccountDetail_UsesPinUnpinActionNames()
     {
         var root = GetRepositoryRootPath();
-        var xaml = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml"));
-        var codeBehind = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml.cs"));
-        var viewModel = File.ReadAllText(Path.Combine(root, "Fluxo", "ViewModels", "Popups", "SpendingSourceDetailVM.cs"));
+        var xaml = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "AccountDetailPopup.xaml"));
+        var codeBehind = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "AccountDetailPopup.xaml.cs"));
+        var viewModel = File.ReadAllText(Path.Combine(root, "Fluxo", "ViewModels", "Popups", "AccountDetailVM.cs"));
 
         Assert.Contains("OnPinOrUnpinButtonClick", xaml);
         Assert.Contains("CanPinOrUnpin", xaml);

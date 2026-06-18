@@ -4,7 +4,7 @@ public enum DataManagementEntityKind
 {
     Expenses,
     Incomes,
-    SpendingSources,
+    Accounts,
     Tags,
     Goals,
     RecurringTransactions,

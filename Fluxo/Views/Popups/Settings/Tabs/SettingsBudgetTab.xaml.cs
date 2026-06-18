@@ -27,7 +27,7 @@ public partial class SettingsBudgetTab : UserControl
 
     private void OnSpendingAmountGateActionClick(object sender, RoutedEventArgs e)
     {
-        _viewModel?.OpenAddSpendingSource();
+        _viewModel?.OpenAddAccount();
     }
 
     private void OnAllocationAdjustButtonClick(object sender, RoutedEventArgs e)

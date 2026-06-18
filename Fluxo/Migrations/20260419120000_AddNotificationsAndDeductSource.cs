@@ -13,7 +13,7 @@ namespace Fluxo.Migrations
         {
             migrationBuilder.AddColumn<int>(
                 name: "DeductSource",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "INTEGER",
                 nullable: true);
 
@@ -44,7 +44,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.DropColumn(
                 name: "DeductSource",
-                table: "SpendingSources");
+                table: "Accounts");
         }
     }
 }

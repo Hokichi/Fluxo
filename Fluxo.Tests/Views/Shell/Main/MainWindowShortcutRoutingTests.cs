@@ -146,11 +146,11 @@ public sealed class MainWindowShortcutRoutingTests
         var sourcesBranch = Slice(
             source,
             "if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)",
-            "if (MainWindowShortcutMatcher.IsOpenAddSpendingSourceShortcut(e.Key, Keyboard.Modifiers))");
+            "if (MainWindowShortcutMatcher.IsOpenAddAccountShortcut(e.Key, Keyboard.Modifiers))");
 
         Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", sourcesBranch);
         Assert.DoesNotContain("IsSufficientFundsActionGateLocked()", sourcesBranch);
-        Assert.Contains("OpenSpendingSourcesListPopup();", sourcesBranch);
+        Assert.Contains("OpenAccountsListPopup();", sourcesBranch);
     }
 
     [Fact]
@@ -186,8 +186,8 @@ public sealed class MainWindowShortcutRoutingTests
     {
         var source = ReadMainWindowSource();
 
-        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAddSpendingSourceShortcut(e.Key, Keyboard.Modifiers))", source);
-        Assert.Contains("OpenAddSpendingSourcePopup();", source);
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAddAccountShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenAddAccountPopup();", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAddSavingGoalShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("OpenAddSavingGoalPopup();", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenDataManagementShortcut(e.Key, Keyboard.Modifiers))", source);
@@ -290,11 +290,11 @@ public sealed class MainWindowShortcutRoutingTests
 
         var sourcesMethod = Slice(
             source,
-            "public void OpenSpendingSourcesListPopup()",
-            "public void OpenAddSpendingSourcePopup()");
+            "public void OpenAccountsListPopup()",
+            "public void OpenAddAccountPopup()");
         var addSourceMethod = Slice(
             source,
-            "public void OpenAddSpendingSourcePopup()",
+            "public void OpenAddAccountPopup()",
             "public void OpenAddSavingGoalPopup()");
 
         Assert.DoesNotContain("IsDashboardSpendingAmountGateLocked()", sourcesMethod);
@@ -315,7 +315,7 @@ public sealed class MainWindowShortcutRoutingTests
             source,
             "private void OnQuickAddButtonClick(object sender, RoutedEventArgs e)",
             "private void OnHeaderMenuButtonMouseEnter(object sender, MouseEventArgs e)"));
-        Assert.Contains("private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)", source);
+        Assert.Contains("private void OnAccountsButtonClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private async void OnAnalyticsNavigationClick(object sender, RoutedEventArgs e)", source);
         Assert.Contains("private async Task NavigateToMainPageAsync(MainPage page)", source);
         Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);
@@ -378,8 +378,8 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("public void OpenQuickAddPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)", source);
         Assert.Contains("public void OpenAddNewTransactionPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)", source);
         Assert.Contains("public void OpenRecurringAddNewTransactionPopup()", source);
-        Assert.Contains("public void OpenSpendingSourcesListPopup()", source);
-        Assert.Contains("public void OpenAddSpendingSourcePopup()", source);
+        Assert.Contains("public void OpenAccountsListPopup()", source);
+        Assert.Contains("public void OpenAddAccountPopup()", source);
         Assert.Contains("public void OpenAnalyticsPopup()", source);
         Assert.Contains("private async Task OpenAnalyticsPopupAsync()", source);
         Assert.Contains("if (IsSufficientFundsActionGateLocked())", source);

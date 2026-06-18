@@ -12,9 +12,9 @@ public partial class QuickAddPopup : BasePopup
         DataContext = mainViewModel;
     }
 
-    private void OnNewSpendingSourceClick(object sender, RoutedEventArgs e)
+    private void OnNewAccountClick(object sender, RoutedEventArgs e)
     {
-        OpenSelectedPopup(mainWindow => mainWindow.OpenAddSpendingSourcePopup());
+        OpenSelectedPopup(mainWindow => mainWindow.OpenAddAccountPopup());
     }
 
     private void OnNewTransactionClick(object sender, RoutedEventArgs e)
@@ -42,9 +42,9 @@ public partial class QuickAddPopup : BasePopup
         OpenSelectedPopup(mainWindow => mainWindow.OpenRecurringAddNewTransactionPopup());
     }
 
-    private void OnViewSpendingSourcesClick(object sender, RoutedEventArgs e)
+    private void OnViewAccountsClick(object sender, RoutedEventArgs e)
     {
-        OpenSelectedPopup(mainWindow => mainWindow.OpenSpendingSourcesListPopup());
+        OpenSelectedPopup(mainWindow => mainWindow.OpenAccountsListPopup());
     }
 
     private void OnStartPlanningModeClick(object sender, RoutedEventArgs e)

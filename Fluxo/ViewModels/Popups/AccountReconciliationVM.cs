@@ -21,15 +21,15 @@ public partial class AccountReconciliationVM : ObservableObject
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isSaving;
-    [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty] private AccountVM? _selectedAccount;
 
     public AccountReconciliationVM(
-        IEnumerable<SpendingSourceVM> spendingSources,
-        SpendingSourceVM promptSource,
+        IEnumerable<AccountVM> accounts,
+        AccountVM promptSource,
         IAppDataService appData,
         Func<Task> reloadCurrentDataAsync)
     {
-        ArgumentNullException.ThrowIfNull(spendingSources);
+        ArgumentNullException.ThrowIfNull(accounts);
         ArgumentNullException.ThrowIfNull(promptSource);
         ArgumentNullException.ThrowIfNull(appData);
         ArgumentNullException.ThrowIfNull(reloadCurrentDataAsync);
@@ -37,32 +37,32 @@ public partial class AccountReconciliationVM : ObservableObject
         _appData = appData;
         _reloadCurrentDataAsync = reloadCurrentDataAsync;
 
-        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
-            SpendingSources,
-            nameof(SpendingSourceVM.TypeDisplayName),
-            nameof(SpendingSourceVM.SpendingSourceType),
-            nameof(SpendingSourceVM.Name));
+        AccountsView = AccountComboBoxViewFactory.CreateGroupedByTypeThenName(
+            Accounts,
+            nameof(AccountVM.TypeDisplayName),
+            nameof(AccountVM.AccountType),
+            nameof(AccountVM.Name));
 
-        foreach (var source in spendingSources
+        foreach (var source in accounts
                      .Where(CanReconcile)
-                     .OrderBy(source => source.SpendingSourceType)
+                     .OrderBy(source => source.AccountType)
                      .ThenBy(source => source.Name))
         {
-            SpendingSources.Add(source);
+            Accounts.Add(source);
         }
 
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == promptSource.Id) ??
-                                 SpendingSources.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault(source => source.Id == promptSource.Id) ??
+                                 Accounts.FirstOrDefault();
     }
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
+    public ObservableCollection<AccountVM> Accounts { get; } = [];
 
-    public ICollectionView SpendingSourcesView { get; }
+    public ICollectionView AccountsView { get; }
 
-    public static bool CanReconcile(SpendingSourceVM source)
+    public static bool CanReconcile(AccountVM source)
     {
         ArgumentNullException.ThrowIfNull(source);
-        return source.SpendingSourceType is not (SpendingSourceType.BNPL or SpendingSourceType.Saving);
+        return source.AccountType is not (AccountType.BNPL or AccountType.Saving);
     }
 
     public async Task<AccountReconciliationSaveResult> SaveAsync(CancellationToken cancellationToken = default)
@@ -77,20 +77,20 @@ public partial class AccountReconciliationVM : ObservableObject
 
         try
         {
-            var spendingSource = await _appData.GetSpendingSourceByIdAsync(
-                input.SpendingSourceId,
+            var account = await _appData.GetAccountByIdAsync(
+                input.AccountId,
                 cancellationToken);
-            if (spendingSource is null)
-                return AccountReconciliationSaveResult.Failure("Please choose a valid spending source.");
+            if (account is null)
+                return AccountReconciliationSaveResult.Failure("Please choose a valid account.");
 
             var reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
-            var expenseName = $"{spendingSource.Name} - {SystemExpenseTags.BudgetReconciliationName}";
+            var expenseName = $"{account.Name} - {SystemExpenseTags.BudgetReconciliationName}";
             var expense = new Expense
             {
                 Name = expenseName,
                 Amount = input.Amount,
                 ExpenseCategory = ExpenseCategory.Needs,
-                SpendingSourceId = spendingSource.Id,
+                AccountId = account.Id,
                 ExpenseTagId = reconciliationTag.Id
             };
             if (reconciliationTag.Id <= 0)
@@ -99,7 +99,7 @@ public partial class AccountReconciliationVM : ObservableObject
             var expenseLog = new ExpenseLog
             {
                 Expense = expense,
-                SpendingSourceId = spendingSource.Id,
+                AccountId = account.Id,
                 Amount = input.Amount,
                 DeductedOn = DateTime.Today,
                 Notes = string.Empty,
@@ -108,12 +108,12 @@ public partial class AccountReconciliationVM : ObservableObject
 
             await _appData.AddExpenseAsync(expense, cancellationToken);
             await _appData.AddExpenseLogAsync(expenseLog, cancellationToken);
-            ApplyExpenseToSpendingSource(spendingSource, input.Amount);
-            _appData.UpdateSpendingSource(spendingSource);
+            ApplyExpenseToAccount(account, input.Amount);
+            _appData.UpdateAccount(account);
 
             await _appData.SaveChangesAsync(cancellationToken);
 
-            var createdExpenseLog = CreateExpenseLogViewModel(expense, expenseLog, spendingSource, reconciliationTag);
+            var createdExpenseLog = CreateExpenseLogViewModel(expense, expenseLog, account, reconciliationTag);
             WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
                 new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
                     expense.Id,
@@ -121,7 +121,7 @@ public partial class AccountReconciliationVM : ObservableObject
                     expense.Name,
                     expenseLog.Amount,
                     expense.ExpenseCategory,
-                    spendingSource.Id,
+                    account.Id,
                     reconciliationTag.Id,
                     expenseLog.DeductedOn,
                     expenseLog.Notes,
@@ -186,30 +186,30 @@ public partial class AccountReconciliationVM : ObservableObject
             return false;
         }
 
-        if (SelectedSpendingSource is null)
+        if (SelectedAccount is null)
         {
-            validationMessage = "Please choose a spending source.";
+            validationMessage = "Please choose a account.";
             return false;
         }
 
-        input = new AccountReconciliationInput(AmountText, SelectedSpendingSource.Id);
+        input = new AccountReconciliationInput(AmountText, SelectedAccount.Id);
         return true;
     }
 
     private static ExpenseLogVM CreateExpenseLogViewModel(
         Expense expense,
         ExpenseLog expenseLog,
-        SpendingSource spendingSource,
+        Account account,
         ExpenseTag reconciliationTag)
     {
-        var sourceVm = new SpendingSourceVM
+        var sourceVm = new AccountVM
         {
-            Id = spendingSource.Id,
-            Name = spendingSource.Name,
-            SpendingSourceType = spendingSource.SpendingSourceType,
-            Balance = spendingSource.Balance,
-            SpentAmount = spendingSource.SpentAmount,
-            IsEnabled = spendingSource.IsEnabled
+            Id = account.Id,
+            Name = account.Name,
+            AccountType = account.AccountType,
+            Balance = account.Balance,
+            SpentAmount = account.SpentAmount,
+            IsEnabled = account.IsEnabled
         };
         var tagVm = new ExpenseTagVM
         {
@@ -227,28 +227,28 @@ public partial class AccountReconciliationVM : ObservableObject
             DeductedOn = expenseLog.DeductedOn,
             Notes = expenseLog.Notes,
             IsForDeletion = expenseLog.IsForDeletion,
-            SpendingSource = sourceVm,
+            Account = sourceVm,
             Expense = new ExpenseVM
             {
                 Id = expense.Id,
                 Name = expense.Name,
                 Amount = expense.Amount,
                 ExpenseCategory = expense.ExpenseCategory,
-                SpendingSource = sourceVm,
+                Account = sourceVm,
                 ExpenseTag = tagVm
             }
         };
     }
 
-    private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount += amount;
+            account.SpentAmount += amount;
             return;
         }
 
-        spendingSource.Balance -= amount;
+        account.Balance -= amount;
     }
 
     public readonly record struct AccountReconciliationSaveResult(
@@ -267,5 +267,5 @@ public partial class AccountReconciliationVM : ObservableObject
         }
     }
 
-    private readonly record struct AccountReconciliationInput(decimal Amount, int SpendingSourceId);
+    private readonly record struct AccountReconciliationInput(decimal Amount, int AccountId);
 }

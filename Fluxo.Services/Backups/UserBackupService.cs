@@ -94,11 +94,11 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             var goalBackupIds = new Dictionary<int, int>();
             var expenseBackupIds = new Dictionary<int, int>();
 
-            if (selection.Includes(DataManagementEntityKind.SpendingSources))
+            if (selection.Includes(DataManagementEntityKind.Accounts))
             {
-                var sources = await appData.GetSpendingSourcesAsync(cancellationToken);
+                var sources = await appData.GetAccountsAsync(cancellationToken);
 
-                var nextBackupId = document.Entities.SpendingSources.Count + 1;
+                var nextBackupId = document.Entities.Accounts.Count + 1;
                 foreach (var source in sources)
                 {
                     sourceBackupIds[source.Id] = nextBackupId;
@@ -113,10 +113,10 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                         ? null
                         : mappedDeductBackupId;
 
-                    document.Entities.SpendingSources.Add(new BackupSpendingSource(
+                    document.Entities.Accounts.Add(new BackupAccount(
                         backupId,
                         source.Name,
-                        source.SpendingSourceType.ToString(),
+                        source.AccountType.ToString(),
                         source.AccountLimit,
                         source.MaximumSpending,
                         source.MinimumPayment,
@@ -181,15 +181,15 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         var document = await LoadDocumentAsync(filePath, cancellationToken);
         var conflicts = new List<UserBackupConflict>();
 
-        if (selection.Includes(DataManagementEntityKind.SpendingSources))
+        if (selection.Includes(DataManagementEntityKind.Accounts))
         {
-            var existing = (await appData.GetSpendingSourcesAsync(cancellationToken))
+            var existing = (await appData.GetAccountsAsync(cancellationToken))
                 .Select(source => source.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            conflicts.AddRange(document.Entities.SpendingSources
+            conflicts.AddRange(document.Entities.Accounts
                 .Where(source => existing.Contains(source.Name))
                 .Select(source => new UserBackupConflict(
-                    $"source:{source.BackupId}", DataManagementEntityKind.SpendingSources, source.Name)));
+                    $"source:{source.BackupId}", DataManagementEntityKind.Accounts, source.Name)));
         }
 
         if (selection.Includes(DataManagementEntityKind.Goals))
@@ -233,7 +233,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             var expenseIdMap = new Dictionary<int, int>();
 
             await AppendTagsAsync(document, selection, conflictDecisions, tagIdMap, cancellationToken);
-            await AppendSpendingSourcesAsync(document, selection, conflictDecisions, sourceIdMap, cancellationToken);
+            await AppendAccountsAsync(document, selection, conflictDecisions, sourceIdMap, cancellationToken);
             await AppendGoalsAsync(document, selection, conflictDecisions, goalIdMap, cancellationToken);
             await AppendExpensesAndLogsAsync(document, selection, sourceIdMap, tagIdMap, expenseIdMap, cancellationToken);
             await AppendIncomeLogsAsync(document, selection, sourceIdMap, cancellationToken);
@@ -281,7 +281,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             var overwriteConflictDecisions = new Dictionary<string, DataManagementConflictDecision>();
 
             await AppendTagsAsync(document, selection, overwriteConflictDecisions, tagIdMap, cancellationToken);
-            await AppendSpendingSourcesAsync(document, selection, overwriteConflictDecisions, sourceIdMap, cancellationToken);
+            await AppendAccountsAsync(document, selection, overwriteConflictDecisions, sourceIdMap, cancellationToken);
             await AppendGoalsAsync(document, selection, overwriteConflictDecisions, goalIdMap, cancellationToken);
             await AppendExpensesAndLogsAsync(document, selection, sourceIdMap, tagIdMap, expenseIdMap, cancellationToken);
             await AppendIncomeLogsAsync(document, selection, sourceIdMap, cancellationToken);
@@ -318,7 +318,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             selection.Includes(DataManagementEntityKind.RecurringTransactions) ||
             selection.Includes(DataManagementEntityKind.Tags) ||
             selection.Includes(DataManagementEntityKind.Goals) ||
-            selection.Includes(DataManagementEntityKind.SpendingSources);
+            selection.Includes(DataManagementEntityKind.Accounts);
 
         // Recurring transactions can depend on tags/goals/sources.
         // When any principal is selected for overwrite, clear recurring first to avoid FK conflicts.
@@ -327,7 +327,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
         var includeExpensesOrLogs =
             selection.Includes(DataManagementEntityKind.Expenses) ||
-            selection.Includes(DataManagementEntityKind.SpendingSources);
+            selection.Includes(DataManagementEntityKind.Accounts);
 
         // Spending source overwrite requires clearing dependent expenses/logs first.
         if (includeExpensesOrLogs)
@@ -337,11 +337,11 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         }
 
         if (selection.Includes(DataManagementEntityKind.Incomes) ||
-            selection.Includes(DataManagementEntityKind.SpendingSources))
+            selection.Includes(DataManagementEntityKind.Accounts))
             labels.Add("IncomeLogs");
 
-        if (selection.Includes(DataManagementEntityKind.SpendingSources))
-            labels.Add("SpendingSources");
+        if (selection.Includes(DataManagementEntityKind.Accounts))
+            labels.Add("Accounts");
 
         if (selection.Includes(DataManagementEntityKind.Goals))
             labels.Add("SavingGoals");
@@ -440,8 +440,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 case "IncomeLogs":
                     await RemoveIncomeLogsAsync(cancellationToken);
                     break;
-                case "SpendingSources":
-                    await RemoveSpendingSourcesAsync(cancellationToken);
+                case "Accounts":
+                    await RemoveAccountsAsync(cancellationToken);
                     break;
                 case "SavingGoals":
                     await RemoveSavingGoalsAsync(cancellationToken);
@@ -484,11 +484,11 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             appData.RemoveIncomeLog(log);
     }
 
-    private async Task RemoveSpendingSourcesAsync(CancellationToken cancellationToken)
+    private async Task RemoveAccountsAsync(CancellationToken cancellationToken)
     {
-        var sources = await appData.GetSpendingSourcesAsync(cancellationToken);
+        var sources = await appData.GetAccountsAsync(cancellationToken);
         foreach (var source in sources)
-            appData.RemoveSpendingSource(source);
+            appData.RemoveAccount(source);
     }
 
     private async Task RemoveSavingGoalsAsync(CancellationToken cancellationToken)
@@ -599,41 +599,41 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         }
     }
 
-    private async Task AppendSpendingSourcesAsync(
+    private async Task AppendAccountsAsync(
         FluxoUserBackupDocument document,
         UserBackupSelection selection,
         IReadOnlyDictionary<string, DataManagementConflictDecision> conflictDecisions,
         Dictionary<int, int> sourceIdMap,
         CancellationToken cancellationToken)
     {
-        if (!selection.Includes(DataManagementEntityKind.SpendingSources))
+        if (!selection.Includes(DataManagementEntityKind.Accounts))
             return;
 
-        var existingSources = await appData.GetSpendingSourcesAsync(cancellationToken);
+        var existingSources = await appData.GetAccountsAsync(cancellationToken);
         var existingByName = existingSources.ToDictionary(source => source.Name, StringComparer.OrdinalIgnoreCase);
-        var pendingDeductMappings = new List<(SpendingSource Source, int? DeductBackupId)>();
+        var pendingDeductMappings = new List<(Account Source, int? DeductBackupId)>();
 
-        foreach (var backupSource in document.Entities.SpendingSources)
+        foreach (var backupSource in document.Entities.Accounts)
         {
             if (existingByName.TryGetValue(backupSource.Name, out var existingSource))
             {
                 var decision = ResolveConflictDecision(
                     conflictDecisions,
                     $"source:{backupSource.BackupId}",
-                    DataManagementEntityKind.SpendingSources);
+                    DataManagementEntityKind.Accounts);
 
                 if (decision == DataManagementConflictDecision.Append)
                 {
                     existingSource.SpentAmount += backupSource.SpentAmount;
                     existingSource.Balance += backupSource.Balance;
-                    appData.UpdateSpendingSource(existingSource);
+                    appData.UpdateAccount(existingSource);
                     sourceIdMap[backupSource.BackupId] = existingSource.Id;
                     continue;
                 }
 
                 if (decision == DataManagementConflictDecision.Replace)
                 {
-                    existingSource.SpendingSourceType = ParseEnumValue<SpendingSourceType>(backupSource.SpendingSourceType, "spendingSourceType");
+                    existingSource.AccountType = ParseEnumValue<AccountType>(backupSource.AccountType, "accountType");
                     existingSource.AccountLimit = backupSource.AccountLimit;
                     existingSource.MaximumSpending = backupSource.MaximumSpending;
                     existingSource.MinimumPayment = backupSource.MinimumPayment;
@@ -645,7 +645,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                     existingSource.PinnedOnUI = backupSource.RestoredPinnedOnUI;
                     existingSource.IsEnabled = backupSource.IsEnabled;
                     existingSource.IsForDeletion = backupSource.IsForDeletion;
-                    appData.UpdateSpendingSource(existingSource);
+                    appData.UpdateAccount(existingSource);
                     pendingDeductMappings.Add((existingSource, backupSource.DeductSourceBackupId));
                 }
 
@@ -653,10 +653,10 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 continue;
             }
 
-            var insertedSource = new SpendingSource
+            var insertedSource = new Account
             {
                 Name = backupSource.Name,
-                SpendingSourceType = ParseEnumValue<SpendingSourceType>(backupSource.SpendingSourceType, "spendingSourceType"),
+                AccountType = ParseEnumValue<AccountType>(backupSource.AccountType, "accountType"),
                 AccountLimit = backupSource.AccountLimit,
                 MaximumSpending = backupSource.MaximumSpending,
                 MinimumPayment = backupSource.MinimumPayment,
@@ -670,7 +670,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 IsForDeletion = backupSource.IsForDeletion
             };
 
-            await appData.AddSpendingSourceAsync(insertedSource, cancellationToken);
+            await appData.AddAccountAsync(insertedSource, cancellationToken);
             sourceIdMap[backupSource.BackupId] = insertedSource.Id;
             existingByName[insertedSource.Name] = insertedSource;
             pendingDeductMappings.Add((insertedSource, backupSource.DeductSourceBackupId));
@@ -682,7 +682,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                                           sourceIdMap.TryGetValue(pending.DeductBackupId.Value, out var mappedDeductSourceId)
                 ? mappedDeductSourceId
                 : null;
-            appData.UpdateSpendingSource(pending.Source);
+            appData.UpdateAccount(pending.Source);
         }
     }
 
@@ -761,7 +761,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
         foreach (var backupExpense in document.Entities.Expenses)
         {
-            if (!sourceIdMap.TryGetValue(backupExpense.SpendingSourceBackupId, out var sourceId))
+            if (!sourceIdMap.TryGetValue(backupExpense.AccountBackupId, out var sourceId))
                 continue;
 
             if (!tagIdMap.TryGetValue(backupExpense.ExpenseTagBackupId, out var tagId) &&
@@ -773,7 +773,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
             var expense = new Expense
             {
-                SpendingSourceId = sourceId,
+                AccountId = sourceId,
                 ExpenseTagId = tagId,
                 Name = backupExpense.Name,
                 Amount = backupExpense.Amount,
@@ -787,7 +787,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         foreach (var backupExpenseLog in document.Entities.ExpenseLogs)
         {
             if (!expenseIdMap.TryGetValue(backupExpenseLog.ExpenseBackupId, out var expenseId) ||
-                !sourceIdMap.TryGetValue(backupExpenseLog.SpendingSourceBackupId, out var sourceId))
+                !sourceIdMap.TryGetValue(backupExpenseLog.AccountBackupId, out var sourceId))
             {
                 continue;
             }
@@ -795,7 +795,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             await appData.AddExpenseLogAsync(new ExpenseLog
             {
                 ExpenseId = expenseId,
-                SpendingSourceId = sourceId,
+                AccountId = sourceId,
                 Amount = backupExpenseLog.Amount,
                 DeductedOn = backupExpenseLog.DeductedOn,
                 Notes = backupExpenseLog.Notes,
@@ -816,12 +816,12 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
         foreach (var backupIncome in document.Entities.IncomeLogs)
         {
-            if (!sourceIdMap.TryGetValue(backupIncome.SpendingSourceBackupId, out var sourceId))
+            if (!sourceIdMap.TryGetValue(backupIncome.AccountBackupId, out var sourceId))
                 continue;
 
             await appData.AddIncomeLogAsync(new IncomeLog
             {
-                SpendingSourceId = sourceId,
+                AccountId = sourceId,
                 Name = backupIncome.Name,
                 Amount = backupIncome.Amount,
                 AddedOn = backupIncome.AddedOn,
@@ -1037,7 +1037,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         var expenses = await appData.GetExpensesAsync(cancellationToken);
         foreach (var expense in expenses)
         {
-            if (!sourceBackupIds.TryGetValue(expense.SpendingSourceId, out var sourceBackupId))
+            if (!sourceBackupIds.TryGetValue(expense.AccountId, out var sourceBackupId))
                 continue;
 
             var hasTag = tagBackupIds.TryGetValue(expense.ExpenseTagId, out var selectedTagBackupId);
@@ -1061,7 +1061,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         foreach (var log in logs)
         {
             if (!expenseBackupIds.TryGetValue(log.ExpenseId, out var expenseBackupId) ||
-                !sourceBackupIds.TryGetValue(log.SpendingSourceId, out var sourceBackupId))
+                !sourceBackupIds.TryGetValue(log.AccountId, out var sourceBackupId))
             {
                 continue;
             }
@@ -1086,7 +1086,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         var logs = await appData.GetIncomeLogsAsync(cancellationToken);
         foreach (var log in logs)
         {
-            if (!sourceBackupIds.TryGetValue(log.SpendingSourceId, out var sourceBackupId))
+            if (!sourceBackupIds.TryGetValue(log.AccountId, out var sourceBackupId))
                 continue;
 
             document.Entities.IncomeLogs.Add(new BackupIncomeLog(

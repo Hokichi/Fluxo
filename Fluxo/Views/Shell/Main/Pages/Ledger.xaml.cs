@@ -162,15 +162,15 @@ public partial class Ledger : UserControl
             listBox.SelectedItem = null;
     }
 
-    private void OnTransactionSpendingSourcePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void OnTransactionAccountPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
             DataContext is not LedgerVM viewModel ||
-            transaction.SpendingSourceId <= 0)
+            transaction.AccountId <= 0)
             return;
 
         e.Handled = true;
-        viewModel.ApplySpendingSourceFilter(transaction.SpendingSourceId);
+        viewModel.ApplyAccountFilter(transaction.AccountId);
     }
 
     private async void OnFilterDropDownClosed(object sender, EventArgs e)

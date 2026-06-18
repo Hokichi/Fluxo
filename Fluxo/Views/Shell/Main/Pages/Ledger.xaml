@@ -625,12 +625,12 @@
                         Background="{StaticResource Brush.Background.Hover}"
                         CornerRadius="8"
                         Cursor="Hand"
-                        PreviewMouseLeftButtonDown="OnTransactionSpendingSourcePreviewMouseLeftButtonDown">
+                        PreviewMouseLeftButtonDown="OnTransactionAccountPreviewMouseLeftButtonDown">
                         <TextBlock
                             FontFamily="{StaticResource Medium}"
                             FontSize="11"
                             Foreground="{StaticResource Brush.Mint}"
-                            Text="{Binding SpendingSourceName}" />
+                            Text="{Binding AccountName}" />
                     </Border>
 
                     <TextBlock
@@ -1032,19 +1032,19 @@
                 Margin="8,0,0,0"
                 DropDownClosed="OnFilterDropDownClosed"
                 ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
-                ItemsSource="{Binding SpendingSourceFilters}"
+                ItemsSource="{Binding AccountFilters}"
                 Style="{StaticResource LedgerFilterComboStyle}"
-                Tag="{Binding SpendingSourceFilterPresentation}"
+                Tag="{Binding AccountFilterPresentation}"
                 Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
             <ComboBox
                 Grid.Column="1"
                 Margin="8,0,0,0"
                 DisplayMemberPath="Label"
-                ItemsSource="{Binding BatchSpendingSourceOptions}"
-                SelectedValue="{Binding SelectedBatchSpendingSourceId, Mode=TwoWay}"
+                ItemsSource="{Binding BatchAccountOptions}"
+                SelectedValue="{Binding SelectedBatchAccountId, Mode=TwoWay}"
                 SelectedValuePath="Value"
                 Style="{StaticResource LedgerGroupingComboStyle}"
-                Tag="{Binding BatchSpendingSourceSelectionText}"
+                Tag="{Binding BatchAccountSelectionText}"
                 Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
             <ComboBox
                 Grid.Column="2"

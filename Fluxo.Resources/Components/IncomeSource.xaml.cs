@@ -19,14 +19,14 @@ public partial class IncomeSource : UserControl
     {
         if (e.ClickCount == 1)
         {
-            ToggleSpendingSourceFilter();
+            ToggleAccountFilter();
             return;
         }
 
         if (e.ClickCount != 2)
             return;
 
-        OpenSpendingSourceDetail();
+        OpenAccountDetail();
     }
 
     private void OnRootPreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
@@ -41,22 +41,22 @@ public partial class IncomeSource : UserControl
     private void OnViewActionClick(object sender, RoutedEventArgs e)
     {
         CloseActionsPopup();
-        OpenSpendingSourceDetail();
+        OpenAccountDetail();
     }
 
     private async void OnDeleteActionClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteAsyncAction("ExecuteDeleteSpendingSourceActionAsync");
+        await ExecuteAsyncAction("ExecuteDeleteAccountActionAsync");
     }
 
     private async void OnHideActionClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteAsyncAction("ExecuteHideSpendingSourceActionAsync");
+        await ExecuteAsyncAction("ExecuteHideAccountActionAsync");
     }
 
     private async void OnDisableActionClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteAsyncAction("ExecuteDisableSpendingSourceActionAsync");
+        await ExecuteAsyncAction("ExecuteDisableAccountActionAsync");
     }
 
     private void OnTransferActionClick(object sender, RoutedEventArgs e)
@@ -89,20 +89,20 @@ public partial class IncomeSource : UserControl
         await WindowMethodInvoker.TryInvokeAsync(this, methodName, DataContext);
     }
 
-    private void OpenSpendingSourceDetail()
+    private void OpenAccountDetail()
     {
         if (DataContext is null)
             return;
 
-        WindowMethodInvoker.TryInvoke(this, "OpenSpendingSourceDetailPopup", DataContext);
+        WindowMethodInvoker.TryInvoke(this, "OpenAccountDetailPopup", DataContext);
     }
 
-    private void ToggleSpendingSourceFilter()
+    private void ToggleAccountFilter()
     {
         if (DataContext is null)
             return;
 
-        WindowMethodInvoker.TryInvoke(this, "ToggleSpendingSourceFilter", DataContext);
+        WindowMethodInvoker.TryInvoke(this, "ToggleAccountFilter", DataContext);
     }
 
     private void CloseActionsPopup()

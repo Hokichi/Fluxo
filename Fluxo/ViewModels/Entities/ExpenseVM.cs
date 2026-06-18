@@ -10,5 +10,5 @@ public partial class ExpenseVM : ObservableObject
     [ObservableProperty] private ExpenseTagVM _expenseTag = new();
     [ObservableProperty] private int _id;
     [ObservableProperty] private string _name = string.Empty;
-    [ObservableProperty] private SpendingSourceVM _spendingSource = new();
+    [ObservableProperty] private AccountVM _account = new();
 }

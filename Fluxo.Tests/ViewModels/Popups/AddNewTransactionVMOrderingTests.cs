@@ -36,25 +36,25 @@ public class AddNewTransactionVMOrderingTests
     }
 
     [Fact]
-    public void SpendingSources_AreOrderedByTypeThenConfiguredMetric()
+    public void Accounts_AreOrderedByTypeThenConfiguredMetric()
     {
         var sources = new[]
         {
-            new SpendingSourceVM { Id = 1, Name = "Checking Low", SpendingSourceType = SpendingSourceType.Checking, Balance = 100m },
-            new SpendingSourceVM { Id = 2, Name = "Checking High", SpendingSourceType = SpendingSourceType.Checking, Balance = 500m },
-            new SpendingSourceVM { Id = 3, Name = "Cash Low", SpendingSourceType = SpendingSourceType.Cash, Balance = 80m },
-            new SpendingSourceVM { Id = 4, Name = "Cash High", SpendingSourceType = SpendingSourceType.Cash, Balance = 200m },
-            new SpendingSourceVM { Id = 5, Name = "Credit Low Remaining", SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 1000m, SpentAmount = 900m },
-            new SpendingSourceVM { Id = 6, Name = "Credit High Remaining", SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 1000m, SpentAmount = 200m },
-            new SpendingSourceVM { Id = 7, Name = "BNPL Low Remaining", SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m, SpentAmount = 450m },
-            new SpendingSourceVM { Id = 8, Name = "BNPL High Remaining", SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m, SpentAmount = 100m },
-            new SpendingSourceVM { Id = 9, Name = "Savings Low", SpendingSourceType = SpendingSourceType.Saving, Balance = 50m },
-            new SpendingSourceVM { Id = 10, Name = "Savings High", SpendingSourceType = SpendingSourceType.Saving, Balance = 700m }
+            new AccountVM { Id = 1, Name = "Checking Low", AccountType = AccountType.Checking, Balance = 100m },
+            new AccountVM { Id = 2, Name = "Checking High", AccountType = AccountType.Checking, Balance = 500m },
+            new AccountVM { Id = 3, Name = "Cash Low", AccountType = AccountType.Cash, Balance = 80m },
+            new AccountVM { Id = 4, Name = "Cash High", AccountType = AccountType.Cash, Balance = 200m },
+            new AccountVM { Id = 5, Name = "Credit Low Remaining", AccountType = AccountType.Credit, AccountLimit = 1000m, SpentAmount = 900m },
+            new AccountVM { Id = 6, Name = "Credit High Remaining", AccountType = AccountType.Credit, AccountLimit = 1000m, SpentAmount = 200m },
+            new AccountVM { Id = 7, Name = "BNPL Low Remaining", AccountType = AccountType.BNPL, AccountLimit = 500m, SpentAmount = 450m },
+            new AccountVM { Id = 8, Name = "BNPL High Remaining", AccountType = AccountType.BNPL, AccountLimit = 500m, SpentAmount = 100m },
+            new AccountVM { Id = 9, Name = "Savings Low", AccountType = AccountType.Saving, Balance = 50m },
+            new AccountVM { Id = 10, Name = "Savings High", AccountType = AccountType.Saving, Balance = 700m }
         };
 
         var ordered = sources
-            .OrderBy(AddNewTransactionVM.GetSpendingSourceTypeSortOrder)
-            .ThenByDescending(AddNewTransactionVM.GetSpendingSourceWithinTypeSortValue)
+            .OrderBy(AddNewTransactionVM.GetAccountTypeSortOrder)
+            .ThenByDescending(AddNewTransactionVM.GetAccountWithinTypeSortValue)
             .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
             .Select(source => source.Id)
             .ToList();
@@ -65,7 +65,7 @@ public class AddNewTransactionVMOrderingTests
     [Fact]
     public void BuildTransactionNameSuggestions_MatchesExpenseNamesAnywhere_AndLoadsExpenseData()
     {
-        var checking = new SpendingSource { Id = 3, Name = "Checking", IsEnabled = true };
+        var checking = new Account { Id = 3, Name = "Checking", IsEnabled = true };
         var groceries = new ExpenseTag { Id = 7, Name = "Groceries", HexCode = "#22C55E" };
         var logs = new[]
         {
@@ -75,16 +75,16 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 42.50m,
                 DeductedOn = new DateTime(2026, 5, 1),
                 Notes = "weekly",
-                SpendingSourceId = checking.Id,
-                SpendingSource = checking,
+                AccountId = checking.Id,
+                Account = checking,
                 Expense = new Expense
                 {
                     Id = 10,
                     Name = "Market Groceries",
                     Amount = 42.50m,
                     ExpenseCategory = ExpenseCategory.Needs,
-                    SpendingSourceId = checking.Id,
-                    SpendingSource = checking,
+                    AccountId = checking.Id,
+                    Account = checking,
                     ExpenseTagId = groceries.Id,
                     ExpenseTag = groceries
                 }
@@ -95,16 +95,16 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 12m,
                 DeductedOn = new DateTime(2026, 5, 2),
                 Notes = "coffee",
-                SpendingSourceId = checking.Id,
-                SpendingSource = checking,
+                AccountId = checking.Id,
+                Account = checking,
                 Expense = new Expense
                 {
                     Id = 11,
                     Name = "Coffee",
                     Amount = 12m,
                     ExpenseCategory = ExpenseCategory.Wants,
-                    SpendingSourceId = checking.Id,
-                    SpendingSource = checking,
+                    AccountId = checking.Id,
+                    Account = checking,
                     ExpenseTagId = groceries.Id,
                     ExpenseTag = groceries
                 }
@@ -116,7 +116,7 @@ public class AddNewTransactionVMOrderingTests
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Market Groceries", suggestion.Name);
         Assert.Equal(42.50m, suggestion.Amount);
-        Assert.Equal(3, suggestion.SpendingSourceId);
+        Assert.Equal(3, suggestion.AccountId);
         Assert.Equal(ExpenseCategory.Needs, suggestion.Category);
         Assert.Equal(7, suggestion.TagId);
         Assert.Equal("weekly", suggestion.Note);
@@ -126,7 +126,7 @@ public class AddNewTransactionVMOrderingTests
     [Fact]
     public void BuildTransactionNameSuggestions_MatchesIncomeNamesAnywhere_AndLoadsIncomeData()
     {
-        var checking = new SpendingSource { Id = 5, Name = "Checking", IsEnabled = true };
+        var checking = new Account { Id = 5, Name = "Checking", IsEnabled = true };
         var logs = new[]
         {
             new IncomeLog
@@ -136,8 +136,8 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 3000m,
                 AddedOn = new DateTime(2026, 5, 3),
                 Notes = "May payroll",
-                SpendingSourceId = checking.Id,
-                SpendingSource = checking
+                AccountId = checking.Id,
+                Account = checking
             },
             new IncomeLog
             {
@@ -146,8 +146,8 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 14m,
                 AddedOn = new DateTime(2026, 5, 4),
                 Notes = "store",
-                SpendingSourceId = checking.Id,
-                SpendingSource = checking
+                AccountId = checking.Id,
+                Account = checking
             }
         };
 
@@ -156,7 +156,7 @@ public class AddNewTransactionVMOrderingTests
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Monthly Salary", suggestion.Name);
         Assert.Equal(3000m, suggestion.Amount);
-        Assert.Equal(5, suggestion.SpendingSourceId);
+        Assert.Equal(5, suggestion.AccountId);
         Assert.Null(suggestion.Category);
         Assert.Null(suggestion.TagId);
         Assert.Equal("May payroll", suggestion.Note);
@@ -175,8 +175,8 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 3000m,
                 AddedOn = new DateTime(2026, 5, 3),
                 Notes = "May payroll",
-                SpendingSourceId = 5,
-                SpendingSource = new SpendingSource { Id = 5, Name = "Checking" }
+                AccountId = 5,
+                Account = new Account { Id = 5, Name = "Checking" }
             }
         };
 

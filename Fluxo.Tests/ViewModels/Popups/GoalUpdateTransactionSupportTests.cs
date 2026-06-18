@@ -52,7 +52,7 @@ public sealed class GoalUpdateTransactionSupportTests
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
         public IExpenseTagRepository ExpenseTags => expenseTags;
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
-        public ISpendingSourceRepository SpendingSources => throw new NotSupportedException();
+        public IAccountRepository Accounts => throw new NotSupportedException();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
         public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => throw new NotSupportedException();

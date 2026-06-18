@@ -45,9 +45,9 @@ public sealed class DialogService : IDialogService
         return ShowScopedDialog<HotkeysOverviewPopup>(owner);
     }
 
-    public bool? ShowSpendingSourcesList(Window? owner = null)
+    public bool? ShowAccountsList(Window? owner = null)
     {
-        return ShowScopedDialog<SpendingSourcesListPopup>(owner);
+        return ShowScopedDialog<AccountsListPopup>(owner);
     }
 
     public bool? ShowSettings(Window? owner = null)
@@ -99,9 +99,9 @@ public sealed class DialogService : IDialogService
         return ShowDialog(popup, owner);
     }
 
-    public bool? ShowSpendingSourceDetail(SpendingSourceDetailVM viewModel, Window? owner = null)
+    public bool? ShowAccountDetail(AccountDetailVM viewModel, Window? owner = null)
     {
-        return ShowDialog(new SpendingSourceDetailPopup(viewModel, this), owner);
+        return ShowDialog(new AccountDetailPopup(viewModel, this), owner);
     }
 
     public bool? ShowTransferFunds(TransferFundsVM viewModel, Window? owner = null)
@@ -114,14 +114,14 @@ public sealed class DialogService : IDialogService
         return ShowDialog(new AccountReconciliationPopup(viewModel), owner);
     }
 
-    public bool? ShowAddSpendingSource(Window? owner = null)
+    public bool? ShowAddAccount(Window? owner = null)
     {
-        return ShowScopedDialog<AddSpendingSourcePopup>(owner);
+        return ShowScopedDialog<AddAccountPopup>(owner);
     }
 
-    public bool? ShowAddSpendingSource(AddSpendingSourceVM viewModel, Window? owner = null)
+    public bool? ShowAddAccount(AddAccountVM viewModel, Window? owner = null)
     {
-        return ShowDialog(new AddSpendingSourcePopup(viewModel), owner);
+        return ShowDialog(new AddAccountPopup(viewModel), owner);
     }
 
     public bool? ShowAddSavingGoal(Window? owner = null)

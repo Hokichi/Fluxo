@@ -5,7 +5,7 @@ using Fluxo.Resources.Resources.Messages;
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
 public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
-    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>,
+    IRecipient<QuickSetupWizardAccountsChangedMessage>,
     IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>
 {
     private const int FirstMiddleStepIndex = 2;
@@ -13,7 +13,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     private const int MiddleStepsCount = LastMiddleStepIndex - FirstMiddleStepIndex + 1;
     private int _currentStepIndex = 2;
 
-    [ObservableProperty] private bool _hasSpendingSources;
+    [ObservableProperty] private bool _hasAccounts;
     [ObservableProperty] private bool _isStep2Active = true;
     [ObservableProperty] private bool _isStep3Active;
     [ObservableProperty] private bool _isStep4Active;
@@ -22,7 +22,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     [ObservableProperty] private bool _isStep7Active;
 
     public QuickSetupWizardMiddlePageVM(
-        QuickSetupWizardSpendingSourcesVM spendingSources,
+        QuickSetupWizardAccountsVM accounts,
         QuickSetupWizardFixedExpensesVM fixedExpenses,
         QuickSetupWizardSavingGoalsVM savingGoals,
         QuickSetupWizardBudgetAllocationVM budgetAllocation,
@@ -31,9 +31,9 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
-        SpendingSources = spendingSources;
+        Accounts = accounts;
         FixedExpenses = fixedExpenses;
-        FixedExpenses.SetSpendingSources(spendingSources);
+        FixedExpenses.SetAccounts(accounts);
         SavingGoals = savingGoals;
         BudgetAllocation = budgetAllocation;
         Notification = notification;
@@ -41,7 +41,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         IsActive = true;
     }
 
-    public QuickSetupWizardSpendingSourcesVM SpendingSources { get; }
+    public QuickSetupWizardAccountsVM Accounts { get; }
 
     public QuickSetupWizardFixedExpensesVM FixedExpenses { get; }
 
@@ -63,7 +63,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
 
     public string CurrentStepTitle => _currentStepIndex switch
     {
-        2 => "Add spending sources",
+        2 => "Add accounts",
         3 => "Add recurring transactions",
         4 => "Add savings goals",
         5 => "Budget allocation",
@@ -85,7 +85,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
 
     public async Task LoadAsync()
     {
-        await SpendingSources.RefreshAsync();
+        await Accounts.RefreshAsync();
         await FixedExpenses.RefreshAsync();
         await SavingGoals.RefreshAsync();
         await BudgetAllocation.LoadAsync();
@@ -103,7 +103,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         IsStep6Active = stepIndex == 6;
         IsStep7Active = stepIndex == 7;
 
-        SpendingSources.IsStep2Active = IsStep2Active;
+        Accounts.IsStep2Active = IsStep2Active;
         FixedExpenses.IsStep3Active = IsStep3Active;
         SavingGoals.IsStep4Active = IsStep4Active;
         BudgetAllocation.IsStep5Active = IsStep5Active;
@@ -117,9 +117,9 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         OnPropertyChanged(nameof(CurrentStepDescription));
     }
 
-    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardAccountsChangedMessage message)
     {
-        HasSpendingSources = message.Value.HasAny;
+        HasAccounts = message.Value.HasAny;
     }
 
     public void Receive(QuickSetupWizardBudgetAllocationChangedMessage message)

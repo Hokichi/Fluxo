@@ -26,7 +26,7 @@ public partial class LedgerVM : ObservableRecipient,
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
     private readonly IMapper _mapper;
-    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly IAccountService _accountService;
     private readonly ITagService _tagService;
     private readonly ObservableCollection<LedgerTransactionItemVM> _transactions = [];
     private readonly Dictionary<(LedgerTransactionKind Kind, int Id), BatchPreviewSnapshot> _batchPreviewSnapshots = [];
@@ -51,20 +51,20 @@ public partial class LedgerVM : ObservableRecipient,
     [ObservableProperty] private bool _isSelectionModeEnabled;
     [ObservableProperty] private bool _hasSelectedVisibleTransactions;
     [ObservableProperty] private bool _areAllVisibleTransactionsSelected;
-    [ObservableProperty] private int? _selectedBatchSpendingSourceId;
+    [ObservableProperty] private int? _selectedBatchAccountId;
     [ObservableProperty] private int? _selectedBatchTagId;
     [ObservableProperty] private LedgerTransactionItemVM? _editingTransaction;
 
     public LedgerVM(
         IExpenseLogService expenseLogService,
-        ISpendingSourceService spendingSourceService,
+        IAccountService accountService,
         ITagService tagService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         IMessenger? messenger = null)
         : this(
             expenseLogService,
-            spendingSourceService,
+            accountService,
             tagService,
             dataOperationRunner,
             mapper,
@@ -75,7 +75,7 @@ public partial class LedgerVM : ObservableRecipient,
 
     public LedgerVM(
         IExpenseLogService expenseLogService,
-        ISpendingSourceService spendingSourceService,
+        IAccountService accountService,
         ITagService tagService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
@@ -84,7 +84,7 @@ public partial class LedgerVM : ObservableRecipient,
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseLogService = expenseLogService;
-        _spendingSourceService = spendingSourceService;
+        _accountService = accountService;
         _tagService = tagService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
@@ -93,10 +93,10 @@ public partial class LedgerVM : ObservableRecipient,
             "Type",
             () => TypeFilterSelectionCount,
             () => TypeFilterSelectionToolTip);
-        SpendingSourceFilterPresentation = new LedgerFilterSelectionPresentation(
-            "Spending Source",
-            () => SpendingSourceFilterSelectionCount,
-            () => SpendingSourceFilterSelectionToolTip);
+        AccountFilterPresentation = new LedgerFilterSelectionPresentation(
+            "Account",
+            () => AccountFilterSelectionCount,
+            () => AccountFilterSelectionToolTip);
         CategoryFilterPresentation = new LedgerFilterSelectionPresentation(
             "Category",
             () => CategoryFilterSelectionCount,
@@ -117,32 +117,32 @@ public partial class LedgerVM : ObservableRecipient,
     public ICollectionView TransactionsView { get; }
     public string EmptyStatePeriodText => BuildSelectedPeriodText();
     public ObservableCollection<LedgerFilterOption<LedgerTransactionKind>> TypeFilters { get; } = [];
-    public ObservableCollection<LedgerFilterOption<int>> SpendingSourceFilters { get; } = [];
+    public ObservableCollection<LedgerFilterOption<int>> AccountFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<ExpenseCategory>> CategoryFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> TagFilters { get; } = [];
     public ObservableCollection<ExpenseTagVM> EditableTags { get; } = [];
-    public IReadOnlyList<LedgerFilterOption<int>> BatchSpendingSourceOptions =>
-        SpendingSourceFilters.Where(option => !option.IsAll).ToList();
+    public IReadOnlyList<LedgerFilterOption<int>> BatchAccountOptions =>
+        AccountFilters.Where(option => !option.IsAll).ToList();
     public IReadOnlyList<LedgerFilterOption<int>> BatchTagOptions =>
         TagFilters.Where(option => !option.IsAll).ToList();
     public bool HasPendingFilterChanges => CaptureFilterSelectionSnapshot() != _appliedFilterSelection;
     public LedgerFilterSelectionPresentation TypeFilterPresentation { get; }
-    public LedgerFilterSelectionPresentation SpendingSourceFilterPresentation { get; }
+    public LedgerFilterSelectionPresentation AccountFilterPresentation { get; }
     public LedgerFilterSelectionPresentation CategoryFilterPresentation { get; }
     public LedgerFilterSelectionPresentation TagFilterPresentation { get; }
     public int TypeFilterSelectionCount => CountSpecificSelections(TypeFilters);
-    public int SpendingSourceFilterSelectionCount => CountSpecificSelections(SpendingSourceFilters);
+    public int AccountFilterSelectionCount => CountSpecificSelections(AccountFilters);
     public int CategoryFilterSelectionCount => CountSpecificSelections(CategoryFilters);
     public int TagFilterSelectionCount => CountSpecificSelections(TagFilters);
     public string? TypeFilterSelectionToolTip => BuildSpecificSelectionToolTip(TypeFilters);
-    public string? SpendingSourceFilterSelectionToolTip => BuildSpecificSelectionToolTip(SpendingSourceFilters);
+    public string? AccountFilterSelectionToolTip => BuildSpecificSelectionToolTip(AccountFilters);
     public string? CategoryFilterSelectionToolTip => BuildSpecificSelectionToolTip(CategoryFilters);
     public string? TagFilterSelectionToolTip => BuildSpecificSelectionToolTip(TagFilters);
     public string SelectionModeButtonText => IsSelectionModeEnabled ? "Disable Selection" : "Enable Selection";
     public string CheckAllButtonText => AreAllVisibleTransactionsSelected ? "Uncheck All" : "Check All";
     public string DeleteSelectedButtonText => AreAllVisibleTransactionsSelected ? "Delete All" : "Delete Selected";
-    public string BatchSpendingSourceSelectionText => SelectedBatchSpendingSourceId is { } sourceId
-        ? BatchSpendingSourceOptions.FirstOrDefault(option => option.Value == sourceId)?.Label ?? string.Empty
+    public string BatchAccountSelectionText => SelectedBatchAccountId is { } sourceId
+        ? BatchAccountOptions.FirstOrDefault(option => option.Value == sourceId)?.Label ?? string.Empty
         : string.Empty;
     public string BatchTagSelectionText => SelectedBatchTagId is { } tagId
         ? BatchTagOptions.FirstOrDefault(option => option.Value == tagId)?.Label ?? string.Empty
@@ -152,7 +152,7 @@ public partial class LedgerVM : ObservableRecipient,
         LedgerGroupingMode.None,
         LedgerGroupingMode.Date,
         LedgerGroupingMode.Tags,
-        LedgerGroupingMode.SpendingSources,
+        LedgerGroupingMode.Accounts,
         LedgerGroupingMode.Types,
         LedgerGroupingMode.Category
     ];
@@ -268,7 +268,7 @@ public partial class LedgerVM : ObservableRecipient,
             RestoreAllBatchPreviewSnapshots();
 
         IsSelectionModeEnabled = shouldEnable;
-        SelectedBatchSpendingSourceId = null;
+        SelectedBatchAccountId = null;
         SelectedBatchTagId = null;
         if (IsSelectionModeEnabled)
             _batchPreviewSnapshots.Clear();
@@ -334,9 +334,9 @@ public partial class LedgerVM : ObservableRecipient,
         OnPropertyChanged(nameof(SelectionModeButtonText));
     }
 
-    partial void OnSelectedBatchSpendingSourceIdChanged(int? value)
+    partial void OnSelectedBatchAccountIdChanged(int? value)
     {
-        OnPropertyChanged(nameof(BatchSpendingSourceSelectionText));
+        OnPropertyChanged(nameof(BatchAccountSelectionText));
         ApplyBatchPreview();
     }
 
@@ -351,13 +351,13 @@ public partial class LedgerVM : ObservableRecipient,
         var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken));
         var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
-        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
-            await _spendingSourceService.GetAllAsync(cancellationToken));
+        var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
+            await _accountService.GetAllAsync(cancellationToken));
         var tags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
             await _tagService.GetAllAsync(cancellationToken));
 
         EditingTransaction = null;
-        RebuildFilters(spendingSources, tags);
+        RebuildFilters(accounts, tags);
 
         var projected = expenseLogs
             .Where(log => !log.IsForDeletion)
@@ -425,19 +425,19 @@ public partial class LedgerVM : ObservableRecipient,
                     Amount = log.Amount,
                     AddedOn = log.AddedOn,
                     Notes = log.Notes,
-                    SpendingSource = new SpendingSourceVM
+                    Account = new AccountVM
                     {
-                        Id = log.SpendingSourceId,
-                        Name = log.SpendingSource?.Name ?? string.Empty,
-                        SpendingSourceType = log.SpendingSource?.SpendingSourceType ?? SpendingSourceType.Checking,
-                        IsEnabled = log.SpendingSource?.IsEnabled ?? true
+                        Id = log.AccountId,
+                        Name = log.Account?.Name ?? string.Empty,
+                        AccountType = log.Account?.AccountType ?? AccountType.Checking,
+                        IsEnabled = log.Account?.IsEnabled ?? true
                     }
                 })
                 .ToList();
         }, cancellationToken);
     }
 
-    private void RebuildFilters(IReadOnlyList<SpendingSourceVM> spendingSources, IReadOnlyList<ExpenseTagVM> tags)
+    private void RebuildFilters(IReadOnlyList<AccountVM> accounts, IReadOnlyList<ExpenseTagVM> tags)
     {
         ReplaceEditableTags(tags);
 
@@ -448,9 +448,9 @@ public partial class LedgerVM : ObservableRecipient,
             new LedgerFilterOption<LedgerTransactionKind>("Incomes", LedgerTransactionKind.Income)
         ]);
 
-        RebuildFilter(SpendingSourceFilters,
+        RebuildFilter(AccountFilters,
             new[] { new LedgerFilterOption<int>("All", default, isAll: true, isChecked: true) }
-                .Concat(spendingSources
+                .Concat(accounts
                     .OrderBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
                     .Select(source => new LedgerFilterOption<int>(source.Name, source.Id)))
                 .ToList());
@@ -471,9 +471,9 @@ public partial class LedgerVM : ObservableRecipient,
                 .ToList());
 
         _appliedFilterSelection = CaptureFilterSelectionSnapshot();
-        OnPropertyChanged(nameof(BatchSpendingSourceOptions));
+        OnPropertyChanged(nameof(BatchAccountOptions));
         OnPropertyChanged(nameof(BatchTagOptions));
-        OnPropertyChanged(nameof(BatchSpendingSourceSelectionText));
+        OnPropertyChanged(nameof(BatchAccountSelectionText));
         OnPropertyChanged(nameof(BatchTagSelectionText));
         RefreshAllFilterSelectionPresentations();
     }
@@ -514,8 +514,8 @@ public partial class LedgerVM : ObservableRecipient,
             case LedgerFilterOption<LedgerTransactionKind> type:
                 NormalizeFilterSelection(TypeFilters, type);
                 break;
-            case LedgerFilterOption<int> source when SpendingSourceFilters.Contains(source):
-                NormalizeFilterSelection(SpendingSourceFilters, source);
+            case LedgerFilterOption<int> source when AccountFilters.Contains(source):
+                NormalizeFilterSelection(AccountFilters, source);
                 break;
             case LedgerFilterOption<int> tag when TagFilters.Contains(tag):
                 NormalizeFilterSelection(TagFilters, tag);
@@ -571,16 +571,16 @@ public partial class LedgerVM : ObservableRecipient,
     {
         var selectedTransactions = GetSelectedVisibleBatchTransactions();
         if (selectedTransactions.Count == 0 ||
-            (SelectedBatchSpendingSourceId is null && SelectedBatchTagId is null))
+            (SelectedBatchAccountId is null && SelectedBatchTagId is null))
         {
             return;
         }
 
         await _dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            SpendingSource? targetSource = null;
-            if (SelectedBatchSpendingSourceId is { } sourceId)
-                targetSource = await scope.UnitOfWork.SpendingSources.GetByIdAsync(sourceId, ct);
+            Account? targetSource = null;
+            if (SelectedBatchAccountId is { } sourceId)
+                targetSource = await scope.UnitOfWork.Accounts.GetByIdAsync(sourceId, ct);
 
             ExpenseTag? targetTag = null;
             if (SelectedBatchTagId is { } tagId)
@@ -596,10 +596,10 @@ public partial class LedgerVM : ObservableRecipient,
 
                     if (targetSource is not null)
                     {
-                        expenseLog.SpendingSource = targetSource;
-                        expenseLog.SpendingSourceId = targetSource.Id;
-                        expenseLog.Expense.SpendingSource = targetSource;
-                        expenseLog.Expense.SpendingSourceId = targetSource.Id;
+                        expenseLog.Account = targetSource;
+                        expenseLog.AccountId = targetSource.Id;
+                        expenseLog.Expense.Account = targetSource;
+                        expenseLog.Expense.AccountId = targetSource.Id;
                     }
 
                     if (targetTag is not null && !transaction.IsGoal)
@@ -620,8 +620,8 @@ public partial class LedgerVM : ObservableRecipient,
                 if (incomeLog is null)
                     continue;
 
-                incomeLog.SpendingSource = targetSource;
-                incomeLog.SpendingSourceId = targetSource.Id;
+                incomeLog.Account = targetSource;
+                incomeLog.AccountId = targetSource.Id;
                 scope.UnitOfWork.IncomeLogs.Update(incomeLog);
             }
 
@@ -629,7 +629,7 @@ public partial class LedgerVM : ObservableRecipient,
         });
 
         _batchPreviewSnapshots.Clear();
-        SelectedBatchSpendingSourceId = null;
+        SelectedBatchAccountId = null;
         SelectedBatchTagId = null;
         await LoadAsync();
         if (IsSelectionModeEnabled)
@@ -686,7 +686,7 @@ public partial class LedgerVM : ObservableRecipient,
     public void ClearFilters()
     {
         ResetFilter(TypeFilters);
-        ResetFilter(SpendingSourceFilters);
+        ResetFilter(AccountFilters);
         ResetFilter(CategoryFilters);
         ResetFilter(TagFilters);
         SearchText = string.Empty;
@@ -699,9 +699,9 @@ public partial class LedgerVM : ObservableRecipient,
         ApplyFilters();
     }
 
-    public void ApplySpendingSourceFilter(int spendingSourceId)
+    public void ApplyAccountFilter(int accountId)
     {
-        ApplySpecificFilter(SpendingSourceFilters, spendingSourceId);
+        ApplySpecificFilter(AccountFilters, accountId);
         ApplyFilters();
     }
 
@@ -825,9 +825,9 @@ public partial class LedgerVM : ObservableRecipient,
             case ObservableCollection<LedgerFilterOption<LedgerTransactionKind>>:
                 RefreshTypeFilterSelectionPresentation();
                 break;
-            case LedgerFilterOption<int> source when SpendingSourceFilters.Contains(source):
-            case ObservableCollection<LedgerFilterOption<int>> sourceCollection when ReferenceEquals(sourceCollection, SpendingSourceFilters):
-                RefreshSpendingSourceFilterSelectionPresentation();
+            case LedgerFilterOption<int> source when AccountFilters.Contains(source):
+            case ObservableCollection<LedgerFilterOption<int>> sourceCollection when ReferenceEquals(sourceCollection, AccountFilters):
+                RefreshAccountFilterSelectionPresentation();
                 break;
             case LedgerFilterOption<int> tag when TagFilters.Contains(tag):
             case ObservableCollection<LedgerFilterOption<int>> tagCollection when ReferenceEquals(tagCollection, TagFilters):
@@ -843,7 +843,7 @@ public partial class LedgerVM : ObservableRecipient,
     private void RefreshAllFilterSelectionPresentations()
     {
         RefreshTypeFilterSelectionPresentation();
-        RefreshSpendingSourceFilterSelectionPresentation();
+        RefreshAccountFilterSelectionPresentation();
         RefreshCategoryFilterSelectionPresentation();
         RefreshTagFilterSelectionPresentation();
     }
@@ -855,11 +855,11 @@ public partial class LedgerVM : ObservableRecipient,
         TypeFilterPresentation.Refresh();
     }
 
-    private void RefreshSpendingSourceFilterSelectionPresentation()
+    private void RefreshAccountFilterSelectionPresentation()
     {
-        OnPropertyChanged(nameof(SpendingSourceFilterSelectionCount));
-        OnPropertyChanged(nameof(SpendingSourceFilterSelectionToolTip));
-        SpendingSourceFilterPresentation.Refresh();
+        OnPropertyChanged(nameof(AccountFilterSelectionCount));
+        OnPropertyChanged(nameof(AccountFilterSelectionToolTip));
+        AccountFilterPresentation.Refresh();
     }
 
     private void RefreshCategoryFilterSelectionPresentation()
@@ -880,7 +880,7 @@ public partial class LedgerVM : ObservableRecipient,
     {
         return new LedgerFilterSelectionSnapshot(
             CaptureFilterSelection(TypeFilters),
-            CaptureFilterSelection(SpendingSourceFilters),
+            CaptureFilterSelection(AccountFilters),
             CaptureFilterSelection(CategoryFilters),
             CaptureFilterSelection(TagFilters));
     }
@@ -906,7 +906,7 @@ public partial class LedgerVM : ObservableRecipient,
         if (!MatchesFilter(TypeFilters, transaction.Kind))
             return false;
 
-        if (!MatchesFilter(SpendingSourceFilters, transaction.SpendingSourceId))
+        if (!MatchesFilter(AccountFilters, transaction.AccountId))
             return false;
 
         if (transaction.Kind == LedgerTransactionKind.Expense &&
@@ -951,8 +951,8 @@ public partial class LedgerVM : ObservableRecipient,
             Amount = log.Amount,
             OccurredOn = log.DeductedOn,
             Category = log.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
-            SpendingSourceId = log.SpendingSource?.Id ?? 0,
-            SpendingSourceName = log.SpendingSource?.Name ?? string.Empty,
+            AccountId = log.Account?.Id ?? 0,
+            AccountName = log.Account?.Name ?? string.Empty,
             TagId = log.Expense?.ExpenseTag?.Id ?? 0,
             TagName = tagName,
             TagHexCode = log.Expense?.ExpenseTag?.HexCode ?? string.Empty,
@@ -970,8 +970,8 @@ public partial class LedgerVM : ObservableRecipient,
             Name = log.Name,
             Amount = log.Amount,
             OccurredOn = log.AddedOn,
-            SpendingSourceId = log.SpendingSource?.Id ?? 0,
-            SpendingSourceName = log.SpendingSource?.Name ?? string.Empty
+            AccountId = log.Account?.Id ?? 0,
+            AccountName = log.Account?.Name ?? string.Empty
         };
     }
 
@@ -1007,7 +1007,7 @@ public partial class LedgerVM : ObservableRecipient,
             LedgerGroupingMode.None => null,
             LedgerGroupingMode.Date => nameof(LedgerTransactionItemVM.DateGroupKey),
             LedgerGroupingMode.Tags => nameof(LedgerTransactionItemVM.TagGroupKey),
-            LedgerGroupingMode.SpendingSources => nameof(LedgerTransactionItemVM.SpendingSourceGroupKey),
+            LedgerGroupingMode.Accounts => nameof(LedgerTransactionItemVM.AccountGroupKey),
             LedgerGroupingMode.Types => nameof(LedgerTransactionItemVM.TypeGroupKey),
             LedgerGroupingMode.Category => nameof(LedgerTransactionItemVM.CategoryGroupKey),
             _ => null
@@ -1047,23 +1047,23 @@ public partial class LedgerVM : ObservableRecipient,
                 return ((ExpenseLogMemorySnapshot?)null, (ExpenseLogMemorySnapshot?)null);
 
             var beforeSnapshot = ExpenseLogMemorySnapshot.Create(expenseLog);
-            var targetSpendingSource =
-                await scope.UnitOfWork.SpendingSources.GetByIdAsync(transaction.SpendingSourceId, ct) ??
-                expenseLog.SpendingSource;
+            var targetAccount =
+                await scope.UnitOfWork.Accounts.GetByIdAsync(transaction.AccountId, ct) ??
+                expenseLog.Account;
             var targetTag =
                 await scope.UnitOfWork.ExpenseTags.GetByIdAsync(transaction.TagId, ct) ??
                 expenseLog.Expense.ExpenseTag;
 
             expenseLog.Expense.Name = transaction.Name.Trim();
             expenseLog.Expense.Amount = transaction.Amount;
-            expenseLog.Expense.SpendingSource = targetSpendingSource;
-            expenseLog.Expense.SpendingSourceId = targetSpendingSource.Id;
+            expenseLog.Expense.Account = targetAccount;
+            expenseLog.Expense.AccountId = targetAccount.Id;
             expenseLog.Expense.ExpenseTag = targetTag;
             expenseLog.Expense.ExpenseTagId = targetTag.Id;
 
             expenseLog.Amount = transaction.Amount;
-            expenseLog.SpendingSource = targetSpendingSource;
-            expenseLog.SpendingSourceId = targetSpendingSource.Id;
+            expenseLog.Account = targetAccount;
+            expenseLog.AccountId = targetAccount.Id;
 
             scope.UnitOfWork.Expenses.Update(expenseLog.Expense);
             scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
@@ -1092,14 +1092,14 @@ public partial class LedgerVM : ObservableRecipient,
                 return ((IncomeLogMemorySnapshot?)null, (IncomeLogMemorySnapshot?)null);
 
             var beforeSnapshot = IncomeLogMemorySnapshot.Create(incomeLog);
-            var targetSpendingSource =
-                await scope.UnitOfWork.SpendingSources.GetByIdAsync(transaction.SpendingSourceId, ct) ??
-                incomeLog.SpendingSource;
+            var targetAccount =
+                await scope.UnitOfWork.Accounts.GetByIdAsync(transaction.AccountId, ct) ??
+                incomeLog.Account;
 
             incomeLog.Name = transaction.Name.Trim();
             incomeLog.Amount = transaction.Amount;
-            incomeLog.SpendingSource = targetSpendingSource;
-            incomeLog.SpendingSourceId = targetSpendingSource.Id;
+            incomeLog.Account = targetAccount;
+            incomeLog.AccountId = targetAccount.Id;
 
             scope.UnitOfWork.IncomeLogs.Update(incomeLog);
             await scope.UnitOfWork.SaveChangesAsync(ct);
@@ -1176,7 +1176,7 @@ public partial class LedgerVM : ObservableRecipient,
     {
         transaction.Name = snapshot.ExpenseName;
         transaction.Amount = snapshot.Amount;
-        transaction.SpendingSourceId = snapshot.SpendingSourceId;
+        transaction.AccountId = snapshot.AccountId;
         transaction.TagId = snapshot.TagId;
     }
 
@@ -1186,14 +1186,14 @@ public partial class LedgerVM : ObservableRecipient,
     {
         transaction.Name = snapshot.Name;
         transaction.Amount = snapshot.Amount;
-        transaction.SpendingSourceId = snapshot.SpendingSourceId;
+        transaction.AccountId = snapshot.AccountId;
     }
 
     private void RefreshTransactionLookups(LedgerTransactionItemVM transaction)
     {
-        transaction.SpendingSourceName = SpendingSourceFilters
-            .FirstOrDefault(option => !option.IsAll && option.Value == transaction.SpendingSourceId)
-            ?.Label ?? transaction.SpendingSourceName;
+        transaction.AccountName = AccountFilters
+            .FirstOrDefault(option => !option.IsAll && option.Value == transaction.AccountId)
+            ?.Label ?? transaction.AccountName;
 
         if (transaction.Kind != LedgerTransactionKind.Expense)
             return;
@@ -1249,7 +1249,7 @@ public partial class LedgerVM : ObservableRecipient,
         if (!IsSelectionModeEnabled)
             return;
 
-        if (SelectedBatchSpendingSourceId is null && SelectedBatchTagId is null)
+        if (SelectedBatchAccountId is null && SelectedBatchTagId is null)
         {
             RestoreAllBatchPreviewSnapshots();
             return;
@@ -1263,12 +1263,12 @@ public partial class LedgerVM : ObservableRecipient,
         {
             CaptureBatchPreviewSnapshot(transaction);
 
-            if (SelectedBatchSpendingSourceId is { } sourceId)
+            if (SelectedBatchAccountId is { } sourceId)
             {
-                transaction.SpendingSourceId = sourceId;
-                transaction.SpendingSourceName = SpendingSourceFilters
+                transaction.AccountId = sourceId;
+                transaction.AccountName = AccountFilters
                     .FirstOrDefault(option => !option.IsAll && option.Value == sourceId)
-                    ?.Label ?? transaction.SpendingSourceName;
+                    ?.Label ?? transaction.AccountName;
             }
 
             if (SelectedBatchTagId is { } tagId &&
@@ -1293,8 +1293,8 @@ public partial class LedgerVM : ObservableRecipient,
             return;
 
         _batchPreviewSnapshots[key] = new BatchPreviewSnapshot(
-            transaction.SpendingSourceId,
-            transaction.SpendingSourceName,
+            transaction.AccountId,
+            transaction.AccountName,
             transaction.TagId,
             transaction.TagName,
             transaction.TagHexCode);
@@ -1314,8 +1314,8 @@ public partial class LedgerVM : ObservableRecipient,
         if (!_batchPreviewSnapshots.Remove(key, out var snapshot))
             return;
 
-        transaction.SpendingSourceId = snapshot.SpendingSourceId;
-        transaction.SpendingSourceName = snapshot.SpendingSourceName;
+        transaction.AccountId = snapshot.AccountId;
+        transaction.AccountName = snapshot.AccountName;
         transaction.TagId = snapshot.TagId;
         transaction.TagName = snapshot.TagName;
         transaction.TagHexCode = snapshot.TagHexCode;
@@ -1327,7 +1327,7 @@ public partial class LedgerVM : ObservableRecipient,
         {
             LedgerGroupingMode.Date => transaction.DateGroupKey,
             LedgerGroupingMode.Tags => transaction.TagGroupKey,
-            LedgerGroupingMode.SpendingSources => transaction.SpendingSourceGroupKey,
+            LedgerGroupingMode.Accounts => transaction.AccountGroupKey,
             LedgerGroupingMode.Types => transaction.TypeGroupKey,
             LedgerGroupingMode.Category => transaction.CategoryGroupKey,
             _ => string.Empty
@@ -1400,7 +1400,7 @@ public partial class LedgerVM : ObservableRecipient,
             {
                 LedgerGroupingMode.Date => right.OccurredOn.Date.CompareTo(left.OccurredOn.Date),
                 LedgerGroupingMode.Tags => string.Compare(left.TagGroupKey, right.TagGroupKey, StringComparison.OrdinalIgnoreCase),
-                LedgerGroupingMode.SpendingSources => string.Compare(left.SpendingSourceGroupKey, right.SpendingSourceGroupKey, StringComparison.OrdinalIgnoreCase),
+                LedgerGroupingMode.Accounts => string.Compare(left.AccountGroupKey, right.AccountGroupKey, StringComparison.OrdinalIgnoreCase),
                 LedgerGroupingMode.Types => string.Compare(left.TypeGroupKey, right.TypeGroupKey, StringComparison.OrdinalIgnoreCase),
                 LedgerGroupingMode.Category => string.Compare(left.CategoryGroupKey, right.CategoryGroupKey, StringComparison.OrdinalIgnoreCase),
                 _ => 0
@@ -1410,7 +1410,7 @@ public partial class LedgerVM : ObservableRecipient,
 
     private readonly record struct LedgerFilterSelectionSnapshot(
         string Type,
-        string SpendingSource,
+        string Account,
         string Category,
         string Tag)
     {
@@ -1418,8 +1418,8 @@ public partial class LedgerVM : ObservableRecipient,
     }
 
     private readonly record struct BatchPreviewSnapshot(
-        int SpendingSourceId,
-        string SpendingSourceName,
+        int AccountId,
+        string AccountName,
         int TagId,
         string TagName,
         string TagHexCode);
@@ -1431,7 +1431,7 @@ public sealed class LedgerGroupingModeDisplayConverter : IValueConverter
     {
         return value switch
         {
-            LedgerGroupingMode.SpendingSources => "Spending Sources",
+            LedgerGroupingMode.Accounts => "Accounts",
             LedgerGroupingMode groupingMode => groupingMode.ToString(),
             _ => string.Empty
         };

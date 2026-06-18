@@ -11,7 +11,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<IncomeLog> IncomeLogs => Set<IncomeLog>();
     public DbSet<ExpenseTag> ExpenseTags => Set<ExpenseTag>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
-    public DbSet<SpendingSource> SpendingSources => Set<SpendingSource>();
+    public DbSet<Account> Accounts => Set<Account>();
     public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
@@ -24,7 +24,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureIncomeLog(modelBuilder.Entity<IncomeLog>());
         ConfigureExpenseTag(modelBuilder.Entity<ExpenseTag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
-        ConfigureSpendingSource(modelBuilder.Entity<SpendingSource>());
+        ConfigureAccount(modelBuilder.Entity<Account>());
         ConfigureRecurringTransaction(modelBuilder.Entity<RecurringTransaction>());
         ConfigureNotification(modelBuilder.Entity<Notification>());
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
@@ -41,9 +41,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(expense => expense.Name).IsRequired();
         entity.Property(expense => expense.Amount).HasColumnType("NUMERIC");
 
-        entity.HasOne(expense => expense.SpendingSource)
+        entity.HasOne(expense => expense.Account)
             .WithMany()
-            .HasForeignKey(expense => expense.SpendingSourceId)
+            .HasForeignKey(expense => expense.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
 
         entity.HasOne(expense => expense.ExpenseTag)
@@ -68,9 +68,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
             .HasForeignKey(log => log.ExpenseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        entity.HasOne(log => log.SpendingSource)
+        entity.HasOne(log => log.Account)
             .WithMany()
-            .HasForeignKey(log => log.SpendingSourceId)
+            .HasForeignKey(log => log.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 
@@ -86,9 +86,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(log => log.IsForDeletion);
         entity.Property(log => log.IsPinned).HasDefaultValue(false);
 
-        entity.HasOne(log => log.SpendingSource)
+        entity.HasOne(log => log.Account)
             .WithMany()
-            .HasForeignKey(log => log.SpendingSourceId)
+            .HasForeignKey(log => log.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 
@@ -117,9 +117,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(goal => goal.CreatedOn);
     }
 
-    private static void ConfigureSpendingSource(EntityTypeBuilder<SpendingSource> entity)
+    private static void ConfigureAccount(EntityTypeBuilder<Account> entity)
     {
-        entity.ToTable("SpendingSources");
+        entity.ToTable("Accounts");
         entity.Property(source => source.Id).ValueGeneratedOnAdd();
         entity.HasKey(source => source.Id);
 

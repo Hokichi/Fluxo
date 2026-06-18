@@ -1,10 +1,10 @@
-﻿namespace Fluxo.Core.Entities;
+namespace Fluxo.Core.Entities;
 
 public sealed class IncomeLog
 {
     public int Id { get; set; }
-    public int SpendingSourceId { get; set; }
-    public SpendingSource SpendingSource { get; set; }
+    public int AccountId { get; set; }
+    public Account Account { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime AddedOn { get; set; }

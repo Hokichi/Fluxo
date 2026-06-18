@@ -11,11 +11,11 @@ namespace Fluxo.Tests.ViewModels.Popups.DataManagement;
 public sealed class DataManagementVMTests
 {
     [Fact]
-    public void SpendingSourcesUnchecked_DisablesExpensesIncomesAndRecurringTransactions()
+    public void AccountsUnchecked_DisablesExpensesIncomesAndRecurringTransactions()
     {
         var vm = new DataManagementVM(Substitute.For<IUserBackupService>());
 
-        vm.SetEntityChecked(DataManagementEntityKind.SpendingSources, false);
+        vm.SetEntityChecked(DataManagementEntityKind.Accounts, false);
 
         Assert.False(vm.GetEntity(DataManagementEntityKind.Expenses).IsEnabled);
         Assert.False(vm.GetEntity(DataManagementEntityKind.Expenses).IsChecked);
@@ -26,11 +26,11 @@ public sealed class DataManagementVMTests
     }
 
     [Fact]
-    public void SpendingSourcesUncheckedFromEntityToggle_DisablesExpensesIncomesAndRecurringTransactions()
+    public void AccountsUncheckedFromEntityToggle_DisablesExpensesIncomesAndRecurringTransactions()
     {
         var vm = new DataManagementVM(Substitute.For<IUserBackupService>());
 
-        vm.GetEntity(DataManagementEntityKind.SpendingSources).IsChecked = false;
+        vm.GetEntity(DataManagementEntityKind.Accounts).IsChecked = false;
 
         Assert.False(vm.GetEntity(DataManagementEntityKind.Expenses).IsEnabled);
         Assert.False(vm.GetEntity(DataManagementEntityKind.Expenses).IsChecked);
@@ -58,18 +58,18 @@ public sealed class DataManagementVMTests
     }
 
     [Fact]
-    public void ApplyManifest_WithSpendingSourcesOnly_KeepsDependentsDisabledAndUnchecked()
+    public void ApplyManifest_WithAccountsOnly_KeepsDependentsDisabledAndUnchecked()
     {
         var vm = new DataManagementVM(Substitute.For<IUserBackupService>());
         var manifest = new UserBackupManifest(
             1,
             DateTime.UtcNow,
-            new HashSet<DataManagementEntityKind> { DataManagementEntityKind.SpendingSources });
+            new HashSet<DataManagementEntityKind> { DataManagementEntityKind.Accounts });
 
         vm.ApplyManifest(manifest);
 
-        Assert.True(vm.GetEntity(DataManagementEntityKind.SpendingSources).IsEnabled);
-        Assert.True(vm.GetEntity(DataManagementEntityKind.SpendingSources).IsChecked);
+        Assert.True(vm.GetEntity(DataManagementEntityKind.Accounts).IsEnabled);
+        Assert.True(vm.GetEntity(DataManagementEntityKind.Accounts).IsChecked);
         Assert.False(vm.GetEntity(DataManagementEntityKind.Expenses).IsEnabled);
         Assert.False(vm.GetEntity(DataManagementEntityKind.Expenses).IsChecked);
         Assert.False(vm.GetEntity(DataManagementEntityKind.Incomes).IsEnabled);

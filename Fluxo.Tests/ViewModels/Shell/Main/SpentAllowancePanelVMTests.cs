@@ -21,11 +21,11 @@ public sealed class SpentAllowancePanelVMTests
     public async Task RecordLogMemoryMessage_DeleteExpenseRestoresSpentAllowanceAndSourceTotalsWithoutReload()
     {
         var messenger = new WeakReferenceMessenger();
-        var source = new SpendingSourceVM
+        var source = new AccountVM
         {
             Id = 1,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = 1000m,
             IsEnabled = true
         };
@@ -35,7 +35,7 @@ public sealed class SpentAllowancePanelVMTests
             Amount = 100m,
             DeductedOn = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 10),
             Notes = "groceries",
-            SpendingSource = source,
+            Account = source,
             Expense = new ExpenseVM
             {
                 Id = 20,
@@ -57,7 +57,7 @@ public sealed class SpentAllowancePanelVMTests
                 ExpenseName: "Groceries",
                 Amount: 100m,
                 ExpenseCategory: ExpenseCategory.Needs,
-                SpendingSourceId: 1,
+                AccountId: 1,
                 TagId: 0,
                 DeductedOn: expenseLog.DeductedOn,
                 Notes: "groceries",
@@ -117,7 +117,7 @@ public sealed class SpentAllowancePanelVMTests
     private static SpentAllowancePanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
-        IReadOnlyList<SpendingSourceVM> spendingSources,
+        IReadOnlyList<AccountVM> accounts,
         BudgetAllocation? budgetAllocation = null,
         Func<DateTime>? todayProvider = null,
         IReadOnlyList<IncomeLog>? incomeLogs = null)
@@ -126,9 +126,9 @@ public sealed class SpentAllowancePanelVMTests
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseLogDto>>([]));
 
-        var spendingSourceService = Substitute.For<ISpendingSourceService>();
-        spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<SpendingSourceDto>>([]));
+        var accountService = Substitute.For<IAccountService>();
+        accountService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<AccountDto>>([]));
 
         var userSettingsRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IUserSettingsRepository>();
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
@@ -151,24 +151,24 @@ public sealed class SpentAllowancePanelVMTests
 
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
-        mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
+        mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
 
         return new SpentAllowancePanelVM(
             expenseLogService,
-            spendingSourceService,
+            accountService,
             dataOperationRunner,
             mapper,
             messenger,
             todayProvider);
     }
 
-    private static SpendingSourceVM CreateCheckingSource(decimal balance)
+    private static AccountVM CreateCheckingSource(decimal balance)
     {
-        return new SpendingSourceVM
+        return new AccountVM
         {
             Id = 1,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = balance,
             IsEnabled = true
         };
@@ -188,7 +188,7 @@ public sealed class SpentAllowancePanelVMTests
                 Amount = amount,
                 ExpenseCategory = ExpenseCategory.Needs
             },
-            SpendingSource = CreateCheckingSource(1_000m)
+            Account = CreateCheckingSource(1_000m)
         };
     }
 
@@ -201,8 +201,8 @@ public sealed class SpentAllowancePanelVMTests
             Amount = amount,
             AddedOn = addedOn,
             Notes = string.Empty,
-            SpendingSourceId = 1,
-            SpendingSource = new SpendingSource()
+            AccountId = 1,
+            Account = new Account()
         };
     }
 }

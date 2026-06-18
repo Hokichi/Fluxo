@@ -31,8 +31,8 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
         var query = QueryWithNavigations()
             .Where(log => !log.IsForDeletion);
 
-        if (filter.SpendingSource is not null)
-            query = query.Where(log => log.SpendingSourceId == filter.SpendingSource.Id);
+        if (filter.Account is not null)
+            query = query.Where(log => log.AccountId == filter.Account.Id);
 
         if (filter.StartDate.HasValue)
             query = query.Where(log => log.AddedOn >= filter.StartDate);
@@ -55,6 +55,6 @@ public sealed class IncomeLogRepository(FluxoDbContext dbContext)
     {
         return DbSet
             .AsNoTrackingWithIdentityResolution()
-            .Include(log => log.SpendingSource);
+            .Include(log => log.Account);
     }
 }

@@ -25,7 +25,7 @@ public sealed class CalendarServiceTests
                 DeductedOn = new DateTime(2026, 6, 12, 9, 0, 0),
                 IsForDeletion = false,
                 Expense = new Expense { Name = "Groceries", ExpenseTag = new ExpenseTag { Name = "Food", HexCode = "#00FF00" } },
-                SpendingSource = new SpendingSource { Name = "Checking" }
+                Account = new Account { Name = "Checking" }
             },
             new ExpenseLog
             {
@@ -34,7 +34,7 @@ public sealed class CalendarServiceTests
                 DeductedOn = new DateTime(2026, 6, 12, 10, 0, 0),
                 IsForDeletion = true,
                 Expense = new Expense { Name = "Deleted" },
-                SpendingSource = new SpendingSource { Name = "Checking" }
+                Account = new Account { Name = "Checking" }
             },
             new ExpenseLog
             {
@@ -43,7 +43,7 @@ public sealed class CalendarServiceTests
                 DeductedOn = new DateTime(2026, 6, 11, 23, 59, 0),
                 IsForDeletion = false,
                 Expense = new Expense { Name = "Different day" },
-                SpendingSource = new SpendingSource { Name = "Checking" }
+                Account = new Account { Name = "Checking" }
             }
         ]);
 
@@ -54,7 +54,7 @@ public sealed class CalendarServiceTests
                 Name = "Freelance",
                 Amount = 450m,
                 AddedOn = new DateTime(2026, 6, 12, 14, 0, 0),
-                SpendingSource = new SpendingSource { Name = "Checking" }
+                Account = new Account { Name = "Checking" }
             },
             new IncomeLog
             {
@@ -62,7 +62,7 @@ public sealed class CalendarServiceTests
                 Name = "Other",
                 Amount = 200m,
                 AddedOn = new DateTime(2026, 6, 13, 1, 0, 0),
-                SpendingSource = new SpendingSource { Name = "Checking" }
+                Account = new Account { Name = "Checking" }
             }
         ]);
 
@@ -81,7 +81,7 @@ public sealed class CalendarServiceTests
                 RecurringPeriod = RecurringPeriod.Monthly,
                 RecurringTime = 12,
                 Type = RecurringTransactionType.Expense,
-                Source = new SpendingSource { Name = "Checking" }
+                Source = new Account { Name = "Checking" }
             },
             new RecurringTransaction
             {
@@ -92,7 +92,7 @@ public sealed class CalendarServiceTests
                 RecurringPeriod = RecurringPeriod.Monthly,
                 RecurringTime = 12,
                 Type = RecurringTransactionType.Expense,
-                Source = new SpendingSource { Name = "Checking" }
+                Source = new Account { Name = "Checking" }
             }
         ]);
 
@@ -142,7 +142,7 @@ public sealed class CalendarServiceTests
                 RecurringPeriod = period,
                 RecurringTime = recurringTime,
                 Type = RecurringTransactionType.Expense,
-                Source = new SpendingSource { Name = "Checking" }
+                Source = new Account { Name = "Checking" }
             }
         ]);
 

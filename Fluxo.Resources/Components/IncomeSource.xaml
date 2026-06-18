@@ -14,19 +14,19 @@
         <Style x:Key="IncomeSourceAccentStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Checking">
+                <DataTrigger Binding="{Binding AccountType}" Value="Checking">
                     <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Cash">
+                <DataTrigger Binding="{Binding AccountType}" Value="Cash">
                     <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Credit">
+                <DataTrigger Binding="{Binding AccountType}" Value="Credit">
                     <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding SpendingSourceType}" Value="BNPL">
+                <DataTrigger Binding="{Binding AccountType}" Value="BNPL">
                     <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding SpendingSourceType}" Value="Saving">
+                <DataTrigger Binding="{Binding AccountType}" Value="Saving">
                     <Setter Property="Background" Value="{StaticResource Brush.Income.Saving}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -112,7 +112,7 @@
                         FontFamily="{StaticResource Medium}"
                         FontSize="10"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding SpendingSourceType}" />
+                        Text="{Binding AccountType}" />
                 </StackPanel>
             </Grid>
         </Border>

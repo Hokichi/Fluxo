@@ -157,16 +157,16 @@ public sealed class LedgerVMTests
             var vm = CreateVm();
             vm.LoadAsync().GetAwaiter().GetResult();
             vm.SearchText = "flix";
-            vm.SelectedGroupingMode = LedgerGroupingMode.SpendingSources;
+            vm.SelectedGroupingMode = LedgerGroupingMode.Accounts;
             vm.TypeFilters.Single(option => option.Value == LedgerTransactionKind.Income).IsChecked = true;
             vm.ApplyFilters();
 
             vm.ClearFilters();
 
             Assert.Equal(string.Empty, vm.SearchText);
-            Assert.Equal(LedgerGroupingMode.SpendingSources, vm.SelectedGroupingMode);
+            Assert.Equal(LedgerGroupingMode.Accounts, vm.SelectedGroupingMode);
             Assert.True(vm.TypeFilters.Single(option => option.IsAll).IsChecked);
-            Assert.True(vm.SpendingSourceFilters.Single(option => option.IsAll).IsChecked);
+            Assert.True(vm.AccountFilters.Single(option => option.IsAll).IsChecked);
             Assert.True(vm.CategoryFilters.Single(option => option.IsAll).IsChecked);
             Assert.True(vm.TagFilters.Single(option => option.IsAll).IsChecked);
             Assert.Equal(4, GetItems(vm.TransactionsView).Count);
@@ -194,7 +194,7 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
-    public void ApplySpendingSourceFilter_SelectsClickedSourceOnTopOfCurrentFilterAndRefreshesImmediately()
+    public void ApplyAccountFilter_SelectsClickedSourceOnTopOfCurrentFilterAndRefreshesImmediately()
     {
         RunInSta(() =>
         {
@@ -203,11 +203,11 @@ public sealed class LedgerVMTests
             vm.CategoryFilters.Single(option => option.Value == ExpenseCategory.Wants).IsChecked = true;
             vm.ApplyFilters();
 
-            vm.ApplySpendingSourceFilter(2);
+            vm.ApplyAccountFilter(2);
 
             Assert.True(vm.CategoryFilters.Single(option => option.Value == ExpenseCategory.Wants).IsChecked);
-            Assert.False(vm.SpendingSourceFilters.Single(option => option.IsAll).IsChecked);
-            Assert.True(vm.SpendingSourceFilters.Single(option => option.Value == 2).IsChecked);
+            Assert.False(vm.AccountFilters.Single(option => option.IsAll).IsChecked);
+            Assert.True(vm.AccountFilters.Single(option => option.Value == 2).IsChecked);
             var item = Assert.Single(GetItems(vm.TransactionsView));
             Assert.Equal("Netflix", item.Name);
         });
@@ -510,14 +510,14 @@ public sealed class LedgerVMTests
             salary.IsSelectedForBatch = false;
             vm.RefreshBatchSelectionState();
 
-            vm.SelectedBatchSpendingSourceId = 2;
+            vm.SelectedBatchAccountId = 2;
             vm.SelectedBatchTagId = 2;
 
-            Assert.Equal(2, grocery.SpendingSourceId);
-            Assert.Equal("Citibank Credit", grocery.SpendingSourceName);
+            Assert.Equal(2, grocery.AccountId);
+            Assert.Equal("Citibank Credit", grocery.AccountName);
             Assert.Equal(2, grocery.TagId);
             Assert.Equal("Streaming", grocery.TagName);
-            Assert.Equal(1, salary.SpendingSourceId);
+            Assert.Equal(1, salary.AccountId);
             unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
         });
     }
@@ -532,18 +532,18 @@ public sealed class LedgerVMTests
             vm.LoadAsync().GetAwaiter().GetResult();
             vm.ToggleSelectionModeCommand.Execute(null);
 
-            vm.SelectedBatchSpendingSourceId = 2;
+            vm.SelectedBatchAccountId = 2;
             vm.SelectedBatchTagId = 2;
             vm.ApplyBatchTransactionUpdatesCommand.ExecuteAsync(null).GetAwaiter().GetResult();
 
             unitOfWork.ExpenseLogs.Received(1).Update(Arg.Is<ExpenseLog>(log =>
                 log.Id == 1 &&
-                log.SpendingSourceId == 2 &&
-                log.Expense.SpendingSourceId == 2 &&
+                log.AccountId == 2 &&
+                log.Expense.AccountId == 2 &&
                 log.Expense.ExpenseTagId == 2));
             unitOfWork.IncomeLogs.Received(1).Update(Arg.Is<IncomeLog>(log =>
                 log.Id == 10 &&
-                log.SpendingSourceId == 2));
+                log.AccountId == 2));
             unitOfWork.Received().SaveChangesAsync(Arg.Any<CancellationToken>());
         });
     }
@@ -676,7 +676,7 @@ public sealed class LedgerVMTests
 
     private static LedgerVM CreateVm(
         IExpenseLogService? expenseLogService = null,
-        ISpendingSourceService? spendingSourceService = null,
+        IAccountService? accountService = null,
         ITagService? tagService = null,
         IUnitOfWork? unitOfWork = null,
         IMessenger? messenger = null)
@@ -685,9 +685,9 @@ public sealed class LedgerVMTests
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(CreateExpenseLogs());
 
-        spendingSourceService ??= Substitute.For<ISpendingSourceService>();
-        spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(CreateSpendingSources());
+        accountService ??= Substitute.For<IAccountService>();
+        accountService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(CreateAccounts());
 
         tagService ??= Substitute.For<ITagService>();
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -697,7 +697,7 @@ public sealed class LedgerVMTests
 
         return new LedgerVM(
             expenseLogService,
-            spendingSourceService,
+            accountService,
             tagService,
             new InlineDataOperationRunner(unitOfWork),
             CreateMapper(),
@@ -730,12 +730,12 @@ public sealed class LedgerVMTests
         var expenses = Substitute.For<IExpenseRepository>();
         unitOfWork.Expenses.Returns(expenses);
 
-        var spendingSources = Substitute.For<ISpendingSourceRepository>();
-        spendingSources.GetByIdAsync(1, Arg.Any<CancellationToken>())
+        var accounts = Substitute.For<IAccountRepository>();
+        accounts.GetByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(CreateCheckingSource());
-        spendingSources.GetByIdAsync(2, Arg.Any<CancellationToken>())
+        accounts.GetByIdAsync(2, Arg.Any<CancellationToken>())
             .Returns(CreateCreditSource());
-        unitOfWork.SpendingSources.Returns(spendingSources);
+        unitOfWork.Accounts.Returns(accounts);
 
         var tags = Substitute.For<IExpenseTagRepository>();
         tags.GetByIdAsync(1, Arg.Any<CancellationToken>())
@@ -754,8 +754,8 @@ public sealed class LedgerVMTests
                 Name = "June Salary",
                 Amount = 2800m,
                 AddedOn = new DateTime(2026, 6, 3, 14, 0, 0),
-                SpendingSourceId = 1,
-                SpendingSource = CreateCheckingSource()
+                AccountId = 1,
+                Account = CreateCheckingSource()
             });
         unitOfWork.IncomeLogs.Returns(incomeLogs);
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
@@ -773,8 +773,8 @@ public sealed class LedgerVMTests
             Name = "FreshMart Grocery",
             Amount = 67.50m,
             ExpenseCategory = ExpenseCategory.Needs,
-            SpendingSourceId = source.Id,
-            SpendingSource = source,
+            AccountId = source.Id,
+            Account = source,
             ExpenseTagId = tag.Id,
             ExpenseTag = tag
         };
@@ -787,8 +787,8 @@ public sealed class LedgerVMTests
             Amount = expense.Amount,
             DeductedOn = new DateTime(2026, 6, 3, 9, 15, 0),
             Notes = string.Empty,
-            SpendingSourceId = source.Id,
-            SpendingSource = source
+            AccountId = source.Id,
+            Account = source
         };
     }
 
@@ -802,8 +802,8 @@ public sealed class LedgerVMTests
             Name = "Netflix",
             Amount = 15.99m,
             ExpenseCategory = ExpenseCategory.Wants,
-            SpendingSourceId = source.Id,
-            SpendingSource = source,
+            AccountId = source.Id,
+            Account = source,
             ExpenseTagId = tag.Id,
             ExpenseTag = tag
         };
@@ -816,8 +816,8 @@ public sealed class LedgerVMTests
             Amount = expense.Amount,
             DeductedOn = new DateTime(2026, 6, 3, 11, 30, 0),
             Notes = "Recurring transaction",
-            SpendingSourceId = source.Id,
-            SpendingSource = source
+            AccountId = source.Id,
+            Account = source
         };
     }
 
@@ -831,8 +831,8 @@ public sealed class LedgerVMTests
             Name = "Vacation Goal",
             Amount = 100m,
             ExpenseCategory = ExpenseCategory.Savings,
-            SpendingSourceId = source.Id,
-            SpendingSource = source,
+            AccountId = source.Id,
+            Account = source,
             ExpenseTagId = tag.Id,
             ExpenseTag = tag
         };
@@ -845,29 +845,29 @@ public sealed class LedgerVMTests
             Amount = expense.Amount,
             DeductedOn = new DateTime(2026, 6, 2, 8, 0, 0),
             Notes = string.Empty,
-            SpendingSourceId = source.Id,
-            SpendingSource = source
+            AccountId = source.Id,
+            Account = source
         };
     }
 
-    private static SpendingSource CreateCheckingSource()
+    private static Account CreateCheckingSource()
     {
-        return new SpendingSource
+        return new Account
         {
             Id = 1,
             Name = "DBS Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             IsEnabled = true
         };
     }
 
-    private static SpendingSource CreateCreditSource()
+    private static Account CreateCreditSource()
     {
-        return new SpendingSource
+        return new Account
         {
             Id = 2,
             Name = "Citibank Credit",
-            SpendingSourceType = SpendingSourceType.Credit,
+            AccountType = AccountType.Credit,
             IsEnabled = false
         };
     }
@@ -877,8 +877,8 @@ public sealed class LedgerVMTests
         var groceries = new ExpenseTagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
         var streaming = new ExpenseTagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" };
         var goal = new ExpenseTagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
-        var checking = new SpendingSourceDto { Id = 1, Name = "DBS Checking", SpendingSourceType = SpendingSourceType.Checking, IsEnabled = true };
-        var credit = new SpendingSourceDto { Id = 2, Name = "Citibank Credit", SpendingSourceType = SpendingSourceType.Credit, IsEnabled = false };
+        var checking = new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true };
+        var credit = new AccountDto { Id = 2, Name = "Citibank Credit", AccountType = AccountType.Credit, IsEnabled = false };
 
         return
         [
@@ -895,7 +895,7 @@ public sealed class LedgerVMTests
         DateTime deductedOn,
         ExpenseCategory category,
         ExpenseTagDto tag,
-        SpendingSourceDto source,
+        AccountDto source,
         string notes = "")
     {
         return new ExpenseLogDto
@@ -912,11 +912,11 @@ public sealed class LedgerVMTests
                 ExpenseCategory = category,
                 ExpenseTag = tag,
                 ExpenseTagId = tag.Id,
-                SpendingSource = source,
-                SpendingSourceId = source.Id
+                Account = source,
+                AccountId = source.Id
             },
-            SpendingSource = source,
-            SpendingSourceId = source.Id
+            Account = source,
+            AccountId = source.Id
         };
     }
 
@@ -930,24 +930,24 @@ public sealed class LedgerVMTests
                 Name = "June Salary",
                 Amount = 2800m,
                 AddedOn = new DateTime(2026, 6, 3, 14, 0, 0),
-                SpendingSourceId = 1,
-                SpendingSource = new SpendingSource
+                AccountId = 1,
+                Account = new Account
                 {
                     Id = 1,
                     Name = "DBS Checking",
-                    SpendingSourceType = SpendingSourceType.Checking,
+                    AccountType = AccountType.Checking,
                     IsEnabled = true
                 }
             }
         ];
     }
 
-    private static IReadOnlyList<SpendingSourceDto> CreateSpendingSources()
+    private static IReadOnlyList<AccountDto> CreateAccounts()
     {
         return
         [
-            new SpendingSourceDto { Id = 1, Name = "DBS Checking", SpendingSourceType = SpendingSourceType.Checking, IsEnabled = true },
-            new SpendingSourceDto { Id = 2, Name = "Citibank Credit", SpendingSourceType = SpendingSourceType.Credit, IsEnabled = false }
+            new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true },
+            new AccountDto { Id = 2, Name = "Citibank Credit", AccountType = AccountType.Credit, IsEnabled = false }
         ];
     }
 

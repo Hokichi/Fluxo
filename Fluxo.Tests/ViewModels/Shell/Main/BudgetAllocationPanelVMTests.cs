@@ -27,7 +27,7 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             messenger.Send(new DateRangeSelectionChangedMessage(
@@ -50,7 +50,7 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts());
             vm.LoadAsync().GetAwaiter().GetResult();
             messenger.Send(new DateRangeSelectionChangedMessage(
                 new DateTime(2026, 4, 10),
@@ -79,7 +79,7 @@ public class BudgetAllocationPanelVMTests
                 messenger,
                 CreateExpenseLogsForUsageOrdering(),
                 CreateTagsForUsageOrdering(),
-                CreateSpendingSources());
+                CreateAccounts());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             messenger.Send(new DateRangeSelectionChangedMessage(
@@ -102,7 +102,7 @@ public class BudgetAllocationPanelVMTests
                 messenger,
                 CreateExpenseLogsForTagPromotion(),
                 CreateTagsForTagPromotion(),
-                CreateSpendingSources());
+                CreateAccounts());
             vm.LoadAsync().GetAwaiter().GetResult();
             messenger.Send(new DateRangeSelectionChangedMessage(
                 new DateTime(2026, 4, 1),
@@ -128,7 +128,7 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             messenger.Send(new DateRangeSelectionChangedMessage(
@@ -160,7 +160,7 @@ public class BudgetAllocationPanelVMTests
                 messenger,
                 CreateExpenseLogs(),
                 CreateTags(),
-                CreateSpendingSources(),
+                CreateAccounts(),
                 budgetAllocation: new BudgetAllocation
                 {
                     NeedsThreshold = 45,
@@ -189,7 +189,7 @@ public class BudgetAllocationPanelVMTests
                 messenger,
                 CreateExpenseLogs(),
                 CreateTags(),
-                CreateSpendingSources(),
+                CreateAccounts(),
                 budgetAllocation: new BudgetAllocation
                 {
                     NeedsThreshold = 40,
@@ -215,7 +215,7 @@ public class BudgetAllocationPanelVMTests
                 messenger,
                 CreateExpenseLogs(),
                 CreateTags(),
-                CreateSpendingSources(),
+                CreateAccounts(),
                 settings:
                 [
                     new UserSettings { Name = "NeedsThreshold", Value = "invalid" }
@@ -235,11 +235,11 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var source = new SpendingSourceVM
+            var source = new AccountVM
             {
                 Id = 1,
                 Name = "Checking",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 1825m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -261,11 +261,11 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var source = new SpendingSourceVM
+            var source = new AccountVM
             {
                 Id = 1,
                 Name = "Checking",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 2000m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -280,7 +280,7 @@ public class BudgetAllocationPanelVMTests
                     ExpenseName: "Groceries",
                     Amount: 45m,
                     ExpenseCategory: ExpenseCategory.Needs,
-                    SpendingSourceId: 1,
+                    AccountId: 1,
                     TagId: 1,
                     DeductedOn: DateTime.Today,
                     Notes: string.Empty,
@@ -299,11 +299,11 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var source = new SpendingSourceVM
+            var source = new AccountVM
             {
                 Id = 1,
                 Name = "Checking",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 2100m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -325,11 +325,11 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var source = new SpendingSourceVM
+            var source = new AccountVM
             {
                 Id = 1,
                 Name = "Checking",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 17_660_000m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -362,11 +362,11 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var source = new SpendingSourceVM
+            var source = new AccountVM
             {
                 Id = 1,
                 Name = "Checking",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 2000m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -377,7 +377,7 @@ public class BudgetAllocationPanelVMTests
             messenger.Send(new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(
                 new IncomeLogMemorySnapshot(
                     IncomeLogId: 10,
-                    SpendingSourceId: 1,
+                    AccountId: 1,
                     Name: "Paycheck",
                     Amount: 100m,
                     AddedOn: new DateTime(2026, 4, 10),
@@ -396,13 +396,13 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts());
             vm.LoadAsync().GetAwaiter().GetResult();
             messenger.Send(new DateRangeSelectionChangedMessage(
                 new DateTime(2026, 4, 10),
                 new DateTime(2026, 4, 18)));
             var targetLog = vm.GetAllExpenseLogs().Single(log => log.Id == 1);
-            var source = vm.SpendingSources.Single();
+            var source = vm.Accounts.Single();
 
             Assert.Equal(-175m, source.Difference);
 
@@ -423,14 +423,14 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources(), CreateIncomeLogs());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts(), CreateIncomeLogs());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             messenger.Send(new DateRangeSelectionChangedMessage(
                 new DateTime(2026, 4, 10),
                 new DateTime(2026, 4, 12)));
 
-            var source = vm.SpendingSources.Single();
+            var source = vm.Accounts.Single();
             Assert.Equal(-55m, source.Difference);
 
             messenger.Send(new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(
@@ -452,7 +452,7 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources(), CreateIncomeLogs());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts(), CreateIncomeLogs());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             var before = new IncomeLogMemorySnapshot(
@@ -483,7 +483,7 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources(), CreateIncomeLogs());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts(), CreateIncomeLogs());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             messenger.Send(new RecordLogMemoryMessage(new DeleteIncomeLogMemoryAction(
@@ -506,7 +506,7 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateSpendingSources());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             var before = new ExpenseLogMemorySnapshot(
@@ -515,7 +515,7 @@ public class BudgetAllocationPanelVMTests
                 ExpenseName: "Groceries",
                 Amount: 45m,
                 ExpenseCategory: ExpenseCategory.Needs,
-                SpendingSourceId: 1,
+                AccountId: 1,
                 TagId: 1,
                 DeductedOn: new DateTime(2026, 4, 10),
                 Notes: string.Empty,
@@ -532,7 +532,7 @@ public class BudgetAllocationPanelVMTests
             messenger.Send(new RecordLogMemoryMessage(new EditExpenseLogMemoryAction(before, after)));
 
             var updated = vm.GetAllExpenseLogs().Single(log => log.Id == 1);
-            Assert.Equal("Checking", updated.SpendingSource.Name);
+            Assert.Equal("Checking", updated.Account.Name);
             Assert.Equal("#F97316", updated.Expense.ExpenseTag.HexCode);
         });
     }
@@ -541,7 +541,7 @@ public class BudgetAllocationPanelVMTests
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
         IReadOnlyList<ExpenseTagVM> tags,
-        IReadOnlyList<SpendingSourceVM> spendingSources,
+        IReadOnlyList<AccountVM> accounts,
         IReadOnlyList<IncomeLogVM>? incomeLogs = null,
         IReadOnlyList<UserSettings>? settings = null,
         BudgetAllocation? budgetAllocation = null)
@@ -552,9 +552,9 @@ public class BudgetAllocationPanelVMTests
         expenseLogService.DeleteAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var spendingSourceService = Substitute.For<ISpendingSourceService>();
-        spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<SpendingSourceDto>>([]));
+        var accountService = Substitute.For<IAccountService>();
+        accountService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<AccountDto>>([]));
 
         var tagService = Substitute.For<ITagService>();
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -579,12 +579,12 @@ public class BudgetAllocationPanelVMTests
                     Amount = log.Amount,
                     AddedOn = log.AddedOn,
                     Notes = log.Notes,
-                    SpendingSourceId = log.SpendingSource.Id,
-                    SpendingSource = new SpendingSource
+                    AccountId = log.Account.Id,
+                    Account = new Account
                     {
-                        Id = log.SpendingSource.Id,
-                        Name = log.SpendingSource.Name,
-                        SpendingSourceType = log.SpendingSource.SpendingSourceType
+                        Id = log.Account.Id,
+                        Name = log.Account.Name,
+                        AccountType = log.Account.AccountType
                     }
                 }).ToList()));
         unitOfWork.IncomeLogs.Returns(incomeLogRepository);
@@ -592,18 +592,18 @@ public class BudgetAllocationPanelVMTests
 
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
-        mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
+        mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
         mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns(tags);
         var allocationData = new AllocationDataVM(
             expenseLogService,
-            spendingSourceService,
+            accountService,
             dataOperationRunner,
             mapper,
             messenger);
 
         return new BudgetAllocationPanelVM(
             expenseLogService,
-            spendingSourceService,
+            accountService,
             tagService,
             dataOperationRunner,
             mapper,
@@ -615,11 +615,11 @@ public class BudgetAllocationPanelVMTests
     {
         var groceries = new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" };
         var fun = new ExpenseTagVM { Id = 2, Name = "Fun", HexCode = "#F97316" };
-        var source = new SpendingSourceVM
+        var source = new AccountVM
         {
             Id = 1,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = 2000m,
             IsEnabled = true,
             PinnedOnUI = true
@@ -639,7 +639,7 @@ public class BudgetAllocationPanelVMTests
                     ExpenseCategory = ExpenseCategory.Needs,
                     ExpenseTag = groceries
                 },
-                SpendingSource = source
+                Account = source
             },
             new ExpenseLogVM
             {
@@ -653,7 +653,7 @@ public class BudgetAllocationPanelVMTests
                     ExpenseCategory = ExpenseCategory.Wants,
                     ExpenseTag = fun
                 },
-                SpendingSource = source
+                Account = source
             },
             new ExpenseLogVM
             {
@@ -667,7 +667,7 @@ public class BudgetAllocationPanelVMTests
                     ExpenseCategory = ExpenseCategory.Savings,
                     ExpenseTag = groceries
                 },
-                SpendingSource = source
+                Account = source
             }
         ];
     }
@@ -681,15 +681,15 @@ public class BudgetAllocationPanelVMTests
         ];
     }
 
-    private static IReadOnlyList<SpendingSourceVM> CreateSpendingSources()
+    private static IReadOnlyList<AccountVM> CreateAccounts()
     {
         return
         [
-            new SpendingSourceVM
+            new AccountVM
             {
                 Id = 1,
                 Name = "Checking",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 1825m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -708,11 +708,11 @@ public class BudgetAllocationPanelVMTests
                 Amount = 20m,
                 AddedOn = new DateTime(2026, 4, 12),
                 Notes = "refund",
-                SpendingSource = new SpendingSourceVM
+                Account = new AccountVM
                 {
                     Id = 1,
                     Name = "Checking",
-                    SpendingSourceType = SpendingSourceType.Checking
+                    AccountType = AccountType.Checking
                 }
             }
         ];
@@ -734,7 +734,7 @@ public class BudgetAllocationPanelVMTests
     private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogsForUsageOrdering()
     {
         var tags = CreateTagsForUsageOrdering().ToDictionary(tag => tag.Id);
-        var source = CreateSpendingSources().Single();
+        var source = CreateAccounts().Single();
         var logs = new List<ExpenseLogVM>();
         var nextId = 1;
 
@@ -764,7 +764,7 @@ public class BudgetAllocationPanelVMTests
     private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogsForTagPromotion()
     {
         var tags = CreateTagsForTagPromotion().ToDictionary(tag => tag.Id);
-        var source = CreateSpendingSources().Single();
+        var source = CreateAccounts().Single();
         var logs = new List<ExpenseLogVM>();
         var nextId = 1;
 
@@ -783,7 +783,7 @@ public class BudgetAllocationPanelVMTests
         ref int nextId,
         ExpenseTagVM tag,
         int count,
-        SpendingSourceVM source)
+        AccountVM source)
     {
         for (var index = 0; index < count; index++)
         {
@@ -799,7 +799,7 @@ public class BudgetAllocationPanelVMTests
                     ExpenseCategory = ExpenseCategory.Needs,
                     ExpenseTag = tag
                 },
-                SpendingSource = source
+                Account = source
             });
         }
     }

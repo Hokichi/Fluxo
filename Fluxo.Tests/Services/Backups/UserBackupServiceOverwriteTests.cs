@@ -13,16 +13,16 @@ public sealed class UserBackupServiceOverwriteTests
         var order = UserBackupService.BuildOverwriteRemovalLabels(
             new UserBackupSelection(new HashSet<DataManagementEntityKind>
             {
-                DataManagementEntityKind.SpendingSources,
+                DataManagementEntityKind.Accounts,
                 DataManagementEntityKind.Expenses,
                 DataManagementEntityKind.Incomes,
                 DataManagementEntityKind.RecurringTransactions
             }));
 
-        Assert.True(order.IndexOf("RecurringTransactions") < order.IndexOf("SpendingSources"));
-        Assert.True(order.IndexOf("ExpenseLogs") < order.IndexOf("SpendingSources"));
-        Assert.True(order.IndexOf("Expenses") < order.IndexOf("SpendingSources"));
-        Assert.True(order.IndexOf("IncomeLogs") < order.IndexOf("SpendingSources"));
+        Assert.True(order.IndexOf("RecurringTransactions") < order.IndexOf("Accounts"));
+        Assert.True(order.IndexOf("ExpenseLogs") < order.IndexOf("Accounts"));
+        Assert.True(order.IndexOf("Expenses") < order.IndexOf("Accounts"));
+        Assert.True(order.IndexOf("IncomeLogs") < order.IndexOf("Accounts"));
     }
 
     [Fact]
@@ -50,16 +50,16 @@ public sealed class UserBackupServiceOverwriteTests
     }
 
     [Fact]
-    public void OverwriteRemovalOrder_SelectingSpendingSourcesIncludesDependentRemovals()
+    public void OverwriteRemovalOrder_SelectingAccountsIncludesDependentRemovals()
     {
         var order = UserBackupService.BuildOverwriteRemovalLabels(
             new UserBackupSelection(new HashSet<DataManagementEntityKind>
             {
-                DataManagementEntityKind.SpendingSources
+                DataManagementEntityKind.Accounts
             }));
 
         Assert.Equal(
-            ["RecurringTransactions", "ExpenseLogs", "Expenses", "IncomeLogs", "SpendingSources"],
+            ["RecurringTransactions", "ExpenseLogs", "Expenses", "IncomeLogs", "Accounts"],
             order);
     }
 

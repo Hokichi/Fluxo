@@ -7,10 +7,10 @@ namespace Fluxo.Services.History;
 
 public interface ILogMemoryAction : Fluxo.Core.Interfaces.History.ILogMemoryAction;
 
-public sealed record SpendingSourceMemorySnapshot(
-    int SpendingSourceId,
+public sealed record AccountMemorySnapshot(
+    int AccountId,
     string Name,
-    SpendingSourceType SpendingSourceType,
+    AccountType AccountType,
     decimal AccountLimit,
     decimal MaximumSpending,
     decimal? MinimumPayment,
@@ -22,30 +22,30 @@ public sealed record SpendingSourceMemorySnapshot(
     bool PinnedOnUI,
     bool IsEnabled)
 {
-    public static SpendingSourceMemorySnapshot Create(SpendingSource spendingSource)
+    public static AccountMemorySnapshot Create(Account account)
     {
-        ArgumentNullException.ThrowIfNull(spendingSource);
+        ArgumentNullException.ThrowIfNull(account);
 
-        return new SpendingSourceMemorySnapshot(
-            spendingSource.Id,
-            spendingSource.Name,
-            spendingSource.SpendingSourceType,
-            spendingSource.AccountLimit,
-            spendingSource.MaximumSpending,
-            spendingSource.MinimumPayment,
-            spendingSource.SpentAmount,
-            spendingSource.Balance,
-            spendingSource.MonthlyDueDate,
-            spendingSource.DeductSource,
-            spendingSource.InterestRate,
-            spendingSource.PinnedOnUI,
-            spendingSource.IsEnabled);
+        return new AccountMemorySnapshot(
+            account.Id,
+            account.Name,
+            account.AccountType,
+            account.AccountLimit,
+            account.MaximumSpending,
+            account.MinimumPayment,
+            account.SpentAmount,
+            account.Balance,
+            account.MonthlyDueDate,
+            account.DeductSource,
+            account.InterestRate,
+            account.PinnedOnUI,
+            account.IsEnabled);
     }
 }
 
 public sealed record ExpenseMemorySnapshot(
     int ExpenseId,
-    int SpendingSourceId,
+    int AccountId,
     int TagId,
     string Name,
     decimal Amount,
@@ -57,7 +57,7 @@ public sealed record ExpenseMemorySnapshot(
 
         return new ExpenseMemorySnapshot(
             expense.Id,
-            expense.SpendingSourceId,
+            expense.AccountId,
             expense.ExpenseTagId,
             expense.Name,
             expense.Amount,
@@ -133,7 +133,7 @@ public sealed record ExpenseLogMemorySnapshot(
     string ExpenseName,
     decimal Amount,
     ExpenseCategory ExpenseCategory,
-    int SpendingSourceId,
+    int AccountId,
     int TagId,
     DateTime DeductedOn,
     string Notes,
@@ -143,7 +143,7 @@ public sealed record ExpenseLogMemorySnapshot(
     {
         ArgumentNullException.ThrowIfNull(expenseLog);
         ArgumentNullException.ThrowIfNull(expenseLog.Expense);
-        ArgumentNullException.ThrowIfNull(expenseLog.SpendingSource);
+        ArgumentNullException.ThrowIfNull(expenseLog.Account);
         ArgumentNullException.ThrowIfNull(expenseLog.Expense.ExpenseTag);
 
         return new ExpenseLogMemorySnapshot(
@@ -152,7 +152,7 @@ public sealed record ExpenseLogMemorySnapshot(
             expenseLog.Expense.Name,
             expenseLog.Amount,
             expenseLog.Expense.ExpenseCategory,
-            expenseLog.SpendingSource.Id,
+            expenseLog.Account.Id,
             expenseLog.Expense.ExpenseTag.Id,
             expenseLog.DeductedOn,
             expenseLog.Notes,
@@ -162,7 +162,7 @@ public sealed record ExpenseLogMemorySnapshot(
 
 public sealed record IncomeLogMemorySnapshot(
     int IncomeLogId,
-    int SpendingSourceId,
+    int AccountId,
     string Name,
     decimal Amount,
     DateTime AddedOn,
@@ -171,11 +171,11 @@ public sealed record IncomeLogMemorySnapshot(
     public static IncomeLogMemorySnapshot Create(IncomeLog incomeLog)
     {
         ArgumentNullException.ThrowIfNull(incomeLog);
-        ArgumentNullException.ThrowIfNull(incomeLog.SpendingSource);
+        ArgumentNullException.ThrowIfNull(incomeLog.Account);
 
         return new IncomeLogMemorySnapshot(
             incomeLog.Id,
-            incomeLog.SpendingSource.Id,
+            incomeLog.Account.Id,
             incomeLog.Name,
             incomeLog.Amount,
             incomeLog.AddedOn,
@@ -185,10 +185,10 @@ public sealed record IncomeLogMemorySnapshot(
 
 public sealed class AddExpenseLogMemoryAction(
     ExpenseLogMemorySnapshot snapshot,
-    bool shouldAdjustSpendingSourceTotals = true) : ILogMemoryAction
+    bool shouldAdjustAccountTotals = true) : ILogMemoryAction
 {
     public ExpenseLogMemorySnapshot Snapshot => snapshot;
-    public bool ShouldAdjustSpendingSourceTotals => shouldAdjustSpendingSourceTotals;
+    public bool ShouldAdjustAccountTotals => shouldAdjustAccountTotals;
 
     public string Description => "Add expense";
 
@@ -198,10 +198,10 @@ public sealed class AddExpenseLogMemoryAction(
         if (expenseLog is null)
             return;
 
-        if (shouldAdjustSpendingSourceTotals)
+        if (shouldAdjustAccountTotals)
         {
-            LogMemoryPersistence.RevertExpenseFromSpendingSource(expenseLog.SpendingSource, expenseLog.Amount);
-            unitOfWork.SpendingSources.Update(expenseLog.SpendingSource);
+            LogMemoryPersistence.RevertExpenseFromAccount(expenseLog.Account, expenseLog.Amount);
+            unitOfWork.Accounts.Update(expenseLog.Account);
         }
 
         var expense = expenseLog.Expense;
@@ -228,8 +228,8 @@ public sealed class AddExpenseLogMemoryAction(
         if (await unitOfWork.ExpenseLogs.GetByIdAsync(snapshot.ExpenseLogId, cancellationToken) is not null)
             return;
 
-        if (shouldAdjustSpendingSourceTotals)
-            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+        if (shouldAdjustAccountTotals)
+            await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
 
         var expense = new Expense
@@ -238,7 +238,7 @@ public sealed class AddExpenseLogMemoryAction(
             Name = snapshot.ExpenseName,
             Amount = snapshot.Amount,
             ExpenseCategory = snapshot.ExpenseCategory,
-            SpendingSourceId = snapshot.SpendingSourceId,
+            AccountId = snapshot.AccountId,
             ExpenseTagId = snapshot.TagId
         };
 
@@ -250,19 +250,19 @@ public sealed class AddExpenseLogMemoryAction(
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
-            SpendingSourceId = snapshot.SpendingSourceId
+            AccountId = snapshot.AccountId
         };
 
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
         await unitOfWork.ExpenseLogs.AddAsync(expenseLog, cancellationToken);
 
-        if (shouldAdjustSpendingSourceTotals)
+        if (shouldAdjustAccountTotals)
         {
-            var spendingSource =
-                await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+            var account =
+                await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                     cancellationToken);
-            LogMemoryPersistence.ApplyExpenseToSpendingSource(spendingSource, snapshot.Amount);
-            unitOfWork.SpendingSources.Update(spendingSource);
+            LogMemoryPersistence.ApplyExpenseToAccount(account, snapshot.Amount);
+            unitOfWork.Accounts.Update(account);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -281,8 +281,8 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
         if (incomeLog is null)
             return;
 
-        LogMemoryPersistence.RevertIncomeFromSpendingSource(incomeLog.SpendingSource, incomeLog.Amount);
-        unitOfWork.SpendingSources.Update(incomeLog.SpendingSource);
+        LogMemoryPersistence.RevertIncomeFromAccount(incomeLog.Account, incomeLog.Amount);
+        unitOfWork.Accounts.Update(incomeLog.Account);
         unitOfWork.IncomeLogs.Remove(incomeLog);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -293,8 +293,8 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
         if (await unitOfWork.IncomeLogs.GetByIdAsync(snapshot.IncomeLogId, cancellationToken) is not null)
             return;
 
-        var spendingSource =
-            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+        var account =
+            await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
 
         var incomeLog = new IncomeLog
@@ -304,13 +304,13 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,
-            SpendingSourceId = snapshot.SpendingSourceId
+            AccountId = snapshot.AccountId
         };
 
         await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
 
-        LogMemoryPersistence.ApplyIncomeToSpendingSource(spendingSource, snapshot.Amount);
-        unitOfWork.SpendingSources.Update(spendingSource);
+        LogMemoryPersistence.ApplyIncomeToAccount(account, snapshot.Amount);
+        unitOfWork.Accounts.Update(account);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -342,26 +342,26 @@ public sealed class EditIncomeLogMemoryAction(
         if (incomeLog is null)
             return;
 
-        var currentSpendingSource = incomeLog.SpendingSource;
-        var targetSpendingSource =
-            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+        var currentAccount = incomeLog.Account;
+        var targetAccount =
+            await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
 
-        LogMemoryPersistence.RevertIncomeFromSpendingSource(currentSpendingSource, incomeLog.Amount);
-        LogMemoryPersistence.ApplyIncomeToSpendingSource(targetSpendingSource, snapshot.Amount);
+        LogMemoryPersistence.RevertIncomeFromAccount(currentAccount, incomeLog.Amount);
+        LogMemoryPersistence.ApplyIncomeToAccount(targetAccount, snapshot.Amount);
 
         incomeLog.Name = snapshot.Name;
         incomeLog.Amount = snapshot.Amount;
         incomeLog.AddedOn = snapshot.AddedOn;
         incomeLog.Notes = snapshot.Notes;
-        incomeLog.SpendingSource = targetSpendingSource;
-        incomeLog.SpendingSourceId = snapshot.SpendingSourceId;
+        incomeLog.Account = targetAccount;
+        incomeLog.AccountId = snapshot.AccountId;
 
         unitOfWork.IncomeLogs.Update(incomeLog);
-        unitOfWork.SpendingSources.Update(currentSpendingSource);
+        unitOfWork.Accounts.Update(currentAccount);
 
-        if (!ReferenceEquals(currentSpendingSource, targetSpendingSource))
-            unitOfWork.SpendingSources.Update(targetSpendingSource);
+        if (!ReferenceEquals(currentAccount, targetAccount))
+            unitOfWork.Accounts.Update(targetAccount);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -378,8 +378,8 @@ public sealed class DeleteIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot
         if (await unitOfWork.IncomeLogs.GetByIdAsync(snapshot.IncomeLogId, cancellationToken) is not null)
             return;
 
-        var spendingSource =
-            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+        var account =
+            await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
 
         var incomeLog = new IncomeLog
@@ -389,13 +389,13 @@ public sealed class DeleteIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,
-            SpendingSourceId = snapshot.SpendingSourceId,
-            SpendingSource = spendingSource
+            AccountId = snapshot.AccountId,
+            Account = account
         };
 
         await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
-        LogMemoryPersistence.ApplyIncomeToSpendingSource(spendingSource, snapshot.Amount);
-        unitOfWork.SpendingSources.Update(spendingSource);
+        LogMemoryPersistence.ApplyIncomeToAccount(account, snapshot.Amount);
+        unitOfWork.Accounts.Update(account);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -406,8 +406,8 @@ public sealed class DeleteIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot
         if (incomeLog is null)
             return;
 
-        LogMemoryPersistence.RevertIncomeFromSpendingSource(incomeLog.SpendingSource, incomeLog.Amount);
-        unitOfWork.SpendingSources.Update(incomeLog.SpendingSource);
+        LogMemoryPersistence.RevertIncomeFromAccount(incomeLog.Account, incomeLog.Amount);
+        unitOfWork.Accounts.Update(incomeLog.Account);
         unitOfWork.IncomeLogs.Remove(incomeLog);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -459,34 +459,34 @@ public sealed class EditExpenseLogMemoryAction(
         if (expenseLog?.Expense is null)
             return;
 
-        var currentSpendingSource = expenseLog.SpendingSource;
-        var targetSpendingSource =
-            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+        var currentAccount = expenseLog.Account;
+        var targetAccount =
+            await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
         var expenseTag =
             await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId, cancellationToken);
 
-        LogMemoryPersistence.RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
-        LogMemoryPersistence.ApplyExpenseToSpendingSource(targetSpendingSource, snapshot.Amount);
+        LogMemoryPersistence.RevertExpenseFromAccount(currentAccount, expenseLog.Amount);
+        LogMemoryPersistence.ApplyExpenseToAccount(targetAccount, snapshot.Amount);
 
         expenseLog.Expense.Name = snapshot.ExpenseName;
         expenseLog.Expense.Amount = snapshot.Amount;
         expenseLog.Expense.ExpenseCategory = snapshot.ExpenseCategory;
-        expenseLog.Expense.SpendingSource = targetSpendingSource;
+        expenseLog.Expense.Account = targetAccount;
         expenseLog.Expense.ExpenseTag = expenseTag;
 
         expenseLog.Amount = snapshot.Amount;
         expenseLog.DeductedOn = snapshot.DeductedOn;
         expenseLog.Notes = snapshot.Notes;
         expenseLog.IsForDeletion = snapshot.IsForDeletion;
-        expenseLog.SpendingSource = targetSpendingSource;
+        expenseLog.Account = targetAccount;
 
         unitOfWork.Expenses.Update(expenseLog.Expense);
         unitOfWork.ExpenseLogs.Update(expenseLog);
-        unitOfWork.SpendingSources.Update(currentSpendingSource);
+        unitOfWork.Accounts.Update(currentAccount);
 
-        if (!ReferenceEquals(currentSpendingSource, targetSpendingSource))
-            unitOfWork.SpendingSources.Update(targetSpendingSource);
+        if (!ReferenceEquals(currentAccount, targetAccount))
+            unitOfWork.Accounts.Update(targetAccount);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -535,31 +535,31 @@ public sealed class DeleteExpenseLogMemoryAction : ILogMemoryAction
     }
 }
 
-public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot snapshot) : ILogMemoryAction
+public sealed class AddAccountMemoryAction(AccountMemorySnapshot snapshot) : ILogMemoryAction
 {
-    public string Description => "Add spending source";
+    public string Description => "Add account";
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        var spendingSource =
-            await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
-        if (spendingSource is null)
+        var account =
+            await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken);
+        if (account is null)
             return;
 
-        unitOfWork.SpendingSources.Remove(spendingSource);
+        unitOfWork.Accounts.Remove(account);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        if (await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken) is not null)
+        if (await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken) is not null)
             return;
 
-        var spendingSource = new SpendingSource
+        var account = new Account
         {
-            Id = snapshot.SpendingSourceId,
+            Id = snapshot.AccountId,
             Name = snapshot.Name,
-            SpendingSourceType = snapshot.SpendingSourceType,
+            AccountType = snapshot.AccountType,
             AccountLimit = snapshot.AccountLimit,
             MaximumSpending = snapshot.MaximumSpending,
             MinimumPayment = snapshot.MinimumPayment,
@@ -572,16 +572,16 @@ public sealed class AddSpendingSourceMemoryAction(SpendingSourceMemorySnapshot s
             IsEnabled = snapshot.IsEnabled
         };
 
-        await unitOfWork.SpendingSources.AddAsync(spendingSource, cancellationToken);
+        await unitOfWork.Accounts.AddAsync(account, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
 
-public sealed class EditSpendingSourceMemoryAction(
-    SpendingSourceMemorySnapshot before,
-    SpendingSourceMemorySnapshot after) : ILogMemoryAction
+public sealed class EditAccountMemoryAction(
+    AccountMemorySnapshot before,
+    AccountMemorySnapshot after) : ILogMemoryAction
 {
-    public string Description => "Edit spending source";
+    public string Description => "Edit account";
 
     public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -593,45 +593,45 @@ public sealed class EditSpendingSourceMemoryAction(
         return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
     }
 
-    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, SpendingSourceMemorySnapshot snapshot,
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, AccountMemorySnapshot snapshot,
         CancellationToken cancellationToken)
     {
-        var spendingSource =
-            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+        var account =
+            await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
 
-        spendingSource.Name = snapshot.Name;
-        spendingSource.SpendingSourceType = snapshot.SpendingSourceType;
-        spendingSource.AccountLimit = snapshot.AccountLimit;
-        spendingSource.MaximumSpending = snapshot.MaximumSpending;
-        spendingSource.MinimumPayment = snapshot.MinimumPayment;
-        spendingSource.SpentAmount = snapshot.SpentAmount;
-        spendingSource.Balance = snapshot.Balance;
-        spendingSource.MonthlyDueDate = snapshot.MonthlyDueDate;
-        spendingSource.DeductSource = snapshot.DeductSource;
-        spendingSource.InterestRate = snapshot.InterestRate;
-        spendingSource.PinnedOnUI = snapshot.PinnedOnUI;
-        spendingSource.IsEnabled = snapshot.IsEnabled;
+        account.Name = snapshot.Name;
+        account.AccountType = snapshot.AccountType;
+        account.AccountLimit = snapshot.AccountLimit;
+        account.MaximumSpending = snapshot.MaximumSpending;
+        account.MinimumPayment = snapshot.MinimumPayment;
+        account.SpentAmount = snapshot.SpentAmount;
+        account.Balance = snapshot.Balance;
+        account.MonthlyDueDate = snapshot.MonthlyDueDate;
+        account.DeductSource = snapshot.DeductSource;
+        account.InterestRate = snapshot.InterestRate;
+        account.PinnedOnUI = snapshot.PinnedOnUI;
+        account.IsEnabled = snapshot.IsEnabled;
 
-        unitOfWork.SpendingSources.Update(spendingSource);
+        unitOfWork.Accounts.Update(account);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
 
-public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapshot snapshot) : ILogMemoryAction
+public sealed class DeleteAccountMemoryAction(AccountMemorySnapshot snapshot) : ILogMemoryAction
 {
-    public string Description => "Delete spending source";
+    public string Description => "Delete account";
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        if (await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken) is not null)
+        if (await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken) is not null)
             return;
 
-        var spendingSource = new SpendingSource
+        var account = new Account
         {
-            Id = snapshot.SpendingSourceId,
+            Id = snapshot.AccountId,
             Name = snapshot.Name,
-            SpendingSourceType = snapshot.SpendingSourceType,
+            AccountType = snapshot.AccountType,
             AccountLimit = snapshot.AccountLimit,
             MaximumSpending = snapshot.MaximumSpending,
             MinimumPayment = snapshot.MinimumPayment,
@@ -644,18 +644,18 @@ public sealed class DeleteSpendingSourceMemoryAction(SpendingSourceMemorySnapsho
             IsEnabled = snapshot.IsEnabled
         };
 
-        await unitOfWork.SpendingSources.AddAsync(spendingSource, cancellationToken);
+        await unitOfWork.Accounts.AddAsync(account, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        var spendingSource =
-            await unitOfWork.SpendingSources.GetByIdAsync(snapshot.SpendingSourceId, cancellationToken);
-        if (spendingSource is null)
+        var account =
+            await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken);
+        if (account is null)
             return;
 
-        unitOfWork.SpendingSources.Remove(spendingSource);
+        unitOfWork.Accounts.Remove(account);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
@@ -686,7 +686,7 @@ public sealed class EditExpenseMemoryAction(
         expense.Name = snapshot.Name;
         expense.Amount = snapshot.Amount;
         expense.ExpenseCategory = snapshot.ExpenseCategory;
-        expense.SpendingSourceId = snapshot.SpendingSourceId;
+        expense.AccountId = snapshot.AccountId;
         expense.ExpenseTagId = snapshot.TagId;
 
         unitOfWork.Expenses.Update(expense);
@@ -703,8 +703,8 @@ public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : 
         if (await unitOfWork.Expenses.GetByIdAsync(snapshot.ExpenseId, cancellationToken) is not null)
             return;
 
-        var spendingSource =
-            await LogMemoryPersistence.GetRequiredSpendingSourceAsync(unitOfWork, snapshot.SpendingSourceId,
+        var account =
+            await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
         var expenseTag = await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId,
             cancellationToken);
@@ -715,9 +715,9 @@ public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : 
             Name = snapshot.Name,
             Amount = snapshot.Amount,
             ExpenseCategory = snapshot.ExpenseCategory,
-            SpendingSourceId = snapshot.SpendingSourceId,
+            AccountId = snapshot.AccountId,
             ExpenseTagId = snapshot.TagId,
-            SpendingSource = spendingSource,
+            Account = account,
             ExpenseTag = expenseTag
         };
 
@@ -884,56 +884,56 @@ public sealed class SetUserSettingMemoryAction(
 
 internal static class LogMemoryPersistence
 {
-    internal static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    internal static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount += amount;
+            account.SpentAmount += amount;
             return;
         }
 
-        spendingSource.Balance -= amount;
+        account.Balance -= amount;
     }
 
-    internal static void RevertExpenseFromSpendingSource(SpendingSource spendingSource, decimal amount)
+    internal static void RevertExpenseFromAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
         }
 
-        spendingSource.Balance += amount;
+        account.Balance += amount;
     }
 
-    internal static void ApplyIncomeToSpendingSource(SpendingSource spendingSource, decimal amount)
+    internal static void ApplyIncomeToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
         }
 
-        spendingSource.Balance += amount;
+        account.Balance += amount;
     }
 
-    internal static void RevertIncomeFromSpendingSource(SpendingSource spendingSource, decimal amount)
+    internal static void RevertIncomeFromAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount += amount;
+            account.SpentAmount += amount;
             return;
         }
 
-        spendingSource.Balance -= amount;
+        account.Balance -= amount;
     }
 
-    internal static async Task<SpendingSource> GetRequiredSpendingSourceAsync(IUnitOfWork unitOfWork,
-        int spendingSourceId, CancellationToken cancellationToken)
+    internal static async Task<Account> GetRequiredAccountAsync(IUnitOfWork unitOfWork,
+        int accountId, CancellationToken cancellationToken)
     {
-        var spendingSource = await unitOfWork.SpendingSources.GetByIdAsync(spendingSourceId, cancellationToken);
-        return spendingSource ??
-               throw new InvalidOperationException($"Unable to find spending source {spendingSourceId}.");
+        var account = await unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken);
+        return account ??
+               throw new InvalidOperationException($"Unable to find account {accountId}.");
     }
 
     internal static async Task<ExpenseTag> GetRequiredExpenseTagAsync(IUnitOfWork unitOfWork, int expenseTagId,

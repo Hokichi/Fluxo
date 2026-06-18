@@ -21,7 +21,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
     private readonly MainVM _mainViewModel;
     private readonly IAppDataService _appData;
     private readonly IMessenger _messenger;
-    private QuickSetupWizardSpendingSourcesVM? _spendingSources;
+    private QuickSetupWizardAccountsVM? _accounts;
     private readonly Dictionary<int, QuickSetupWizardDraftFixedExpense> _draftExpenses = [];
     private readonly HashSet<int> _removedPersistedIds = [];
     private readonly Dictionary<int, ExpenseTagVM> _tagCatalog = [];
@@ -43,18 +43,18 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
     public ObservableCollection<QuickSetupWizardFixedExpenseItemVM> FixedExpenses { get; } = [];
 
-    public void SetSpendingSources(QuickSetupWizardSpendingSourcesVM spendingSources)
+    public void SetAccounts(QuickSetupWizardAccountsVM accounts)
     {
-        _spendingSources = spendingSources;
+        _accounts = accounts;
     }
 
     public AddNewTransactionVM CreateAddViewModel()
     {
-        var spendingSourcesVm = GetSpendingSourcesOrThrow();
+        var accountsVm = GetAccountsOrThrow();
         var vm = new AddNewTransactionVM(
             _mainViewModel,
             _appData,
-            spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
+            accountsOverride: accountsVm.BuildAccountOptions(),
             saveRecurringDraftAsync: SaveDraftRecurringTransactionAsync);
         vm.InitializeRecurringMode(isLocked: true);
         return vm;
@@ -65,11 +65,11 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         if (!_isLoaded)
             await LoadDraftExpensesAsync();
 
-        var spendingSourcesVm = GetSpendingSourcesOrThrow();
+        var accountsVm = GetAccountsOrThrow();
         var vm = new AddNewTransactionVM(
             _mainViewModel,
             _appData,
-            spendingSourcesOverride: spendingSourcesVm.BuildSpendingSourceOptions(),
+            accountsOverride: accountsVm.BuildAccountOptions(),
             saveRecurringDraftAsync: SaveDraftRecurringTransactionAsync);
 
         if (_draftExpenses.TryGetValue(id, out var draft))
@@ -81,7 +81,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 draft.Amount,
                 draft.RecurringPeriod,
                 draft.RecurringTime,
-                draft.SpendingSourceId,
+                draft.AccountId,
                 draft.ExpenseTagId > 0 ? draft.ExpenseTagId : null,
                 null));
             return vm;
@@ -116,9 +116,9 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
         foreach (var draft in _draftExpenses.Values.OrderBy(expense => expense.Id))
         {
-            var mappedSourceId = sourceIdMap.TryGetValue(draft.SpendingSourceId, out var mapped)
+            var mappedSourceId = sourceIdMap.TryGetValue(draft.AccountId, out var mapped)
                 ? mapped
-                : draft.SpendingSourceId;
+                : draft.AccountId;
             if (mappedSourceId <= 0)
                 continue;
 
@@ -218,7 +218,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             input.Name,
             input.Amount,
             input.Category,
-            input.SpendingSourceId,
+            input.AccountId,
             RecurringPeriod.Monthly,
             input.RecurringTime,
             input.TagId,
@@ -249,7 +249,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             input.Name,
             input.Amount,
             ExpenseCategory.Needs,
-            input.SpendingSourceId,
+            input.AccountId,
             input.RecurringPeriod,
             input.RecurringTime,
             input.TagId ?? 0,
@@ -359,7 +359,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
     private void RefreshProjectionAndPublish()
     {
-        var spendingSourcesVm = GetSpendingSourcesOrThrow();
+        var accountsVm = GetAccountsOrThrow();
 
         QuickSetupWizardShared.ReplaceCollection(
             FixedExpenses,
@@ -367,15 +367,15 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 .OrderBy(expense => expense.Name)
                 .Select(expense => new QuickSetupWizardFixedExpenseItemVM(
                     expense,
-                    spendingSourcesVm.ResolveSourceName(expense.SpendingSourceId))));
+                    accountsVm.ResolveSourceName(expense.AccountId))));
 
         PublishSnapshot();
     }
 
-    private QuickSetupWizardSpendingSourcesVM GetSpendingSourcesOrThrow()
+    private QuickSetupWizardAccountsVM GetAccountsOrThrow()
     {
-        return _spendingSources
-               ?? throw new InvalidOperationException("Startup wizard spending sources were not configured.");
+        return _accounts
+               ?? throw new InvalidOperationException("Startup wizard accounts were not configured.");
     }
 }
 

@@ -108,10 +108,10 @@ public partial class QuickSetupWizard : BasePopup
 
     public async void OnNextClick(object sender, RoutedEventArgs e)
     {
-        if (_viewModel.IsStep2Active && !_viewModel.HasSpendingSources)
+        if (_viewModel.IsStep2Active && !_viewModel.HasAccounts)
         {
             var dialogResult = FluxoMessageBox.Show(this,
-                "A spending source is required to calculate budgets and linked transactions. If there are no available sources, Recurring transactions, Saving goals, and Budget allocation setup will be skipped. Do you want to continue without adding a source?",
+                "A account is required to calculate budgets and linked transactions. If there are no available sources, Recurring transactions, Saving goals, and Budget allocation setup will be skipped. Do you want to continue without adding a source?",
                 "Startup Wizard",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -126,7 +126,7 @@ public partial class QuickSetupWizard : BasePopup
             }
             else
             {
-                OnAddSpendingSourceClick(sender, e);
+                OnAddAccountClick(sender, e);
                 return;
             }
         }
@@ -204,10 +204,10 @@ public partial class QuickSetupWizard : BasePopup
         base.OnPreviewKeyDown(e);
     }
 
-    public async void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
+    public async void OnAddAccountClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddSpendingSource(_viewModel.MiddlePage.SpendingSources.CreateAddViewModel(), this);
-        await _viewModel.MiddlePage.SpendingSources.RefreshAsync();
+        _dialogService.ShowAddAccount(_viewModel.MiddlePage.Accounts.CreateAddViewModel(), this);
+        await _viewModel.MiddlePage.Accounts.RefreshAsync();
     }
 
     public async void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
@@ -222,28 +222,28 @@ public partial class QuickSetupWizard : BasePopup
         await _viewModel.MiddlePage.SavingGoals.RefreshAsync();
     }
 
-    public async void OnEditSpendingSourceClick(object sender, RoutedEventArgs e)
+    public async void OnEditAccountClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
 
-        var vm = await _viewModel.MiddlePage.SpendingSources.CreateEditViewModelAsync(id);
-        _dialogService.ShowAddSpendingSource(vm, this);
-        await _viewModel.MiddlePage.SpendingSources.RefreshAsync();
+        var vm = await _viewModel.MiddlePage.Accounts.CreateEditViewModelAsync(id);
+        _dialogService.ShowAddAccount(vm, this);
+        await _viewModel.MiddlePage.Accounts.RefreshAsync();
     }
 
-    public async void OnDeleteSpendingSourceClick(object sender, RoutedEventArgs e)
+    public async void OnDeleteAccountClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
 
-        var confirmationMessage = _viewModel.MiddlePage.SpendingSources.BuildDeleteConfirmationMessage(id);
+        var confirmationMessage = _viewModel.MiddlePage.Accounts.BuildDeleteConfirmationMessage(id);
         var result = FluxoMessageBox.Show(this,
             confirmationMessage,
-            "Delete Spending Source", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            "Delete Account", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)
-            await _viewModel.MiddlePage.SpendingSources.DeleteAsync(id);
+            await _viewModel.MiddlePage.Accounts.DeleteAsync(id);
     }
 
     public async void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)

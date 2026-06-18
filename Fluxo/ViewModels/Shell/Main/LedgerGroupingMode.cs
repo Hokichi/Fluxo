@@ -5,7 +5,7 @@ public enum LedgerGroupingMode
     None,
     Date,
     Tags,
-    SpendingSources,
+    Accounts,
     Types,
     Category
 }

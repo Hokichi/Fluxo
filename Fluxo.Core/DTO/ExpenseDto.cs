@@ -5,9 +5,9 @@ namespace Fluxo.Core.DTO;
 public class ExpenseDto
 {
     public int Id { get; set; }
-    public int SpendingSourceId { get; set; }
+    public int AccountId { get; set; }
     public int ExpenseTagId { get; set; }
-    public SpendingSourceDto SpendingSource { get; set; } = new();
+    public AccountDto Account { get; set; } = new();
     public ExpenseTagDto ExpenseTag { get; set; } = new();
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }

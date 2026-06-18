@@ -225,7 +225,7 @@
                                         TextWrapping="NoWrap" />
                                     <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                                         <TextBlock FontFamily="{StaticResource Regular}" FontSize="12">
-                                            <Run Foreground="{StaticResource Brush.Text.Muted}" Text="{Binding SpendingSource.Name}" />
+                                            <Run Foreground="{StaticResource Brush.Text.Muted}" Text="{Binding Account.Name}" />
                                         </TextBlock>
                                     </StackPanel>
                                 </StackPanel>
@@ -337,7 +337,7 @@
                         Width="184"
                         Click="OnEmptyActionButtonClick"
                         Content="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                        Style="{StaticResource SpendingSourceAddButtonStyle}" />
+                        Style="{StaticResource AccountAddButtonStyle}" />
                 </StackPanel>
 
                 <customControls:FadingScrollViewer

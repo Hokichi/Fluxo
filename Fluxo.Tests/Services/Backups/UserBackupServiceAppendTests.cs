@@ -41,8 +41,8 @@ public sealed class UserBackupServiceAppendTests
     public async Task FindAppendConflictsAsync_DetectsSourceGoalAndTagNameConflicts()
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
-            .Returns([new SpendingSource { Id = 1, Name = "Wallet" }]);
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>())
+            .Returns([new Account { Id = 1, Name = "Wallet" }]);
         appData.GetSavingGoalsAsync(Arg.Any<CancellationToken>())
             .Returns([new SavingGoal { Id = 2, Name = "Trip" }]);
         appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
@@ -53,9 +53,9 @@ public sealed class UserBackupServiceAppendTests
         {
           "schemaVersion": 1,
           "createdAt": "2026-05-26T00:00:00Z",
-          "includedEntities": [ "spendingSources", "goals", "tags" ],
+          "includedEntities": [ "accounts", "goals", "tags" ],
           "entities": {
-            "spendingSources": [ { "backupId": 1, "name": "Wallet", "spendingSourceType": "Cash" } ],
+            "accounts": [ { "backupId": 1, "name": "Wallet", "accountType": "Cash" } ],
             "goals": [ { "backupId": 1, "name": "Trip", "targetAmount": 100, "currentAmount": 1, "createdOn": "2026-05-26T00:00:00Z" } ],
             "tags": [ { "backupId": 1, "name": "Food", "hexCode": "#fff", "isSystemTag": false } ]
           }
@@ -68,12 +68,12 @@ public sealed class UserBackupServiceAppendTests
             var conflicts = await service.FindAppendConflictsAsync(tempFile,
                 new UserBackupSelection(new HashSet<DataManagementEntityKind>
                 {
-                    DataManagementEntityKind.SpendingSources,
+                    DataManagementEntityKind.Accounts,
                     DataManagementEntityKind.Goals,
                     DataManagementEntityKind.Tags
                 }));
 
-            Assert.Contains(conflicts, conflict => conflict.EntityKind == DataManagementEntityKind.SpendingSources);
+            Assert.Contains(conflicts, conflict => conflict.EntityKind == DataManagementEntityKind.Accounts);
             Assert.Contains(conflicts, conflict => conflict.EntityKind == DataManagementEntityKind.Goals);
             Assert.Contains(conflicts, conflict => conflict.EntityKind == DataManagementEntityKind.Tags);
         }
@@ -89,8 +89,8 @@ public sealed class UserBackupServiceAppendTests
         var appData = Substitute.For<IAppDataService>();
         appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
             .Returns(_ => (IReadOnlyList<ExpenseTag>)[]);
-        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => (IReadOnlyList<SpendingSource>)[]);
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => (IReadOnlyList<Account>)[]);
         appData.GetSavingGoalsAsync(Arg.Any<CancellationToken>())
             .Returns(_ => (IReadOnlyList<SavingGoal>)[]);
 
@@ -119,10 +119,10 @@ public sealed class UserBackupServiceAppendTests
                 return Task.CompletedTask;
             });
 
-        appData.AddSpendingSourceAsync(Arg.Any<SpendingSource>(), Arg.Any<CancellationToken>())
+        appData.AddAccountAsync(Arg.Any<Account>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                call.Arg<SpendingSource>().Id = 10;
+                call.Arg<Account>().Id = 10;
                 return Task.CompletedTask;
             });
 
@@ -131,16 +131,16 @@ public sealed class UserBackupServiceAppendTests
         {
           "schemaVersion": 1,
           "createdAt": "2026-05-26T00:00:00Z",
-          "includedEntities": [ "spendingSources", "expenses", "recurringTransactions", "tags" ],
+          "includedEntities": [ "accounts", "expenses", "recurringTransactions", "tags" ],
           "entities": {
-            "spendingSources": [
-              { "backupId": 1, "name": "Wallet", "spendingSourceType": "Cash" }
+            "accounts": [
+              { "backupId": 1, "name": "Wallet", "accountType": "Cash" }
             ],
             "tags": [
               { "backupId": 2, "name": "Missing Tag", "hexCode": "#123456", "isSystemTag": false }
             ],
             "expenses": [
-              { "backupId": 3, "spendingSourceBackupId": 1, "expenseTagBackupId": 2, "name": "Lunch", "amount": 10, "expenseCategory": "Needs" }
+              { "backupId": 3, "accountBackupId": 1, "expenseTagBackupId": 2, "name": "Lunch", "amount": 10, "expenseCategory": "Needs" }
             ],
             "expenseLogs": [],
             "recurringTransactions": [
@@ -157,7 +157,7 @@ public sealed class UserBackupServiceAppendTests
                 tempFile,
                 new UserBackupSelection(new HashSet<DataManagementEntityKind>
                 {
-                    DataManagementEntityKind.SpendingSources,
+                    DataManagementEntityKind.Accounts,
                     DataManagementEntityKind.Expenses,
                     DataManagementEntityKind.RecurringTransactions
                 }),
@@ -231,14 +231,14 @@ public sealed class UserBackupServiceAppendTests
     public async Task AppendAsync_WithLegacyShowOnUiBackup_RestoresPinnedOnUi()
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => (IReadOnlyList<SpendingSource>)[]);
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => (IReadOnlyList<Account>)[]);
 
-        var appendedSources = new List<SpendingSource>();
-        appData.AddSpendingSourceAsync(Arg.Any<SpendingSource>(), Arg.Any<CancellationToken>())
+        var appendedSources = new List<Account>();
+        appData.AddAccountAsync(Arg.Any<Account>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                appendedSources.Add(call.Arg<SpendingSource>());
+                appendedSources.Add(call.Arg<Account>());
                 return Task.CompletedTask;
             });
 
@@ -247,13 +247,13 @@ public sealed class UserBackupServiceAppendTests
         {
           "schemaVersion": 1,
           "createdAt": "2026-05-26T00:00:00Z",
-          "includedEntities": [ "spendingSources" ],
+          "includedEntities": [ "accounts" ],
           "entities": {
-            "spendingSources": [
+            "accounts": [
               {
                 "backupId": 1,
                 "name": "Wallet",
-                "spendingSourceType": "Cash",
+                "accountType": "Cash",
                 "accountLimit": 0,
                 "maximumSpending": 0,
                 "minimumPayment": null,
@@ -278,7 +278,7 @@ public sealed class UserBackupServiceAppendTests
                 tempFile,
                 new UserBackupSelection(new HashSet<DataManagementEntityKind>
                 {
-                    DataManagementEntityKind.SpendingSources
+                    DataManagementEntityKind.Accounts
                 }),
                 new Dictionary<string, DataManagementConflictDecision>());
 
@@ -363,7 +363,7 @@ public sealed class UserBackupServiceAppendTests
     [Fact]
     public async Task AppendAsync_WithAppendDecisionOnSourceAndGoal_AddsAmountsToExistingEntities()
     {
-        var existingSource = new SpendingSource
+        var existingSource = new Account
         {
             Id = 10,
             Name = "Wallet",
@@ -379,7 +379,7 @@ public sealed class UserBackupServiceAppendTests
         };
 
         var appData = Substitute.For<IAppDataService>();
-        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>())
             .Returns([existingSource]);
         appData.GetSavingGoalsAsync(Arg.Any<CancellationToken>())
             .Returns([existingGoal]);
@@ -391,13 +391,13 @@ public sealed class UserBackupServiceAppendTests
         {
           "schemaVersion": 1,
           "createdAt": "2026-05-26T00:00:00Z",
-          "includedEntities": [ "spendingSources", "goals" ],
+          "includedEntities": [ "accounts", "goals" ],
           "entities": {
-            "spendingSources": [
+            "accounts": [
               {
                 "backupId": 1,
                 "name": "Wallet",
-                "spendingSourceType": "Cash",
+                "accountType": "Cash",
                 "accountLimit": 0,
                 "maximumSpending": 0,
                 "minimumPayment": null,
@@ -432,7 +432,7 @@ public sealed class UserBackupServiceAppendTests
                 tempFile,
                 new UserBackupSelection(new HashSet<DataManagementEntityKind>
                 {
-                    DataManagementEntityKind.SpendingSources,
+                    DataManagementEntityKind.Accounts,
                     DataManagementEntityKind.Goals
                 }),
                 new Dictionary<string, DataManagementConflictDecision>
@@ -447,9 +447,9 @@ public sealed class UserBackupServiceAppendTests
             Assert.Equal(150m, existingGoal.CurrentAmount);
             Assert.Equal(500m, existingGoal.TargetAmount);
 
-            _ = appData.DidNotReceive().AddSpendingSourceAsync(Arg.Any<SpendingSource>(), Arg.Any<CancellationToken>());
+            _ = appData.DidNotReceive().AddAccountAsync(Arg.Any<Account>(), Arg.Any<CancellationToken>());
             _ = appData.DidNotReceive().AddSavingGoalAsync(Arg.Any<SavingGoal>(), Arg.Any<CancellationToken>());
-            appData.Received(1).UpdateSpendingSource(existingSource);
+            appData.Received(1).UpdateAccount(existingSource);
             appData.Received(1).UpdateSavingGoal(existingGoal);
         }
         finally

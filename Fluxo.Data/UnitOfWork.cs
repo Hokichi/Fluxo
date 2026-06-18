@@ -11,7 +11,7 @@ public sealed class UnitOfWork(
     IIncomeLogRepository incomeLogs,
     IExpenseTagRepository expenseTags,
     ISavingGoalRepository savingGoals,
-    ISpendingSourceRepository spendingSources,
+    IAccountRepository accounts,
     IRecurringTransactionRepository recurringTransactions,
     INotificationRepository notifications,
     IUserSettingsRepository userSettings,
@@ -24,7 +24,7 @@ public sealed class UnitOfWork(
     public IIncomeLogRepository IncomeLogs { get; } = incomeLogs;
     public IExpenseTagRepository ExpenseTags { get; } = expenseTags;
     public ISavingGoalRepository SavingGoals { get; } = savingGoals;
-    public ISpendingSourceRepository SpendingSources { get; } = spendingSources;
+    public IAccountRepository Accounts { get; } = accounts;
     public IRecurringTransactionRepository RecurringTransactions { get; } = recurringTransactions;
     public INotificationRepository Notifications { get; } = notifications;
     public IUserSettingsRepository UserSettings { get; } = userSettings;

@@ -30,7 +30,7 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
                     log.Id,
                     log.Expense?.Name ?? string.Empty,
                     log.Amount,
-                    log.SpendingSource?.Name ?? string.Empty,
+                    log.Account?.Name ?? string.Empty,
                     log.Expense?.ExpenseTag?.Name))
                 .ToArray();
 
@@ -42,7 +42,7 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
                     log.Id,
                     log.Name,
                     log.Amount,
-                    log.SpendingSource?.Name ?? string.Empty))
+                    log.Account?.Name ?? string.Empty))
                 .ToArray();
 
             var goalDeadlines = goals

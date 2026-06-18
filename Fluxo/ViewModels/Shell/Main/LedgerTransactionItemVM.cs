@@ -7,7 +7,7 @@ namespace Fluxo.ViewModels.Shell.Main;
 public sealed partial class LedgerTransactionItemVM : ObservableObject
 {
     [ObservableProperty] private decimal _amount;
-    [ObservableProperty] private int _spendingSourceId;
+    [ObservableProperty] private int _accountId;
     [ObservableProperty] private int _tagId;
     [ObservableProperty] private bool _isDisabledByAnotherEdit;
     [ObservableProperty] private bool _isEditing;
@@ -15,7 +15,7 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     [ObservableProperty] private bool _isSelectedForBatch;
     [ObservableProperty] private bool _isTagPopupOpen;
     [ObservableProperty] private string _name = string.Empty;
-    [ObservableProperty] private string _spendingSourceName = string.Empty;
+    [ObservableProperty] private string _accountName = string.Empty;
     [ObservableProperty] private string _tagHexCode = string.Empty;
     [ObservableProperty] private string _tagName = string.Empty;
 
@@ -38,7 +38,7 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
 
     public string DateGroupKey => OccurredOn.ToString("MMM dd", CultureInfo.InvariantCulture).ToUpperInvariant();
     public string TagGroupKey => string.IsNullOrWhiteSpace(TagName) ? "Untagged" : TagName;
-    public string SpendingSourceGroupKey => string.IsNullOrWhiteSpace(SpendingSourceName) ? "No source" : SpendingSourceName;
+    public string AccountGroupKey => string.IsNullOrWhiteSpace(AccountName) ? "No source" : AccountName;
     public string TypeGroupKey => TypeLabel;
     public string CategoryGroupKey => CategoryLabel;
 

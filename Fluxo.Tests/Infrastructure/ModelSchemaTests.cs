@@ -16,13 +16,13 @@ public sealed class ModelSchemaTests
         using var dbContext = CreateDbContext();
         var model = dbContext.Model;
 
-        var spendingSource = model.FindEntityType(typeof(SpendingSource))!;
-        Assert.NotNull(spendingSource.FindProperty(nameof(SpendingSource.PinnedOnUI)));
-        Assert.Null(spendingSource.FindProperty("PinnedOnUI"));
-        Assert.Equal("NUMERIC", spendingSource.FindProperty(nameof(SpendingSource.MaximumSpending))!.GetColumnType());
-        Assert.False(spendingSource.FindProperty(nameof(SpendingSource.MaximumSpending))!.IsNullable);
-        Assert.Equal("NUMERIC", spendingSource.FindProperty(nameof(SpendingSource.MinimumPayment))!.GetColumnType());
-        Assert.True(spendingSource.FindProperty(nameof(SpendingSource.MinimumPayment))!.IsNullable);
+        var account = model.FindEntityType(typeof(Account))!;
+        Assert.NotNull(account.FindProperty(nameof(Account.PinnedOnUI)));
+        Assert.Null(account.FindProperty("ShowOnUI"));
+        Assert.Equal("NUMERIC", account.FindProperty(nameof(Account.MaximumSpending))!.GetColumnType());
+        Assert.False(account.FindProperty(nameof(Account.MaximumSpending))!.IsNullable);
+        Assert.Equal("NUMERIC", account.FindProperty(nameof(Account.MinimumPayment))!.GetColumnType());
+        Assert.True(account.FindProperty(nameof(Account.MinimumPayment))!.IsNullable);
 
         var expenseTag = model.FindEntityType(typeof(ExpenseTag))!;
         Assert.Equal("NUMERIC", expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.GetColumnType());
@@ -75,13 +75,13 @@ public sealed class ModelSchemaTests
     [Fact]
     public void EntitiesAndViewModels_ExposeRequestedProperties()
     {
-        var source = new SpendingSource
+        var source = new Account
         {
             MaximumSpending = 500m,
             MinimumPayment = 25m,
             PinnedOnUI = true
         };
-        var sourceVm = new SpendingSourceVM
+        var sourceVm = new AccountVM
         {
             MaximumSpending = source.MaximumSpending,
             MinimumPayment = source.MinimumPayment,

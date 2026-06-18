@@ -88,7 +88,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
     ];
 
     public bool HasBudgetAllocationError => !string.IsNullOrWhiteSpace(BudgetAllocationErrorMessage);
-    public bool HasSpendingSources { get; private set; }
+    public bool HasAccounts { get; private set; }
     public bool IsAllocationPageSelected =>
         SelectedBudgetManagementPage == SettingsBudgetManagementPage.Allocation;
 
@@ -145,9 +145,9 @@ public partial class SettingsBudgetTabVM : ObservableObject
                 RolloverPolicy,
                 OverspendPolicy);
 
-            HasSpendingSources = (await _appData.GetSpendingSourcesAsync()).Count > 0;
+            HasAccounts = (await _appData.GetAccountsAsync()).Count > 0;
             ValidateBudgetAllocation();
-            OnPropertyChanged(nameof(HasSpendingSources));
+            OnPropertyChanged(nameof(HasAccounts));
             OnPropertyChanged(nameof(TotalBudgetAmount));
             OnPropertyChanged(nameof(NeedsAllocationAmountText));
             OnPropertyChanged(nameof(WantsAllocationAmountText));
@@ -195,10 +195,10 @@ public partial class SettingsBudgetTabVM : ObservableObject
         PublishPendingState();
     }
 
-    public void OpenAddSpendingSource()
+    public void OpenAddAccount()
     {
         _messenger.Send(new SettingsDialogRequestedMessage(
-            new SettingsDialogRequest(SettingsDialogRequestType.AddSpendingSource)));
+            new SettingsDialogRequest(SettingsDialogRequestType.AddAccount)));
     }
 
     public void RevertChanges()

@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIncomeLogRepository, IncomeLogRepository>();
         services.AddScoped<IExpenseTagRepository, ExpenseTagRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
-        services.AddScoped<ISpendingSourceRepository, SpendingSourceRepository>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
@@ -51,7 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRepository<IncomeLog>, IncomeLogRepository>();
         services.AddScoped<IRepository<ExpenseTag>, ExpenseTagRepository>();
         services.AddScoped<IRepository<SavingGoal>, SavingGoalRepository>();
-        services.AddScoped<IRepository<SpendingSource>, SpendingSourceRepository>();
+        services.AddScoped<IRepository<Account>, AccountRepository>();
         services.AddScoped<IRepository<RecurringTransaction>, RecurringTransactionRepository>();
         services.AddScoped<IRepository<Notification>, NotificationRepository>();
 

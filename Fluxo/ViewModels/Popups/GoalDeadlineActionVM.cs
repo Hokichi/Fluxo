@@ -16,20 +16,20 @@ public enum GoalDeadlineActionType
 
 public partial class GoalDeadlineActionVM : ObservableObject
 {
-    public GoalDeadlineActionVM(IEnumerable<SpendingSourceVM>? eligibleSources = null)
+    public GoalDeadlineActionVM(IEnumerable<AccountVM>? eligibleSources = null)
     {
-        EligibleSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+        EligibleSourcesView = AccountComboBoxViewFactory.CreateGroupedByTypeThenName(
             EligibleSources,
-            nameof(SpendingSourceVM.TypeDisplayName),
-            nameof(SpendingSourceVM.SpendingSourceType),
-            nameof(SpendingSourceVM.Name));
+            nameof(AccountVM.TypeDisplayName),
+            nameof(AccountVM.AccountType),
+            nameof(AccountVM.Name));
 
         if (eligibleSources is null)
             return;
 
         foreach (var source in eligibleSources
                      .Where(source => source.IsEnabled)
-                     .OrderBy(source => source.SpendingSourceType)
+                     .OrderBy(source => source.AccountType)
                      .ThenBy(source => source.Name))
             EligibleSources.Add(source);
 
@@ -38,10 +38,10 @@ public partial class GoalDeadlineActionVM : ObservableObject
 
     [ObservableProperty] private decimal _enteredAmount;
     [ObservableProperty] private decimal _remainingAmount;
-    [ObservableProperty] private SpendingSourceVM? _selectedSource;
+    [ObservableProperty] private AccountVM? _selectedSource;
     [ObservableProperty] private GoalDeadlineActionType _selectedAction = GoalDeadlineActionType.None;
 
-    public ObservableCollection<SpendingSourceVM> EligibleSources { get; } = [];
+    public ObservableCollection<AccountVM> EligibleSources { get; } = [];
     public ICollectionView EligibleSourcesView { get; }
 
     public bool CanMarkAsReached => EnteredAmount != RemainingAmount;

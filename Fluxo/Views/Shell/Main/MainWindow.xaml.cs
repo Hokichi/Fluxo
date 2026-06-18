@@ -736,14 +736,14 @@ public partial class MainWindow : Window, IPopupHost
 
         if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            OpenSpendingSourcesListPopup();
+            OpenAccountsListPopup();
             e.Handled = true;
             return;
         }
 
-        if (MainWindowShortcutMatcher.IsOpenAddSpendingSourceShortcut(e.Key, Keyboard.Modifiers))
+        if (MainWindowShortcutMatcher.IsOpenAddAccountShortcut(e.Key, Keyboard.Modifiers))
         {
-            OpenAddSpendingSourcePopup();
+            OpenAddAccountPopup();
             e.Handled = true;
             return;
         }
@@ -1217,10 +1217,10 @@ public partial class MainWindow : Window, IPopupHost
         OpenHeaderMenu(true);
     }
 
-    private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)
+    private void OnAccountsButtonClick(object sender, RoutedEventArgs e)
     {
         CloseHeaderMenu();
-        OpenSpendingSourcesListPopup();
+        OpenAccountsListPopup();
     }
 
     private async void OnUndoButtonClick(object sender, RoutedEventArgs e)
@@ -1276,14 +1276,14 @@ public partial class MainWindow : Window, IPopupHost
         await NavigateToMainPageAsync(MainPage.Ledger);
     }
 
-    private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
+    private void OnAddAccountButtonClick(object sender, RoutedEventArgs e)
     {
-        OpenAddSpendingSourcePopup();
+        OpenAddAccountPopup();
     }
 
     private void OnDashboardSpendingAmountGateActionClick(object sender, RoutedEventArgs e)
     {
-        OpenAddSpendingSourcePopup();
+        OpenAddAccountPopup();
     }
 
     public void OpenQuickAddPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)
@@ -1358,14 +1358,14 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowIncomeDetail(popupViewModel, this);
     }
 
-    public void OpenSpendingSourcesListPopup()
+    public void OpenAccountsListPopup()
     {
-        _dialogService.ShowSpendingSourcesList(this);
+        _dialogService.ShowAccountsList(this);
     }
 
-    public void OpenAddSpendingSourcePopup()
+    public void OpenAddAccountPopup()
     {
-        _dialogService.ShowAddSpendingSource(this);
+        _dialogService.ShowAddAccount(this);
     }
 
     public void OpenAddSavingGoalPopup()
@@ -1690,59 +1690,59 @@ public partial class MainWindow : Window, IPopupHost
         };
     }
 
-    public void OpenSpendingSourceDetailPopup(SpendingSourceVM spendingSource)
+    public void OpenAccountDetailPopup(AccountVM account)
     {
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var popupViewModel = new SpendingSourceDetailVM(_mainVM, spendingSource.Id, appData);
-        _dialogService.ShowSpendingSourceDetail(popupViewModel, this);
+        var popupViewModel = new AccountDetailVM(_mainVM, account.Id, appData);
+        _dialogService.ShowAccountDetail(popupViewModel, this);
     }
 
-    public void ToggleSpendingSourceFilter(SpendingSourceVM? spendingSource)
+    public void ToggleAccountFilter(AccountVM? account)
     {
-        _mainVM.ToggleSpendingSourceFilter(spendingSource);
+        _mainVM.ToggleAccountFilter(account);
     }
 
-    public async Task ExecuteDeleteSpendingSourceActionAsync(SpendingSourceVM spendingSource)
+    public async Task ExecuteDeleteAccountActionAsync(AccountVM account)
     {
-        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Delete, true);
+        await ExecuteAccountSettingsActionAsync(account, SettingsBatchAction.Delete, true);
     }
 
-    public async Task ExecuteUnpinSpendingSourceActionAsync(SpendingSourceVM spendingSource)
+    public async Task ExecuteUnpinAccountActionAsync(AccountVM account)
     {
-        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Unpin);
+        await ExecuteAccountSettingsActionAsync(account, SettingsBatchAction.Unpin);
     }
 
-    public async Task ExecuteDisableSpendingSourceActionAsync(SpendingSourceVM spendingSource)
+    public async Task ExecuteDisableAccountActionAsync(AccountVM account)
     {
-        await ExecuteSpendingSourceSettingsActionAsync(spendingSource, SettingsBatchAction.Disable);
+        await ExecuteAccountSettingsActionAsync(account, SettingsBatchAction.Disable);
     }
 
-    public void OpenTransferFundsPopup(SpendingSourceVM spendingSource)
+    public void OpenTransferFundsPopup(AccountVM account)
     {
-        ArgumentNullException.ThrowIfNull(spendingSource);
+        ArgumentNullException.ThrowIfNull(account);
 
-        if (!spendingSource.CanTransfer)
+        if (!account.CanTransfer)
             return;
 
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var transferVm = new TransferFundsVM(_mainVM, spendingSource, appData);
+        var transferVm = new TransferFundsVM(_mainVM, account, appData);
         _dialogService.ShowTransferFunds(transferVm, this);
     }
 
-    public void OpenAccountReconciliationPopup(SpendingSourceVM spendingSource)
+    public void OpenAccountReconciliationPopup(AccountVM account)
     {
-        ArgumentNullException.ThrowIfNull(spendingSource);
+        ArgumentNullException.ThrowIfNull(account);
 
-        if (!spendingSource.CanReconcile)
+        if (!account.CanReconcile)
             return;
 
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
         var reconciliationVm = new AccountReconciliationVM(
-            _mainVM.BudgetPanel.SpendingSources,
-            spendingSource,
+            _mainVM.BudgetPanel.Accounts,
+            account,
             appData,
             _mainVM.ReloadCurrentDataAsync);
         _dialogService.ShowAccountReconciliation(reconciliationVm, this);
@@ -1949,11 +1949,11 @@ public partial class MainWindow : Window, IPopupHost
         return new BlurEffect { Radius = 20, RenderingBias = RenderingBias.Performance };
     }
 
-    private async Task ExecuteSpendingSourceSettingsActionAsync(SpendingSourceVM spendingSource,
+    private async Task ExecuteAccountSettingsActionAsync(AccountVM account,
         SettingsBatchAction action,
         bool requireDeleteConfirmation = false)
     {
-        ArgumentNullException.ThrowIfNull(spendingSource);
+        ArgumentNullException.ThrowIfNull(account);
 
         try
         {
@@ -1962,10 +1962,10 @@ public partial class MainWindow : Window, IPopupHost
 
             if (requireDeleteConfirmation)
             {
-                var confirmationMessage = await SpendingSourceDeletionConfirmationHelper.BuildDeleteConfirmationMessageAsync(
+                var confirmationMessage = await AccountDeletionConfirmationHelper.BuildDeleteConfirmationMessageAsync(
                     appData,
-                    spendingSource.Id,
-                    spendingSource.Name);
+                    account.Id,
+                    account.Name);
 
                 if (_dialogService.ShowWarning(confirmationMessage, "Settings", this, MessageBoxButton.YesNo) !=
                     MessageBoxResult.Yes)
@@ -1975,14 +1975,14 @@ public partial class MainWindow : Window, IPopupHost
             var settingsViewModel = scope.ServiceProvider.GetRequiredService<SettingsVM>();
             await settingsViewModel.LoadAsync();
 
-            var result = await settingsViewModel.ExecuteSpendingSourceItemActionAsync(spendingSource.Id, action);
+            var result = await settingsViewModel.ExecuteAccountItemActionAsync(account.Id, action);
             if (!result.IsSuccess)
                 _dialogService.ShowInformation(result.ErrorMessage, "Settings", this);
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to update spending source from settings workflow.");
-            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("update spending source"), "Settings", this);
+            FluxoLogManager.LogError(exception, "Unable to update account from settings workflow.");
+            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("update account"), "Settings", this);
         }
     }
 

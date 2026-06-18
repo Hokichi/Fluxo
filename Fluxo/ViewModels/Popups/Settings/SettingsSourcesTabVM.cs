@@ -24,10 +24,10 @@ public partial class SettingsSourcesTabVM : ObservableObject
     private readonly MainVM _mainViewModel;
     private readonly IMessenger _messenger;
     private readonly IAppDataService _appData;
-    private readonly HashSet<SettingsSpendingSourceItemVM> _spendingSourcesVisibleWindow = [];
-    private int _visibleSpendingSourceCount = PageSize;
+    private readonly HashSet<SettingsAccountItemVM> _accountsVisibleWindow = [];
+    private int _visibleAccountCount = PageSize;
 
-    [ObservableProperty] private bool _isSpendingSourceChecksEnabled;
+    [ObservableProperty] private bool _isAccountChecksEnabled;
     [ObservableProperty] private bool _hasMoreItems;
     [ObservableProperty] private bool _isLoading;
 
@@ -37,72 +37,72 @@ public partial class SettingsSourcesTabVM : ObservableObject
         _appData = appData;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
 
-        SpendingSourcesView = CollectionViewSource.GetDefaultView(SpendingSources);
-        SpendingSourcesView.Filter = FilterSpendingSource;
+        AccountsView = CollectionViewSource.GetDefaultView(Accounts);
+        AccountsView.Filter = FilterAccount;
     }
 
-    public ObservableCollection<SettingsSpendingSourceItemVM> SpendingSources { get; } = [];
-    public ICollectionView SpendingSourcesView { get; }
-    public bool AreAllSpendingSourcesChecked => SpendingSources.Count > 0 && SpendingSources.All(item => item.IsChecked);
-    public bool HasSpendingSources => SpendingSources.Count > 0;
+    public ObservableCollection<SettingsAccountItemVM> Accounts { get; } = [];
+    public ICollectionView AccountsView { get; }
+    public bool AreAllAccountsChecked => Accounts.Count > 0 && Accounts.All(item => item.IsChecked);
+    public bool HasAccounts => Accounts.Count > 0;
 
-    public bool ShowSpendingSourceUnpinActionButton =>
-        IsSpendingSourceChecksEnabled && ShouldShowUnpinAction(SpendingSources);
-    public bool ShowSpendingSourcePinActionButton =>
-        IsSpendingSourceChecksEnabled && !ShouldShowUnpinAction(SpendingSources);
-    public bool ShowSpendingSourceDisableActionButton =>
-        IsSpendingSourceChecksEnabled && ShouldShowDisableAction(SpendingSources);
-    public bool ShowSpendingSourceEnableActionButton =>
-        IsSpendingSourceChecksEnabled && !ShouldShowDisableAction(SpendingSources);
-    public bool ShowSpendingSourceCheckAllButton => IsSpendingSourceChecksEnabled && !AreAllSpendingSourcesChecked;
-    public bool ShowSpendingSourceUncheckAllButton => IsSpendingSourceChecksEnabled && AreAllSpendingSourcesChecked;
-    public bool ShowSpendingSourceEnableChecksButton => !IsSpendingSourceChecksEnabled && HasSpendingSources;
+    public bool ShowAccountUnpinActionButton =>
+        IsAccountChecksEnabled && ShouldShowUnpinAction(Accounts);
+    public bool ShowAccountPinActionButton =>
+        IsAccountChecksEnabled && !ShouldShowUnpinAction(Accounts);
+    public bool ShowAccountDisableActionButton =>
+        IsAccountChecksEnabled && ShouldShowDisableAction(Accounts);
+    public bool ShowAccountEnableActionButton =>
+        IsAccountChecksEnabled && !ShouldShowDisableAction(Accounts);
+    public bool ShowAccountCheckAllButton => IsAccountChecksEnabled && !AreAllAccountsChecked;
+    public bool ShowAccountUncheckAllButton => IsAccountChecksEnabled && AreAllAccountsChecked;
+    public bool ShowAccountEnableChecksButton => !IsAccountChecksEnabled && HasAccounts;
 
     public async Task LoadAsync()
     {
-        await RefreshSpendingSourcesAsync(resetPagination: true);
-        IsSpendingSourceChecksEnabled = false;
+        await RefreshAccountsAsync(resetPagination: true);
+        IsAccountChecksEnabled = false;
     }
 
-    public AddSpendingSourceVM CreateAddSpendingSourceViewModel()
+    public AddAccountVM CreateAddAccountViewModel()
     {
-        return new AddSpendingSourceVM(_mainViewModel, _appData);
+        return new AddAccountVM(_mainViewModel, _appData);
     }
 
-    public SpendingSourceDetailVM CreateSpendingSourceDetailViewModel(int spendingSourceId)
+    public AccountDetailVM CreateAccountDetailViewModel(int accountId)
     {
-        return new SpendingSourceDetailVM(_mainViewModel, spendingSourceId, _appData);
+        return new AccountDetailVM(_mainViewModel, accountId, _appData);
     }
 
-    public async Task OpenAddSpendingSourceAsync()
-    {
-        _messenger.Send(new SettingsDialogRequestedMessage(
-            new SettingsDialogRequest(
-                SettingsDialogRequestType.AddSpendingSource,
-                CreateAddSpendingSourceViewModel())));
-        await RefreshSpendingSourcesAsync();
-        _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
-    }
-
-    public async Task OpenSpendingSourceDetailAsync(int spendingSourceId)
+    public async Task OpenAddAccountAsync()
     {
         _messenger.Send(new SettingsDialogRequestedMessage(
             new SettingsDialogRequest(
-                SettingsDialogRequestType.SpendingSourceDetail,
-                CreateSpendingSourceDetailViewModel(spendingSourceId))));
-        await RefreshSpendingSourcesAsync(keepVisibleItemId: spendingSourceId);
-        _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
-        SelectSingleItem(spendingSourceId);
+                SettingsDialogRequestType.AddAccount,
+                CreateAddAccountViewModel())));
+        await RefreshAccountsAsync();
+        _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts));
+    }
+
+    public async Task OpenAccountDetailAsync(int accountId)
+    {
+        _messenger.Send(new SettingsDialogRequestedMessage(
+            new SettingsDialogRequest(
+                SettingsDialogRequestType.AccountDetail,
+                CreateAccountDetailViewModel(accountId))));
+        await RefreshAccountsAsync(keepVisibleItemId: accountId);
+        _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts));
+        SelectSingleItem(accountId);
     }
 
     public Task<string> BuildDeleteConfirmationMessageAsync(
-        int spendingSourceId,
+        int accountId,
         string? fallbackSourceName = null,
         CancellationToken cancellationToken = default)
     {
-        return SpendingSourceDeletionConfirmationHelper.BuildDeleteConfirmationMessageAsync(
+        return AccountDeletionConfirmationHelper.BuildDeleteConfirmationMessageAsync(
             _appData,
-            spendingSourceId,
+            accountId,
             fallbackSourceName,
             cancellationToken);
     }
@@ -114,7 +114,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     public void SetSelections(bool isChecked)
     {
-        foreach (var item in SpendingSources)
+        foreach (var item in Accounts)
             item.IsChecked = isChecked;
     }
 
@@ -123,21 +123,21 @@ public partial class SettingsSourcesTabVM : ObservableObject
         if (action is not (SettingsBatchAction.Unpin or SettingsBatchAction.Disable))
             return false;
 
-        if (SpendingSources.Count == 0)
+        if (Accounts.Count == 0)
             return false;
 
-        var selectedCount = SpendingSources.Count(item => item.IsChecked);
-        return selectedCount == SpendingSources.Count;
+        var selectedCount = Accounts.Count(item => item.IsChecked);
+        return selectedCount == Accounts.Count;
     }
 
     public async Task<SettingsOperationResult> ExecuteActionAsync(
         SettingsBatchAction action,
         IReadOnlyCollection<int>? selectedIdsOverride = null)
     {
-        var selectedIds = SettingsShared.NormalizeSelectionIds(selectedIdsOverride, SpendingSources.Select(item => item.Id),
-            SpendingSources.Where(item => item.IsChecked).Select(item => item.Id));
+        var selectedIds = SettingsShared.NormalizeSelectionIds(selectedIdsOverride, Accounts.Select(item => item.Id),
+            Accounts.Where(item => item.IsChecked).Select(item => item.Id));
         if (selectedIds.Length == 0)
-            return SettingsOperationResult.Failure("Select at least one spending source first.");
+            return SettingsOperationResult.Failure("Select at least one account first.");
 
         var actions = new List<ILogMemoryAction>();
 
@@ -148,17 +148,17 @@ public partial class SettingsSourcesTabVM : ObservableObject
                 case SettingsBatchAction.Delete:
                     var allExpenseLogs = await _appData.GetExpenseLogsAsync();
                     var expenseLogsBySourceId = allExpenseLogs
-                        .GroupBy(log => log.SpendingSourceId)
+                        .GroupBy(log => log.AccountId)
                         .ToDictionary(group => group.Key, group => (IReadOnlyList<ExpenseLog>)group.ToList());
                     var allIncomeLogs = await _appData.GetIncomeLogsAsync();
                     var incomeLogsBySourceId = allIncomeLogs
-                        .GroupBy(log => log.SpendingSourceId)
+                        .GroupBy(log => log.AccountId)
                         .ToDictionary(group => group.Key, group => (IReadOnlyList<IncomeLog>)group.ToList());
 
                     foreach (var selectedId in selectedIds)
                     {
-                        var spendingSource = await _appData.GetSpendingSourceByIdAsync(selectedId);
-                        if (spendingSource is null)
+                        var account = await _appData.GetAccountByIdAsync(selectedId);
+                        if (account is null)
                             continue;
 
                         if (expenseLogsBySourceId.TryGetValue(selectedId, out var expenseLogs))
@@ -169,9 +169,9 @@ public partial class SettingsSourcesTabVM : ObservableObject
                             foreach (var incomeLog in incomeLogs)
                                 _appData.RemoveIncomeLog(incomeLog);
 
-                        var snapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
-                        _appData.RemoveSpendingSource(spendingSource);
-                        actions.Add(new DeleteSpendingSourceMemoryAction(snapshot));
+                        var snapshot = AccountMemorySnapshot.Create(account);
+                        _appData.RemoveAccount(account);
+                        actions.Add(new DeleteAccountMemoryAction(snapshot));
                     }
 
                     break;
@@ -182,31 +182,31 @@ public partial class SettingsSourcesTabVM : ObservableObject
                 case SettingsBatchAction.Enable:
                     foreach (var selectedId in selectedIds)
                     {
-                        var spendingSource = await _appData.GetSpendingSourceByIdAsync(selectedId);
-                        if (spendingSource is null)
+                        var account = await _appData.GetAccountByIdAsync(selectedId);
+                        if (account is null)
                             continue;
 
-                        var beforeSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
+                        var beforeSnapshot = AccountMemorySnapshot.Create(account);
                         var updated = false;
 
                         switch (action)
                         {
-                            case SettingsBatchAction.Unpin when spendingSource.PinnedOnUI:
-                                spendingSource.PinnedOnUI = false;
+                            case SettingsBatchAction.Unpin when account.PinnedOnUI:
+                                account.PinnedOnUI = false;
                                 updated = true;
                                 break;
-                            case SettingsBatchAction.Pin when !spendingSource.PinnedOnUI && spendingSource.IsEnabled:
-                                spendingSource.PinnedOnUI = true;
+                            case SettingsBatchAction.Pin when !account.PinnedOnUI && account.IsEnabled:
+                                account.PinnedOnUI = true;
                                 updated = true;
                                 break;
-                            case SettingsBatchAction.Disable when spendingSource.IsEnabled:
-                                spendingSource.IsEnabled = false;
-                                spendingSource.PinnedOnUI = false;
+                            case SettingsBatchAction.Disable when account.IsEnabled:
+                                account.IsEnabled = false;
+                                account.PinnedOnUI = false;
                                 updated = true;
                                 break;
-                            case SettingsBatchAction.Enable when !spendingSource.IsEnabled:
-                                spendingSource.IsEnabled = true;
-                                spendingSource.PinnedOnUI = true;
+                            case SettingsBatchAction.Enable when !account.IsEnabled:
+                                account.IsEnabled = true;
+                                account.PinnedOnUI = true;
                                 updated = true;
                                 break;
                         }
@@ -214,32 +214,32 @@ public partial class SettingsSourcesTabVM : ObservableObject
                         if (!updated)
                             continue;
 
-                        _appData.UpdateSpendingSource(spendingSource);
-                        var afterSnapshot = SpendingSourceMemorySnapshot.Create(spendingSource);
-                        actions.Add(new EditSpendingSourceMemoryAction(beforeSnapshot, afterSnapshot));
+                        _appData.UpdateAccount(account);
+                        var afterSnapshot = AccountMemorySnapshot.Create(account);
+                        actions.Add(new EditAccountMemoryAction(beforeSnapshot, afterSnapshot));
                     }
 
                     break;
             }
 
             if (actions.Count == 0)
-                return SettingsOperationResult.Failure("Nothing changed for the selected spending sources.");
+                return SettingsOperationResult.Failure("Nothing changed for the selected accounts.");
 
             await _appData.SaveChangesAsync();
             SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _mainViewModel.ReloadCurrentDataAsync();
-            await RefreshSpendingSourcesAsync();
-            _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
+            await RefreshAccountsAsync();
+            _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts));
 
             return SettingsOperationResult.Success();
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to update selected spending sources from settings.");
+            FluxoLogManager.LogError(exception, "Unable to update selected accounts from settings.");
             return SettingsOperationResult.Failure(
-                FluxoLogManager.CreateFailureMessage("update selected spending sources"));
+                FluxoLogManager.CreateFailureMessage("update selected accounts"));
         }
     }
 
@@ -251,20 +251,20 @@ public partial class SettingsSourcesTabVM : ObservableObject
     public void SelectSingleItem(int itemId)
     {
         if (EnsureItemVisible(itemId))
-            RefreshSpendingSourcesView();
+            RefreshAccountsView();
 
-        foreach (var item in SpendingSources)
+        foreach (var item in Accounts)
             item.IsSelected = item.Id == itemId;
     }
 
-    public async Task RefreshSpendingSourcesAsync(bool resetPagination = false, int? keepVisibleItemId = null)
+    public async Task RefreshAccountsAsync(bool resetPagination = false, int? keepVisibleItemId = null)
     {
-        SettingsShared.ReplaceCollection(SpendingSources, (await _appData.GetSpendingSourcesAsync())
+        SettingsShared.ReplaceCollection(Accounts, (await _appData.GetAccountsAsync())
             .OrderByDescending(source => source.PinnedOnUI)
             .ThenBy(source => source.Name)
-            .Select(source => new SettingsSpendingSourceItemVM(source)));
+            .Select(source => new SettingsAccountItemVM(source)));
 
-        AttachSelectableItemHandlers(SpendingSources);
+        AttachSelectableItemHandlers(Accounts);
         if (resetPagination)
             ResetPaginationWindow();
         else
@@ -273,12 +273,12 @@ public partial class SettingsSourcesTabVM : ObservableObject
         if (keepVisibleItemId is int itemId)
             EnsureItemVisible(itemId);
 
-        RefreshSpendingSourcesView();
-        OnPropertyChanged(nameof(HasSpendingSources));
+        RefreshAccountsView();
+        OnPropertyChanged(nameof(HasAccounts));
         OnSelectionStateChanged();
     }
 
-    partial void OnIsSpendingSourceChecksEnabledChanged(bool value)
+    partial void OnIsAccountChecksEnabledChanged(bool value)
     {
         OnSelectionStateChanged();
     }
@@ -302,8 +302,8 @@ public partial class SettingsSourcesTabVM : ObservableObject
         IsLoading = true;
         try
         {
-            _visibleSpendingSourceCount += PageSize;
-            RefreshSpendingSourcesView();
+            _visibleAccountCount += PageSize;
+            RefreshAccountsView();
         }
         finally
         {
@@ -311,7 +311,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
         }
     }
 
-    private void AttachSelectableItemHandlers(IEnumerable<SettingsSpendingSourceItemVM> items)
+    private void AttachSelectableItemHandlers(IEnumerable<SettingsAccountItemVM> items)
     {
         foreach (var item in items)
         {
@@ -322,20 +322,20 @@ public partial class SettingsSourcesTabVM : ObservableObject
 
     private void OnSelectableItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(SettingsSpendingSourceItemVM.IsChecked))
+        if (e.PropertyName == nameof(SettingsAccountItemVM.IsChecked))
             OnSelectionStateChanged();
     }
 
     private void OnSelectionStateChanged()
     {
-        OnPropertyChanged(nameof(AreAllSpendingSourcesChecked));
-        OnPropertyChanged(nameof(ShowSpendingSourceUnpinActionButton));
-        OnPropertyChanged(nameof(ShowSpendingSourcePinActionButton));
-        OnPropertyChanged(nameof(ShowSpendingSourceDisableActionButton));
-        OnPropertyChanged(nameof(ShowSpendingSourceEnableActionButton));
-        OnPropertyChanged(nameof(ShowSpendingSourceCheckAllButton));
-        OnPropertyChanged(nameof(ShowSpendingSourceUncheckAllButton));
-        OnPropertyChanged(nameof(ShowSpendingSourceEnableChecksButton));
+        OnPropertyChanged(nameof(AreAllAccountsChecked));
+        OnPropertyChanged(nameof(ShowAccountUnpinActionButton));
+        OnPropertyChanged(nameof(ShowAccountPinActionButton));
+        OnPropertyChanged(nameof(ShowAccountDisableActionButton));
+        OnPropertyChanged(nameof(ShowAccountEnableActionButton));
+        OnPropertyChanged(nameof(ShowAccountCheckAllButton));
+        OnPropertyChanged(nameof(ShowAccountUncheckAllButton));
+        OnPropertyChanged(nameof(ShowAccountEnableChecksButton));
     }
 
     private bool CanLoadMore()
@@ -343,23 +343,23 @@ public partial class SettingsSourcesTabVM : ObservableObject
         return HasMoreItems && !IsLoading;
     }
 
-    private bool FilterSpendingSource(object item)
+    private bool FilterAccount(object item)
     {
-        return item is SettingsSpendingSourceItemVM spendingSource &&
-               _spendingSourcesVisibleWindow.Contains(spendingSource);
+        return item is SettingsAccountItemVM account &&
+               _accountsVisibleWindow.Contains(account);
     }
 
     private void ResetPaginationWindow()
     {
-        _visibleSpendingSourceCount = PageSize;
+        _visibleAccountCount = PageSize;
         IsLoading = false;
     }
 
     private bool EnsureItemVisible(int itemId)
     {
         var index = -1;
-        for (var i = 0; i < SpendingSources.Count; i++)
-            if (SpendingSources[i].Id == itemId)
+        for (var i = 0; i < Accounts.Count; i++)
+            if (Accounts[i].Id == itemId)
             {
                 index = i;
                 break;
@@ -369,30 +369,30 @@ public partial class SettingsSourcesTabVM : ObservableObject
             return false;
 
         var requiredVisibleCount = ((index / PageSize) + 1) * PageSize;
-        if (requiredVisibleCount <= _visibleSpendingSourceCount)
+        if (requiredVisibleCount <= _visibleAccountCount)
             return false;
 
-        _visibleSpendingSourceCount = requiredVisibleCount;
+        _visibleAccountCount = requiredVisibleCount;
         return true;
     }
 
-    private void RefreshSpendingSourcesView()
+    private void RefreshAccountsView()
     {
         RecomputeVisibleWindow();
-        SpendingSourcesView.Refresh();
+        AccountsView.Refresh();
     }
 
     private void RecomputeVisibleWindow()
     {
-        _spendingSourcesVisibleWindow.Clear();
+        _accountsVisibleWindow.Clear();
 
-        foreach (var spendingSource in SpendingSources.Take(_visibleSpendingSourceCount))
-            _spendingSourcesVisibleWindow.Add(spendingSource);
+        foreach (var account in Accounts.Take(_visibleAccountCount))
+            _accountsVisibleWindow.Add(account);
 
-        HasMoreItems = SpendingSources.Count > _visibleSpendingSourceCount;
+        HasMoreItems = Accounts.Count > _visibleAccountCount;
     }
 
-    private static bool ShouldShowUnpinAction(IReadOnlyCollection<SettingsSpendingSourceItemVM> items)
+    private static bool ShouldShowUnpinAction(IReadOnlyCollection<SettingsAccountItemVM> items)
     {
         if (items.Count == 0)
             return true;
@@ -401,7 +401,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
         return scopedItems.Any(item => !item.IsUnpinned);
     }
 
-    private static bool ShouldShowDisableAction(IReadOnlyCollection<SettingsSpendingSourceItemVM> items)
+    private static bool ShouldShowDisableAction(IReadOnlyCollection<SettingsAccountItemVM> items)
     {
         if (items.Count == 0)
             return true;
@@ -410,8 +410,8 @@ public partial class SettingsSourcesTabVM : ObservableObject
         return scopedItems.Any(item => item.IsEnabled);
     }
 
-    private static IReadOnlyList<SettingsSpendingSourceItemVM> GetScopedItems(
-        IReadOnlyCollection<SettingsSpendingSourceItemVM> items)
+    private static IReadOnlyList<SettingsAccountItemVM> GetScopedItems(
+        IReadOnlyCollection<SettingsAccountItemVM> items)
     {
         var selectedItems = items.Where(item => item.IsChecked).ToArray();
         return selectedItems.Length > 0 ? selectedItems : items.ToArray();

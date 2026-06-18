@@ -42,13 +42,13 @@ public class NotificationPanelVMTests
     public async Task LoadAsync_CreditDueDate_DoesNotCreateUpcomingPaymentNotification()
     {
         var dueDate = DateTime.Today.AddDays(7);
-        var spendingSources = new List<SpendingSourceVM>
+        var accounts = new List<AccountVM>
         {
             new()
             {
                 Id = 1,
                 Name = "Visa",
-                SpendingSourceType = SpendingSourceType.Credit,
+                AccountType = AccountType.Credit,
                 MonthlyDueDate = dueDate.Day,
                 AccountLimit = 1000m,
                 SpentAmount = 0m
@@ -58,7 +58,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: spendingSources,
+            accounts: accounts,
             out _);
 
         await vm.LoadAsync();
@@ -73,7 +73,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
         persistedNotifications.Add(new Notification
         {
@@ -101,7 +101,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         SeedDistinctCategoryNotifications(persistedNotifications);
@@ -126,7 +126,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out _,
             recurringTransactions:
             [
@@ -177,13 +177,13 @@ public class NotificationPanelVMTests
                     }
                 }
             ],
-            spendingSources:
+            accounts:
             [
-                new SpendingSourceVM
+                new AccountVM
                 {
                     Id = 1,
                     Name = "Checking",
-                    SpendingSourceType = SpendingSourceType.Checking,
+                    AccountType = AccountType.Checking,
                     Balance = 1_000m,
                     IsEnabled = true
                 }
@@ -263,7 +263,7 @@ public class NotificationPanelVMTests
                     }
                 }
             ],
-            spendingSources: [],
+            accounts: [],
             out _);
 
         await vm.LoadAsync();
@@ -313,7 +313,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out _,
             recurringTransactions: recurringTransactions,
             userSettings: userSettings);
@@ -334,7 +334,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         SeedDistinctCategoryNotifications(persistedNotifications);
@@ -359,7 +359,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         SeedDistinctCategoryNotifications(persistedNotifications);
@@ -380,22 +380,22 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources:
+            accounts:
             [
-                new SpendingSourceVM
+                new AccountVM
                 {
                     Id = 1,
                     Name = "Visa",
-                    SpendingSourceType = SpendingSourceType.Credit,
+                    AccountType = AccountType.Credit,
                     MonthlyDueDate = dueDate.Day,
                     AccountLimit = 1000m,
                     SpentAmount = 250m
                 },
-                new SpendingSourceVM
+                new AccountVM
                 {
                     Id = 2,
                     Name = "MasterCard",
-                    SpendingSourceType = SpendingSourceType.Credit,
+                    AccountType = AccountType.Credit,
                     MonthlyDueDate = dueDate.Day,
                     AccountLimit = 1200m,
                     SpentAmount = 300m
@@ -421,7 +421,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         SeedDistinctCategoryNotifications(persistedNotifications);
@@ -446,7 +446,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         SeedDistinctCategoryNotifications(persistedNotifications);
@@ -495,13 +495,13 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources:
+            accounts:
             [
-                new SpendingSourceVM
+                new AccountVM
                 {
                     Id = 1,
                     Name = "Checking",
-                    SpendingSourceType = SpendingSourceType.Checking,
+                    AccountType = AccountType.Checking,
                     Balance = 1000m,
                     IsEnabled = true
                 }
@@ -552,7 +552,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications,
             appUpdateInteractionService: interactionService);
 
@@ -593,7 +593,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications,
             appUpdateInteractionService: interactionService);
 
@@ -631,7 +631,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications,
             appUpdateInteractionService: interactionService);
 
@@ -665,7 +665,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications,
             appUpdateInteractionService: interactionService);
 
@@ -698,7 +698,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         SeedDistinctCategoryNotifications(persistedNotifications);
@@ -718,7 +718,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         persistedNotifications.Add(new Notification
@@ -743,7 +743,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         persistedNotifications.Add(new Notification
@@ -770,7 +770,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         persistedNotifications.Add(new Notification
@@ -792,13 +792,13 @@ public class NotificationPanelVMTests
     [Fact]
     public async Task LoadAsync_MarksLatePaymentNotificationForDeletion_WhenPaymentProcessed()
     {
-        var spendingSources = new List<SpendingSourceVM>
+        var accounts = new List<AccountVM>
         {
             new()
             {
                 Id = 1,
                 Name = "Visa",
-                SpendingSourceType = SpendingSourceType.Credit,
+                AccountType = AccountType.Credit,
                 MonthlyDueDate = 10,
                 AccountLimit = 1000m,
                 SpentAmount = 0m
@@ -808,7 +808,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: spendingSources,
+            accounts: accounts,
             out var persistedNotifications);
 
         persistedNotifications.Add(new Notification
@@ -833,7 +833,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications,
             recurringTransactions: [],
             userSettings:
@@ -865,7 +865,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications,
             recurringTransactions:
             [
@@ -909,7 +909,7 @@ public class NotificationPanelVMTests
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
-            spendingSources: [],
+            accounts: [],
             out var persistedNotifications);
 
         persistedNotifications.Add(new Notification
@@ -1011,7 +1011,7 @@ public class NotificationPanelVMTests
     private static NotificationPanelVM CreateVm(
         IReadOnlyList<ExpenseVM> expenses,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
-        IReadOnlyList<SpendingSourceVM> spendingSources,
+        IReadOnlyList<AccountVM> accounts,
         out List<Notification> persistedNotifications,
         INotificationActionService? notificationActionService = null,
         IDialogService? dialogService = null,
@@ -1028,9 +1028,9 @@ public class NotificationPanelVMTests
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseLogDto>>([]));
 
-        var spendingSourceService = Substitute.For<ISpendingSourceService>();
-        spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<SpendingSourceDto>>([]));
+        var accountService = Substitute.For<IAccountService>();
+        accountService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<AccountDto>>([]));
 
         var userSettingsRepository = Substitute.For<IUserSettingsRepository>();
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
@@ -1121,13 +1121,13 @@ public class NotificationPanelVMTests
                 RecurringPeriod = transaction.RecurringPeriod,
                 RecurringTime = transaction.RecurringTime,
                 Type = transaction.Type,
-                Source = spendingSources.FirstOrDefault(source => source.Id == transaction.SourceId) ?? new SpendingSourceVM(),
+                Source = accounts.FirstOrDefault(source => source.Id == transaction.SourceId) ?? new AccountVM(),
                 IsEnabled = transaction.IsEnabled
             })
             .ToList();
         mapper.Map<IReadOnlyList<ExpenseVM>>(Arg.Any<object>()).Returns(expenses);
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
-        mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns(spendingSources);
+        mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
         mapper.Map<IReadOnlyList<RecurringTransactionDto>>(Arg.Any<object>()).Returns(recurringDtos);
         mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns(recurringVms);
         mapper.Map<IReadOnlyList<ExpenseTagDto>>(Arg.Any<object>()).Returns([]);
@@ -1138,7 +1138,7 @@ public class NotificationPanelVMTests
         return new NotificationPanelVM(
             expenseService,
             expenseLogService,
-            spendingSourceService,
+            accountService,
             dataOperationRunner,
             mapper,
             new NotificationGroupingService(),

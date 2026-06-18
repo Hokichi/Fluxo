@@ -61,7 +61,7 @@
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="12"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="Spending Sources">
+                                Text="Accounts">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
@@ -93,7 +93,7 @@
                 </Border>
 
                 <!--  Step 2  -->
-                <Border Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Border.Style>
                         <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
                             <Style.Triggers>
@@ -155,7 +155,7 @@
                 </Border>
 
                 <!--  Step 3  -->
-                <Border Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Border.Style>
                         <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
                             <Style.Triggers>
@@ -214,7 +214,7 @@
                 </Border>
 
                 <!--  Step 4  -->
-                <Border Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Border.Style>
                         <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
                             <Style.Triggers>
@@ -411,7 +411,7 @@
                     <!--  Sticky Add Buttons  -->
                     <StackPanel Grid.Row="1" Margin="0,22,0,0">
                         <Button
-                            Click="OnAddSpendingSourceClick"
+                            Click="OnAddAccountClick"
                             Style="{StaticResource AddTileButtonStyle}"
                             Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <Button
@@ -428,7 +428,7 @@
                         Margin="0,12,0,0"
                         VerticalScrollBarVisibility="Auto">
                         <Grid>
-                            <steps:SpendingSources DataContext="{Binding SpendingSources}" />
+                            <steps:Accounts DataContext="{Binding Accounts}" />
                             <steps:FixedExpenses DataContext="{Binding FixedExpenses}" />
                             <steps:SavingGoals DataContext="{Binding SavingGoals}" />
                             <steps:BudgetAllocation DataContext="{Binding BudgetAllocation}" />

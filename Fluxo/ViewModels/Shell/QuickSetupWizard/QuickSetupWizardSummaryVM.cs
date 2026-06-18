@@ -7,7 +7,7 @@ namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
 public partial class QuickSetupWizardSummaryVM : ObservableRecipient,
     IRecipient<QuickSetupWizardIdentityChangedMessage>,
-    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>,
+    IRecipient<QuickSetupWizardAccountsChangedMessage>,
     IRecipient<QuickSetupWizardFixedExpensesChangedMessage>,
     IRecipient<QuickSetupWizardSavingGoalsChangedMessage>,
     IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>,
@@ -18,7 +18,7 @@ public partial class QuickSetupWizardSummaryVM : ObservableRecipient,
     private int _reportFixedExpenseCount;
     private int _reportNotificationsEnabledCount;
     private int _reportSavingGoalCount;
-    private int _reportSpendingSourceCount;
+    private int _reportAccountCount;
     private string _reportUsernameText = "User";
     private decimal _totalFixedExpenseAmount;
     private decimal _totalPrimaryAmount;
@@ -34,7 +34,7 @@ public partial class QuickSetupWizardSummaryVM : ObservableRecipient,
 
     public string ReportUsernameText => _reportUsernameText;
 
-    public int ReportSpendingSourceCount => _reportSpendingSourceCount;
+    public int ReportAccountCount => _reportAccountCount;
 
     public int ReportFixedExpenseCount => _reportFixedExpenseCount;
 
@@ -63,11 +63,11 @@ public partial class QuickSetupWizardSummaryVM : ObservableRecipient,
         OnPropertyChanged(nameof(ReportUsernameText));
     }
 
-    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardAccountsChangedMessage message)
     {
-        _reportSpendingSourceCount = message.Value.Count;
+        _reportAccountCount = message.Value.Count;
         _totalPrimaryAmount = message.Value.TotalPrimaryAmount;
-        OnPropertyChanged(nameof(ReportSpendingSourceCount));
+        OnPropertyChanged(nameof(ReportAccountCount));
         OnPropertyChanged(nameof(ReportTotalBalanceText));
         OnPropertyChanged(nameof(ReportTotalBalanceTooltipText));
     }

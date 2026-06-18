@@ -217,11 +217,11 @@ public class PlanningPopupVMTests
             Amount = amount,
             AddedOn = DateTime.UnixEpoch,
             Notes = $"Income {id}",
-            SpendingSource = new SpendingSourceVM
+            Account = new AccountVM
             {
                 Id = id,
                 Name = $"Source {id}",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 500m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -244,11 +244,11 @@ public class PlanningPopupVMTests
                 HexCode = "#000000",
                 IsSystemTag = false
             },
-            SpendingSource = new SpendingSource
+            Account = new Account
             {
                 Id = id,
                 Name = $"Source {id}",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 1000m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -271,11 +271,11 @@ public class PlanningPopupVMTests
                 HexCode = "#000000",
                 IsSystemTag = false
             },
-            SpendingSource = new SpendingSourceVM
+            Account = new AccountVM
             {
                 Id = id,
                 Name = $"Source {id}",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 1000m,
                 IsEnabled = true,
                 PinnedOnUI = true

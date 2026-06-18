@@ -15,7 +15,7 @@ public interface IDialogService
 
     bool? ShowHotkeysOverview(Window? owner = null);
 
-    bool? ShowSpendingSourcesList(Window? owner = null);
+    bool? ShowAccountsList(Window? owner = null);
 
     bool? ShowSettings(Window? owner = null);
     bool? ShowDataManagement(Window? owner = null);
@@ -32,15 +32,15 @@ public interface IDialogService
 
     bool? ShowIncomeDetail(IncomeDetailVM viewModel, Window? owner = null);
 
-    bool? ShowSpendingSourceDetail(SpendingSourceDetailVM viewModel, Window? owner = null);
+    bool? ShowAccountDetail(AccountDetailVM viewModel, Window? owner = null);
 
     bool? ShowTransferFunds(TransferFundsVM viewModel, Window? owner = null);
 
     bool? ShowAccountReconciliation(AccountReconciliationVM viewModel, Window? owner = null);
 
-    bool? ShowAddSpendingSource(Window? owner = null);
+    bool? ShowAddAccount(Window? owner = null);
 
-    bool? ShowAddSpendingSource(AddSpendingSourceVM viewModel, Window? owner = null);
+    bool? ShowAddAccount(AddAccountVM viewModel, Window? owner = null);
 
     bool? ShowAddSavingGoal(Window? owner = null);
 

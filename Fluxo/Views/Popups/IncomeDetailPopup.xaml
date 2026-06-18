@@ -78,16 +78,16 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
-                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Spending Source" />
+                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Account" />
                     <ComboBox
-                        x:Name="IncomeSpendingSourceComboBox"
+                        x:Name="IncomeAccountComboBox"
                         DisplayMemberPath="Name"
                         IsEnabled="False"
-                        ItemsSource="{Binding SpendingSourcesView}"
-                        SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+                        ItemsSource="{Binding AccountsView}"
+                        SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
                         Style="{StaticResource FluxoComboBoxStyle}">
                         <ComboBox.GroupStyle>
-                            <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                            <GroupStyle HeaderTemplate="{StaticResource AccountComboGroupHeaderTemplate}" />
                         </ComboBox.GroupStyle>
                     </ComboBox>
                 </StackPanel>

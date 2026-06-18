@@ -19,7 +19,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
     [ObservableProperty] private int? _selectedGoalId;
     [ObservableProperty] private bool _updateRecurringAmount;
 
-    public ObservableCollection<SpendingSourceVM> AvailableSources { get; } = [];
+    public ObservableCollection<AccountVM> AvailableSources { get; } = [];
     public ObservableCollection<ExpenseTagVM> AvailableTags { get; } = [];
     public ObservableCollection<SavingGoalVM> AvailableGoals { get; } = [];
 

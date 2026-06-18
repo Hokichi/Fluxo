@@ -36,11 +36,11 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
             if (log is null || log.IsForDeletion)
                 return;
 
-            var source = await unitOfWork.SpendingSources.GetByIdAsync(log.SpendingSourceId, ct);
+            var source = await unitOfWork.Accounts.GetByIdAsync(log.AccountId, ct);
             if (source is not null)
             {
-                RestoreExpenseOnSpendingSource(source, log.Amount);
-                unitOfWork.SpendingSources.Update(source);
+                RestoreExpenseOnAccount(source, log.Amount);
+                unitOfWork.Accounts.Update(source);
             }
 
             log.IsForDeletion = true;
@@ -90,9 +90,9 @@ public sealed class ExpenseLogService(IDataOperationRunner dataOperationRunner, 
         }, cancellationToken);
     }
 
-    private static void RestoreExpenseOnSpendingSource(SpendingSource source, decimal amount)
+    private static void RestoreExpenseOnAccount(Account source, decimal amount)
     {
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - amount);
             return;

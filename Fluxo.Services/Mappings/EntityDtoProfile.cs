@@ -16,9 +16,9 @@ public sealed class EntityDtoProfile : Profile
         CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap();
         CreateMap<UserSettings, UserSettingsDto>().ReverseMap();
 
-        // SpendingSource: ignore computed fields when mapping Entity→DTO,
+        // Account: ignore computed fields when mapping Entity→DTO,
         // and ignore Id when mapping DTO→Entity (EF assigns Id on insert).
-        CreateMap<SpendingSource, SpendingSourceDto>()
+        CreateMap<Account, AccountDto>()
             .ForMember(dest => dest.MoneyIn, opt => opt.Ignore())
             .ForMember(dest => dest.MoneyOut, opt => opt.Ignore())
             .ReverseMap()

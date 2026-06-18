@@ -12,7 +12,7 @@
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasSpendingSources}" Value="False">
+                            <DataTrigger Binding="{Binding HasAccounts}" Value="False">
                                 <Setter Property="Effect">
                                     <Setter.Value>
                                         <BlurEffect Radius="15" />
@@ -370,7 +370,7 @@
                 FontFamily="{StaticResource Bold}"
                 FontSize="13"
                 Style="{StaticResource TextOnlyButtonStyle}"
-                Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
         </Grid>
     </Border>
 </UserControl>

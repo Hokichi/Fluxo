@@ -8,7 +8,7 @@ public enum ExpenseDetailChangedFields
     Amount = 1 << 1,
     Date = 1 << 2,
     Category = 1 << 3,
-    SpendingSource = 1 << 4,
+    Account = 1 << 4,
     Tag = 1 << 5,
     Note = 1 << 6,
     Pin = 1 << 7
@@ -32,15 +32,15 @@ public sealed record ExpenseDetailUpdate(
     public bool AffectsVisibleMoneyOut =>
         (ChangedFields &
          (ExpenseDetailChangedFields.Amount | ExpenseDetailChangedFields.Date |
-          ExpenseDetailChangedFields.SpendingSource)) != 0;
+          ExpenseDetailChangedFields.Account)) != 0;
 
-    public bool AffectsSpendingSourceState =>
-        (ChangedFields & (ExpenseDetailChangedFields.Amount | ExpenseDetailChangedFields.SpendingSource)) != 0;
+    public bool AffectsAccountState =>
+        (ChangedFields & (ExpenseDetailChangedFields.Amount | ExpenseDetailChangedFields.Account)) != 0;
 }
 
 public sealed record ExpenseDetailSnapshot(
     decimal Amount,
     DateTime Date,
     ExpenseCategory Category,
-    int SpendingSourceId,
+    int AccountId,
     int TagId);

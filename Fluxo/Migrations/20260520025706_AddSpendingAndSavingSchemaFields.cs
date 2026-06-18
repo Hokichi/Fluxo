@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -13,14 +13,14 @@ namespace Fluxo.Migrations
         {
             migrationBuilder.AddColumn<decimal>(
                 name: "MaximumSpending",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "NUMERIC",
                 nullable: false,
                 defaultValue: 0m);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "MinimumPayment",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "NUMERIC",
                 nullable: true);
 
@@ -50,11 +50,11 @@ namespace Fluxo.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "MaximumSpending",
-                table: "SpendingSources");
+                table: "Accounts");
 
             migrationBuilder.DropColumn(
                 name: "MinimumPayment",
-                table: "SpendingSources");
+                table: "Accounts");
 
             migrationBuilder.DropColumn(
                 name: "RecurringPeriod",

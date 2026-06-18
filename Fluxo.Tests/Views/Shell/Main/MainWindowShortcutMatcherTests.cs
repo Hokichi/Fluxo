@@ -222,9 +222,9 @@ public class MainWindowShortcutMatcherTests
 
     [Theory]
     [InlineData(Key.L, ModifierKeys.Control | ModifierKeys.Shift)]
-    public void IsOpenAddSpendingSourceShortcut_ReturnsTrue_ForCtrlShiftL(Key key, ModifierKeys modifiers)
+    public void IsOpenAddAccountShortcut_ReturnsTrue_ForCtrlShiftL(Key key, ModifierKeys modifiers)
     {
-        Assert.True(MainWindowShortcutMatcher.IsOpenAddSpendingSourceShortcut(key, modifiers));
+        Assert.True(MainWindowShortcutMatcher.IsOpenAddAccountShortcut(key, modifiers));
     }
 
     [Theory]

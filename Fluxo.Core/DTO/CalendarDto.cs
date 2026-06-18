@@ -19,14 +19,14 @@ public sealed record CalendarExpenseItem(
     int Id,
     string Name,
     decimal Amount,
-    string SpendingSourceName,
+    string AccountName,
     string? TagName);
 
 public sealed record CalendarIncomeItem(
     int Id,
     string Name,
     decimal Amount,
-    string SpendingSourceName);
+    string AccountName);
 
 public sealed record CalendarGoalDeadlineItem(
     int Id,

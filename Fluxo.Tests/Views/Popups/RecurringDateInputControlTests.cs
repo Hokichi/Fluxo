@@ -36,9 +36,9 @@ public sealed class RecurringDateInputControlTests
     }
 
     [Fact]
-    public void AddSpendingSourcePopup_MonthlyDueDateInputUsesBoundedNumericUpDown()
+    public void AddAccountPopup_MonthlyDueDateInputUsesBoundedNumericUpDown()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddSpendingSourcePopup.xaml"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddAccountPopup.xaml"));
 
         Assert.Equal(1, CountNumericUpDownsBoundTo(xaml, "MonthlyDueDateText", "1", "28"));
         Assert.DoesNotContain("OnMonthlyDueDatePasting", xaml);
@@ -47,13 +47,13 @@ public sealed class RecurringDateInputControlTests
     }
 
     [Fact]
-    public void AddSpendingSourcePopup_MaximumSpendingShowsForCheckingCashAndCredit()
+    public void AddAccountPopup_MaximumSpendingShowsForCheckingCashAndCredit()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddSpendingSourcePopup.xaml"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddAccountPopup.xaml"));
 
-        Assert.Contains("Binding=\"{Binding SelectedSpendingSourceType}\" Value=\"{x:Static enums:SpendingSourceType.Checking}\"", xaml);
-        Assert.Contains("Binding=\"{Binding SelectedSpendingSourceType}\" Value=\"{x:Static enums:SpendingSourceType.Cash}\"", xaml);
-        Assert.Contains("Binding=\"{Binding SelectedSpendingSourceType}\" Value=\"{x:Static enums:SpendingSourceType.Credit}\"", xaml);
+        Assert.Contains("Binding=\"{Binding SelectedAccountType}\" Value=\"{x:Static enums:AccountType.Checking}\"", xaml);
+        Assert.Contains("Binding=\"{Binding SelectedAccountType}\" Value=\"{x:Static enums:AccountType.Cash}\"", xaml);
+        Assert.Contains("Binding=\"{Binding SelectedAccountType}\" Value=\"{x:Static enums:AccountType.Credit}\"", xaml);
     }
 
     private static int CountNumericUpDownsBoundTo(string xaml, string propertyName, string lowerLimit, string upperLimit)

@@ -145,9 +145,9 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
-    public void SpendingSourceDetailInlineTextBoxTemplate_StretchesContentHost_ForCenteredText()
+    public void AccountDetailInlineTextBoxTemplate_StretchesContentHost_ForCenteredText()
     {
-        var popupXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml"));
+        var popupXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Popups", "AccountDetailPopup.xaml"));
         var styleSection = ExtractSection(popupXaml, "x:Key=\"InlineHeaderTextBoxBaseStyle\"", "x:Key=\"InlineDetailValueTextBoxStyle\"");
 
         Assert.Contains("<Setter Property=\"VerticalContentAlignment\" Value=\"Center\" />", styleSection);

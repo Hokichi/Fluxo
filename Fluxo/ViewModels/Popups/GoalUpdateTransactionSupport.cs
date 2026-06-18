@@ -9,9 +9,9 @@ public static class GoalUpdateTransactionSupport
     public const string GoalUpdateTagName = "Goal Update";
     public const string GoalUpdateTagColor = "#aed4e1";
 
-    public static bool IsEligibleGoalSourceType(SpendingSourceType sourceType)
+    public static bool IsEligibleGoalSourceType(AccountType sourceType)
     {
-        return sourceType is SpendingSourceType.Cash or SpendingSourceType.Checking;
+        return sourceType is AccountType.Cash or AccountType.Checking;
     }
 
     public static async Task<ExpenseTag> ResolveGoalUpdateTagAsync(IAppDataService appData)

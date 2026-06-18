@@ -83,14 +83,14 @@ IsSaveButtonEnabled="{Binding CanSave}"
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
-                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Spending Source" />
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Account" />
                         <ComboBox
                             DisplayMemberPath="Name"
-                            ItemsSource="{Binding SpendingSourcesView}"
-                            SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+                            ItemsSource="{Binding AccountsView}"
+                            SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
                             Style="{StaticResource FluxoComboBoxStyle}">
                             <ComboBox.GroupStyle>
-                                <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                                <GroupStyle HeaderTemplate="{StaticResource AccountComboGroupHeaderTemplate}" />
                             </ComboBox.GroupStyle>
                         </ComboBox>
 

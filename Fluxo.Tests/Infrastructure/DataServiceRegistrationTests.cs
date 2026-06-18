@@ -31,7 +31,7 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IIncomeLogRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IExpenseTagRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<ISavingGoalRepository>(services, ServiceLifetime.Scoped);
-        AssertLifetime<ISpendingSourceRepository>(services, ServiceLifetime.Scoped);
+        AssertLifetime<IAccountRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRecurringTransactionRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<INotificationRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IUserSettingsRepository>(services, ServiceLifetime.Scoped);
@@ -41,7 +41,7 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IRepository<IncomeLog>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<ExpenseTag>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<SavingGoal>>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IRepository<SpendingSource>>(services, ServiceLifetime.Scoped);
+        AssertLifetime<IRepository<Account>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<RecurringTransaction>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<Notification>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IDataOperationScopeFactory>(services, ServiceLifetime.Singleton);
@@ -106,7 +106,7 @@ public sealed class DataServiceRegistrationTests
             new IncomeLogRepository(dbContext),
             new ExpenseTagRepository(dbContext),
             new SavingGoalRepository(dbContext),
-            new SpendingSourceRepository(dbContext),
+            new AccountRepository(dbContext),
             new RecurringTransactionRepository(dbContext),
             new NotificationRepository(dbContext),
             new UserSettingsRepository(dbContext),

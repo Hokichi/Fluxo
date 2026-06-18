@@ -13,7 +13,7 @@ public sealed class ExpensesListEmptyActionTests
         Assert.DoesNotContain("No entry found", xaml);
         Assert.Contains("Content=\"{Binding EmptyActionText", xaml);
         Assert.Contains("Click=\"OnEmptyActionButtonClick\"", xaml);
-        Assert.Contains("Style=\"{StaticResource SpendingSourceAddButtonStyle}\"", xaml);
+        Assert.Contains("Style=\"{StaticResource AccountAddButtonStyle}\"", xaml);
         Assert.Contains("<MultiDataTrigger.Conditions>", xaml);
         Assert.Contains("Binding IsListEmpty", xaml);
         Assert.Contains("Binding IsEmptyActionVisible", xaml);

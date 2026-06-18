@@ -24,18 +24,18 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
     private readonly IExpenseLogService _expenseLogService;
     private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
-    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly IAccountService _accountService;
     private readonly Func<DateTime> _todayProvider;
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLog> _allIncomeLogs = [];
     private BudgetAllocation _budgetAllocation = new();
     private (DateTime From, DateTime To)? _selectedRange;
-    private List<SpendingSourceVM> _spendingSources = [];
+    private List<AccountVM> _accounts = [];
 
     public SpentAllowancePanelVM(
         IExpenseLogService expenseLogService,
-        ISpendingSourceService spendingSourceService,
+        IAccountService accountService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         IMessenger? messenger = null,
@@ -43,7 +43,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseLogService = expenseLogService;
-        _spendingSourceService = spendingSourceService;
+        _accountService = accountService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
         _todayProvider = todayProvider ?? (() => DateTime.Today);
@@ -101,8 +101,8 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
         var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken));
-        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
-            await _spendingSourceService.GetAllAsync(cancellationToken));
+        var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
+            await _accountService.GetAllAsync(cancellationToken));
         var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
 
         _allExpenseLogs = expenseLogs
@@ -112,7 +112,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         _allIncomeLogs = incomeLogs
             .OrderByDescending(log => log.AddedOn)
             .ToList();
-        _spendingSources = spendingSources.ToList();
+        _accounts = accounts.ToList();
 
         RefreshMetrics();
     }
@@ -143,7 +143,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         TotalSpent = visibleExpenseLogs.Sum(log => log.Amount);
         TotalEarned = visibleIncomeLogs.Sum(log => log.Amount);
 
-        var totalIncomeAmount = _spendingSources.Where(source => source.IsEnabled).Sum(source => source.Balance);
+        var totalIncomeAmount = _accounts.Where(source => source.IsEnabled).Sum(source => source.Balance);
         Allowance = BudgetAllocationCalculator.CalculateDailyAllowance(
             _budgetAllocation,
             _todayProvider(),
@@ -203,11 +203,11 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount += snapshot.Amount;
             return;
@@ -218,11 +218,11 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private void RestoreExpenseFromTrackedSource(ExpenseLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
             return;
@@ -233,7 +233,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private ExpenseLogVM ToExpenseLogVm(ExpenseLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
 
         return new ExpenseLogVM
         {
@@ -242,11 +242,11 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
-            SpendingSource = new SpendingSourceVM
+            Account = new AccountVM
             {
-                Id = snapshot.SpendingSourceId,
+                Id = snapshot.AccountId,
                 Name = source?.Name ?? string.Empty,
-                SpendingSourceType = source?.SpendingSourceType ?? SpendingSourceType.Checking
+                AccountType = source?.AccountType ?? AccountType.Checking
             },
             Expense = new ExpenseVM
             {

@@ -27,10 +27,10 @@ public partial class QuickSetupWizardMiddlePage : UserControl
 
     private static QuickSetupWizard? FindPopup(DependencyObject source) => Window.GetWindow(source) as QuickSetupWizard;
 
-    private void OnAddSpendingSourceClick(object sender, RoutedEventArgs e)
+    private void OnAddAccountClick(object sender, RoutedEventArgs e)
     {
         if (sender is DependencyObject source)
-            FindPopup(source)?.OnAddSpendingSourceClick(sender, e);
+            FindPopup(source)?.OnAddAccountClick(sender, e);
     }
 
     private void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)

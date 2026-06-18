@@ -47,6 +47,6 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
         return DbSet
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.ExpenseTag)
-            .Include(e => e.SpendingSource);
+            .Include(e => e.Account);
     }
 }

@@ -56,7 +56,7 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<IExpenseService, ExpenseService>();
         services.AddTransient<IExpenseLogService, ExpenseLogService>();
-        services.AddTransient<ISpendingSourceService, SpendingSourceService>();
+        services.AddTransient<IAccountService, AccountService>();
         services.AddTransient<ITagService, TagService>();
         services.AddTransient<IAnalyticsService, AnalyticsService>();
         services.AddTransient<ICalendarService, CalendarService>();
@@ -96,10 +96,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IncomeLogVM>();
         services.AddTransient<ExpenseTagVM>();
         services.AddTransient<SavingGoalVM>();
-        services.AddTransient<SpendingSourceVM>();
+        services.AddTransient<AccountVM>();
         services.AddTransient<UserSettingsVM>();
         services.AddTransient<AddNewTransactionVM>();
-        services.AddTransient<AddSpendingSourceVM>();
+        services.AddTransient<AddAccountVM>();
         services.AddTransient<AddSavingGoalVM>();
         services.AddTransient<NotificationChecklistActionVM>();
         services.AddTransient<GoalDeadlineActionVM>();
@@ -120,7 +120,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardMiddlePageVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardLoadingPageVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardFinalPageVM>();
-        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSpendingSourcesVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardAccountsVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardFixedExpensesVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSavingGoalsVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardBudgetAllocationVM>();
@@ -130,8 +130,8 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<QuickAddPopup>();
         services.AddTransient<HotkeysOverviewPopup>();
-        services.AddTransient<SpendingSourcesListPopup>();
-        services.AddTransient<AddSpendingSourcePopup>();
+        services.AddTransient<AccountsListPopup>();
+        services.AddTransient<AddAccountPopup>();
         services.AddTransient<AddSavingGoalPopup>();
         services.AddTransient<NotificationChecklistActionPopup>();
         services.AddTransient<GoalDeadlineActionPopup>();

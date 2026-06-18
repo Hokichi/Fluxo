@@ -42,7 +42,7 @@ public sealed class AppDatabaseMigrationTests
 
             Assert.True(File.Exists(databasePath));
             Assert.Equal(migrations.Count, appliedMigrations.Count);
-            Assert.Empty(await dbContext.SpendingSources.ToListAsync());
+            Assert.Empty(await dbContext.Accounts.ToListAsync());
 
             var budgetAllocation = await dbContext.BudgetAllocation.SingleAsync();
             Assert.Equal(50, budgetAllocation.NeedsThreshold);
@@ -161,6 +161,56 @@ public sealed class AppDatabaseMigrationTests
         }
     }
 
+    [Fact]
+    public async Task MigrateDatabaseAsync_WhenDatabaseHasLegacyAccountSchema_RenamesSchemaAndMigrationHistory()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(tempDirectory, "fluxo.db");
+
+        try
+        {
+            Directory.CreateDirectory(tempDirectory);
+            using var serviceProvider = CreateServiceProvider(databasePath);
+            await CreateLegacyAccountSchemaDatabaseAsync(databasePath, serviceProvider);
+            var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
+
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+
+            await using var connection = new SqliteConnection($"Data Source={databasePath}");
+            await connection.OpenAsync();
+
+            var legacyEntityName = "Spending" + "Source";
+            Assert.True(await TableExistsAsync(connection, "Accounts"));
+            Assert.False(await TableExistsAsync(connection, legacyEntityName + "s"));
+            Assert.True(await ColumnExistsAsync(connection, "Accounts", "AccountType"));
+            Assert.False(await ColumnExistsAsync(connection, "Accounts", legacyEntityName + "Type"));
+            Assert.True(await ColumnExistsAsync(connection, "Expenses", "AccountId"));
+            Assert.False(await ColumnExistsAsync(connection, "Expenses", legacyEntityName + "Id"));
+            Assert.True(await ColumnExistsAsync(connection, "ExpenseLogs", "AccountId"));
+            Assert.True(await ColumnExistsAsync(connection, "IncomeLogs", "AccountId"));
+
+            await using (var command = connection.CreateCommand())
+            {
+                command.CommandText = """SELECT "Name", "AccountType" FROM "Accounts" WHERE "Id" = 7;""";
+                await using var reader = await command.ExecuteReaderAsync();
+                Assert.True(await reader.ReadAsync());
+                Assert.Equal("Wallet", reader.GetString(0));
+                Assert.Equal((int)AccountType.Cash, reader.GetInt32(1));
+            }
+
+            var migrations = await ReadMigrationHistoryAsync(connection);
+            Assert.Contains("20260401093922_AddShowOnUIToAccount", migrations);
+            Assert.DoesNotContain("20260401093922_AddShowOnUITo" + legacyEntityName, migrations);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static ServiceProvider CreateServiceProvider(string databasePath)
     {
         var services = new ServiceCollection();
@@ -179,7 +229,7 @@ public sealed class AppDatabaseMigrationTests
         services.AddScoped<IIncomeLogRepository, IncomeLogRepository>();
         services.AddScoped<IExpenseTagRepository, ExpenseTagRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
-        services.AddScoped<ISpendingSourceRepository, SpendingSourceRepository>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
@@ -295,6 +345,128 @@ public sealed class AppDatabaseMigrationTests
                 """,
                 ("$migrationId", migrationId));
         }
+    }
+
+    private static async Task CreateLegacyAccountSchemaDatabaseAsync(
+        string databasePath,
+        IServiceProvider serviceProvider)
+    {
+        await using var connection = new SqliteConnection($"Data Source={databasePath}");
+        await connection.OpenAsync();
+
+        var legacyEntityName = "Spending" + "Source";
+        var legacyTableName = legacyEntityName + "s";
+
+        await ExecuteNonQueryAsync(
+            connection,
+            $"""
+             CREATE TABLE "{legacyTableName}" (
+                 "Id" INTEGER NOT NULL CONSTRAINT "PK_{legacyTableName}" PRIMARY KEY AUTOINCREMENT,
+                 "Name" TEXT NOT NULL,
+                 "{legacyEntityName}Type" INTEGER NOT NULL,
+                 "AccountLimit" NUMERIC NOT NULL,
+                 "MaximumSpending" NUMERIC NOT NULL,
+                 "MinimumPayment" NUMERIC NULL,
+                 "SpentAmount" NUMERIC NOT NULL,
+                 "Balance" NUMERIC NOT NULL,
+                 "MonthlyDueDate" INTEGER NULL,
+                 "DeductSource" INTEGER NULL,
+                 "IsEnabled" INTEGER NOT NULL,
+                 "PinnedOnUI" INTEGER NOT NULL,
+                 "InterestRate" REAL NOT NULL
+             );
+
+             CREATE TABLE "Expenses" (
+                 "Id" INTEGER NOT NULL CONSTRAINT "PK_Expenses" PRIMARY KEY AUTOINCREMENT,
+                 "Name" TEXT NOT NULL,
+                 "Amount" NUMERIC NOT NULL,
+                 "{legacyEntityName}Id" INTEGER NOT NULL,
+                 "ExpenseTagId" INTEGER NOT NULL,
+                 "Date" TEXT NOT NULL,
+                 "IsRecurring" INTEGER NOT NULL
+             );
+
+             CREATE TABLE "ExpenseLogs" (
+                 "Id" INTEGER NOT NULL CONSTRAINT "PK_ExpenseLogs" PRIMARY KEY AUTOINCREMENT,
+                 "ExpenseId" INTEGER NOT NULL,
+                 "{legacyEntityName}Id" INTEGER NOT NULL,
+                 "Amount" NUMERIC NOT NULL,
+                 "Date" TEXT NOT NULL,
+                 "IsForDeletion" INTEGER NOT NULL,
+                 "IsPinned" INTEGER NOT NULL,
+                 "Notes" TEXT NOT NULL
+             );
+
+             CREATE TABLE "IncomeLogs" (
+                 "Id" INTEGER NOT NULL CONSTRAINT "PK_IncomeLogs" PRIMARY KEY AUTOINCREMENT,
+                 "{legacyEntityName}Id" INTEGER NOT NULL,
+                 "Name" TEXT NOT NULL,
+                 "Amount" NUMERIC NOT NULL,
+                 "Date" TEXT NOT NULL,
+                 "IsForDeletion" INTEGER NOT NULL,
+                 "IsPinned" INTEGER NOT NULL,
+                 "Notes" TEXT NOT NULL
+             );
+
+             CREATE TABLE "__EFMigrationsHistory" (
+                 "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+                 "ProductVersion" TEXT NOT NULL
+             );
+
+             INSERT INTO "{legacyTableName}" (
+                 "Id",
+                 "Name",
+                 "{legacyEntityName}Type",
+                 "AccountLimit",
+                 "MaximumSpending",
+                 "SpentAmount",
+                 "Balance",
+                 "IsEnabled",
+                 "PinnedOnUI",
+                 "InterestRate")
+             VALUES (7, 'Wallet', {(int)AccountType.Cash}, 0, 0, 0, 100, 1, 1, 0);
+             """);
+
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+        var migrationIds = dbContext.Database.GetMigrations()
+            .Select(migrationId => migrationId switch
+            {
+                "20260401093922_AddShowOnUIToAccount" => "20260401093922_AddShowOnUITo" + legacyEntityName,
+                "20260411142128_AddIsEnabledToAccount" => "20260411142128_AddIsEnabledTo" + legacyEntityName,
+                "20260415014219_AddIsForDeletionToAccount" => "20260415014219_AddIsForDeletionTo" + legacyEntityName,
+                "20260416153000_AddIconNameAndMonthlyDueDateToAccount" =>
+                    "20260416153000_AddIconNameAndMonthlyDueDateTo" + legacyEntityName,
+                _ => migrationId
+            });
+
+        foreach (var migrationId in migrationIds)
+        {
+            await ExecuteNonQueryAsync(
+                connection,
+                """
+                INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                VALUES ($migrationId, '10.0.5');
+                """,
+                ("$migrationId", migrationId));
+        }
+    }
+
+    private static async Task<bool> TableExistsAsync(
+        SqliteConnection connection,
+        string tableName)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+                              SELECT 1
+                              FROM sqlite_master
+                              WHERE type = 'table'
+                                AND name = $name
+                              LIMIT 1;
+                              """;
+        command.Parameters.AddWithValue("$name", tableName);
+
+        return await command.ExecuteScalarAsync() is not null;
     }
 
     private static async Task<bool> ColumnExistsAsync(

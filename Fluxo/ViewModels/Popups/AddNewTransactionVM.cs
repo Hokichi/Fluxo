@@ -23,13 +23,13 @@ public partial class AddNewTransactionVM : ObservableValidator
 {
     private const int DefaultVisibleTagSlots = 4;
     private const int MaxNameLength = 256;
-    private const int NoSpendingSourceId = -1;
+    private const int NoAccountId = -1;
     private const int NoTagId = -1;
     private const int NoSavingGoalId = -1;
     private const decimal SimilarAmountTolerance = 0.05m;
 
-    private readonly List<SpendingSourceVM> _availableSpendingSources = [];
-    private readonly IReadOnlyList<SpendingSourceVM>? _spendingSourcesOverride;
+    private readonly List<AccountVM> _availableAccounts = [];
+    private readonly IReadOnlyList<AccountVM>? _accountsOverride;
     private readonly Func<RecurringDraftSaveInput, Task<AddNewTransactionSubmissionResult>>? _saveRecurringDraftAsync;
     private readonly List<SavingGoalVM> _orderedGoals = [];
     private readonly MainVM _mainViewModel;
@@ -73,8 +73,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     private SavingGoalVM? _selectedGoal;
     [ObservableProperty]
     [NotifyDataErrorInfo]
-    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedSpendingSource))]
-    private SpendingSourceVM? _selectedSpendingSource;
+    [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedAccount))]
+    private AccountVM? _selectedAccount;
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedTag))]
@@ -83,12 +83,12 @@ public partial class AddNewTransactionVM : ObservableValidator
     public AddNewTransactionVM(
         MainVM mainViewModel,
         IAppDataService appData,
-        IReadOnlyList<SpendingSourceVM>? spendingSourcesOverride = null,
+        IReadOnlyList<AccountVM>? accountsOverride = null,
         Func<RecurringDraftSaveInput, Task<AddNewTransactionSubmissionResult>>? saveRecurringDraftAsync = null)
     {
         _mainViewModel = mainViewModel;
         _appData = appData;
-        _spendingSourcesOverride = spendingSourcesOverride;
+        _accountsOverride = accountsOverride;
         _saveRecurringDraftAsync = saveRecurringDraftAsync;
         ErrorsChanged += (_, e) =>
         {
@@ -100,9 +100,9 @@ public partial class AddNewTransactionVM : ObservableValidator
             if (e.PropertyName == nameof(AmountText))
                 OnPropertyChanged(nameof(AmountValidationHint));
         };
-        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByProperty(
-            SpendingSources,
-            nameof(SpendingSourceVM.TypeDisplayName));
+        AccountsView = AccountComboBoxViewFactory.CreateGroupedByProperty(
+            Accounts,
+            nameof(AccountVM.TypeDisplayName));
 
         ReloadChoicesFromMainViewModel();
         ResetForm(false);
@@ -116,8 +116,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         new("Invest", ExpenseCategory.Savings)
     ];
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
-    public ICollectionView SpendingSourcesView { get; }
+    public ObservableCollection<AccountVM> Accounts { get; } = [];
+    public ICollectionView AccountsView { get; }
     public ObservableCollection<SavingGoalVM> Goals { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
@@ -269,7 +269,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         NotifyFormStateChanged();
     }
-    partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value)
+    partial void OnSelectedAccountChanged(AccountVM? value)
     {
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
@@ -306,10 +306,10 @@ public partial class AddNewTransactionVM : ObservableValidator
         NoteText = draft.Note;
         SelectedDate = draft.Date.Date;
         SelectedExpenseCategory = draft.Category ?? ExpenseCategory.Needs;
-        SelectedSpendingSource = draft.SpendingSourceId is null
-            ? SpendingSources.FirstOrDefault()
-            : SpendingSources.FirstOrDefault(source => source.Id == draft.SpendingSourceId.Value) ??
-              SpendingSources.FirstOrDefault();
+        SelectedAccount = draft.AccountId is null
+            ? Accounts.FirstOrDefault()
+            : Accounts.FirstOrDefault(source => source.Id == draft.AccountId.Value) ??
+              Accounts.FirstOrDefault();
         SelectedTag = draft.TagId is null
             ? _orderedTags.FirstOrDefault()
             : _orderedTags.FirstOrDefault(tag => tag.Id == draft.TagId.Value) ?? _orderedTags.FirstOrDefault();
@@ -335,7 +335,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (!value || IsGoal)
             IsMoreTagsOpen = false;
 
-        RefreshSpendingSources();
+        RefreshAccounts();
         ClearNameValidation();
         RefreshActiveValidation(nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
@@ -361,7 +361,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (value)
             IsMoreTagsOpen = false;
 
-        RefreshSpendingSources();
+        RefreshAccounts();
         ClearNameValidation();
         RefreshActiveValidation(nameof(AmountText));
         _ = RefreshTransactionNameSuggestionsAsync();
@@ -394,8 +394,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         NameText = suggestion.Name;
         AmountText = suggestion.Amount;
         NoteText = suggestion.Note;
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == suggestion.SpendingSourceId) ??
-                                 SelectedSpendingSource;
+        SelectedAccount = Accounts.FirstOrDefault(source => source.Id == suggestion.AccountId) ??
+                                 SelectedAccount;
 
         if (IsExpense)
         {
@@ -457,7 +457,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     input.Amount,
                     input.RecurringPeriod,
                     recurringTime,
-                    input.SpendingSourceId,
+                    input.AccountId,
                     input.TagId,
                     input.GoalId));
                 if (!draftSaveResult.IsSuccess)
@@ -472,11 +472,11 @@ public partial class AddNewTransactionVM : ObservableValidator
                 return AddNewTransactionSubmissionResult.Success();
             }
 
-            var spendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
-            if (spendingSource is null)
-                return AddNewTransactionSubmissionResult.Failure("Please select a valid spending source.");
+            var account = await _appData.GetAccountByIdAsync(input.AccountId);
+            if (account is null)
+                return AddNewTransactionSubmissionResult.Failure("Please select a valid account.");
 
-            if (!TryValidateSpendingAmountAgainstSource(input.IsExpense, input.IsGoal, input.Amount, spendingSource, out var spendingValidationMessage))
+            if (!TryValidateSpendingAmountAgainstSource(input.IsExpense, input.IsGoal, input.Amount, account, out var spendingValidationMessage))
                 return AddNewTransactionSubmissionResult.Failure(spendingValidationMessage);
 
             var invalidationScope = DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications;
@@ -509,7 +509,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 recurring.RecurringPeriod = input.RecurringPeriod;
                 recurring.RecurringTime = recurringTime;
                 recurring.Type = recurringType;
-                recurring.SourceId = input.SpendingSourceId;
+                recurring.SourceId = input.AccountId;
                 recurring.TagId = input.IsExpense ? input.TagId : null;
                 recurring.GoalId = input.IsGoal ? input.GoalId : null;
                 recurring.IsEnabled = true;
@@ -526,7 +526,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (input.GoalId is null)
                     return AddNewTransactionSubmissionResult.Failure("Please choose a goal.");
 
-                if (!GoalUpdateTransactionSupport.IsEligibleGoalSourceType(spendingSource.SpendingSourceType))
+                if (!GoalUpdateTransactionSupport.IsEligibleGoalSourceType(account.AccountType))
                     return AddNewTransactionSubmissionResult.Failure("Goal updates can only be taken from Cash or Checking.");
 
                 var goal = await _appData.GetSavingGoalByIdAsync(input.GoalId.Value);
@@ -546,7 +546,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Name = BuildGoalUpdateName(goal.Name),
                     Amount = input.Amount,
                     ExpenseCategory = ExpenseCategory.Savings,
-                    SpendingSourceId = spendingSource.Id,
+                    AccountId = account.Id,
                     ExpenseTagId = goalUpdateTag.Id
                 };
 
@@ -557,7 +557,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     DeductedOn = input.Date,
                     Notes = $"Goal update for {goal.Name}",
                     IsForDeletion = false,
-                    SpendingSourceId = spendingSource.Id,
+                    AccountId = account.Id,
                     IsPinned = false
                 };
 
@@ -567,8 +567,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                 await _appData.AddExpenseLogAsync(expenseLog);
                 _appData.UpdateSavingGoal(goal);
 
-                ApplyExpenseToSpendingSource(spendingSource, input.Amount);
-                _appData.UpdateSpendingSource(spendingSource);
+                ApplyExpenseToAccount(account, input.Amount);
+                _appData.UpdateAccount(account);
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
@@ -578,7 +578,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                         expense.Name,
                         expenseLog.Amount,
                         expense.ExpenseCategory,
-                        spendingSource.Id,
+                        account.Id,
                         goalUpdateTag.Id,
                         expenseLog.DeductedOn,
                         expenseLog.Notes,
@@ -601,7 +601,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Name = BuildExpenseName(input.Name, input.Note, expenseTag.Name),
                     Amount = input.Amount,
                     ExpenseCategory = input.Category!.Value,
-                    SpendingSourceId = spendingSource.Id,
+                    AccountId = account.Id,
                     ExpenseTagId = expenseTag.Id
                 };
 
@@ -612,15 +612,15 @@ public partial class AddNewTransactionVM : ObservableValidator
                     DeductedOn = input.Date,
                     Notes = input.Note,
                     IsForDeletion = false,
-                    SpendingSourceId = spendingSource.Id,
+                    AccountId = account.Id,
                     IsPinned = input.IsPinned
                 };
 
                 await _appData.AddExpenseAsync(expense);
                 await _appData.AddExpenseLogAsync(expenseLog);
 
-                ApplyExpenseToSpendingSource(spendingSource, input.Amount);
-                _appData.UpdateSpendingSource(spendingSource);
+                ApplyExpenseToAccount(account, input.Amount);
+                _appData.UpdateAccount(account);
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
@@ -630,7 +630,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                         expense.Name,
                         expenseLog.Amount,
                         expense.ExpenseCategory,
-                        spendingSource.Id,
+                        account.Id,
                         expenseTag.Id,
                         expenseLog.DeductedOn,
                         expenseLog.Notes,
@@ -644,20 +644,20 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Amount = input.Amount,
                     AddedOn = input.Date,
                     Notes = input.Note,
-                    SpendingSourceId = spendingSource.Id,
+                    AccountId = account.Id,
                     IsPinned = input.IsPinned
                 };
 
                 await _appData.AddIncomeLogAsync(incomeLog);
 
-                ApplyIncomeToSpendingSource(spendingSource, input.Amount);
-                _appData.UpdateSpendingSource(spendingSource);
+                ApplyIncomeToAccount(account, input.Amount);
+                _appData.UpdateAccount(account);
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
                     new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
                         incomeLog.Id,
-                        spendingSource.Id,
+                        account.Id,
                         incomeLog.Name,
                         incomeLog.Amount,
                         incomeLog.AddedOn,
@@ -743,7 +743,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         SelectedRecurringPeriod = RecurringPeriod.Monthly;
         RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
         SelectedExpenseCategory = ExpenseCategory.Needs;
-        SelectedSpendingSource = SpendingSources.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault();
         SelectedTag = _orderedTags.FirstOrDefault();
         SelectedGoal = Goals.FirstOrDefault();
         IsMoreTagsOpen = false;
@@ -800,9 +800,9 @@ public partial class AddNewTransactionVM : ObservableValidator
             tagId = SelectedTag.Id;
         }
 
-        if (SelectedSpendingSource is null)
+        if (SelectedAccount is null)
         {
-            validationMessage = "Please choose a spending source.";
+            validationMessage = "Please choose a account.";
             return false;
         }
 
@@ -815,7 +815,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             SelectedRecurringPeriod,
             NameText.Trim(),
             AmountText,
-            SelectedSpendingSource.Id,
+            SelectedAccount.Id,
             SelectedDate.Date,
             RecurringTimeText.Trim(),
             NoteText.Trim(),
@@ -828,9 +828,9 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private void ReloadChoicesFromMainViewModel()
     {
-        _availableSpendingSources.Clear();
-        var sourceCatalog = _spendingSourcesOverride ?? _mainViewModel.BudgetPanel.SpendingSources;
-        _availableSpendingSources.AddRange(sourceCatalog.Where(source => source.IsEnabled));
+        _availableAccounts.Clear();
+        var sourceCatalog = _accountsOverride ?? _mainViewModel.BudgetPanel.Accounts;
+        _availableAccounts.AddRange(sourceCatalog.Where(source => source.IsEnabled));
 
         _orderedTags.Clear();
         _orderedTags.AddRange(OrderNonSystemTags(_mainViewModel.BudgetPanel.Tags
@@ -846,7 +846,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         ReplaceCollection(Goals, _orderedGoals);
         RefreshTagCollections();
-        RefreshSpendingSources();
+        RefreshAccounts();
         _ = RefreshExpenseCategoryAvailabilityAsync();
     }
 
@@ -1083,7 +1083,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         IReadOnlySet<int> goalUpdateTagIds)
     {
         if (log.IsForDeletion ||
-            log.SpendingSourceId != input.SpendingSourceId ||
+            log.AccountId != input.AccountId ||
             log.Expense is null ||
             !IsSameTransactionName(log.Expense.Name, candidateName) ||
             !IsSimilarAmount(log.Amount, input.Amount))
@@ -1099,7 +1099,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         QuickTransactionInput input,
         string candidateName)
     {
-        return log.SpendingSourceId == input.SpendingSourceId &&
+        return log.AccountId == input.AccountId &&
                IsSameTransactionName(log.Name, candidateName) &&
                IsSimilarAmount(log.Amount, input.Amount);
     }
@@ -1222,8 +1222,8 @@ public partial class AddNewTransactionVM : ObservableValidator
             .Select(log => new AddNewTransactionSuggestion(
                 log.Expense.Name,
                 log.Amount,
-                log.SpendingSourceId,
-                log.SpendingSource?.Name ?? log.Expense.SpendingSource?.Name ?? string.Empty,
+                log.AccountId,
+                log.Account?.Name ?? log.Expense.Account?.Name ?? string.Empty,
                 log.Notes,
                 log.Expense.ExpenseCategory,
                 log.Expense.ExpenseTagId,
@@ -1241,8 +1241,8 @@ public partial class AddNewTransactionVM : ObservableValidator
             .Select(log => new AddNewTransactionSuggestion(
                 log.Name,
                 log.Amount,
-                log.SpendingSourceId,
-                log.SpendingSource?.Name ?? string.Empty,
+                log.AccountId,
+                log.Account?.Name ?? string.Empty,
                 log.Notes,
                 null,
                 null,
@@ -1253,7 +1253,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool isExpense,
         bool isGoal,
         decimal amount,
-        SpendingSourceVM source,
+        AccountVM source,
         out string validationMessage)
     {
         if (amount <= 0m)
@@ -1268,17 +1268,17 @@ public partial class AddNewTransactionVM : ObservableValidator
             return true;
         }
 
-        if (!TryValidateMaximumSpending(source.MaximumSpending, source.SpendingSourceType, source.SpentAmount, source.MoneyOut, amount, out validationMessage))
+        if (!TryValidateMaximumSpending(source.MaximumSpending, source.AccountType, source.SpentAmount, source.MoneyOut, amount, out validationMessage))
             return false;
 
-        return TryValidateSpendingCapacity(source.SpendingSourceType, source.Balance, source.AccountLimit, source.SpentAmount, amount, out validationMessage);
+        return TryValidateSpendingCapacity(source.AccountType, source.Balance, source.AccountLimit, source.SpentAmount, amount, out validationMessage);
     }
 
     private static bool TryValidateSpendingAmountAgainstSource(
         bool isExpense,
         bool isGoal,
         decimal amount,
-        SpendingSource source,
+        Account source,
         out string validationMessage)
     {
         if (amount <= 0m)
@@ -1294,13 +1294,13 @@ public partial class AddNewTransactionVM : ObservableValidator
         }
 
         var persistedMoneyOut = GetPersistedMoneyOut(source);
-        if (!TryValidateMaximumSpending(source.MaximumSpending, source.SpendingSourceType, source.SpentAmount, persistedMoneyOut, amount, out validationMessage))
+        if (!TryValidateMaximumSpending(source.MaximumSpending, source.AccountType, source.SpentAmount, persistedMoneyOut, amount, out validationMessage))
             return false;
 
-        return TryValidateSpendingCapacity(source.SpendingSourceType, source.Balance, source.AccountLimit, source.SpentAmount, amount, out validationMessage);
+        return TryValidateSpendingCapacity(source.AccountType, source.Balance, source.AccountLimit, source.SpentAmount, amount, out validationMessage);
     }
 
-    private static decimal GetPersistedMoneyOut(SpendingSource source)
+    private static decimal GetPersistedMoneyOut(Account source)
     {
         var moneyOutProperty = source.GetType().GetProperty("MoneyOut");
         if (moneyOutProperty is not null)
@@ -1315,7 +1315,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private static bool TryValidateMaximumSpending(
         decimal maximumSpending,
-        SpendingSourceType sourceType,
+        AccountType sourceType,
         decimal spentAmount,
         decimal moneyOut,
         decimal amount,
@@ -1327,7 +1327,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             return true;
         }
 
-        var projectedSpending = sourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL
+        var projectedSpending = sourceType is AccountType.Credit or AccountType.BNPL
             ? spentAmount + amount
             : moneyOut + amount;
 
@@ -1342,14 +1342,14 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     private static bool TryValidateSpendingCapacity(
-        SpendingSourceType sourceType,
+        AccountType sourceType,
         decimal balance,
         decimal accountLimit,
         decimal spentAmount,
         decimal amount,
         out string validationMessage)
     {
-        if (sourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (sourceType is AccountType.Credit or AccountType.BNPL)
         {
             if (spentAmount + amount <= accountLimit)
             {
@@ -1371,26 +1371,26 @@ public partial class AddNewTransactionVM : ObservableValidator
         return false;
     }
 
-    private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount += amount;
+            account.SpentAmount += amount;
             return;
         }
 
-        spendingSource.Balance -= amount;
+        account.Balance -= amount;
     }
 
-    private static void ApplyIncomeToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyIncomeToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
         }
 
-        spendingSource.Balance += amount;
+        account.Balance += amount;
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> items)
@@ -1407,7 +1407,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                  {
                      nameof(NameText),
                      nameof(AmountText),
-                     nameof(SelectedSpendingSource),
+                     nameof(SelectedAccount),
                      nameof(SelectedGoal),
                      nameof(SelectedTag),
                      nameof(RecurringTimeText)
@@ -1444,7 +1444,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             NoteText ?? string.Empty,
             SelectedDate.Date,
             SelectedExpenseCategory,
-            SelectedSpendingSource?.Id ?? NoSpendingSourceId,
+            SelectedAccount?.Id ?? NoAccountId,
             SelectedTag?.Id ?? NoTagId,
             SelectedGoal?.Id ?? NoSavingGoalId);
     }
@@ -1535,8 +1535,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         NoteText = item.Note;
         SelectedDate = item.Date.Date;
         IsPinned = item.IsPinned;
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == item.SpendingSourceId) ??
-                                 SelectedSpendingSource;
+        SelectedAccount = Accounts.FirstOrDefault(source => source.Id == item.AccountId) ??
+                                 SelectedAccount;
 
         if (item.IsExpense)
         {
@@ -1554,7 +1554,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         return IsValidationSuccess(ValidateNameText(NameText, CreateValidationContext()))
                && IsValidationSuccess(ValidateAmountText(AmountText, CreateValidationContext()))
-               && IsValidationSuccess(ValidateSelectedSpendingSource(SelectedSpendingSource, CreateValidationContext()))
+               && IsValidationSuccess(ValidateSelectedAccount(SelectedAccount, CreateValidationContext()))
                && IsValidationSuccess(ValidateSelectedTag(SelectedTag, CreateValidationContext()))
                && IsValidationSuccess(ValidateSelectedGoal(SelectedGoal, CreateValidationContext()))
                && IsValidationSuccess(ValidateRecurringTimeText(RecurringTimeText, CreateValidationContext()));
@@ -1636,26 +1636,26 @@ public partial class AddNewTransactionVM : ObservableValidator
         return "Invalid Amount";
     }
 
-    private void RefreshSpendingSources()
+    private void RefreshAccounts()
     {
-        var selectedSpendingSourceId = SelectedSpendingSource?.Id;
+        var selectedAccountId = SelectedAccount?.Id;
 
-        var filteredSources = _availableSpendingSources
+        var filteredSources = _availableAccounts
             .Where(source =>
                 IsGoal
-                    ? GoalUpdateTransactionSupport.IsEligibleGoalSourceType(source.SpendingSourceType)
-                    : IsExpense || source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL))
-            .OrderBy(GetSpendingSourceTypeSortOrder)
-            .ThenByDescending(GetSpendingSourceWithinTypeSortValue)
+                    ? GoalUpdateTransactionSupport.IsEligibleGoalSourceType(source.AccountType)
+                    : IsExpense || source.AccountType is not (AccountType.Credit or AccountType.BNPL))
+            .OrderBy(GetAccountTypeSortOrder)
+            .ThenByDescending(GetAccountWithinTypeSortValue)
             .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        ReplaceCollection(SpendingSources, filteredSources);
+        ReplaceCollection(Accounts, filteredSources);
 
-        SelectedSpendingSource = selectedSpendingSourceId is null
-            ? SpendingSources.FirstOrDefault()
-            : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ??
-              SpendingSources.FirstOrDefault();
+        SelectedAccount = selectedAccountId is null
+            ? Accounts.FirstOrDefault()
+            : Accounts.FirstOrDefault(source => source.Id == selectedAccountId.Value) ??
+              Accounts.FirstOrDefault();
     }
 
     public static ValidationResult? ValidateNameText(string value, ValidationContext validationContext)
@@ -1684,10 +1684,10 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (value <= 0m)
             return new ValidationResult("Please enter a valid amount greater than zero.");
 
-        if (viewModel.SelectedSpendingSource is null)
+        if (viewModel.SelectedAccount is null)
             return ValidationResult.Success;
 
-        if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense, viewModel.IsGoal, value, viewModel.SelectedSpendingSource, out var validationMessage))
+        if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense, viewModel.IsGoal, value, viewModel.SelectedAccount, out var validationMessage))
             return new ValidationResult(validationMessage);
 
         if (!viewModel.TryValidateSpendingAmountAgainstTagLimit(value, out var tagLimitValidationMessage))
@@ -1728,11 +1728,11 @@ public partial class AddNewTransactionVM : ObservableValidator
         }
     }
 
-    public static ValidationResult? ValidateSelectedSpendingSource(SpendingSourceVM? value, ValidationContext validationContext)
+    public static ValidationResult? ValidateSelectedAccount(AccountVM? value, ValidationContext validationContext)
     {
         _ = validationContext;
         return value is null
-            ? new ValidationResult("Please choose a spending source.")
+            ? new ValidationResult("Please choose a account.")
             : ValidationResult.Success;
     }
 
@@ -1791,26 +1791,26 @@ public partial class AddNewTransactionVM : ObservableValidator
             .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
     }
 
-    internal static int GetSpendingSourceTypeSortOrder(SpendingSourceVM source)
+    internal static int GetAccountTypeSortOrder(AccountVM source)
     {
-        return source.SpendingSourceType switch
+        return source.AccountType switch
         {
-            SpendingSourceType.Checking => 0,
-            SpendingSourceType.Cash => 1,
-            SpendingSourceType.Credit => 2,
-            SpendingSourceType.BNPL => 3,
-            SpendingSourceType.Saving => 4,
+            AccountType.Checking => 0,
+            AccountType.Cash => 1,
+            AccountType.Credit => 2,
+            AccountType.BNPL => 3,
+            AccountType.Saving => 4,
             _ => 5
         };
     }
 
-    internal static decimal GetSpendingSourceWithinTypeSortValue(SpendingSourceVM source)
+    internal static decimal GetAccountWithinTypeSortValue(AccountVM source)
     {
-        return source.SpendingSourceType switch
+        return source.AccountType switch
         {
-            SpendingSourceType.Checking or SpendingSourceType.Cash => source.Balance,
-            SpendingSourceType.Credit or SpendingSourceType.BNPL => source.AccountLimit - source.SpentAmount,
-            SpendingSourceType.Saving => source.Balance,
+            AccountType.Checking or AccountType.Cash => source.Balance,
+            AccountType.Credit or AccountType.BNPL => source.AccountLimit - source.SpentAmount,
+            AccountType.Saving => source.Balance,
             _ => source.Balance
         };
     }
@@ -1834,8 +1834,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     public sealed record AddNewTransactionSuggestion(
         string Name,
         decimal Amount,
-        int SpendingSourceId,
-        string SpendingSourceName,
+        int AccountId,
+        string AccountName,
         string Note,
         ExpenseCategory? Category,
         int? TagId,
@@ -1858,7 +1858,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsExpense,
         string Name,
         decimal AmountText,
-        int? SpendingSourceId,
+        int? AccountId,
         DateTime Date,
         string Note,
         ExpenseCategory? Category,
@@ -1873,7 +1873,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         decimal Amount,
         RecurringPeriod RecurringPeriod,
         int RecurringTime,
-        int SpendingSourceId,
+        int AccountId,
         int? TagId,
         int? GoalId);
 
@@ -1884,7 +1884,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         decimal Amount,
         RecurringPeriod RecurringPeriod,
         int RecurringTime,
-        int SpendingSourceId,
+        int AccountId,
         int? TagId,
         int? GoalId);
 
@@ -1897,7 +1897,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RecurringPeriod RecurringPeriod,
         string Name,
         decimal Amount,
-        int SpendingSourceId,
+        int AccountId,
         DateTime Date,
         string RecurringTimeText,
         string Note,
@@ -1917,7 +1917,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         string NoteText,
         DateTime SelectedDate,
         ExpenseCategory SelectedExpenseCategory,
-        int SelectedSpendingSourceId,
+        int SelectedAccountId,
         int SelectedTagId,
         int SelectedGoalId);
 
@@ -1950,7 +1950,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RecurringTimeText = recurring.RecurringPeriod == RecurringPeriod.None
             ? string.Empty
             : recurring.RecurringTime.ToString(CultureInfo.InvariantCulture);
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == recurring.SourceId) ?? SpendingSources.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault(source => source.Id == recurring.SourceId) ?? Accounts.FirstOrDefault();
         SelectedTag = recurring.TagId is > 0 ? _orderedTags.FirstOrDefault(tag => tag.Id == recurring.TagId.Value) : _orderedTags.FirstOrDefault();
         SelectedGoal = recurring.GoalId is > 0 ? Goals.FirstOrDefault(goal => goal.Id == recurring.GoalId.Value) : Goals.FirstOrDefault();
         return true;
@@ -1969,7 +1969,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RecurringTimeText = draft.RecurringPeriod == RecurringPeriod.None
             ? string.Empty
             : draft.RecurringTime.ToString(CultureInfo.InvariantCulture);
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == draft.SpendingSourceId) ?? SpendingSources.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault(source => source.Id == draft.AccountId) ?? Accounts.FirstOrDefault();
         SelectedTag = draft.TagId is > 0 ? _orderedTags.FirstOrDefault(tag => tag.Id == draft.TagId.Value) : _orderedTags.FirstOrDefault();
         SelectedGoal = draft.GoalId is > 0 ? Goals.FirstOrDefault(goal => goal.Id == draft.GoalId.Value) : Goals.FirstOrDefault();
     }

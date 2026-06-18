@@ -12,32 +12,32 @@ public partial class IncomeDetailVM : ObservableObject
 {
     private readonly IncomeLogVM _incomeLog;
     private readonly MainVM _mainViewModel;
-    private readonly List<SpendingSourceVM> _availableSpendingSources = [];
+    private readonly List<AccountVM> _availableAccounts = [];
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private string _popupTitle = "Income Detail";
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
-    [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty] private AccountVM? _selectedAccount;
 
     public IncomeDetailVM(MainVM mainViewModel, IncomeLogVM incomeLog, IAppDataService appData)
     {
         _ = appData;
         _mainViewModel = mainViewModel;
         _incomeLog = incomeLog;
-        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
-            SpendingSources,
-            nameof(SpendingSourceVM.TypeDisplayName),
-            nameof(SpendingSourceVM.SpendingSourceType),
-            nameof(SpendingSourceVM.Name));
+        AccountsView = AccountComboBoxViewFactory.CreateGroupedByTypeThenName(
+            Accounts,
+            nameof(AccountVM.TypeDisplayName),
+            nameof(AccountVM.AccountType),
+            nameof(AccountVM.Name));
 
         ReloadChoicesFromMainViewModel();
         LoadFromIncomeLog();
     }
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
-    public ICollectionView SpendingSourcesView { get; }
+    public ObservableCollection<AccountVM> Accounts { get; } = [];
+    public ICollectionView AccountsView { get; }
 
     public AddNewTransactionVM.AddNewTransactionDraft CreateAddNewTransactionDraft()
     {
@@ -45,7 +45,7 @@ public partial class IncomeDetailVM : ObservableObject
             false,
             NameText,
             AmountText,
-            SelectedSpendingSource?.Id,
+            SelectedAccount?.Id,
             SelectedDate.Date,
             NoteText,
             null,
@@ -59,33 +59,33 @@ public partial class IncomeDetailVM : ObservableObject
         NoteText = _incomeLog.Notes?.Trim() ?? string.Empty;
         PopupTitle = "Income Detail";
         SelectedDate = _incomeLog.AddedOn == default ? DateTime.Today : _incomeLog.AddedOn.Date;
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == (_incomeLog.SpendingSource?.Id ?? 0)) ??
-                                 SpendingSources.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault(source => source.Id == (_incomeLog.Account?.Id ?? 0)) ??
+                                 Accounts.FirstOrDefault();
     }
 
     private void ReloadChoicesFromMainViewModel()
     {
-        _availableSpendingSources.Clear();
-        _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources.Where(source => source.IsEnabled));
+        _availableAccounts.Clear();
+        _availableAccounts.AddRange(_mainViewModel.BudgetPanel.Accounts.Where(source => source.IsEnabled));
 
-        var currentSource = _incomeLog.SpendingSource;
-        if (currentSource is not null && _availableSpendingSources.All(source => source.Id != currentSource.Id))
-            _availableSpendingSources.Add(currentSource);
+        var currentSource = _incomeLog.Account;
+        if (currentSource is not null && _availableAccounts.All(source => source.Id != currentSource.Id))
+            _availableAccounts.Add(currentSource);
 
-        RefreshSpendingSources();
+        RefreshAccounts();
     }
 
-    private void RefreshSpendingSources()
+    private void RefreshAccounts()
     {
-        var selectedSpendingSourceId = SelectedSpendingSource?.Id;
-        ReplaceCollection(SpendingSources, _availableSpendingSources
-            .OrderBy(source => source.SpendingSourceType)
+        var selectedAccountId = SelectedAccount?.Id;
+        ReplaceCollection(Accounts, _availableAccounts
+            .OrderBy(source => source.AccountType)
             .ThenBy(source => source.Name));
 
-        SelectedSpendingSource = selectedSpendingSourceId is null
-            ? SpendingSources.FirstOrDefault()
-            : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ??
-              SpendingSources.FirstOrDefault();
+        SelectedAccount = selectedAccountId is null
+            ? Accounts.FirstOrDefault()
+            : Accounts.FirstOrDefault(source => source.Id == selectedAccountId.Value) ??
+              Accounts.FirstOrDefault();
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> items)

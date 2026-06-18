@@ -9,23 +9,23 @@ namespace Fluxo.Views.Shell.Main.Pages;
 
 public partial class Dashboard : UserControl
 {
-    private const double DashboardSpendingSourcesScrollPixels = 10;
-    private const int DashboardSpendingSourcesScrollIntervalMilliseconds = 10;
+    private const double DashboardAccountsScrollPixels = 10;
+    private const int DashboardAccountsScrollIntervalMilliseconds = 10;
 
     private readonly IDialogService _dialogService;
-    private readonly DispatcherTimer _dashboardSpendingSourcesScrollTimer = new()
+    private readonly DispatcherTimer _dashboardAccountsScrollTimer = new()
     {
-        Interval = TimeSpan.FromMilliseconds(DashboardSpendingSourcesScrollIntervalMilliseconds)
+        Interval = TimeSpan.FromMilliseconds(DashboardAccountsScrollIntervalMilliseconds)
     };
 
-    private int _dashboardSpendingSourcesScrollDirection;
+    private int _dashboardAccountsScrollDirection;
 
     public Dashboard(DashboardVM dashboardVM, IDialogService dialogService)
     {
         _dialogService = dialogService;
         InitializeComponent();
         DataContext = dashboardVM;
-        _dashboardSpendingSourcesScrollTimer.Tick += OnDashboardSpendingSourcesScrollTimerTick;
+        _dashboardAccountsScrollTimer.Tick += OnDashboardAccountsScrollTimerTick;
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -33,122 +33,122 @@ public partial class Dashboard : UserControl
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _ = Dispatcher.BeginInvoke(
-            UpdateDashboardSpendingSourcesScrollButtonVisibility,
+            UpdateDashboardAccountsScrollButtonVisibility,
             DispatcherPriority.ApplicationIdle);
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        _dashboardSpendingSourcesScrollTimer.Stop();
+        _dashboardAccountsScrollTimer.Stop();
     }
 
-    private void OnDashboardSpendingSourcesScrollChanged(object sender, ScrollChangedEventArgs e)
+    private void OnDashboardAccountsScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        UpdateDashboardSpendingSourcesScrollButtonVisibility();
+        UpdateDashboardAccountsScrollButtonVisibility();
     }
 
-    private void OnDashboardSpendingSourcesScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
+    private void OnDashboardAccountsScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
     {
         _ = Dispatcher.BeginInvoke(
-            UpdateDashboardSpendingSourcesScrollButtonVisibility,
+            UpdateDashboardAccountsScrollButtonVisibility,
             DispatcherPriority.ApplicationIdle);
     }
 
-    private void OnDashboardSpendingSourcesScrollLeftButtonPressed(object sender, MouseButtonEventArgs e)
+    private void OnDashboardAccountsScrollLeftButtonPressed(object sender, MouseButtonEventArgs e)
     {
-        StartDashboardSpendingSourcesScroll(sender, e, -1);
+        StartDashboardAccountsScroll(sender, e, -1);
     }
 
-    private void OnDashboardSpendingSourcesScrollRightButtonPressed(object sender, MouseButtonEventArgs e)
+    private void OnDashboardAccountsScrollRightButtonPressed(object sender, MouseButtonEventArgs e)
     {
-        StartDashboardSpendingSourcesScroll(sender, e, 1);
+        StartDashboardAccountsScroll(sender, e, 1);
     }
 
-    private void OnDashboardSpendingSourcesScrollButtonReleased(object sender, MouseButtonEventArgs e)
+    private void OnDashboardAccountsScrollButtonReleased(object sender, MouseButtonEventArgs e)
     {
-        StopDashboardSpendingSourcesScroll(sender);
+        StopDashboardAccountsScroll(sender);
         e.Handled = true;
     }
 
-    private void OnDashboardSpendingSourcesScrollButtonLostMouseCapture(object sender, MouseEventArgs e)
+    private void OnDashboardAccountsScrollButtonLostMouseCapture(object sender, MouseEventArgs e)
     {
-        StopDashboardSpendingSourcesScroll(sender);
+        StopDashboardAccountsScroll(sender);
     }
 
-    private void OnDashboardSpendingSourcesScrollTimerTick(object? sender, EventArgs e)
+    private void OnDashboardAccountsScrollTimerTick(object? sender, EventArgs e)
     {
-        if (_dashboardSpendingSourcesScrollDirection == 0)
+        if (_dashboardAccountsScrollDirection == 0)
             return;
 
-        ScrollDashboardSpendingSources(_dashboardSpendingSourcesScrollDirection);
+        ScrollDashboardAccounts(_dashboardAccountsScrollDirection);
     }
 
-    private void StartDashboardSpendingSourcesScroll(object sender, MouseButtonEventArgs e, int direction)
+    private void StartDashboardAccountsScroll(object sender, MouseButtonEventArgs e, int direction)
     {
-        if (DashboardSpendingSourcesScrollViewer.ScrollableWidth <= 0)
+        if (DashboardAccountsScrollViewer.ScrollableWidth <= 0)
             return;
 
-        _dashboardSpendingSourcesScrollDirection = direction;
+        _dashboardAccountsScrollDirection = direction;
 
         if (sender is UIElement scrollButton)
             scrollButton.CaptureMouse();
 
-        _dashboardSpendingSourcesScrollTimer.Stop();
-        _dashboardSpendingSourcesScrollTimer.Start();
+        _dashboardAccountsScrollTimer.Stop();
+        _dashboardAccountsScrollTimer.Start();
         e.Handled = true;
     }
 
-    private void StopDashboardSpendingSourcesScroll(object sender)
+    private void StopDashboardAccountsScroll(object sender)
     {
-        _dashboardSpendingSourcesScrollTimer.Stop();
-        _dashboardSpendingSourcesScrollDirection = 0;
+        _dashboardAccountsScrollTimer.Stop();
+        _dashboardAccountsScrollDirection = 0;
 
         if (sender is UIElement { IsMouseCaptured: true } scrollButton)
             scrollButton.ReleaseMouseCapture();
     }
 
-    private void ScrollDashboardSpendingSources(int direction)
+    private void ScrollDashboardAccounts(int direction)
     {
-        if (DashboardSpendingSourcesScrollViewer.ScrollableWidth <= 0)
+        if (DashboardAccountsScrollViewer.ScrollableWidth <= 0)
             return;
 
         var targetOffset = Math.Clamp(
-            DashboardSpendingSourcesScrollViewer.HorizontalOffset + direction * DashboardSpendingSourcesScrollPixels,
+            DashboardAccountsScrollViewer.HorizontalOffset + direction * DashboardAccountsScrollPixels,
             0,
-            DashboardSpendingSourcesScrollViewer.ScrollableWidth);
+            DashboardAccountsScrollViewer.ScrollableWidth);
 
-        DashboardSpendingSourcesScrollViewer.ScrollToHorizontalOffset(targetOffset);
-        UpdateDashboardSpendingSourcesScrollButtonVisibility();
+        DashboardAccountsScrollViewer.ScrollToHorizontalOffset(targetOffset);
+        UpdateDashboardAccountsScrollButtonVisibility();
     }
 
-    private void UpdateDashboardSpendingSourcesScrollButtonVisibility()
+    private void UpdateDashboardAccountsScrollButtonVisibility()
     {
-        if (DashboardSpendingSourcesScrollLeftButton is null ||
-            DashboardSpendingSourcesScrollRightButton is null ||
-            DashboardSpendingSourcesScrollViewer is null)
+        if (DashboardAccountsScrollLeftButton is null ||
+            DashboardAccountsScrollRightButton is null ||
+            DashboardAccountsScrollViewer is null)
             return;
 
-        var canScroll = DashboardSpendingSourcesScrollViewer.ScrollableWidth > 0;
+        var canScroll = DashboardAccountsScrollViewer.ScrollableWidth > 0;
         var canScrollLeft = canScroll &&
-                            DashboardSpendingSourcesScrollViewer.HorizontalOffset > 0;
+                            DashboardAccountsScrollViewer.HorizontalOffset > 0;
         var canScrollRight = canScroll &&
-                             DashboardSpendingSourcesScrollViewer.HorizontalOffset < DashboardSpendingSourcesScrollViewer.ScrollableWidth;
+                             DashboardAccountsScrollViewer.HorizontalOffset < DashboardAccountsScrollViewer.ScrollableWidth;
 
-        DashboardSpendingSourcesScrollLeftButton.Visibility = canScrollLeft
+        DashboardAccountsScrollLeftButton.Visibility = canScrollLeft
             ? Visibility.Visible
             : Visibility.Collapsed;
-        DashboardSpendingSourcesScrollRightButton.Visibility = canScrollRight
+        DashboardAccountsScrollRightButton.Visibility = canScrollRight
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
 
-    private void OnSpendingSourcesButtonClick(object sender, RoutedEventArgs e)
+    private void OnAccountsButtonClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowSpendingSourcesList(Window.GetWindow(this));
+        _dialogService.ShowAccountsList(Window.GetWindow(this));
     }
 
-    private void OnAddSpendingSourceButtonClick(object sender, RoutedEventArgs e)
+    private void OnAddAccountButtonClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddSpendingSource(Window.GetWindow(this));
+        _dialogService.ShowAddAccount(Window.GetWindow(this));
     }
 }

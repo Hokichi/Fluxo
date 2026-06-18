@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -12,7 +12,7 @@ namespace Fluxo.Migrations
         {
             migrationBuilder.RenameColumn(
                 name: "ShowOnUI",
-                table: "SpendingSources",
+                table: "Accounts",
                 newName: "PinnedOnUI");
 
             migrationBuilder.AddColumn<decimal>(
@@ -31,7 +31,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.RenameColumn(
                 name: "PinnedOnUI",
-                table: "SpendingSources",
+                table: "Accounts",
                 newName: "ShowOnUI");
         }
     }

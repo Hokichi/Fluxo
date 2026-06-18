@@ -96,9 +96,9 @@ public class UpcomingEventsPanelVMTests
     }
 
     [Theory]
-    [InlineData(SpendingSourceType.Credit)]
-    [InlineData(SpendingSourceType.BNPL)]
-    public async Task LoadAsync_CreditRecurringExpenseTypeText_UsesPayment(SpendingSourceType sourceType)
+    [InlineData(AccountType.Credit)]
+    [InlineData(AccountType.BNPL)]
+    public async Task LoadAsync_CreditRecurringExpenseTypeText_UsesPayment(AccountType sourceType)
     {
         var today = new DateTime(2026, 6, 14);
         var vm = CreateVm(
@@ -113,7 +113,7 @@ public class UpcomingEventsPanelVMTests
                     RecurringPeriod = RecurringPeriod.Monthly,
                     RecurringTime = today.Day,
                     Type = RecurringTransactionType.Expense,
-                    Source = new SpendingSource { Id = 3, Name = "Visa", SpendingSourceType = sourceType },
+                    Source = new Account { Id = 3, Name = "Visa", AccountType = sourceType },
                     IsEnabled = true
                 }
             ],
@@ -324,12 +324,12 @@ public class UpcomingEventsPanelVMTests
                 RecurringTime = transaction.RecurringTime,
                 Type = transaction.Type,
                 Source = transaction.Source is null
-                    ? new SpendingSourceVM()
-                    : new SpendingSourceVM
+                    ? new AccountVM()
+                    : new AccountVM
                     {
                         Id = transaction.Source.Id,
                         Name = transaction.Source.Name,
-                        SpendingSourceType = transaction.Source.SpendingSourceType
+                        AccountType = transaction.Source.AccountType
                     },
                 Goal = transaction.Goal is null
                     ? null

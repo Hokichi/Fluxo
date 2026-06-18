@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -12,7 +12,7 @@ namespace Fluxo.Migrations
         {
             migrationBuilder.AlterColumn<decimal>(
                 name: "SpentAmount",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "NUMERIC",
                 nullable: false,
                 oldClrType: typeof(decimal),
@@ -20,7 +20,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.AlterColumn<decimal>(
                 name: "InterestRate",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "REAL",
                 nullable: true,
                 oldClrType: typeof(decimal),
@@ -29,7 +29,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.AlterColumn<decimal>(
                 name: "Balance",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "NUMERIC",
                 nullable: false,
                 oldClrType: typeof(decimal),
@@ -37,7 +37,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.AlterColumn<decimal>(
                 name: "AccountLimit",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "NUMERIC",
                 nullable: false,
                 oldClrType: typeof(decimal),
@@ -89,7 +89,7 @@ namespace Fluxo.Migrations
         {
             migrationBuilder.AlterColumn<decimal>(
                 name: "SpentAmount",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "TEXT",
                 nullable: false,
                 oldClrType: typeof(decimal),
@@ -97,7 +97,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.AlterColumn<decimal>(
                 name: "InterestRate",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "TEXT",
                 nullable: true,
                 oldClrType: typeof(decimal),
@@ -106,7 +106,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.AlterColumn<decimal>(
                 name: "Balance",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "TEXT",
                 nullable: false,
                 oldClrType: typeof(decimal),
@@ -114,7 +114,7 @@ namespace Fluxo.Migrations
 
             migrationBuilder.AlterColumn<decimal>(
                 name: "AccountLimit",
-                table: "SpendingSources",
+                table: "Accounts",
                 type: "TEXT",
                 nullable: false,
                 oldClrType: typeof(decimal),

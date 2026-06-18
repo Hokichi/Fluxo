@@ -13,7 +13,7 @@ public sealed class FluxoUserBackupDocument
 
 public sealed class FluxoUserBackupEntities
 {
-    public List<BackupSpendingSource> SpendingSources { get; set; } = [];
+    public List<BackupAccount> Accounts { get; set; } = [];
     public List<BackupExpenseTag> Tags { get; set; } = [];
     public List<BackupSavingGoal> Goals { get; set; } = [];
     public List<BackupExpense> Expenses { get; set; } = [];
@@ -23,10 +23,10 @@ public sealed class FluxoUserBackupEntities
     public List<BackupUserSetting> UserSettings { get; set; } = [];
 }
 
-public sealed record BackupSpendingSource(
+public sealed record BackupAccount(
     int BackupId,
     string Name,
-    string SpendingSourceType,
+    string AccountType,
     decimal AccountLimit,
     decimal MaximumSpending,
     decimal? MinimumPayment,
@@ -64,7 +64,7 @@ public sealed record BackupSavingGoal(
 
 public sealed record BackupExpense(
     int BackupId,
-    int SpendingSourceBackupId,
+    int AccountBackupId,
     int ExpenseTagBackupId,
     string Name,
     decimal Amount,
@@ -73,7 +73,7 @@ public sealed record BackupExpense(
 public sealed record BackupExpenseLog(
     int BackupId,
     int ExpenseBackupId,
-    int SpendingSourceBackupId,
+    int AccountBackupId,
     decimal Amount,
     DateTime DeductedOn,
     string Notes,
@@ -82,7 +82,7 @@ public sealed record BackupExpenseLog(
 
 public sealed record BackupIncomeLog(
     int BackupId,
-    int SpendingSourceBackupId,
+    int AccountBackupId,
     string Name,
     decimal Amount,
     DateTime AddedOn,

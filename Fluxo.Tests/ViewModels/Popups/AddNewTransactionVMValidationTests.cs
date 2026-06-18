@@ -234,27 +234,27 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
-    public void AmountValidation_WhenActive_RevalidatesWhenSpendingSourceChanges()
+    public void AmountValidation_WhenActive_RevalidatesWhenAccountChanges()
     {
         RunInSta(() =>
         {
             var lowBalance = CreateCheckingSource(balance: 20m);
-            var highBalance = new SpendingSourceVM
+            var highBalance = new AccountVM
             {
                 Id = 2,
                 Name = "Checking 2",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 100m,
                 IsEnabled = true
             };
             var vm = new AddNewTransactionVM(CreateMainViewModel([lowBalance, highBalance]), CreateAppData());
-            vm.SelectedSpendingSource = lowBalance;
+            vm.SelectedAccount = lowBalance;
             vm.AmountText = 30m;
             vm.ValidateAmountField();
 
             Assert.Equal("Insufficient Balance", vm.AmountValidationHint);
 
-            vm.SelectedSpendingSource = highBalance;
+            vm.SelectedAccount = highBalance;
 
             Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)));
             Assert.Equal(string.Empty, vm.AmountValidationHint);
@@ -354,12 +354,12 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Income, CreateCheckingSource(balance: 500m), isRecurring: false, amount: 10m);
-            vm.SelectedSpendingSource = null;
+            vm.SelectedAccount = null;
 
             var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
 
             Assert.False(result.IsSuccess);
-            Assert.Equal("Please choose a spending source.", result.ErrorMessage);
+            Assert.Equal("Please choose a account.", result.ErrorMessage);
         });
     }
 
@@ -483,11 +483,11 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var sourceVm = CreateCheckingSource(balance: 200m);
-            var staleSource = new SpendingSource
+            var staleSource = new Account
             {
                 Id = sourceVm.Id,
                 Name = sourceVm.Name,
-                SpendingSourceType = sourceVm.SpendingSourceType,
+                AccountType = sourceVm.AccountType,
                 Balance = 10m,
                 AccountLimit = 0m,
                 MaximumSpending = 0m,
@@ -496,8 +496,8 @@ public sealed class AddNewTransactionVMValidationTests
             };
 
             var appData = CreateAppData();
-            appData.GetSpendingSourceByIdAsync(sourceVm.Id, Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<SpendingSource?>(staleSource));
+            appData.GetAccountByIdAsync(sourceVm.Id, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<Account?>(staleSource));
 
             var vm = CreateVm(TransactionKind.Expense, sourceVm, isRecurring: false, amount: 25m, appData: appData);
             var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
@@ -513,11 +513,11 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var sourceVm = CreateCheckingSource(balance: 500m, maximumSpending: 100m, moneyOut: 0m);
-            var staleSource = new SpendingSource
+            var staleSource = new Account
             {
                 Id = sourceVm.Id,
                 Name = sourceVm.Name,
-                SpendingSourceType = sourceVm.SpendingSourceType,
+                AccountType = sourceVm.AccountType,
                 Balance = sourceVm.Balance,
                 AccountLimit = 0m,
                 MaximumSpending = 100m,
@@ -526,8 +526,8 @@ public sealed class AddNewTransactionVMValidationTests
             };
 
             var appData = CreateAppData();
-            appData.GetSpendingSourceByIdAsync(sourceVm.Id, Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<SpendingSource?>(staleSource));
+            appData.GetAccountByIdAsync(sourceVm.Id, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<Account?>(staleSource));
 
             var vm = CreateVm(TransactionKind.Expense, sourceVm, isRecurring: false, amount: 10m, appData: appData);
             Assert.False(vm.HasErrors);
@@ -613,7 +613,7 @@ public sealed class AddNewTransactionVMValidationTests
                 {
                     Name = "Valid name",
                     Amount = 10.25m,
-                    SpendingSourceId = 1
+                    AccountId = 1
                 }
             ]);
             var vm = CreateVm(
@@ -679,16 +679,16 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
-    public void Constructor_UsesSpendingSourcesOverride_WhenProvided()
+    public void Constructor_UsesAccountsOverride_WhenProvided()
     {
         RunInSta(() =>
         {
             var persistedSource = CreateCheckingSource(balance: 500m);
-            var temporarySource = new SpendingSourceVM
+            var temporarySource = new AccountVM
             {
                 Id = -11,
                 Name = "Wizard Temporary",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 250m,
                 IsEnabled = true
             };
@@ -696,11 +696,11 @@ public sealed class AddNewTransactionVMValidationTests
             var vm = new AddNewTransactionVM(
                 CreateMainViewModel([persistedSource]),
                 CreateAppData(),
-                spendingSourcesOverride: [temporarySource]);
+                accountsOverride: [temporarySource]);
 
-            Assert.Single(vm.SpendingSources);
-            Assert.Equal(-11, vm.SpendingSources.Single().Id);
-            Assert.Equal("Wizard Temporary", vm.SpendingSources.Single().Name);
+            Assert.Single(vm.Accounts);
+            Assert.Equal(-11, vm.Accounts.Single().Id);
+            Assert.Equal("Wizard Temporary", vm.Accounts.Single().Name);
         });
     }
 
@@ -709,24 +709,24 @@ public sealed class AddNewTransactionVMValidationTests
     {
         RunInSta(() =>
         {
-            var temporarySource = new SpendingSourceVM
+            var temporarySource = new AccountVM
             {
                 Id = -7,
                 Name = "Wizard Temporary",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 500m,
                 IsEnabled = true
             };
 
             var appData = CreateAppData();
-            appData.GetSpendingSourceByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<SpendingSource?>(null));
+            appData.GetAccountByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<Account?>(null));
 
             AddNewTransactionVM.RecurringDraftSaveInput? captured = null;
             var vm = new AddNewTransactionVM(
                 CreateMainViewModel([CreateCheckingSource(balance: 100m)]),
                 appData,
-                spendingSourcesOverride: [temporarySource],
+                accountsOverride: [temporarySource],
                 saveRecurringDraftAsync: input =>
                 {
                     captured = input;
@@ -739,16 +739,16 @@ public sealed class AddNewTransactionVMValidationTests
             vm.AmountText = 50m;
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "10";
-            vm.SelectedSpendingSource = vm.SpendingSources.Single(source => source.Id == -7);
+            vm.SelectedAccount = vm.Accounts.Single(source => source.Id == -7);
 
             var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
             Assert.True(captured.HasValue);
             Assert.Equal(RecurringTransactionType.Expense, captured.Value.Type);
-            Assert.Equal(-7, captured.Value.SpendingSourceId);
+            Assert.Equal(-7, captured.Value.AccountId);
             Assert.Equal(50m, captured.Value.Amount);
-            appData.DidNotReceiveWithAnyArgs().GetSpendingSourceByIdAsync(default, default);
+            appData.DidNotReceiveWithAnyArgs().GetAccountByIdAsync(default, default);
         });
     }
 
@@ -1069,8 +1069,8 @@ public sealed class AddNewTransactionVMValidationTests
                 IsExpense = true,
                 Name = "Coffee",
                 Amount = 4.5m,
-                SpendingSourceId = source.Id,
-                SpendingSourceName = source.Name,
+                AccountId = source.Id,
+                AccountName = source.Name,
                 Note = "morning",
                 Date = new DateTime(2026, 6, 1),
                 Category = ExpenseCategory.Wants,
@@ -1086,13 +1086,13 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.Equal(new DateTime(2026, 6, 1), vm.SelectedDate);
             Assert.True(vm.IsPinned);
             Assert.True(vm.IsRecurring);
-            Assert.Same(source, vm.SelectedSpendingSource);
+            Assert.Same(source, vm.SelectedAccount);
         });
     }
 
     private static AddNewTransactionVM CreateVm(
         TransactionKind kind,
-        SpendingSourceVM source,
+        AccountVM source,
         bool isRecurring,
         decimal amount = 10m,
         string name = "Valid name",
@@ -1136,12 +1136,12 @@ public sealed class AddNewTransactionVMValidationTests
             .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(expenseLogs ?? []));
         appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>(incomeLogs ?? []));
-        appData.GetSpendingSourceByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(callInfo => Task.FromResult<SpendingSource?>(new SpendingSource
+        appData.GetAccountByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult<Account?>(new Account
             {
                 Id = callInfo.ArgAt<int>(0),
                 Name = "Default",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 1_000m,
                 AccountLimit = 0m,
                 MaximumSpending = 0m,
@@ -1190,14 +1190,14 @@ public sealed class AddNewTransactionVMValidationTests
         return appData;
     }
 
-    private static MainVM CreateMainViewModel(IReadOnlyList<SpendingSourceVM> spendingSources)
+    private static MainVM CreateMainViewModel(IReadOnlyList<AccountVM> accounts)
     {
         var messenger = new WeakReferenceMessenger();
         var mapper = Substitute.For<IMapper>();
         var unitOfWork = CreateUnitOfWork();
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns([]);
-        mapper.Map<IReadOnlyList<SpendingSourceVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<Fluxo.Core.DTO.RecurringTransactionDto>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns([]);
@@ -1207,9 +1207,9 @@ public sealed class AddNewTransactionVMValidationTests
         var expenseLogService = Substitute.For<IExpenseLogService>();
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseLogDto>>([]));
-        var spendingSourceService = Substitute.For<ISpendingSourceService>();
-        spendingSourceService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.SpendingSourceDto>>([]));
+        var accountService = Substitute.For<IAccountService>();
+        accountService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.AccountDto>>([]));
         var tagService = Substitute.For<ITagService>();
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseTagDto>>([]));
@@ -1221,20 +1221,20 @@ public sealed class AddNewTransactionVMValidationTests
             new NotificationPanelVM(
                 expenseService,
                 expenseLogService,
-                spendingSourceService,
+                accountService,
                 dataOperationRunner,
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
                 expenseLogService,
-                spendingSourceService,
+                accountService,
                 tagService,
                 dataOperationRunner,
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
                 expenseLogService,
-                spendingSourceService,
+                accountService,
                 dataOperationRunner,
                 mapper,
                 messenger),
@@ -1247,8 +1247,8 @@ public sealed class AddNewTransactionVMValidationTests
             new DaySpinnerVM(messenger),
             null);
 
-        foreach (var source in spendingSources)
-            main.BudgetPanel.SpendingSources.Add(source);
+        foreach (var source in accounts)
+            main.BudgetPanel.Accounts.Add(source);
 
         main.BudgetPanel.Tags = new ObservableCollection<ExpenseTagVM>(
         [
@@ -1328,7 +1328,7 @@ public sealed class AddNewTransactionVMValidationTests
         {
             Id = 10,
             Amount = amount,
-            SpendingSourceId = sourceId,
+            AccountId = sourceId,
             DeductedOn = DateTime.Today,
             IsForDeletion = false,
             Expense = new Expense
@@ -1336,7 +1336,7 @@ public sealed class AddNewTransactionVMValidationTests
                 Id = 20,
                 Name = name,
                 Amount = amount,
-                SpendingSourceId = sourceId,
+                AccountId = sourceId,
                 ExpenseTagId = tagId,
                 ExpenseTag = new ExpenseTag
                 {
@@ -1347,16 +1347,16 @@ public sealed class AddNewTransactionVMValidationTests
         };
     }
 
-    private static SpendingSourceVM CreateCheckingSource(
+    private static AccountVM CreateCheckingSource(
         decimal balance,
         decimal maximumSpending = 0m,
         decimal moneyOut = 0m)
     {
-        return new SpendingSourceVM
+        return new AccountVM
         {
             Id = 1,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = balance,
             MaximumSpending = maximumSpending,
             MoneyOut = moneyOut,
@@ -1364,16 +1364,16 @@ public sealed class AddNewTransactionVMValidationTests
         };
     }
 
-    private static SpendingSourceVM CreateCreditSource(
+    private static AccountVM CreateCreditSource(
         decimal accountLimit,
         decimal spentAmount,
         decimal maximumSpending = 0m)
     {
-        return new SpendingSourceVM
+        return new AccountVM
         {
             Id = 1,
             Name = "Credit",
-            SpendingSourceType = SpendingSourceType.Credit,
+            AccountType = AccountType.Credit,
             AccountLimit = accountLimit,
             SpentAmount = spentAmount,
             MaximumSpending = maximumSpending,

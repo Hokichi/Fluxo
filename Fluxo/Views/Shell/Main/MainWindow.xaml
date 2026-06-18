@@ -272,7 +272,7 @@
                                 FontFamily="{StaticResource Regular}"
                                 FontSize="10"
                                 Foreground="{StaticResource Brush.Text.Muted}"
-                                Text="{Binding SpendingSourceName}"
+                                Text="{Binding AccountName}"
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="NoWrap" />
                         </StackPanel>
@@ -575,7 +575,7 @@
 
                                     <Button
                                         x:Name="SourcesMenuButton"
-                                        Click="OnSpendingSourcesButtonClick"
+                                        Click="OnAccountsButtonClick"
                                         Style="{StaticResource HeaderMenuActionButtonStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -595,7 +595,7 @@
                                                 VerticalAlignment="Center"
                                                 FontFamily="{StaticResource Bold}"
                                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Sources" />
+                                                Text="Accounts" />
                                             <TextBlock
                                                 Grid.Column="4"
                                                 Style="{StaticResource HeaderMenuShortcutTextStyle}"
@@ -824,7 +824,7 @@
                             FontFamily="{StaticResource Medium}"
                             FontSize="18"
                             Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Insufficient fund. Please include a spending source with sufficient funds to start using "
+                            Text="Insufficient fund. Please include a account with sufficient funds to start using "
                             TextAlignment="Center" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock

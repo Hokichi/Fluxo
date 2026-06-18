@@ -10,7 +10,7 @@ using Fluxo.ViewModels.Popups.Settings;
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
 public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
-    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>
+    IRecipient<QuickSetupWizardAccountsChangedMessage>
 {
     private readonly IAppDataService _appData;
     private bool _isLoadingBudgetAllocation;
@@ -43,7 +43,7 @@ public partial class QuickSetupWizardBudgetAllocationVM : ObservableRecipient,
 
     public string InvestAllocationAmountText => BuildAllocationAmountText(InvestAllocationPercentage);
 
-    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardAccountsChangedMessage message)
     {
         _totalBudgetAmount = message.Value.TotalPrimaryAmount;
         RaiseAmountProperties();

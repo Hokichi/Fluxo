@@ -48,7 +48,7 @@ Width="500"
             SelectedItem="{Binding SelectedSource, Mode=TwoWay}"
             Style="{StaticResource FluxoComboBoxStyle}">
             <ComboBox.GroupStyle>
-                <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                <GroupStyle HeaderTemplate="{StaticResource AccountComboGroupHeaderTemplate}" />
             </ComboBox.GroupStyle>
         </ComboBox>
 

@@ -108,8 +108,8 @@ public sealed class AddNewTransactionHistoryBuilderTests
             DeductedOn = date,
             Notes = "note",
             IsPinned = isPinned,
-            SpendingSourceId = 10,
-            SpendingSource = new SpendingSource { Id = 10, Name = "Checking" },
+            AccountId = 10,
+            Account = new Account { Id = 10, Name = "Checking" },
             Expense = new Expense
             {
                 Id = id + 100,
@@ -143,8 +143,8 @@ public sealed class AddNewTransactionHistoryBuilderTests
             AddedOn = date,
             Notes = "note",
             IsPinned = isPinned,
-            SpendingSourceId = 10,
-            SpendingSource = new SpendingSource { Id = 10, Name = "Checking" }
+            AccountId = 10,
+            Account = new Account { Id = 10, Name = "Checking" }
         };
     }
 
@@ -161,8 +161,8 @@ public sealed class AddNewTransactionHistoryBuilderTests
             DeductedOn = date,
             Notes = $"Goal update for {goalName}",
             IsPinned = false,
-            SpendingSourceId = 10,
-            SpendingSource = new SpendingSource { Id = 10, Name = "Checking" },
+            AccountId = 10,
+            Account = new Account { Id = 10, Name = "Checking" },
             Expense = new Expense
             {
                 Id = id + 100,

@@ -143,7 +143,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public void Receive(SettingsDataChangedMessage message)
     {
-        if (message.Value.HasFlag(SettingsDataChangedScope.SpendingSources))
+        if (message.Value.HasFlag(SettingsDataChangedScope.Accounts))
             RefreshDashboardSpendingAmountGateState();
     }
 
@@ -167,7 +167,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         await PersonalizationTab.LoadAsync();
         ApplyDashboardSpendingAmountGateState();
 
-        OnPropertyChanged(nameof(IsSpendingSourceChecksEnabled));
+        OnPropertyChanged(nameof(IsAccountChecksEnabled));
         OnPropertyChanged(nameof(IsFixedExpenseChecksEnabled));
         OnPropertyChanged(nameof(IsGoalChecksEnabled));
         OnPropertyChanged(nameof(HasPendingBudgetConfigurationChanges));
@@ -264,7 +264,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         switch (target)
         {
-            case SettingsBatchTarget.SpendingSources:
+            case SettingsBatchTarget.Accounts:
                 SourcesTab.ClearSelections();
                 break;
 
@@ -282,7 +282,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         switch (target)
         {
-            case SettingsBatchTarget.SpendingSources:
+            case SettingsBatchTarget.Accounts:
                 SourcesTab.SetSelections(isChecked);
                 break;
 
@@ -300,14 +300,14 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         return target switch
         {
-            SettingsBatchTarget.SpendingSources => SourcesTab.ShouldWarnBeforeApplyingToAll(action),
+            SettingsBatchTarget.Accounts => SourcesTab.ShouldWarnBeforeApplyingToAll(action),
             SettingsBatchTarget.FixedExpenses => FixedExpensesTab.ShouldWarnBeforeApplyingToAll(action),
             SettingsBatchTarget.Goals => GoalsTab.ShouldWarnBeforeApplyingToAll(action),
             _ => false
         };
     }
 
-    public Task<SettingsOperationResult> ExecuteSpendingSourceActionAsync(SettingsBatchAction action,
+    public Task<SettingsOperationResult> ExecuteAccountActionAsync(SettingsBatchAction action,
         IReadOnlyCollection<int>? selectedIdsOverride = null)
     {
         return SourcesTab.ExecuteActionAsync(action, selectedIdsOverride);
@@ -325,7 +325,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return GoalsTab.ExecuteActionAsync(action, selectedIdsOverride);
     }
 
-    public Task<SettingsOperationResult> ExecuteSpendingSourceItemActionAsync(int itemId, SettingsBatchAction action)
+    public Task<SettingsOperationResult> ExecuteAccountItemActionAsync(int itemId, SettingsBatchAction action)
     {
         return SourcesTab.ExecuteItemActionAsync(itemId, action);
     }
@@ -391,7 +391,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             var incomeLogs = await _appData.GetIncomeLogsAsync();
             var expenses = await _appData.GetExpensesAsync();
             var savingGoals = await _appData.GetSavingGoalsAsync();
-            var spendingSources = await _appData.GetSpendingSourcesAsync();
+            var accounts = await _appData.GetAccountsAsync();
             var tags = await _appData.GetExpenseTagsAsync();
             var recurringTransactions = await _appData.GetRecurringTransactionsAsync();
             var notifications = await _appData.GetNotificationsAsync();
@@ -400,7 +400,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             ApplyDeleteAllDataRemovalPolicy(
                 _appData,
                 tags,
-                spendingSources,
+                accounts,
                 expenses,
                 expenseLogs,
                 incomeLogs,
@@ -433,9 +433,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
     }
 
-    public AddSpendingSourceVM CreateAddSpendingSourceViewModel()
+    public AddAccountVM CreateAddAccountViewModel()
     {
-        return SourcesTab.CreateAddSpendingSourceViewModel();
+        return SourcesTab.CreateAddAccountViewModel();
     }
 
     public AddNewTransactionVM CreateAddFixedExpenseViewModel()
@@ -448,16 +448,16 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return GoalsTab.CreateAddSavingGoalViewModel();
     }
 
-    public SpendingSourceDetailVM CreateSpendingSourceDetailViewModel(int spendingSourceId)
+    public AccountDetailVM CreateAccountDetailViewModel(int accountId)
     {
-        return SourcesTab.CreateSpendingSourceDetailViewModel(spendingSourceId);
+        return SourcesTab.CreateAccountDetailViewModel(accountId);
     }
 
     public void SelectSingleItem(SettingsBatchTarget target, int itemId)
     {
         switch (target)
         {
-            case SettingsBatchTarget.SpendingSources:
+            case SettingsBatchTarget.Accounts:
                 SourcesTab.SelectSingleItem(itemId);
                 break;
 
@@ -471,9 +471,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
     }
 
-    public Task RefreshSpendingSourcesAsync()
+    public Task RefreshAccountsAsync()
     {
-        return SourcesTab.RefreshSpendingSourcesAsync();
+        return SourcesTab.RefreshAccountsAsync();
     }
 
     public Task RefreshFixedExpensesAsync()
@@ -496,12 +496,12 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         BudgetTab.SetAllocation(segment, value);
     }
 
-    public bool IsSpendingSourceChecksEnabled
+    public bool IsAccountChecksEnabled
     {
-        get => SourcesTab.IsSpendingSourceChecksEnabled;
+        get => SourcesTab.IsAccountChecksEnabled;
         set
         {
-            SourcesTab.IsSpendingSourceChecksEnabled = value;
+            SourcesTab.IsAccountChecksEnabled = value;
             OnPropertyChanged();
         }
     }
@@ -605,7 +605,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     internal static void ApplyDeleteAllDataRemovalPolicy(
         IAppDataService appData,
         IReadOnlyList<ExpenseTag> tags,
-        IReadOnlyList<SpendingSource> spendingSources,
+        IReadOnlyList<Account> accounts,
         IReadOnlyList<Expense> expenses,
         IReadOnlyList<ExpenseLog> expenseLogs,
         IReadOnlyList<IncomeLog> incomeLogs,
@@ -615,7 +615,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         ArgumentNullException.ThrowIfNull(appData);
         ArgumentNullException.ThrowIfNull(tags);
-        ArgumentNullException.ThrowIfNull(spendingSources);
+        ArgumentNullException.ThrowIfNull(accounts);
         ArgumentNullException.ThrowIfNull(expenses);
         ArgumentNullException.ThrowIfNull(expenseLogs);
         ArgumentNullException.ThrowIfNull(incomeLogs);
@@ -635,8 +635,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         foreach (var incomeLog in incomeLogs)
             appData.RemoveIncomeLog(incomeLog);
 
-        foreach (var source in spendingSources)
-            appData.RemoveSpendingSource(source);
+        foreach (var source in accounts)
+            appData.RemoveAccount(source);
 
         foreach (var goal in savingGoals)
             appData.RemoveSavingGoal(goal);

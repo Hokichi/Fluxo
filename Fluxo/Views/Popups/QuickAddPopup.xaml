@@ -124,8 +124,8 @@
         HorizontalGap="16"
         VerticalGap="16">
         <Button
-            x:Name="NewSpendingSourceQuickAddButton"
-            Click="OnNewSpendingSourceClick"
+            x:Name="NewAccountQuickAddButton"
+            Click="OnNewAccountClick"
             Style="{StaticResource QuickAddTileButtonStyle}">
             <StackPanel VerticalAlignment="Center">
                 <components:Icon
@@ -140,7 +140,7 @@
                     FontFamily="{DynamicResource Bold}"
                     FontSize="13"
                     Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="New Spending Source"
+                    Text="New Account"
                     TextAlignment="Center" />
                 <TextBlock
                     Margin="0,8,0,0"
@@ -310,8 +310,8 @@
         </Button>
 
         <Button
-            x:Name="ViewSpendingSourcesQuickAddButton"
-            Click="OnViewSpendingSourcesClick"
+            x:Name="ViewAccountsQuickAddButton"
+            Click="OnViewAccountsClick"
             Style="{StaticResource QuickAddTileButtonStyle}">
             <StackPanel VerticalAlignment="Center">
                 <components:Icon
@@ -326,7 +326,7 @@
                     FontFamily="{DynamicResource Bold}"
                     FontSize="13"
                     Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="View Spending Sources"
+                    Text="View Accounts"
                     TextAlignment="Center" />
                 <TextBlock
                     Margin="0,8,0,0"

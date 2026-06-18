@@ -247,13 +247,13 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
-    public void Ledger_GroupByDisplaysSpendingSourcesWithSpace()
+    public void Ledger_GroupByDisplaysAccountsWithSpace()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
         var ledgerVm = File.ReadAllText(RepositoryPaths.File("Fluxo", "ViewModels", "Shell", "Main", "LedgerVM.cs"));
 
         Assert.Contains("LedgerGroupingModeDisplayConverter", ledgerXaml);
-        Assert.Contains("Spending Sources", ledgerVm);
+        Assert.Contains("Accounts", ledgerVm);
     }
 
     [Fact]
@@ -264,7 +264,7 @@ public sealed class MainWindowPageRegressionTests
 
         Assert.Equal(4, CountOccurrences(ledgerXaml, "DropDownClosed=\"OnFilterDropDownClosed\""));
         Assert.Contains("ItemsSource=\"{Binding TypeFilters}\"", ledgerXaml);
-        Assert.Contains("ItemsSource=\"{Binding SpendingSourceFilters}\"", ledgerXaml);
+        Assert.Contains("ItemsSource=\"{Binding AccountFilters}\"", ledgerXaml);
         Assert.Contains("ItemsSource=\"{Binding CategoryFilters}\"", ledgerXaml);
         Assert.Contains("ItemsSource=\"{Binding TagFilters}\"", ledgerXaml);
         Assert.Contains("StaysOpen=\"False\"", ledgerXaml);

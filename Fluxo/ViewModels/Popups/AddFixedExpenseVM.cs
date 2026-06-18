@@ -19,7 +19,7 @@ namespace Fluxo.ViewModels.Popups;
 public partial class AddFixedExpenseVM : ObservableObject
 {
     private const string DefaultTagColor = "#75B798";
-    private const int NoSpendingSourceId = -1;
+    private const int NoAccountId = -1;
     private const int NoTagId = -1;
 
     private readonly MainVM _mainViewModel;
@@ -37,7 +37,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private string _recurringTimeText = string.Empty;
     [ObservableProperty] private ExpenseCategory _selectedCategory = ExpenseCategory.Needs;
-    [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty] private AccountVM? _selectedAccount;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
     [ObservableProperty] private TagOption? _selectedTagOption;
     [ObservableProperty] private string _tagNameText = "General";
@@ -47,8 +47,8 @@ public partial class AddFixedExpenseVM : ObservableObject
     public AddFixedExpenseVM(
         MainVM mainViewModel,
         IAppDataService appData,
-        IReadOnlyList<SpendingSourceVM>? spendingSourcesOverride = null,
-        int? forceIncludeSpendingSourceId = null,
+        IReadOnlyList<AccountVM>? accountsOverride = null,
+        int? forceIncludeAccountId = null,
         Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? saveDraftAsync = null,
         Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? loadDraftTagsAsync = null,
         Func<string, string, Task<SettingsOperationResult>>? createDraftTagAsync = null)
@@ -58,34 +58,34 @@ public partial class AddFixedExpenseVM : ObservableObject
         _saveDraftAsync = saveDraftAsync;
         _loadDraftTagsAsync = loadDraftTagsAsync;
         _createDraftTagAsync = createDraftTagAsync;
-        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
-            SpendingSources,
-            nameof(SpendingSourceVM.TypeDisplayName),
-            nameof(SpendingSourceVM.SpendingSourceType),
-            nameof(SpendingSourceVM.Name));
+        AccountsView = AccountComboBoxViewFactory.CreateGroupedByTypeThenName(
+            Accounts,
+            nameof(AccountVM.TypeDisplayName),
+            nameof(AccountVM.AccountType),
+            nameof(AccountVM.Name));
 
-        var sourceList = spendingSourcesOverride ??
-                         _mainViewModel.BudgetPanel.SpendingSources
+        var sourceList = accountsOverride ??
+                         _mainViewModel.BudgetPanel.Accounts
                              .ToList();
 
         sourceList = sourceList
             .Where(source => source.IsEnabled ||
-                             (forceIncludeSpendingSourceId.HasValue && source.Id == forceIncludeSpendingSourceId.Value))
-            .OrderBy(source => source.SpendingSourceType)
+                             (forceIncludeAccountId.HasValue && source.Id == forceIncludeAccountId.Value))
+            .OrderBy(source => source.AccountType)
             .ThenBy(source => source.Name)
             .ToList();
 
-        foreach (var spendingSource in sourceList)
-            SpendingSources.Add(spendingSource);
+        foreach (var account in sourceList)
+            Accounts.Add(account);
 
         RecurringTimeText = MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ??
                             MonthlyDueDateHelper.MinMonthlyDay.ToString(CultureInfo.InvariantCulture);
-        SelectedSpendingSource = SpendingSources.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault();
         _initialState = CaptureState();
     }
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
-    public ICollectionView SpendingSourcesView { get; }
+    public ObservableCollection<AccountVM> Accounts { get; } = [];
+    public ICollectionView AccountsView { get; }
     public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
     public ObservableCollection<TagOption> TagOptions { get; } = [];
     public bool IsEditMode => EditingId.HasValue;
@@ -129,7 +129,7 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     partial void OnSelectedCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
 
-    partial void OnSelectedSpendingSourceChanged(SpendingSourceVM? value) => NotifyFormStateChanged();
+    partial void OnSelectedAccountChanged(AccountVM? value) => NotifyFormStateChanged();
 
     partial void OnSelectedTagChanged(ExpenseTagVM? value)
     {
@@ -254,9 +254,9 @@ public partial class AddFixedExpenseVM : ObservableObject
 
         try
         {
-            var spendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
-            if (spendingSource is null)
-                return AddFixedExpenseResult.Failure("Please choose a valid spending source.");
+            var account = await _appData.GetAccountByIdAsync(input.AccountId);
+            if (account is null)
+                return AddFixedExpenseResult.Failure("Please choose a valid account.");
 
             var existingTags = await _appData.GetExpenseTagsAsync();
             var tag = existingTags.FirstOrDefault(existing => existing.Id == input.TagId && !existing.IsSystemTag);
@@ -282,7 +282,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                 existing.Name = input.Name;
                 existing.Amount = input.Amount;
                 existing.ExpenseCategory = input.Category;
-                existing.SpendingSourceId = spendingSource.Id;
+                existing.AccountId = account.Id;
                 existing.ExpenseTagId = tag.Id;
                 _appData.UpdateExpense(existing);
             }
@@ -293,7 +293,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                     Name = input.Name,
                     Amount = input.Amount,
                     ExpenseCategory = input.Category,
-                    SpendingSourceId = spendingSource.Id,
+                    AccountId = account.Id,
                     ExpenseTagId = tag.Id
                 };
                 await _appData.AddExpenseAsync(expense);
@@ -334,9 +334,9 @@ public partial class AddFixedExpenseVM : ObservableObject
             return false;
         }
 
-        if (SelectedSpendingSource is null)
+        if (SelectedAccount is null)
         {
-            validationMessage = "Please select a spending source.";
+            validationMessage = "Please select a account.";
             return false;
         }
 
@@ -363,7 +363,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             name,
             AmountText,
             SelectedCategory,
-            SelectedSpendingSource.Id,
+            SelectedAccount.Id,
             recurringTime,
             SelectedTag.Id,
             tagName,
@@ -385,7 +385,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                AmountText > 0m &&
                TryParseRecurringTime(RecurringTimeText, out _) &&
                SelectedTag is not null &&
-               SelectedSpendingSource is not null;
+               SelectedAccount is not null;
     }
 
     private FormState CaptureState()
@@ -394,7 +394,7 @@ public partial class AddFixedExpenseVM : ObservableObject
             NameText ?? string.Empty,
             AmountText,
             SelectedCategory,
-            SelectedSpendingSource?.Id ?? NoSpendingSourceId,
+            SelectedAccount?.Id ?? NoAccountId,
             RecurringTimeText ?? string.Empty,
             SelectedTag?.Id ?? NoTagId,
             IsActive);
@@ -426,7 +426,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         string Name,
         decimal Amount,
         ExpenseCategory Category,
-        int SpendingSourceId,
+        int AccountId,
         int RecurringTime,
         int TagId,
         string TagName,
@@ -436,7 +436,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         string NameText,
         decimal AmountText,
         ExpenseCategory SelectedCategory,
-        int SelectedSpendingSourceId,
+        int SelectedAccountId,
         string RecurringTimeText,
         int SelectedTagId,
         bool IsActive);

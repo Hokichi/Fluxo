@@ -40,11 +40,11 @@ public partial class DashboardVM : ObservableObject
     public UpcomingEventsPanelVM UpcomingEventsPanel { get; }
     public MainViewModeToggleVM ViewModeToggle { get; }
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources => BudgetPanel.SpendingSources;
+    public ObservableCollection<AccountVM> Accounts => BudgetPanel.Accounts;
 
-    public void ToggleSpendingSourceFilter(SpendingSourceVM? spendingSource)
+    public void ToggleAccountFilter(AccountVM? account)
     {
-        BudgetPanel.ToggleSelectedSpendingSource(spendingSource);
+        BudgetPanel.ToggleSelectedAccount(account);
     }
 
     public Task Initialize()
@@ -99,23 +99,23 @@ public partial class DashboardVM : ObservableObject
     }
 
     public static bool ShouldLockDashboardForSpendingAmount(
-        IEnumerable<SpendingSourceVM> spendingSources,
+        IEnumerable<AccountVM> accounts,
         IEnumerable<ExpenseLogVM> expenseLogs)
     {
-        ArgumentNullException.ThrowIfNull(spendingSources);
+        ArgumentNullException.ThrowIfNull(accounts);
         ArgumentNullException.ThrowIfNull(expenseLogs);
 
-        return !spendingSources.Any(source => source.IsEnabled);
+        return !accounts.Any(source => source.IsEnabled);
     }
 
     public static bool ShouldLockActionsForSufficientFunds(
-        IEnumerable<SpendingSourceVM> spendingSources,
+        IEnumerable<AccountVM> accounts,
         IEnumerable<ExpenseLogVM> expenseLogs)
     {
-        ArgumentNullException.ThrowIfNull(spendingSources);
+        ArgumentNullException.ThrowIfNull(accounts);
         ArgumentNullException.ThrowIfNull(expenseLogs);
 
-        var hasUsableFunds = spendingSources
+        var hasUsableFunds = accounts
             .Where(source => source.IsEnabled)
             .Any(HasUsableFunds);
         var hasActiveExpenseLogs = expenseLogs.Any(log => !log.IsForDeletion);
@@ -123,9 +123,9 @@ public partial class DashboardVM : ObservableObject
         return !hasUsableFunds && !hasActiveExpenseLogs;
     }
 
-    private static bool HasUsableFunds(SpendingSourceVM source)
+    private static bool HasUsableFunds(AccountVM source)
     {
-        return source.SpendingSourceType is Fluxo.Core.Enums.SpendingSourceType.Credit or Fluxo.Core.Enums.SpendingSourceType.BNPL
+        return source.AccountType is Fluxo.Core.Enums.AccountType.Credit or Fluxo.Core.Enums.AccountType.BNPL
             ? source.AccountLimit > 0m
             : source.Balance > 0m;
     }
@@ -133,10 +133,10 @@ public partial class DashboardVM : ObservableObject
     private void RefreshSpendingAmountGateStates()
     {
         IsDashboardSpendingAmountGateLocked = ShouldLockDashboardForSpendingAmount(
-            SpendingSources,
+            Accounts,
             BudgetPanel.GetAllExpenseLogs());
         IsSufficientFundsActionGateLocked =
             IsDashboardSpendingAmountGateLocked ||
-            ShouldLockActionsForSufficientFunds(SpendingSources, BudgetPanel.GetAllExpenseLogs());
+            ShouldLockActionsForSufficientFunds(Accounts, BudgetPanel.GetAllExpenseLogs());
     }
 }

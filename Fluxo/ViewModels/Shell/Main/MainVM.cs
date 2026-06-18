@@ -49,11 +49,11 @@ public partial class MainVM : ObservableRecipient
     public bool IsDashboardSpendingAmountGateLocked => Dashboard.IsDashboardSpendingAmountGateLocked;
     public bool IsSufficientFundsActionGateLocked => Dashboard.IsSufficientFundsActionGateLocked;
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources => Dashboard.SpendingSources;
+    public ObservableCollection<AccountVM> Accounts => Dashboard.Accounts;
 
-    public void ToggleSpendingSourceFilter(SpendingSourceVM? spendingSource)
+    public void ToggleAccountFilter(AccountVM? account)
     {
-        Dashboard.ToggleSpendingSourceFilter(spendingSource);
+        Dashboard.ToggleAccountFilter(account);
     }
 
     public Task Initialize()

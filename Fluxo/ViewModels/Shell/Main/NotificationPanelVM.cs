@@ -39,7 +39,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly SemaphoreSlim _notificationSyncGate = new(1, 1);
-    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly IAccountService _accountService;
     private readonly HashSet<int> _hiddenFixedExpenseIds = [];
     private readonly HashSet<int> _hiddenSavingGoalIds = [];
     private readonly HashSet<int> _disabledSavingGoalIds = [];
@@ -58,13 +58,13 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private BudgetAllocation _budgetAllocation = new();
     private IReadOnlyList<RecurringTransactionVM> _recurringTransactions = [];
     private IReadOnlyList<ExpenseLogVM> _expenseLogs = [];
-    private IReadOnlyList<SpendingSourceVM> _spendingSources = [];
+    private IReadOnlyList<AccountVM> _accounts = [];
     private IReadOnlyList<SavingGoalVM> _savingGoals = [];
 
     public NotificationPanelVM(
         IExpenseService expenseService,
         IExpenseLogService expenseLogService,
-        ISpendingSourceService spendingSourceService,
+        IAccountService accountService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         INotificationGroupingService? notificationGroupingService = null,
@@ -76,7 +76,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     {
         _expenseService = expenseService;
         _expenseLogService = expenseLogService;
-        _spendingSourceService = spendingSourceService;
+        _accountService = accountService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
         _notificationActionService = notificationActionService ?? new NotificationActionService(dataOperationRunner);
@@ -256,8 +256,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken))
             .Where(log => !log.IsForDeletion).ToList();
-        _spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
-            await _spendingSourceService.GetAllAsync(cancellationToken));
+        _accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
+            await _accountService.GetAllAsync(cancellationToken));
         _savingGoals = _mapper.Map<IReadOnlyList<SavingGoalVM>>(
             _mapper.Map<IReadOnlyList<SavingGoalDto>>(
                 await _dataOperationRunner.RunAsync(async (scope, ct) =>
@@ -379,8 +379,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (!_isLatePaymentNotifEnabled)
             yield break;
 
-        foreach (var source in _spendingSources.Where(source =>
-                     source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
+        foreach (var source in _accounts.Where(source =>
+                     source.AccountType is AccountType.Credit or AccountType.BNPL &&
                      source.MonthlyDueDate.HasValue &&
                      source.SpentAmount > 0m))
         {
@@ -419,7 +419,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             CalculateSpentByCategory(currentPeriod),
             CalculateSpentByCategory(previousPeriod),
             DateTime.Today,
-            _spendingSources.Sum(source => source.Balance));
+            _accounts.Sum(source => source.Balance));
 
         if (HasCrossedBudgetThreshold(snapshot.Needs.Spent, snapshot.Needs.Available))
             yield return new NotificationCandidate(
@@ -458,8 +458,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (!_isLowCreditNotifEnabled)
             yield break;
 
-        foreach (var source in _spendingSources.Where(source =>
-                     source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL &&
+        foreach (var source in _accounts.Where(source =>
+                     source.AccountType is AccountType.Credit or AccountType.BNPL &&
                      source.AccountLimit > 0))
         {
             var creditUsage = source.SpentAmount / source.AccountLimit;
@@ -481,8 +481,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (!_isLowAccountBalanceNotifEnabled)
             yield break;
 
-        foreach (var source in _spendingSources.Where(source =>
-                     source.SpendingSourceType is SpendingSourceType.Cash or SpendingSourceType.Checking))
+        foreach (var source in _accounts.Where(source =>
+                     source.AccountType is AccountType.Cash or AccountType.Checking))
         {
             var currentBalance = source.Balance;
             var totalBeforeSpending = currentBalance + source.MoneyOut;
@@ -639,11 +639,11 @@ public partial class NotificationPanelVM : ObservableRecipient,
         if (!TryExtractNotificationEntityId(notificationType, "LatePayment-", out var sourceId))
             return false;
 
-        var spendingSource = _spendingSources.FirstOrDefault(source => source.Id == sourceId);
-        if (spendingSource is null)
+        var account = _accounts.FirstOrDefault(source => source.Id == sourceId);
+        if (account is null)
             return true;
 
-        return spendingSource.SpentAmount <= 0m;
+        return account.SpentAmount <= 0m;
     }
 
     private static bool IsDeadlinePassed(string notificationType)
@@ -853,9 +853,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
             return;
 
         var isRecurringDue = card.Category == NotificationGroupCategory.RecurringTransactionDue;
-        var availableSources = _spendingSources
+        var availableSources = _accounts
             .Where(source => source.IsEnabled)
-            .OrderBy(source => source.SpendingSourceType)
+            .OrderBy(source => source.AccountType)
             .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
         var tagVm = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
@@ -956,8 +956,8 @@ public partial class NotificationPanelVM : ObservableRecipient,
             .DefaultIfEmpty(0m)
             .Max();
 
-        var eligibleSources = _spendingSources
-            .Where(source => source.SpendingSourceType is SpendingSourceType.Cash or SpendingSourceType.Checking)
+        var eligibleSources = _accounts
+            .Where(source => source.AccountType is AccountType.Cash or AccountType.Checking)
             .ToList();
 
         var viewModel = new GoalDeadlineActionVM(eligibleSources)

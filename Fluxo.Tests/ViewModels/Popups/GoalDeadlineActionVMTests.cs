@@ -11,7 +11,7 @@ public sealed class GoalDeadlineActionVMTests
     {
         var vm = new GoalDeadlineActionVM(
         [
-            new SpendingSourceVM { Id = 1, Name = "Checking" }
+            new AccountVM { Id = 1, Name = "Checking" }
         ])
         {
             RemainingAmount = 150m,
@@ -30,7 +30,7 @@ public sealed class GoalDeadlineActionVMTests
     {
         var vm = new GoalDeadlineActionVM(
         [
-            new SpendingSourceVM { Id = 1, Name = "Checking" }
+            new AccountVM { Id = 1, Name = "Checking" }
         ])
         {
             RemainingAmount = 100m,

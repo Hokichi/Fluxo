@@ -70,7 +70,7 @@ public sealed class PlanningSnapshot
             Amount = source.Amount,
             AddedOn = source.AddedOn,
             Notes = source.Notes,
-            SpendingSource = CopySpendingSource(source.SpendingSource)
+            Account = CopyAccount(source.Account)
         };
     }
 
@@ -83,7 +83,7 @@ public sealed class PlanningSnapshot
             Amount = source.Amount,
             ExpenseCategory = source.ExpenseCategory,
             ExpenseTag = CopyExpenseTag(source.ExpenseTag),
-            SpendingSource = CopySpendingSource(source.SpendingSource)
+            Account = CopyAccount(source.Account)
         };
     }
 
@@ -99,13 +99,13 @@ public sealed class PlanningSnapshot
         };
     }
 
-    private static SpendingSourceVM CopySpendingSource(SpendingSourceVM source)
+    private static AccountVM CopyAccount(AccountVM source)
     {
-        return new SpendingSourceVM
+        return new AccountVM
         {
             Id = source.Id,
             Name = source.Name,
-            SpendingSourceType = source.SpendingSourceType,
+            AccountType = source.AccountType,
             AccountLimit = source.AccountLimit,
             MaximumSpending = source.MaximumSpending,
             MinimumPayment = source.MinimumPayment,

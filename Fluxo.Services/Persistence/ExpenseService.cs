@@ -36,14 +36,14 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
             var unitOfWork = scope.UnitOfWork;
 
             // Validate source exists before staging any entities.
-            var source = await unitOfWork.SpendingSources.GetByIdAsync(dto.SpendingSourceId, ct);
+            var source = await unitOfWork.Accounts.GetByIdAsync(dto.AccountId, ct);
             if (source is null)
-                throw new InvalidOperationException($"SpendingSource with id {dto.SpendingSourceId} was not found.");
+                throw new InvalidOperationException($"Account with id {dto.AccountId} was not found.");
 
             // Build the entity manually so EF can track it and resolve the ExpenseLog FK.
             var expense = new Expense
             {
-                SpendingSourceId = dto.SpendingSourceId,
+                AccountId = dto.AccountId,
                 ExpenseTagId = dto.ExpenseTagId,
                 Name = dto.Name,
                 Amount = dto.Amount,
@@ -55,7 +55,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
             var log = new ExpenseLog
             {
                 Expense = expense,
-                SpendingSourceId = dto.SpendingSourceId,
+                AccountId = dto.AccountId,
                 Amount = dto.Amount,
                 DeductedOn = DateTime.Now,
                 Notes = string.Empty,
@@ -63,8 +63,8 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
             };
             await unitOfWork.ExpenseLogs.AddAsync(log, ct);
 
-            ApplyExpenseToSpendingSource(source, dto.Amount);
-            unitOfWork.SpendingSources.Update(source);
+            ApplyExpenseToAccount(source, dto.Amount);
+            unitOfWork.Accounts.Update(source);
 
             await unitOfWork.SaveChangesAsync(ct);
         }, cancellationToken);
@@ -94,16 +94,16 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
             // FK deletes are Restrict; remove logs before removing the expense.
             var logs = await unitOfWork.ExpenseLogs.GetByExpenseIdAsync(id, ct);
 
-            // Restore balance on each affected spending source before deleting logs.
-            foreach (var grp in logs.GroupBy(l => l.SpendingSourceId))
+            // Restore balance on each affected account before deleting logs.
+            foreach (var grp in logs.GroupBy(l => l.AccountId))
             {
-                var source = await unitOfWork.SpendingSources.GetByIdAsync(grp.Key, ct);
+                var source = await unitOfWork.Accounts.GetByIdAsync(grp.Key, ct);
                 if (source is null)
                     continue;
 
                 var total = grp.Sum(l => l.Amount);
-                RestoreExpenseOnSpendingSource(source, total);
-                unitOfWork.SpendingSources.Update(source);
+                RestoreExpenseOnAccount(source, total);
+                unitOfWork.Accounts.Update(source);
             }
 
             foreach (var log in logs)
@@ -117,9 +117,9 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
         }, cancellationToken);
     }
 
-    private static void ApplyExpenseToSpendingSource(SpendingSource source, decimal amount)
+    private static void ApplyExpenseToAccount(Account source, decimal amount)
     {
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount += amount;
             return;
@@ -128,9 +128,9 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
         source.Balance -= amount;
     }
 
-    private static void RestoreExpenseOnSpendingSource(SpendingSource source, decimal amount)
+    private static void RestoreExpenseOnAccount(Account source, decimal amount)
     {
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - amount);
             return;

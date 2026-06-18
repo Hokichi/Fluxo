@@ -48,14 +48,14 @@ namespace Fluxo.Migrations
                     b.Property<int?>("RecurringDate")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("SpendingSourceId")
+                    b.Property<int>("AccountId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ExpenseTagId");
 
-                    b.HasIndex("SpendingSourceId");
+                    b.HasIndex("AccountId");
 
                     b.ToTable("Expenses", (string)null);
                 });
@@ -82,14 +82,14 @@ namespace Fluxo.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("SpendingSourceId")
+                    b.Property<int>("AccountId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ExpenseId");
 
-                    b.HasIndex("SpendingSourceId");
+                    b.HasIndex("AccountId");
 
                     b.ToTable("ExpenseLogs", (string)null);
                 });
@@ -138,12 +138,12 @@ namespace Fluxo.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("SpendingSourceId")
+                    b.Property<int>("AccountId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SpendingSourceId");
+                    b.HasIndex("AccountId");
 
                     b.ToTable("IncomeLogs", (string)null);
                 });
@@ -204,7 +204,7 @@ namespace Fluxo.Migrations
                     b.ToTable("Notifications", (string)null);
                 });
 
-            modelBuilder.Entity("Fluxo.Core.Entities.SpendingSource", b =>
+            modelBuilder.Entity("Fluxo.Core.Entities.Account", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -238,7 +238,7 @@ namespace Fluxo.Migrations
                     b.Property<bool>("ShowOnUI")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("SpendingSourceType")
+                    b.Property<int>("AccountType")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("SpentAmount")
@@ -246,7 +246,7 @@ namespace Fluxo.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SpendingSources", (string)null);
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("Fluxo.Core.Entities.UserSettings", b =>
@@ -271,15 +271,15 @@ namespace Fluxo.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Fluxo.Core.Entities.SpendingSource", "SpendingSource")
+                    b.HasOne("Fluxo.Core.Entities.Account", "Account")
                         .WithMany()
-                        .HasForeignKey("SpendingSourceId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ExpenseTag");
 
-                    b.Navigation("SpendingSource");
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("Fluxo.Core.Entities.ExpenseLog", b =>
@@ -290,26 +290,26 @@ namespace Fluxo.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Fluxo.Core.Entities.SpendingSource", "SpendingSource")
+                    b.HasOne("Fluxo.Core.Entities.Account", "Account")
                         .WithMany()
-                        .HasForeignKey("SpendingSourceId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Expense");
 
-                    b.Navigation("SpendingSource");
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("Fluxo.Core.Entities.IncomeLog", b =>
                 {
-                    b.HasOne("Fluxo.Core.Entities.SpendingSource", "SpendingSource")
+                    b.HasOne("Fluxo.Core.Entities.Account", "Account")
                         .WithMany()
-                        .HasForeignKey("SpendingSourceId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("SpendingSource");
+                    b.Navigation("Account");
                 });
 #pragma warning restore 612, 618
         }

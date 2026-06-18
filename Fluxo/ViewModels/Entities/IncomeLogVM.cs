@@ -10,5 +10,5 @@ public partial class IncomeLogVM : ObservableObject
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private string _notes = string.Empty;
-    [ObservableProperty] private SpendingSourceVM _spendingSource = new();
+    [ObservableProperty] private AccountVM _account = new();
 }

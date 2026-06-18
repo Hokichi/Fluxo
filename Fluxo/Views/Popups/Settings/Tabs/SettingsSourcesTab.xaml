@@ -29,7 +29,7 @@
                             VerticalAlignment="Center"
                             IsChecked="{Binding IsChecked, Mode=TwoWay}"
                             Style="{StaticResource ItemCheckBoxStyle}"
-                            Visibility="{Binding DataContext.IsSpendingSourceChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding DataContext.IsAccountChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <StackPanel Grid.Column="1">
                             <TextBlock
                                 FontFamily="{StaticResource Bold}"
@@ -96,20 +96,20 @@
                                 Click="OnRowActionClick"
                                 HoveredBackground="{StaticResource Brush.Danger}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="SpendingSources:Delete"
+                                Tag="Accounts:Delete"
                                 ToolTip="Delete" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource EyeOff}"
                                 Click="OnRowActionClick"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="SpendingSources:Unpin"
+                                Tag="Accounts:Unpin"
                                 ToolTip="Unpin"
                                 Visibility="{Binding IsUnpinned, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource Eye}"
                                 Click="OnRowActionClick"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="SpendingSources:Pin"
+                                Tag="Accounts:Pin"
                                 ToolTip="Pin"
                                 Visibility="{Binding IsUnpinned, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <customControls:BalloonButton
@@ -117,7 +117,7 @@
                                 Click="OnRowActionClick"
                                 HoveredBackground="{StaticResource Brush.Warning}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="SpendingSources:Disable"
+                                Tag="Accounts:Disable"
                                 ToolTip="Disable"
                                 Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <customControls:BalloonButton
@@ -125,7 +125,7 @@
                                 Click="OnRowActionClick"
                                 HoveredBackground="{StaticResource Brush.Mint}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="SpendingSources:Enable"
+                                Tag="Accounts:Enable"
                                 ToolTip="Enable"
                                 Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                         </StackPanel>
@@ -167,7 +167,7 @@
                     FontFamily="{StaticResource Bold}"
                     FontSize="16"
                     Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Spending Sources" />
+                    Text="Accounts" />
                 <StackPanel
                     Grid.Column="1"
                     HorizontalAlignment="Right"
@@ -177,73 +177,73 @@
                         Click="OnBatchActionClick"
                         HoveredBackground="{StaticResource Brush.Danger}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:Delete"
+                        Tag="Accounts:Delete"
                         ToolTip="Delete selected"
-                        Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding IsAccountChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource EyeOff}"
                         Click="OnBatchActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:Unpin"
+                        Tag="Accounts:Unpin"
                         ToolTip="Unpin selected"
-                        Visibility="{Binding ShowSpendingSourceUnpinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowAccountUnpinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource Eye}"
                         Click="OnBatchActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:Pin"
+                        Tag="Accounts:Pin"
                         ToolTip="Pin selected"
-                        Visibility="{Binding ShowSpendingSourcePinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowAccountPinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource LightningSlashFill}"
                         Click="OnBatchActionClick"
                         HoveredBackground="{StaticResource Brush.Warning}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:Disable"
+                        Tag="Accounts:Disable"
                         ToolTip="Disable selected"
-                        Visibility="{Binding ShowSpendingSourceDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowAccountDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource LightningFill}"
                         Click="OnBatchActionClick"
                         HoveredBackground="{StaticResource Brush.Mint}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:Enable"
+                        Tag="Accounts:Enable"
                         ToolTip="Enable selected"
-                        Visibility="{Binding ShowSpendingSourceEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowAccountEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource CheckAll}"
                         Click="OnSelectionActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:CheckAll"
+                        Tag="Accounts:CheckAll"
                         ToolTip="Check all"
-                        Visibility="{Binding ShowSpendingSourceCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowAccountCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource UncheckAll}"
                         Click="OnSelectionActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:UncheckAll"
+                        Tag="Accounts:UncheckAll"
                         ToolTip="Uncheck all"
-                        Visibility="{Binding ShowSpendingSourceUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowAccountUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource EnableChecks}"
                         Click="OnChecksToggleClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:EnableChecks"
+                        Tag="Accounts:EnableChecks"
                         ToolTip="Enable selection"
-                        Visibility="{Binding ShowSpendingSourceEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowAccountEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource DisableChecks}"
                         Click="OnChecksToggleClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="SpendingSources:DisableChecks"
+                        Tag="Accounts:DisableChecks"
                         ToolTip="Disable selection"
-                        Visibility="{Binding IsSpendingSourceChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding IsAccountChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource PlusSolid}"
                         Click="OnAddPlaceholderClick"
                         HoveredBackground="{StaticResource Brush.Mint}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Add New Spending Source"
+                        Tag="Add New Account"
                         ToolTip="Add source" />
                 </StackPanel>
             </Grid>
@@ -264,7 +264,7 @@
                     behaviors:ScrollOnDemandBehavior.IsLoading="{Binding IsLoading}"
                     behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand}"
                     ItemTemplate="{StaticResource SettingsSourceItemTemplate}"
-                    ItemsSource="{Binding SpendingSourcesView}" />
+                    ItemsSource="{Binding AccountsView}" />
             </customControls:FadingScrollViewer>
             <TextBlock
                 Grid.RowSpan="3"
@@ -274,8 +274,8 @@
                 FontFamily="{StaticResource Bold}"
                 FontSize="13"
                 Foreground="{StaticResource Brush.Text.Secondary}"
-                Text="No Spending Source Available"
-                Visibility="{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                Text="No Account Available"
+                Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
         </Grid>
     </Border>
 </UserControl>

@@ -23,16 +23,16 @@ public sealed class NotificationActionServiceTests
             new() { Id = 1, Type = "UpcomingPayment-10_20260501", Message = "Card 10 due", IsCleared = false },
             new() { Id = 2, Type = "UpcomingPayment-20_20260501", Message = "Card 20 due", IsCleared = false }
         };
-        var spendingSources = new List<SpendingSource>
+        var accounts = new List<Account>
         {
             new()
             {
-                Id = 1, Name = "Checking", SpendingSourceType = SpendingSourceType.Checking, Balance = 200m,
+                Id = 1, Name = "Checking", AccountType = AccountType.Checking, Balance = 200m,
                 SpentAmount = 0m
             },
             new()
             {
-                Id = 10, Name = "Card 10", SpendingSourceType = SpendingSourceType.Credit, SpentAmount = 75m,
+                Id = 10, Name = "Card 10", AccountType = AccountType.Credit, SpentAmount = 75m,
                 Balance = 0m, DeductSource = 1
             }
         };
@@ -45,7 +45,7 @@ public sealed class NotificationActionServiceTests
 
         var sut = CreateSut(
             persistedNotifications,
-            spendingSources: spendingSources,
+            accounts: accounts,
             expenseLogs: expenseLogs,
             incomeLogs: incomeLogs,
             expenseTags: [new ExpenseTag { Id = 1, Name = "Transfer", HexCode = "#000000" }]);
@@ -57,8 +57,8 @@ public sealed class NotificationActionServiceTests
         Assert.True(succeeded);
         Assert.True(persistedNotifications.Single(notification => notification.Id == 1).IsCleared);
         Assert.False(persistedNotifications.Single(notification => notification.Id == 2).IsCleared);
-        Assert.Equal(200m, spendingSources.Single(source => source.Id == 1).Balance);
-        Assert.Equal(75m, spendingSources.Single(source => source.Id == 10).SpentAmount);
+        Assert.Equal(200m, accounts.Single(source => source.Id == 1).Balance);
+        Assert.Equal(75m, accounts.Single(source => source.Id == 10).SpentAmount);
         Assert.Empty(expenseLogs);
         Assert.Empty(incomeLogs);
     }
@@ -71,15 +71,15 @@ public sealed class NotificationActionServiceTests
             new() { Id = 1, Type = "UpcomingPayment-10_20260501", Message = "Card 10 due", IsCleared = false },
             new() { Id = 2, Type = "LowBalance-8", Message = "Low balance", IsCleared = false }
         };
-        var spendingSources = new List<SpendingSource>
+        var accounts = new List<Account>
         {
             new()
             {
-                Id = 1, Name = "Checking", SpendingSourceType = SpendingSourceType.Checking, Balance = 250m
+                Id = 1, Name = "Checking", AccountType = AccountType.Checking, Balance = 250m
             },
             new()
             {
-                Id = 10, Name = "Card 10", SpendingSourceType = SpendingSourceType.Credit, SpentAmount = 60m,
+                Id = 10, Name = "Card 10", AccountType = AccountType.Credit, SpentAmount = 60m,
                 DeductSource = 1
             }
         };
@@ -90,7 +90,7 @@ public sealed class NotificationActionServiceTests
 
         var sut = CreateSut(
             persistedNotifications,
-            spendingSources: spendingSources,
+            accounts: accounts,
             expenses: expenses,
             expenseLogs: expenseLogs,
             incomeLogs: incomeLogs,
@@ -101,15 +101,15 @@ public sealed class NotificationActionServiceTests
             [new NotificationChecklistActionDecision(10, NotificationChecklistItemActionType.Process, null)]);
 
         Assert.True(succeeded);
-        Assert.Equal(190m, spendingSources.Single(source => source.Id == 1).Balance);
-        Assert.Equal(0m, spendingSources.Single(source => source.Id == 10).SpentAmount);
+        Assert.Equal(190m, accounts.Single(source => source.Id == 1).Balance);
+        Assert.Equal(0m, accounts.Single(source => source.Id == 10).SpentAmount);
         Assert.Single(expenses);
         Assert.Single(expenseLogs);
         Assert.Single(incomeLogs);
         Assert.Equal(60m, expenseLogs[0].Amount);
-        Assert.Equal(1, expenseLogs[0].SpendingSourceId);
+        Assert.Equal(1, expenseLogs[0].AccountId);
         Assert.Equal(60m, incomeLogs[0].Amount);
-        Assert.Equal(10, incomeLogs[0].SpendingSourceId);
+        Assert.Equal(10, incomeLogs[0].AccountId);
         Assert.True(persistedNotifications.Single(notification => notification.Id == 1).IsCleared);
         Assert.False(persistedNotifications.Single(notification => notification.Id == 2).IsCleared);
     }
@@ -122,15 +122,15 @@ public sealed class NotificationActionServiceTests
             new() { Id = 1, Type = "RecurringTransactionDue-77_20260501", Message = "Rent due", IsCleared = false }
         };
         var recurring = new List<RecurringTransaction> { new() { Id = 77, Name = "Rent", Amount = 25m, SourceId = 4, TagId = 5, Type = RecurringTransactionType.Expense, IsEnabled = true, RecurringPeriod = RecurringPeriod.Monthly, RecurringTime = 10 } };
-        var spendingSources = new List<SpendingSource>
+        var accounts = new List<Account>
         {
             new()
             {
-                Id = 4, Name = "Default Card", SpendingSourceType = SpendingSourceType.Credit, SpentAmount = 10m
+                Id = 4, Name = "Default Card", AccountType = AccountType.Credit, SpentAmount = 10m
             },
             new()
             {
-                Id = 8, Name = "Checking", SpendingSourceType = SpendingSourceType.Checking, Balance = 100m
+                Id = 8, Name = "Checking", AccountType = AccountType.Checking, Balance = 100m
             }
         };
         var expenseLogs = new List<ExpenseLog>();
@@ -138,7 +138,7 @@ public sealed class NotificationActionServiceTests
 
         var sut = CreateSut(
             persistedNotifications,
-            spendingSources: spendingSources,
+            accounts: accounts,
             recurringTransactions: recurring,
             expenseLogs: expenseLogs,
             expenseTags: [new ExpenseTag { Id = 5, Name = "Needs", HexCode = "#111111" }]);
@@ -148,10 +148,10 @@ public sealed class NotificationActionServiceTests
             [new NotificationChecklistActionDecision(77, NotificationChecklistItemActionType.Process, 8, 25m, 5)]);
 
         Assert.True(succeeded);
-        Assert.Equal(75m, spendingSources.Single(source => source.Id == 8).Balance);
+        Assert.Equal(75m, accounts.Single(source => source.Id == 8).Balance);
         Assert.Single(expenseLogs);
         Assert.Equal("Rent", expenseLogs[0].Expense.Name);
-        Assert.Equal(8, expenseLogs[0].SpendingSourceId);
+        Assert.Equal(8, expenseLogs[0].AccountId);
         Assert.Equal(25m, expenseLogs[0].Amount);
         Assert.True(persistedNotifications[0].IsCleared);
     }
@@ -184,25 +184,25 @@ public sealed class NotificationActionServiceTests
             new() { Id = 2, Type = "UpcomingPayment-20_20260501", Message = "Card 20 due", IsCleared = false },
             new() { Id = 3, Type = "UpcomingPayment-30_20260501", Message = "Card 30 due", IsCleared = false }
         };
-        var spendingSources = new List<SpendingSource>
+        var accounts = new List<Account>
         {
             new()
             {
-                Id = 1, Name = "Checking", SpendingSourceType = SpendingSourceType.Checking, Balance = 400m
+                Id = 1, Name = "Checking", AccountType = AccountType.Checking, Balance = 400m
             },
             new()
             {
-                Id = 10, Name = "Card 10", SpendingSourceType = SpendingSourceType.Credit, SpentAmount = 30m,
+                Id = 10, Name = "Card 10", AccountType = AccountType.Credit, SpentAmount = 30m,
                 DeductSource = 1
             },
             new()
             {
-                Id = 20, Name = "Card 20", SpendingSourceType = SpendingSourceType.Credit, SpentAmount = 50m,
+                Id = 20, Name = "Card 20", AccountType = AccountType.Credit, SpentAmount = 50m,
                 DeductSource = 1
             },
             new()
             {
-                Id = 30, Name = "Card 30", SpendingSourceType = SpendingSourceType.Credit, SpentAmount = 60m,
+                Id = 30, Name = "Card 30", AccountType = AccountType.Credit, SpentAmount = 60m,
                 DeductSource = 1
             }
         };
@@ -217,7 +217,7 @@ public sealed class NotificationActionServiceTests
 
         var sut = CreateSut(
             persistedNotifications,
-            spendingSources: spendingSources,
+            accounts: accounts,
             expenses: expenses,
             expenseLogs: expenseLogs,
             incomeLogs: incomeLogs,
@@ -235,10 +235,10 @@ public sealed class NotificationActionServiceTests
         Assert.True(persistedNotifications.Single(notification => notification.Id == 1).IsCleared);
         Assert.True(persistedNotifications.Single(notification => notification.Id == 2).IsCleared);
         Assert.False(persistedNotifications.Single(notification => notification.Id == 3).IsCleared);
-        Assert.Equal(350m, spendingSources.Single(source => source.Id == 1).Balance);
-        Assert.Equal(30m, spendingSources.Single(source => source.Id == 10).SpentAmount);
-        Assert.Equal(0m, spendingSources.Single(source => source.Id == 20).SpentAmount);
-        Assert.Equal(60m, spendingSources.Single(source => source.Id == 30).SpentAmount);
+        Assert.Equal(350m, accounts.Single(source => source.Id == 1).Balance);
+        Assert.Equal(30m, accounts.Single(source => source.Id == 10).SpentAmount);
+        Assert.Equal(0m, accounts.Single(source => source.Id == 20).SpentAmount);
+        Assert.Equal(60m, accounts.Single(source => source.Id == 30).SpentAmount);
         Assert.Single(expenses);
         Assert.Single(expenseLogs);
         Assert.Single(incomeLogs);
@@ -317,7 +317,7 @@ public sealed class NotificationActionServiceTests
     private static NotificationActionService CreateSut(
         List<Notification> persistedNotifications,
         List<SavingGoal>? persistedGoals = null,
-        List<SpendingSource>? spendingSources = null,
+        List<Account>? accounts = null,
         List<Expense>? expenses = null,
         List<RecurringTransaction>? recurringTransactions = null,
         List<ExpenseLog>? expenseLogs = null,
@@ -325,7 +325,7 @@ public sealed class NotificationActionServiceTests
         List<ExpenseTag>? expenseTags = null)
     {
         persistedGoals ??= [];
-        spendingSources ??= [];
+        accounts ??= [];
         expenses ??= [];
         recurringTransactions ??= [];
         expenseLogs ??= [];
@@ -386,29 +386,29 @@ public sealed class NotificationActionServiceTests
                 persistedGoals.RemoveAll(goal => goal.Id == removed.Id);
             });
 
-        var spendingSourceRepository = Substitute.For<ISpendingSourceRepository>();
-        spendingSourceRepository.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+        var accountRepository = Substitute.For<IAccountRepository>();
+        accountRepository.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
                 var id = call.Arg<int>();
-                return Task.FromResult<SpendingSource?>(spendingSources.FirstOrDefault(source => source.Id == id));
+                return Task.FromResult<Account?>(accounts.FirstOrDefault(source => source.Id == id));
             });
-        spendingSourceRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<SpendingSource>>(spendingSources.ToList()));
-        spendingSourceRepository
-            .When(repository => repository.Update(Arg.Any<SpendingSource>()))
+        accountRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IReadOnlyList<Account>>(accounts.ToList()));
+        accountRepository
+            .When(repository => repository.Update(Arg.Any<Account>()))
             .Do(call =>
             {
-                var updated = call.Arg<SpendingSource>();
-                var existing = spendingSources.FirstOrDefault(source => source.Id == updated.Id);
+                var updated = call.Arg<Account>();
+                var existing = accounts.FirstOrDefault(source => source.Id == updated.Id);
                 if (existing is null)
                 {
-                    spendingSources.Add(updated);
+                    accounts.Add(updated);
                     return;
                 }
 
                 existing.Name = updated.Name;
-                existing.SpendingSourceType = updated.SpendingSourceType;
+                existing.AccountType = updated.AccountType;
                 existing.AccountLimit = updated.AccountLimit;
                 existing.SpentAmount = updated.SpentAmount;
                 existing.Balance = updated.Balance;
@@ -517,7 +517,7 @@ public sealed class NotificationActionServiceTests
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.Notifications.Returns(notificationRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);
-        unitOfWork.SpendingSources.Returns(spendingSourceRepository);
+        unitOfWork.Accounts.Returns(accountRepository);
         unitOfWork.Expenses.Returns(expenseRepository);
         unitOfWork.ExpenseLogs.Returns(expenseLogRepository);
         unitOfWork.IncomeLogs.Returns(incomeLogRepository);

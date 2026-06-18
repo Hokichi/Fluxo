@@ -12,7 +12,7 @@ Fluxo is a Windows personal finance app for keeping everyday money decisions vis
 - [Getting Started](#getting-started)
 - [Dashboard Overview](#dashboard-overview)
 - [Adding Transactions](#adding-transactions)
-- [Managing Spending Sources](#managing-spending-sources)
+- [Managing Accounts](#managing-accounts)
 - [Budgeting With Needs, Wants, and Savings](#budgeting-with-needs-wants-and-savings)
 - [Saving Goals](#saving-goals)
 - [Notifications and Reminders](#notifications-and-reminders)
@@ -35,7 +35,7 @@ Fluxo is a Windows personal finance app for keeping everyday money decisions vis
 
 ## Why Use Fluxo?
 
-Fluxo is built for people who want a practical view of where their money is going without turning budgeting into a spreadsheet project. The app centers your finances around spending sources, quick transaction entry, budget categories, reminders, and local-first storage.
+Fluxo is built for people who want a practical view of where their money is going without turning budgeting into a spreadsheet project. The app centers your finances around accounts, quick transaction entry, budget categories, reminders, and local-first storage.
 
 With Fluxo, you can:
 
@@ -55,7 +55,7 @@ When Fluxo opens for the first time, it guides you through setup so the dashboar
 
 1. Install and open Fluxo.
 2. Enter the display name you want Fluxo to use.
-3. Add your spending sources, such as cash, checking accounts, credit cards, BNPL accounts, or savings.
+3. Add your accounts, such as cash, checking accounts, credit cards, BNPL accounts, or savings.
 4. Choose your budget allocation percentages for Needs, Wants, and Savings/Invest.
 5. Add fixed expenses that repeat monthly.
 6. Add saving goals with target amounts and deadlines.
@@ -94,7 +94,7 @@ Quick Access includes common creation, setup, update, planning, source, and sett
 
 For each entry, Fluxo lets you choose the source, amount, date, category, tag, goal, and notes where relevant. After saving, Fluxo updates balances, budget totals, notifications, and goal progress.
 
-## Managing Spending Sources
+## Managing Accounts
 
 Spending sources are the accounts or money pools Fluxo uses to calculate your budget and transaction impact.
 
@@ -293,6 +293,6 @@ Initial Release
 ### v1.0.4:
 - Hotfix: Cleaned up redundant files created by build 1.0.3.
 - The installer now supports runtime installation.
-- Improvement in Quick Setup, Spending Source, and Dashboard for better user experience.
-- Incorrect behavior during Quick Setup (Spending Sources not found) has been addressed.
+- Improvement in Quick Setup, Account, and Dashboard for better user experience.
+- Incorrect behavior during Quick Setup (Accounts not found) has been addressed.
 - UI improvements.

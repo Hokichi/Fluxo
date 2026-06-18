@@ -21,7 +21,7 @@
             </StackPanel>
         </Border>
 
-        <!--  Spending Sources / Recurring Transactions / Savings Goals  -->
+        <!--  Accounts / Recurring Transactions / Savings Goals  -->
         <Grid Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -38,14 +38,14 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Mint}"
-                        Text="{Binding ReportSpendingSourceCount}" />
+                        Text="{Binding ReportAccountCount}" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"
                         FontFamily="{StaticResource Medium}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Spending Sources" />
+                        Text="Accounts" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"

@@ -8,7 +8,7 @@ public sealed record QuickSetupWizardFixedExpenseItemVM(
     string Name,
     decimal Amount,
     string CategoryLabel,
-    string SpendingSourceName,
+    string AccountName,
     RecurringPeriod RecurringPeriod,
     int? DueTime)
 {
@@ -24,13 +24,13 @@ public sealed record QuickSetupWizardFixedExpenseItemVM(
             ExpenseCategory.Wants => "Wants",
             _ => "Invest"
         },
-        expense.SpendingSource?.Name ?? "No source",
+        expense.Account?.Name ?? "No source",
         RecurringPeriod.None,
         null)
     {
     }
 
-    public QuickSetupWizardFixedExpenseItemVM(QuickSetupWizardDraftFixedExpense expense, string spendingSourceName) : this(
+    public QuickSetupWizardFixedExpenseItemVM(QuickSetupWizardDraftFixedExpense expense, string accountName) : this(
         expense.Id,
         expense.Name,
         expense.Amount,
@@ -40,7 +40,7 @@ public sealed record QuickSetupWizardFixedExpenseItemVM(
             ExpenseCategory.Wants => "Wants",
             _ => "Invest"
         },
-        spendingSourceName,
+        accountName,
         expense.RecurringPeriod,
         expense.RecurringTime)
     {

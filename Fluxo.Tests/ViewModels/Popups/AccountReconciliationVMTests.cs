@@ -20,9 +20,9 @@ public sealed class AccountReconciliationVMTests
         var vm = new AccountReconciliationVM(sources, sources[2], appData, () => Task.CompletedTask);
 
         Assert.Equal(
-            [SpendingSourceType.Credit, SpendingSourceType.Checking, SpendingSourceType.Cash],
-            vm.SpendingSources.Select(source => source.SpendingSourceType).ToArray());
-        Assert.Equal(3, vm.SelectedSpendingSource?.Id);
+            [AccountType.Credit, AccountType.Checking, AccountType.Cash],
+            vm.Accounts.Select(source => source.AccountType).ToArray());
+        Assert.Equal(3, vm.SelectedAccount?.Id);
     }
 
     [Fact]
@@ -30,11 +30,11 @@ public sealed class AccountReconciliationVMTests
     {
         var sources = CreateSourceViewModels();
         var appData = Substitute.For<IAppDataService>();
-        var persistedSource = new SpendingSource
+        var persistedSource = new Account
         {
             Id = 3,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = 500m
         };
         var reconciliationTag = new ExpenseTag
@@ -49,8 +49,8 @@ public sealed class AccountReconciliationVMTests
         ExpenseLog? savedLog = null;
         var reloadCount = 0;
 
-        appData.GetSpendingSourceByIdAsync(3, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<SpendingSource?>(persistedSource));
+        appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Account?>(persistedSource));
         appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>([reconciliationTag]));
         appData.AddExpenseAsync(Arg.Do<Expense>(expense => savedExpense = expense), Arg.Any<CancellationToken>())
@@ -78,15 +78,15 @@ public sealed class AccountReconciliationVMTests
         Assert.Equal("Checking - Budget Reconciliation", savedExpense.Name);
         Assert.Equal(42.50m, savedExpense.Amount);
         Assert.Equal(ExpenseCategory.Needs, savedExpense.ExpenseCategory);
-        Assert.Equal(3, savedExpense.SpendingSourceId);
+        Assert.Equal(3, savedExpense.AccountId);
         Assert.Equal(9, savedExpense.ExpenseTagId);
         Assert.Equal(42.50m, savedLog.Amount);
         Assert.Equal(DateTime.Today, savedLog.DeductedOn);
-        Assert.Equal(3, savedLog.SpendingSourceId);
+        Assert.Equal(3, savedLog.AccountId);
         Assert.False(savedLog.IsForDeletion);
         Assert.Equal(457.50m, persistedSource.Balance);
         Assert.Equal(1, reloadCount);
-        appData.Received(1).UpdateSpendingSource(persistedSource);
+        appData.Received(1).UpdateAccount(persistedSource);
         await appData.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -95,17 +95,17 @@ public sealed class AccountReconciliationVMTests
     {
         var sources = CreateSourceViewModels();
         var appData = Substitute.For<IAppDataService>();
-        var persistedSource = new SpendingSource
+        var persistedSource = new Account
         {
             Id = 3,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = 500m
         };
         ExpenseTag? addedTag = null;
 
-        appData.GetSpendingSourceByIdAsync(3, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<SpendingSource?>(persistedSource));
+        appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Account?>(persistedSource));
         appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>([]));
         appData.AddExpenseTagAsync(Arg.Do<ExpenseTag>(tag =>
@@ -132,15 +132,15 @@ public sealed class AccountReconciliationVMTests
         await appData.Received(1).AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>());
     }
 
-    private static IReadOnlyList<SpendingSourceVM> CreateSourceViewModels()
+    private static IReadOnlyList<AccountVM> CreateSourceViewModels()
     {
         return
         [
-            new SpendingSourceVM { Id = 1, Name = "Credit", SpendingSourceType = SpendingSourceType.Credit },
-            new SpendingSourceVM { Id = 2, Name = "Pay Later", SpendingSourceType = SpendingSourceType.BNPL },
-            new SpendingSourceVM { Id = 3, Name = "Checking", SpendingSourceType = SpendingSourceType.Checking },
-            new SpendingSourceVM { Id = 4, Name = "Cash", SpendingSourceType = SpendingSourceType.Cash },
-            new SpendingSourceVM { Id = 5, Name = "Emergency", SpendingSourceType = SpendingSourceType.Saving }
+            new AccountVM { Id = 1, Name = "Credit", AccountType = AccountType.Credit },
+            new AccountVM { Id = 2, Name = "Pay Later", AccountType = AccountType.BNPL },
+            new AccountVM { Id = 3, Name = "Checking", AccountType = AccountType.Checking },
+            new AccountVM { Id = 4, Name = "Cash", AccountType = AccountType.Cash },
+            new AccountVM { Id = 5, Name = "Emergency", AccountType = AccountType.Saving }
         ];
     }
 }

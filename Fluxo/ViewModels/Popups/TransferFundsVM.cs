@@ -18,31 +18,31 @@ namespace Fluxo.ViewModels.Popups;
 public partial class TransferFundsVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
-    private readonly int _sourceSpendingSourceId;
+    private readonly int _sourceAccountId;
     private readonly IAppDataService _appData;
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isSaving;
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
-    [ObservableProperty] private SpendingSourceVM? _selectedTarget;
+    [ObservableProperty] private AccountVM? _selectedTarget;
 
-    public TransferFundsVM(MainVM mainViewModel, SpendingSourceVM source, IAppDataService appData)
+    public TransferFundsVM(MainVM mainViewModel, AccountVM source, IAppDataService appData)
     {
         _mainViewModel = mainViewModel;
-        _sourceSpendingSourceId = source.Id;
+        _sourceAccountId = source.Id;
         _appData = appData;
         SourceName = source.Name;
-        TargetsView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
+        TargetsView = AccountComboBoxViewFactory.CreateGroupedByTypeThenName(
             Targets,
-            nameof(SpendingSourceVM.TypeDisplayName),
-            nameof(SpendingSourceVM.SpendingSourceType),
-            nameof(SpendingSourceVM.Name));
+            nameof(AccountVM.TypeDisplayName),
+            nameof(AccountVM.AccountType),
+            nameof(AccountVM.Name));
 
-        var candidateTargets = _mainViewModel.BudgetPanel.SpendingSources
-            .Where(spendingSource => spendingSource.Id != source.Id && spendingSource.IsEnabled)
-            .OrderBy(spendingSource => spendingSource.SpendingSourceType)
-            .ThenBy(spendingSource => spendingSource.Name)
+        var candidateTargets = _mainViewModel.BudgetPanel.Accounts
+            .Where(account => account.Id != source.Id && account.IsEnabled)
+            .OrderBy(account => account.AccountType)
+            .ThenBy(account => account.Name)
             .ToList();
 
         foreach (var candidate in candidateTargets)
@@ -55,7 +55,7 @@ public partial class TransferFundsVM : ObservableObject
 
     public string SourceName { get; }
 
-    public ObservableCollection<SpendingSourceVM> Targets { get; } = [];
+    public ObservableCollection<AccountVM> Targets { get; } = [];
     public ICollectionView TargetsView { get; }
 
     public async Task<TransferFundsResult> SaveAsync()
@@ -70,11 +70,11 @@ public partial class TransferFundsVM : ObservableObject
 
         try
         {
-            var source = await _appData.GetSpendingSourceByIdAsync(_sourceSpendingSourceId);
+            var source = await _appData.GetAccountByIdAsync(_sourceAccountId);
             if (source is null)
-                return TransferFundsResult.Failure("Unable to load the source spending source.");
+                return TransferFundsResult.Failure("Unable to load the source account.");
 
-            var target = await _appData.GetSpendingSourceByIdAsync(input.TargetSpendingSourceId);
+            var target = await _appData.GetAccountByIdAsync(input.TargetAccountId);
             if (target is null)
                 return TransferFundsResult.Failure("Please choose a valid destination account.");
 
@@ -87,7 +87,7 @@ public partial class TransferFundsVM : ObservableObject
                 Name = $"Transfer to {target.Name}",
                 Amount = input.Amount,
                 ExpenseCategory = ExpenseCategory.Savings,
-                SpendingSourceId = source.Id,
+                AccountId = source.Id,
                 ExpenseTagId = expenseTag.Id
             };
 
@@ -98,7 +98,7 @@ public partial class TransferFundsVM : ObservableObject
                 DeductedOn = input.Date,
                 Notes = BuildExpenseNote(target.Name, input.Note),
                 IsForDeletion = false,
-                SpendingSourceId = source.Id
+                AccountId = source.Id
             };
 
             var incomeLog = new IncomeLog
@@ -107,18 +107,18 @@ public partial class TransferFundsVM : ObservableObject
                 Amount = input.Amount,
                 AddedOn = input.Date,
                 Notes = input.Note,
-                SpendingSourceId = target.Id
+                AccountId = target.Id
             };
 
             await _appData.AddExpenseAsync(expense);
             await _appData.AddExpenseLogAsync(expenseLog);
             await _appData.AddIncomeLogAsync(incomeLog);
 
-            ApplyExpenseToSpendingSource(source, input.Amount);
-            ApplyIncomeToSpendingSource(target, input.Amount);
+            ApplyExpenseToAccount(source, input.Amount);
+            ApplyIncomeToAccount(target, input.Amount);
 
-            _appData.UpdateSpendingSource(source);
-            _appData.UpdateSpendingSource(target);
+            _appData.UpdateAccount(source);
+            _appData.UpdateAccount(target);
 
             await _appData.SaveChangesAsync();
 
@@ -211,26 +211,26 @@ public partial class TransferFundsVM : ObservableObject
         return $"Transfer from {sourceName}";
     }
 
-    private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount += amount;
+            account.SpentAmount += amount;
             return;
         }
 
-        spendingSource.Balance -= amount;
+        account.Balance -= amount;
     }
 
-    private static void ApplyIncomeToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyIncomeToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
         }
 
-        spendingSource.Balance += amount;
+        account.Balance += amount;
     }
 
     public readonly record struct TransferFundsResult(bool IsSuccess, string? ErrorMessage)
@@ -248,7 +248,7 @@ public partial class TransferFundsVM : ObservableObject
 
     private readonly record struct TransferFundsInput(
         decimal Amount,
-        int TargetSpendingSourceId,
+        int TargetAccountId,
         DateTime Date,
         string Note);
 }

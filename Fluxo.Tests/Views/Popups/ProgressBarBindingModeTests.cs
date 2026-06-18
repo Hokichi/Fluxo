@@ -6,7 +6,7 @@ namespace Fluxo.Tests.Views.Popups;
 public sealed class ProgressBarBindingModeTests
 {
     private static readonly string AnalyticsXamlPath = ResolveRepoPath("Fluxo", "Views", "Shell", "Main", "Pages", "Analytics.xaml");
-    private static readonly string SpendingSourceDetailPopupXamlPath = ResolveRepoPath("Fluxo", "Views", "Popups", "SpendingSourceDetailPopup.xaml");
+    private static readonly string AccountDetailPopupXamlPath = ResolveRepoPath("Fluxo", "Views", "Popups", "AccountDetailPopup.xaml");
 
     [Fact]
     public void AnalyticsProgressBindings_AreOneWay()
@@ -20,9 +20,9 @@ public sealed class ProgressBarBindingModeTests
     }
 
     [Fact]
-    public void SpendingSourceTrendProgressBindings_AreOneWay()
+    public void AccountTrendProgressBindings_AreOneWay()
     {
-        var xaml = File.ReadAllText(SpendingSourceDetailPopupXamlPath);
+        var xaml = File.ReadAllText(AccountDetailPopupXamlPath);
 
         Assert.Contains("Value=\"{Binding IncomeAmount, Mode=OneWay}\"", xaml);
         Assert.Contains("Value=\"{Binding ExpenseAmount, Mode=OneWay}\"", xaml);

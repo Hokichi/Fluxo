@@ -141,7 +141,7 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
             Amount = expense.Amount,
             ExpenseCategory = expense.ExpenseCategory,
             ExpenseTag = expense.ExpenseTag is null ? new ExpenseTagVM() : MapExpenseTag(expense.ExpenseTag),
-            SpendingSource = expense.SpendingSource is null ? new SpendingSourceVM() : MapSpendingSource(expense.SpendingSource)
+            Account = expense.Account is null ? new AccountVM() : MapAccount(expense.Account)
         };
     }
 
@@ -157,13 +157,13 @@ public partial class PlanningPopupVM : ObservableObject, IDisposable
         };
     }
 
-    private static SpendingSourceVM MapSpendingSource(SpendingSource source)
+    private static AccountVM MapAccount(Account source)
     {
-        return new SpendingSourceVM
+        return new AccountVM
         {
             Id = source.Id,
             Name = source.Name,
-            SpendingSourceType = source.SpendingSourceType,
+            AccountType = source.AccountType,
             AccountLimit = source.AccountLimit,
             SpentAmount = source.SpentAmount,
             Balance = source.Balance,

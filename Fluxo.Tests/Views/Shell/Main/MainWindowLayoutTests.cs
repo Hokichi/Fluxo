@@ -357,21 +357,21 @@ public sealed class MainWindowLayoutTests
         Assert.DoesNotContain("DaySpinnerControlHost", dashboardXaml);
         AssertElementHasName(dashboardXamlDocument, "MainViewModeToggleControl", "ViewModeToggleControlHost");
         AssertElementHasName(dashboardXamlDocument, "Grid", "MainContentGrid");
-        AssertElementHasName(dashboardXamlDocument, "Button", "ViewAllSpendingSourcesButton");
-        AssertElementHasName(dashboardXamlDocument, "Button", "AddSpendingSourceButton");
+        AssertElementHasName(dashboardXamlDocument, "Button", "ViewAllAccountsButton");
+        AssertElementHasName(dashboardXamlDocument, "Button", "AddAccountButton");
         AssertElementHasName(dashboardXamlDocument, "SpentAllowancePanel", "SpentAllowancePanelHost");
         AssertElementHasName(dashboardXamlDocument, "BudgetAllocationPanel", "BudgetAllocationPanelHost");
         AssertElementHasName(dashboardXamlDocument, "SavingGoalsPanel", "SavingGoalsPanelHost");
         Assert.DoesNotContain("NotificationPanelHost", dashboardXaml);
         Assert.DoesNotContain("NotificationPanelPlaceholder", dashboardXaml);
         AssertElementHasName(dashboardXamlDocument, "UpcomingEventsPanel", "UpcomingEventsPanelHost");
-        AssertElementHasName(dashboardXamlDocument, "FadingScrollViewer", "DashboardSpendingSourcesScrollViewer");
-        AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollLeftButton");
-        AssertElementHasName(dashboardXamlDocument, "Button", "DashboardSpendingSourcesScrollRightButton");
+        AssertElementHasName(dashboardXamlDocument, "FadingScrollViewer", "DashboardAccountsScrollViewer");
+        AssertElementHasName(dashboardXamlDocument, "Button", "DashboardAccountsScrollLeftButton");
+        AssertElementHasName(dashboardXamlDocument, "Button", "DashboardAccountsScrollRightButton");
     }
 
     [Fact]
-    public void DashboardSpendingSources_HasOverflowScrollButtonsInMainWindow()
+    public void DashboardAccounts_HasOverflowScrollButtonsInMainWindow()
     {
         var xaml = DashboardXaml.Value;
         var source = File.ReadAllText(ResolveDashboardCodeBehindPath());
@@ -382,13 +382,13 @@ public sealed class MainWindowLayoutTests
 
         Assert.Contains("x:Key=\"AngleLeft\"", icons);
         Assert.Contains("x:Key=\"AngleRight\"", icons);
-        Assert.Contains("x:Key=\"DashboardSpendingSourcesScrollButtonStyle\"", xaml);
-        Assert.Contains("DashboardSpendingSourcesScrollPixels = 10", source);
-        Assert.Contains("DashboardSpendingSourcesScrollIntervalMilliseconds = 10", source);
-        Assert.Contains("_dashboardSpendingSourcesScrollTimer.Tick += OnDashboardSpendingSourcesScrollTimerTick;", source);
-        Assert.Contains("private void OnDashboardSpendingSourcesScrollTimerTick(object? sender, EventArgs e)", source);
-        Assert.Contains("ScrollDashboardSpendingSources(", source);
-        Assert.Contains("DashboardSpendingSourcesScrollViewer.ScrollableWidth > 0", source);
+        Assert.Contains("x:Key=\"DashboardAccountsScrollButtonStyle\"", xaml);
+        Assert.Contains("DashboardAccountsScrollPixels = 10", source);
+        Assert.Contains("DashboardAccountsScrollIntervalMilliseconds = 10", source);
+        Assert.Contains("_dashboardAccountsScrollTimer.Tick += OnDashboardAccountsScrollTimerTick;", source);
+        Assert.Contains("private void OnDashboardAccountsScrollTimerTick(object? sender, EventArgs e)", source);
+        Assert.Contains("ScrollDashboardAccounts(", source);
+        Assert.Contains("DashboardAccountsScrollViewer.ScrollableWidth > 0", source);
     }
 
     private static void AssertElementHasName(XDocument xamlDocument, string elementName, string xName)

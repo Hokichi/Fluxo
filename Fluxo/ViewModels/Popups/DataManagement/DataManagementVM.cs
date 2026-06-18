@@ -33,7 +33,7 @@ public partial class DataManagementVM : ObservableObject
 
         Entities =
         [
-            new(DataManagementEntityKind.SpendingSources, "Spending Sources"),
+            new(DataManagementEntityKind.Accounts, "Accounts"),
             new(DataManagementEntityKind.Expenses, "Expenses"),
             new(DataManagementEntityKind.Incomes, "Incomes"),
             new(DataManagementEntityKind.Tags, "Tags"),
@@ -42,7 +42,7 @@ public partial class DataManagementVM : ObservableObject
             new(DataManagementEntityKind.UserSettings, "User Settings")
         ];
 
-        GetEntity(DataManagementEntityKind.SpendingSources).PropertyChanged += OnSpendingSourcePropertyChanged;
+        GetEntity(DataManagementEntityKind.Accounts).PropertyChanged += OnAccountPropertyChanged;
 
         _manifestAvailableEntities.UnionWith(Entities.Select(entity => entity.EntityKind));
     }
@@ -215,9 +215,9 @@ public partial class DataManagementVM : ObservableObject
 
     private void ApplyDependencyRules()
     {
-        var spendingSources = GetEntity(DataManagementEntityKind.SpendingSources);
-        var canEnableDependents = _manifestAvailableEntities.Contains(DataManagementEntityKind.SpendingSources)
-            && spendingSources.IsChecked;
+        var accounts = GetEntity(DataManagementEntityKind.Accounts);
+        var canEnableDependents = _manifestAvailableEntities.Contains(DataManagementEntityKind.Accounts)
+            && accounts.IsChecked;
         var dependentKinds = new[]
         {
             DataManagementEntityKind.Expenses,
@@ -258,7 +258,7 @@ public partial class DataManagementVM : ObservableObject
             _backupFilePath = value;
     }
 
-    private void OnSpendingSourcePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnAccountPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(DataManagementEntityOptionVM.IsChecked))
             ApplyDependencyRules();

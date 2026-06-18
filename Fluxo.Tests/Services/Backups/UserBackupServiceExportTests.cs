@@ -21,12 +21,12 @@ public sealed class UserBackupServiceExportTests
     public async Task BackupAsync_WhenTagsAreNotSelected_MapsExpensesToDataRestorationTag()
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
-            .Returns([new SpendingSource { Id = 7, Name = "Wallet", SpendingSourceType = SpendingSourceType.Cash }]);
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>())
+            .Returns([new Account { Id = 7, Name = "Wallet", AccountType = AccountType.Cash }]);
         appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
             .Returns([new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff" }]);
         appData.GetExpensesAsync(Arg.Any<CancellationToken>())
-            .Returns([new Expense { Id = 9, SpendingSourceId = 7, ExpenseTagId = 3, Name = "Lunch" }]);
+            .Returns([new Expense { Id = 9, AccountId = 7, ExpenseTagId = 3, Name = "Lunch" }]);
         appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
@@ -37,7 +37,7 @@ public sealed class UserBackupServiceExportTests
             var result = await service.BackupAsync(new UserBackupSelection(new HashSet<DataManagementEntityKind>
             {
                 DataManagementEntityKind.Expenses,
-                DataManagementEntityKind.SpendingSources
+                DataManagementEntityKind.Accounts
             }), tempFile);
 
             Assert.True(result.IsSuccess);
@@ -94,20 +94,20 @@ public sealed class UserBackupServiceExportTests
     public async Task BackupAsync_WhenDeductSourceAppearsAfterDependent_MapsDeductSourceByBackupId()
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetSpendingSourcesAsync(Arg.Any<CancellationToken>())
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>())
             .Returns([
-                new SpendingSource
+                new Account
                 {
                     Id = 11,
                     Name = "Card A",
-                    SpendingSourceType = SpendingSourceType.Credit,
+                    AccountType = AccountType.Credit,
                     DeductSource = 12
                 },
-                new SpendingSource
+                new Account
                 {
                     Id = 12,
                     Name = "Wallet",
-                    SpendingSourceType = SpendingSourceType.Cash
+                    AccountType = AccountType.Cash
                 }
             ]);
 
@@ -118,7 +118,7 @@ public sealed class UserBackupServiceExportTests
         {
             var result = await service.BackupAsync(new UserBackupSelection(new HashSet<DataManagementEntityKind>
             {
-                DataManagementEntityKind.SpendingSources
+                DataManagementEntityKind.Accounts
             }), tempFile);
 
             Assert.True(result.IsSuccess);
@@ -126,8 +126,8 @@ public sealed class UserBackupServiceExportTests
             var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
             Assert.NotNull(document);
 
-            var dependentSource = Assert.Single(document.Entities.SpendingSources, source => source.Name == "Card A");
-            var deductSource = Assert.Single(document.Entities.SpendingSources, source => source.Name == "Wallet");
+            var dependentSource = Assert.Single(document.Entities.Accounts, source => source.Name == "Card A");
+            var deductSource = Assert.Single(document.Entities.Accounts, source => source.Name == "Wallet");
 
             Assert.Equal(deductSource.BackupId, dependentSource.DeductSourceBackupId);
         }
@@ -191,7 +191,7 @@ public sealed class UserBackupServiceExportTests
         {
           "schemaVersion": 1,
           "createdAt": "2026-05-26T00:00:00Z",
-          "includedEntities": [ "expenses", "spendingSources" ],
+          "includedEntities": [ "expenses", "accounts" ],
           "entities": {}
         }
         """);
@@ -202,7 +202,7 @@ public sealed class UserBackupServiceExportTests
             var manifest = await service.ReadManifestAsync(tempFile);
 
             Assert.Contains(DataManagementEntityKind.Expenses, manifest.IncludedEntities);
-            Assert.Contains(DataManagementEntityKind.SpendingSources, manifest.IncludedEntities);
+            Assert.Contains(DataManagementEntityKind.Accounts, manifest.IncludedEntities);
         }
         finally
         {

@@ -38,15 +38,15 @@
         <TextBlock
             Grid.Row="4"
             Style="{StaticResource FieldLabelStyle}"
-            Text="Spending Source" />
+            Text="Account" />
         <ComboBox
             Grid.Row="6"
             DisplayMemberPath="Name"
-            ItemsSource="{Binding SpendingSourcesView}"
-            SelectedItem="{Binding SelectedSpendingSource, Mode=TwoWay}"
+            ItemsSource="{Binding AccountsView}"
+            SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
             Style="{StaticResource FluxoComboBoxStyle}">
             <ComboBox.GroupStyle>
-                <GroupStyle HeaderTemplate="{StaticResource SpendingSourceComboGroupHeaderTemplate}" />
+                <GroupStyle HeaderTemplate="{StaticResource AccountComboGroupHeaderTemplate}" />
             </ComboBox.GroupStyle>
         </ComboBox>
     </Grid>

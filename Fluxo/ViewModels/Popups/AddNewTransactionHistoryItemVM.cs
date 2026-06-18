@@ -10,8 +10,8 @@ public sealed partial class AddNewTransactionHistoryItemVM : ObservableObject
     public bool IsGoalUpdate { get; init; }
     public string Name { get; init; } = string.Empty;
     public decimal Amount { get; init; }
-    public int SpendingSourceId { get; init; }
-    public string SpendingSourceName { get; init; } = string.Empty;
+    public int AccountId { get; init; }
+    public string AccountName { get; init; } = string.Empty;
     public string Note { get; init; } = string.Empty;
     public DateTime Date { get; init; }
     public ExpenseCategory? Category { get; init; }

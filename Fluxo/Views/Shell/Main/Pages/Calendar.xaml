@@ -246,7 +246,7 @@
                             FontFamily="{StaticResource Medium}"
                             FontSize="11"
                             Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding SpendingSourceName}" />
+                            Text="{Binding AccountName}" />
                     </StackPanel>
                     <TextBlock
                         Grid.Column="1"
@@ -274,7 +274,7 @@
                             FontFamily="{StaticResource Medium}"
                             FontSize="11"
                             Foreground="{StaticResource Brush.Text.Secondary}"
-                            Text="{Binding SpendingSourceName}" />
+                            Text="{Binding AccountName}" />
                     </StackPanel>
                     <TextBlock
                         Grid.Column="1"

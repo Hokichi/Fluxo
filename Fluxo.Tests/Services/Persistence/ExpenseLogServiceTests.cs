@@ -16,24 +16,24 @@ public sealed class ExpenseLogServiceTests
     [Fact]
     public async Task DeleteAsync_RestoresBalanceForCheckingSource_AndMarksLogForDeletion()
     {
-        var (sut, unitOfWork, expenseLogs, _, spendingSources) = CreateSut();
+        var (sut, unitOfWork, expenseLogs, _, accounts) = CreateSut();
         var expenseLog = new ExpenseLog
         {
             Id = 44,
-            SpendingSourceId = 7,
+            AccountId = 7,
             Amount = 35m,
             IsForDeletion = false
         };
-        var source = new SpendingSource
+        var source = new Account
         {
             Id = 7,
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = 100m,
             SpentAmount = 12m
         };
         expenseLogs.GetByLogIdAsync(expenseLog.Id, Arg.Any<CancellationToken>())
             .Returns(expenseLog);
-        spendingSources.GetByIdAsync(source.Id, Arg.Any<CancellationToken>())
+        accounts.GetByIdAsync(source.Id, Arg.Any<CancellationToken>())
             .Returns(source);
 
         await sut.DeleteAsync(expenseLog.Id);
@@ -41,7 +41,7 @@ public sealed class ExpenseLogServiceTests
         Assert.True(expenseLog.IsForDeletion);
         Assert.Equal(135m, source.Balance);
         Assert.Equal(12m, source.SpentAmount);
-        spendingSources.Received(1).Update(source);
+        accounts.Received(1).Update(source);
         expenseLogs.Received(1).Update(expenseLog);
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
@@ -49,24 +49,24 @@ public sealed class ExpenseLogServiceTests
     [Fact]
     public async Task DeleteAsync_RestoresSpentAmountForCreditSource_AndMarksLogForDeletion()
     {
-        var (sut, unitOfWork, expenseLogs, _, spendingSources) = CreateSut();
+        var (sut, unitOfWork, expenseLogs, _, accounts) = CreateSut();
         var expenseLog = new ExpenseLog
         {
             Id = 99,
-            SpendingSourceId = 2,
+            AccountId = 2,
             Amount = 30m,
             IsForDeletion = false
         };
-        var source = new SpendingSource
+        var source = new Account
         {
             Id = 2,
-            SpendingSourceType = SpendingSourceType.Credit,
+            AccountType = AccountType.Credit,
             Balance = 500m,
             SpentAmount = 80m
         };
         expenseLogs.GetByLogIdAsync(expenseLog.Id, Arg.Any<CancellationToken>())
             .Returns(expenseLog);
-        spendingSources.GetByIdAsync(source.Id, Arg.Any<CancellationToken>())
+        accounts.GetByIdAsync(source.Id, Arg.Any<CancellationToken>())
             .Returns(source);
 
         await sut.DeleteAsync(expenseLog.Id);
@@ -74,7 +74,7 @@ public sealed class ExpenseLogServiceTests
         Assert.True(expenseLog.IsForDeletion);
         Assert.Equal(500m, source.Balance);
         Assert.Equal(50m, source.SpentAmount);
-        spendingSources.Received(1).Update(source);
+        accounts.Received(1).Update(source);
         expenseLogs.Received(1).Update(expenseLog);
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
@@ -82,12 +82,12 @@ public sealed class ExpenseLogServiceTests
     [Fact]
     public async Task PostTerminationCleanupAsync_RemovesMarkedLogs_WithoutRestoringBalancesAgain()
     {
-        var (sut, unitOfWork, expenseLogs, expenses, spendingSources) = CreateSut();
+        var (sut, unitOfWork, expenseLogs, expenses, accounts) = CreateSut();
         var markedLog = new ExpenseLog
         {
             Id = 101,
             ExpenseId = 30,
-            SpendingSourceId = 7,
+            AccountId = 7,
             Amount = 22m,
             IsForDeletion = true
         };
@@ -103,19 +103,19 @@ public sealed class ExpenseLogServiceTests
 
         expenseLogs.Received(1).Remove(markedLog);
         expenses.Received(1).Remove(Arg.Is<Expense>(expense => expense.Id == markedLog.ExpenseId));
-        spendingSources.DidNotReceiveWithAnyArgs().Update(default!);
+        accounts.DidNotReceiveWithAnyArgs().Update(default!);
         await unitOfWork.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task PostTerminationCleanupAsync_RemovesMarkedIncomeLogs()
     {
-        var (sut, unitOfWork, expenseLogs, expenses, spendingSources) = CreateSut();
+        var (sut, unitOfWork, expenseLogs, expenses, accounts) = CreateSut();
         var incomeLogs = Substitute.For<IIncomeLogRepository>();
         var markedIncomeLog = new IncomeLog
         {
             Id = 88,
-            SpendingSourceId = 7,
+            AccountId = 7,
             Name = "Deleted income",
             Amount = 100m,
             AddedOn = new DateTime(2026, 6, 14),
@@ -134,27 +134,27 @@ public sealed class ExpenseLogServiceTests
         incomeLogs.Received(1).Remove(markedIncomeLog);
         expenseLogs.DidNotReceiveWithAnyArgs().Remove(default!);
         expenses.DidNotReceiveWithAnyArgs().Remove(default!);
-        spendingSources.DidNotReceiveWithAnyArgs().Update(default!);
+        accounts.DidNotReceiveWithAnyArgs().Update(default!);
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     private static (ExpenseLogService Sut, IUnitOfWork UnitOfWork, IExpenseLogRepository ExpenseLogs,
-        IExpenseRepository Expenses, ISpendingSourceRepository SpendingSources) CreateSut()
+        IExpenseRepository Expenses, IAccountRepository Accounts) CreateSut()
     {
         var unitOfWork = Substitute.For<IUnitOfWork>();
         var expenseLogs = Substitute.For<IExpenseLogRepository>();
         var incomeLogs = Substitute.For<IIncomeLogRepository>();
         var expenses = Substitute.For<IExpenseRepository>();
-        var spendingSources = Substitute.For<ISpendingSourceRepository>();
+        var accounts = Substitute.For<IAccountRepository>();
 
         unitOfWork.ExpenseLogs.Returns(expenseLogs);
         unitOfWork.IncomeLogs.Returns(incomeLogs);
         unitOfWork.Expenses.Returns(expenses);
-        unitOfWork.SpendingSources.Returns(spendingSources);
+        unitOfWork.Accounts.Returns(accounts);
         incomeLogs.GetMarkedForDeletionAsync(Arg.Any<CancellationToken>())
             .Returns(Array.Empty<IncomeLog>());
 
         var sut = new ExpenseLogService(new InlineDataOperationRunner(unitOfWork), Substitute.For<IMapper>());
-        return (sut, unitOfWork, expenseLogs, expenses, spendingSources);
+        return (sut, unitOfWork, expenseLogs, expenses, accounts);
     }
 }

@@ -43,9 +43,9 @@ namespace Fluxo.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_RecurringTransactions_SpendingSources_SourceId",
+                        name: "FK_RecurringTransactions_Accounts_SourceId",
                         column: x => x.SourceId,
-                        principalTable: "SpendingSources",
+                        principalTable: "Accounts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -73,7 +73,7 @@ namespace Fluxo.Migrations
                     Amount,
                     COALESCE(RecurringDate, 1),
                     1,
-                    SpendingSourceId,
+                    AccountId,
                     ExpenseTagId,
                     NULL,
                     IsActive
@@ -89,16 +89,16 @@ namespace Fluxo.Migrations
                     Amount NUMERIC NOT NULL,
                     ExpenseCategory INTEGER NOT NULL,
                     ExpenseTagId INTEGER NOT NULL,
-                    SpendingSourceId INTEGER NOT NULL,
+                    AccountId INTEGER NOT NULL,
                     CONSTRAINT FK_Expenses_ExpenseTags_ExpenseTagId FOREIGN KEY (ExpenseTagId) REFERENCES ExpenseTags (Id) ON DELETE RESTRICT,
-                    CONSTRAINT FK_Expenses_SpendingSources_SpendingSourceId FOREIGN KEY (SpendingSourceId) REFERENCES SpendingSources (Id) ON DELETE RESTRICT
+                    CONSTRAINT FK_Expenses_Accounts_AccountId FOREIGN KEY (AccountId) REFERENCES Accounts (Id) ON DELETE RESTRICT
                 );
-                INSERT INTO Expenses_new (Id, Name, Amount, ExpenseCategory, ExpenseTagId, SpendingSourceId)
-                SELECT Id, Name, Amount, ExpenseCategory, ExpenseTagId, SpendingSourceId FROM Expenses;
+                INSERT INTO Expenses_new (Id, Name, Amount, ExpenseCategory, ExpenseTagId, AccountId)
+                SELECT Id, Name, Amount, ExpenseCategory, ExpenseTagId, AccountId FROM Expenses;
                 DROP TABLE Expenses;
                 ALTER TABLE Expenses_new RENAME TO Expenses;
                 CREATE INDEX IX_Expenses_ExpenseTagId ON Expenses (ExpenseTagId);
-                CREATE INDEX IX_Expenses_SpendingSourceId ON Expenses (SpendingSourceId);
+                CREATE INDEX IX_Expenses_AccountId ON Expenses (AccountId);
                 """);
         }
 
@@ -115,11 +115,11 @@ namespace Fluxo.Migrations
                     IsActive INTEGER NOT NULL,
                     Name TEXT NOT NULL,
                     RecurringDate INTEGER NULL,
-                    SpendingSourceId INTEGER NOT NULL,
+                    AccountId INTEGER NOT NULL,
                     CONSTRAINT FK_Expenses_ExpenseTags_ExpenseTagId FOREIGN KEY (ExpenseTagId) REFERENCES ExpenseTags (Id) ON DELETE RESTRICT,
-                    CONSTRAINT FK_Expenses_SpendingSources_SpendingSourceId FOREIGN KEY (SpendingSourceId) REFERENCES SpendingSources (Id) ON DELETE RESTRICT
+                    CONSTRAINT FK_Expenses_Accounts_AccountId FOREIGN KEY (AccountId) REFERENCES Accounts (Id) ON DELETE RESTRICT
                 );
-                INSERT INTO Expenses_old (Id, Amount, ExpenseCategory, ExpenseKind, ExpenseTagId, IsActive, Name, RecurringDate, SpendingSourceId)
+                INSERT INTO Expenses_old (Id, Amount, ExpenseCategory, ExpenseKind, ExpenseTagId, IsActive, Name, RecurringDate, AccountId)
                 SELECT
                     expense.Id,
                     expense.Amount,
@@ -130,7 +130,7 @@ namespace Fluxo.Migrations
                             ELSE 2
                         END
                         FROM RecurringTransactions recurring
-                        WHERE recurring.SourceId = expense.SpendingSourceId
+                        WHERE recurring.SourceId = expense.AccountId
                           AND recurring.TagId = expense.ExpenseTagId
                           AND recurring.Name = expense.Name
                         ORDER BY recurring.Id DESC
@@ -140,7 +140,7 @@ namespace Fluxo.Migrations
                     COALESCE((
                         SELECT recurring.IsEnabled
                         FROM RecurringTransactions recurring
-                        WHERE recurring.SourceId = expense.SpendingSourceId
+                        WHERE recurring.SourceId = expense.AccountId
                           AND recurring.TagId = expense.ExpenseTagId
                           AND recurring.Name = expense.Name
                         ORDER BY recurring.Id DESC
@@ -150,18 +150,18 @@ namespace Fluxo.Migrations
                     (
                         SELECT recurring.RecurringDate
                         FROM RecurringTransactions recurring
-                        WHERE recurring.SourceId = expense.SpendingSourceId
+                        WHERE recurring.SourceId = expense.AccountId
                           AND recurring.TagId = expense.ExpenseTagId
                           AND recurring.Name = expense.Name
                         ORDER BY recurring.Id DESC
                         LIMIT 1
                     ),
-                    expense.SpendingSourceId
+                    expense.AccountId
                 FROM Expenses expense;
                 DROP TABLE Expenses;
                 ALTER TABLE Expenses_old RENAME TO Expenses;
                 CREATE INDEX IX_Expenses_ExpenseTagId ON Expenses (ExpenseTagId);
-                CREATE INDEX IX_Expenses_SpendingSourceId ON Expenses (SpendingSourceId);
+                CREATE INDEX IX_Expenses_AccountId ON Expenses (AccountId);
                 """);
 
             migrationBuilder.DropTable(

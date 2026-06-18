@@ -48,22 +48,22 @@ public sealed class IncomeDetailVMTests
     {
         await RunInStaAsync(() =>
         {
-            var disabledSource = CreateSpendingSource(
-                SpendingSourceType.Checking,
+            var disabledSource = CreateAccount(
+                AccountType.Checking,
                 balance: 1_000m,
                 spentAmount: 0m,
                 id: 1,
                 isEnabled: false);
-            var enabledSource = CreateSpendingSource(
-                SpendingSourceType.Checking,
+            var enabledSource = CreateAccount(
+                AccountType.Checking,
                 balance: 500m,
                 spentAmount: 0m,
                 id: 2,
                 name: "Enabled source");
             var vm = CreateVm([disabledSource, enabledSource], disabledSource);
 
-            Assert.Contains(vm.SpendingSources, source => source.Id == disabledSource.Id);
-            Assert.Equal(disabledSource.Id, vm.SelectedSpendingSource?.Id);
+            Assert.Contains(vm.Accounts, source => source.Id == disabledSource.Id);
+            Assert.Equal(disabledSource.Id, vm.SelectedAccount?.Id);
             return Task.CompletedTask;
         });
     }
@@ -84,7 +84,7 @@ public sealed class IncomeDetailVMTests
             Assert.False(draft.IsExpense);
             Assert.Equal("Salary", draft.Name);
             Assert.Equal(125m, draft.AmountText);
-            Assert.Equal(source.Id, draft.SpendingSourceId);
+            Assert.Equal(source.Id, draft.AccountId);
             Assert.Equal(new DateTime(2026, 5, 1), draft.Date);
             Assert.Equal("Monthly salary", draft.Note);
             Assert.Null(draft.Category);
@@ -93,36 +93,36 @@ public sealed class IncomeDetailVMTests
         });
     }
 
-    private static (IncomeDetailVM Vm, SpendingSourceVM Source) CreateVm(
+    private static (IncomeDetailVM Vm, AccountVM Source) CreateVm(
         decimal sourceBalance = 1_000m,
         decimal incomeAmount = 100m,
-        SpendingSourceType sourceType = SpendingSourceType.Checking,
+        AccountType sourceType = AccountType.Checking,
         decimal spentAmount = 0m,
         string? name = "Salary",
         string? notes = "Monthly salary")
     {
-        var sourceVm = CreateSpendingSource(sourceType, sourceBalance, spentAmount);
+        var sourceVm = CreateAccount(sourceType, sourceBalance, spentAmount);
         return CreateVmWithSource([sourceVm], sourceVm, incomeAmount, name, notes);
     }
 
     private static IncomeDetailVM CreateVm(
-        IReadOnlyList<SpendingSourceVM> spendingSources,
-        SpendingSourceVM incomeSource,
+        IReadOnlyList<AccountVM> accounts,
+        AccountVM incomeSource,
         decimal incomeAmount = 100m,
         string? name = "Salary",
         string? notes = "Monthly salary")
     {
-        return CreateVmWithSource(spendingSources, incomeSource, incomeAmount, name, notes).Vm;
+        return CreateVmWithSource(accounts, incomeSource, incomeAmount, name, notes).Vm;
     }
 
-    private static (IncomeDetailVM Vm, SpendingSourceVM Source) CreateVmWithSource(
-        IReadOnlyList<SpendingSourceVM> spendingSources,
-        SpendingSourceVM incomeSource,
+    private static (IncomeDetailVM Vm, AccountVM Source) CreateVmWithSource(
+        IReadOnlyList<AccountVM> accounts,
+        AccountVM incomeSource,
         decimal incomeAmount,
         string? name,
         string? notes)
     {
-        var main = CreateMainViewModel(spendingSources);
+        var main = CreateMainViewModel(accounts);
         var incomeLog = new IncomeLogVM
         {
             Id = 1,
@@ -130,13 +130,13 @@ public sealed class IncomeDetailVMTests
             Amount = incomeAmount,
             AddedOn = new DateTime(2026, 5, 1),
             Notes = notes!,
-            SpendingSource = incomeSource
+            Account = incomeSource
         };
 
         return (new IncomeDetailVM(main, incomeLog, Substitute.For<IAppDataService>()), incomeSource);
     }
 
-    private static MainVM CreateMainViewModel(IReadOnlyList<SpendingSourceVM> spendingSources)
+    private static MainVM CreateMainViewModel(IReadOnlyList<AccountVM> accounts)
     {
         var messenger = new WeakReferenceMessenger();
         var mapper = Substitute.For<IMapper>();
@@ -147,20 +147,20 @@ public sealed class IncomeDetailVMTests
             new NotificationPanelVM(
                 Substitute.For<IExpenseService>(),
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 dataOperationRunner,
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 Substitute.For<ITagService>(),
                 dataOperationRunner,
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 dataOperationRunner,
                 mapper,
                 messenger),
@@ -173,8 +173,8 @@ public sealed class IncomeDetailVMTests
             new DaySpinnerVM(messenger),
             null);
 
-        foreach (var source in spendingSources)
-            main.BudgetPanel.SpendingSources.Add(source);
+        foreach (var source in accounts)
+            main.BudgetPanel.Accounts.Add(source);
 
         return main;
     }
@@ -196,19 +196,19 @@ public sealed class IncomeDetailVMTests
         return unitOfWork;
     }
 
-    private static SpendingSourceVM CreateSpendingSource(
-        SpendingSourceType sourceType,
+    private static AccountVM CreateAccount(
+        AccountType sourceType,
         decimal balance,
         decimal spentAmount,
         int id = 1,
         bool isEnabled = true,
         string name = "Source")
     {
-        return new SpendingSourceVM
+        return new AccountVM
         {
             Id = id,
             Name = name,
-            SpendingSourceType = sourceType,
+            AccountType = sourceType,
             Balance = balance,
             SpentAmount = spentAmount,
             IsEnabled = isEnabled

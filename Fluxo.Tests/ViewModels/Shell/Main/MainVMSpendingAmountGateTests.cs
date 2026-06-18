@@ -20,9 +20,9 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = -10m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Saving, Balance = 0m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.Checking, Balance = -10m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.Saving, Balance = 0m, IsEnabled = true }
         };
 
         var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
@@ -35,8 +35,8 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = 25m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.Checking, Balance = 25m, IsEnabled = true }
         };
 
         var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
@@ -49,8 +49,8 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = -1m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Credit, AccountLimit = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.BNPL, AccountLimit = -1m, IsEnabled = true }
         };
 
         var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
@@ -63,8 +63,8 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Credit, AccountLimit = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.BNPL, AccountLimit = 500m, IsEnabled = true }
         };
 
         var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, []);
@@ -90,7 +90,7 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true }
         };
         var logs = new[]
         {
@@ -107,7 +107,7 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true }
         };
         var logs = new[]
         {
@@ -124,9 +124,9 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM
+            new AccountVM
             {
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 25m,
                 IsEnabled = false
             }
@@ -150,11 +150,11 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = -10m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Saving, Balance = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = -1m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.Checking, Balance = -10m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.Saving, Balance = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.Credit, AccountLimit = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.BNPL, AccountLimit = -1m, IsEnabled = true }
         };
 
         var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, []);
@@ -167,8 +167,8 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Checking, Balance = 25m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.Checking, Balance = 25m, IsEnabled = true }
         };
 
         var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, []);
@@ -181,8 +181,8 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Credit, AccountLimit = 0m, IsEnabled = true },
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.BNPL, AccountLimit = 500m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Credit, AccountLimit = 0m, IsEnabled = true },
+            new AccountVM { AccountType = AccountType.BNPL, AccountLimit = 500m, IsEnabled = true }
         };
 
         var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, []);
@@ -195,9 +195,9 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM
+            new AccountVM
             {
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 25m,
                 IsEnabled = false
             }
@@ -213,7 +213,7 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true }
         };
         var logs = new[]
         {
@@ -230,7 +230,7 @@ public class MainVMSpendingAmountGateTests
     {
         var sources = new[]
         {
-            new SpendingSourceVM { SpendingSourceType = SpendingSourceType.Cash, Balance = 0m, IsEnabled = true }
+            new AccountVM { AccountType = AccountType.Cash, Balance = 0m, IsEnabled = true }
         };
         var logs = new[]
         {

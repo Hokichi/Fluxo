@@ -37,11 +37,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly HashSet<ExpenseLogVM> _needsVisibleWindow = [];
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
-    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly IAccountService _accountService;
     private readonly ITagService _tagService;
     private readonly HashSet<ExpenseLogVM> _wantsVisibleWindow = [];
     private readonly ObservableCollection<ExpenseLogVM> _wantsSource = [];
-    private readonly ObservableCollection<SpendingSourceVM> _spendingSources = [];
+    private readonly ObservableCollection<AccountVM> _accounts = [];
     private readonly IDialogService? _dialogService;
     private readonly IUiSettleAwaiter? _uiSettleAwaiter;
     private readonly SemaphoreSlim _filterFeedbackGate = new(1, 1);
@@ -60,7 +60,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public BudgetAllocationPanelVM(
         IExpenseLogService expenseLogService,
-        ISpendingSourceService spendingSourceService,
+        IAccountService accountService,
         ITagService tagService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
@@ -71,7 +71,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseLogService = expenseLogService;
-        _spendingSourceService = spendingSourceService;
+        _accountService = accountService;
         _tagService = tagService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
@@ -165,7 +165,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private ExpenseTagVM? _selectedOtherTag;
 
     [ObservableProperty]
-    private int? _selectedSpendingSourceId;
+    private int? _selectedAccountId;
 
     [ObservableProperty]
     private decimal _needsThreshold = 0.5m;
@@ -186,7 +186,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public bool IsSelectedTagInOtherTags => SelectedOtherTag is not null;
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources => _spendingSources;
+    public ObservableCollection<AccountVM> Accounts => _accounts;
 
     public decimal TotalIncomeAmount => _allocationData?.TotalIncomeAmount ?? 0m;
 
@@ -235,8 +235,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
             await _expenseLogService.GetAllAsync(cancellationToken));
         var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
-        var spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
-            await _spendingSourceService.GetAllAsync(cancellationToken));
+        var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
+            await _accountService.GetAllAsync(cancellationToken));
         var tags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
             await _tagService.GetAllAsync(cancellationToken));
 
@@ -251,15 +251,15 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (_allocationData is not null)
             await _allocationData.LoadAsync(cancellationToken);
 
-        _spendingSources.Clear();
-        foreach (var source in spendingSources)
-            _spendingSources.Add(source);
+        _accounts.Clear();
+        foreach (var source in accounts)
+            _accounts.Add(source);
 
-        if (SelectedSpendingSourceId is int selectedId &&
-            _spendingSources.All(source => source.Id != selectedId))
-            SetSelectedSpendingSourceInternal(null);
+        if (SelectedAccountId is int selectedId &&
+            _accounts.All(source => source.Id != selectedId))
+            SetSelectedAccountInternal(null);
         else
-            SynchronizeSpendingSourceSelections(SelectedSpendingSourceId);
+            SynchronizeAccountSelections(SelectedAccountId);
 
         CacheKnownTags(tags);
         ApplyVisibleExpenseLogs();
@@ -287,9 +287,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         QueueFilterRefreshWithFeedback($"Filtering {value?.Name ?? "All"}");
     }
 
-    partial void OnSelectedSpendingSourceIdChanged(int? value)
+    partial void OnSelectedAccountIdChanged(int? value)
     {
-        SynchronizeSpendingSourceSelections(value);
+        SynchronizeAccountSelections(value);
         ResetPaginationWindows();
 
         if (_suppressFilterFeedback)
@@ -299,7 +299,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }
 
         var sourceName = value is int sourceId
-            ? Enumerable.FirstOrDefault<SpendingSourceVM>(_spendingSources, source => source.Id == sourceId)?.Name
+            ? Enumerable.FirstOrDefault<AccountVM>(_accounts, source => source.Id == sourceId)?.Name
             : null;
         QueueFilterRefreshWithFeedback($"Filtering for {sourceName ?? "All sources"}");
     }
@@ -425,23 +425,23 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }
     }
 
-    public void ToggleSelectedSpendingSource(SpendingSourceVM? source)
+    public void ToggleSelectedAccount(AccountVM? source)
     {
         var selectedId = source?.Id;
         if (selectedId is null)
             return;
 
-        SelectedSpendingSourceId = SelectedSpendingSourceId == selectedId
+        SelectedAccountId = SelectedAccountId == selectedId
             ? null
             : selectedId;
     }
 
-    private void SetSelectedSpendingSourceInternal(int? sourceId)
+    private void SetSelectedAccountInternal(int? sourceId)
     {
         _suppressFilterFeedback = true;
         try
         {
-            SelectedSpendingSourceId = sourceId;
+            SelectedAccountId = sourceId;
         }
         finally
         {
@@ -494,11 +494,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                     Amount = log.Amount,
                     AddedOn = log.AddedOn,
                     Notes = log.Notes,
-                    SpendingSource = new SpendingSourceVM
+                    Account = new AccountVM
                     {
-                        Id = log.SpendingSourceId,
-                        Name = log.SpendingSource?.Name ?? string.Empty,
-                        SpendingSourceType = log.SpendingSource?.SpendingSourceType ?? SpendingSourceType.Checking
+                        Id = log.AccountId,
+                        Name = log.Account?.Name ?? string.Empty,
+                        AccountType = log.Account?.AccountType ?? AccountType.Checking
                     }
                 })
                 .ToList();
@@ -590,8 +590,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             expenseLog.Expense?.ExpenseTag?.Id != SelectedTag.Id)
             return false;
 
-        return SelectedSpendingSourceId is null ||
-               expenseLog.SpendingSource?.Id == SelectedSpendingSourceId;
+        return SelectedAccountId is null ||
+               expenseLog.Account?.Id == SelectedAccountId;
     }
 
     private void SynchronizeTagSelections(ExpenseTagVM? selectedTag)
@@ -686,10 +686,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         IsInvestEmpty = Invest.IsEmpty;
     }
 
-    private void SynchronizeSpendingSourceSelections(int? selectedSpendingSourceId)
+    private void SynchronizeAccountSelections(int? selectedAccountId)
     {
-        foreach (var source in _spendingSources)
-            source.IsSelected = selectedSpendingSourceId is int id && source.Id == id;
+        foreach (var source in _accounts)
+            source.IsSelected = selectedAccountId is int id && source.Id == id;
     }
 
     private void ApplyDeletedExpenseLogToUi(ExpenseLogVM expenseLog)
@@ -705,13 +705,13 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         var visibleIncomes = EnumerateVisibleIncomeLogs();
 
         var expenseBySource = visibleExpenses
-            .GroupBy(log => log.SpendingSource?.Id ?? 0)
+            .GroupBy(log => log.Account?.Id ?? 0)
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
         var incomeBySource = visibleIncomes
-            .GroupBy(log => log.SpendingSource?.Id ?? 0)
+            .GroupBy(log => log.Account?.Id ?? 0)
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
 
-        foreach (var source in _spendingSources)
+        foreach (var source in _accounts)
         {
             var expense = expenseBySource.GetValueOrDefault(source.Id);
             var income = incomeBySource.GetValueOrDefault(source.Id);
@@ -777,14 +777,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             UpsertExpenseLog(snapshot);
             ApplyExpenseToTrackedSource(snapshot);
-            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
+            AdjustSourceDifference(snapshot.AccountId, snapshot.DeductedOn, snapshot.Amount);
             RefreshExpenseBucketsFromTrackedLogs();
             return;
         }
 
         RemoveExpenseLog(snapshot.ExpenseLogId);
         RestoreExpenseFromTrackedSource(snapshot);
-        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
+        AdjustSourceDifference(snapshot.AccountId, snapshot.DeductedOn, -snapshot.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
     }
 
@@ -794,13 +794,13 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             UpsertIncomeLog(snapshot);
             ApplyIncomeToTrackedSource(snapshot);
-            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, -snapshot.Amount);
+            AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, -snapshot.Amount);
             return;
         }
 
         RemoveIncomeLog(snapshot.IncomeLogId);
         RestoreIncomeFromTrackedSource(snapshot);
-        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, snapshot.Amount);
+        AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, snapshot.Amount);
     }
 
     private void ApplyEditedExpenseAction(EditExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
@@ -811,8 +811,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         UpsertExpenseLog(target);
         RestoreExpenseFromTrackedSource(previous);
         ApplyExpenseToTrackedSource(target);
-        AdjustSourceDifference(previous.SpendingSourceId, previous.DeductedOn, -previous.Amount);
-        AdjustSourceDifference(target.SpendingSourceId, target.DeductedOn, target.Amount);
+        AdjustSourceDifference(previous.AccountId, previous.DeductedOn, -previous.Amount);
+        AdjustSourceDifference(target.AccountId, target.DeductedOn, target.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
     }
 
@@ -824,8 +824,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         UpsertIncomeLog(target);
         RestoreIncomeFromTrackedSource(previous);
         ApplyIncomeToTrackedSource(target);
-        AdjustSourceDifference(previous.SpendingSourceId, previous.AddedOn, previous.Amount);
-        AdjustSourceDifference(target.SpendingSourceId, target.AddedOn, -target.Amount);
+        AdjustSourceDifference(previous.AccountId, previous.AddedOn, previous.Amount);
+        AdjustSourceDifference(target.AccountId, target.AddedOn, -target.Amount);
     }
 
     private void ApplyDeletedExpenseAction(DeleteExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
@@ -837,14 +837,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             RemoveExpenseLog(snapshot.ExpenseLogId);
             RestoreExpenseFromTrackedSource(snapshot);
-            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, snapshot.Amount);
+            AdjustSourceDifference(snapshot.AccountId, snapshot.DeductedOn, snapshot.Amount);
             RefreshExpenseBucketsFromTrackedLogs();
             return;
         }
 
         UpsertExpenseLog(snapshot);
         ApplyExpenseToTrackedSource(snapshot);
-        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.DeductedOn, -snapshot.Amount);
+        AdjustSourceDifference(snapshot.AccountId, snapshot.DeductedOn, -snapshot.Amount);
         RefreshExpenseBucketsFromTrackedLogs();
     }
 
@@ -856,22 +856,22 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             RemoveIncomeLog(snapshot.IncomeLogId);
             RestoreIncomeFromTrackedSource(snapshot);
-            AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, snapshot.Amount);
+            AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, snapshot.Amount);
             return;
         }
 
         UpsertIncomeLog(snapshot);
         ApplyIncomeToTrackedSource(snapshot);
-        AdjustSourceDifference(snapshot.SpendingSourceId, snapshot.AddedOn, -snapshot.Amount);
+        AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, -snapshot.Amount);
     }
 
     private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount += snapshot.Amount;
             return;
@@ -882,11 +882,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void RestoreExpenseFromTrackedSource(ExpenseLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
             return;
@@ -897,11 +897,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void ApplyIncomeToTrackedSource(IncomeLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
             return;
@@ -912,11 +912,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void RestoreIncomeFromTrackedSource(IncomeLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount += snapshot.Amount;
             return;
@@ -930,7 +930,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (!IsDateVisible(occurredOn))
             return;
 
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == sourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == sourceId);
         if (source is null)
             return;
 
@@ -1126,7 +1126,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             expenseLog.Expense?.Name ?? "Expense",
             expenseLog.Amount,
             expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
-            expenseLog.SpendingSource?.Id ?? 0,
+            expenseLog.Account?.Id ?? 0,
             expenseLog.Expense?.ExpenseTag?.Id ?? 0,
             expenseLog.DeductedOn,
             expenseLog.Notes,
@@ -1135,11 +1135,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private ExpenseLogVM ToExpenseLogVm(ExpenseLogMemorySnapshot snapshot, ExpenseLogVM? existing)
     {
-        var knownSpendingSource = _spendingSources.FirstOrDefault(source => source.Id == snapshot.SpendingSourceId);
-        var existingSpendingSource = existing?.SpendingSource;
-        var resolvedSpendingSourceType = knownSpendingSource?.SpendingSourceType ??
-                                         existingSpendingSource?.SpendingSourceType ??
-                                         SpendingSourceType.Checking;
+        var knownAccount = _accounts.FirstOrDefault(source => source.Id == snapshot.AccountId);
+        var existingAccount = existing?.Account;
+        var resolvedAccountType = knownAccount?.AccountType ??
+                                         existingAccount?.AccountType ??
+                                         AccountType.Checking;
 
         var knownTag = _knownTagsById.GetValueOrDefault(snapshot.TagId);
         var existingTag = existing?.Expense?.ExpenseTag;
@@ -1151,11 +1151,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             DeductedOn = snapshot.DeductedOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
-            SpendingSource = new SpendingSourceVM
+            Account = new AccountVM
             {
-                Id = snapshot.SpendingSourceId,
-                Name = knownSpendingSource?.Name ?? existingSpendingSource?.Name ?? string.Empty,
-                SpendingSourceType = resolvedSpendingSourceType
+                Id = snapshot.AccountId,
+                Name = knownAccount?.Name ?? existingAccount?.Name ?? string.Empty,
+                AccountType = resolvedAccountType
             },
             Expense = new ExpenseVM
             {
@@ -1184,9 +1184,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,
-            SpendingSource = new SpendingSourceVM
+            Account = new AccountVM
             {
-                Id = snapshot.SpendingSourceId
+                Id = snapshot.AccountId
             }
         };
     }

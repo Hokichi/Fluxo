@@ -13,7 +13,7 @@ public sealed class DtoViewModelProfile : Profile
         CreateMap<IncomeLogDto, IncomeLogVM>().ReverseMap();
         CreateMap<ExpenseTagDto, ExpenseTagVM>().ReverseMap();
         CreateMap<SavingGoalDto, SavingGoalVM>().ReverseMap();
-        CreateMap<SpendingSourceDto, SpendingSourceVM>().ReverseMap();
+        CreateMap<AccountDto, AccountVM>().ReverseMap();
         CreateMap<RecurringTransactionDto, RecurringTransactionVM>().ReverseMap();
         CreateMap<UserSettingsDto, UserSettingsVM>().ReverseMap();
     }

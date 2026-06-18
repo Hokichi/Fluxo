@@ -49,7 +49,7 @@
                     IsChecked="True"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource TabButtonStyle}"
-                    Tag="Spending Sources">
+                    Tag="Accounts">
                     <components:Icon
                         Width="12"
                         Path="{StaticResource BookDollar}"

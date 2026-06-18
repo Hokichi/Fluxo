@@ -673,6 +673,8 @@ public partial class App : Application
             }
 
             var appliedMigrations = await TryGetAppliedMigrationsAsync(dbContext, ct);
+            await NormalizeLegacyAccountSchemaAsync(dbContext, allMigrations, appliedMigrations, ct);
+            appliedMigrations = await TryGetAppliedMigrationsAsync(dbContext, ct);
 
             if (appliedMigrations.Count == 0)
             {
@@ -695,6 +697,104 @@ public partial class App : Application
 
             await dbContext.Database.MigrateAsync(ct);
         });
+    }
+
+    private static async Task NormalizeLegacyAccountSchemaAsync(
+        FluxoDbContext dbContext,
+        IReadOnlyList<string> allMigrations,
+        IReadOnlyCollection<string> appliedMigrations,
+        CancellationToken cancellationToken)
+    {
+        var legacyEntityName = "Spending" + "Source";
+        var legacyTableName = legacyEntityName + "s";
+        var hasLegacyTable = await TableExistsAsync(dbContext, legacyTableName, cancellationToken);
+        var hasCurrentTable = await TableExistsAsync(dbContext, "Accounts", cancellationToken);
+
+        if (hasLegacyTable && !hasCurrentTable)
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys=OFF;", cancellationToken);
+            try
+            {
+                var renameTableSql = "ALTER TABLE \"" + legacyTableName + "\" RENAME TO \"Accounts\";";
+                await dbContext.Database.ExecuteSqlRawAsync(renameTableSql, cancellationToken);
+                await RenameColumnIfExistsAsync(dbContext, "Accounts", legacyEntityName + "Type", "AccountType",
+                    cancellationToken);
+                await RenameColumnIfExistsAsync(dbContext, "Expenses", legacyEntityName + "Id", "AccountId",
+                    cancellationToken);
+                await RenameColumnIfExistsAsync(dbContext, "ExpenseLogs", legacyEntityName + "Id", "AccountId",
+                    cancellationToken);
+                await RenameColumnIfExistsAsync(dbContext, "IncomeLogs", legacyEntityName + "Id", "AccountId",
+                    cancellationToken);
+            }
+            finally
+            {
+                await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys=ON;", cancellationToken);
+            }
+        }
+
+        if (appliedMigrations.Count == 0)
+            return;
+
+        await RemapLegacyAccountMigrationHistoryAsync(dbContext, allMigrations, cancellationToken);
+    }
+
+    private static async Task RenameColumnIfExistsAsync(
+        FluxoDbContext dbContext,
+        string tableName,
+        string legacyColumnName,
+        string currentColumnName,
+        CancellationToken cancellationToken)
+    {
+        if (!await ColumnExistsAsync(dbContext, tableName, legacyColumnName, cancellationToken) ||
+            await ColumnExistsAsync(dbContext, tableName, currentColumnName, cancellationToken))
+            return;
+
+        var renameColumnSql = "ALTER TABLE \"" + tableName + "\" RENAME COLUMN \"" + legacyColumnName +
+                              "\" TO \"" + currentColumnName + "\";";
+        await dbContext.Database.ExecuteSqlRawAsync(renameColumnSql, cancellationToken);
+    }
+
+    private static async Task RemapLegacyAccountMigrationHistoryAsync(
+        FluxoDbContext dbContext,
+        IReadOnlyCollection<string> allMigrations,
+        CancellationToken cancellationToken)
+    {
+        var legacyEntityName = "Spending" + "Source";
+        var legacyMigrationPairs = new[]
+        {
+            ("20260401093922_AddShowOnUITo" + legacyEntityName, "20260401093922_AddShowOnUIToAccount"),
+            ("20260411142128_AddIsEnabledTo" + legacyEntityName, "20260411142128_AddIsEnabledToAccount"),
+            ("20260415014219_AddIsForDeletionTo" + legacyEntityName, "20260415014219_AddIsForDeletionToAccount"),
+            ("20260416153000_AddIconNameAndMonthlyDueDateTo" + legacyEntityName,
+                "20260416153000_AddIconNameAndMonthlyDueDateToAccount")
+        };
+
+        foreach (var (legacyMigrationId, currentMigrationId) in legacyMigrationPairs)
+        {
+            if (!allMigrations.Contains(currentMigrationId))
+                continue;
+
+            await dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"""
+                 INSERT OR IGNORE INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                 SELECT {currentMigrationId}, "ProductVersion"
+                 FROM "__EFMigrationsHistory"
+                 WHERE "MigrationId" = {legacyMigrationId};
+                 """,
+                cancellationToken);
+
+            await dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"""
+                 DELETE FROM "__EFMigrationsHistory"
+                 WHERE "MigrationId" = {legacyMigrationId}
+                   AND EXISTS (
+                       SELECT 1
+                       FROM "__EFMigrationsHistory"
+                       WHERE "MigrationId" = {currentMigrationId}
+                   );
+                 """,
+                cancellationToken);
+        }
     }
 
     private static async Task CreateCurrentSchemaAndSeedMigrationHistoryAsync(
@@ -821,9 +921,9 @@ public partial class App : Application
         if (hasCreatedOnColumn)
             return "20260421180000_AddSavingGoalCreatedOn";
 
-        var hasMonthlyDueDate = await ColumnExistsAsync(dbContext, "SpendingSources", "MonthlyDueDate", cancellationToken);
+        var hasMonthlyDueDate = await ColumnExistsAsync(dbContext, "Accounts", "MonthlyDueDate", cancellationToken);
         var hasIsSystemTag = await ColumnExistsAsync(dbContext, "ExpenseTags", "IsSystemTag", cancellationToken);
-        var hasDeductSource = await ColumnExistsAsync(dbContext, "SpendingSources", "DeductSource", cancellationToken);
+        var hasDeductSource = await ColumnExistsAsync(dbContext, "Accounts", "DeductSource", cancellationToken);
         var hasNotificationsTable = await TableExistsAsync(dbContext, "Notifications", cancellationToken);
         var hasIconName = await ColumnExistsAsync(dbContext, "ExpenseTags", "IconName", cancellationToken);
 
@@ -832,7 +932,7 @@ public partial class App : Application
 
         if (hasMonthlyDueDate && hasIsSystemTag && hasDeductSource && hasNotificationsTable)
         {
-            var accountLimitType = await GetColumnTypeAsync(dbContext, "SpendingSources", "AccountLimit", cancellationToken);
+            var accountLimitType = await GetColumnTypeAsync(dbContext, "Accounts", "AccountLimit", cancellationToken);
             if (string.Equals(accountLimitType, "NUMERIC", StringComparison.OrdinalIgnoreCase))
                 return "20260419153000_ConvertMoneyColumnsToNumeric";
 
@@ -844,18 +944,18 @@ public partial class App : Application
 
         if (hasMonthlyDueDate)
         {
-            var monthlyDueDateNullable = await IsColumnNullableAsync(dbContext, "SpendingSources", "MonthlyDueDate", cancellationToken);
+            var monthlyDueDateNullable = await IsColumnNullableAsync(dbContext, "Accounts", "MonthlyDueDate", cancellationToken);
             if (monthlyDueDateNullable is true)
                 return "20260416170000_MakeMonthlyDueDateNullable";
 
-            return "20260416153000_AddIconNameAndMonthlyDueDateToSpendingSource";
+            return "20260416153000_AddIconNameAndMonthlyDueDateToAccount";
         }
 
-        if (await ColumnExistsAsync(dbContext, "SpendingSources", "IsForDeletion", cancellationToken))
-            return "20260415014219_AddIsForDeletionToSpendingSource";
+        if (await ColumnExistsAsync(dbContext, "Accounts", "IsForDeletion", cancellationToken))
+            return "20260415014219_AddIsForDeletionToAccount";
 
-        if (await ColumnExistsAsync(dbContext, "SpendingSources", "IsEnabled", cancellationToken))
-            return "20260411142128_AddIsEnabledToSpendingSource";
+        if (await ColumnExistsAsync(dbContext, "Accounts", "IsEnabled", cancellationToken))
+            return "20260411142128_AddIsEnabledToAccount";
 
         if (await ColumnExistsAsync(dbContext, "ExpenseLogs", "IsForDeletion", cancellationToken))
             return "20260408110007_AddIsForDeletionToExpenseLog";
@@ -863,8 +963,8 @@ public partial class App : Application
         if (await TableExistsAsync(dbContext, "UserSettings", cancellationToken))
             return "20260408105340_AddUserSettings";
 
-        if (await ColumnExistsAsync(dbContext, "SpendingSources", "ShowOnUI", cancellationToken))
-            return "20260401093922_AddShowOnUIToSpendingSource";
+        if (await ColumnExistsAsync(dbContext, "Accounts", "ShowOnUI", cancellationToken))
+            return "20260401093922_AddShowOnUIToAccount";
 
         return null;
     }

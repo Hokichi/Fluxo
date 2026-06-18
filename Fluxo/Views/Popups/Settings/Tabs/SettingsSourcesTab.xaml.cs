@@ -25,7 +25,7 @@ public partial class SettingsSourcesTab : UserControl
 
         if (action == SettingsBatchAction.Delete)
         {
-            var selectedItems = _viewModel.SpendingSources.Where(item => item.IsChecked).ToList();
+            var selectedItems = _viewModel.Accounts.Where(item => item.IsChecked).ToList();
             if (selectedItems.Count == 1)
             {
                 var selectedItem = selectedItems[0];
@@ -61,7 +61,7 @@ public partial class SettingsSourcesTab : UserControl
         if (_viewModel is null || !TryParseChecksToggle(sender, out var isEnabled))
             return;
 
-        _viewModel.IsSpendingSourceChecksEnabled = isEnabled;
+        _viewModel.IsAccountChecksEnabled = isEnabled;
         if (!isEnabled)
             _viewModel.ClearSelections();
     }
@@ -79,13 +79,13 @@ public partial class SettingsSourcesTab : UserControl
         if (_viewModel is null)
             return;
 
-        await _viewModel.OpenAddSpendingSourceAsync();
+        await _viewModel.OpenAddAccountAsync();
     }
 
     private async void OnRowActionClick(object sender, RoutedEventArgs e)
     {
         if (_viewModel is null ||
-            sender is not FrameworkElement { DataContext: SettingsSpendingSourceItemVM sourceItem } ||
+            sender is not FrameworkElement { DataContext: SettingsAccountItemVM sourceItem } ||
             !TryParseBatchAction(sender, out var action))
             return;
 
@@ -106,7 +106,7 @@ public partial class SettingsSourcesTab : UserControl
         var originalSource = e.OriginalSource as DependencyObject;
 
         if (_viewModel is null ||
-            sender is not FrameworkElement { DataContext: SettingsSpendingSourceItemVM sourceItem } ||
+            sender is not FrameworkElement { DataContext: SettingsAccountItemVM sourceItem } ||
             ShouldIgnoreRowClick(originalSource))
             return;
 
@@ -115,7 +115,7 @@ public partial class SettingsSourcesTab : UserControl
         if (e.ClickCount < 2 || IsCheckBoxClick(originalSource))
             return;
 
-        await _viewModel.OpenSpendingSourceDetailAsync(sourceItem.Id);
+        await _viewModel.OpenAccountDetailAsync(sourceItem.Id);
     }
 
     private static bool TryParseBatchAction(object sender, out SettingsBatchAction action)

@@ -25,11 +25,11 @@ public class PlanningReportVMTests
 
         income.Amount = 999m;
         income.Notes = "Mutated income";
-        income.SpendingSource.Name = "Mutated income source";
+        income.Account.Name = "Mutated income source";
         expense.Amount = 888m;
         expense.Name = "Mutated expense";
         expense.ExpenseTag.Name = "Mutated tag";
-        expense.SpendingSource.Name = "Mutated expense source";
+        expense.Account.Name = "Mutated expense source";
         popup.Incomes.Clear();
         popup.Expenses.Clear();
 
@@ -39,16 +39,16 @@ public class PlanningReportVMTests
         Assert.Single(report.Expenses);
         Assert.Equal(125m, report.Incomes[0].Amount);
         Assert.Equal("Income 1", report.Incomes[0].Notes);
-        Assert.Equal("Income Source 1", report.Incomes[0].SpendingSource.Name);
+        Assert.Equal("Income Source 1", report.Incomes[0].Account.Name);
         Assert.Equal(200m, report.Expenses[0].Amount);
         Assert.Equal("Rent", report.Expenses[0].Name);
         Assert.Equal("Tag 2", report.Expenses[0].ExpenseTag.Name);
-        Assert.Equal("Expense Source 2", report.Expenses[0].SpendingSource.Name);
+        Assert.Equal("Expense Source 2", report.Expenses[0].Account.Name);
         Assert.NotSame(income, report.Incomes[0]);
-        Assert.NotSame(income.SpendingSource, report.Incomes[0].SpendingSource);
+        Assert.NotSame(income.Account, report.Incomes[0].Account);
         Assert.NotSame(expense, report.Expenses[0]);
         Assert.NotSame(expense.ExpenseTag, report.Expenses[0].ExpenseTag);
-        Assert.NotSame(expense.SpendingSource, report.Expenses[0].SpendingSource);
+        Assert.NotSame(expense.Account, report.Expenses[0].Account);
         Assert.Equal(45, report.NeedsPercent);
         Assert.Equal(35, report.WantsPercent);
         Assert.Equal(20, report.InvestPercent);
@@ -172,11 +172,11 @@ public class PlanningReportVMTests
             Amount = amount,
             AddedOn = DateTime.UnixEpoch.AddDays(id),
             Notes = $"Income {id}",
-            SpendingSource = new SpendingSourceVM
+            Account = new AccountVM
             {
                 Id = id,
                 Name = $"Income Source {id}",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 500m,
                 IsEnabled = true,
                 PinnedOnUI = true
@@ -203,11 +203,11 @@ public class PlanningReportVMTests
                 HexCode = "#000000",
                 IsSystemTag = false
             },
-            SpendingSource = new SpendingSourceVM
+            Account = new AccountVM
             {
                 Id = id,
                 Name = $"Expense Source {id}",
-                SpendingSourceType = SpendingSourceType.Checking,
+                AccountType = AccountType.Checking,
                 Balance = 1000m,
                 IsEnabled = true,
                 PinnedOnUI = true

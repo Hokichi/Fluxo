@@ -87,11 +87,11 @@ public sealed class QuickSetupWizardVMTests
     }
 
     [Fact]
-    public void GoBack_FromPreferencesWithoutSpendingSources_ReturnsToSpendingSources()
+    public void GoBack_FromPreferencesWithoutAccounts_ReturnsToAccounts()
     {
         var viewModel = CreateViewModel();
         viewModel.CurrentStepIndex = 6;
-        viewModel.HasSpendingSources = false;
+        viewModel.HasAccounts = false;
 
         viewModel.GoBack();
 
@@ -99,7 +99,7 @@ public sealed class QuickSetupWizardVMTests
     }
 
     [Fact]
-    public void MiddlePageSidebar_HidesBudgetAllocationWhenThereAreNoSpendingSources()
+    public void MiddlePageSidebar_HidesBudgetAllocationWhenThereAreNoAccounts()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File(
             "Fluxo",
@@ -115,12 +115,12 @@ public sealed class QuickSetupWizardVMTests
         budgetAllocationSidebarBlock = budgetAllocationSidebarBlock[
             budgetAllocationSidebarBlock.LastIndexOf("<!--  Step 4  -->", StringComparison.Ordinal)..];
         Assert.Contains(
-            "Visibility=\"{Binding HasSpendingSources, Converter={StaticResource BoolToVisibilityConverter}}\"",
+            "Visibility=\"{Binding HasAccounts, Converter={StaticResource BoolToVisibilityConverter}}\"",
             budgetAllocationSidebarBlock);
     }
 
     [Fact]
-    public void WizardNextClick_SkipsToPreferencesWhenThereAreNoSpendingSources()
+    public void WizardNextClick_SkipsToPreferencesWhenThereAreNoAccounts()
     {
         var source = File.ReadAllText(RepositoryPaths.File(
             "Fluxo",
@@ -213,8 +213,8 @@ public sealed class QuickSetupWizardVMTests
         var viewModel = new QuickSetupWizardBudgetAllocationVM(
             new AppDataService(unitOfWork),
             new WeakReferenceMessenger());
-        viewModel.Receive(new QuickSetupWizardSpendingSourcesChangedMessage(
-            new QuickSetupWizardSpendingSourcesChanged(1, true, 1000m)));
+        viewModel.Receive(new QuickSetupWizardAccountsChangedMessage(
+            new QuickSetupWizardAccountsChanged(1, true, 1000m)));
 
         await viewModel.LoadAsync();
 
@@ -277,14 +277,14 @@ public sealed class QuickSetupWizardVMTests
         var messenger = new WeakReferenceMessenger();
         var greeting = new QuickSetupWizardGreetingPageVM();
         var name = new QuickSetupWizardNamePageVM(appData, messenger);
-        var spendingSources = new QuickSetupWizardSpendingSourcesVM(null!, appData, messenger);
+        var accounts = new QuickSetupWizardAccountsVM(null!, appData, messenger);
         var fixedExpenses = new QuickSetupWizardFixedExpensesVM(null!, appData, messenger);
         var savingGoals = new QuickSetupWizardSavingGoalsVM(null!, appData, messenger);
         var budget = new QuickSetupWizardBudgetAllocationVM(appData, messenger);
         var notification = new QuickSetupWizardNotificationVM(appData, messenger);
         var summary = new QuickSetupWizardSummaryVM(messenger);
         var middle = new QuickSetupWizardMiddlePageVM(
-            spendingSources,
+            accounts,
             fixedExpenses,
             savingGoals,
             budget,
@@ -326,7 +326,7 @@ public sealed class QuickSetupWizardVMTests
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
         public IExpenseTagRepository ExpenseTags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
-        public ISpendingSourceRepository SpendingSources => throw new NotSupportedException();
+        public IAccountRepository Accounts => throw new NotSupportedException();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
         public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => userSettingsRepository;

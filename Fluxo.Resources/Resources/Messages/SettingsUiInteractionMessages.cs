@@ -2,10 +2,10 @@ namespace Fluxo.Resources.Resources.Messages;
 
 public enum SettingsDialogRequestType
 {
-    AddSpendingSource,
+    AddAccount,
     AddRecurringTransaction,
     AddSavingGoal,
-    SpendingSourceDetail,
+    AccountDetail,
     AddTag,
     FeaturePlaceholder
 }

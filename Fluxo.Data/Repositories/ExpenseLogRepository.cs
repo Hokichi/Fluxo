@@ -47,7 +47,7 @@ public sealed class ExpenseLogRepository(FluxoDbContext dbContext)
             .Include(log => log.Expense)
             .ThenInclude(e => e.ExpenseTag)
             .Include(log => log.Expense)
-            .ThenInclude(e => e.SpendingSource)
-            .Include(log => log.SpendingSource);
+            .ThenInclude(e => e.Account)
+            .Include(log => log.Account);
     }
 }

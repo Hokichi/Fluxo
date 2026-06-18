@@ -131,7 +131,7 @@ public sealed class DataRestorationTagMigrationTests
         services.AddScoped<IIncomeLogRepository, IncomeLogRepository>();
         services.AddScoped<IExpenseTagRepository, ExpenseTagRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
-        services.AddScoped<ISpendingSourceRepository, SpendingSourceRepository>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();

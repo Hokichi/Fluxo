@@ -220,19 +220,19 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
 
     private static async Task<bool> ProcessPaymentAsync(
         IUnitOfWork unitOfWork,
-        int spendingSourceId,
+        int accountId,
         CancellationToken cancellationToken)
     {
-        var targetSource = await unitOfWork.SpendingSources.GetByIdAsync(spendingSourceId, cancellationToken);
+        var targetSource = await unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken);
         if (targetSource is null ||
-            targetSource.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL) ||
+            targetSource.AccountType is not (AccountType.Credit or AccountType.BNPL) ||
             targetSource.DeductSource is not > 0 ||
             targetSource.SpentAmount <= 0m)
         {
             return false;
         }
 
-        var deductingSource = await unitOfWork.SpendingSources.GetByIdAsync(targetSource.DeductSource.Value, cancellationToken);
+        var deductingSource = await unitOfWork.Accounts.GetByIdAsync(targetSource.DeductSource.Value, cancellationToken);
         if (deductingSource is null)
             return false;
 
@@ -247,7 +247,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             Name = $"Payment to {targetSource.Name}",
             Amount = amount,
             ExpenseCategory = ExpenseCategory.Savings,
-            SpendingSourceId = deductingSource.Id,
+            AccountId = deductingSource.Id,
             ExpenseTagId = paymentTag.Id
         };
 
@@ -256,7 +256,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         var expenseLog = new ExpenseLog
         {
             Expense = expense,
-            SpendingSourceId = deductingSource.Id,
+            AccountId = deductingSource.Id,
             Amount = amount,
             DeductedOn = processedOn,
             Notes = $"Payment to {targetSource.Name}",
@@ -266,7 +266,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
 
         var incomeLog = new IncomeLog
         {
-            SpendingSourceId = targetSource.Id,
+            AccountId = targetSource.Id,
             Name = $"Payment from {deductingSource.Name}",
             Amount = amount,
             AddedOn = processedOn,
@@ -274,10 +274,10 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         };
         await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
 
-        ApplyExpenseToSpendingSource(deductingSource, amount);
-        ApplyIncomeToSpendingSource(targetSource, amount);
-        unitOfWork.SpendingSources.Update(deductingSource);
-        unitOfWork.SpendingSources.Update(targetSource);
+        ApplyExpenseToAccount(deductingSource, amount);
+        ApplyIncomeToAccount(targetSource, amount);
+        unitOfWork.Accounts.Update(deductingSource);
+        unitOfWork.Accounts.Update(targetSource);
 
         return true;
     }
@@ -297,7 +297,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             unitOfWork.RecurringTransactions.Update(recurring);
         }
 
-        var source = await unitOfWork.SpendingSources.GetByIdAsync(decision.SelectedSourceId.Value, cancellationToken);
+        var source = await unitOfWork.Accounts.GetByIdAsync(decision.SelectedSourceId.Value, cancellationToken);
         if (source is null)
             return false;
 
@@ -327,7 +327,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
     private static async Task<bool> AddRecurringExpenseLogAsync(
         IUnitOfWork unitOfWork,
         RecurringTransaction recurring,
-        SpendingSource source,
+        Account source,
         decimal amount,
         int? selectedTagId,
         CancellationToken cancellationToken)
@@ -344,48 +344,48 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             Name = recurring.Name,
             Amount = amount,
             ExpenseCategory = ExpenseCategory.Needs,
-            SpendingSourceId = source.Id,
+            AccountId = source.Id,
             ExpenseTagId = tag.Id
         };
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
         await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
         {
             Expense = expense,
-            SpendingSourceId = source.Id,
+            AccountId = source.Id,
             Amount = amount,
             DeductedOn = DateTime.Now,
             Notes = recurring.Name,
             IsForDeletion = false
         }, cancellationToken);
-        ApplyExpenseToSpendingSource(source, amount);
-        unitOfWork.SpendingSources.Update(source);
+        ApplyExpenseToAccount(source, amount);
+        unitOfWork.Accounts.Update(source);
         return true;
     }
 
     private static async Task<bool> AddRecurringIncomeLogAsync(
         IUnitOfWork unitOfWork,
         RecurringTransaction recurring,
-        SpendingSource source,
+        Account source,
         decimal amount,
         CancellationToken cancellationToken)
     {
         await unitOfWork.IncomeLogs.AddAsync(new IncomeLog
         {
-            SpendingSourceId = source.Id,
+            AccountId = source.Id,
             Name = recurring.Name,
             Amount = amount,
             AddedOn = DateTime.Now,
             Notes = string.Empty
         }, cancellationToken);
-        ApplyIncomeToSpendingSource(source, amount);
-        unitOfWork.SpendingSources.Update(source);
+        ApplyIncomeToAccount(source, amount);
+        unitOfWork.Accounts.Update(source);
         return true;
     }
 
     private static async Task<bool> AddRecurringGoalUpdateAsync(
         IUnitOfWork unitOfWork,
         RecurringTransaction recurring,
-        SpendingSource source,
+        Account source,
         decimal amount,
         int? selectedGoalId,
         CancellationToken cancellationToken)
@@ -406,14 +406,14 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             Name = recurring.Name,
             Amount = amount,
             ExpenseCategory = ExpenseCategory.Savings,
-            SpendingSourceId = source.Id,
+            AccountId = source.Id,
             ExpenseTagId = goalUpdateTag.Id
         };
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
         await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
         {
             Expense = expense,
-            SpendingSourceId = source.Id,
+            AccountId = source.Id,
             Amount = amount,
             DeductedOn = DateTime.Now,
             Notes = recurring.Name,
@@ -421,8 +421,8 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         }, cancellationToken);
         goal.CurrentAmount += amount;
         unitOfWork.SavingGoals.Update(goal);
-        ApplyExpenseToSpendingSource(source, amount);
-        unitOfWork.SpendingSources.Update(source);
+        ApplyExpenseToAccount(source, amount);
+        unitOfWork.Accounts.Update(source);
         return true;
     }
 
@@ -435,25 +435,25 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             .FirstOrDefault();
     }
 
-    private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount += amount;
+            account.SpentAmount += amount;
             return;
         }
 
-        spendingSource.Balance -= amount;
+        account.Balance -= amount;
     }
 
-    private static void ApplyIncomeToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyIncomeToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
         }
 
-        spendingSource.Balance += amount;
+        account.Balance += amount;
     }
 }

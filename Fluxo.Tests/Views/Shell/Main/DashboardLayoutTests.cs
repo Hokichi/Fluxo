@@ -23,7 +23,7 @@ public class DashboardLayoutTests
     }
 
     [Fact]
-    public void Dashboard_PlacesAllocationDataBesideAllowanceAboveSpendingSources()
+    public void Dashboard_PlacesAllocationDataBesideAllowanceAboveAccounts()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File(
             "Fluxo",
@@ -35,7 +35,7 @@ public class DashboardLayoutTests
 
         var allocationIndex = xaml.IndexOf("x:Name=\"AllocationDataHost\"", StringComparison.Ordinal);
         var allowanceIndex = xaml.IndexOf("x:Name=\"SpentAllowancePanelHost\"", StringComparison.Ordinal);
-        var sourcesIndex = xaml.IndexOf("x:Name=\"DashboardSpendingSourcesScrollViewer\"", StringComparison.Ordinal);
+        var sourcesIndex = xaml.IndexOf("x:Name=\"DashboardAccountsScrollViewer\"", StringComparison.Ordinal);
 
         Assert.True(allocationIndex >= 0);
         Assert.True(allowanceIndex > allocationIndex);

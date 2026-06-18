@@ -306,7 +306,7 @@ public sealed class SettingsConfigTabVMTests
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
         public IExpenseTagRepository ExpenseTags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
-        public ISpendingSourceRepository SpendingSources { get; } = new TestSpendingSourceRepository();
+        public IAccountRepository Accounts { get; } = new TestAccountRepository();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
         public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => throw new NotSupportedException();
@@ -356,29 +356,29 @@ public sealed class SettingsConfigTabVMTests
         }
     }
 
-    private sealed class TestSpendingSourceRepository : ISpendingSourceRepository
+    private sealed class TestAccountRepository : IAccountRepository
     {
-        public Task<IReadOnlyList<SpendingSource>> GetAllAsync(CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<SpendingSource> sources = [];
+            IReadOnlyList<Account> sources = [];
             return Task.FromResult(sources);
         }
 
-        public Task<SpendingSource?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public Task<Account?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<SpendingSource?>(null);
+            return Task.FromResult<Account?>(null);
         }
 
-        public Task AddAsync(SpendingSource entity, CancellationToken cancellationToken = default)
+        public Task AddAsync(Account entity, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
 
-        public void Update(SpendingSource entity)
+        public void Update(Account entity)
         {
         }
 
-        public void Remove(SpendingSource entity)
+        public void Remove(Account entity)
         {
         }
 
@@ -387,18 +387,18 @@ public sealed class SettingsConfigTabVMTests
             return Task.FromResult(0);
         }
 
-        public Task<IReadOnlyList<SpendingSource>> SearchAsync(
-            SpendingSourceFilter filter,
+        public Task<IReadOnlyList<Account>> SearchAsync(
+            AccountFilter filter,
             CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<SpendingSource> sources = [];
+            IReadOnlyList<Account> sources = [];
             return Task.FromResult(sources);
         }
 
-        public Task<IReadOnlyList<SpendingSource>> GetMarkedForDeletionAsync(
+        public Task<IReadOnlyList<Account>> GetMarkedForDeletionAsync(
             CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<SpendingSource> sources = [];
+            IReadOnlyList<Account> sources = [];
             return Task.FromResult(sources);
         }
     }

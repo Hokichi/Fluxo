@@ -57,7 +57,7 @@
                                 HorizontalAlignment="Right"
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Muted}"
-                                Text="{Binding SpendingSourceName}" />
+                                Text="{Binding AccountName}" />
                         </StackPanel>
                         <StackPanel
                             Grid.Column="3"

@@ -19,7 +19,7 @@ namespace Fluxo.ViewModels.Popups;
 public partial class ExpenseDetailVM : ObservableObject
 {
     private const int DefaultVisibleTagSlots = 4;
-    private readonly List<SpendingSourceVM> _availableSpendingSources = [];
+    private readonly List<AccountVM> _availableAccounts = [];
     private readonly ExpenseLogVM _expenseLog;
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
@@ -45,7 +45,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
-    [ObservableProperty] private SpendingSourceVM? _selectedSpendingSource;
+    [ObservableProperty] private AccountVM? _selectedAccount;
     [ObservableProperty] private ExpenseTagVM? _selectedTag;
 
     public ExpenseDetailVM(MainVM mainViewModel, ExpenseLogVM expenseLog, IAppDataService appData)
@@ -53,11 +53,11 @@ public partial class ExpenseDetailVM : ObservableObject
         _mainViewModel = mainViewModel;
         _expenseLog = expenseLog;
         _appData = appData;
-        SpendingSourcesView = SpendingSourceComboBoxViewFactory.CreateGroupedByTypeThenName(
-            SpendingSources,
-            nameof(SpendingSourceVM.TypeDisplayName),
-            nameof(SpendingSourceVM.SpendingSourceType),
-            nameof(SpendingSourceVM.Name));
+        AccountsView = AccountComboBoxViewFactory.CreateGroupedByTypeThenName(
+            Accounts,
+            nameof(AccountVM.TypeDisplayName),
+            nameof(AccountVM.AccountType),
+            nameof(AccountVM.Name));
 
         ReloadChoicesFromMainViewModel();
         _savedState = CreateSavedState(expenseLog);
@@ -71,8 +71,8 @@ public partial class ExpenseDetailVM : ObservableObject
         new("Invest", ExpenseCategory.Savings)
     ];
 
-    public ObservableCollection<SpendingSourceVM> SpendingSources { get; } = [];
-    public ICollectionView SpendingSourcesView { get; }
+    public ObservableCollection<AccountVM> Accounts { get; } = [];
+    public ICollectionView AccountsView { get; }
     public ObservableCollection<ExpenseSplitRowVM> SplitRows { get; } = [];
     public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
     public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
@@ -239,7 +239,7 @@ public partial class ExpenseDetailVM : ObservableObject
             true,
             NameText,
             AmountText,
-            SelectedSpendingSource?.Id,
+            SelectedAccount?.Id,
             SelectedDate.Date,
             NoteText,
             SelectedExpenseCategory,
@@ -278,13 +278,13 @@ public partial class ExpenseDetailVM : ObservableObject
             var beforeHistorySnapshot = ExpenseLogMemorySnapshot.Create(expenseLog);
 
             var expense = expenseLog.Expense;
-            var currentSpendingSource = expenseLog.SpendingSource;
-            if (currentSpendingSource is null)
+            var currentAccount = expenseLog.Account;
+            if (currentAccount is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense source.");
 
-            var newSpendingSource = await _appData.GetSpendingSourceByIdAsync(input.SpendingSourceId);
-            if (newSpendingSource is null)
-                return ExpenseDetailSaveResult.Failure("Please select a valid spending source.");
+            var newAccount = await _appData.GetAccountByIdAsync(input.AccountId);
+            if (newAccount is null)
+                return ExpenseDetailSaveResult.Failure("Please select a valid account.");
 
             var expenseTag = await _appData.GetExpenseTagByIdAsync(input.TagId);
             if (expenseTag is null)
@@ -292,37 +292,37 @@ public partial class ExpenseDetailVM : ObservableObject
 
             var resolvedName = BuildExpenseName(input.Name, input.Note, expenseTag.Name);
 
-            var sourceChanged = currentSpendingSource.Id != newSpendingSource.Id;
+            var sourceChanged = currentAccount.Id != newAccount.Id;
             if (!sourceChanged)
             {
-                RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
-                ApplyExpenseToSpendingSource(currentSpendingSource, input.Amount);
-                newSpendingSource = currentSpendingSource;
+                RevertExpenseFromAccount(currentAccount, expenseLog.Amount);
+                ApplyExpenseToAccount(currentAccount, input.Amount);
+                newAccount = currentAccount;
             }
             else
             {
-                RevertExpenseFromSpendingSource(currentSpendingSource, expenseLog.Amount);
-                ApplyExpenseToSpendingSource(newSpendingSource, input.Amount);
+                RevertExpenseFromAccount(currentAccount, expenseLog.Amount);
+                ApplyExpenseToAccount(newAccount, input.Amount);
             }
 
             expense.Name = resolvedName;
             expense.Amount = input.Amount;
             expense.ExpenseCategory = input.Category;
-            expense.SpendingSource = newSpendingSource;
+            expense.Account = newAccount;
             expense.ExpenseTag = expenseTag;
 
             expenseLog.Amount = input.Amount;
             expenseLog.IsPinned = input.IsPinned;
             expenseLog.DeductedOn = input.Date;
             expenseLog.Notes = input.Note;
-            expenseLog.SpendingSource = newSpendingSource;
+            expenseLog.Account = newAccount;
 
             _appData.UpdateExpense(expense);
             _appData.UpdateExpenseLog(expenseLog);
-            _appData.UpdateSpendingSource(currentSpendingSource);
+            _appData.UpdateAccount(currentAccount);
 
             if (sourceChanged)
-                _appData.UpdateSpendingSource(newSpendingSource);
+                _appData.UpdateAccount(newAccount);
 
             await _appData.SaveChangesAsync();
             _savedState = new ExpenseDetailSavedState(
@@ -332,7 +332,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 input.Note,
                 input.Date,
                 input.Category,
-                input.SpendingSourceId,
+                input.AccountId,
                 input.TagId);
 
             IsEditing = false;
@@ -382,10 +382,10 @@ public partial class ExpenseDetailVM : ObservableObject
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
 
             var snapshot = ExpenseLogMemorySnapshot.Create(expenseLog);
-            if (expenseLog.SpendingSource is { } spendingSource)
+            if (expenseLog.Account is { } account)
             {
-                RevertExpenseFromSpendingSource(spendingSource, expenseLog.Amount);
-                _appData.UpdateSpendingSource(spendingSource);
+                RevertExpenseFromAccount(account, expenseLog.Amount);
+                _appData.UpdateAccount(account);
             }
 
             _appData.RemoveExpenseLog(expenseLog);
@@ -424,8 +424,8 @@ public partial class ExpenseDetailVM : ObservableObject
         NoteText = _savedState.Note;
         SelectedDate = _savedState.Date == default ? DateTime.Today : _savedState.Date.Date;
         SelectedExpenseCategory = _savedState.Category;
-        SelectedSpendingSource = SpendingSources.FirstOrDefault(source => source.Id == _savedState.SpendingSourceId) ??
-                                 SpendingSources.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault(source => source.Id == _savedState.AccountId) ??
+                                 Accounts.FirstOrDefault();
         SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == _savedState.TagId) ??
                       _orderedTags.FirstOrDefault();
         PopupTitle = string.IsNullOrWhiteSpace(NameText) ? "Expense Detail" : NameText.Trim();
@@ -443,9 +443,9 @@ public partial class ExpenseDetailVM : ObservableObject
             return false;
         }
 
-        if (SelectedSpendingSource is null)
+        if (SelectedAccount is null)
         {
-            validationMessage = "Please choose a spending source.";
+            validationMessage = "Please choose a account.";
             return false;
         }
 
@@ -459,7 +459,7 @@ public partial class ExpenseDetailVM : ObservableObject
             NameText.Trim(),
             AmountText,
             IsPinned,
-            SelectedSpendingSource.Id,
+            SelectedAccount.Id,
             SelectedDate.Date,
             NoteText.Trim(),
             SelectedExpenseCategory,
@@ -557,8 +557,8 @@ public partial class ExpenseDetailVM : ObservableObject
             if (originalLog?.Expense is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense.");
 
-            var spendingSource = originalLog.SpendingSource;
-            if (spendingSource is null)
+            var account = originalLog.Account;
+            if (account is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense source.");
 
             var splitEntries = new List<(ExpenseSplitInput Input, ExpenseTag Tag)>();
@@ -573,7 +573,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
             var deleteSnapshot = ExpenseLogMemorySnapshot.Create(originalLog);
 
-            RevertExpenseFromSpendingSource(spendingSource, originalLog.Amount);
+            RevertExpenseFromAccount(account, originalLog.Amount);
             var keptParentSnapshot = default(ExpenseLogMemorySnapshot?);
             var keepParentWithRemainder = keepParentExpenseWhenRemainder && AmountText > 0m;
             if (keepParentWithRemainder)
@@ -602,7 +602,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
                 _appData.UpdateExpense(parentExpense);
                 _appData.UpdateExpenseLog(originalLog);
-                ApplyExpenseToSpendingSource(spendingSource, AmountText);
+                ApplyExpenseToAccount(account, AmountText);
                 keptParentSnapshot = ExpenseLogMemorySnapshot.Create(originalLog);
             }
             else
@@ -627,7 +627,7 @@ public partial class ExpenseDetailVM : ObservableObject
                     Name = BuildExpenseName(input.Name, input.Note, tag.Name),
                     Amount = input.Amount,
                     ExpenseCategory = input.Category,
-                    SpendingSourceId = spendingSource.Id,
+                    AccountId = account.Id,
                     ExpenseTagId = tag.Id
                 };
                 var expenseLog = new ExpenseLog
@@ -637,16 +637,16 @@ public partial class ExpenseDetailVM : ObservableObject
                     DeductedOn = input.Date,
                     Notes = input.Note,
                     IsForDeletion = false,
-                    SpendingSourceId = spendingSource.Id
+                    AccountId = account.Id
                 };
 
                 await _appData.AddExpenseAsync(expense);
                 await _appData.AddExpenseLogAsync(expenseLog);
-                ApplyExpenseToSpendingSource(spendingSource, input.Amount);
+                ApplyExpenseToAccount(account, input.Amount);
                 createdLogs.Add((expense, expenseLog, tag));
             }
 
-            _appData.UpdateSpendingSource(spendingSource);
+            _appData.UpdateAccount(account);
             await _appData.SaveChangesAsync();
 
             var createdSnapshots = createdLogs.Select(entry => new ExpenseLogMemorySnapshot(
@@ -655,7 +655,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 entry.Expense.Name,
                 entry.ExpenseLog.Amount,
                 entry.Expense.ExpenseCategory,
-                spendingSource.Id,
+                account.Id,
                 entry.Tag.Id,
                 entry.ExpenseLog.DeductedOn,
                 entry.ExpenseLog.Notes,
@@ -668,7 +668,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 historyActions.Add(new EditExpenseLogMemoryAction(deleteSnapshot, keptParentSnapshot));
 
             historyActions.AddRange(createdSnapshots.Select(snapshot =>
-                new AddExpenseLogMemoryAction(snapshot, shouldAdjustSpendingSourceTotals: false)));
+                new AddExpenseLogMemoryAction(snapshot, shouldAdjustAccountTotals: false)));
 
             WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
                 new CompositeLogMemoryAction("Split expense", historyActions)));
@@ -685,7 +685,7 @@ public partial class ExpenseDetailVM : ObservableObject
                     NoteText.Trim(),
                     SelectedDate.Date,
                     SelectedExpenseCategory,
-                    spendingSource.Id,
+                    account.Id,
                     SelectedTag?.Id ?? 0);
             }
             else
@@ -698,7 +698,7 @@ public partial class ExpenseDetailVM : ObservableObject
                     primary.Input.Note,
                     primary.Input.Date,
                     primary.Input.Category,
-                    spendingSource.Id,
+                    account.Id,
                     primary.Tag.Id);
             }
 
@@ -720,8 +720,8 @@ public partial class ExpenseDetailVM : ObservableObject
 
     private void ReloadChoicesFromMainViewModel()
     {
-        _availableSpendingSources.Clear();
-        _availableSpendingSources.AddRange(_mainViewModel.BudgetPanel.SpendingSources.Where(source => source.IsEnabled));
+        _availableAccounts.Clear();
+        _availableAccounts.AddRange(_mainViewModel.BudgetPanel.Accounts.Where(source => source.IsEnabled));
 
         _orderedTags.Clear();
         _orderedTags.AddRange(_mainViewModel.BudgetPanel.Tags
@@ -730,7 +730,7 @@ public partial class ExpenseDetailVM : ObservableObject
             .Select(group => group.First()));
 
         RefreshTagCollections();
-        RefreshSpendingSources();
+        RefreshAccounts();
     }
 
     private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
@@ -785,17 +785,17 @@ public partial class ExpenseDetailVM : ObservableObject
         }
     }
 
-    private void RefreshSpendingSources()
+    private void RefreshAccounts()
     {
-        var selectedSpendingSourceId = SelectedSpendingSource?.Id;
-        ReplaceCollection(SpendingSources, _availableSpendingSources
-            .OrderBy(source => source.SpendingSourceType)
+        var selectedAccountId = SelectedAccount?.Id;
+        ReplaceCollection(Accounts, _availableAccounts
+            .OrderBy(source => source.AccountType)
             .ThenBy(source => source.Name));
 
-        SelectedSpendingSource = selectedSpendingSourceId is null
-            ? SpendingSources.FirstOrDefault()
-            : SpendingSources.FirstOrDefault(source => source.Id == selectedSpendingSourceId.Value) ??
-              SpendingSources.FirstOrDefault();
+        SelectedAccount = selectedAccountId is null
+            ? Accounts.FirstOrDefault()
+            : Accounts.FirstOrDefault(source => source.Id == selectedAccountId.Value) ??
+              Accounts.FirstOrDefault();
     }
 
     private static string BuildExpenseName(string name, string note, string fallbackName)
@@ -816,15 +816,15 @@ public partial class ExpenseDetailVM : ObservableObject
             : firstMeaningfulLine;
     }
 
-    private static void ApplyExpenseToSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount += amount;
+            account.SpentAmount += amount;
             return;
         }
 
-        spendingSource.Balance -= amount;
+        account.Balance -= amount;
     }
 
     private static bool IsBudgetReconciliationExpenseLog(ExpenseLog expenseLog)
@@ -834,15 +834,15 @@ public partial class ExpenseDetailVM : ObservableObject
                string.Equals(tag.Name, SystemExpenseTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void RevertExpenseFromSpendingSource(SpendingSource spendingSource, decimal amount)
+    private static void RevertExpenseFromAccount(Account account, decimal amount)
     {
-        if (spendingSource.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
         {
-            spendingSource.SpentAmount = Math.Max(0m, spendingSource.SpentAmount - amount);
+            account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
         }
 
-        spendingSource.Balance += amount;
+        account.Balance += amount;
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> items)
@@ -862,7 +862,7 @@ public partial class ExpenseDetailVM : ObservableObject
             expenseLog.Notes?.Trim() ?? string.Empty,
             expenseLog.DeductedOn == default ? DateTime.Today : expenseLog.DeductedOn.Date,
             expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
-            expenseLog.SpendingSource?.Id ?? 0,
+            expenseLog.Account?.Id ?? 0,
             expenseLog.Expense?.ExpenseTag?.Id ?? 0);
     }
 
@@ -872,7 +872,7 @@ public partial class ExpenseDetailVM : ObservableObject
             savedState.Amount,
             savedState.Date,
             savedState.Category,
-            savedState.SpendingSourceId,
+            savedState.AccountId,
             savedState.TagId);
     }
 
@@ -896,8 +896,8 @@ public partial class ExpenseDetailVM : ObservableObject
         if (input.Category != savedState.Category)
             changedFields |= ExpenseDetailChangedFields.Category;
 
-        if (input.SpendingSourceId != savedState.SpendingSourceId)
-            changedFields |= ExpenseDetailChangedFields.SpendingSource;
+        if (input.AccountId != savedState.AccountId)
+            changedFields |= ExpenseDetailChangedFields.Account;
 
         if (input.TagId != savedState.TagId)
             changedFields |= ExpenseDetailChangedFields.Tag;
@@ -960,7 +960,7 @@ public partial class ExpenseDetailVM : ObservableObject
         string Name,
         decimal Amount,
         bool IsPinned,
-        int SpendingSourceId,
+        int AccountId,
         DateTime Date,
         string Note,
         ExpenseCategory Category,
@@ -981,6 +981,6 @@ public partial class ExpenseDetailVM : ObservableObject
         string Note,
         DateTime Date,
         ExpenseCategory Category,
-        int SpendingSourceId,
+        int AccountId,
         int TagId);
 }

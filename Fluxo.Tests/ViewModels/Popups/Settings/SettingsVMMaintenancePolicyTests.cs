@@ -146,13 +146,13 @@ public sealed class SettingsVMMaintenancePolicyTests
         var systemTag = new ExpenseTag { Id = 1, Name = "System", HexCode = "#FFFFFF", IsSystemTag = true };
         var customTag = new ExpenseTag { Id = 2, Name = "Custom", HexCode = "#000000", IsSystemTag = false };
 
-        var source = new SpendingSource { Id = 1, Name = "Wallet" };
+        var source = new Account { Id = 1, Name = "Wallet" };
         var expense = new Expense
         {
             Id = 1,
             Name = "Coffee",
-            SpendingSourceId = source.Id,
-            SpendingSource = source,
+            AccountId = source.Id,
+            Account = source,
             ExpenseTagId = customTag.Id,
             ExpenseTag = customTag
         };
@@ -162,16 +162,16 @@ public sealed class SettingsVMMaintenancePolicyTests
             Id = 1,
             ExpenseId = expense.Id,
             Expense = expense,
-            SpendingSourceId = source.Id,
-            SpendingSource = source,
+            AccountId = source.Id,
+            Account = source,
             Notes = string.Empty
         };
 
         var incomeLog = new IncomeLog
         {
             Id = 1,
-            SpendingSourceId = source.Id,
-            SpendingSource = source,
+            AccountId = source.Id,
+            Account = source,
             Notes = string.Empty
         };
 
@@ -204,7 +204,7 @@ public sealed class SettingsVMMaintenancePolicyTests
         appData.DidNotReceive().RemoveExpenseTag(systemTag);
         appData.Received(1).RemoveRecurringTransaction(recurringTransaction);
         appData.Received(1).RemoveExpenseTag(customTag);
-        appData.Received(1).RemoveSpendingSource(source);
+        appData.Received(1).RemoveAccount(source);
         appData.Received(1).RemoveExpense(expense);
         appData.Received(1).RemoveExpenseLog(expenseLog);
         appData.Received(1).RemoveIncomeLog(incomeLog);
@@ -218,7 +218,7 @@ public sealed class SettingsVMMaintenancePolicyTests
             appData.RemoveExpenseLog(expenseLog);
             appData.RemoveExpense(expense);
             appData.RemoveIncomeLog(incomeLog);
-            appData.RemoveSpendingSource(source);
+            appData.RemoveAccount(source);
             appData.RemoveSavingGoal(savingGoal);
             appData.RemoveExpenseTag(customTag);
             appData.RemoveNotification(firstNotification);

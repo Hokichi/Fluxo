@@ -31,7 +31,7 @@ public sealed class DataManagementVMOperationTests
         service.BuildDefaultBackupPath(Arg.Any<DateTime>()).Returns("backup.json");
         service.FindAppendConflictsAsync("backup.json", Arg.Any<UserBackupSelection>(), Arg.Any<CancellationToken>())
             .Returns([
-                new UserBackupConflict("source:1", DataManagementEntityKind.SpendingSources, "Wallet")
+                new UserBackupConflict("source:1", DataManagementEntityKind.Accounts, "Wallet")
             ]);
 
         var vm = new DataManagementVM(service)

@@ -118,7 +118,7 @@ public class HeaderQuickSearchEngineTests
                     HexCode = "#FFAA00"
                 }
             },
-            SpendingSource = new SpendingSourceVM { Id = 20 + id, Name = "Wallet" }
+            Account = new AccountVM { Id = 20 + id, Name = "Wallet" }
         };
     }
 
@@ -130,7 +130,7 @@ public class HeaderQuickSearchEngineTests
             Name = incomeName,
             Amount = id * 100m,
             AddedOn = addedOn,
-            SpendingSource = new SpendingSourceVM { Id = 30 + id, Name = "Checking" }
+            Account = new AccountVM { Id = 30 + id, Name = "Checking" }
         };
     }
 }

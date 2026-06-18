@@ -21,24 +21,24 @@ public partial class AllocationDataVM : ObservableRecipient,
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
     private readonly IMapper _mapper;
-    private readonly ISpendingSourceService _spendingSourceService;
+    private readonly IAccountService _accountService;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
     private List<IncomeLogVM> _allIncomeLogs = [];
-    private List<SpendingSourceVM> _spendingSources = [];
+    private List<AccountVM> _accounts = [];
     private BudgetAllocation _budgetAllocation = new();
 
     public AllocationDataVM(
         IExpenseLogService expenseLogService,
-        ISpendingSourceService spendingSourceService,
+        IAccountService accountService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _expenseLogService = expenseLogService;
-        _spendingSourceService = spendingSourceService;
+        _accountService = accountService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
 
@@ -120,8 +120,8 @@ public partial class AllocationDataVM : ObservableRecipient,
         _allIncomeLogs = (await LoadIncomeLogsAsync(cancellationToken))
             .OrderByDescending(log => log.AddedOn)
             .ToList();
-        _spendingSources = _mapper.Map<IReadOnlyList<SpendingSourceVM>>(
-                await _spendingSourceService.GetAllAsync(cancellationToken))
+        _accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
+                await _accountService.GetAllAsync(cancellationToken))
             .ToList();
 
         RefreshBudgetMetrics();
@@ -188,11 +188,11 @@ public partial class AllocationDataVM : ObservableRecipient,
                     Amount = log.Amount,
                     AddedOn = log.AddedOn,
                     Notes = log.Notes,
-                    SpendingSource = new SpendingSourceVM
+                    Account = new AccountVM
                     {
-                        Id = log.SpendingSourceId,
-                        Name = log.SpendingSource?.Name ?? string.Empty,
-                        SpendingSourceType = log.SpendingSource?.SpendingSourceType ?? SpendingSourceType.Checking
+                        Id = log.AccountId,
+                        Name = log.Account?.Name ?? string.Empty,
+                        AccountType = log.Account?.AccountType ?? AccountType.Checking
                     }
                 })
                 .ToList();
@@ -255,17 +255,17 @@ public partial class AllocationDataVM : ObservableRecipient,
         if (_budgetAllocation.AllocationLimit > 0m)
             return _budgetAllocation.AllocationLimit;
 
-        var balanceBackedSourceIds = _spendingSources
+        var balanceBackedSourceIds = _accounts
             .Where(IsBalanceBackedSource)
             .Select(source => source.Id)
             .ToHashSet();
 
         var balanceBackedExpenseAmount = _allExpenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.SpendingSource is { } source && balanceBackedSourceIds.Contains(source.Id))
+            .Where(log => log.Account is { } source && balanceBackedSourceIds.Contains(source.Id))
             .Sum(log => log.Amount);
 
-        return _spendingSources.Sum(source => source.Balance) + balanceBackedExpenseAmount;
+        return _accounts.Sum(source => source.Balance) + balanceBackedExpenseAmount;
     }
 
     private void ApplyLogMemoryAction(CoreILogMemoryAction action, LogMemoryApplyDirection direction)
@@ -388,11 +388,11 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount += snapshot.Amount;
             return;
@@ -403,11 +403,11 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     private void RestoreExpenseFromTrackedSource(ExpenseLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
             return;
@@ -418,11 +418,11 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     private void ApplyIncomeToTrackedSource(IncomeLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
             return;
@@ -433,11 +433,11 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     private void RestoreIncomeFromTrackedSource(IncomeLogMemorySnapshot snapshot)
     {
-        var source = _spendingSources.FirstOrDefault(candidate => candidate.Id == snapshot.SpendingSourceId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.SpendingSourceType is SpendingSourceType.Credit or SpendingSourceType.BNPL)
+        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
         {
             source.SpentAmount += snapshot.Amount;
             return;
@@ -462,7 +462,7 @@ public partial class AllocationDataVM : ObservableRecipient,
                 Name = snapshot.ExpenseName,
                 ExpenseCategory = snapshot.ExpenseCategory
             },
-            SpendingSource = new SpendingSourceVM { Id = snapshot.SpendingSourceId }
+            Account = new AccountVM { Id = snapshot.AccountId }
         };
 
         if (existingIndex >= 0)
@@ -488,7 +488,7 @@ public partial class AllocationDataVM : ObservableRecipient,
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,
-            SpendingSource = new SpendingSourceVM { Id = snapshot.SpendingSourceId }
+            Account = new AccountVM { Id = snapshot.AccountId }
         };
 
         if (existingIndex >= 0)
@@ -504,9 +504,9 @@ public partial class AllocationDataVM : ObservableRecipient,
             .ToList();
     }
 
-    private static bool IsBalanceBackedSource(SpendingSourceVM source)
+    private static bool IsBalanceBackedSource(AccountVM source)
     {
-        return source.SpendingSourceType is not (SpendingSourceType.Credit or SpendingSourceType.BNPL);
+        return source.AccountType is not (AccountType.Credit or AccountType.BNPL);
     }
 
     private static int ConvertThresholdToPercentage(decimal threshold)

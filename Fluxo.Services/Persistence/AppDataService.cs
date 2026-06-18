@@ -158,29 +158,29 @@ public sealed class AppDataService(IUnitOfWork unitOfWork) : IAppDataService
         unitOfWork.SavingGoals.Remove(entity);
     }
 
-    public Task<IReadOnlyList<SpendingSource>> GetSpendingSourcesAsync(CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<Account>> GetAccountsAsync(CancellationToken cancellationToken = default)
     {
-        return unitOfWork.SpendingSources.GetAllAsync(cancellationToken);
+        return unitOfWork.Accounts.GetAllAsync(cancellationToken);
     }
 
-    public Task<SpendingSource?> GetSpendingSourceByIdAsync(int id, CancellationToken cancellationToken = default)
+    public Task<Account?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return unitOfWork.SpendingSources.GetByIdAsync(id, cancellationToken);
+        return unitOfWork.Accounts.GetByIdAsync(id, cancellationToken);
     }
 
-    public Task AddSpendingSourceAsync(SpendingSource entity, CancellationToken cancellationToken = default)
+    public Task AddAccountAsync(Account entity, CancellationToken cancellationToken = default)
     {
-        return unitOfWork.SpendingSources.AddAsync(entity, cancellationToken);
+        return unitOfWork.Accounts.AddAsync(entity, cancellationToken);
     }
 
-    public void UpdateSpendingSource(SpendingSource entity)
+    public void UpdateAccount(Account entity)
     {
-        unitOfWork.SpendingSources.Update(entity);
+        unitOfWork.Accounts.Update(entity);
     }
 
-    public void RemoveSpendingSource(SpendingSource entity)
+    public void RemoveAccount(Account entity)
     {
-        unitOfWork.SpendingSources.Remove(entity);
+        unitOfWork.Accounts.Remove(entity);
     }
 
     public Task<IReadOnlyList<RecurringTransaction>> GetRecurringTransactionsAsync(CancellationToken cancellationToken = default)

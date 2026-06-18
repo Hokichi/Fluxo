@@ -41,11 +41,11 @@ public interface IAppDataService
     void UpdateSavingGoal(SavingGoal entity);
     void RemoveSavingGoal(SavingGoal entity);
 
-    Task<IReadOnlyList<SpendingSource>> GetSpendingSourcesAsync(CancellationToken cancellationToken = default);
-    Task<SpendingSource?> GetSpendingSourceByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task AddSpendingSourceAsync(SpendingSource entity, CancellationToken cancellationToken = default);
-    void UpdateSpendingSource(SpendingSource entity);
-    void RemoveSpendingSource(SpendingSource entity);
+    Task<IReadOnlyList<Account>> GetAccountsAsync(CancellationToken cancellationToken = default);
+    Task<Account?> GetAccountByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task AddAccountAsync(Account entity, CancellationToken cancellationToken = default);
+    void UpdateAccount(Account entity);
+    void RemoveAccount(Account entity);
 
     Task<IReadOnlyList<RecurringTransaction>> GetRecurringTransactionsAsync(CancellationToken cancellationToken = default);
     Task<RecurringTransaction?> GetRecurringTransactionByIdAsync(int id, CancellationToken cancellationToken = default);

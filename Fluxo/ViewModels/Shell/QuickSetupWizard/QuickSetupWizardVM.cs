@@ -17,7 +17,7 @@ using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
 public partial class QuickSetupWizardVM : ObservableRecipient,
-    IRecipient<QuickSetupWizardSpendingSourcesChangedMessage>,
+    IRecipient<QuickSetupWizardAccountsChangedMessage>,
     IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>
 {
     private readonly MainVM _mainViewModel;
@@ -29,7 +29,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
     private Func<Task>? _stagedRollbackAsync;
 
     [ObservableProperty] private int _currentStepIndex;
-    [ObservableProperty] private bool _hasSpendingSources;
+    [ObservableProperty] private bool _hasAccounts;
 
     public QuickSetupWizardVM(
         MainVM mainViewModel,
@@ -101,9 +101,9 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
             MiddlePage.SetCurrentStepIndex(value);
     }
 
-    public void Receive(QuickSetupWizardSpendingSourcesChangedMessage message)
+    public void Receive(QuickSetupWizardAccountsChangedMessage message)
     {
-        HasSpendingSources = message.Value.HasAny;
+        HasAccounts = message.Value.HasAny;
     }
 
     public void Receive(QuickSetupWizardBudgetAllocationChangedMessage message)
@@ -128,7 +128,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
             return;
         }
 
-        if (CurrentStepIndex == 6 && !HasSpendingSources)
+        if (CurrentStepIndex == 6 && !HasAccounts)
         {
             CurrentStepIndex = 2;
             return;
@@ -268,10 +268,10 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
                 throw new InvalidOperationException(budgetAllocationResult.ErrorMessage);
 
             await MiddlePage.Notification.ApplyAsync(stagedAppData);
-            await MiddlePage.SpendingSources.ApplyAsync(stagedAppData);
+            await MiddlePage.Accounts.ApplyAsync(stagedAppData);
             await MiddlePage.FixedExpenses.ApplyAsync(
                 stagedAppData,
-                MiddlePage.SpendingSources.LastPersistedIdMap);
+                MiddlePage.Accounts.LastPersistedIdMap);
             await MiddlePage.SavingGoals.ApplyAsync(stagedAppData);
             await stagedAppData.SaveChangesAsync();
 

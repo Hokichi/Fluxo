@@ -113,7 +113,7 @@ public static class MainWindowShortcutMatcher
         return false;
     }
 
-    public static bool IsOpenAddSpendingSourceShortcut(Key key, ModifierKeys modifiers)
+    public static bool IsOpenAddAccountShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.L && modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
     }

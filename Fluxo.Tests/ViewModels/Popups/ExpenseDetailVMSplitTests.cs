@@ -360,7 +360,7 @@ public sealed class ExpenseDetailVMSplitTests
             appData.DidNotReceive().RemoveExpenseLog(Arg.Any<ExpenseLog>());
             appData.DidNotReceive().RemoveExpense(Arg.Any<Expense>());
 
-            appData.Received(1).UpdateSpendingSource(Arg.Is<SpendingSource>(source =>
+            appData.Received(1).UpdateAccount(Arg.Is<Account>(source =>
                 source.Id == 1 &&
                 source.Balance == 1000m));
 
@@ -387,19 +387,19 @@ public sealed class ExpenseDetailVMSplitTests
                 Arg.Is<ExpenseLog>(log =>
                     log.Amount == 50m &&
                     log.Notes == "Remainder note" &&
-                    log.SpendingSourceId == 1),
+                    log.AccountId == 1),
                 Arg.Any<CancellationToken>());
             _ = appData.Received(1).AddExpenseLogAsync(
                 Arg.Is<ExpenseLog>(log =>
                     log.Amount == 30m &&
                     log.Notes == string.Empty &&
-                    log.SpendingSourceId == 1),
+                    log.AccountId == 1),
                 Arg.Any<CancellationToken>());
             _ = appData.Received(1).AddExpenseLogAsync(
                 Arg.Is<ExpenseLog>(log =>
                     log.Amount == 20m &&
                     log.Notes == string.Empty &&
-                    log.SpendingSourceId == 1),
+                    log.AccountId == 1),
                 Arg.Any<CancellationToken>());
 
             _ = appData.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -415,7 +415,7 @@ public sealed class ExpenseDetailVMSplitTests
 
             var addActions = composite.Actions.Skip(1).Select(Assert.IsType<AddExpenseLogMemoryAction>).ToList();
             Assert.Equal(3, addActions.Count);
-            Assert.All(addActions, action => Assert.False(action.ShouldAdjustSpendingSourceTotals));
+            Assert.All(addActions, action => Assert.False(action.ShouldAdjustAccountTotals));
             Assert.All(addActions, action => Assert.True(action.Snapshot.ExpenseId > 0));
             Assert.All(addActions, action => Assert.True(action.Snapshot.ExpenseLogId > 0));
             Assert.All(addActions, action => Assert.Equal(1, action.Snapshot.TagId));
@@ -516,7 +516,7 @@ public sealed class ExpenseDetailVMSplitTests
                 appData.DidNotReceive().RemoveExpenseLog(Arg.Any<ExpenseLog>());
                 appData.DidNotReceive().RemoveExpense(Arg.Any<Expense>());
 
-                appData.Received(1).UpdateSpendingSource(Arg.Is<SpendingSource>(source =>
+                appData.Received(1).UpdateAccount(Arg.Is<Account>(source =>
                     source.Id == 1 &&
                     source.Balance == 1000m));
 
@@ -550,7 +550,7 @@ public sealed class ExpenseDetailVMSplitTests
 
                 var addActions = composite.Actions.Skip(1).Select(Assert.IsType<AddExpenseLogMemoryAction>).ToList();
                 Assert.Equal(2, addActions.Count);
-                Assert.All(addActions, action => Assert.False(action.ShouldAdjustSpendingSourceTotals));
+                Assert.All(addActions, action => Assert.False(action.ShouldAdjustAccountTotals));
                 Assert.Contains(addActions, action =>
                     action.Snapshot.Amount == 30m &&
                     action.Snapshot.ExpenseName == "Groceries");
@@ -589,15 +589,15 @@ public sealed class ExpenseDetailVMSplitTests
         return CreateVmWithDependencies(amount).Vm;
     }
 
-    private static (ExpenseDetailVM Vm, IAppDataService AppData, SpendingSource PersistedSource) CreateVmWithDependencies(
+    private static (ExpenseDetailVM Vm, IAppDataService AppData, Account PersistedSource) CreateVmWithDependencies(
         decimal amount = 100m,
         bool isBudgetReconciliation = false)
     {
-        var source = new SpendingSourceVM
+        var source = new AccountVM
         {
             Id = 1,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = 1_000m,
             IsEnabled = true
         };
@@ -619,11 +619,11 @@ public sealed class ExpenseDetailVMSplitTests
                 new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false }
             ]));
 
-        var persistedSource = new SpendingSource
+        var persistedSource = new Account
         {
             Id = 1,
             Name = "Checking",
-            SpendingSourceType = SpendingSourceType.Checking,
+            AccountType = AccountType.Checking,
             Balance = 1_000m,
             IsEnabled = true
         };
@@ -642,8 +642,8 @@ public sealed class ExpenseDetailVMSplitTests
             Name = "Parent expense",
             Amount = amount,
             ExpenseCategory = ExpenseCategory.Needs,
-            SpendingSource = persistedSource,
-            SpendingSourceId = persistedSource.Id,
+            Account = persistedSource,
+            AccountId = persistedSource.Id,
             ExpenseTag = persistedTag,
             ExpenseTagId = persistedTag.Id
         };
@@ -652,9 +652,9 @@ public sealed class ExpenseDetailVMSplitTests
         {
             Id = 10,
             ExpenseId = persistedExpense.Id,
-            SpendingSourceId = persistedSource.Id,
+            AccountId = persistedSource.Id,
             Expense = persistedExpense,
-            SpendingSource = persistedSource,
+            Account = persistedSource,
             Amount = amount,
             DeductedOn = new DateTime(2026, 5, 31),
             Notes = "Original note"
@@ -662,8 +662,8 @@ public sealed class ExpenseDetailVMSplitTests
 
         appData.GetExpenseLogByLogIdAsync(10, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<ExpenseLog?>(persistedLog));
-        appData.GetSpendingSourceByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<SpendingSource?>(persistedSource));
+        appData.GetAccountByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Account?>(persistedSource));
         appData.GetExpenseTagByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<ExpenseTag?>(persistedTag));
         appData.SaveChangesAsync(Arg.Any<CancellationToken>())
@@ -692,20 +692,20 @@ public sealed class ExpenseDetailVMSplitTests
             Amount = amount,
             DeductedOn = new DateTime(2026, 5, 31),
             Notes = "Original note",
-            SpendingSource = source,
+            Account = source,
             Expense = new ExpenseVM
             {
                 Id = 20,
                 Name = "Parent expense",
                 Amount = amount,
                 ExpenseCategory = ExpenseCategory.Needs,
-                SpendingSource = source,
+                Account = source,
                 ExpenseTag = tag
             }
         }, appData), appData, persistedSource);
     }
 
-    private static MainVM CreateMainViewModel(SpendingSourceVM source, ExpenseTagVM tag)
+    private static MainVM CreateMainViewModel(AccountVM source, ExpenseTagVM tag)
     {
         var messenger = new WeakReferenceMessenger();
         var mapper = Substitute.For<IMapper>();
@@ -727,20 +727,20 @@ public sealed class ExpenseDetailVMSplitTests
             new NotificationPanelVM(
                 Substitute.For<IExpenseService>(),
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 runner,
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 Substitute.For<ITagService>(),
                 runner,
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 runner,
                 mapper,
                 messenger),
@@ -753,7 +753,7 @@ public sealed class ExpenseDetailVMSplitTests
             new DaySpinnerVM(messenger),
             null);
 
-        main.BudgetPanel.SpendingSources.Add(source);
+        main.BudgetPanel.Accounts.Add(source);
         main.BudgetPanel.Tags = new ObservableCollection<ExpenseTagVM>([tag]);
         main.BudgetPanel.OtherTags = new ObservableCollection<ExpenseTagVM>(
         [

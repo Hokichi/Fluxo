@@ -7,7 +7,7 @@ public sealed record QuickSetupWizardDraftFixedExpense(
     string Name,
     decimal Amount,
     ExpenseCategory Category,
-    int SpendingSourceId,
+    int AccountId,
     RecurringPeriod RecurringPeriod,
     int RecurringTime,
     int ExpenseTagId,

@@ -371,12 +371,12 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         var request = message.Value;
         switch (request.RequestType)
         {
-            case SettingsDialogRequestType.AddSpendingSource when request.Payload is null:
-                _dialogService.ShowAddSpendingSource(_viewModel.CreateAddSpendingSourceViewModel(), this);
+            case SettingsDialogRequestType.AddAccount when request.Payload is null:
+                _dialogService.ShowAddAccount(_viewModel.CreateAddAccountViewModel(), this);
                 break;
 
-            case SettingsDialogRequestType.AddSpendingSource when request.Payload is AddSpendingSourceVM addSpendingSource:
-                _dialogService.ShowAddSpendingSource(addSpendingSource, this);
+            case SettingsDialogRequestType.AddAccount when request.Payload is AddAccountVM addAccount:
+                _dialogService.ShowAddAccount(addAccount, this);
                 break;
 
             case SettingsDialogRequestType.AddRecurringTransaction when request.Payload is AddNewTransactionVM quickAdd:
@@ -387,9 +387,9 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
                 _dialogService.ShowAddSavingGoal(addSavingGoal, this);
                 break;
 
-            case SettingsDialogRequestType.SpendingSourceDetail
-                when request.Payload is SpendingSourceDetailVM spendingSourceDetail:
-                _dialogService.ShowSpendingSourceDetail(spendingSourceDetail, this);
+            case SettingsDialogRequestType.AccountDetail
+                when request.Payload is AccountDetailVM accountDetail:
+                _dialogService.ShowAccountDetail(accountDetail, this);
                 break;
 
             case SettingsDialogRequestType.AddTag when request.Payload is SettingsTagDialogRequest tagDialogRequest:

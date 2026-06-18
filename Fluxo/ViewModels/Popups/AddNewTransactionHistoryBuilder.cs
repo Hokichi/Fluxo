@@ -13,7 +13,7 @@ public static class AddNewTransactionHistoryBuilder
             .GroupBy(item => new ExpenseKey(
                 NormalizeName(item.Name),
                 item.Amount,
-                item.SpendingSourceId,
+                item.AccountId,
                 item.Note,
                 item.Category ?? ExpenseCategory.Needs,
                 item.TagId ?? 0))
@@ -32,7 +32,7 @@ public static class AddNewTransactionHistoryBuilder
             .GroupBy(item => new RepeatingExpenseKey(
                 NormalizeName(item.Name),
                 item.Amount,
-                item.SpendingSourceId,
+                item.AccountId,
                 item.TagId ?? 0))
             .Select(SelectNewest)
             .OrderByDescending(item => item.Date)
@@ -49,7 +49,7 @@ public static class AddNewTransactionHistoryBuilder
             .GroupBy(item => new IncomeKey(
                 NormalizeName(item.Name),
                 item.Amount,
-                item.SpendingSourceId,
+                item.AccountId,
                 item.Note))
             .Select(SelectNewest)
             .OrderByDescending(item => item.Date)
@@ -66,7 +66,7 @@ public static class AddNewTransactionHistoryBuilder
             .GroupBy(item => new RepeatingIncomeKey(
                 NormalizeName(item.Name),
                 item.Amount,
-                item.SpendingSourceId))
+                item.AccountId))
             .Select(SelectNewest)
             .OrderByDescending(item => item.Date)
             .ThenByDescending(item => item.Id)
@@ -94,8 +94,8 @@ public static class AddNewTransactionHistoryBuilder
                 IsGoalUpdate = true,
                 Name = log.Expense?.Name ?? GoalUpdateTransactionSupport.GoalUpdateTagName,
                 Amount = log.Amount,
-                SpendingSourceId = log.SpendingSourceId,
-                SpendingSourceName = log.SpendingSource?.Name ?? log.Expense?.SpendingSource?.Name ?? string.Empty,
+                AccountId = log.AccountId,
+                AccountName = log.Account?.Name ?? log.Expense?.Account?.Name ?? string.Empty,
                 Note = log.Notes ?? string.Empty,
                 Date = log.DeductedOn,
                 Category = ExpenseCategory.Savings,
@@ -121,8 +121,8 @@ public static class AddNewTransactionHistoryBuilder
                 IsExpense = true,
                 Name = log.Expense.Name,
                 Amount = log.Amount,
-                SpendingSourceId = log.SpendingSourceId,
-                SpendingSourceName = log.SpendingSource?.Name ?? log.Expense.SpendingSource?.Name ?? string.Empty,
+                AccountId = log.AccountId,
+                AccountName = log.Account?.Name ?? log.Expense.Account?.Name ?? string.Empty,
                 Note = log.Notes ?? string.Empty,
                 Date = log.DeductedOn,
                 Category = log.Expense.ExpenseCategory,
@@ -146,8 +146,8 @@ public static class AddNewTransactionHistoryBuilder
                 IsExpense = false,
                 Name = log.Name,
                 Amount = log.Amount,
-                SpendingSourceId = log.SpendingSourceId,
-                SpendingSourceName = log.SpendingSource?.Name ?? string.Empty,
+                AccountId = log.AccountId,
+                AccountName = log.Account?.Name ?? string.Empty,
                 Note = log.Notes ?? string.Empty,
                 Date = log.AddedOn,
                 IsPinned = log.IsPinned
@@ -187,7 +187,7 @@ public static class AddNewTransactionHistoryBuilder
     private sealed record ExpenseKey(
         string Name,
         decimal Amount,
-        int SpendingSourceId,
+        int AccountId,
         string Note,
         ExpenseCategory Category,
         int TagId);
@@ -195,17 +195,17 @@ public static class AddNewTransactionHistoryBuilder
     private sealed record RepeatingExpenseKey(
         string Name,
         decimal Amount,
-        int SpendingSourceId,
+        int AccountId,
         int TagId);
 
     private sealed record IncomeKey(
         string Name,
         decimal Amount,
-        int SpendingSourceId,
+        int AccountId,
         string Note);
 
     private sealed record RepeatingIncomeKey(
         string Name,
         decimal Amount,
-        int SpendingSourceId);
+        int AccountId);
 }

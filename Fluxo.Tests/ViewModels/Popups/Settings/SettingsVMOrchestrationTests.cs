@@ -47,7 +47,7 @@ public sealed class SettingsVMOrchestrationTests
             ],
             UsernameChange: new SettingsUsernameChange("Fluxo", "Fluxo Pro")));
         var revertRequested = new SettingsRevertRequestedMessage(operation);
-        var dataChanged = new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources | SettingsDataChangedScope.Tags);
+        var dataChanged = new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts | SettingsDataChangedScope.Tags);
 
         Assert.Equal(operation, loadRequested.Value);
         Assert.Equal(operation, tabLoaded.Value.Operation);
@@ -61,12 +61,12 @@ public sealed class SettingsVMOrchestrationTests
         Assert.Single(contribution.Value.MemoryActions);
         Assert.Equal("Fluxo Pro", contribution.Value.UsernameChange?.CurrentValue);
         Assert.Equal(operation, revertRequested.Value);
-        Assert.True(dataChanged.Value.HasFlag(SettingsDataChangedScope.SpendingSources));
+        Assert.True(dataChanged.Value.HasFlag(SettingsDataChangedScope.Accounts));
         Assert.True(dataChanged.Value.HasFlag(SettingsDataChangedScope.Tags));
     }
 
     [Fact]
-    public void SpendingSourceDataChanged_RefreshesSufficientFundsActionGateState()
+    public void AccountDataChanged_RefreshesSufficientFundsActionGateState()
     {
         RunInSta(() =>
         {
@@ -81,7 +81,7 @@ public sealed class SettingsVMOrchestrationTests
 
             mainViewModel.Dashboard.IsDashboardSpendingAmountGateLocked = false;
             mainViewModel.Dashboard.IsSufficientFundsActionGateLocked = false;
-            settings.Receive(new SettingsDataChangedMessage(SettingsDataChangedScope.SpendingSources));
+            settings.Receive(new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts));
 
             Assert.False(settings.IsSufficientFundsActionGateLocked);
             Assert.False(settings.FixedExpensesTab.IsDashboardSpendingAmountGateLocked);
@@ -124,20 +124,20 @@ public sealed class SettingsVMOrchestrationTests
             new NotificationPanelVM(
                 Substitute.For<IExpenseService>(),
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 dataOperationRunner,
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 Substitute.For<ITagService>(),
                 dataOperationRunner,
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
                 Substitute.For<IExpenseLogService>(),
-                Substitute.For<ISpendingSourceService>(),
+                Substitute.For<IAccountService>(),
                 dataOperationRunner,
                 mapper,
                 messenger),

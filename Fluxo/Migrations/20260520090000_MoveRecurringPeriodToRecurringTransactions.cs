@@ -69,7 +69,7 @@ namespace Fluxo.Migrations
                     "IsEnabled" INTEGER NOT NULL,
                     CONSTRAINT "FK_RecurringTransactions_ExpenseTags_TagId" FOREIGN KEY ("TagId") REFERENCES "ExpenseTags" ("Id") ON DELETE RESTRICT,
                     CONSTRAINT "FK_RecurringTransactions_SavingGoals_GoalId" FOREIGN KEY ("GoalId") REFERENCES "SavingGoals" ("Id") ON DELETE RESTRICT,
-                    CONSTRAINT "FK_RecurringTransactions_SpendingSources_SourceId" FOREIGN KEY ("SourceId") REFERENCES "SpendingSources" ("Id") ON DELETE RESTRICT
+                    CONSTRAINT "FK_RecurringTransactions_Accounts_SourceId" FOREIGN KEY ("SourceId") REFERENCES "Accounts" ("Id") ON DELETE RESTRICT
                 );
 
                 INSERT INTO "RecurringTransactions_old" (

@@ -165,8 +165,8 @@ public sealed partial class CalendarVM : ObservableObject, IDisposable
         TotalEarnedText = FormatMoney(dto.TotalEarned);
         GoalsDueText = dto.GoalsDue.ToString(CultureInfo.InvariantCulture);
         PaymentDueText = dto.PaymentsDue.ToString(CultureInfo.InvariantCulture);
-        Expenses = dto.Expenses.Select(item => new CalendarExpenseListItem(item.Name, item.Amount, item.SpendingSourceName, item.TagName)).ToArray();
-        Incomes = dto.Incomes.Select(item => new CalendarIncomeListItem(item.Name, item.Amount, item.SpendingSourceName)).ToArray();
+        Expenses = dto.Expenses.Select(item => new CalendarExpenseListItem(item.Name, item.Amount, item.AccountName, item.TagName)).ToArray();
+        Incomes = dto.Incomes.Select(item => new CalendarIncomeListItem(item.Name, item.Amount, item.AccountName)).ToArray();
         GoalDeadlines = dto.GoalDeadlines.Select(item => new CalendarGoalDeadlineListItem(item.Name, item.CurrentAmount, item.TargetAmount)).ToArray();
         RecurringTransactions = dto.RecurringTransactions.Select(item => new CalendarRecurringTransactionListItem(item.Name, item.Amount, item.Type.ToString(), item.SourceName)).ToArray();
         OnPropertyChanged(nameof(HasNoExpenses));
@@ -292,7 +292,7 @@ public sealed record CalendarDayItem(
 public sealed record CalendarExpenseListItem(
     string Name,
     decimal Amount,
-    string SpendingSourceName,
+    string AccountName,
     string? TagName)
 {
     public string AmountText => $"{Amount:N0}";
@@ -301,7 +301,7 @@ public sealed record CalendarExpenseListItem(
 public sealed record CalendarIncomeListItem(
     string Name,
     decimal Amount,
-    string SpendingSourceName)
+    string AccountName)
 {
     public string AmountText => $"{Amount:N0}";
 }

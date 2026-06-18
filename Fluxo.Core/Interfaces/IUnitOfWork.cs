@@ -9,7 +9,7 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IIncomeLogRepository IncomeLogs { get; }
     IExpenseTagRepository ExpenseTags { get; }
     ISavingGoalRepository SavingGoals { get; }
-    ISpendingSourceRepository SpendingSources { get; }
+    IAccountRepository Accounts { get; }
     IRecurringTransactionRepository RecurringTransactions { get; }
     INotificationRepository Notifications { get; }
     IUserSettingsRepository UserSettings { get; }
