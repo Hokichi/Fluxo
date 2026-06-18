@@ -78,7 +78,8 @@ public sealed record BackupExpenseLog(
     DateTime DeductedOn,
     string Notes,
     bool IsForDeletion,
-    bool IsPinned = false);
+    bool IsPinned = false,
+    int? ParentLogBackupId = null);
 
 public sealed record BackupIncomeLog(
     int BackupId,

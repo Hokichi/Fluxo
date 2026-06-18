@@ -91,6 +91,86 @@ public sealed class UserBackupServiceExportTests
     }
 
     [Fact]
+    public async Task BackupAsync_WhenExpenseLogsHaveParent_StoresParentLogBackupId()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        var account = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking };
+        var tag = new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff" };
+        var parentExpense = new Expense
+        {
+            Id = 20,
+            AccountId = account.Id,
+            ExpenseTagId = tag.Id,
+            Name = "Dinner",
+            Amount = 100m,
+            ExpenseTag = tag,
+            Account = account
+        };
+        var childExpense = new Expense
+        {
+            Id = 21,
+            AccountId = account.Id,
+            ExpenseTagId = tag.Id,
+            Name = "Tip",
+            Amount = 20m,
+            ExpenseTag = tag,
+            Account = account
+        };
+        var parentLog = new ExpenseLog
+        {
+            Id = 10,
+            ExpenseId = parentExpense.Id,
+            AccountId = account.Id,
+            Expense = parentExpense,
+            Account = account,
+            Amount = 100m,
+            Notes = string.Empty
+        };
+        var childLog = new ExpenseLog
+        {
+            Id = 11,
+            ParentLogId = parentLog.Id,
+            ExpenseId = childExpense.Id,
+            AccountId = account.Id,
+            Expense = childExpense,
+            Account = account,
+            Amount = 20m,
+            Notes = string.Empty
+        };
+
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>()).Returns([account]);
+        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
+        appData.GetExpensesAsync(Arg.Any<CancellationToken>()).Returns([parentExpense, childExpense]);
+        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([parentLog, childLog]);
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        var service = new UserBackupService(appData);
+
+        try
+        {
+            var result = await service.BackupAsync(new UserBackupSelection(new HashSet<DataManagementEntityKind>
+            {
+                DataManagementEntityKind.Accounts,
+                DataManagementEntityKind.Tags,
+                DataManagementEntityKind.Expenses
+            }), tempFile);
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            var json = await File.ReadAllTextAsync(tempFile);
+            var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
+            Assert.NotNull(document);
+
+            var exportedChild = Assert.Single(document.Entities.ExpenseLogs, log => log.BackupId == 2);
+            Assert.Equal(1, exportedChild.ParentLogBackupId);
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
     public async Task BackupAsync_WhenDeductSourceAppearsAfterDependent_MapsDeductSourceByBackupId()
     {
         var appData = Substitute.For<IAppDataService>();

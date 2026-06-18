@@ -784,6 +784,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             expenseIdMap[backupExpense.BackupId] = expense.Id;
         }
 
+        var restoredExpenseLogsByBackupId = new Dictionary<int, ExpenseLog>();
         foreach (var backupExpenseLog in document.Entities.ExpenseLogs)
         {
             if (!expenseIdMap.TryGetValue(backupExpenseLog.ExpenseBackupId, out var expenseId) ||
@@ -792,7 +793,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 continue;
             }
 
-            await appData.AddExpenseLogAsync(new ExpenseLog
+            var expenseLog = new ExpenseLog
             {
                 ExpenseId = expenseId,
                 AccountId = sourceId,
@@ -801,7 +802,24 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 Notes = backupExpenseLog.Notes,
                 IsForDeletion = backupExpenseLog.IsForDeletion,
                 IsPinned = backupExpenseLog.IsPinned
-            }, cancellationToken);
+            };
+
+            await appData.AddExpenseLogAsync(expenseLog, cancellationToken);
+            restoredExpenseLogsByBackupId[backupExpenseLog.BackupId] = expenseLog;
+        }
+
+        foreach (var backupExpenseLog in document.Entities.ExpenseLogs)
+        {
+            if (backupExpenseLog.ParentLogBackupId is not { } parentBackupId ||
+                !restoredExpenseLogsByBackupId.TryGetValue(backupExpenseLog.BackupId, out var childLog) ||
+                !restoredExpenseLogsByBackupId.TryGetValue(parentBackupId, out var parentLog))
+            {
+                continue;
+            }
+
+            childLog.ParentLog = parentLog;
+            childLog.ParentLogId = parentLog.Id;
+            appData.UpdateExpenseLog(childLog);
         }
     }
 
@@ -1058,6 +1076,10 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         }
 
         var logs = await appData.GetExpenseLogsAsync(cancellationToken);
+        var expenseLogBackupIds = logs
+            .Select((log, index) => new { log.Id, BackupId = index + 1 })
+            .ToDictionary(entry => entry.Id, entry => entry.BackupId);
+
         foreach (var log in logs)
         {
             if (!expenseBackupIds.TryGetValue(log.ExpenseId, out var expenseBackupId) ||
@@ -1065,6 +1087,11 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             {
                 continue;
             }
+
+            var parentLogBackupId = log.ParentLogId is { } parentLogId &&
+                                    expenseLogBackupIds.TryGetValue(parentLogId, out var parentBackupId)
+                ? parentBackupId
+                : (int?)null;
 
             document.Entities.ExpenseLogs.Add(new BackupExpenseLog(
                 document.Entities.ExpenseLogs.Count + 1,
@@ -1074,7 +1101,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 log.DeductedOn,
                 log.Notes,
                 log.IsForDeletion,
-                log.IsPinned));
+                log.IsPinned,
+                parentLogBackupId));
         }
     }
 
