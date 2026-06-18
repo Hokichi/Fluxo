@@ -312,12 +312,15 @@ public sealed class MainWindowPageRegressionTests
     public void Ledger_ClearFiltersButtonUsesBanIconAndClearHandler()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
-        var banButtonIndex = ledgerXaml.IndexOf("ButtonIcon=\"{StaticResource Ban}\"", StringComparison.Ordinal);
+        var banButtonIndex = ledgerXaml.IndexOf("Click=\"OnClearFiltersClick\"", StringComparison.Ordinal);
 
         Assert.True(banButtonIndex >= 0);
+        var buttonStartIndex = ledgerXaml.LastIndexOf("<customControls:BalloonButton", banButtonIndex, StringComparison.Ordinal);
         var buttonEndIndex = ledgerXaml.IndexOf("/>", banButtonIndex, StringComparison.Ordinal);
-        Assert.True(buttonEndIndex > banButtonIndex);
-        var button = ledgerXaml.Substring(banButtonIndex, buttonEndIndex - banButtonIndex);
+        Assert.True(buttonStartIndex >= 0);
+        Assert.True(buttonEndIndex > buttonStartIndex);
+        var button = ledgerXaml.Substring(buttonStartIndex, buttonEndIndex - buttonStartIndex);
+        Assert.Contains("ButtonIcon=\"{StaticResource Ban}\"", button);
         Assert.Contains("Click=\"OnClearFiltersClick\"", button);
         Assert.DoesNotContain("Click=\"OnApplyFiltersClick\"", button);
     }
@@ -362,7 +365,11 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("IsDisabledByAnotherEdit", rowTemplateSection);
         Assert.Contains("Property=\"IsHitTestVisible\" Value=\"False\"", rowTemplateSection);
         Assert.Contains("CommandParameter=\"{Binding}\"", rowTemplateSection);
+        Assert.Contains("CreateDuplicateTransactionDraft", ledgerCodeBehind);
+        Assert.Contains("ButtonIcon=\"{StaticResource Duplicate}\"", rowTemplateSection);
         Assert.Contains("IsEnabled=\"{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}\"", rowTemplateSection);
+        Assert.Contains("ButtonIcon=\"{StaticResource Ban}\"", rowTemplateSection);
+        Assert.Contains("DiscardTransactionEditCommand", rowTemplateSection);
         Assert.Contains("Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.X)\"", rowTemplateSection);
         Assert.Contains("To=\"3\"", rowTemplateSection);
         Assert.Contains("FluxoMessageBox.Show", ledgerCodeBehind);
@@ -376,10 +383,13 @@ public sealed class MainWindowPageRegressionTests
         var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
         var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
 
-        Assert.Contains("PreviewMouseLeftButtonDown=\"OnLedgerRowPreviewMouseLeftButtonDown\"", rowTemplateSection);
+        Assert.Contains("Loaded=\"OnLedgerRowLoaded\"", rowTemplateSection);
+        Assert.Contains("PreviewMouseLeftButtonDownEvent", ledgerCodeBehind);
+        Assert.Contains("handledEventsToo: true", ledgerCodeBehind);
         Assert.Contains("ItemsSource=\"{Binding ChildTransactions}\"", rowTemplateSection);
         Assert.Contains("Visibility=\"{Binding IsChildrenExpanded, Converter={StaticResource BoolToVisibilityConverter}}\"", rowTemplateSection);
         Assert.Contains("LedgerChildRowTemplate", rowTemplateSection);
+        Assert.Contains("e.Handled = true;", ledgerCodeBehind);
         Assert.Contains("ToggleChildTransactionsCommand", ledgerCodeBehind);
     }
 

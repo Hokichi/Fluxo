@@ -15,6 +15,7 @@ using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Mappings;
 using Fluxo.Services.History;
 using Fluxo.Tests.TestDoubles;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.Main;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -520,6 +521,100 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void DiscardTransactionEditCommand_ReloadsPersistedTransactionValuesWithoutSaving()
+    {
+        RunInSta(() =>
+        {
+            var unitOfWork = CreateUnitOfWork();
+            var vm = CreateVm(unitOfWork: unitOfWork);
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var grocery = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+
+            vm.EditTransactionCommand.ExecuteAsync(grocery).GetAwaiter().GetResult();
+            grocery.Name = "Changed locally";
+            grocery.Amount = 42m;
+            grocery.AccountId = 2;
+            grocery.TagId = 2;
+
+            vm.DiscardTransactionEditCommand.ExecuteAsync(grocery).GetAwaiter().GetResult();
+
+            Assert.False(grocery.IsEditing);
+            Assert.Null(vm.EditingTransaction);
+            Assert.Equal("FreshMart Grocery", grocery.Name);
+            Assert.Equal(67.50m, grocery.Amount);
+            Assert.Equal(1, grocery.AccountId);
+            Assert.Equal("DBS Checking", grocery.AccountName);
+            Assert.Equal(1, grocery.TagId);
+            Assert.Equal("Groceries", grocery.TagName);
+            unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void CreateDuplicateTransactionDraft_CopiesVisibleFieldsAsStandaloneTransaction()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(unitOfWork: CreateUnitOfWork());
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var grocery = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+
+            var draft = vm.CreateDuplicateTransactionDraft(grocery);
+
+            Assert.Equal(new AddNewTransactionVM.AddNewTransactionDraft(
+                true,
+                "FreshMart Grocery",
+                67.50m,
+                1,
+                new DateTime(2026, 6, 3),
+                string.Empty,
+                ExpenseCategory.Needs,
+                1), draft);
+        });
+    }
+
+    [Fact]
+    public void CreateDuplicateTransactionDraft_ForChildExpenseDoesNotPreserveParentRelationship()
+    {
+        RunInSta(() =>
+        {
+            var expenseLogs = CreateExpenseLogs()
+                .Concat(
+                [
+                    CreateExpenseLog(
+                        4,
+                        "FreshMart Split",
+                        12.25m,
+                        new DateTime(2026, 6, 3, 10, 0, 0),
+                        ExpenseCategory.Wants,
+                        new ExpenseTagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" },
+                        new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true },
+                        parentLogId: 1)
+                ])
+                .ToList();
+            var expenseLogService = Substitute.For<IExpenseLogService>();
+            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(expenseLogs);
+            var vm = CreateVm(expenseLogService: expenseLogService, unitOfWork: CreateUnitOfWork());
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+            var child = Assert.Single(parent.ChildTransactions);
+
+            var draft = vm.CreateDuplicateTransactionDraft(child);
+
+            Assert.True(draft.IsExpense);
+            Assert.Equal("FreshMart Split", draft.Name);
+            Assert.Equal(12.25m, draft.AmountText);
+            Assert.Equal(1, draft.AccountId);
+            Assert.Equal(new DateTime(2026, 6, 3), draft.Date);
+            Assert.Equal(ExpenseCategory.Wants, draft.Category);
+            Assert.Equal(2, draft.TagId);
+            Assert.False(draft.IsGoal);
+            Assert.Null(draft.GoalId);
+        });
+    }
+
+    [Fact]
     public void LedgerTagsForEditing_ExposeOnlyNonSystemTagsAndUpdateTransactionSelection()
     {
         RunInSta(() =>
@@ -537,6 +632,25 @@ public sealed class LedgerVMTests
             Assert.Equal(2, grocery.TagId);
             Assert.Equal("Streaming", grocery.TagName);
             Assert.Equal("#D97936", grocery.TagHexCode);
+        });
+    }
+
+    [Fact]
+    public void LedgerAccountsForEditing_UpdateTransactionSelection()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(unitOfWork: CreateUnitOfWork());
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var grocery = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+
+            Assert.Equal(new[] { "Citibank Credit", "DBS Checking" }, vm.EditableAccounts.Select(account => account.Name).ToArray());
+
+            vm.EditTransactionCommand.ExecuteAsync(grocery).GetAwaiter().GetResult();
+            vm.ApplyTransactionAccount(grocery, vm.EditableAccounts.Single(account => account.Name == "Citibank Credit"));
+
+            Assert.Equal(2, grocery.AccountId);
+            Assert.Equal("Citibank Credit", grocery.AccountName);
         });
     }
 

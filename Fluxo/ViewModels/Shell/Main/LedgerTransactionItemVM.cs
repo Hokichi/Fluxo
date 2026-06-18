@@ -15,6 +15,7 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     [ObservableProperty] private bool _isChildrenExpanded;
     [ObservableProperty] private bool _isLastVisibleInGroup;
     [ObservableProperty] private bool _isSelectedForBatch;
+    [ObservableProperty] private bool _isAccountPopupOpen;
     [ObservableProperty] private bool _isTagPopupOpen;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private string _accountName = string.Empty;

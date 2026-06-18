@@ -9,6 +9,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell.Main;
+using Fluxo.Views.Shell.Main;
 using Microsoft.Win32;
 
 namespace Fluxo.Views.Shell.Main.Pages;
@@ -59,6 +60,18 @@ public partial class Ledger : UserControl
             viewModel.ApplyAllTimeRange(refresh: false);
     }
 
+    private void OnLedgerRowLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is UIElement row)
+        {
+            row.RemoveHandler(UIElement.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnLedgerRowPreviewMouseLeftButtonDown));
+            row.AddHandler(
+                UIElement.PreviewMouseLeftButtonDownEvent,
+                new MouseButtonEventHandler(OnLedgerRowPreviewMouseLeftButtonDown),
+                handledEventsToo: true);
+        }
+    }
+
     private void OnRemoveTransactionClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
@@ -89,12 +102,19 @@ public partial class Ledger : UserControl
         }
 
         viewModel.ToggleChildTransactionsCommand.Execute(transaction);
+        e.Handled = true;
     }
 
     private static bool IsInteractiveLedgerRowElement(DependencyObject? source)
     {
         while (source is not null)
         {
+            if (source is TextBox { IsReadOnly: true })
+            {
+                source = VisualTreeHelper.GetParent(source);
+                continue;
+            }
+
             if (source is TextBox or ButtonBase or CheckBox or ComboBox or ListBox or Popup)
                 return true;
 
@@ -165,7 +185,7 @@ public partial class Ledger : UserControl
         e.Handled = true;
         if (transaction.IsEditing)
         {
-            transaction.IsTagPopupOpen = transaction.Kind == LedgerTransactionKind.Expense;
+            OpenTransactionTagPopup(transaction);
             return;
         }
 
@@ -198,7 +218,57 @@ public partial class Ledger : UserControl
             return;
 
         e.Handled = true;
+        if (transaction.IsEditing)
+        {
+            OpenTransactionAccountPopup(transaction);
+            return;
+        }
+
         viewModel.ApplyAccountFilter(transaction.AccountId);
+    }
+
+    private void OnEditAccountSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel ||
+            e.AddedItems.Count == 0 ||
+            e.AddedItems[0] is not AccountVM account)
+        {
+            return;
+        }
+
+        viewModel.ApplyTransactionAccount(transaction, account);
+        transaction.IsAccountPopupOpen = false;
+        if (sender is ListBox listBox)
+            listBox.SelectedItem = null;
+    }
+
+    private void OnDuplicateTransactionClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel ||
+            Window.GetWindow(this) is not MainWindow ownerWindow)
+        {
+            return;
+        }
+
+        var draft = viewModel.CreateDuplicateTransactionDraft(transaction);
+        ownerWindow.OpenAddNewTransactionPopup(draft);
+    }
+
+    private void OpenTransactionTagPopup(LedgerTransactionItemVM transaction)
+    {
+        if (transaction.Kind != LedgerTransactionKind.Expense)
+            return;
+
+        transaction.IsTagPopupOpen = false;
+        _ = Dispatcher.BeginInvoke(() => transaction.IsTagPopupOpen = true, DispatcherPriority.Input);
+    }
+
+    private void OpenTransactionAccountPopup(LedgerTransactionItemVM transaction)
+    {
+        transaction.IsAccountPopupOpen = false;
+        _ = Dispatcher.BeginInvoke(() => transaction.IsAccountPopupOpen = true, DispatcherPriority.Input);
     }
 
     private async void OnFilterDropDownClosed(object sender, EventArgs e)
