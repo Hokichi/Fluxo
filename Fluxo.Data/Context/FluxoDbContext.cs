@@ -233,6 +233,13 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
                 if (navigation.IsCollection)
                     continue;
 
+                var isOptionalSelfReference =
+                    navigation.DeclaringEntityType.ClrType == navigation.TargetEntityType.ClrType &&
+                    !navigation.ForeignKey.IsRequired;
+
+                if (isOptionalSelfReference)
+                    continue;
+
                 modelBuilder.Entity(entityType.ClrType)
                     .Navigation(navigation.Name)
                     .AutoInclude();

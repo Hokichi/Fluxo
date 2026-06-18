@@ -38,6 +38,11 @@ public sealed class ModelSchemaTests
             foreignKey.Properties.Any(property => property.Name == nameof(ExpenseLog.ParentLogId)) &&
             foreignKey.PrincipalEntityType.ClrType == typeof(ExpenseLog) &&
             foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
+        var parentLogNavigation = expenseLog.FindNavigation(nameof(ExpenseLog.ParentLog));
+        Assert.NotNull(parentLogNavigation);
+        Assert.False(parentLogNavigation!.IsEagerLoaded);
+        Assert.True(expenseLog.FindNavigation(nameof(ExpenseLog.Expense))!.IsEagerLoaded);
+        Assert.True(expenseLog.FindNavigation(nameof(ExpenseLog.Account))!.IsEagerLoaded);
 
         var incomeLog = model.FindEntityType(typeof(IncomeLog))!;
         Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsForDeletion))!.IsNullable);
