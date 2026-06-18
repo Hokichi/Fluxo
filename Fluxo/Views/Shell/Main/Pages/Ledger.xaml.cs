@@ -96,7 +96,7 @@ public partial class Ledger : UserControl
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
             DataContext is not LedgerVM viewModel ||
             !transaction.HasChildTransactions ||
-            IsInteractiveLedgerRowElement(e.OriginalSource as DependencyObject))
+            IsInteractiveLedgerRowElement(e.OriginalSource as DependencyObject, sender as DependencyObject))
         {
             return;
         }
@@ -105,10 +105,13 @@ public partial class Ledger : UserControl
         e.Handled = true;
     }
 
-    private static bool IsInteractiveLedgerRowElement(DependencyObject? source)
+    private static bool IsInteractiveLedgerRowElement(DependencyObject? source, DependencyObject? rowRoot)
     {
         while (source is not null)
         {
+            if (ReferenceEquals(source, rowRoot))
+                return false;
+
             if (source is TextBox { IsReadOnly: true })
             {
                 source = VisualTreeHelper.GetParent(source);

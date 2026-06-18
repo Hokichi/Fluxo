@@ -446,14 +446,13 @@
         <DataTemplate x:Key="LedgerChildRowTemplate">
             <Border
                 MinHeight="48"
+                Margin="0,0,0,8"
                 Padding="0"
-                Background="Transparent">
-                <Border.RenderTransform>
-                    <TranslateTransform />
-                </Border.RenderTransform>
+                Background="{StaticResource Brush.Background.Surface}"
+                CornerRadius="8">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4" />
+                        <ColumnDefinition Width="2" />
                         <ColumnDefinition Width="6" />
                         <ColumnDefinition Width="1.5*" />
                         <ColumnDefinition Width="*" />
@@ -465,7 +464,7 @@
 
                     <Border
                         Grid.Column="0"
-                        Margin="0,8"
+                        Margin="0,12"
                         CornerRadius="0,4,4,0">
                         <Border.Style>
                             <Style TargetType="Border">
@@ -483,9 +482,13 @@
                     </Border>
 
                     <StackPanel
+                        x:Name="ChildRowNameContent"
                         Grid.Column="2"
                         Margin="0,8"
                         Orientation="Horizontal">
+                        <StackPanel.RenderTransform>
+                            <TranslateTransform />
+                        </StackPanel.RenderTransform>
                         <TextBox
                             MinWidth="120"
                             VerticalContentAlignment="Center"
@@ -539,10 +542,15 @@
                     </StackPanel>
 
                     <Grid
+                        x:Name="ChildRowTagCell"
                         Grid.Column="4"
                         MaxWidth="160"
+                        Margin="-26,0,0,0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center">
+                        <Grid.RenderTransform>
+                            <TranslateTransform />
+                        </Grid.RenderTransform>
                         <Border
                             x:Name="LedgerTransactionTagBadge"
                             Padding="8,2"
@@ -600,8 +608,10 @@
                     </Grid>
 
                     <Border
+                        x:Name="ChildRowAccountCell"
                         Grid.Column="5"
                         MaxWidth="180"
+                        Margin="-23,0,0,0"
                         Padding="8,3"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
@@ -609,6 +619,9 @@
                         CornerRadius="8"
                         Cursor="Hand"
                         PreviewMouseLeftButtonDown="OnTransactionAccountPreviewMouseLeftButtonDown">
+                        <Border.RenderTransform>
+                            <TranslateTransform />
+                        </Border.RenderTransform>
                         <TextBlock
                             FontFamily="{StaticResource Medium}"
                             FontSize="11"
@@ -617,13 +630,17 @@
                     </Border>
 
                     <TextBlock
+                        x:Name="ChildRowSignedAmountText"
                         Grid.Column="6"
-                        Margin="0,8,8,8"
+                        Margin="0,8,26,8"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
                         Text="{Binding SignedAmount, StringFormat={}{0:+#,##0;-#,##0;$0}}">
+                        <TextBlock.RenderTransform>
+                            <TranslateTransform />
+                        </TextBlock.RenderTransform>
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
@@ -638,16 +655,85 @@
                     </TextBlock>
 
                     <customControls:MoneyTextBox
+                        x:Name="ChildRowMoneyEditor"
                         Grid.Column="6"
-                        Margin="0,8,8,8"
+                        Margin="0,8,26,8"
                         VerticalContentAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
                         Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
                         Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
-                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <customControls:MoneyTextBox.RenderTransform>
+                            <TranslateTransform />
+                        </customControls:MoneyTextBox.RenderTransform>
+                    </customControls:MoneyTextBox>
 
                 </Grid>
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="MouseEnter">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowNameContent"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="3"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowTagCell"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="3"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowAccountCell"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="3"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowSignedAmountText"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="3"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowMoneyEditor"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="3"
+                                    Duration="0:0:0.12" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="MouseLeave">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowNameContent"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="0"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowTagCell"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="0"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowAccountCell"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="0"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowSignedAmountText"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="0"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowMoneyEditor"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="0"
+                                    Duration="0:0:0.12" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="Transparent" />
@@ -672,12 +758,14 @@
                 <Border
                     x:Name="RowRoot"
                     MinHeight="48"
+                    Margin="0,0,0,8"
                     Padding="0"
-                    Background="Transparent"
+                    Background="{StaticResource Brush.Background.Surface}"
+                    CornerRadius="8"
                     Loaded="OnLedgerRowLoaded">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="4" />
+                            <ColumnDefinition Width="2" />
                             <ColumnDefinition Width="6" />
                             <ColumnDefinition Width="1.5*" />
                             <ColumnDefinition Width="*" />
@@ -688,26 +776,8 @@
                         </Grid.ColumnDefinitions>
 
                         <Border
-                            x:Name="RowSeparator"
-                            Grid.ColumnSpan="8"
-                            Height="1"
-                            VerticalAlignment="Bottom"
-                            Background="{StaticResource Brush.Border.Subtle}">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLastVisibleInGroup}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                        </Border>
-
-                        <Border
                             Grid.Column="0"
-                            Margin="0,8"
+                            Margin="0,12"
                             CornerRadius="0,4,4,0">
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -1125,11 +1195,21 @@
                         </Style>
                     </Border.Style>
                 </Border>
-                <ItemsControl
-                    Margin="18,0,0,0"
-                    ItemTemplate="{StaticResource LedgerChildRowTemplate}"
-                    ItemsSource="{Binding ChildTransactions}"
-                    Visibility="{Binding IsChildrenExpanded, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <Grid Visibility="{Binding IsChildrenExpanded, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="1.5"
+                        Margin="0,0,0,8"
+                        HorizontalAlignment="Center"
+                        Background="{StaticResource Brush.Background.Hover}" />
+                    <ItemsControl
+                        Grid.Column="1"
+                        ItemTemplate="{StaticResource LedgerChildRowTemplate}"
+                        ItemsSource="{Binding ChildTransactions}" />
+                </Grid>
             </StackPanel>
         </DataTemplate>
 
@@ -1139,9 +1219,7 @@
                     <ControlTemplate TargetType="GroupItem">
                         <Border
                             Margin="0,0,0,8"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="1"
+                            Background="Transparent"
                             CornerRadius="8">
                             <StackPanel>
                                 <ToggleButton

@@ -394,6 +394,43 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
+    public void Ledger_ChildRowsKeepIndicatorIndentButAlignDataColumnsAndUseHoverAnimation()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var childTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerChildRowTemplate\"", "x:Key=\"LedgerRowTemplate\"");
+        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
+
+        Assert.Contains("<ColumnDefinition Width=\"36\" />", rowTemplateSection);
+        Assert.Contains("Margin=\"0,0,0,8\"", rowTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowNameContent\"", childTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowTagCell\"", childTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowAccountCell\"", childTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowSignedAmountText\"", childTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowMoneyEditor\"", childTemplateSection);
+        Assert.Equal(5, CountOccurrences(childTemplateSection, "<TranslateTransform />"));
+        Assert.Contains("Margin=\"-18,0,0,0\"", childTemplateSection);
+        Assert.Contains("Margin=\"-11,0,0,0\"", childTemplateSection);
+        Assert.Contains("Margin=\"0,8,12,8\"", childTemplateSection);
+        Assert.Contains("Storyboard.TargetName=\"ChildRowNameContent\"", childTemplateSection);
+        Assert.Contains("Storyboard.TargetName=\"ChildRowTagCell\"", childTemplateSection);
+        Assert.Contains("Storyboard.TargetName=\"ChildRowAccountCell\"", childTemplateSection);
+        Assert.Contains("Storyboard.TargetName=\"ChildRowSignedAmountText\"", childTemplateSection);
+        Assert.Contains("Storyboard.TargetName=\"ChildRowMoneyEditor\"", childTemplateSection);
+        Assert.Contains("Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.X)\"", childTemplateSection);
+        Assert.Contains("To=\"3\"", childTemplateSection);
+    }
+
+    [Fact]
+    public void Ledger_RowClickInteractiveScanStopsAtRowRootBeforeListViewAncestor()
+    {
+        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
+
+        Assert.Contains("IsInteractiveLedgerRowElement(e.OriginalSource as DependencyObject, sender as DependencyObject)", ledgerCodeBehind);
+        Assert.Contains("DependencyObject? rowRoot", ledgerCodeBehind);
+        Assert.Contains("ReferenceEquals(source, rowRoot)", ledgerCodeBehind);
+    }
+
+    [Fact]
     public void Ledger_GroupItemsAnimateAndRowsDoNotRenderSeparatorForLastItem()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
