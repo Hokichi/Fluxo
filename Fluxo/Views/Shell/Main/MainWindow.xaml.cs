@@ -1052,7 +1052,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderSearchButtonClick(object sender, RoutedEventArgs e)
     {
-        if (IsSufficientFundsActionGateLocked())
+        if (IsAppLocked() || IsSufficientFundsActionGateLocked())
             return;
 
         ExpandHeaderSearch();
@@ -1060,7 +1060,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderQuickAddButtonClick(object sender, RoutedEventArgs e)
     {
-        if (IsSufficientFundsActionGateLocked())
+        if (IsAppLocked() || IsSufficientFundsActionGateLocked())
             return;
 
         OpenAddNewTransactionPopup();
@@ -1078,6 +1078,9 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderNotificationButtonClick(object sender, RoutedEventArgs e)
     {
+        if (IsAppLocked())
+            return;
+
         ToggleHeaderNotificationPopup();
     }
 
@@ -1289,6 +1292,9 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnHeaderMenuButtonClick(object sender, RoutedEventArgs e)
     {
+        if (IsAppLocked())
+            return;
+
         OpenHeaderMenu(true);
     }
 
@@ -1359,6 +1365,11 @@ public partial class MainWindow : Window, IPopupHost
     private void OnDashboardSpendingAmountGateActionClick(object sender, RoutedEventArgs e)
     {
         OpenAddAccountPopup();
+    }
+
+    private void OnAppLockOverlayClick(object sender, RoutedEventArgs e)
+    {
+        UnlockAppUiFromUser();
     }
 
     public void OpenQuickAddPopup(AddNewTransactionVM.AddNewTransactionDraft? draft = null)
@@ -2021,6 +2032,12 @@ public partial class MainWindow : Window, IPopupHost
 
     private void ApplyPopupBlur()
     {
+        if (IsAppLocked())
+        {
+            ApplyAppLockBlur();
+            return;
+        }
+
         ContentGrid.Effect = CreatePopupBlurEffect();
         MainPageHost.Effect = CreatePopupBlurEffect();
         FloatingSideNavigationRail.Effect = CreatePopupBlurEffect();
@@ -2290,6 +2307,8 @@ public partial class MainWindow : Window, IPopupHost
         if (HeaderAppLockButton is not null)
             HeaderAppLockButton.IsChecked = _mainVM.IsAppLocked;
 
+        SetDashboardMainContentHitTestVisible(!_mainVM.IsAppLocked);
+
         if (_mainVM.IsAppLocked)
             ApplyAppLockBlur();
         else if (_popupOverlayHandoffState.ActivePopupCount <= 0)
@@ -2300,6 +2319,7 @@ public partial class MainWindow : Window, IPopupHost
 
     private void ApplyAppLockBlur()
     {
+        ContentGrid.Effect = null;
         DashboardSpendingAmountGateContent.Effect = CreatePopupBlurEffect();
         MainPageHost.Effect = CreatePopupBlurEffect();
         FloatingSideNavigationRail.Effect = CreatePopupBlurEffect();
@@ -2311,6 +2331,14 @@ public partial class MainWindow : Window, IPopupHost
         ContentGrid.Effect = null;
         MainPageHost.Effect = null;
         FloatingSideNavigationRail.Effect = null;
+    }
+
+    private void SetDashboardMainContentHitTestVisible(bool isHitTestVisible)
+    {
+        if (_dashboardPageView?.MainContentGrid is null)
+            return;
+
+        _dashboardPageView.MainContentGrid.IsHitTestVisible = isHitTestVisible;
     }
 
     private bool ShouldCollapseHeaderSearchOnExternalClick()

@@ -15,6 +15,7 @@ public sealed class AppUnlockPopupTests
         Assert.Contains("x:Name=\"ValidationText\"", xaml);
         Assert.Contains("Password does not match.", xaml);
         Assert.Contains("Content=\"Unlock\"", xaml);
+        Assert.Contains("Style=\"{StaticResource RoundedPasswordInputStyle}\"", xaml);
     }
 
     [Fact]

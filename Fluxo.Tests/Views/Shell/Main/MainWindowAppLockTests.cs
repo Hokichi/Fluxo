@@ -18,6 +18,29 @@ public sealed class MainWindowAppLockTests
         Assert.Contains("CheckedIcon=\"{StaticResource LockOpen}\"", xaml);
         Assert.Contains("x:Name=\"AppLockOverlay\"", xaml);
         Assert.Contains("Visibility=\"{Binding IsAppLocked", xaml);
+        Assert.Contains("Click=\"OnAppLockOverlayClick\"", xaml);
+        Assert.Contains("Text=\"flux\"", xaml);
+        Assert.Contains("Text=\"o\"", xaml);
+        Assert.Contains("Text=\" is locked\"", xaml);
+        Assert.Contains("FontFamily=\"{StaticResource Black}\"", xaml);
+        Assert.Contains("Foreground=\"{StaticResource Brush.Mint}\"", xaml);
+    }
+
+    [Fact]
+    public void LockedStateDisablesHeaderActionsButKeepsLockButtonAvailable()
+    {
+        var xaml = ReadMainWindowXaml();
+
+        Assert.Contains("x:Key=\"HeaderButtonDisableWhenAppLockedStyle\"", xaml);
+        Assert.Contains("x:Key=\"HeaderButtonDisableWhenAppLockedAndSufficientFundsActionGateLockedStyle\"", xaml);
+        Assert.Contains("x:Key=\"HeaderSearchRegionLockAndGateStyle\"", xaml);
+        Assert.Contains("x:Name=\"HeaderMenuButton\"", xaml);
+        Assert.Contains("x:Name=\"HeaderNotificationButton\"", xaml);
+        Assert.Contains("x:Name=\"HeaderSearchRegion\"", xaml);
+        Assert.Contains("x:Name=\"HeaderQuickAddButton\"", xaml);
+        Assert.Contains("Style=\"{StaticResource HeaderButtonDisableWhenAppLockedStyle}\"", xaml);
+        Assert.Contains("Style=\"{StaticResource HeaderButtonDisableWhenAppLockedAndSufficientFundsActionGateLockedStyle}\"", xaml);
+        Assert.Contains("Style=\"{StaticResource HeaderSearchRegionLockAndGateStyle}\"", xaml);
     }
 
     [Fact]
@@ -30,6 +53,8 @@ public sealed class MainWindowAppLockTests
         Assert.Contains("UnlockAppUiFromUser();", source);
         Assert.Contains("MainWindowShortcutMatcher.IsToggleAppLockShortcut(e.Key, Keyboard.Modifiers)", source);
         Assert.Contains("LockAppUiFromUser();", source);
+        Assert.Contains("SetDashboardMainContentHitTestVisible(!_mainVM.IsAppLocked);", source);
+        Assert.Contains("private void OnAppLockOverlayClick(object sender, RoutedEventArgs e)", source);
     }
 
     [Fact]

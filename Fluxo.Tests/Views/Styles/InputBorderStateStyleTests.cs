@@ -108,6 +108,33 @@ public sealed class InputBorderStateStyleTests
     }
 
     [Fact]
+    public void RoundedPasswordInputStyle_MatchesTextInputShapeAndUsesMintFocusBorder()
+    {
+        var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));
+        var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"RoundedPasswordInputStyle\"", "x:Key=\"RoundedMoneyTextInputStyle\"");
+
+        Assert.Contains("TargetType=\"PasswordBox\"", styleSection);
+        Assert.Contains("<Setter Property=\"Foreground\" Value=\"{DynamicResource Brush.Text.Primary}\" />", styleSection);
+        Assert.Contains("<Setter Property=\"CaretBrush\" Value=\"{DynamicResource Brush.Text.Primary}\" />", styleSection);
+        Assert.Contains("CornerRadius=\"8\"", styleSection);
+        Assert.Contains("Property=\"IsKeyboardFocused\" Value=\"True\"", styleSection);
+        Assert.Contains("TargetName=\"InputRoot\" Property=\"BorderBrush\" Value=\"{DynamicResource Brush.Mint}\"", styleSection);
+    }
+
+    [Fact]
+    public void UnlockPasswordFields_UseRoundedPasswordInputStyle()
+    {
+        var settingsXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsPersonalizationTab.xaml"));
+        var wizardXaml = File.ReadAllText(ResolveRepoPath("Fluxo", "Views", "Shell", "Wizard", "Pages", "Steps", "Personalization.xaml"));
+
+        var settingsPasswordSection = ExtractSection(settingsXaml, "x:Name=\"UiLockingPasswordBox\"", "/>");
+        var wizardPasswordSection = ExtractSection(wizardXaml, "x:Name=\"UiLockingPasswordBox\"", "/>");
+
+        Assert.Contains("Style=\"{StaticResource RoundedPasswordInputStyle}\"", settingsPasswordSection);
+        Assert.Contains("Style=\"{StaticResource RoundedPasswordInputStyle}\"", wizardPasswordSection);
+    }
+
+    [Fact]
     public void RoundedMoneyTextInputStyle_UsesZeroVerticalPadding_ForCenteredTextAndPlaceholder()
     {
         var textBoxStylesXaml = File.ReadAllText(ResolveRepoPath("Fluxo.Resources", "Resources", "Styles", "TextBoxStyles.xaml"));

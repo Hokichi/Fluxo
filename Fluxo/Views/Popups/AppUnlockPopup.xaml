@@ -3,10 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
-    Width="440"
     PopupTitle="Unlock fluxo"
     ShowCancelButton="True">
-    <Border Padding="24,8,24,24">
+    <Border Width="440" Padding="24,8,24,24">
         <StackPanel>
             <TextBlock
                 FontFamily="{StaticResource Medium}"
@@ -18,13 +17,8 @@
             <PasswordBox
                 x:Name="UnlockPasswordBox"
                 Margin="0,12,0,0"
-                Padding="12,8"
-                Background="{StaticResource Brush.Background.Surface}"
-                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                BorderThickness="1"
-                CaretBrush="{StaticResource Brush.Text.Primary}"
-                Foreground="{StaticResource Brush.Text.Primary}"
-                PasswordChanged="OnUnlockPasswordBoxPasswordChanged" />
+                PasswordChanged="OnUnlockPasswordBoxPasswordChanged"
+                Style="{StaticResource RoundedPasswordInputStyle}" />
 
             <TextBlock
                 x:Name="ValidationText"

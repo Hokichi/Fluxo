@@ -80,13 +80,8 @@
                 <Grid Grid.Column="1" Width="260">
                     <PasswordBox
                         x:Name="UiLockingPasswordBox"
-                        Padding="12,8"
-                        Background="{StaticResource Brush.Background.Surface}"
-                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                        BorderThickness="1"
-                        CaretBrush="{StaticResource Brush.Text.Primary}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
                         PasswordChanged="OnUiLockingPasswordBoxPasswordChanged"
+                        Style="{StaticResource RoundedPasswordInputStyle}"
                         Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                     <TextBox
                         x:Name="UiLockingPasswordVisibleTextBox"

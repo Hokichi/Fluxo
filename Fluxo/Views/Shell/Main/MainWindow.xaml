@@ -52,6 +52,19 @@
                 </Style.Triggers>
             </Style>
 
+            <Style x:Key="HeaderSearchRegionLockAndGateStyle" TargetType="Grid">
+                <Setter Property="IsEnabled" Value="True" />
+                <Setter Property="Visibility" Value="Visible" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsAppLocked}" Value="True">
+                        <Setter Property="IsEnabled" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
             <Style x:Key="DashboardSpendingAmountGateLockedContentStyle" TargetType="Grid">
                 <Setter Property="IsHitTestVisible" Value="True" />
                 <Setter Property="Effect" Value="{x:Null}" />
@@ -155,6 +168,31 @@
                 BasedOn="{StaticResource HeaderButtonStyle}"
                 TargetType="customControls:BalloonButton">
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style
+                x:Key="HeaderButtonDisableWhenAppLockedStyle"
+                BasedOn="{StaticResource HeaderButtonStyle}"
+                TargetType="customControls:BalloonButton">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsAppLocked}" Value="True">
+                        <Setter Property="IsEnabled" Value="False" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style
+                x:Key="HeaderButtonDisableWhenAppLockedAndSufficientFundsActionGateLockedStyle"
+                BasedOn="{StaticResource HeaderButtonStyle}"
+                TargetType="customControls:BalloonButton">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsAppLocked}" Value="True">
+                        <Setter Property="IsEnabled" Value="False" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding IsSufficientFundsActionGateLocked}" Value="True">
                         <Setter Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
@@ -375,7 +413,7 @@
                                 VerticalAlignment="Top"
                                 Panel.ZIndex="10"
                                 PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus"
-                                Style="{StaticResource HideWhenSufficientFundsActionGateLockedStyle}">
+                                Style="{StaticResource HeaderSearchRegionLockAndGateStyle}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
@@ -473,7 +511,7 @@
                                     ButtonIcon="{StaticResource Bell}"
                                     Click="OnHeaderNotificationButtonClick"
                                     IconSize="11"
-                                    Style="{StaticResource HeaderButtonStyle}" />
+                                    Style="{StaticResource HeaderButtonDisableWhenAppLockedStyle}" />
 
                                 <Ellipse
                                     x:Name="HeaderNotificationUnreadDot"
@@ -517,7 +555,7 @@
                                 IconSize="9"
                                 MouseEnter="OnHeaderMenuButtonMouseEnter"
                                 MouseLeave="OnHeaderMenuButtonMouseLeave"
-                                Style="{StaticResource HeaderButtonStyle}" />
+                                Style="{StaticResource HeaderButtonDisableWhenAppLockedStyle}" />
 
                             <Popup
                                 x:Name="HeaderMenuPopup"
@@ -764,7 +802,7 @@
                                 Foreground="{StaticResource Brush.Text.Primary.Dark}"
                                 HoveredBackground="{StaticResource Brush.Mint.Muted}"
                                 ShouldExpand="True"
-                                Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
+                                Style="{StaticResource HeaderButtonDisableWhenAppLockedAndSufficientFundsActionGateLockedStyle}" />
 
                             <Border
                                 Width="1"
@@ -867,6 +905,44 @@
                         </StackPanel>
                     </Button>
                 </Grid>
+
+                <Button
+                    x:Name="AppLockOverlay"
+                    Margin="200,76,200,48"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Panel.ZIndex="11"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="OnAppLockOverlayClick"
+                    Cursor="Hand"
+                    FocusVisualStyle="{x:Null}"
+                    Visibility="{Binding IsAppLocked, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            FontFamily="{StaticResource Black}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="flux" />
+                        <TextBlock
+                            FontFamily="{StaticResource Black}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Mint}"
+                            Text="o" />
+                        <TextBlock
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="18"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text=" is locked" />
+                    </StackPanel>
+                </Button>
 
                 <Border
                     x:Name="FloatingSideNavigationRail"
