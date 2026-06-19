@@ -254,8 +254,8 @@
                         SnapsToDevicePixels="True">
                         <Border.CornerRadius>
                             <MultiBinding Converter="{StaticResource CornerRadiusConverter}">
-                                <Binding Path="Width" RelativeSource="{RelativeSource TemplatedParent}" />
-                                <Binding Path="Height" RelativeSource="{RelativeSource TemplatedParent}" />
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}" />
+                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource TemplatedParent}" />
                             </MultiBinding>
                         </Border.CornerRadius>
                         <Grid x:Name="PART_Track">
