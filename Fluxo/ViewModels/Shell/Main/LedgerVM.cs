@@ -1139,10 +1139,15 @@ public partial class LedgerVM : ObservableRecipient,
 
     private async Task CommitExpenseEditTreeAsync(LedgerTransactionItemVM transaction)
     {
+        var targetAccountId = transaction.AccountId;
         await CommitExpenseEditAsync(transaction);
 
         foreach (var child in transaction.ChildTransactions)
+        {
+            child.AccountId = targetAccountId;
+            child.AccountName = transaction.AccountName;
             await CommitExpenseEditAsync(child);
+        }
     }
 
     private Task ReloadTransactionFromStoreAsync(LedgerTransactionItemVM transaction)

@@ -23,6 +23,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly ExpenseLogVM _expenseLog;
     private readonly MainVM _mainViewModel;
     private readonly List<ExpenseTagVM> _orderedTags = [];
+    private readonly List<ExpenseSplitRowVM> _removedSplitRows = [];
     private readonly IAppDataService _appData;
 
     [ObservableProperty] private decimal _amountText;
@@ -191,6 +192,9 @@ public partial class ExpenseDetailVM : ObservableObject
     public void RemoveSplitRow(ExpenseSplitRowVM row)
     {
         row.PropertyChanged -= OnSplitRowPropertyChanged;
+        if (row.ExpenseLogId is not null)
+            _removedSplitRows.Add(row);
+
         SplitRows.Remove(row);
         NotifySplitRowStateChanged();
         RecalculateSplitRemainder(SplitRows.LastOrDefault());
@@ -221,6 +225,7 @@ public partial class ExpenseDetailVM : ObservableObject
             row.PropertyChanged -= OnSplitRowPropertyChanged;
 
         SplitRows.Clear();
+        _removedSplitRows.Clear();
 
         foreach (var childLog in childLogs)
             AddSplitRow(ProjectSplitRow(childLog));
@@ -242,6 +247,7 @@ public partial class ExpenseDetailVM : ObservableObject
             row.PropertyChanged -= OnSplitRowPropertyChanged;
 
         SplitRows.Clear();
+        _removedSplitRows.Clear();
         IsSplitMode = false;
         HasNegativeSplitRemainder = false;
         NegativeRemainderRow = null;
@@ -373,6 +379,9 @@ public partial class ExpenseDetailVM : ObservableObject
             expenseLog.DeductedOn = input.Date;
             expenseLog.Notes = input.Note;
             expenseLog.Account = newAccount;
+
+            if (sourceChanged)
+                await CascadeAccountToChildExpenseLogsAsync(newAccount);
 
             _appData.UpdateExpense(expense);
             _appData.UpdateExpenseLog(expenseLog);
@@ -557,6 +566,8 @@ public partial class ExpenseDetailVM : ObservableObject
             }
 
             result.Add(new ExpenseSplitInput(
+                row.ExpenseLogId,
+                _expenseLog.Id,
                 row.NameText.Trim(),
                 row.AmountText,
                 row.SelectedExpenseCategory,
@@ -565,7 +576,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 SelectedDate.Date));
         }
 
-        if (result.Count == 0)
+        if (result.Count == 0 && _removedSplitRows.All(row => row.ExpenseLogId is null))
         {
             validationMessage = "Add at least one split amount before saving.";
             return false;
@@ -613,32 +624,85 @@ public partial class ExpenseDetailVM : ObservableObject
 
             _ = keepParentExpenseWhenRemainder;
             originalLog.ParentLogId = null;
+            var existingChildren = (await LoadChildExpenseLogsAsync(CancellationToken.None))
+                .ToDictionary(log => log.Id);
 
+            var changedSnapshots = new List<(ExpenseLogMemorySnapshot Before, ExpenseLogMemorySnapshot After)>();
             var createdLogs = new List<(Expense Expense, ExpenseLog ExpenseLog, ExpenseTag Tag)>(splitEntries.Count);
             foreach (var (input, tag) in splitEntries)
             {
-                var expense = new Expense
+                if (input.ExpenseLogId is { } childLogId &&
+                    existingChildren.TryGetValue(childLogId, out var existingChild) &&
+                    existingChild.Expense is not null)
                 {
-                    Name = BuildExpenseName(input.Name, input.Note, tag.Name),
-                    Amount = input.Amount,
-                    ExpenseCategory = input.Category,
-                    AccountId = account.Id,
-                    ExpenseTagId = tag.Id
-                };
-                var expenseLog = new ExpenseLog
-                {
-                    Expense = expense,
-                    Amount = input.Amount,
-                    DeductedOn = input.Date,
-                    Notes = input.Note,
-                    IsForDeletion = false,
-                    AccountId = account.Id,
-                    ParentLogId = originalLog.Id
-                };
+                    var beforeSnapshot = ExpenseLogMemorySnapshot.Create(existingChild);
+                    ApplySplitInputToExistingChild(existingChild, input, tag, account);
+                    _appData.UpdateExpense(existingChild.Expense);
+                    _appData.UpdateExpenseLog(existingChild);
+                    changedSnapshots.Add((beforeSnapshot, ExpenseLogMemorySnapshot.Create(existingChild)));
+                    continue;
+                }
+
+                var expense = CreateSplitExpense(input, tag, account);
+                var expenseLog = CreateSplitExpenseLog(input, expense, account, originalLog.Id);
 
                 await _appData.AddExpenseAsync(expense);
                 await _appData.AddExpenseLogAsync(expenseLog);
                 createdLogs.Add((expense, expenseLog, tag));
+            }
+
+            var retainedChildIds = inputs
+                .Select(input => input.ExpenseLogId)
+                .OfType<int>()
+                .ToHashSet();
+            var removedChildIds = new HashSet<int>();
+
+            foreach (var removedRow in _removedSplitRows.Where(row => row.ExpenseLogId is not null))
+            {
+                var removedChildId = removedRow.ExpenseLogId!.Value;
+                removedChildIds.Add(removedChildId);
+
+                if (!existingChildren.TryGetValue(removedChildId, out var removedChild) ||
+                    removedChild.Expense is null ||
+                    removedChild.IsForDeletion)
+                    continue;
+
+                if (removedRow.SelectedTag is null)
+                {
+                    removedChild.IsForDeletion = true;
+                    _appData.UpdateExpenseLog(removedChild);
+                    continue;
+                }
+
+                var removedTag = await _appData.GetExpenseTagByIdAsync(removedRow.SelectedTag.Id);
+                if (removedTag is null)
+                    return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
+
+                var input = new ExpenseSplitInput(
+                    removedRow.ExpenseLogId,
+                    originalLog.Id,
+                    removedRow.NameText.Trim(),
+                    removedRow.AmountText,
+                    removedRow.SelectedExpenseCategory,
+                    removedRow.SelectedTag.Id,
+                    string.Empty,
+                    SelectedDate.Date);
+                var beforeSnapshot = ExpenseLogMemorySnapshot.Create(removedChild);
+                ApplySplitInputToExistingChild(removedChild, input, removedTag, account);
+                removedChild.IsForDeletion = true;
+                _appData.UpdateExpense(removedChild.Expense);
+                _appData.UpdateExpenseLog(removedChild);
+                changedSnapshots.Add((beforeSnapshot, ExpenseLogMemorySnapshot.Create(removedChild)));
+            }
+
+            foreach (var staleChild in existingChildren.Values.Where(child =>
+                         !retainedChildIds.Contains(child.Id) &&
+                         !removedChildIds.Contains(child.Id)))
+            {
+                var beforeSnapshot = ExpenseLogMemorySnapshot.Create(staleChild);
+                staleChild.IsForDeletion = true;
+                _appData.UpdateExpenseLog(staleChild);
+                changedSnapshots.Add((beforeSnapshot, ExpenseLogMemorySnapshot.Create(staleChild)));
             }
 
             await _appData.SaveChangesAsync();
@@ -656,8 +720,11 @@ public partial class ExpenseDetailVM : ObservableObject
                 entry.ExpenseLog.IsForDeletion,
                 entry.ExpenseLog.ParentLogId)).ToList();
 
-            var historyActions = createdSnapshots
+            var historyActions = changedSnapshots
+                .Select(snapshots => (ILogMemoryAction)new EditExpenseLogMemoryAction(snapshots.Before, snapshots.After))
+                .Concat(createdSnapshots
                 .Select(snapshot => (ILogMemoryAction)new AddExpenseLogMemoryAction(snapshot, shouldAdjustAccountTotals: false))
+                )
                 .ToList();
 
             WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
@@ -801,6 +868,7 @@ public partial class ExpenseDetailVM : ObservableObject
     {
         return new ExpenseSplitRowVM
         {
+            ExpenseLogId = log.Id,
             AmountText = log.Amount,
             NameText = log.Expense?.Name ?? string.Empty,
             SelectedExpenseCategory = log.Expense?.ExpenseCategory ?? SelectedExpenseCategory,
@@ -824,6 +892,80 @@ public partial class ExpenseDetailVM : ObservableObject
             HexCode = tag.HexCode,
             IsSystemTag = tag.IsSystemTag
         };
+    }
+
+    private async Task CascadeAccountToChildExpenseLogsAsync(Account account, CancellationToken cancellationToken = default)
+    {
+        var childLogs = await LoadChildExpenseLogsAsync(cancellationToken);
+        foreach (var childLog in childLogs)
+        {
+            if (childLog.Expense is not null)
+            {
+                childLog.Expense.Account = account;
+                childLog.Expense.AccountId = account.Id;
+                _appData.UpdateExpense(childLog.Expense);
+            }
+
+            childLog.Account = account;
+            childLog.AccountId = account.Id;
+            _appData.UpdateExpenseLog(childLog);
+        }
+    }
+
+    private static Expense CreateSplitExpense(ExpenseSplitInput input, ExpenseTag tag, Account account)
+    {
+        return new Expense
+        {
+            Name = BuildExpenseName(input.Name, input.Note, tag.Name),
+            Amount = input.Amount,
+            ExpenseCategory = input.Category,
+            Account = account,
+            AccountId = account.Id,
+            ExpenseTag = tag,
+            ExpenseTagId = tag.Id
+        };
+    }
+
+    private static ExpenseLog CreateSplitExpenseLog(
+        ExpenseSplitInput input,
+        Expense expense,
+        Account account,
+        int parentLogId)
+    {
+        return new ExpenseLog
+        {
+            Expense = expense,
+            Amount = input.Amount,
+            DeductedOn = input.Date,
+            Notes = input.Note,
+            IsForDeletion = false,
+            Account = account,
+            AccountId = account.Id,
+            ParentLogId = parentLogId
+        };
+    }
+
+    private static void ApplySplitInputToExistingChild(
+        ExpenseLog expenseLog,
+        ExpenseSplitInput input,
+        ExpenseTag tag,
+        Account account)
+    {
+        expenseLog.Expense!.Name = BuildExpenseName(input.Name, input.Note, tag.Name);
+        expenseLog.Expense.Amount = input.Amount;
+        expenseLog.Expense.ExpenseCategory = input.Category;
+        expenseLog.Expense.Account = account;
+        expenseLog.Expense.AccountId = account.Id;
+        expenseLog.Expense.ExpenseTag = tag;
+        expenseLog.Expense.ExpenseTagId = tag.Id;
+
+        expenseLog.Amount = input.Amount;
+        expenseLog.DeductedOn = input.Date;
+        expenseLog.Notes = input.Note;
+        expenseLog.Account = account;
+        expenseLog.AccountId = account.Id;
+        expenseLog.IsForDeletion = false;
+        expenseLog.ParentLogId = input.ParentLogId;
     }
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)
@@ -977,6 +1119,8 @@ public partial class ExpenseDetailVM : ObservableObject
         int TagId);
 
     private readonly record struct ExpenseSplitInput(
+        int? ExpenseLogId,
+        int ParentLogId,
         string Name,
         decimal Amount,
         ExpenseCategory Category,

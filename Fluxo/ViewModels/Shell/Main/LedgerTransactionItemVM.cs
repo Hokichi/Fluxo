@@ -83,6 +83,6 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     {
         CanApplyEdit = !IsEditing ||
                        !HasChildTransactions ||
-                       ChildTransactions.Sum(child => child.Amount) == Amount;
+                       ChildTransactions.Sum(child => child.Amount) <= Amount;
     }
 }

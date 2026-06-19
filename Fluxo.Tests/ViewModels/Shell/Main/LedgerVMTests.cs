@@ -542,7 +542,7 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
-    public void EditingParentTransaction_EnablesChildrenAndBlocksApplyUntilChildAmountsMatchParent()
+    public void EditingParentTransaction_BlocksApplyOnlyWhenChildAmountsExceedParent()
     {
         RunInSta(() =>
         {
@@ -557,14 +557,51 @@ public sealed class LedgerVMTests
             Assert.True(parent.CanApplyEdit);
             Assert.All(children, child => Assert.True(child.IsEditing));
 
-            var originalChildAmount = children[0].Amount;
             children[0].Amount = 10m;
+
+            Assert.True(parent.CanApplyEdit);
+
+            children[0].Amount = parent.Amount + 1m;
 
             Assert.False(parent.CanApplyEdit);
 
-            children[0].Amount = originalChildAmount;
+            children[0].Amount = parent.Amount;
+            children[1].Amount = 0m;
 
             Assert.True(parent.CanApplyEdit);
+        });
+    }
+
+    [Fact]
+    public void EditingParentTransaction_WhenAccountChanges_CascadesAccountToChildren()
+    {
+        RunInSta(() =>
+        {
+            var unitOfWork = CreateUnitOfWork();
+            var childLog4 = CreatePersistedExpenseLog(4, "FreshMart Produce", 30m, parentLogId: 1);
+            var childLog5 = CreatePersistedExpenseLog(5, "FreshMart Treats", 37.50m, parentLogId: 1);
+            unitOfWork.ExpenseLogs.GetByIdAsync(4, Arg.Any<CancellationToken>())
+                .Returns(childLog4);
+            unitOfWork.ExpenseLogs.GetByIdAsync(5, Arg.Any<CancellationToken>())
+                .Returns(childLog5);
+
+            var vm = CreateVm(
+                expenseLogService: CreateExpenseLogService(CreateBalancedSplitExpenseLogs()),
+                unitOfWork: unitOfWork);
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+            var children = parent.ChildTransactions.ToList();
+
+            vm.EditTransactionCommand.ExecuteAsync(parent).GetAwaiter().GetResult();
+            parent.AccountId = 2;
+            vm.EditTransactionCommand.ExecuteAsync(parent).GetAwaiter().GetResult();
+
+            Assert.All(children, child => Assert.Equal(2, child.AccountId));
+            unitOfWork.ExpenseLogs.Received().Update(Arg.Is<ExpenseLog>(log =>
+                log.Id == children[0].Id &&
+                log.AccountId == 2 &&
+                log.Expense != null &&
+                log.Expense.AccountId == 2));
         });
     }
 
@@ -1010,6 +1047,40 @@ public sealed class LedgerVMTests
             Amount = expense.Amount,
             DeductedOn = new DateTime(2026, 6, 3, 9, 15, 0),
             Notes = string.Empty,
+            AccountId = source.Id,
+            Account = source
+        };
+    }
+
+    private static ExpenseLog CreatePersistedExpenseLog(
+        int id,
+        string name,
+        decimal amount,
+        int? parentLogId = null)
+    {
+        var source = CreateCheckingSource();
+        var tag = new ExpenseTag { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
+        var expense = new Expense
+        {
+            Id = id,
+            Name = name,
+            Amount = amount,
+            ExpenseCategory = ExpenseCategory.Needs,
+            AccountId = source.Id,
+            Account = source,
+            ExpenseTagId = tag.Id,
+            ExpenseTag = tag
+        };
+
+        return new ExpenseLog
+        {
+            Id = id,
+            ExpenseId = expense.Id,
+            Expense = expense,
+            Amount = expense.Amount,
+            DeductedOn = new DateTime(2026, 6, 3, 9, 20, 0),
+            Notes = string.Empty,
+            ParentLogId = parentLogId,
             AccountId = source.Id,
             Account = source
         };

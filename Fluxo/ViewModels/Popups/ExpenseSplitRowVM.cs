@@ -7,6 +7,7 @@ namespace Fluxo.ViewModels.Popups;
 public partial class ExpenseSplitRowVM : ObservableObject
 {
     [ObservableProperty] private decimal _amountText;
+    [ObservableProperty] private int? _expenseLogId;
     [ObservableProperty] private bool _isCausingNegativeRemainder;
     [ObservableProperty] private bool _isTagPopupOpen;
     [ObservableProperty] private string _nameText = string.Empty;

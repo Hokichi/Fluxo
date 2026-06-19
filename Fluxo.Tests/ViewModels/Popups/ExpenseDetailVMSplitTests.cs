@@ -394,6 +394,180 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
+    public void SaveAsync_FromExistingSplitMode_UpdatesChildrenInsteadOfDuplicating()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
+            var childTag = new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6" };
+            var childExpense = new Expense
+            {
+                Id = 30,
+                Name = "Old child",
+                Amount = 25m,
+                ExpenseCategory = ExpenseCategory.Needs,
+                Account = persistedSource,
+                AccountId = persistedSource.Id,
+                ExpenseTag = childTag,
+                ExpenseTagId = childTag.Id
+            };
+            var childLog = new ExpenseLog
+            {
+                Id = 200,
+                Expense = childExpense,
+                ExpenseId = childExpense.Id,
+                Account = persistedSource,
+                AccountId = persistedSource.Id,
+                ParentLogId = 10,
+                Amount = 25m,
+                DeductedOn = new DateTime(2026, 5, 31)
+            };
+            appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([childLog]));
+            appData.GetExpenseTagByIdAsync(2, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<ExpenseTag?>(childTag));
+
+            vm.BeginSplitModeAsync().GetAwaiter().GetResult();
+            var row = Assert.Single(vm.SplitRows);
+            row.NameText = "Updated child";
+            row.AmountText = 40m;
+            row.SelectedExpenseCategory = ExpenseCategory.Wants;
+            row.SelectedTag = new ExpenseTagVM { Id = 2, Name = "Travel", HexCode = "#3B82F6" };
+
+            var result = vm.SaveAsync().GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).UpdateExpense(Arg.Is<Expense>(expense =>
+                expense.Id == 30 &&
+                expense.Name == "Updated child" &&
+                expense.Amount == 40m &&
+                expense.ExpenseCategory == ExpenseCategory.Wants &&
+                expense.ExpenseTagId == 2));
+            appData.Received(1).UpdateExpenseLog(Arg.Is<ExpenseLog>(log =>
+                log.Id == 200 &&
+                log.Amount == 40m &&
+                log.ParentLogId == 10 &&
+                !log.IsForDeletion));
+            _ = appData.DidNotReceive().AddExpenseLogAsync(
+                Arg.Is<ExpenseLog>(log => log.ParentLogId == 10),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_FromExistingSplitMode_RemovedChildPersistsEditsAndMarksForDeletion()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
+            var tag = new ExpenseTag { Id = 1, Name = "General", HexCode = "#22C55E" };
+            var childExpense = new Expense
+            {
+                Id = 30,
+                Name = "Old child",
+                Amount = 25m,
+                ExpenseCategory = ExpenseCategory.Needs,
+                Account = persistedSource,
+                AccountId = persistedSource.Id,
+                ExpenseTag = tag,
+                ExpenseTagId = tag.Id
+            };
+            var childLog = new ExpenseLog
+            {
+                Id = 200,
+                Expense = childExpense,
+                ExpenseId = childExpense.Id,
+                Account = persistedSource,
+                AccountId = persistedSource.Id,
+                ParentLogId = 10,
+                Amount = 25m,
+                DeductedOn = new DateTime(2026, 5, 31)
+            };
+            appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([childLog]));
+
+            vm.BeginSplitModeAsync().GetAwaiter().GetResult();
+            var row = Assert.Single(vm.SplitRows);
+            row.NameText = "Edited then removed";
+            row.AmountText = 45m;
+            vm.RemoveSplitRow(row);
+
+            var result = vm.SaveAsync().GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).UpdateExpense(Arg.Is<Expense>(expense =>
+                expense.Id == 30 &&
+                expense.Name == "Edited then removed" &&
+                expense.Amount == 45m));
+            appData.Received(1).UpdateExpenseLog(Arg.Is<ExpenseLog>(log =>
+                log.Id == 200 &&
+                log.Amount == 45m &&
+                log.IsForDeletion));
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_NormalMode_WhenParentAccountChanges_UpdatesChildAccounts()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
+            var targetSource = new Account
+            {
+                Id = 2,
+                Name = "Credit",
+                AccountType = AccountType.Credit,
+                IsEnabled = true
+            };
+            var childExpense = new Expense
+            {
+                Id = 30,
+                Name = "Child",
+                Amount = 25m,
+                Account = persistedSource,
+                AccountId = 1
+            };
+            var childLog = new ExpenseLog
+            {
+                Id = 200,
+                Expense = childExpense,
+                ExpenseId = childExpense.Id,
+                Account = persistedSource,
+                AccountId = 1,
+                ParentLogId = 10,
+                Amount = 25m,
+                DeductedOn = new DateTime(2026, 5, 31)
+            };
+            appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([childLog]));
+            appData.GetAccountByIdAsync(2, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<Account?>(targetSource));
+            vm.Accounts.Add(new AccountVM
+            {
+                Id = 2,
+                Name = "Credit",
+                AccountType = AccountType.Credit,
+                IsEnabled = true
+            });
+
+            vm.BeginEditingAsync().GetAwaiter().GetResult();
+            vm.SelectedAccount = vm.Accounts.Single(account => account.Id == 2);
+
+            var result = vm.SaveAsync().GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).UpdateExpense(Arg.Is<Expense>(expense =>
+                expense.Id == 30 &&
+                expense.AccountId == 2 &&
+                ReferenceEquals(expense.Account, targetSource)));
+            appData.Received(1).UpdateExpenseLog(Arg.Is<ExpenseLog>(log =>
+                log.Id == 200 &&
+                log.AccountId == 2 &&
+                ReferenceEquals(log.Account, targetSource)));
+        });
+    }
+
+    [Fact]
     public void SaveAsync_FromSplitMode_RequiresAtLeastOneAmount()
     {
         RunInSta(() =>
