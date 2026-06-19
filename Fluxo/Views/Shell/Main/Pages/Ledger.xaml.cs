@@ -16,8 +16,6 @@ namespace Fluxo.Views.Shell.Main.Pages;
 
 public partial class Ledger : UserControl
 {
-    private static readonly Thickness LedgerTransactionsListDefaultMargin = new(0, 0, 0, 0);
-    private static readonly Thickness LedgerTransactionsListScrollableMargin = new(0, 0, -32, 0);
     private readonly IDialogService _dialogService;
     private ComboBox? _filterDropDownKeepOpenComboBox;
     private bool _hasLoaded;
@@ -498,10 +496,4 @@ public partial class Ledger : UserControl
         }
     }
 
-    private void OnLedgerTransactionsListScrollChanged(object sender, ScrollChangedEventArgs e)
-    {
-        LedgerTransactionsList.Margin = e.ExtentHeight > e.ViewportHeight
-            ? LedgerTransactionsListScrollableMargin
-            : LedgerTransactionsListDefaultMargin;
-    }
 }

@@ -361,12 +361,12 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Property=\"Opacity\" Value=\"0.4\"", filterComboStyleSection);
         Assert.Contains("Property=\"IsEnabled\" Value=\"False\"", groupingComboStyleSection);
         Assert.Contains("Property=\"Opacity\" Value=\"0.4\"", groupingComboStyleSection);
-        Assert.Contains("Brush.Background.Hovered", rowTemplateSection);
+        Assert.Contains("Brush.Background.Hover", rowTemplateSection);
         Assert.Contains("IsDisabledByAnotherEdit", rowTemplateSection);
         Assert.Contains("Property=\"IsHitTestVisible\" Value=\"False\"", rowTemplateSection);
         Assert.Contains("CommandParameter=\"{Binding}\"", rowTemplateSection);
         Assert.Contains("CreateDuplicateTransactionDraft", ledgerCodeBehind);
-        Assert.Contains("ButtonIcon=\"{StaticResource Duplicate}\"", rowTemplateSection);
+        Assert.Contains("ButtonIcon=\"{StaticResource CloneRegular}\"", rowTemplateSection);
         Assert.Contains("IsEnabled=\"{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}\"", rowTemplateSection);
         Assert.Contains("ButtonIcon=\"{StaticResource Ban}\"", rowTemplateSection);
         Assert.Contains("DiscardTransactionEditCommand", rowTemplateSection);
@@ -397,6 +397,7 @@ public sealed class MainWindowPageRegressionTests
     public void Ledger_ChildRowsKeepIndicatorIndentButAlignDataColumnsAndUseHoverAnimation()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
         var childTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerChildRowTemplate\"", "x:Key=\"LedgerRowTemplate\"");
         var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
 
@@ -407,10 +408,18 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("x:Name=\"ChildRowAccountCell\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowSignedAmountText\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowMoneyEditor\"", childTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowRoot\"", childTemplateSection);
+        Assert.DoesNotContain("Width=\"{Binding ActualWidth", childTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowSurface\"", childTemplateSection);
+        Assert.Contains("Margin=\"36,0,0,8\"", childTemplateSection);
         Assert.Equal(5, CountOccurrences(childTemplateSection, "<TranslateTransform />"));
-        Assert.Contains("Margin=\"-18,0,0,0\"", childTemplateSection);
-        Assert.Contains("Margin=\"-11,0,0,0\"", childTemplateSection);
-        Assert.Contains("Margin=\"0,8,12,8\"", childTemplateSection);
+        Assert.Contains("Margin=\"-36,0,0,0\"", childTemplateSection);
+        Assert.Contains("Margin=\"36,8,0,8\"", childTemplateSection);
+        Assert.Contains("Margin=\"0,8,8,8\"", childTemplateSection);
+        Assert.DoesNotContain("Margin=\"-26,0,0,0\"", childTemplateSection);
+        Assert.DoesNotContain("Margin=\"-23,0,0,0\"", childTemplateSection);
+        Assert.DoesNotContain("Margin=\"0,8,26,8\"", childTemplateSection);
+        Assert.Contains("Brush.Background.Hover", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowNameContent\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowTagCell\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowAccountCell\"", childTemplateSection);
@@ -418,6 +427,7 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Storyboard.TargetName=\"ChildRowMoneyEditor\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.X)\"", childTemplateSection);
         Assert.Contains("To=\"3\"", childTemplateSection);
+        Assert.DoesNotContain("new(0, 0, -", ledgerCodeBehind);
     }
 
     [Fact]

@@ -6,7 +6,7 @@
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Shell">
     <StackPanel>
-        <customControls:SegmentedToggleGroup Width="470" SelectedValue="{Binding SelectedMainContentViewMode, Mode=OneWay}">
+        <customControls:SegmentedToggleGroup Width="600" SelectedValue="{Binding SelectedMainContentViewMode, Mode=OneWay}">
             <customControls:SegmentedToggleOption
                 Click="OnViewModeButtonClick"
                 CommandParameter="{x:Static enums:MainContentViewMode.Daily}"

@@ -444,47 +444,41 @@
         </ItemsPanelTemplate>
 
         <DataTemplate x:Key="LedgerChildRowTemplate">
-            <Border
+            <Grid
+                x:Name="ChildRowRoot"
                 MinHeight="48"
-                Margin="0,0,0,8"
-                Padding="0"
-                Background="{StaticResource Brush.Background.Surface}"
-                CornerRadius="8">
-                <Grid>
+                Margin="0,0,0,0">
+                <Border
+                    x:Name="ChildRowSurface"
+                    Margin="0,0,0,8"
+                    CornerRadius="8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMouseOver, ElementName=ChildRowRoot}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
+
+                <Grid Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2" />
-                        <ColumnDefinition Width="6" />
-                        <ColumnDefinition Width="1.5*" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="0.5*" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="200" />
                     </Grid.ColumnDefinitions>
-
-                    <Border
-                        Grid.Column="0"
-                        Margin="0,12"
-                        CornerRadius="0,4,4,0">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="{StaticResource Brush.Category.Needs}" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding CategoryLabel}" Value="Wants">
-                                        <Setter Property="Background" Value="{StaticResource Brush.Category.Wants}" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding CategoryLabel}" Value="Invest">
-                                        <Setter Property="Background" Value="{StaticResource Brush.Category.Investments}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
 
                     <StackPanel
                         x:Name="ChildRowNameContent"
-                        Grid.Column="2"
-                        Margin="0,8"
+                        Grid.Column="1"
+                        Margin="8"
                         Orientation="Horizontal">
                         <StackPanel.RenderTransform>
                             <TranslateTransform />
@@ -543,9 +537,8 @@
 
                     <Grid
                         x:Name="ChildRowTagCell"
-                        Grid.Column="4"
+                        Grid.Column="3"
                         MaxWidth="160"
-                        Margin="-26,0,0,0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center">
                         <Grid.RenderTransform>
@@ -609,9 +602,8 @@
 
                     <Border
                         x:Name="ChildRowAccountCell"
-                        Grid.Column="5"
+                        Grid.Column="4"
                         MaxWidth="180"
-                        Margin="-23,0,0,0"
                         Padding="8,3"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
@@ -631,8 +623,8 @@
 
                     <TextBlock
                         x:Name="ChildRowSignedAmountText"
-                        Grid.Column="6"
-                        Margin="0,8,26,8"
+                        Grid.Column="5"
+                        Margin="0,8,8,8"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
@@ -657,7 +649,7 @@
                     <customControls:MoneyTextBox
                         x:Name="ChildRowMoneyEditor"
                         Grid.Column="6"
-                        Margin="0,8,26,8"
+                        Margin="0,8,8,8"
                         VerticalContentAlignment="Center"
                         FontFamily="{StaticResource Bold}"
                         FontSize="12"
@@ -668,9 +660,8 @@
                             <TranslateTransform />
                         </customControls:MoneyTextBox.RenderTransform>
                     </customControls:MoneyTextBox>
-
                 </Grid>
-                <Border.Triggers>
+                <Grid.Triggers>
                     <EventTrigger RoutedEvent="MouseEnter">
                         <BeginStoryboard>
                             <Storyboard>
@@ -733,24 +724,21 @@
                             </Storyboard>
                         </BeginStoryboard>
                     </EventTrigger>
-                </Border.Triggers>
-                <Border.Style>
-                    <Style TargetType="Border">
+                </Grid.Triggers>
+                <Grid.Style>
+                    <Style TargetType="Grid">
                         <Setter Property="Background" Value="Transparent" />
                         <Setter Property="IsHitTestVisible" Value="True" />
                         <Setter Property="Opacity" Value="1" />
                         <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
-                            </Trigger>
                             <DataTrigger Binding="{Binding IsDisabledByAnotherEdit}" Value="True">
                                 <Setter Property="IsHitTestVisible" Value="False" />
                                 <Setter Property="Opacity" Value="0.4" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </Border.Style>
-            </Border>
+                </Grid.Style>
+            </Grid>
         </DataTemplate>
 
         <DataTemplate x:Key="LedgerRowTemplate">
@@ -760,44 +748,22 @@
                     MinHeight="48"
                     Margin="0,0,0,8"
                     Padding="0"
-                    Background="{StaticResource Brush.Background.Surface}"
                     CornerRadius="8"
                     Loaded="OnLedgerRowLoaded">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2" />
-                            <ColumnDefinition Width="6" />
-                            <ColumnDefinition Width="1.5*" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="130" />
-                            <ColumnDefinition Width="0.5*" />
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="200" />
                         </Grid.ColumnDefinitions>
-
-                        <Border
-                            Grid.Column="0"
-                            Margin="0,12"
-                            CornerRadius="0,4,4,0">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background" Value="{StaticResource Brush.Category.Needs}" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding CategoryLabel}" Value="Wants">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Category.Wants}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding CategoryLabel}" Value="Invest">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Category.Investments}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                        </Border>
 
                         <StackPanel
                             x:Name="RowNameContent"
-                            Grid.Column="2"
-                            Margin="0,8"
+                            Grid.Column="0"
+                            Margin="8"
                             Orientation="Horizontal">
                             <StackPanel.RenderTransform>
                                 <TranslateTransform />
@@ -831,6 +797,7 @@
                                     </Style>
                                 </Border.Style>
                             </Border>
+
                             <Border
                                 Margin="6,0,0,0"
                                 Padding="5,1"
@@ -856,8 +823,8 @@
 
                         <CheckBox
                             x:Name="RowBatchCheckBox"
-                            Grid.Column="3"
-                            Margin="12,0,0,0"
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Click="OnBatchSelectionCheckBoxClick"
                             IsChecked="{Binding IsSelectedForBatch, Mode=TwoWay}"
@@ -870,8 +837,7 @@
 
                         <Grid
                             x:Name="RowTagCell"
-                            Grid.Column="4"
-                            MaxWidth="160"
+                            Grid.Column="2"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center">
                             <Grid.RenderTransform>
@@ -935,8 +901,7 @@
 
                         <Grid
                             x:Name="RowAccountCell"
-                            Grid.Column="5"
-                            MaxWidth="180"
+                            Grid.Column="3"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center">
                             <Grid.RenderTransform>
@@ -984,7 +949,7 @@
 
                         <TextBlock
                             x:Name="RowSignedAmountText"
-                            Grid.Column="6"
+                            Grid.Column="4"
                             Margin="0,8,8,8"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
@@ -1009,7 +974,7 @@
 
                         <customControls:MoneyTextBox
                             x:Name="RowMoneyEditor"
-                            Grid.Column="6"
+                            Grid.Column="4"
                             Margin="0,8,8,8"
                             VerticalContentAlignment="Center"
                             FontFamily="{StaticResource Bold}"
@@ -1024,7 +989,7 @@
 
                         <Border
                             x:Name="RowActions"
-                            Grid.Column="7"
+                            Grid.Column="5"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Background="Transparent">
@@ -1180,12 +1145,12 @@
                     </Border.Triggers>
                     <Border.Style>
                         <Style TargetType="Border">
-                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
                             <Setter Property="IsHitTestVisible" Value="True" />
                             <Setter Property="Opacity" Value="1" />
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                                 </Trigger>
                                 <DataTrigger Binding="{Binding IsDisabledByAnotherEdit}" Value="True">
                                     <Setter Property="IsHitTestVisible" Value="False" />
@@ -1197,7 +1162,7 @@
                 </Border>
                 <Grid Visibility="{Binding IsChildrenExpanded, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="36" />
+                        <ColumnDefinition Width="24" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Border
@@ -1614,8 +1579,8 @@
                     ItemContainerStyle="{StaticResource LedgerListViewItemStyle}"
                     ItemTemplate="{StaticResource LedgerRowTemplate}"
                     ItemsSource="{Binding TransactionsView}"
-                    ScrollViewer.ScrollChanged="OnLedgerTransactionsListScrollChanged"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    ScrollViewer.VerticalScrollBarVisibility="Disabled">
                     <ListView.GroupStyle>
                         <StaticResource ResourceKey="LedgerGroupStyle" />
                     </ListView.GroupStyle>
