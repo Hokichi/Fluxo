@@ -4,7 +4,7 @@
     xmlns:components="clr-namespace:Fluxo.Resources.Components"
     xmlns:coreEnums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core">
 
-    <Style x:Key="IncomeSources" TargetType="ListViewItem">
+    <Style x:Key="Accounts" TargetType="ListViewItem">
         <Setter Property="Margin" Value="0,0,8,0" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="Transparent" />

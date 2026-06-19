@@ -366,7 +366,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Click="OnSpendingAmountGateActionClick"
-                Content="Add An Income Source To Adjust Allocation"
+                Content="Add An Account To Adjust Allocation"
                 FontFamily="{StaticResource Bold}"
                 FontSize="13"
                 Style="{StaticResource TextOnlyButtonStyle}"

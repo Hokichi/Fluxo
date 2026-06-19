@@ -25,7 +25,7 @@ public class PlanningReportVMTests
 
         income.Amount = 999m;
         income.Notes = "Mutated income";
-        income.Account.Name = "Mutated income source";
+        income.Account.Name = "Mutated account";
         expense.Amount = 888m;
         expense.Name = "Mutated expense";
         expense.ExpenseTag.Name = "Mutated tag";
@@ -39,7 +39,7 @@ public class PlanningReportVMTests
         Assert.Single(report.Expenses);
         Assert.Equal(125m, report.Incomes[0].Amount);
         Assert.Equal("Income 1", report.Incomes[0].Notes);
-        Assert.Equal("Income Source 1", report.Incomes[0].Account.Name);
+        Assert.Equal("Account 1", report.Incomes[0].Account.Name);
         Assert.Equal(200m, report.Expenses[0].Amount);
         Assert.Equal("Rent", report.Expenses[0].Name);
         Assert.Equal("Tag 2", report.Expenses[0].ExpenseTag.Name);
@@ -175,7 +175,7 @@ public class PlanningReportVMTests
             Account = new AccountVM
             {
                 Id = id,
-                Name = $"Income Source {id}",
+                Name = $"Account {id}",
                 AccountType = AccountType.Checking,
                 Balance = 500m,
                 IsEnabled = true,

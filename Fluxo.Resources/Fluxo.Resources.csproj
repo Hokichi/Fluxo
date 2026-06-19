@@ -33,7 +33,7 @@
     <Compile Update="Components\ExpensesList.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Components\IncomeSource.xaml.cs">
+    <Compile Update="Components\Account.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="CustomControls\BalloonBorder.xaml.cs">

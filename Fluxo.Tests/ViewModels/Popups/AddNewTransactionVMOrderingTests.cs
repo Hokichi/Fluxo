@@ -46,10 +46,8 @@ public class AddNewTransactionVMOrderingTests
             new AccountVM { Id = 4, Name = "Cash High", AccountType = AccountType.Cash, Balance = 200m },
             new AccountVM { Id = 5, Name = "Credit Low Remaining", AccountType = AccountType.Credit, AccountLimit = 1000m, SpentAmount = 900m },
             new AccountVM { Id = 6, Name = "Credit High Remaining", AccountType = AccountType.Credit, AccountLimit = 1000m, SpentAmount = 200m },
-            new AccountVM { Id = 7, Name = "BNPL Low Remaining", AccountType = AccountType.BNPL, AccountLimit = 500m, SpentAmount = 450m },
-            new AccountVM { Id = 8, Name = "BNPL High Remaining", AccountType = AccountType.BNPL, AccountLimit = 500m, SpentAmount = 100m },
-            new AccountVM { Id = 9, Name = "Savings Low", AccountType = AccountType.Saving, Balance = 50m },
-            new AccountVM { Id = 10, Name = "Savings High", AccountType = AccountType.Saving, Balance = 700m }
+            new AccountVM { Id = 7, Name = "Savings Low", AccountType = AccountType.Saving, Balance = 50m },
+            new AccountVM { Id = 8, Name = "Savings High", AccountType = AccountType.Saving, Balance = 700m }
         };
 
         var ordered = sources
@@ -59,7 +57,7 @@ public class AddNewTransactionVMOrderingTests
             .Select(source => source.Id)
             .ToList();
 
-        Assert.Equal([2, 1, 4, 3, 6, 5, 8, 7, 10, 9], ordered);
+        Assert.Equal([2, 1, 4, 3, 6, 5, 8, 7], ordered);
     }
 
     [Fact]

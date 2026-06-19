@@ -225,7 +225,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
     {
         var targetSource = await unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken);
         if (targetSource is null ||
-            targetSource.AccountType is not (AccountType.Credit or AccountType.BNPL) ||
+            targetSource.AccountType != AccountType.Credit ||
             targetSource.DeductSource is not > 0 ||
             targetSource.SpentAmount <= 0m)
         {
@@ -437,7 +437,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount += amount;
             return;
@@ -448,7 +448,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
 
     private static void ApplyIncomeToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;

@@ -114,7 +114,7 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
         vm.PinnedOnUI = source.PinnedOnUi;
         vm.IsEnabled = source.IsEnabled;
 
-        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (source.AccountType == AccountType.Credit)
         {
             vm.PrimaryAmountText = source.SpentAmount;
             vm.SpentAmountText = source.SpentAmount;
@@ -130,7 +130,7 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
             vm.PrimaryAmountText = source.Balance;
         }
 
-        if (source.AccountType is not (AccountType.Credit or AccountType.BNPL))
+        if (source.AccountType != AccountType.Credit)
             vm.MaximumSpendingText = source.MaximumSpending;
 
         if (source.AccountType == AccountType.Saving && source.InterestRate.HasValue)
@@ -350,7 +350,7 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
     {
         return _draftSources.Values
             .Where(source => source.Id != (editingId ?? 0))
-            .Where(source => source.AccountType is not (AccountType.Credit or AccountType.BNPL))
+            .Where(source => source.AccountType != AccountType.Credit)
             .OrderBy(source => source.Name)
             .Select(source => new AddAccountVM.DeductSourceOption(source.Id, source.Name))
             .ToList();

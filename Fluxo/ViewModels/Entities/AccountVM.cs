@@ -28,30 +28,27 @@ public partial class AccountVM : ObservableObject
 
     public bool IsCredit => AccountType == AccountType.Credit;
 
-    public bool IsBnpl => AccountType == AccountType.BNPL;
-
     public bool IsSaving => AccountType == AccountType.Saving;
 
-    public bool CanTransferOut => AccountType is not (AccountType.Credit or AccountType.BNPL);
+    public bool CanTransferOut => AccountType != AccountType.Credit;
     public bool CanTransfer => IsEnabled && CanTransferOut;
-    public bool CanReconcile => AccountType is not (AccountType.BNPL or AccountType.Saving);
+    public bool CanReconcile => AccountType != AccountType.Saving;
 
-    public decimal PrimaryAmount => AccountType is AccountType.Credit or AccountType.BNPL
+    public decimal PrimaryAmount => AccountType == AccountType.Credit
         ? SpentAmount
         : Balance;
 
-    public string PrimaryAmountLabel => AccountType is AccountType.Credit or AccountType.BNPL
+    public string PrimaryAmountLabel => AccountType == AccountType.Credit
         ? "Spent"
         : "Balance";
 
     public string TypeDisplayName => AccountType switch
     {
         AccountType.Credit => "Credit",
-        AccountType.BNPL => "BNPL",
         AccountType.Checking => "Checking",
         AccountType.Cash => "Cash",
         AccountType.Saving => "Savings",
-        _ => "Source"
+        _ => "Account"
     };
 
     public bool IsDisabled => !IsEnabled;
@@ -76,7 +73,6 @@ public partial class AccountVM : ObservableObject
     {
         OnPropertyChanged(nameof(IsCashOrChecking));
         OnPropertyChanged(nameof(IsCredit));
-        OnPropertyChanged(nameof(IsBnpl));
         OnPropertyChanged(nameof(IsSaving));
         OnPropertyChanged(nameof(CanTransferOut));
         OnPropertyChanged(nameof(CanTransfer));

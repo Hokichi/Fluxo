@@ -67,14 +67,10 @@ public partial class AccountDetailVM : ObservableObject
 
     public bool IsCredit => AccountType == AccountType.Credit;
 
-    public bool IsBnpl => AccountType == AccountType.BNPL;
-
-    public bool IsCreditLike => IsCredit || IsBnpl;
-
     public bool IsSaving => AccountType == AccountType.Saving;
 
     public bool CanTransfer => IsEnabled &&
-                               AccountType is not (AccountType.Credit or AccountType.BNPL) &&
+                               AccountType != AccountType.Credit &&
                                !IsEditing &&
                                DeductSources.Count > 0;
 
@@ -88,11 +84,11 @@ public partial class AccountDetailVM : ObservableObject
 
     public bool HasRecentActivities => RecentActivities.Count > 0;
 
-    public decimal DisplayPrimaryAmount => AccountType is AccountType.Credit or AccountType.BNPL
+    public decimal DisplayPrimaryAmount => AccountType == AccountType.Credit
         ? SpentAmountText
         : PrimaryAmountText;
 
-    public string PrimaryAmountLabel => AccountType is AccountType.Credit or AccountType.BNPL
+    public string PrimaryAmountLabel => AccountType == AccountType.Credit
         ? "Spent"
         : "Balance";
 
@@ -126,15 +122,13 @@ public partial class AccountDetailVM : ObservableObject
     {
         OnPropertyChanged(nameof(IsCashOrChecking));
         OnPropertyChanged(nameof(IsCredit));
-        OnPropertyChanged(nameof(IsBnpl));
-        OnPropertyChanged(nameof(IsCreditLike));
         OnPropertyChanged(nameof(IsSaving));
         OnPropertyChanged(nameof(CanTransfer));
         OnPropertyChanged(nameof(DisplayPrimaryAmount));
         OnPropertyChanged(nameof(PrimaryAmountLabel));
         OnPropertyChanged(nameof(DeductSourceDisplay));
 
-        if (value is not (AccountType.Credit or AccountType.BNPL))
+        if (value != AccountType.Credit)
         {
             MonthlyDueDateText = string.Empty;
             SelectedDeductSource = null;
@@ -488,11 +482,11 @@ public partial class AccountDetailVM : ObservableObject
 
         int? monthlyDueDate = null;
         int? deductSource = null;
-        if (AccountType is AccountType.Credit or AccountType.BNPL)
+        if (AccountType == AccountType.Credit)
         {
             if (string.IsNullOrWhiteSpace(MonthlyDueDateText))
             {
-                validationMessage = "Credit and BNPL sources require a due date.";
+                validationMessage = "Credit accounts require a due date.";
                 return false;
             }
 
@@ -506,7 +500,7 @@ public partial class AccountDetailVM : ObservableObject
 
             if (!SelectedDeductSource.HasValue || DeductSources.All(option => option.Id != SelectedDeductSource.Value))
             {
-                validationMessage = "Credit and BNPL sources require a deduct source.";
+                validationMessage = "Credit accounts require a deduct account.";
                 return false;
             }
 
@@ -544,7 +538,7 @@ public partial class AccountDetailVM : ObservableObject
         account.IsEnabled = input.IsEnabled;
         account.PinnedOnUI = ResolvePinnedOnUiFromEnabledState(previousIsEnabled, input.IsEnabled, input.PinnedOnUI);
 
-        if (input.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (input.AccountType == AccountType.Credit)
         {
             account.SpentAmount = input.SpentAmount;
             return;
@@ -562,7 +556,7 @@ public partial class AccountDetailVM : ObservableObject
         return new AccountDetailState(
             account.Name,
             account.AccountType,
-            account.AccountType is AccountType.Credit or AccountType.BNPL
+            account.AccountType == AccountType.Credit
                 ? account.SpentAmount
                 : account.Balance,
             account.AccountLimit,
@@ -581,7 +575,7 @@ public partial class AccountDetailVM : ObservableObject
         var options = (await _appData.GetAccountsAsync())
             .Where(source => source.Id != AccountId)
             .Where(source => source.IsEnabled)
-            .Where(source => source.AccountType is not (AccountType.Credit or AccountType.BNPL))
+            .Where(source => source.AccountType != AccountType.Credit)
             .OrderBy(source => source.AccountType)
             .ThenBy(source => source.Name)
             .Select(source => new DeductSourceOption(source.Id, source.Name, source.AccountType))
@@ -593,7 +587,7 @@ public partial class AccountDetailVM : ObservableObject
 
         OnPropertyChanged(nameof(CanTransfer));
 
-        if (!IsCreditLike)
+        if (!IsCredit)
         {
             SelectedDeductSource = null;
             return;
@@ -743,11 +737,10 @@ public partial class AccountDetailVM : ObservableObject
         public string TypeDisplayName => AccountType switch
         {
             AccountType.Credit => "Credit",
-            AccountType.BNPL => "BNPL",
             AccountType.Checking => "Checking",
             AccountType.Cash => "Cash",
             AccountType.Saving => "Savings",
-            _ => "Source"
+            _ => "Account"
         };
     }
 }

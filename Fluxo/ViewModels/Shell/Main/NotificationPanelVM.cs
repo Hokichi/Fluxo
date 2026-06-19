@@ -381,7 +381,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             yield break;
 
         foreach (var source in _accounts.Where(source =>
-                     source.AccountType is AccountType.Credit or AccountType.BNPL &&
+                     source.AccountType == AccountType.Credit &&
                      source.MonthlyDueDate.HasValue &&
                      source.SpentAmount > 0m))
         {
@@ -459,7 +459,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             yield break;
 
         foreach (var source in _accounts.Where(source =>
-                     source.AccountType is AccountType.Credit or AccountType.BNPL &&
+                     source.AccountType == AccountType.Credit &&
                      source.AccountLimit > 0))
         {
             var creditUsage = source.SpentAmount / source.AccountLimit;

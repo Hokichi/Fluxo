@@ -214,7 +214,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
                 SettingsShared.ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false)),
             new SettingsNotificationOptionVM(
                 "Credit deadline reminders",
-                "Warn when credit and BNPL due dates are approaching.",
+                "Warn when credit due dates are approaching.",
                 UserSettingNames.IsCreditDeadlineNotifEnabled,
                 SettingsShared.ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true)),
             new SettingsNotificationOptionVM(
@@ -224,7 +224,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
                 SettingsShared.ParseBool(settingsByName, UserSettingNames.IsGoalDeadlineNotifEnabled, true)),
             new SettingsNotificationOptionVM(
                 "Late payment alerts",
-                "Warn when credit and BNPL payments are past due.",
+                "Warn when Credit payments are past due.",
                 UserSettingNames.IsLatePaymentNotifEnabled,
                 SettingsShared.ParseBool(settingsByName, UserSettingNames.IsLatePaymentNotifEnabled, true)),
             new SettingsNotificationOptionVM(
@@ -234,7 +234,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
                 SettingsShared.ParseBool(settingsByName, UserSettingNames.IsBudgetThresholdNotifEnabled, true)),
             new SettingsNotificationOptionVM(
                 "Low credit usage alerts",
-                "Warn when credit or BNPL sources cross their usage threshold.",
+                "Warn when credit accounts cross their usage threshold.",
                 UserSettingNames.IsLowCreditNotifEnabled,
                 SettingsShared.ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false)),
             new SettingsNotificationOptionVM(

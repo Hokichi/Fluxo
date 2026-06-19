@@ -16,16 +16,15 @@ public partial class SettingsAccountItemVM : ObservableObject
         TypeDisplayName = account.AccountType switch
         {
             AccountType.Credit => "Credit",
-            AccountType.BNPL => "BNPL",
             AccountType.Checking => "Checking",
             AccountType.Cash => "Cash",
             AccountType.Saving => "Savings",
-            _ => "Source"
+            _ => "Account"
         };
-        PrimaryAmount = account.AccountType is AccountType.Credit or AccountType.BNPL
+        PrimaryAmount = account.AccountType == AccountType.Credit
             ? account.SpentAmount
             : account.Balance;
-        PrimaryAmountLabel = account.AccountType is AccountType.Credit or AccountType.BNPL
+        PrimaryAmountLabel = account.AccountType == AccountType.Credit
             ? "Spent"
             : "Balance";
         MaximumSpending = account.MaximumSpending;

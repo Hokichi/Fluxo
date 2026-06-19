@@ -74,7 +74,6 @@ public sealed class AddAccountVMTests
     [InlineData(AccountType.Cash, true)]
     [InlineData(AccountType.Saving, true)]
     [InlineData(AccountType.Credit, false)]
-    [InlineData(AccountType.BNPL, false)]
     public void IsBalanceLike_MatchesExpectedTypes(AccountType sourceType, bool expected)
     {
         var sut = CreateSut();
@@ -290,7 +289,7 @@ public sealed class AddAccountVMTests
         Assert.True(sut.HasErrors);
         Assert.Equal("Exceeds Limit", sut.MaximumSpendingValidationHint);
 
-        sut.SelectedAccountType = AccountType.BNPL;
+        sut.SelectedAccountType = AccountType.Cash;
 
         Assert.Empty(sut.GetErrors(nameof(AddAccountVM.MaximumSpendingText)));
         Assert.Equal(string.Empty, sut.MaximumSpendingValidationHint);
@@ -413,20 +412,6 @@ public sealed class AddAccountVMTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(100m, savedInput?.MaximumSpending);
-    }
-
-    [Fact]
-    public void SelectedAccountType_WhenBnpl_ClearsMaximumSpendingAndMinimumPayment()
-    {
-        var sut = CreateSut();
-        sut.SelectedAccountType = AccountType.Credit;
-        sut.MaximumSpendingText = 250m;
-        sut.MinimumPaymentText = 10m;
-
-        sut.SelectedAccountType = AccountType.BNPL;
-
-        Assert.Equal(0m, sut.MaximumSpendingText);
-        Assert.Equal(0m, sut.MinimumPaymentText);
     }
 
     private static AddAccountVM CreateSut(

@@ -125,7 +125,7 @@ public partial class DashboardVM : ObservableObject
 
     private static bool HasUsableFunds(AccountVM source)
     {
-        return source.AccountType is Fluxo.Core.Enums.AccountType.Credit or Fluxo.Core.Enums.AccountType.BNPL
+        return source.AccountType == Fluxo.Core.Enums.AccountType.Credit
             ? source.AccountLimit > 0m
             : source.Balance > 0m;
     }

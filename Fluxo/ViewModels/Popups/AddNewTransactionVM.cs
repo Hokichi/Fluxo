@@ -1362,7 +1362,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             return true;
         }
 
-        var projectedSpending = sourceType is AccountType.Credit or AccountType.BNPL
+        var projectedSpending = sourceType == AccountType.Credit
             ? spentAmount + amount
             : moneyOut + amount;
 
@@ -1384,7 +1384,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         decimal amount,
         out string validationMessage)
     {
-        if (sourceType is AccountType.Credit or AccountType.BNPL)
+        if (sourceType == AccountType.Credit)
         {
             if (spentAmount + amount <= accountLimit)
             {
@@ -1408,7 +1408,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount += amount;
             return;
@@ -1419,7 +1419,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private static void ApplyIncomeToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
@@ -1679,7 +1679,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             .Where(source =>
                 IsGoal
                     ? GoalUpdateTransactionSupport.IsEligibleGoalSourceType(source.AccountType)
-                    : IsExpense || source.AccountType is not (AccountType.Credit or AccountType.BNPL))
+                    : IsExpense || source.AccountType != AccountType.Credit)
             .OrderBy(GetAccountTypeSortOrder)
             .ThenByDescending(GetAccountWithinTypeSortValue)
             .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
@@ -1833,8 +1833,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             AccountType.Checking => 0,
             AccountType.Cash => 1,
             AccountType.Credit => 2,
-            AccountType.BNPL => 3,
-            AccountType.Saving => 4,
+            AccountType.Saving => 3,
             _ => 5
         };
     }
@@ -1844,7 +1843,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         return source.AccountType switch
         {
             AccountType.Checking or AccountType.Cash => source.Balance,
-            AccountType.Credit or AccountType.BNPL => source.AccountLimit - source.SpentAmount,
+            AccountType.Credit => source.AccountLimit - source.SpentAmount,
             AccountType.Saving => source.Balance,
             _ => source.Balance
         };

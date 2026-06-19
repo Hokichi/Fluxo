@@ -64,7 +64,7 @@ public partial class AccountReconciliationVM : ObservableObject
     public static bool CanReconcile(AccountVM source)
     {
         ArgumentNullException.ThrowIfNull(source);
-        return source.AccountType is not (AccountType.BNPL or AccountType.Saving);
+        return source.AccountType != AccountType.Saving;
     }
 
     public async Task<AccountReconciliationSaveResult> SaveAsync(CancellationToken cancellationToken = default)
@@ -245,7 +245,7 @@ public partial class AccountReconciliationVM : ObservableObject
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount += amount;
             return;

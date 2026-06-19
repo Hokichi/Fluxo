@@ -20,6 +20,7 @@ public sealed class AppDatabaseMigrationTests
     private const string MoveRecurringPeriodMigrationId = "20260520090000_MoveRecurringPeriodToRecurringTransactions";
     private const string AddBudgetAllocationMigrationId = "20260602084415_AddBudgetAllocation";
     private const string AddBudgetAllocationPeriodStartMigrationId = "20260615051332_AddBudgetAllocationPeriodStart";
+    private const string ConvertLegacyAccountType2ToCreditMigrationId = "20260619071800_ConvertLegacyAccountType2ToCredit";
 
     [Fact]
     public async Task MigrateDatabaseAsync_WhenDatabaseFileDoesNotExist_CreatesCurrentSchemaAndSeedsMigrationHistory()
@@ -211,6 +212,42 @@ public sealed class AppDatabaseMigrationTests
         }
     }
 
+    [Fact]
+    public async Task MigrateDatabaseAsync_WhenDatabaseHasLegacyAccountType2_ConvertsItToCredit()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(tempDirectory, "fluxo.db");
+
+        try
+        {
+            Directory.CreateDirectory(tempDirectory);
+            using var serviceProvider = CreateServiceProvider(databasePath);
+            await CreateDatabaseBeforeLegacyAccountType2ConversionAsync(databasePath, serviceProvider);
+            var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
+
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+
+            await using var connection = new SqliteConnection($"Data Source={databasePath}");
+            await connection.OpenAsync();
+
+            await using (var command = connection.CreateCommand())
+            {
+                command.CommandText = """SELECT "AccountType" FROM "Accounts" WHERE "Id" = 42;""";
+                var value = Assert.IsType<long>(await command.ExecuteScalarAsync());
+                Assert.Equal((int)AccountType.Credit, (int)value);
+            }
+
+            Assert.Contains(ConvertLegacyAccountType2ToCreditMigrationId, await ReadMigrationHistoryAsync(connection));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static ServiceProvider CreateServiceProvider(string databasePath)
     {
         var services = new ServiceCollection();
@@ -332,6 +369,77 @@ public sealed class AppDatabaseMigrationTests
             .Where(migrationId => !string.Equals(
                 migrationId,
                 MoveRecurringPeriodMigrationId,
+                StringComparison.Ordinal))
+            .ToList();
+
+        foreach (var migrationId in migrationsToSeed)
+        {
+            await ExecuteNonQueryAsync(
+                connection,
+                """
+                INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                VALUES ($migrationId, '10.0.5');
+                """,
+                ("$migrationId", migrationId));
+        }
+    }
+
+    private static async Task CreateDatabaseBeforeLegacyAccountType2ConversionAsync(
+        string databasePath,
+        IServiceProvider serviceProvider)
+    {
+        await using var connection = new SqliteConnection($"Data Source={databasePath}");
+        await connection.OpenAsync();
+
+        await ExecuteNonQueryAsync(
+            connection,
+            """
+            CREATE TABLE "Accounts" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_Accounts" PRIMARY KEY AUTOINCREMENT,
+                "AccountLimit" NUMERIC NOT NULL,
+                "AccountType" INTEGER NOT NULL,
+                "Balance" NUMERIC NOT NULL,
+                "DeductSource" INTEGER NULL,
+                "InterestRate" REAL NULL,
+                "IsEnabled" INTEGER NOT NULL,
+                "IsForDeletion" INTEGER NOT NULL,
+                "MaximumSpending" NUMERIC NOT NULL,
+                "MinimumPayment" NUMERIC NULL,
+                "MonthlyDueDate" INTEGER NULL,
+                "Name" TEXT NOT NULL,
+                "PinnedOnUI" INTEGER NOT NULL,
+                "SpentAmount" NUMERIC NOT NULL
+            );
+
+            CREATE TABLE "__EFMigrationsHistory" (
+                "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+                "ProductVersion" TEXT NOT NULL
+            );
+
+            INSERT INTO "Accounts" (
+                "Id",
+                "AccountLimit",
+                "AccountType",
+                "Balance",
+                "DeductSource",
+                "InterestRate",
+                "IsEnabled",
+                "IsForDeletion",
+                "MaximumSpending",
+                "MinimumPayment",
+                "MonthlyDueDate",
+                "Name",
+                "PinnedOnUI",
+                "SpentAmount")
+            VALUES (42, 1000, 2, 0, NULL, NULL, 1, 0, 1000, NULL, 15, 'Legacy Pay Later', 1, 120);
+            """);
+
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+        var migrationsToSeed = dbContext.Database.GetMigrations()
+            .Where(migrationId => !string.Equals(
+                migrationId,
+                ConvertLegacyAccountType2ToCreditMigrationId,
                 StringComparison.Ordinal))
             .ToList();
 

@@ -47,7 +47,7 @@ public static class AccountDeletionConfirmationHelper
         if (!isEnabled)
             return false;
 
-        return sourceType is AccountType.Credit or AccountType.BNPL
+        return sourceType == AccountType.Credit
             ? accountLimit > 0m
             : balance > 0m;
     }

@@ -95,10 +95,8 @@ public class UpcomingEventsPanelVMTests
         Assert.Equal(expectedTypeText, item.EventTypeText);
     }
 
-    [Theory]
-    [InlineData(AccountType.Credit)]
-    [InlineData(AccountType.BNPL)]
-    public async Task LoadAsync_CreditRecurringExpenseTypeText_UsesPayment(AccountType sourceType)
+    [Fact]
+    public async Task LoadAsync_CreditRecurringExpenseTypeText_UsesPayment()
     {
         var today = new DateTime(2026, 6, 14);
         var vm = CreateVm(
@@ -113,7 +111,7 @@ public class UpcomingEventsPanelVMTests
                     RecurringPeriod = RecurringPeriod.Monthly,
                     RecurringTime = today.Day,
                     Type = RecurringTransactionType.Expense,
-                    Source = new Account { Id = 3, Name = "Visa", AccountType = sourceType },
+                    Source = new Account { Id = 3, Name = "Visa", AccountType = AccountType.Credit },
                     IsEnabled = true
                 }
             ],

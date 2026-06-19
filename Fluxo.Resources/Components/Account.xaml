@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Resources.Components.IncomeSource"
+    x:Class="Fluxo.Resources.Components.Account"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Resources.Components"
@@ -11,23 +11,20 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <Style x:Key="IncomeSourceAccentStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
+        <Style x:Key="AccountAccentStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding AccountType}" Value="Checking">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding AccountType}" Value="Cash">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding AccountType}" Value="Credit">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding AccountType}" Value="BNPL">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Credit}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding AccountType}" Value="Saving">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Saving}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Saving}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -35,7 +32,7 @@
 
     <Grid>
         <Border
-            x:Name="SourceCard"
+            x:Name="AccountCard"
             BorderThickness="2"
             CornerRadius="8"
             MouseLeftButtonDown="OnRootMouseLeftButtonDown"
@@ -76,6 +73,12 @@
                 </Style>
             </Border.Style>
             <Grid>
+                <Border
+                    Height="3"
+                    VerticalAlignment="Top"
+                    CornerRadius="8,8,0,0"
+                    Style="{StaticResource AccountAccentStyle}" />
+
                 <StackPanel Margin="12" IsHitTestVisible="False">
                     <TextBlock
                         VerticalAlignment="Bottom"
@@ -94,35 +97,24 @@
                         ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
                 </StackPanel>
 
-                <StackPanel
-                    Margin="0,0,8,8"
+                <Border
+                    x:Name="AccentBorder"
+                    Width="7"
+                    Height="7"
+                    Margin="0,10,10,0"
                     HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Orientation="Horizontal">
-                    <Border
-                        x:Name="AccentBorder"
-                        Width="6"
-                        Height="6"
-                        CornerRadius="16"
-                        Style="{StaticResource IncomeSourceAccentStyle}" />
-
-                    <TextBlock
-                        Margin="4,0,0,0"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Medium}"
-                        FontSize="10"
-                        Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="{Binding AccountType}" />
-                </StackPanel>
+                    VerticalAlignment="Top"
+                    CornerRadius="16"
+                    Style="{StaticResource AccountAccentStyle}" />
             </Grid>
         </Border>
 
         <Popup
-            x:Name="SourceActionsPopup"
+            x:Name="AccountActionsPopup"
             AllowsTransparency="True"
             IsOpen="False"
             Placement="Bottom"
-            PlacementTarget="{Binding ElementName=SourceCard}"
+            PlacementTarget="{Binding ElementName=AccountCard}"
             PopupAnimation="Fade"
             StaysOpen="False"
             VerticalOffset="8">

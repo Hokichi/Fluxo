@@ -6,11 +6,11 @@ using Fluxo.Resources.Infrastructure;
 namespace Fluxo.Resources.Components;
 
 /// <summary>
-///     Interaction logic for IncomeSource.xaml
+///     Interaction logic for Account.xaml
 /// </summary>
-public partial class IncomeSource : UserControl
+public partial class Account : UserControl
 {
-    public IncomeSource()
+    public Account()
     {
         InitializeComponent();
     }
@@ -34,7 +34,7 @@ public partial class IncomeSource : UserControl
         if (DataContext is null)
             return;
 
-        SourceActionsPopup.IsOpen = true;
+        AccountActionsPopup.IsOpen = true;
         e.Handled = true;
     }
 
@@ -107,6 +107,6 @@ public partial class IncomeSource : UserControl
 
     private void CloseActionsPopup()
     {
-        SourceActionsPopup.IsOpen = false;
+        AccountActionsPopup.IsOpen = false;
     }
 }

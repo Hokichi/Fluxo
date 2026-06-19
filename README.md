@@ -2,7 +2,7 @@
   <img src="docs/images/fluxo-logo.png" alt="Fluxo logo placeholder" width="160">
 </p>
 
-Fluxo is a Windows personal finance app for keeping everyday money decisions visible. It helps you track spending, manage money sources, plan around recurring expenses, monitor saving goals, and stay aware of upcoming payments or budget pressure from one desktop dashboard.
+Fluxo is a Windows personal finance app for keeping everyday money decisions visible. It helps you track spending, manage accounts, plan around recurring expenses, monitor saving goals, and stay aware of upcoming payments or budget pressure from one desktop dashboard.
 
 ![Fluxo dashboard screenshot placeholder](docs/images/fluxo-dashboard-overview.png)
 
@@ -39,10 +39,10 @@ Fluxo is built for people who want a practical view of where their money is goin
 
 With Fluxo, you can:
 
-- Track cash, checking, credit, BNPL, and saving sources.
+- Track cash, checking, credit, and saving accounts.
 - Record expenses, income, and saving goal contributions.
 - Split spending into Needs, Wants, and Savings/Invest categories.
-- Review spending by date range, source, tag, and category.
+- Review spending by date range, account, tag, and category.
 - Watch saving goals progress toward a target amount and deadline.
 - Receive reminders for payment dates, budget thresholds, low balances, and goal deadlines.
 - Keep your financial data local on your Windows device.
@@ -55,7 +55,7 @@ When Fluxo opens for the first time, it guides you through setup so the dashboar
 
 1. Install and open Fluxo.
 2. Enter the display name you want Fluxo to use.
-3. Add your accounts, such as cash, checking accounts, credit cards, BNPL accounts, or savings.
+3. Add your accounts, such as cash, checking accounts, credit cards, or savings.
 4. Choose your budget allocation percentages for Needs, Wants, and Savings/Invest.
 5. Add fixed expenses that repeat monthly.
 6. Add saving goals with target amounts and deadlines.
@@ -66,15 +66,15 @@ You can change these choices later from Settings.
 
 ## Dashboard Overview
 
-The dashboard is the main workspace in Fluxo. It combines your budget, spending activity, money sources, notifications, and goals into one view.
+The dashboard is the main workspace in Fluxo. It combines your budget, spending activity, accounts, notifications, and goals into one view.
 
 The dashboard includes:
 
 - **Date controls** for reviewing today, another period, or all-time activity.
 - **Budget allocation** for Needs, Wants, and Savings/Invest.
-- **Spending source cards** that show balances, credit usage, and account differences for the selected period.
+- **Account cards** that show balances, credit usage, and account differences for the selected period.
 - **Transaction buckets** that group spending by category.
-- **Tag and source filters** for narrowing down the visible transactions.
+- **Tag and account filters** for narrowing down the visible transactions.
 - **Daily allowance and total spent** summaries.
 - **Saving goal carousel** for active goals.
 - **Notification panel** for reminders and action items.
@@ -86,27 +86,26 @@ Use Quick Access when you want to open common Fluxo actions immediately.
 
 ![Fluxo quick access screenshot placeholder](docs/images/fluxo-quick-add.png)
 
-Quick Access includes common creation, setup, update, planning, source, and settings actions.
+Quick Access includes common creation, setup, update, planning, account, and settings actions.
 
-- **Expense**: money spent from a source, assigned to a category and tag.
-- **Income**: money added to a cash, checking, or saving source.
+- **Expense**: money spent from an account, assigned to a category and tag.
+- **Income**: money added to a cash, checking, or saving account.
 - **Goal contribution**: money moved toward a saving goal.
 
-For each entry, Fluxo lets you choose the source, amount, date, category, tag, goal, and notes where relevant. After saving, Fluxo updates balances, budget totals, notifications, and goal progress.
+For each entry, Fluxo lets you choose the account, amount, date, category, tag, goal, and notes where relevant. After saving, Fluxo updates balances, budget totals, notifications, and goal progress.
 
 ## Managing Accounts
 
-Spending sources are the accounts or money pools Fluxo uses to calculate your budget and transaction impact.
+Accounts are the money pools Fluxo uses to calculate your budget and transaction impact.
 
 Fluxo supports:
 
 - **Cash** for physical money or cash-like balances.
 - **Checking** for everyday bank accounts.
 - **Credit** for credit cards with account limits and due dates.
-- **BNPL** for buy-now-pay-later balances and due dates.
 - **Saving** for savings accounts or reserved funds.
 
-Sources can have balances, account limits, spent amounts, due dates, visibility settings, and enabled states. Credit and BNPL sources behave differently from cash or checking sources: expenses increase the spent amount, while payments reduce it.
+Accounts can have balances, account limits, spent amounts, due dates, visibility settings, and enabled states. Credit accounts behave differently from cash or checking accounts: expenses increase the spent amount, while payments reduce it.
 
 ## Budgeting With Needs, Wants, and Savings
 
@@ -121,7 +120,7 @@ Your allocation percentages determine how much of your available money is reserv
 Filters help you review spending by:
 
 - Date range.
-- Spending source.
+- Account.
 - Expense tag.
 - Budget category.
 
@@ -137,7 +136,7 @@ A goal can include:
 - Deadline.
 - Active or hidden state.
 
-When you add a goal contribution, Fluxo records the transaction, updates the goal's current amount, and adjusts the selected source. If a goal deadline is approaching and the goal is not complete, Fluxo can show a reminder.
+When you add a goal contribution, Fluxo records the transaction, updates the goal's current amount, and adjusts the selected account. If a goal deadline is approaching and the goal is not complete, Fluxo can show a reminder.
 
 ## Notifications and Reminders
 
@@ -145,7 +144,7 @@ Fluxo evaluates your current data and settings to show financial reminders.
 
 Notifications can include:
 
-- Upcoming credit or BNPL payments.
+- Upcoming credit payments.
 - Late payments.
 - Fixed expenses due soon.
 - Budget categories near or past their warning threshold.
@@ -182,7 +181,7 @@ Settings lets you adjust Fluxo after setup.
 Settings areas include:
 
 - **Personalization**: display name and app behavior preferences.
-- **Spending sources**: account details, visibility, due dates, balances, and source types.
+- **Accounts**: account details, visibility, due dates, balances, and account types.
 - **Fixed expenses**: recurring monthly expenses.
 - **Saving goals**: targets, deadlines, hidden goals, and disabled goal reminders.
 - **Tags**: labels and colors for expense organization.
@@ -258,7 +257,7 @@ Fluxo stores data under `%LocalAppData%\fluxo`. If that folder was removed durin
 
 ### Notifications do not appear
 
-Open Settings and confirm that the relevant notification type is enabled. Some reminders only appear when the matching source, due date, threshold, or saving goal condition applies.
+Open Settings and confirm that the relevant notification type is enabled. Some reminders only appear when the matching account, due date, threshold, or saving goal condition applies.
 
 ## Support
 

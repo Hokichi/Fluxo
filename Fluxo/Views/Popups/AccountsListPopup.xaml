@@ -9,16 +9,13 @@
 
     <customControls:BasePopup.Resources>
         <Style x:Key="AccentStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource Brush.Income.Checking.Cash}" />
+            <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding AccountType}" Value="Credit">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding AccountType}" Value="BNPL">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Credit.BNPL}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Credit}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding AccountType}" Value="Saving">
-                    <Setter Property="Background" Value="{StaticResource Brush.Income.Saving}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Saving}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -39,9 +36,6 @@
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding AccountType}" Value="Credit">
-                    <Setter Property="Visibility" Value="Visible" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding AccountType}" Value="BNPL">
                     <Setter Property="Visibility" Value="Visible" />
                 </DataTrigger>
             </Style.Triggers>

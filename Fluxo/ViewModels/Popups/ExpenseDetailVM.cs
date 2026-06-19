@@ -828,7 +828,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount += amount;
             return;
@@ -846,7 +846,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
     private static void RevertExpenseFromAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;

@@ -18,16 +18,15 @@ public sealed record QuickSetupWizardAccountItemVM(
         account.AccountType switch
         {
             AccountType.Credit => "Credit",
-            AccountType.BNPL => "BNPL",
             AccountType.Checking => "Checking",
             AccountType.Cash => "Cash",
             AccountType.Saving => "Savings",
-            _ => "Source"
+            _ => "Account"
         },
-        account.AccountType is AccountType.Credit or AccountType.BNPL
+        account.AccountType == AccountType.Credit
             ? account.SpentAmount
             : account.Balance,
-        account.AccountType is AccountType.Credit or AccountType.BNPL
+        account.AccountType == AccountType.Credit
             ? "Spent"
             : "Balance",
         account.MaximumSpending,
@@ -41,16 +40,15 @@ public sealed record QuickSetupWizardAccountItemVM(
         account.AccountType switch
         {
             AccountType.Credit => "Credit",
-            AccountType.BNPL => "BNPL",
             AccountType.Checking => "Checking",
             AccountType.Cash => "Cash",
             AccountType.Saving => "Savings",
-            _ => "Source"
+            _ => "Account"
         },
-        account.AccountType is AccountType.Credit or AccountType.BNPL
+        account.AccountType == AccountType.Credit
             ? account.SpentAmount
             : account.Balance,
-        account.AccountType is AccountType.Credit or AccountType.BNPL
+        account.AccountType == AccountType.Credit
             ? "Spent"
             : "Balance",
         account.MaximumSpending,

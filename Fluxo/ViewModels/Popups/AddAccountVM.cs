@@ -105,7 +105,6 @@ public partial class AddAccountVM : ObservableValidator
         new("Checking", AccountType.Checking),
         new("Cash", AccountType.Cash),
         new("Credit", AccountType.Credit),
-        new("BNPL", AccountType.BNPL),
         new("Savings", AccountType.Saving)
     ];
 
@@ -116,12 +115,12 @@ public partial class AddAccountVM : ObservableValidator
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool IsEditMode => EditingId.HasValue;
     public bool IsSourceTypeSelectionEnabled => !IsEditMode;
-    public string PopupTitle => IsEditMode ? "Edit Account" : "Add New Income Source";
+    public string PopupTitle => IsEditMode ? "Edit Account" : "Add New Account";
     public string HeaderTitle => PopupTitle;
 
     public string HeaderDescription => IsEditMode
-        ? "Update this source for checking, cash, credit, BNPL, or savings."
-        : "Set up a new source for checking, cash, credit, BNPL, or savings.";
+        ? "Update this account for checking, cash, credit, or savings."
+        : "Set up a new account for checking, cash, credit, or savings.";
 
     public string ValidationDialogTitle => PopupTitle;
     public string NameValidationHint => GetValidationHint(nameof(NameText));
@@ -148,7 +147,7 @@ public partial class AddAccountVM : ObservableValidator
         PinnedOnUI = source.PinnedOnUI;
         IsEnabled = source.IsEnabled;
 
-        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (source.AccountType == AccountType.Credit)
         {
             PrimaryAmountText = source.SpentAmount;
             SpentAmountText = source.SpentAmount;
@@ -226,12 +225,10 @@ public partial class AddAccountVM : ObservableValidator
     }
 
     public bool IsCredit => SelectedAccountType == AccountType.Credit;
-    public bool IsBnpl => SelectedAccountType == AccountType.BNPL;
-    public bool IsCreditLike => IsCredit || IsBnpl;
     public bool IsSaving => SelectedAccountType == AccountType.Saving;
     public bool IsCashLike => SelectedAccountType is AccountType.Checking or AccountType.Cash;
     public bool IsBalanceLike => IsCashLike || IsSaving;
-    public string PrimaryAmountLabel => IsCreditLike ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
+    public string PrimaryAmountLabel => IsCredit ? "Current spent" : IsCashLike ? "Current amount" : "Current balance";
 
     partial void OnAccountLimitTextChanged(decimal value)
     {
@@ -299,8 +296,6 @@ public partial class AddAccountVM : ObservableValidator
     partial void OnSelectedAccountTypeChanged(AccountType value)
     {
         OnPropertyChanged(nameof(IsCredit));
-        OnPropertyChanged(nameof(IsBnpl));
-        OnPropertyChanged(nameof(IsCreditLike));
         OnPropertyChanged(nameof(IsSaving));
         OnPropertyChanged(nameof(IsCashLike));
         OnPropertyChanged(nameof(IsBalanceLike));
@@ -308,7 +303,7 @@ public partial class AddAccountVM : ObservableValidator
         OnPropertyChanged(nameof(MaximumSpendingPlaceholderText));
         SyncMaximumSpendingToPlaceholder();
 
-        if (!IsCreditLike)
+        if (!IsCredit)
         {
             AccountLimitText = 0m;
             SpentAmountText = 0m;
@@ -354,7 +349,7 @@ public partial class AddAccountVM : ObservableValidator
             options = existingSources
                 .Where(source => source.Id != (EditingId ?? 0))
                 .Where(source => source.IsEnabled)
-                .Where(source => source.AccountType is not (AccountType.Credit or AccountType.BNPL))
+                .Where(source => source.AccountType != AccountType.Credit)
                 .OrderBy(source => source.AccountType)
                 .ThenBy(source => source.Name)
                 .Select(source => new DeductSourceOption(source.Id, source.Name, source.AccountType))
@@ -365,7 +360,7 @@ public partial class AddAccountVM : ObservableValidator
         foreach (var option in options)
             DeductSources.Add(option);
 
-        if (!IsCreditLike)
+        if (!IsCredit)
         {
             SelectedDeductSource = null;
             return;
@@ -380,7 +375,7 @@ public partial class AddAccountVM : ObservableValidator
     public async Task<AddAccountResult> SaveAsync()
     {
         if (IsBusy)
-            return AddAccountResult.Failure("A source is already being saved.");
+            return AddAccountResult.Failure("An account is already being saved.");
 
         if (!TryBuildInput(out var input, out var validationMessage, out var failurePresentation))
             return AddAccountResult.Failure(validationMessage, failurePresentation);
@@ -396,7 +391,7 @@ public partial class AddAccountVM : ObservableValidator
             var existingSources = await _appData.GetAccountsAsync();
             if (HasDuplicateSourceName(input.Name))
                 return AddAccountResult.Failure(
-                    $"A account named \"{input.Name}\" already exists.");
+                    $"An account named \"{input.Name}\" already exists.");
 
             Account account;
             AccountMemorySnapshot? beforeSnapshot = null;
@@ -405,7 +400,7 @@ public partial class AddAccountVM : ObservableValidator
             if (EditingId.HasValue)
             {
                 account = existingSources.FirstOrDefault(s => s.Id == EditingId.Value)
-                                 ?? throw new InvalidOperationException("Spending source not found.");
+                                 ?? throw new InvalidOperationException("Account not found.");
                 beforeSnapshot = AccountMemorySnapshot.Create(account);
                 previousSpentAmount = account.SpentAmount;
                 account.Name = input.Name;
@@ -445,7 +440,7 @@ public partial class AddAccountVM : ObservableValidator
             await _appData.SaveChangesAsync();
 
             if (!EditingId.HasValue &&
-                account.AccountType is AccountType.Credit or AccountType.BNPL &&
+                account.AccountType == AccountType.Credit &&
                 account.MonthlyDueDate.HasValue &&
                 account.DeductSource.HasValue)
             {
@@ -617,19 +612,19 @@ public partial class AddAccountVM : ObservableValidator
         var name = (NameText ?? string.Empty).Trim();
         if (name.Length == 0)
         {
-            validationMessage = "Please enter a source name.";
+            validationMessage = "Please enter an account name.";
             return false;
         }
 
         if (name.Length > MaxNameLength)
         {
-            validationMessage = $"Source name cannot exceed {MaxNameLength} characters.";
+            validationMessage = $"Account name cannot exceed {MaxNameLength} characters.";
             return false;
         }
 
         if (name.Any(char.IsControl))
         {
-            validationMessage = "Source name cannot contain control characters.";
+            validationMessage = "Account name cannot contain control characters.";
             return false;
         }
 
@@ -650,7 +645,7 @@ public partial class AddAccountVM : ObservableValidator
 
         if (SelectedAccountType == AccountType.Credit && accountLimit <= 0m)
         {
-            validationMessage = "Credit sources require an account limit greater than zero.";
+            validationMessage = "Credit accounts require an account limit greater than zero.";
             return false;
         }
 
@@ -706,11 +701,11 @@ public partial class AddAccountVM : ObservableValidator
         }
 
         int? monthlyDueDate = null;
-        if (IsCreditLike)
+        if (IsCredit)
         {
             if (string.IsNullOrWhiteSpace(MonthlyDueDateText))
             {
-                validationMessage = "Credit and BNPL sources require a due date.";
+                validationMessage = "Credit accounts require a due date.";
                 return false;
             }
 
@@ -724,7 +719,7 @@ public partial class AddAccountVM : ObservableValidator
 
             if (!SelectedDeductSource.HasValue || DeductSources.All(option => option.Id != SelectedDeductSource.Value))
             {
-                validationMessage = "Credit and BNPL sources require a deduct source.";
+                validationMessage = "Credit accounts require a deduct account.";
                 return false;
             }
         }
@@ -732,13 +727,13 @@ public partial class AddAccountVM : ObservableValidator
         input = new AddAccountInput(
             name,
             SelectedAccountType,
-            IsCreditLike ? 0m : primaryAmount,
-            IsCreditLike ? spentAmount : 0m,
+            IsCredit ? 0m : primaryAmount,
+            IsCredit ? spentAmount : 0m,
             IsCredit ? accountLimit : 0m,
             maximumSpending,
             IsCredit ? minimumPayment : null,
             monthlyDueDate,
-            IsCreditLike ? SelectedDeductSource : null,
+            IsCredit ? SelectedDeductSource : null,
             interestRate,
             PinnedOnUI,
             IsEnabled);
@@ -810,10 +805,10 @@ public partial class AddAccountVM : ObservableValidator
         if (IsCredit && AccountLimitText <= 0m)
             return false;
 
-        if (IsCreditLike && !TryParseMonthlyDueDate(MonthlyDueDateText, out _))
+        if (IsCredit && !TryParseMonthlyDueDate(MonthlyDueDateText, out _))
             return false;
 
-        if (IsCreditLike && !SelectedDeductSource.HasValue)
+        if (IsCredit && !SelectedDeductSource.HasValue)
             return false;
 
         return true;
@@ -897,7 +892,7 @@ public partial class AddAccountVM : ObservableValidator
 
     private static string GetNameValidationHint(string message)
     {
-        if (message.Contains("enter a source name", StringComparison.OrdinalIgnoreCase))
+        if (message.Contains("enter an account name", StringComparison.OrdinalIgnoreCase))
             return "Required";
 
         if (message.Contains("exceed", StringComparison.OrdinalIgnoreCase))
@@ -960,16 +955,16 @@ public partial class AddAccountVM : ObservableValidator
         var trimmedName = value?.Trim() ?? string.Empty;
 
         if (trimmedName.Length == 0)
-            return new ValidationResult("Please enter a source name.");
+            return new ValidationResult("Please enter an account name.");
 
         if (trimmedName.Length > MaxNameLength)
-            return new ValidationResult($"Source name cannot exceed {MaxNameLength} characters.");
+            return new ValidationResult($"Account name cannot exceed {MaxNameLength} characters.");
 
         if (trimmedName.Any(char.IsControl))
-            return new ValidationResult("Source name cannot contain control characters.");
+            return new ValidationResult("Account name cannot contain control characters.");
 
         if (viewModel.HasDuplicateSourceName(trimmedName))
-            return new ValidationResult($"A account named \"{trimmedName}\" already exists.");
+            return new ValidationResult($"An account named \"{trimmedName}\" already exists.");
 
         return ValidationResult.Success;
     }
@@ -1094,11 +1089,10 @@ public partial class AddAccountVM : ObservableValidator
         public string TypeDisplayName => AccountType switch
         {
             AccountType.Credit => "Credit",
-            AccountType.BNPL => "BNPL",
             AccountType.Checking => "Checking",
             AccountType.Cash => "Cash",
             AccountType.Saving => "Savings",
-            _ => "Source"
+            _ => "Account"
         };
     }
 }

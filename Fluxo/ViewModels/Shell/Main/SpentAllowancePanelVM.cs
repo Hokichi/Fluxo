@@ -208,7 +208,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         if (source is null)
             return;
 
-        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (source.AccountType == AccountType.Credit)
         {
             source.SpentAmount += snapshot.Amount;
             return;
@@ -223,7 +223,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         if (source is null)
             return;
 
-        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (source.AccountType == AccountType.Credit)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
             return;

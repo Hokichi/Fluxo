@@ -243,7 +243,7 @@
 
     <Style x:Key="RoundedProgressBarStyle" TargetType="ProgressBar">
         <Setter Property="Background" Value="{StaticResource Brush.Reserved}" />
-        <Setter Property="Foreground" Value="{StaticResource Brush.Income.Credit.BNPL}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Account.Credit}" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="Template">
             <Setter.Value>

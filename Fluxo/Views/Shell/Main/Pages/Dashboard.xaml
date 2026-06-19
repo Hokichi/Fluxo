@@ -13,8 +13,16 @@
         </ItemsPanelTemplate>
 
         <DataTemplate x:Key="MainWindowAccountItemTemplate">
-            <components:IncomeSource />
+            <components:Account />
         </DataTemplate>
+
+        <Style x:Key="DashboardAccountLegendLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="6,0,14,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        </Style>
 
         <Style x:Key="DashboardAccountsScrollButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="28" />
@@ -105,62 +113,91 @@
                     Style="{StaticResource AccountAddButtonStyle}" />
 
                 <Grid Grid.Column="1">
-                    <customControls:FadingScrollViewer
-                        x:Name="DashboardAccountsScrollViewer"
-                        HorizontalAlignment="Stretch"
-                        CanContentScroll="False"
-                        HorizontalScrollBarVisibility="Hidden"
-                        ScrollChanged="OnDashboardAccountsScrollChanged"
-                        SizeChanged="OnDashboardAccountsScrollViewerSizeChanged"
-                        VerticalScrollBarVisibility="Disabled">
-                        <ListView
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="80" />
+                        <RowDefinition Height="18" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <customControls:FadingScrollViewer
+                            x:Name="DashboardAccountsScrollViewer"
+                            HorizontalAlignment="Stretch"
+                            CanContentScroll="False"
+                            HorizontalScrollBarVisibility="Hidden"
+                            ScrollChanged="OnDashboardAccountsScrollChanged"
+                            SizeChanged="OnDashboardAccountsScrollViewerSizeChanged"
+                            VerticalScrollBarVisibility="Disabled">
+                            <ListView
+                                HorizontalAlignment="Left"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource Accounts}"
+                                ItemTemplate="{StaticResource MainWindowAccountItemTemplate}"
+                                ItemsPanel="{StaticResource MainWindowAccountsItemsPanelTemplate}"
+                                ItemsSource="{Binding Accounts}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                        </customControls:FadingScrollViewer>
+
+                        <Button
+                            x:Name="DashboardAccountsScrollLeftButton"
                             HorizontalAlignment="Left"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
-                            BorderThickness="0"
-                            ItemContainerStyle="{StaticResource IncomeSources}"
-                            ItemTemplate="{StaticResource MainWindowAccountItemTemplate}"
-                            ItemsPanel="{StaticResource MainWindowAccountsItemsPanelTemplate}"
-                            ItemsSource="{Binding Accounts}"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            ScrollViewer.VerticalScrollBarVisibility="Disabled" />
-                    </customControls:FadingScrollViewer>
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            AutomationProperties.Name="Scroll accounts left"
+                            LostMouseCapture="OnDashboardAccountsScrollButtonLostMouseCapture"
+                            PreviewMouseLeftButtonDown="OnDashboardAccountsScrollLeftButtonPressed"
+                            PreviewMouseLeftButtonUp="OnDashboardAccountsScrollButtonReleased"
+                            Style="{StaticResource DashboardAccountsScrollButtonStyle}"
+                            Visibility="Collapsed">
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource AngleLeft}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
 
-                    <Button
-                        x:Name="DashboardAccountsScrollLeftButton"
+                        <Button
+                            x:Name="DashboardAccountsScrollRightButton"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            AutomationProperties.Name="Scroll accounts right"
+                            LostMouseCapture="OnDashboardAccountsScrollButtonLostMouseCapture"
+                            PreviewMouseLeftButtonDown="OnDashboardAccountsScrollRightButtonPressed"
+                            PreviewMouseLeftButtonUp="OnDashboardAccountsScrollButtonReleased"
+                            Style="{StaticResource DashboardAccountsScrollButtonStyle}"
+                            Visibility="Collapsed">
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Path="{StaticResource AngleRight}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                    </Grid>
+
+                    <StackPanel
+                        Grid.Row="1"
+                        Margin="0,4,0,0"
                         HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Panel.ZIndex="1"
-                        AutomationProperties.Name="Scroll accounts left"
-                        LostMouseCapture="OnDashboardAccountsScrollButtonLostMouseCapture"
-                        PreviewMouseLeftButtonDown="OnDashboardAccountsScrollLeftButtonPressed"
-                        PreviewMouseLeftButtonUp="OnDashboardAccountsScrollButtonReleased"
-                        Style="{StaticResource DashboardAccountsScrollButtonStyle}"
-                        Visibility="Collapsed">
-                        <components:Icon
-                            Width="14"
-                            Height="14"
-                            Path="{StaticResource AngleLeft}"
-                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                    </Button>
-
-                    <Button
-                        x:Name="DashboardAccountsScrollRightButton"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Panel.ZIndex="1"
-                        AutomationProperties.Name="Scroll accounts right"
-                        LostMouseCapture="OnDashboardAccountsScrollButtonLostMouseCapture"
-                        PreviewMouseLeftButtonDown="OnDashboardAccountsScrollRightButtonPressed"
-                        PreviewMouseLeftButtonUp="OnDashboardAccountsScrollButtonReleased"
-                        Style="{StaticResource DashboardAccountsScrollButtonStyle}"
-                        Visibility="Collapsed">
-                        <components:Icon
-                            Width="14"
-                            Height="14"
-                            Path="{StaticResource AngleRight}"
-                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                    </Button>
+                        Orientation="Horizontal">
+                        <Ellipse
+                            Width="6"
+                            Height="6"
+                            Fill="{StaticResource Brush.Account.Checking.Cash}" />
+                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Checking/Cash" />
+                        <Ellipse
+                            Width="6"
+                            Height="6"
+                            Fill="{StaticResource Brush.Account.Credit}" />
+                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Credit" />
+                        <Ellipse
+                            Width="6"
+                            Height="6"
+                            Fill="{StaticResource Brush.Account.Saving}" />
+                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Saving" />
+                    </StackPanel>
                 </Grid>
             </Grid>
 

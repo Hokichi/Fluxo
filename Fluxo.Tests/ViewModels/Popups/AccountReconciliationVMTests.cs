@@ -12,7 +12,7 @@ namespace Fluxo.Tests.ViewModels.Popups;
 public sealed class AccountReconciliationVMTests
 {
     [Fact]
-    public void Constructor_FiltersBnplAndSavingSources_AndSelectsPromptSource()
+    public void Constructor_FiltersSavingSources_AndSelectsPromptSource()
     {
         var sources = CreateSourceViewModels();
         var appData = Substitute.For<IAppDataService>();
@@ -20,7 +20,7 @@ public sealed class AccountReconciliationVMTests
         var vm = new AccountReconciliationVM(sources, sources[2], appData, () => Task.CompletedTask);
 
         Assert.Equal(
-            [AccountType.Credit, AccountType.Checking, AccountType.Cash],
+            [AccountType.Credit, AccountType.Checking, AccountType.Checking, AccountType.Cash],
             vm.Accounts.Select(source => source.AccountType).ToArray());
         Assert.Equal(3, vm.SelectedAccount?.Id);
     }
@@ -158,7 +158,7 @@ public sealed class AccountReconciliationVMTests
         return
         [
             new AccountVM { Id = 1, Name = "Credit", AccountType = AccountType.Credit },
-            new AccountVM { Id = 2, Name = "Pay Later", AccountType = AccountType.BNPL },
+            new AccountVM { Id = 2, Name = "Spare Checking", AccountType = AccountType.Checking },
             new AccountVM { Id = 3, Name = "Checking", AccountType = AccountType.Checking },
             new AccountVM { Id = 4, Name = "Cash", AccountType = AccountType.Cash },
             new AccountVM { Id = 5, Name = "Emergency", AccountType = AccountType.Saving }

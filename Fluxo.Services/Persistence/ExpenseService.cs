@@ -119,7 +119,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
 
     private static void ApplyExpenseToAccount(Account source, decimal amount)
     {
-        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (source.AccountType == AccountType.Credit)
         {
             source.SpentAmount += amount;
             return;
@@ -130,7 +130,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
 
     private static void RestoreExpenseOnAccount(Account source, decimal amount)
     {
-        if (source.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (source.AccountType == AccountType.Credit)
         {
             source.SpentAmount = Math.Max(0m, source.SpentAmount - amount);
             return;

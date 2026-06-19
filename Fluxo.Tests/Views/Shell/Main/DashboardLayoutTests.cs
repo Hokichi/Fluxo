@@ -38,8 +38,34 @@ public class DashboardLayoutTests
         var sourcesIndex = xaml.IndexOf("x:Name=\"DashboardAccountsScrollViewer\"", StringComparison.Ordinal);
 
         Assert.True(allocationIndex >= 0);
-        Assert.True(allowanceIndex > allocationIndex);
+        Assert.True(allowanceIndex >= 0);
         Assert.True(sourcesIndex > allowanceIndex);
+        Assert.True(sourcesIndex > allocationIndex);
         Assert.Contains("DataContext=\"{Binding AllocationData}\"", xaml);
+        Assert.Contains("<components:Account />", xaml);
+        Assert.Contains("ItemContainerStyle=\"{StaticResource Accounts}\"", xaml);
+    }
+
+    [Fact]
+    public void Dashboard_AccountsStrip_HasTypeLegendBelowScroller()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Shell",
+            "Main",
+            "Pages",
+            "Dashboard.xaml"));
+
+        var scrollerIndex = xaml.IndexOf("x:Name=\"DashboardAccountsScrollViewer\"", StringComparison.Ordinal);
+        var legendIndex = xaml.IndexOf("Text=\"Checking/Cash\"", StringComparison.Ordinal);
+
+        Assert.True(scrollerIndex >= 0);
+        Assert.True(legendIndex > scrollerIndex);
+        Assert.Contains("Text=\"Credit\"", xaml);
+        Assert.Contains("Text=\"Saving\"", xaml);
+        Assert.Contains("Brush.Account.Checking.Cash", xaml);
+        Assert.Contains("Brush.Account.Credit", xaml);
+        Assert.Contains("Brush.Account.Saving", xaml);
     }
 }

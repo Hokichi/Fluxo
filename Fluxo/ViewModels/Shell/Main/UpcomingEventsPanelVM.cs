@@ -146,7 +146,7 @@ public partial class UpcomingEventsPanelVM : ObservableRecipient, IRecipient<Das
             RecurringTransactionType.Income => "Income",
             RecurringTransactionType.GoalUpdate => "Goal",
             RecurringTransactionType.Expense when transaction.Source.AccountType is
-                AccountType.Credit or AccountType.BNPL => "Payment",
+                AccountType.Credit => "Payment",
             RecurringTransactionType.Expense => "Expense",
             _ => "Event"
         };

@@ -890,7 +890,7 @@ internal static class LogMemoryPersistence
 {
     internal static void ApplyExpenseToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount += amount;
             return;
@@ -901,7 +901,7 @@ internal static class LogMemoryPersistence
 
     internal static void RevertExpenseFromAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
@@ -912,7 +912,7 @@ internal static class LogMemoryPersistence
 
     internal static void ApplyIncomeToAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
             return;
@@ -923,7 +923,7 @@ internal static class LogMemoryPersistence
 
     internal static void RevertIncomeFromAccount(Account account, decimal amount)
     {
-        if (account.AccountType is AccountType.Credit or AccountType.BNPL)
+        if (account.AccountType == AccountType.Credit)
         {
             account.SpentAmount += amount;
             return;
