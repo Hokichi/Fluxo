@@ -62,7 +62,6 @@
                             Command="{Binding DataContext.OpenNotificationActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}"
                             HoveredBackground="{StaticResource Brush.Mint}"
-                            IconSize="10"
                             ShouldExpand="True"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                             Visibility="{Binding HasActionCta, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -86,6 +85,9 @@
     </UserControl.Resources>
 
     <Border Style="{StaticResource DashboardPanelStyle}">
+        <Border.Background>
+            <SolidColorBrush Opacity="1" Color="{StaticResource Color.Background.Elevated}" />
+        </Border.Background>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
