@@ -1,0 +1,46 @@
+<customControls:BasePopup
+    x:Class="Fluxo.Views.Popups.AppUnlockPopup"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
+    Width="440"
+    PopupTitle="Unlock fluxo"
+    ShowCancelButton="True">
+    <Border Padding="24,8,24,24">
+        <StackPanel>
+            <TextBlock
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Foreground="{StaticResource Brush.Text.Secondary}"
+                Text="Enter the unlock password."
+                TextWrapping="Wrap" />
+
+            <PasswordBox
+                x:Name="UnlockPasswordBox"
+                Margin="0,12,0,0"
+                Padding="12,8"
+                Background="{StaticResource Brush.Background.Surface}"
+                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                BorderThickness="1"
+                CaretBrush="{StaticResource Brush.Text.Primary}"
+                Foreground="{StaticResource Brush.Text.Primary}"
+                PasswordChanged="OnUnlockPasswordBoxPasswordChanged" />
+
+            <TextBlock
+                x:Name="ValidationText"
+                Margin="0,8,0,0"
+                FontFamily="{StaticResource Medium}"
+                FontSize="11"
+                Foreground="{StaticResource Brush.Danger}"
+                Text="Password does not match."
+                Visibility="Collapsed" />
+
+            <Button
+                Margin="0,18,0,0"
+                HorizontalAlignment="Right"
+                Click="OnUnlockButtonClick"
+                Content="Unlock"
+                Style="{StaticResource PrimaryDialogActionButtonStyle}" />
+        </StackPanel>
+    </Border>
+</customControls:BasePopup>

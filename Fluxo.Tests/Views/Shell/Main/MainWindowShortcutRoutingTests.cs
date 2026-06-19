@@ -120,7 +120,9 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("private bool IsDashboardSpendingAmountGateLocked()", source);
         Assert.Contains("return _mainVM.IsDashboardSpendingAmountGateLocked;", source);
         Assert.Contains("private bool IsSufficientFundsActionGateLocked()", source);
-        Assert.Contains("return _mainVM.IsSufficientFundsActionGateLocked;", source);
+        Assert.Contains("return _mainVM.IsAnyActionGateLocked;", source);
+        Assert.Contains("private bool IsAppLocked()", source);
+        Assert.Contains("return _mainVM.IsAppLocked;", source);
     }
 
     [Fact]

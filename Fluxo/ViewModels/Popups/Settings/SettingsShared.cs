@@ -93,6 +93,18 @@ internal static class SettingsShared
         return (int)Math.Round(parsedValue, MidpointRounding.AwayFromZero);
     }
 
+    public static int ParsePositiveInt(IReadOnlyDictionary<string, string> settings, string name, int defaultValue)
+    {
+        if (!settings.TryGetValue(name, out var value) ||
+            !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue) ||
+            parsedValue <= 0)
+        {
+            return defaultValue;
+        }
+
+        return parsedValue;
+    }
+
     public static bool ParseBool(IReadOnlyDictionary<string, string> settings, string name, bool defaultValue)
     {
         return settings.TryGetValue(name, out var value)

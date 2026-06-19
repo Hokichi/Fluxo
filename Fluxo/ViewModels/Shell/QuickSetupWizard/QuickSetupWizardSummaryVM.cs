@@ -24,7 +24,7 @@ public partial class QuickSetupWizardSummaryVM : ObservableRecipient,
     private decimal _totalPrimaryAmount;
     private int _wantsPercentage = 30;
 
-    [ObservableProperty] private bool _isStep7Active;
+    [ObservableProperty] private bool _isStep8Active;
 
     public QuickSetupWizardSummaryVM(IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)

@@ -115,6 +115,13 @@ public static class MainWindowShortcutMatcher
 
     public static bool IsOpenAddAccountShortcut(Key key, ModifierKeys modifiers)
     {
+        _ = key;
+        _ = modifiers;
+        return false;
+    }
+
+    public static bool IsToggleAppLockShortcut(Key key, ModifierKeys modifiers)
+    {
         return key == Key.L && modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
     }
 

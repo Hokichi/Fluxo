@@ -84,6 +84,9 @@
                                             <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
@@ -146,6 +149,9 @@
                                             <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
@@ -205,6 +211,9 @@
                                             <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
@@ -261,6 +270,9 @@
                                             <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
@@ -295,7 +307,7 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource RegularBell}"
+                                Path="{StaticResource Lock}"
                                 Color="{Binding Foreground, ElementName=Step5Label}" />
                             <TextBlock
                                 x:Name="Step5Label"
@@ -303,7 +315,7 @@
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="12"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="Preferences">
+                                Text="Personalization">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
@@ -312,6 +324,9 @@
                                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -348,10 +363,63 @@
                             <components:Icon
                                 Width="12"
                                 Height="12"
-                                Path="{StaticResource InvoiceLight}"
+                                Path="{StaticResource RegularBell}"
                                 Color="{Binding Foreground, ElementName=Step6Label}" />
                             <TextBlock
                                 x:Name="Step6Label"
+                                Margin="10,0,0,0"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="12"
+                                Foreground="{StaticResource Brush.Text.Secondary}"
+                                Text="Preferences">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  Step 7  -->
+                <Border>
+                    <Border.Style>
+                        <Style BasedOn="{StaticResource SidebarStepStyle}" TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <Border
+                            x:Name="Step7Stripe"
+                            Width="4"
+                            HorizontalAlignment="Left"
+                            Background="{StaticResource Brush.Mint}"
+                            CornerRadius="2"
+                            Opacity="0" />
+                        <StackPanel
+                            Margin="14,0,0,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <components:Icon
+                                Width="12"
+                                Height="12"
+                                Path="{StaticResource InvoiceLight}"
+                                Color="{Binding Foreground, ElementName=Step7Label}" />
+                            <TextBlock
+                                x:Name="Step7Label"
                                 Margin="10,0,0,0"
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="12"
@@ -361,7 +429,7 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsStep7Active}" Value="True">
+                                            <DataTrigger Binding="{Binding IsStep8Active}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -433,6 +501,7 @@
                             <steps:FixedExpenses DataContext="{Binding FixedExpenses}" />
                             <steps:SavingGoals DataContext="{Binding SavingGoals}" />
                             <steps:BudgetAllocation DataContext="{Binding BudgetAllocation}" />
+                            <steps:Personalization DataContext="{Binding Personalization}" />
                             <steps:Notification DataContext="{Binding Notification}" />
                             <steps:Summary DataContext="{Binding Summary}" />
                         </Grid>

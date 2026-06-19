@@ -352,15 +352,15 @@ public partial class QuickSetupWizard : BasePopup
 
     private Border? GetStripeForStep(int stepIndex) => MiddleStepPage?.GetStripeForStep(stepIndex);
 
-    private bool IsMiddleStep(int stepIndex) => stepIndex >= 2 && stepIndex <= 7;
+    private bool IsMiddleStep(int stepIndex) => stepIndex >= 2 && stepIndex <= 8;
 
     private static bool IsLoadingFinalTransition(int fromStep, int toStep) =>
-        (fromStep == 8 && toStep == 9) || (fromStep == 9 && toStep == 8);
+        (fromStep == 9 && toStep == 10) || (fromStep == 10 && toStep == 9);
 
     private UIElement? GetContentElementForStep(int stepIndex) => stepIndex switch
     {
-        8 => LoadingStepPage?.ContentElement,
-        9 => FinalStepPage?.ContentElement,
+        9 => LoadingStepPage?.ContentElement,
+        10 => FinalStepPage?.ContentElement,
         _ => null
     };
 
@@ -532,7 +532,7 @@ public partial class QuickSetupWizard : BasePopup
 
     private void SyncStripeOpacities()
     {
-        for (var i = 2; i <= 7; i++)
+        for (var i = 2; i <= 8; i++)
         {
             var stripe = GetStripeForStep(i);
             if (stripe is null) continue;

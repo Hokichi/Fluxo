@@ -9,7 +9,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     IRecipient<QuickSetupWizardBudgetAllocationChangedMessage>
 {
     private const int FirstMiddleStepIndex = 2;
-    private const int LastMiddleStepIndex = 7;
+    private const int LastMiddleStepIndex = 8;
     private const int MiddleStepsCount = LastMiddleStepIndex - FirstMiddleStepIndex + 1;
     private int _currentStepIndex = 2;
 
@@ -20,12 +20,14 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     [ObservableProperty] private bool _isStep5Active;
     [ObservableProperty] private bool _isStep6Active;
     [ObservableProperty] private bool _isStep7Active;
+    [ObservableProperty] private bool _isStep8Active;
 
     public QuickSetupWizardMiddlePageVM(
         QuickSetupWizardAccountsVM accounts,
         QuickSetupWizardFixedExpensesVM fixedExpenses,
         QuickSetupWizardSavingGoalsVM savingGoals,
         QuickSetupWizardBudgetAllocationVM budgetAllocation,
+        QuickSetupWizardPersonalizationVM personalization,
         QuickSetupWizardNotificationVM notification,
         QuickSetupWizardSummaryVM summary,
         IMessenger? messenger = null)
@@ -36,6 +38,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         FixedExpenses.SetAccounts(accounts);
         SavingGoals = savingGoals;
         BudgetAllocation = budgetAllocation;
+        Personalization = personalization;
         Notification = notification;
         Summary = summary;
         IsActive = true;
@@ -48,6 +51,8 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     public QuickSetupWizardSavingGoalsVM SavingGoals { get; }
 
     public QuickSetupWizardBudgetAllocationVM BudgetAllocation { get; }
+
+    public QuickSetupWizardPersonalizationVM Personalization { get; }
 
     public QuickSetupWizardNotificationVM Notification { get; }
 
@@ -67,7 +72,8 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         3 => "Add recurring transactions",
         4 => "Add savings goals",
         5 => "Budget allocation",
-        6 => "Preferences",
+        6 => "Personalization",
+        7 => "Preferences",
         _ => "Setup summary"
     };
 
@@ -77,7 +83,8 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         3 => "Add recurring transactions so fluxo can account for them upfront.",
         4 => "Add a few goals to start tracking progress right away.",
         5 => "Split your budget into Needs, Wants, and Invest.",
-        6 => "Choose which reminders and alerts fluxo should show.",
+        6 => "Set how fluxo locks and unlocks when you're away.",
+        7 => "Choose which reminders and alerts fluxo should show.",
         _ => "Here's a summary of everything you've set up."
     };
 
@@ -89,6 +96,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         await FixedExpenses.RefreshAsync();
         await SavingGoals.RefreshAsync();
         await BudgetAllocation.LoadAsync();
+        await Personalization.LoadAsync();
         await Notification.LoadAsync();
     }
 
@@ -102,13 +110,15 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         IsStep5Active = stepIndex == 5;
         IsStep6Active = stepIndex == 6;
         IsStep7Active = stepIndex == 7;
+        IsStep8Active = stepIndex == 8;
 
         Accounts.IsStep2Active = IsStep2Active;
         FixedExpenses.IsStep3Active = IsStep3Active;
         SavingGoals.IsStep4Active = IsStep4Active;
         BudgetAllocation.IsStep5Active = IsStep5Active;
-        Notification.IsStep6Active = IsStep6Active;
-        Summary.IsStep7Active = IsStep7Active;
+        Personalization.IsStep6Active = IsStep6Active;
+        Notification.IsStep7Active = IsStep7Active;
+        Summary.IsStep8Active = IsStep8Active;
 
         OnPropertyChanged(nameof(MiddleCurrentStep));
         OnPropertyChanged(nameof(IsNextEnabled));

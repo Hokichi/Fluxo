@@ -1,6 +1,8 @@
+using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Threading;
+using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Views.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
@@ -9,6 +11,8 @@ public partial class SettingsPersonalizationTab : UserControl
 {
     private readonly DispatcherTimer _usernameAutosaveTimer = new() { Interval = TimeSpan.FromSeconds(10) };
     private bool _isLoaded;
+    private bool _isSyncingUiLockPassword;
+    private SettingsPersonalizationTabVM? _trackedViewModel;
 
     public SettingsPersonalizationTab()
     {
@@ -22,12 +26,15 @@ public partial class SettingsPersonalizationTab : UserControl
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _isLoaded = true;
+        TrackViewModel(DataContext as SettingsPersonalizationTabVM);
+        SyncUiLockPasswordFieldsFromViewModel();
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _isLoaded = false;
         _usernameAutosaveTimer.Stop();
+        TrackViewModel(null);
     }
 
     private void OnUsernameTextBoxTextChanged(object sender, TextChangedEventArgs e)
@@ -68,5 +75,65 @@ public partial class SettingsPersonalizationTab : UserControl
         await SettingsSetupWizardFlow.RunAsync(
             Window.GetWindow(this),
             DataContext as Fluxo.ViewModels.Popups.Settings.SettingsPersonalizationTabVM);
+    }
+
+    private void OnUiLockingPasswordBoxPasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isSyncingUiLockPassword || DataContext is not SettingsPersonalizationTabVM viewModel)
+            return;
+
+        _isSyncingUiLockPassword = true;
+        viewModel.UiLockingPassword = UiLockingPasswordBox.Password;
+        UiLockingPasswordVisibleTextBox.Text = UiLockingPasswordBox.Password;
+        _isSyncingUiLockPassword = false;
+    }
+
+    private void OnUiLockingPasswordVisibleTextBoxTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isSyncingUiLockPassword || DataContext is not SettingsPersonalizationTabVM viewModel)
+            return;
+
+        _isSyncingUiLockPassword = true;
+        viewModel.UiLockingPassword = UiLockingPasswordVisibleTextBox.Text;
+        UiLockingPasswordBox.Password = UiLockingPasswordVisibleTextBox.Text;
+        _isSyncingUiLockPassword = false;
+    }
+
+    private void TrackViewModel(SettingsPersonalizationTabVM? viewModel)
+    {
+        if (ReferenceEquals(_trackedViewModel, viewModel))
+            return;
+
+        if (_trackedViewModel is not null)
+            _trackedViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+
+        _trackedViewModel = viewModel;
+
+        if (_trackedViewModel is not null)
+            _trackedViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SettingsPersonalizationTabVM.UiLockingPassword))
+            SyncUiLockPasswordFieldsFromViewModel();
+    }
+
+    private void SyncUiLockPasswordFieldsFromViewModel()
+    {
+        if (DataContext is not SettingsPersonalizationTabVM viewModel)
+            return;
+
+        var password = viewModel.UiLockingPassword ?? string.Empty;
+        if (string.Equals(UiLockingPasswordBox.Password, password, StringComparison.Ordinal) &&
+            string.Equals(UiLockingPasswordVisibleTextBox.Text, password, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _isSyncingUiLockPassword = true;
+        UiLockingPasswordBox.Password = password;
+        UiLockingPasswordVisibleTextBox.Text = password;
+        _isSyncingUiLockPassword = false;
     }
 }

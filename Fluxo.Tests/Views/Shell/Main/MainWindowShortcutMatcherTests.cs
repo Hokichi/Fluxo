@@ -222,9 +222,16 @@ public class MainWindowShortcutMatcherTests
 
     [Theory]
     [InlineData(Key.L, ModifierKeys.Control | ModifierKeys.Shift)]
-    public void IsOpenAddAccountShortcut_ReturnsTrue_ForCtrlShiftL(Key key, ModifierKeys modifiers)
+    public void IsOpenAddAccountShortcut_ReturnsFalse_ForCtrlShiftL(Key key, ModifierKeys modifiers)
     {
-        Assert.True(MainWindowShortcutMatcher.IsOpenAddAccountShortcut(key, modifiers));
+        Assert.False(MainWindowShortcutMatcher.IsOpenAddAccountShortcut(key, modifiers));
+    }
+
+    [Theory]
+    [InlineData(Key.L, ModifierKeys.Control | ModifierKeys.Shift)]
+    public void IsToggleAppLockShortcut_ReturnsTrue_ForCtrlShiftL(Key key, ModifierKeys modifiers)
+    {
+        Assert.True(MainWindowShortcutMatcher.IsToggleAppLockShortcut(key, modifiers));
     }
 
     [Theory]

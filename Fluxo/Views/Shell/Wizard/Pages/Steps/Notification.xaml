@@ -35,8 +35,8 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <!--  Step 6: Notifications  -->
-    <StackPanel Visibility="{Binding IsStep6Active, Converter={StaticResource BoolToVisibilityConverter}}">
+    <!--  Step 7: Notifications  -->
+    <StackPanel Visibility="{Binding IsStep7Active, Converter={StaticResource BoolToVisibilityConverter}}">
         <Border Margin="0,0,0,12" Style="{StaticResource CardStyle}">
             <StackPanel>
                 <Grid>

@@ -74,6 +74,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILogService, FluxoLogService>();
         services.AddSingleton<IUiSettleAwaiter, UiSettleAwaiter>();
         services.AddSingleton<IStartupRegistrationService, StartupRegistrationService>();
+        services.AddSingleton<IUiLockPasswordProtector, DpapiUiLockPasswordProtector>();
         services.AddSingleton<IAppUpdateService, AppUpdateService>();
         services.AddSingleton<IAppUpdateLifecycleService, AppUpdateLifecycleService>();
         services.AddSingleton<IAppUpdateInteractionService, AppUpdateInteractionService>();
@@ -124,6 +125,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardFixedExpensesVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSavingGoalsVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardBudgetAllocationVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardPersonalizationVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardNotificationVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSummaryVM>();
         services.AddTransient<QuickSetupWizardVM>();

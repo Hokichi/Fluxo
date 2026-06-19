@@ -739,6 +739,21 @@
                                 Background="{StaticResource Brush.Background.Hover}"
                                 SnapsToDevicePixels="True" />
 
+                            <customControls:BalloonCheckBox
+                                x:Name="HeaderAppLockButton"
+                                CheckedBackground="{StaticResource Brush.Mint}"
+                                CheckedIcon="{StaticResource LockOpen}"
+                                CheckedText="Unlock fluxo"
+                                Click="OnHeaderAppLockButtonClick"
+                                DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                                IconSize="12"
+                                IsChecked="{Binding IsAppLocked, Mode=OneWay}"
+                                ShouldExpand="True"
+                                Style="{StaticResource HeaderCheckBoxStyle}"
+                                UncheckedIcon="{StaticResource Lock}"
+                                UncheckedText="Lock fluxo" />
+
                             <customControls:BalloonButton
                                 x:Name="HeaderQuickAddButton"
                                 Padding="8,0"

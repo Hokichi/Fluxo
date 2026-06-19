@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces.Operations;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
 
@@ -23,13 +24,16 @@ public partial class MainVM : ObservableRecipient
         IDataOperationRunner dataOperationRunner,
         DashboardVM dashboard,
         Main.DaySpinnerVM daySpinner,
-        Main.LedgerVM? ledger = null)
+        Main.LedgerVM? ledger = null,
+        IUiLockPasswordProtector? passwordProtector = null)
     {
         _dataOperationRunner = dataOperationRunner;
         Dashboard = dashboard;
         DaySpinner = daySpinner;
         Ledger = ledger;
+        AppLock = new AppLockState(passwordProtector);
         Dashboard.PropertyChanged += OnDashboardPropertyChanged;
+        AppLock.PropertyChanged += OnAppLockPropertyChanged;
 
         WeakReferenceMessenger.Default.Register<MainVM, UsernameChangedMessage>(this,
             static (recipient, message) => recipient.Username = message.Value);
@@ -45,9 +49,16 @@ public partial class MainVM : ObservableRecipient
     public Main.UpcomingEventsPanelVM UpcomingEventsPanel => Dashboard.UpcomingEventsPanel;
     public Main.DaySpinnerVM DaySpinner { get; }
     public Main.LedgerVM? Ledger { get; }
+    public AppLockState AppLock { get; }
 
     public bool IsDashboardSpendingAmountGateLocked => Dashboard.IsDashboardSpendingAmountGateLocked;
     public bool IsSufficientFundsActionGateLocked => Dashboard.IsSufficientFundsActionGateLocked;
+    public bool IsAppAutoLocked => AppLock.IsAppAutoLocked;
+    public int AppAutoLockedInterval => AppLock.AppAutoLockedInterval;
+    public bool IsAppLocked => AppLock.IsAppLocked;
+    public bool HasUiLockingPassword => AppLock.HasUiLockingPassword;
+    public bool IsAnyActionGateLocked => IsAppLocked || IsSufficientFundsActionGateLocked;
+    public string AppLockButtonText => AppLock.AppLockButtonText;
 
     public ObservableCollection<AccountVM> Accounts => Dashboard.Accounts;
 
@@ -101,6 +112,21 @@ public partial class MainVM : ObservableRecipient
             var trimmed = (name ?? string.Empty).Trim();
             Username = trimmed.Length > 0 ? trimmed : "User";
         }
+
+        AppLock.ApplySettings(settingsByName);
+        OnPropertyChanged(nameof(IsAppAutoLocked));
+        OnPropertyChanged(nameof(AppAutoLockedInterval));
+        OnPropertyChanged(nameof(HasUiLockingPassword));
+    }
+
+    public void LockUi()
+    {
+        AppLock.LockUi();
+    }
+
+    public bool TryUnlockUi(string? password)
+    {
+        return AppLock.TryUnlockUi(password);
     }
 
     private void HandleExpenseDetailUpdatedMessage(ExpenseDetailUpdatedMessage message)
@@ -120,6 +146,31 @@ public partial class MainVM : ObservableRecipient
                 break;
             case nameof(DashboardVM.IsSufficientFundsActionGateLocked):
                 OnPropertyChanged(nameof(IsSufficientFundsActionGateLocked));
+                OnPropertyChanged(nameof(IsAnyActionGateLocked));
+                break;
+        }
+    }
+
+    private void OnAppLockPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(AppLockState.IsAppAutoLocked):
+                OnPropertyChanged(nameof(IsAppAutoLocked));
+                break;
+            case nameof(AppLockState.AppAutoLockedInterval):
+                OnPropertyChanged(nameof(AppAutoLockedInterval));
+                break;
+            case nameof(AppLockState.IsAppLocked):
+                OnPropertyChanged(nameof(IsAppLocked));
+                OnPropertyChanged(nameof(IsAnyActionGateLocked));
+                OnPropertyChanged(nameof(AppLockButtonText));
+                break;
+            case nameof(AppLockState.AppLockButtonText):
+                OnPropertyChanged(nameof(AppLockButtonText));
+                break;
+            case nameof(AppLockState.HasUiLockingPassword):
+                OnPropertyChanged(nameof(HasUiLockingPassword));
                 break;
         }
     }

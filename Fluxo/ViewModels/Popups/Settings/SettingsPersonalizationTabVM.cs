@@ -10,6 +10,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Ui;
 using Fluxo.Services.Updates;
 
 namespace Fluxo.ViewModels.Popups.Settings;
@@ -19,24 +20,34 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private readonly IMessenger _messenger;
     private readonly Dictionary<string, bool> _savedNotificationSettings = new(StringComparer.Ordinal);
     private readonly IAppDataService _appData;
+    private readonly IUiLockPasswordProtector _passwordProtector;
     private readonly IAppUpdateService _appUpdateService;
     private readonly IAppUpdateInteractionService? _appUpdateInteractionService;
     private string _savedPreferredAppName = string.Empty;
     private bool _savedShouldRunAtStartup;
     private AppCloseBehavior _savedCloseBehavior = AppCloseBehavior.Exit;
+    private bool _savedIsAppAutoLocked;
+    private int _savedAppAutoLockedInterval = 100;
+    private string _savedUiLockingPassword = string.Empty;
 
     [ObservableProperty] private string _preferredAppName = string.Empty;
     [ObservableProperty] private bool _shouldRunAtStartup;
     [ObservableProperty] private AppCloseBehavior _closeBehavior = AppCloseBehavior.Exit;
     [ObservableProperty] private bool _isCheckingForUpdates;
+    [ObservableProperty] private bool _isAppAutoLocked;
+    [ObservableProperty] private int _appAutoLockedInterval = 100;
+    [ObservableProperty] private string _uiLockingPassword = string.Empty;
+    [ObservableProperty] private bool _isUiLockingPasswordVisible;
 
     public SettingsPersonalizationTabVM(
         IAppDataService appData,
         IMessenger? messenger = null,
         IAppUpdateService? appUpdateService = null,
-        IAppUpdateInteractionService? appUpdateInteractionService = null)
+        IAppUpdateInteractionService? appUpdateInteractionService = null,
+        IUiLockPasswordProtector? passwordProtector = null)
     {
         _appData = appData;
+        _passwordProtector = passwordProtector ?? new DpapiUiLockPasswordProtector();
         _appUpdateService = appUpdateService ?? new AppUpdateService();
         _appUpdateInteractionService = appUpdateInteractionService;
         _messenger = messenger ?? WeakReferenceMessenger.Default;
@@ -50,10 +61,15 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     public string CurrentVersion { get; } = AppVersionResolver.ResolveCurrentVersion();
 
+    public bool HasAutoLockInterval => IsAppAutoLocked;
+
     public bool HasPendingChanges =>
         !string.Equals((PreferredAppName ?? string.Empty).Trim(), _savedPreferredAppName, StringComparison.Ordinal) ||
         ShouldRunAtStartup != _savedShouldRunAtStartup ||
         CloseBehavior != _savedCloseBehavior ||
+        IsAppAutoLocked != _savedIsAppAutoLocked ||
+        AppAutoLockedInterval != _savedAppAutoLockedInterval ||
+        !string.Equals(UiLockingPassword ?? string.Empty, _savedUiLockingPassword, StringComparison.Ordinal) ||
         NotificationSettings.Any(setting =>
             _savedNotificationSettings.TryGetValue(setting.SettingName, out var savedValue)
                 ? savedValue != setting.IsEnabled
@@ -65,9 +81,17 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         PreferredAppName = SettingsShared.ParseString(settingsByName, UserSettingNames.PreferredDisplayName, string.Empty);
         ShouldRunAtStartup = SettingsShared.ParseBool(settingsByName, UserSettingNames.ShouldRunAtStartup, false);
         CloseBehavior = SettingsShared.ParseCloseBehavior(settingsByName, UserSettingNames.CloseBehavior, AppCloseBehavior.Exit);
+        IsAppAutoLocked = SettingsShared.ParseBool(settingsByName, UserSettingNames.IsAppAutoLocked, false);
+        AppAutoLockedInterval =
+            SettingsShared.ParsePositiveInt(settingsByName, UserSettingNames.AppAutoLockedInterval, 100);
+        UiLockingPassword = _passwordProtector.Unprotect(
+            SettingsShared.ParseString(settingsByName, UserSettingNames.UILockingPassword, string.Empty));
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
         _savedShouldRunAtStartup = ShouldRunAtStartup;
         _savedCloseBehavior = CloseBehavior;
+        _savedIsAppAutoLocked = IsAppAutoLocked;
+        _savedAppAutoLockedInterval = AppAutoLockedInterval;
+        _savedUiLockingPassword = UiLockingPassword;
         LoadNotificationSettings(settingsByName);
         PublishPendingState();
     }
@@ -150,6 +174,16 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.CloseBehavior,
             CloseBehavior.ToString(), actions);
 
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.IsAppAutoLocked,
+            IsAppAutoLocked.ToString(CultureInfo.InvariantCulture), actions);
+
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.AppAutoLockedInterval,
+            Math.Max(1, AppAutoLockedInterval).ToString(CultureInfo.InvariantCulture), actions);
+
+        var protectedPassword = _passwordProtector.Protect(UiLockingPassword);
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.UILockingPassword,
+            string.IsNullOrWhiteSpace(protectedPassword) ? null : protectedPassword, actions);
+
         var newUsername = string.IsNullOrWhiteSpace(PreferredAppName) ? "User" : PreferredAppName.Trim();
         var oldUsername = string.IsNullOrWhiteSpace(_savedPreferredAppName) ? "User" : _savedPreferredAppName;
         return (SettingsOperationResult.Success(), actions, oldUsername, newUsername, ShouldRunAtStartup);
@@ -160,6 +194,9 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
         _savedShouldRunAtStartup = ShouldRunAtStartup;
         _savedCloseBehavior = CloseBehavior;
+        _savedIsAppAutoLocked = IsAppAutoLocked;
+        _savedAppAutoLockedInterval = AppAutoLockedInterval;
+        _savedUiLockingPassword = UiLockingPassword;
         _savedNotificationSettings.Clear();
         foreach (var setting in NotificationSettings)
             _savedNotificationSettings[setting.SettingName] = setting.IsEnabled;
@@ -171,6 +208,9 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         PreferredAppName = _savedPreferredAppName;
         ShouldRunAtStartup = _savedShouldRunAtStartup;
         CloseBehavior = _savedCloseBehavior;
+        IsAppAutoLocked = _savedIsAppAutoLocked;
+        AppAutoLockedInterval = _savedAppAutoLockedInterval;
+        UiLockingPassword = _savedUiLockingPassword;
         foreach (var setting in NotificationSettings)
             if (_savedNotificationSettings.TryGetValue(setting.SettingName, out var value))
                 setting.IsEnabled = value;
@@ -191,6 +231,33 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         OnPropertyChanged(nameof(IsMinimizeToTrayCloseBehaviorSelected));
         OnPropertyChanged(nameof(IsExitCloseBehaviorSelected));
+        PublishPendingState();
+    }
+
+    partial void OnIsAppAutoLockedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(HasAutoLockInterval));
+        PublishPendingState();
+    }
+
+    partial void OnAppAutoLockedIntervalChanged(int value)
+    {
+        if (value < 1)
+        {
+            AppAutoLockedInterval = 1;
+            return;
+        }
+
+        PublishPendingState();
+    }
+
+    partial void OnUiLockingPasswordChanged(string value)
+    {
+        PublishPendingState();
+    }
+
+    partial void OnIsUiLockingPasswordVisibleChanged(bool value)
+    {
         PublishPendingState();
     }
 

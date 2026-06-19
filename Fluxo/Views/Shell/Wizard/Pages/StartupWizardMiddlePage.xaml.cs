@@ -27,6 +27,7 @@ public partial class QuickSetupWizardMiddlePage : UserControl
         5 => Step4Stripe,
         6 => Step5Stripe,
         7 => Step6Stripe,
+        8 => Step7Stripe,
         _ => null
     };
 

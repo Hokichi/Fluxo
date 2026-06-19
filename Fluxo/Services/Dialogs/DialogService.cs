@@ -70,6 +70,11 @@ public sealed class DialogService : IDialogService
         return ShowScopedDialog<PlanningPopup>(owner);
     }
 
+    public bool? ShowAppUnlock(Func<string, bool> tryUnlock, Window? owner = null)
+    {
+        return ShowDialog(new AppUnlockPopup(tryUnlock), owner);
+    }
+
     public bool? ShowPlanningReport(PlanningSnapshot snapshot, Window? owner = null)
     {
         using var scope = _serviceProvider.CreateScope();

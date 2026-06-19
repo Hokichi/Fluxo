@@ -22,7 +22,7 @@ public partial class HotkeysOverviewPopup : BasePopup
             new HotkeyItem("Create transaction", Parts("Ctrl", "N")),
             new HotkeyItem("Create recurring transaction", Parts("Ctrl", "Shift", "N")),
             new HotkeyItem("View accounts", Parts("Ctrl", "L")),
-            new HotkeyItem("Add account", Parts("Ctrl", "Shift", "L")),
+            new HotkeyItem("Lock fluxo", Parts("Ctrl", "Shift", "L")),
             new HotkeyItem("Add saving goal", Parts("Ctrl", "Shift", "G")),
             new HotkeyItem("Open planning mode", Parts("Ctrl", "P")),
             new HotkeyItem("Toggle notifications", Parts("Ctrl", "Alt", "N"))

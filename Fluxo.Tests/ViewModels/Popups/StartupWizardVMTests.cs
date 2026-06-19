@@ -281,6 +281,7 @@ public sealed class QuickSetupWizardVMTests
         var fixedExpenses = new QuickSetupWizardFixedExpensesVM(null!, appData, messenger);
         var savingGoals = new QuickSetupWizardSavingGoalsVM(null!, appData, messenger);
         var budget = new QuickSetupWizardBudgetAllocationVM(appData, messenger);
+        var personalization = new QuickSetupWizardPersonalizationVM(appData, new TestPasswordProtector());
         var notification = new QuickSetupWizardNotificationVM(appData, messenger);
         var summary = new QuickSetupWizardSummaryVM(messenger);
         var middle = new QuickSetupWizardMiddlePageVM(
@@ -288,6 +289,7 @@ public sealed class QuickSetupWizardVMTests
             fixedExpenses,
             savingGoals,
             budget,
+            personalization,
             notification,
             summary,
             messenger);
@@ -311,6 +313,24 @@ public sealed class QuickSetupWizardVMTests
         public ValueTask<IDataOperationScope> CreateAsync(CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
+        }
+    }
+
+    private sealed class TestPasswordProtector : IUiLockPasswordProtector
+    {
+        public string Protect(string? password)
+        {
+            return string.IsNullOrWhiteSpace(password) ? string.Empty : "protected:" + password;
+        }
+
+        public string Unprotect(string? protectedPassword)
+        {
+            if (string.IsNullOrWhiteSpace(protectedPassword))
+                return string.Empty;
+
+            return protectedPassword.StartsWith("protected:", StringComparison.Ordinal)
+                ? protectedPassword["protected:".Length..]
+                : string.Empty;
         }
     }
 

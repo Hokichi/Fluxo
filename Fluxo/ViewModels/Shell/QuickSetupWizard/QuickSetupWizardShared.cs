@@ -9,7 +9,7 @@ namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
 internal static class QuickSetupWizardShared
 {
-    public const int TotalSteps = 10;
+    public const int TotalSteps = 11;
 
     public static string ResolveUsername(string? username)
     {
@@ -48,6 +48,16 @@ internal static class QuickSetupWizardShared
             return (int)defaultValue;
 
         return (int)Math.Round(parsedValue, MidpointRounding.AwayFromZero);
+    }
+
+    public static int ParsePositiveInt(IReadOnlyDictionary<string, string> settings, string name, int defaultValue)
+    {
+        if (!settings.TryGetValue(name, out var value) ||
+            !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue) ||
+            parsedValue <= 0)
+            return defaultValue;
+
+        return parsedValue;
     }
 
     public static void ReplaceCollection<T>(ObservableCollection<T> collection, IEnumerable<T> items)

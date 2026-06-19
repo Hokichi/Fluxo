@@ -16,7 +16,7 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
     private readonly IAppDataService _appData;
     private readonly IMessenger _messenger;
 
-    [ObservableProperty] private bool _isStep6Active;
+    [ObservableProperty] private bool _isStep7Active;
     [ObservableProperty] private bool _shouldRunAtStartup;
     [ObservableProperty] private AppCloseBehavior _closeBehavior = AppCloseBehavior.Exit;
 

@@ -71,6 +71,18 @@ public sealed class DialogServiceTests
         Assert.Contains("owner.WindowState == WindowState.Minimized", reactivateOwnerBody);
     }
 
+    [Fact]
+    public void ShowAppUnlock_UsesAppUnlockPopup()
+    {
+        var source = File.ReadAllText(ResolveDialogServicePath());
+        var showAppUnlockBody = ExtractMethodBodyBySignature(
+            source,
+            "public bool? ShowAppUnlock(Func<string, bool> tryUnlock, Window? owner = null)");
+
+        Assert.Contains("new AppUnlockPopup(tryUnlock)", showAppUnlockBody);
+        Assert.Contains("ShowDialog", showAppUnlockBody);
+    }
+
     private static (DialogService sut, TestMessageBoxState state) CreateSut()
     {
         var state = new TestMessageBoxState();

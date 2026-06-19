@@ -67,9 +67,12 @@ public partial class MainWindow : Window, IPopupHost
     private const double HeaderSearchCollapsedWidth = 36;
     private const double HeaderSearchExpandedWidth = 160;
     private const int HeaderSearchAnimationDuration = 160; // ms
+    private static readonly TimeSpan AppAutoLockActiveDelay = TimeSpan.FromSeconds(10);
 
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
     private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new() { Interval = TimeSpan.FromMilliseconds(FadeDuration) };
+    private readonly DispatcherTimer _appAutoLockActiveDelayTimer = new() { Interval = AppAutoLockActiveDelay };
+    private readonly DispatcherTimer _appAutoLockCountdownTimer = new();
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly LogMemoryManager _logMemoryManager;
     private readonly MainVM _mainVM;
@@ -132,6 +135,7 @@ public partial class MainWindow : Window, IPopupHost
         HeaderSearchResultsList.ItemsSource = _headerSearchResults;
         DataContext = _mainVM;
         _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
+        _mainVM.PropertyChanged += OnMainViewModelPropertyChanged;
         UpdateHistoryAvailability();
 
         Loaded += async (_, _) =>
@@ -149,15 +153,22 @@ public partial class MainWindow : Window, IPopupHost
             UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
+            RefreshAppLockVisualState();
+            ResetAppAutoLockActivity();
             FadeIn();
         };
 
         Closing += OnWindowClosing;
+        Activated += OnWindowActivated;
         Deactivated += OnWindowDeactivated;
         StateChanged += OnWindowStateChanged;
         PreviewKeyDown += OnPreviewKeyDown;
+        PreviewMouseMove += OnWindowPreviewInputActivity;
+        PreviewMouseWheel += OnWindowPreviewInputActivity;
         PreviewMouseLeftButtonDown += OnWindowPreviewMouseLeftButtonDown;
         _headerMenuCloseTimer.Tick += OnHeaderMenuCloseTimerTick;
+        _appAutoLockActiveDelayTimer.Tick += OnAppAutoLockActiveDelayTimerTick;
+        _appAutoLockCountdownTimer.Tick += OnAppAutoLockCountdownTimerTick;
     }
 
     private void MainWindow_OnMouseMove(object sender, MouseEventArgs e)
@@ -298,6 +309,19 @@ public partial class MainWindow : Window, IPopupHost
         {
             _hasCompletedPendingDeletionCleanup = true;
             _logMemoryManager.StateChanged -= OnHistoryManagerStateChanged;
+            _mainVM.PropertyChanged -= OnMainViewModelPropertyChanged;
+            Activated -= OnWindowActivated;
+            Deactivated -= OnWindowDeactivated;
+            StateChanged -= OnWindowStateChanged;
+            PreviewKeyDown -= OnPreviewKeyDown;
+            PreviewMouseMove -= OnWindowPreviewInputActivity;
+            PreviewMouseWheel -= OnWindowPreviewInputActivity;
+            PreviewMouseLeftButtonDown -= OnWindowPreviewMouseLeftButtonDown;
+            _headerMenuCloseTimer.Tick -= OnHeaderMenuCloseTimerTick;
+            _appAutoLockActiveDelayTimer.Tick -= OnAppAutoLockActiveDelayTimerTick;
+            _appAutoLockCountdownTimer.Tick -= OnAppAutoLockCountdownTimerTick;
+            _headerMenuCloseTimer.Stop();
+            StopAppAutoLockTimers();
             _logMemoryManager.Dispose();
         }
         finally
@@ -316,6 +340,7 @@ public partial class MainWindow : Window, IPopupHost
     public void HideToTray()
     {
         CancelPendingPopupOverlayDeferredHide();
+        StartAppAutoLockCountdown();
         CloseHeaderMenu();
         CloseHeaderNotificationPopup();
         CollapseHeaderSearch();
@@ -352,6 +377,7 @@ public partial class MainWindow : Window, IPopupHost
         Topmost = false;
         Focus();
         Keyboard.Focus(this);
+        ResetAppAutoLockActivity();
 
         Dispatcher.BeginInvoke(() =>
         {
@@ -368,12 +394,14 @@ public partial class MainWindow : Window, IPopupHost
         if (WindowState == WindowState.Minimized)
         {
             _wasMinimized = true;
+            StartAppAutoLockCountdown();
             BeginAnimation(OpacityProperty, null);
             Opacity = 0;
         }
         else if (WindowState == WindowState.Normal && _wasMinimized)
         {
             _wasMinimized = false;
+            ResetAppAutoLockActivity();
             FadeIn();
         }
     }
@@ -673,6 +701,24 @@ public partial class MainWindow : Window, IPopupHost
 
     private async void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (IsAppLocked())
+        {
+            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+                UnlockAppUiFromUser();
+
+            e.Handled = true;
+            return;
+        }
+
+        RecordAppAutoLockInputActivity();
+
+        if (MainWindowShortcutMatcher.IsToggleAppLockShortcut(e.Key, Keyboard.Modifiers))
+        {
+            LockAppUiFromUser();
+            e.Handled = true;
+            return;
+        }
+
         if (_isHeaderSearchExpanded && e.Key == Key.Escape)
         {
             CollapseHeaderSearch();
@@ -1018,6 +1064,16 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         OpenAddNewTransactionPopup();
+    }
+
+    private void OnHeaderAppLockButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (IsAppLocked())
+            UnlockAppUiFromUser();
+        else
+            LockAppUiFromUser();
+
+        HeaderAppLockButton.IsChecked = _mainVM.IsAppLocked;
     }
 
     private void OnHeaderNotificationButtonClick(object sender, RoutedEventArgs e)
@@ -1972,6 +2028,12 @@ public partial class MainWindow : Window, IPopupHost
 
     private void ClearPopupBlur()
     {
+        if (IsAppLocked())
+        {
+            ApplyAppLockBlur();
+            return;
+        }
+
         ContentGrid.Effect = null;
         MainPageHost.Effect = null;
         FloatingSideNavigationRail.Effect = null;
@@ -2061,6 +2123,8 @@ public partial class MainWindow : Window, IPopupHost
 
     private void OnWindowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        RecordAppAutoLockInputActivity();
+
         if (e.OriginalSource is not DependencyObject source)
             return;
 
@@ -2088,6 +2152,165 @@ public partial class MainWindow : Window, IPopupHost
         CollapseHeaderSearch();
         CloseHeaderMenu();
         CloseHeaderNotificationPopup();
+        StartAppAutoLockCountdown();
+    }
+
+    private void OnWindowActivated(object? sender, EventArgs e)
+    {
+        ResetAppAutoLockActivity();
+    }
+
+    private void OnWindowPreviewInputActivity(object sender, InputEventArgs e)
+    {
+        RecordAppAutoLockInputActivity();
+    }
+
+    private void OnAppAutoLockActiveDelayTimerTick(object? sender, EventArgs e)
+    {
+        _appAutoLockActiveDelayTimer.Stop();
+        StartAppAutoLockCountdown();
+    }
+
+    private void OnAppAutoLockCountdownTimerTick(object? sender, EventArgs e)
+    {
+        _appAutoLockCountdownTimer.Stop();
+
+        if (!CanAutoLockUi())
+            return;
+
+        LockAppUiFromUser();
+    }
+
+    private void OnMainViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(MainVM.IsAppLocked):
+                RefreshAppLockVisualState();
+                if (_mainVM.IsAppLocked)
+                    StopAppAutoLockTimers();
+                else
+                    ResetAppAutoLockActivity();
+                break;
+            case nameof(MainVM.IsAppAutoLocked):
+            case nameof(MainVM.AppAutoLockedInterval):
+                ResetAppAutoLockActivity();
+                break;
+        }
+    }
+
+    private void RecordAppAutoLockInputActivity()
+    {
+        if (IsAppLocked())
+            return;
+
+        ResetAppAutoLockActivity();
+    }
+
+    private void ResetAppAutoLockActivity()
+    {
+        if (!CanAutoLockUi())
+        {
+            StopAppAutoLockTimers();
+            return;
+        }
+
+        _appAutoLockCountdownTimer.Stop();
+        _appAutoLockActiveDelayTimer.Stop();
+
+        if (IsWindowActiveForAutoLock())
+            _appAutoLockActiveDelayTimer.Start();
+        else
+            StartAppAutoLockCountdown();
+    }
+
+    private void StartAppAutoLockCountdown()
+    {
+        if (!CanAutoLockUi())
+        {
+            StopAppAutoLockTimers();
+            return;
+        }
+
+        _appAutoLockActiveDelayTimer.Stop();
+        _appAutoLockCountdownTimer.Stop();
+        _appAutoLockCountdownTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, _mainVM.AppAutoLockedInterval));
+        _appAutoLockCountdownTimer.Start();
+    }
+
+    private bool CanAutoLockUi()
+    {
+        return _mainVM.IsAppAutoLocked && !_mainVM.IsAppLocked;
+    }
+
+    private bool IsWindowActiveForAutoLock()
+    {
+        return IsVisible && IsActive && WindowState != WindowState.Minimized;
+    }
+
+    private void StopAppAutoLockTimers()
+    {
+        _appAutoLockActiveDelayTimer.Stop();
+        _appAutoLockCountdownTimer.Stop();
+    }
+
+    private void LockAppUiFromUser()
+    {
+        if (IsAppLocked())
+            return;
+
+        CloseHeaderMenu();
+        CloseHeaderNotificationPopup();
+        CollapseHeaderSearch();
+        _mainVM.LockUi();
+        RefreshAppLockVisualState();
+    }
+
+    private void UnlockAppUiFromUser()
+    {
+        if (!IsAppLocked())
+            return;
+
+        if (!_mainVM.HasUiLockingPassword)
+        {
+            _mainVM.TryUnlockUi(null);
+            RefreshAppLockVisualState();
+            ResetAppAutoLockActivity();
+            return;
+        }
+
+        _dialogService.ShowAppUnlock(_mainVM.TryUnlockUi, this);
+        RefreshAppLockVisualState();
+        if (!_mainVM.IsAppLocked)
+            ResetAppAutoLockActivity();
+    }
+
+    private void RefreshAppLockVisualState()
+    {
+        if (HeaderAppLockButton is not null)
+            HeaderAppLockButton.IsChecked = _mainVM.IsAppLocked;
+
+        if (_mainVM.IsAppLocked)
+            ApplyAppLockBlur();
+        else if (_popupOverlayHandoffState.ActivePopupCount <= 0)
+            ClearAppLockBlur();
+        else
+            ApplyPopupBlur();
+    }
+
+    private void ApplyAppLockBlur()
+    {
+        DashboardSpendingAmountGateContent.Effect = CreatePopupBlurEffect();
+        MainPageHost.Effect = CreatePopupBlurEffect();
+        FloatingSideNavigationRail.Effect = CreatePopupBlurEffect();
+    }
+
+    private void ClearAppLockBlur()
+    {
+        DashboardSpendingAmountGateContent.Effect = null;
+        ContentGrid.Effect = null;
+        MainPageHost.Effect = null;
+        FloatingSideNavigationRail.Effect = null;
     }
 
     private bool ShouldCollapseHeaderSearchOnExternalClick()
@@ -2139,7 +2362,12 @@ public partial class MainWindow : Window, IPopupHost
 
     private bool IsSufficientFundsActionGateLocked()
     {
-        return _mainVM.IsSufficientFundsActionGateLocked;
+        return _mainVM.IsAnyActionGateLocked;
+    }
+
+    private bool IsAppLocked()
+    {
+        return _mainVM.IsAppLocked;
     }
 
     private void OnHistoryManagerStateChanged(object? sender, EventArgs e)

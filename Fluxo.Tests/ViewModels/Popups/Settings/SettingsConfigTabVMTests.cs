@@ -1,10 +1,12 @@
 using CommunityToolkit.Mvvm.Messaging;
 using System.Globalization;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Filters;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Persistence;
 using Fluxo.ViewModels.Popups.Settings;
@@ -321,9 +323,175 @@ public sealed class SettingsConfigTabVMTests
             m.Value.HasPendingChanges);
     }
 
+    [Fact]
+    public void PersonalizationTab_ChangingLockUiWhenAway_PublishesPendingState()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var captured = new List<SettingsPendingChangesChangedMessage>();
+        var recipient = new PendingRecipient(captured);
+        messenger.Register<PendingRecipient, SettingsPendingChangesChangedMessage>(recipient,
+            static (r, m) => r.Messages.Add(m));
+
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(new NullUnitOfWork()),
+            messenger,
+            passwordProtector: new TestPasswordProtector());
+
+        vm.IsAppAutoLocked = true;
+
+        Assert.Contains(captured, m =>
+            m.Value.TabKey == SettingsTabKey.Personalization &&
+            m.Value.HasPendingChanges);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_LoadAsync_DecryptsUiLockPassword()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork(
+        [
+            new UserSettings { Name = UserSettingNames.UILockingPassword, Value = "protected:secret-pass" }
+        ]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+
+        await vm.LoadAsync();
+
+        Assert.Equal("secret-pass", vm.UiLockingPassword);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_BuildApplyChangesAsync_ProtectsPasswordBeforePersisting()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.UiLockingPassword = "secret-pass";
+        var (result, _, _, _, _) = await vm.BuildApplyChangesAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("protected:secret-pass", unitOfWork.GetValue(UserSettingNames.UILockingPassword));
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_BuildApplyChangesAsync_RemovesBlankPassword()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork(
+        [
+            new UserSettings { Name = UserSettingNames.UILockingPassword, Value = "protected:secret-pass" }
+        ]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.UiLockingPassword = "";
+        var (result, _, _, _, _) = await vm.BuildApplyChangesAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(unitOfWork.GetValue(UserSettingNames.UILockingPassword));
+    }
+
     private sealed class PendingRecipient(List<SettingsPendingChangesChangedMessage> messages)
     {
         public List<SettingsPendingChangesChangedMessage> Messages { get; } = messages;
+    }
+
+    private sealed class TestPasswordProtector : IUiLockPasswordProtector
+    {
+        public string Protect(string? password)
+        {
+            return string.IsNullOrWhiteSpace(password) ? string.Empty : "protected:" + password;
+        }
+
+        public string Unprotect(string? protectedPassword)
+        {
+            return string.IsNullOrWhiteSpace(protectedPassword)
+                ? string.Empty
+                : protectedPassword.StartsWith("protected:", StringComparison.Ordinal)
+                    ? protectedPassword["protected:".Length..]
+                    : string.Empty;
+        }
+    }
+
+    private sealed class TestSettingsUnitOfWork(IReadOnlyList<UserSettings> settings) : IUnitOfWork
+    {
+        private readonly Dictionary<string, UserSettings> _settings = settings
+            .ToDictionary(setting => setting.Name,
+                setting => new UserSettings { Name = setting.Name, Value = setting.Value },
+                StringComparer.Ordinal);
+
+        public IExpenseRepository Expenses => throw new NotSupportedException();
+        public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
+        public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
+        public IExpenseTagRepository ExpenseTags => throw new NotSupportedException();
+        public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
+        public IAccountRepository Accounts { get; } = new TestAccountRepository();
+        public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
+        public INotificationRepository Notifications => throw new NotSupportedException();
+        public IUserSettingsRepository UserSettings => new TestUserSettingsRepository(_settings);
+        public IBudgetAllocationRepository BudgetAllocation => new TestBudgetAllocationRepository();
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(1);
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        public string? GetValue(string name)
+        {
+            return _settings.TryGetValue(name, out var setting) ? setting.Value : null;
+        }
+    }
+
+    private sealed class TestUserSettingsRepository(Dictionary<string, UserSettings> settings)
+        : IUserSettingsRepository
+    {
+        public Task<IReadOnlyList<UserSettings>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<UserSettings>>(settings.Values
+                .Select(setting => new UserSettings { Name = setting.Name, Value = setting.Value })
+                .ToList());
+        }
+
+        public Task<UserSettings?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(settings.TryGetValue(name, out var setting)
+                ? new UserSettings { Name = setting.Name, Value = setting.Value }
+                : null);
+        }
+
+        public Task AddAsync(UserSettings entity, CancellationToken cancellationToken = default)
+        {
+            settings[entity.Name] = new UserSettings { Name = entity.Name, Value = entity.Value };
+            return Task.CompletedTask;
+        }
+
+        public void Update(UserSettings entity)
+        {
+            settings[entity.Name] = new UserSettings { Name = entity.Name, Value = entity.Value };
+        }
+
+        public void Remove(UserSettings entity)
+        {
+            settings.Remove(entity.Name);
+        }
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(1);
+        }
     }
 
     private sealed class NullUnitOfWork : IUnitOfWork

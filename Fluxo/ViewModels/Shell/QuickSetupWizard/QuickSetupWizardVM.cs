@@ -76,9 +76,9 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
 
     public bool IsNameStep => CurrentStepIndex == 1;
 
-    public bool IsMiddleStep => CurrentStepIndex is >= 2 and <= 7;
+    public bool IsMiddleStep => CurrentStepIndex is >= 2 and <= 8;
 
-    public bool IsLoadingStep => CurrentStepIndex == 8;
+    public bool IsLoadingStep => CurrentStepIndex == 9;
 
     public bool IsFinalStep => CurrentStepIndex == TotalSteps - 1;
 
@@ -97,7 +97,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
         OnPropertyChanged(nameof(IsNextEnabled));
         OnPropertyChanged(nameof(CurrentStep));
 
-        if (value is >= 2 and <= 7)
+        if (value is >= 2 and <= 8)
             MiddlePage.SetCurrentStepIndex(value);
     }
 
@@ -124,7 +124,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
 
         if (IsFinalStep)
         {
-            CurrentStepIndex = 6;
+            CurrentStepIndex = 7;
             return;
         }
 
@@ -267,6 +267,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
             if (!budgetAllocationResult.IsSuccess)
                 throw new InvalidOperationException(budgetAllocationResult.ErrorMessage);
 
+            await MiddlePage.Personalization.ApplyAsync(stagedAppData);
             await MiddlePage.Notification.ApplyAsync(stagedAppData);
             await MiddlePage.Accounts.ApplyAsync(stagedAppData);
             await MiddlePage.FixedExpenses.ApplyAsync(

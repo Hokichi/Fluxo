@@ -58,19 +58,19 @@
             <!--  Preferred Name Page (Step 1)  -->
             <pages:QuickSetupWizardNamePage DataContext="{Binding NamePage}" Visibility="{Binding DataContext.IsNameStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-            <!--  Middle Steps (2-7): Sidebar + Content  -->
+            <!--  Middle Steps (2-8): Sidebar + Content  -->
             <pages:QuickSetupWizardMiddlePage
                 x:Name="MiddleStepPage"
                 DataContext="{Binding MiddlePage}"
                 Visibility="{Binding DataContext.IsMiddleStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-            <!--  Loading Page (Step 8)  -->
+            <!--  Loading Page (Step 9)  -->
             <pages:QuickSetupWizardLoadingPage
                 x:Name="LoadingStepPage"
                 DataContext="{Binding LoadingPage}"
                 Visibility="{Binding DataContext.IsLoadingStep, RelativeSource={RelativeSource AncestorType={x:Type customControls:BasePopup}}, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-            <!--  Welcome Page (Step 9)  -->
+            <!--  Welcome Page (Step 10)  -->
             <pages:QuickSetupWizardFinalPage
                 x:Name="FinalStepPage"
                 DataContext="{Binding FinalPage}"

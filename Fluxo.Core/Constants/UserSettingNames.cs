@@ -21,4 +21,7 @@ public static class UserSettingNames
     public const string PreferredDisplayName = nameof(PreferredDisplayName);
     public const string ShouldRunAtStartup = nameof(ShouldRunAtStartup);
     public const string CloseBehavior = nameof(CloseBehavior);
+    public const string IsAppAutoLocked = nameof(IsAppAutoLocked);
+    public const string AppAutoLockedInterval = nameof(AppAutoLockedInterval);
+    public const string UILockingPassword = nameof(UILockingPassword);
 }
