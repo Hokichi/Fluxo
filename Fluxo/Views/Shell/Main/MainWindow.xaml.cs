@@ -496,6 +496,7 @@ public partial class MainWindow : Window, IPopupHost
         FadeContentOut(() =>
         {
             RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
+            MainGrid.Margin = maximizing ? new Thickness(0) : new Thickness(8);
             IsWindowLayoutMaximized = maximizing;
 
             AnimateBounds(from, to, maximizing, () =>

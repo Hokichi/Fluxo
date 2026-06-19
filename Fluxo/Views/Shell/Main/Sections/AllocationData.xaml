@@ -22,7 +22,7 @@
                                 Height="8"
                                 Fill="{StaticResource Brush.Category.Needs}" />
                             <TextBlock
-                                Margin="12,0,0,0"
+                                Margin="8,0,0,0"
                                 VerticalAlignment="Center"
                                 FontFamily="{StaticResource ExtraBold}"
                                 FontSize="14"
@@ -66,37 +66,37 @@
                             Text="{Binding NeedsAvailable, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </TextBlock>
 
-                    <TextBlock
-                        Margin="0,10,0,0"
-                        FontFamily="{StaticResource Light}"
-                        FontSize="12"
-                        Foreground="{StaticResource Brush.Text.Muted}">
-                        <Run Text="{Binding NeedsRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                        <Run Text="remaining" />
-                    </TextBlock>
-
                     <ProgressBar
                         Height="4"
-                        Margin="0,8,0,0"
+                        Margin="0,16,0,0"
                         Foreground="{StaticResource Brush.Category.Needs}"
                         Maximum="100"
                         Minimum="0"
                         Style="{StaticResource RoundedProgressBarStyle}"
                         Value="{Binding NeedsPercentage, Mode=OneWay}" />
 
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        HorizontalAlignment="Right"
-                        FontFamily="{StaticResource Light}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="{Binding NeedsPercentage, Mode=OneWay, StringFormat={}{0}% spent}" />
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock
+                            FontFamily="{StaticResource Light}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}">
+                            <Run Text="{Binding NeedsRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            <Run Text="remaining" />
+                        </TextBlock>
+
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Light}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding NeedsPercentage, Mode=OneWay, StringFormat={}{0}% spent}" />
+                    </Grid>
                 </StackPanel>
             </Grid>
 
             <Border
                 Grid.Column="1"
-                Width="1"
+                Width="1.5"
                 Margin="16,0"
                 Background="{StaticResource Brush.Border.Subtle}" />
 
@@ -109,7 +109,7 @@
                                 Height="8"
                                 Fill="{StaticResource Brush.Category.Wants}" />
                             <TextBlock
-                                Margin="12,0,0,0"
+                                Margin="8,0,0,0"
                                 VerticalAlignment="Center"
                                 FontFamily="{StaticResource ExtraBold}"
                                 FontSize="14"
@@ -152,37 +152,37 @@
                             Text="{Binding WantsAvailable, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </TextBlock>
 
-                    <TextBlock
-                        Margin="0,10,0,0"
-                        FontFamily="{StaticResource Light}"
-                        FontSize="12"
-                        Foreground="{StaticResource Brush.Text.Muted}">
-                        <Run Text="{Binding WantsRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                        <Run Text="remaining" />
-                    </TextBlock>
-
                     <ProgressBar
                         Height="4"
-                        Margin="0,8,0,0"
+                        Margin="0,16,0,0"
                         Foreground="{StaticResource Brush.Category.Wants}"
                         Maximum="100"
                         Minimum="0"
                         Style="{StaticResource RoundedProgressBarStyle}"
                         Value="{Binding WantsPercentage, Mode=OneWay}" />
 
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        HorizontalAlignment="Right"
-                        FontFamily="{StaticResource Light}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="{Binding WantsPercentage, Mode=OneWay, StringFormat={}{0}% spent}" />
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock
+                            FontFamily="{StaticResource Light}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}">
+                            <Run Text="{Binding WantsRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            <Run Text="remaining" />
+                        </TextBlock>
+
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Light}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding WantsPercentage, Mode=OneWay, StringFormat={}{0}% spent}" />
+                    </Grid>
                 </StackPanel>
             </Grid>
 
             <Border
                 Grid.Column="3"
-                Width="1"
+                Width="1.5"
                 Margin="16,0"
                 Background="{StaticResource Brush.Border.Subtle}" />
 
@@ -195,7 +195,7 @@
                                 Height="8"
                                 Fill="{StaticResource Brush.Category.Investments}" />
                             <TextBlock
-                                Margin="12,2,0,0"
+                                Margin="8,2,0,0"
                                 VerticalAlignment="Center"
                                 FontFamily="{StaticResource ExtraBold}"
                                 FontSize="14"
@@ -239,31 +239,31 @@
                             Text="{Binding InvestAvailable, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </TextBlock>
 
-                    <TextBlock
-                        Margin="0,10,0,0"
-                        FontFamily="{StaticResource Light}"
-                        FontSize="12"
-                        Foreground="{StaticResource Brush.Text.Muted}">
-                        <Run Text="{Binding InvestRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                        <Run Text="remaining" />
-                    </TextBlock>
-
                     <ProgressBar
                         Height="4"
-                        Margin="0,8,0,0"
+                        Margin="0,16,0,0"
                         Foreground="{StaticResource Brush.Category.Investments}"
                         Maximum="100"
                         Minimum="0"
                         Style="{StaticResource RoundedProgressBarStyle}"
                         Value="{Binding InvestPercentage, Mode=OneWay}" />
 
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        HorizontalAlignment="Right"
-                        FontFamily="{StaticResource Light}"
-                        FontSize="11"
-                        Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="{Binding InvestPercentage, Mode=OneWay, StringFormat={}{0}% spent}" />
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock
+                            FontFamily="{StaticResource Light}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}">
+                            <Run Text="{Binding InvestRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            <Run Text="remaining" />
+                        </TextBlock>
+
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Light}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="{Binding InvestPercentage, Mode=OneWay, StringFormat={}{0}% spent}" />
+                    </Grid>
                 </StackPanel>
             </Grid>
         </Grid>

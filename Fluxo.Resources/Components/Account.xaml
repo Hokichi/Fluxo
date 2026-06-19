@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Width="140"
-    Height="80"
+    Height="60"
     Visibility="{Binding PinnedOnUI, Converter={StaticResource BoolToVisibilityConverter}}"
     mc:Ignorable="d">
 
@@ -40,6 +40,7 @@
             <Border.Background>
                 <SolidColorBrush Color="{StaticResource Color.Background.Surface}" />
             </Border.Background>
+
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
@@ -72,14 +73,9 @@
                     </Style.Triggers>
                 </Style>
             </Border.Style>
-            <Grid>
-                <Border
-                    Height="3"
-                    VerticalAlignment="Top"
-                    CornerRadius="8,8,0,0"
-                    Style="{StaticResource AccountAccentStyle}" />
 
-                <StackPanel Margin="12" IsHitTestVisible="False">
+            <Grid>
+                <StackPanel Margin="12,8" IsHitTestVisible="False">
                     <TextBlock
                         VerticalAlignment="Bottom"
                         FontFamily="{StaticResource Light}"

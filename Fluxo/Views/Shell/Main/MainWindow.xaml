@@ -282,649 +282,654 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Border
-        x:Name="RootBorder"
-        Background="{StaticResource Brush.Background.Main}"
-        BorderBrush="{StaticResource Brush.Border.Subtle}"
-        BorderThickness="1"
-        CornerRadius="8"
-        MouseMove="MainWindow_OnMouseMove">
-        <Border.Effect>
-            <DropShadowEffect
-                BlurRadius="26"
-                Color="Black"
-                Opacity="0.65"
-                ShadowDepth="0" />
-        </Border.Effect>
-        <Grid>
-            <Grid x:Name="ContentGrid" Margin="0,16,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="60" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+    <Grid x:Name="MainGrid" Margin="8">
+        <Border Background="{StaticResource Brush.Background.Main}" CornerRadius="8">
+            <Border.Effect>
+                <DropShadowEffect
+                    BlurRadius="10"
+                    Opacity="1"
+                    ShadowDepth="0"
+                    Color="{StaticResource Color.Background.Main}" />
+            </Border.Effect>
+        </Border>
 
-                <Border
-                    x:Name="TopBorderHitArea"
-                    Grid.Row="0"
-                    Margin="24,0"
-                    Background="Transparent"
-                    MouseLeftButtonDown="OnTopBorderHitAreaMouseLeftButtonDown" />
-
-                <Grid Grid.Row="0" Margin="24,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel
-                        Margin="32,0,0,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal">
-                        <Image
-                            Width="24"
-                            Height="24"
-                            VerticalAlignment="Center"
-                            Source="/Fluxo.Resources;component/Resources/fluxo.ico"
-                            Stretch="Uniform" />
-
-                        <TextBlock
-                            Margin="8,1,0,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Black}"
-                            FontSize="18"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="flux" />
-
-                        <TextBlock
-                            Margin="0,1,0,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Black}"
-                            FontSize="18"
-                            Foreground="{StaticResource Brush.Mint}"
-                            Text="o" />
-
-                        <Border
-                            Width="1"
-                            Height="32"
-                            Margin="16,0"
-                            Background="{StaticResource Brush.Border.Subtle}" />
-
-                        <TextBlock
-                            Margin="0,4,0,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="14"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding ActivePageTitle, RelativeSource={RelativeSource AncestorType=Window}}" />
-                    </StackPanel>
-
-                    <StackPanel
-                        Grid.Column="2"
-                        Margin="0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal">
-                        <Grid
-                            x:Name="HeaderSearchRegion"
-                            VerticalAlignment="Top"
-                            Panel.ZIndex="10"
-                            PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus"
-                            Style="{StaticResource HideWhenSufficientFundsActionGateLockedStyle}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <customControls:BalloonButton
-                                x:Name="HeaderSearchButton"
-                                ButtonIcon="{StaticResource MagnifyingGlass}"
-                                Click="OnHeaderSearchButtonClick"
-                                IconSize="11"
-                                Style="{StaticResource HeaderButtonStyle}" />
-
-                            <Border
-                                x:Name="HeaderSearchInputBorder"
-                                Width="160"
-                                Padding="10,6"
-                                Background="{StaticResource Brush.Background.Surface}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <components:Icon
-                                        Width="12"
-                                        Height="12"
-                                        VerticalAlignment="Center"
-                                        Path="{StaticResource MagnifyingGlass}"
-                                        Color="{StaticResource Brush.Text.Muted}" />
-
-                                    <TextBox
-                                        x:Name="HeaderSearchBox"
-                                        Grid.Column="1"
-                                        Margin="8,0,0,0"
-                                        VerticalContentAlignment="Center"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        CaretBrush="{StaticResource Brush.Text.Primary}"
-                                        FontFamily="{StaticResource Regular}"
-                                        FontSize="13"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        PreviewKeyDown="OnHeaderSearchBoxPreviewKeyDown"
-                                        TextChanged="OnHeaderSearchTextChanged">
-                                        <TextBox.Template>
-                                            <ControlTemplate TargetType="TextBox">
-                                                <customControls:FadingScrollViewer
-                                                    x:Name="PART_ContentHost"
-                                                    Margin="0"
-                                                    VerticalAlignment="Stretch" />
-                                            </ControlTemplate>
-                                        </TextBox.Template>
-                                    </TextBox>
-                                </Grid>
-                            </Border>
-
-                            <Popup
-                                x:Name="HeaderSearchResultsPopup"
-                                AllowsTransparency="True"
-                                IsOpen="False"
-                                Placement="Bottom"
-                                PlacementTarget="{Binding ElementName=HeaderSearchInputBorder}"
-                                PopupAnimation="Fade"
-                                StaysOpen="True"
-                                VerticalOffset="8">
-                                <Border
-                                    x:Name="HeaderSearchResultsBorder"
-                                    Width="300"
-                                    Padding="6"
-                                    Background="{StaticResource Brush.Background.Elevated}"
-                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                    BorderThickness="1"
-                                    CornerRadius="12">
-                                    <Grid>
-                                        <TextBlock
-                                            x:Name="HeaderSearchNoResultsText"
-                                            Padding="12,10"
-                                            HorizontalAlignment="Center"
-                                            FontFamily="{StaticResource Medium}"
-                                            FontSize="14"
-                                            Foreground="{StaticResource Brush.Text.Muted}"
-                                            Text="No transaction found"
-                                            Visibility="Collapsed" />
-                                        <ItemsControl x:Name="HeaderSearchResultsList" ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
-                                    </Grid>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                        <Grid>
-                            <customControls:BalloonButton
-                                x:Name="HeaderNotificationButton"
-                                ButtonIcon="{StaticResource Bell}"
-                                Click="OnHeaderNotificationButtonClick"
-                                IconSize="11"
-                                Style="{StaticResource HeaderButtonStyle}" />
-
-                            <Ellipse
-                                x:Name="HeaderNotificationUnreadDot"
-                                Width="7"
-                                Height="7"
-                                Margin="0,1,0,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
-                                Fill="{StaticResource Brush.Danger}"
-                                IsHitTestVisible="False"
-                                Stroke="{StaticResource Brush.Background.Main}"
-                                StrokeThickness="1"
-                                Visibility="{Binding Dashboard.NotificationPanel.HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        </Grid>
-
-                        <Popup
-                            x:Name="HeaderNotificationPopup"
-                            AllowsTransparency="True"
-                            DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
-                            IsOpen="False"
-                            Placement="Bottom"
-                            PlacementTarget="{Binding ElementName=HeaderNotificationButton}"
-                            PopupAnimation="Fade"
-                            StaysOpen="True"
-                            VerticalOffset="8">
-                            <Border
-                                Width="360"
-                                MinHeight="150"
-                                MaxHeight="420"
-                                Background="Transparent">
-                                <sections:NotificationPanel x:Name="HeaderNotificationPanel" DataContext="{Binding Dashboard.NotificationPanel}" />
-                            </Border>
-                        </Popup>
-
-                        <customControls:BalloonButton
-                            x:Name="HeaderMenuButton"
-                            ButtonIcon="{StaticResource BarsSolid}"
-                            Click="OnHeaderMenuButtonClick"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                            HoveredBackground="{StaticResource Brush.Background.Hover}"
-                            IconSize="9"
-                            MouseEnter="OnHeaderMenuButtonMouseEnter"
-                            MouseLeave="OnHeaderMenuButtonMouseLeave"
-                            Style="{StaticResource HeaderButtonStyle}" />
-
-                        <Popup
-                            x:Name="HeaderMenuPopup"
-                            AllowsTransparency="True"
-                            IsOpen="False"
-                            Placement="Bottom"
-                            PlacementTarget="{Binding ElementName=HeaderMenuButton}"
-                            PopupAnimation="Fade"
-                            StaysOpen="True"
-                            VerticalOffset="8">
-                            <Border
-                                x:Name="HeaderMenuPopupRoot"
-                                Width="220"
-                                Padding="8"
-                                Background="{StaticResource Brush.Background.Elevated}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="1"
-                                CornerRadius="18"
-                                MouseEnter="OnHeaderMenuPopupMouseEnter"
-                                MouseLeave="OnHeaderMenuPopupMouseLeave">
-                                <Border.Resources>
-                                    <Style x:Key="HeaderMenuShortcutTextStyle" TargetType="TextBlock">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="HorizontalAlignment" Value="Right" />
-                                        <Setter Property="FontFamily" Value="{StaticResource Medium}" />
-                                        <Setter Property="FontSize" Value="11" />
-                                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Resources>
-                                <StackPanel>
-                                    <Button
-                                        x:Name="QuickAddMenuButton"
-                                        Click="OnQuickAddButtonClick"
-                                        Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <components:Icon
-                                                Width="14"
-                                                Height="14"
-                                                Path="{StaticResource AppsSolid}"
-                                                Color="{StaticResource Brush.Mint}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Quick Access" />
-                                            <TextBlock
-                                                Grid.Column="4"
-                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+K" />
-                                        </Grid>
-                                    </Button>
-
-                                    <Button
-                                        x:Name="SourcesMenuButton"
-                                        Click="OnAccountsButtonClick"
-                                        Style="{StaticResource HeaderMenuActionButtonStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <components:Icon
-                                                Width="14"
-                                                Height="14"
-                                                Path="{StaticResource Bank}"
-                                                Color="{StaticResource Brush.Mint}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Accounts" />
-                                            <TextBlock
-                                                Grid.Column="4"
-                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+L" />
-                                        </Grid>
-                                    </Button>
-
-                                    <Button
-                                        x:Name="UndoMenuButton"
-                                        Click="OnUndoButtonClick"
-                                        IsEnabled="False"
-                                        Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <components:Icon
-                                                Width="14"
-                                                Height="14"
-                                                Path="{StaticResource RegularUndo}"
-                                                Color="{StaticResource Brush.Warning}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Undo" />
-                                            <TextBlock
-                                                Grid.Column="4"
-                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+Z" />
-                                        </Grid>
-                                    </Button>
-
-                                    <Button
-                                        x:Name="RedoMenuButton"
-                                        Click="OnRedoButtonClick"
-                                        IsEnabled="False"
-                                        Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <components:Icon
-                                                Width="14"
-                                                Height="14"
-                                                Path="{StaticResource RegularRedo}"
-                                                Color="{StaticResource Brush.Info}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Redo" />
-                                            <TextBlock
-                                                Grid.Column="4"
-                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+Y" />
-                                        </Grid>
-                                    </Button>
-
-                                    <Button Click="OnHotkeysButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <components:Icon
-                                                Width="14"
-                                                Height="14"
-                                                Path="{StaticResource KeyboardBoxFill}"
-                                                Color="{StaticResource Brush.Info}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Hotkeys" />
-                                            <TextBlock
-                                                Grid.Column="4"
-                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+/" />
-                                        </Grid>
-                                    </Button>
-
-                                    <Button Click="OnSettingsButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <components:Icon
-                                                Width="14"
-                                                Height="14"
-                                                Path="{StaticResource Cog}"
-                                                Color="{StaticResource Brush.Info}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                FontFamily="{StaticResource Bold}"
-                                                Foreground="{StaticResource Brush.Text.Primary}"
-                                                Text="Settings" />
-                                            <TextBlock
-                                                Grid.Column="4"
-                                                Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                Text="Ctrl+," />
-                                        </Grid>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
-                        </Popup>
-
-                        <Border
-                            Width="1"
-                            Margin="16,0,8,0"
-                            Background="{StaticResource Brush.Background.Hover}"
-                            SnapsToDevicePixels="True" />
-
-                        <customControls:BalloonButton
-                            x:Name="HeaderQuickAddButton"
-                            Padding="8,0"
-                            ButtonIcon="{StaticResource PlusSolid}"
-                            ButtonText="New Transaction"
-                            Click="OnHeaderQuickAddButtonClick"
-                            DefaultBackground="{StaticResource Brush.Mint}"
-                            Foreground="{StaticResource Brush.Text.Primary.Dark}"
-                            HoveredBackground="{StaticResource Brush.Mint.Muted}"
-                            ShouldExpand="True"
-                            Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
-
-                        <Border
-                            Width="1"
-                            Margin="16,0,8,0"
-                            Background="{StaticResource Brush.Background.Hover}"
-                            SnapsToDevicePixels="True" />
-
-                        <customControls:BalloonButton
-                            ButtonIcon="{StaticResource Minus}"
-                            ButtonText="Minimize"
-                            Command="{x:Static SystemCommands.MinimizeWindowCommand}"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                            HoveredBackground="{StaticResource Brush.Primary.Hover}"
-                            ShouldExpand="True"
-                            Style="{StaticResource HeaderButtonStyle}" />
-
-                        <customControls:BalloonButton
-                            x:Name="ExpandRestoreButton"
-                            ButtonIcon="{StaticResource ExpandAlt}"
-                            ButtonText="Maximize"
-                            Click="OnExpandRestoreWindow"
-                            HoveredBackground="{StaticResource Brush.Primary.Hover}"
-                            ShouldExpand="True"
-                            Style="{StaticResource HeaderButtonStyle}" />
-
-                        <customControls:BalloonButton
-                            ButtonIcon="{StaticResource Close}"
-                            ButtonText="Close"
-                            Command="{x:Static SystemCommands.CloseWindowCommand}"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                            HoveredBackground="{StaticResource Brush.Danger}"
-                            ShouldExpand="True"
-                            Style="{StaticResource HeaderButtonStyle}" />
-                    </StackPanel>
-                </Grid>
-
-                <Grid
-                    x:Name="DashboardSpendingAmountGateContent"
-                    Grid.RowSpan="2"
-                    Style="{StaticResource DashboardSpendingAmountGateLockedContentStyle}">
+        <Border
+            x:Name="RootBorder"
+            Background="{StaticResource Brush.Background.Main}"
+            BorderBrush="{StaticResource Brush.Border.Subtle}"
+            BorderThickness="1"
+            CornerRadius="8"
+            MouseMove="MainWindow_OnMouseMove">
+            <Grid>
+                <Grid x:Name="ContentGrid" Margin="0,16,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="60" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <controls:DaySpinnerControl
-                        x:Name="DaySpinnerControlHost"
+                    <Border
+                        x:Name="TopBorderHitArea"
                         Grid.Row="0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        DataContext="{Binding DaySpinner}" />
+                        Margin="24,0"
+                        Background="Transparent"
+                        MouseLeftButtonDown="OnTopBorderHitAreaMouseLeftButtonDown" />
 
-                    <ContentControl
-                        x:Name="MainPageHost"
-                        Grid.Row="1"
-                        Margin="200,16,200,48"
-                        Panel.ZIndex="6" />
-                </Grid>
-            </Grid>
+                    <Grid Grid.Row="0" Margin="24,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-            <Grid
-                x:Name="DashboardSpendingAmountGateOverlay"
-                Grid.RowSpan="3"
-                Panel.ZIndex="10">
-                <Grid.Style>
-                    <Style TargetType="Grid">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
-                <Button
-                    x:Name="DashboardSpendingAmountGateActionButton"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Click="OnDashboardSpendingAmountGateActionClick"
-                    Style="{StaticResource TextOnlyButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="18"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Insufficient fund. Please include a account with sufficient funds to start using "
-                            TextAlignment="Center" />
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel
+                            Margin="32,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Image
+                                Width="24"
+                                Height="24"
+                                VerticalAlignment="Center"
+                                Source="/Fluxo.Resources;component/Resources/fluxo.ico"
+                                Stretch="Uniform" />
+
                             <TextBlock
+                                Margin="8,1,0,0"
+                                VerticalAlignment="Center"
                                 FontFamily="{StaticResource Black}"
                                 FontSize="18"
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="flux" />
+
                             <TextBlock
+                                Margin="0,1,0,0"
+                                VerticalAlignment="Center"
                                 FontFamily="{StaticResource Black}"
                                 FontSize="18"
                                 Foreground="{StaticResource Brush.Mint}"
                                 Text="o" />
+
+                            <Border
+                                Width="1"
+                                Height="32"
+                                Margin="16,0"
+                                Background="{StaticResource Brush.Border.Subtle}" />
+
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="14"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding ActivePageTitle, RelativeSource={RelativeSource AncestorType=Window}}" />
                         </StackPanel>
-                    </StackPanel>
-                </Button>
-            </Grid>
 
-            <Border
-                x:Name="FloatingSideNavigationRail"
-                Margin="24,76,0,28"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Style="{StaticResource FloatingSideNavigationRailStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="64" />
-                        <RowDefinition Height="64" />
-                        <RowDefinition Height="64" />
-                        <RowDefinition Height="64" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                        <StackPanel
+                            Grid.Column="2"
+                            Margin="0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Grid
+                                x:Name="HeaderSearchRegion"
+                                VerticalAlignment="Top"
+                                Panel.ZIndex="10"
+                                PreviewLostKeyboardFocus="OnHeaderSearchRegionPreviewLostKeyboardFocus"
+                                Style="{StaticResource HideWhenSufficientFundsActionGateLockedStyle}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
-                    <ToggleButton
-                        x:Name="HomeNavigationButton"
-                        AutomationProperties.Name="Navigate Home"
-                        Click="OnHomeNavigationClick"
-                        IsChecked="True"
-                        Style="{StaticResource FloatingSideNavigationButtonStyle}">
-                        <components:Icon
-                            Width="16"
-                            Height="16"
-                            Path="{StaticResource Home}"
-                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
-                    </ToggleButton>
+                                <customControls:BalloonButton
+                                    x:Name="HeaderSearchButton"
+                                    ButtonIcon="{StaticResource MagnifyingGlass}"
+                                    Click="OnHeaderSearchButtonClick"
+                                    IconSize="11"
+                                    Style="{StaticResource HeaderButtonStyle}" />
 
-                    <ToggleButton
-                        x:Name="AnalyticsNavigationButton"
-                        Grid.Row="1"
-                        AutomationProperties.Name="Navigate Analytics"
-                        Click="OnAnalyticsNavigationClick"
-                        Style="{StaticResource FloatingSideNavigationButtonStyle}">
-                        <components:Icon
-                            Width="16"
-                            Height="16"
-                            Path="{StaticResource ChartColumn}"
-                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
-                    </ToggleButton>
+                                <Border
+                                    x:Name="HeaderSearchInputBorder"
+                                    Width="160"
+                                    Padding="10,6"
+                                    Background="{StaticResource Brush.Background.Surface}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Visibility="Collapsed">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
 
-                    <ToggleButton
-                        x:Name="CalendarNavigationButton"
-                        Grid.Row="2"
-                        AutomationProperties.Name="Navigate Calendar"
-                        Click="OnCalendarNavigationClick"
-                        Style="{StaticResource FloatingSideNavigationButtonStyle}">
-                        <components:Icon
-                            Width="16"
-                            Height="16"
-                            Path="{StaticResource Calendar}"
-                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
-                    </ToggleButton>
+                                        <components:Icon
+                                            Width="12"
+                                            Height="12"
+                                            VerticalAlignment="Center"
+                                            Path="{StaticResource MagnifyingGlass}"
+                                            Color="{StaticResource Brush.Text.Muted}" />
 
-                    <ToggleButton
-                        x:Name="LedgerNavigationButton"
-                        Grid.Row="3"
-                        AutomationProperties.Name="Navigate Ledger"
-                        Click="OnLedgerNavigationClick"
-                        Style="{StaticResource FloatingSideNavigationButtonStyle}">
-                        <components:Icon
-                            Width="16"
-                            Height="16"
-                            Path="{StaticResource BookAiFill}"
-                            Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
-                    </ToggleButton>
+                                        <TextBox
+                                            x:Name="HeaderSearchBox"
+                                            Grid.Column="1"
+                                            Margin="8,0,0,0"
+                                            VerticalContentAlignment="Center"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            CaretBrush="{StaticResource Brush.Text.Primary}"
+                                            FontFamily="{StaticResource Regular}"
+                                            FontSize="13"
+                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                            PreviewKeyDown="OnHeaderSearchBoxPreviewKeyDown"
+                                            TextChanged="OnHeaderSearchTextChanged">
+                                            <TextBox.Template>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <customControls:FadingScrollViewer
+                                                        x:Name="PART_ContentHost"
+                                                        Margin="0"
+                                                        VerticalAlignment="Stretch" />
+                                                </ControlTemplate>
+                                            </TextBox.Template>
+                                        </TextBox>
+                                    </Grid>
+                                </Border>
+
+                                <Popup
+                                    x:Name="HeaderSearchResultsPopup"
+                                    AllowsTransparency="True"
+                                    IsOpen="False"
+                                    Placement="Bottom"
+                                    PlacementTarget="{Binding ElementName=HeaderSearchInputBorder}"
+                                    PopupAnimation="Fade"
+                                    StaysOpen="True"
+                                    VerticalOffset="8">
+                                    <Border
+                                        x:Name="HeaderSearchResultsBorder"
+                                        Width="300"
+                                        Padding="6"
+                                        Background="{StaticResource Brush.Background.Elevated}"
+                                        BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                        BorderThickness="1"
+                                        CornerRadius="12">
+                                        <Grid>
+                                            <TextBlock
+                                                x:Name="HeaderSearchNoResultsText"
+                                                Padding="12,10"
+                                                HorizontalAlignment="Center"
+                                                FontFamily="{StaticResource Medium}"
+                                                FontSize="14"
+                                                Foreground="{StaticResource Brush.Text.Muted}"
+                                                Text="No transaction found"
+                                                Visibility="Collapsed" />
+                                            <ItemsControl x:Name="HeaderSearchResultsList" ItemTemplate="{StaticResource HeaderSearchResultItemTemplate}" />
+                                        </Grid>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <Grid>
+                                <customControls:BalloonButton
+                                    x:Name="HeaderNotificationButton"
+                                    ButtonIcon="{StaticResource Bell}"
+                                    Click="OnHeaderNotificationButtonClick"
+                                    IconSize="11"
+                                    Style="{StaticResource HeaderButtonStyle}" />
+
+                                <Ellipse
+                                    x:Name="HeaderNotificationUnreadDot"
+                                    Width="7"
+                                    Height="7"
+                                    Margin="0,1,0,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Fill="{StaticResource Brush.Danger}"
+                                    IsHitTestVisible="False"
+                                    Stroke="{StaticResource Brush.Background.Main}"
+                                    StrokeThickness="1"
+                                    Visibility="{Binding Dashboard.NotificationPanel.HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </Grid>
+
+                            <Popup
+                                x:Name="HeaderNotificationPopup"
+                                AllowsTransparency="True"
+                                DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                                IsOpen="False"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding ElementName=HeaderNotificationButton}"
+                                PopupAnimation="Fade"
+                                StaysOpen="True"
+                                VerticalOffset="8">
+                                <Border
+                                    Width="360"
+                                    MinHeight="150"
+                                    MaxHeight="420"
+                                    Background="Transparent">
+                                    <sections:NotificationPanel x:Name="HeaderNotificationPanel" DataContext="{Binding Dashboard.NotificationPanel}" />
+                                </Border>
+                            </Popup>
+
+                            <customControls:BalloonButton
+                                x:Name="HeaderMenuButton"
+                                ButtonIcon="{StaticResource BarsSolid}"
+                                Click="OnHeaderMenuButtonClick"
+                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                                HoveredBackground="{StaticResource Brush.Background.Hover}"
+                                IconSize="9"
+                                MouseEnter="OnHeaderMenuButtonMouseEnter"
+                                MouseLeave="OnHeaderMenuButtonMouseLeave"
+                                Style="{StaticResource HeaderButtonStyle}" />
+
+                            <Popup
+                                x:Name="HeaderMenuPopup"
+                                AllowsTransparency="True"
+                                IsOpen="False"
+                                Placement="Bottom"
+                                PlacementTarget="{Binding ElementName=HeaderMenuButton}"
+                                PopupAnimation="Fade"
+                                StaysOpen="True"
+                                VerticalOffset="8">
+                                <Border
+                                    x:Name="HeaderMenuPopupRoot"
+                                    Width="220"
+                                    Padding="8"
+                                    Background="{StaticResource Brush.Background.Elevated}"
+                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                    BorderThickness="1"
+                                    CornerRadius="18"
+                                    MouseEnter="OnHeaderMenuPopupMouseEnter"
+                                    MouseLeave="OnHeaderMenuPopupMouseLeave">
+                                    <Border.Resources>
+                                        <Style x:Key="HeaderMenuShortcutTextStyle" TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                            <Setter Property="HorizontalAlignment" Value="Right" />
+                                            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+                                            <Setter Property="FontSize" Value="11" />
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Resources>
+                                    <StackPanel>
+                                        <Button
+                                            x:Name="QuickAddMenuButton"
+                                            Click="OnQuickAddButtonClick"
+                                            Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <components:Icon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Path="{StaticResource AppsSolid}"
+                                                    Color="{StaticResource Brush.Mint}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Quick Access" />
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                    Text="Ctrl+K" />
+                                            </Grid>
+                                        </Button>
+
+                                        <Button
+                                            x:Name="SourcesMenuButton"
+                                            Click="OnAccountsButtonClick"
+                                            Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <components:Icon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Path="{StaticResource Bank}"
+                                                    Color="{StaticResource Brush.Mint}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Accounts" />
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                    Text="Ctrl+L" />
+                                            </Grid>
+                                        </Button>
+
+                                        <Button
+                                            x:Name="UndoMenuButton"
+                                            Click="OnUndoButtonClick"
+                                            IsEnabled="False"
+                                            Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <components:Icon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Path="{StaticResource RegularUndo}"
+                                                    Color="{StaticResource Brush.Warning}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Undo" />
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                    Text="Ctrl+Z" />
+                                            </Grid>
+                                        </Button>
+
+                                        <Button
+                                            x:Name="RedoMenuButton"
+                                            Click="OnRedoButtonClick"
+                                            IsEnabled="False"
+                                            Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <components:Icon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Path="{StaticResource RegularRedo}"
+                                                    Color="{StaticResource Brush.Info}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Redo" />
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                    Text="Ctrl+Y" />
+                                            </Grid>
+                                        </Button>
+
+                                        <Button Click="OnHotkeysButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <components:Icon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Path="{StaticResource KeyboardBoxFill}"
+                                                    Color="{StaticResource Brush.Info}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Hotkeys" />
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                    Text="Ctrl+/" />
+                                            </Grid>
+                                        </Button>
+
+                                        <Button Click="OnSettingsButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <components:Icon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Path="{StaticResource Cog}"
+                                                    Color="{StaticResource Brush.Info}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Bold}"
+                                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                                    Text="Settings" />
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
+                                                    Text="Ctrl+," />
+                                            </Grid>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+
+                            <Border
+                                Width="1"
+                                Margin="16,0,8,0"
+                                Background="{StaticResource Brush.Background.Hover}"
+                                SnapsToDevicePixels="True" />
+
+                            <customControls:BalloonButton
+                                x:Name="HeaderQuickAddButton"
+                                Padding="8,0"
+                                ButtonIcon="{StaticResource PlusSolid}"
+                                ButtonText="New Transaction"
+                                Click="OnHeaderQuickAddButtonClick"
+                                DefaultBackground="{StaticResource Brush.Mint}"
+                                Foreground="{StaticResource Brush.Text.Primary.Dark}"
+                                HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                                ShouldExpand="True"
+                                Style="{StaticResource HeaderButtonHideWhenSufficientFundsActionGateLockedStyle}" />
+
+                            <Border
+                                Width="1"
+                                Margin="16,0,8,0"
+                                Background="{StaticResource Brush.Background.Hover}"
+                                SnapsToDevicePixels="True" />
+
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource Minus}"
+                                ButtonText="Minimize"
+                                Command="{x:Static SystemCommands.MinimizeWindowCommand}"
+                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                                HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                                ShouldExpand="True"
+                                Style="{StaticResource HeaderButtonStyle}" />
+
+                            <customControls:BalloonButton
+                                x:Name="ExpandRestoreButton"
+                                ButtonIcon="{StaticResource ExpandAlt}"
+                                ButtonText="Maximize"
+                                Click="OnExpandRestoreWindow"
+                                HoveredBackground="{StaticResource Brush.Primary.Hover}"
+                                ShouldExpand="True"
+                                Style="{StaticResource HeaderButtonStyle}" />
+
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource Close}"
+                                ButtonText="Close"
+                                Command="{x:Static SystemCommands.CloseWindowCommand}"
+                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                                HoveredBackground="{StaticResource Brush.Danger}"
+                                ShouldExpand="True"
+                                Style="{StaticResource HeaderButtonStyle}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid
+                        x:Name="DashboardSpendingAmountGateContent"
+                        Grid.RowSpan="2"
+                        Style="{StaticResource DashboardSpendingAmountGateLockedContentStyle}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="60" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <controls:DaySpinnerControl
+                            x:Name="DaySpinnerControlHost"
+                            Grid.Row="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            DataContext="{Binding DaySpinner}" />
+
+                        <ContentControl
+                            x:Name="MainPageHost"
+                            Grid.Row="1"
+                            Margin="200,16,200,48"
+                            Panel.ZIndex="6" />
+                    </Grid>
                 </Grid>
-            </Border>
-            <Border
-                x:Name="PopupOverlay"
-                Panel.ZIndex="30"
-                Background="Black"
-                CornerRadius="16"
-                IsHitTestVisible="False"
-                Opacity="0"
-                Visibility="Collapsed" />
-        </Grid>
-    </Border>
+
+                <Grid
+                    x:Name="DashboardSpendingAmountGateOverlay"
+                    Grid.RowSpan="3"
+                    Panel.ZIndex="10">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDashboardSpendingAmountGateLocked}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Button
+                        x:Name="DashboardSpendingAmountGateActionButton"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Click="OnDashboardSpendingAmountGateActionClick"
+                        Style="{StaticResource TextOnlyButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="18"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Insufficient fund. Please include a account with sufficient funds to start using "
+                                TextAlignment="Center" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    FontFamily="{StaticResource Black}"
+                                    FontSize="18"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="flux" />
+                                <TextBlock
+                                    FontFamily="{StaticResource Black}"
+                                    FontSize="18"
+                                    Foreground="{StaticResource Brush.Mint}"
+                                    Text="o" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <Border
+                    x:Name="FloatingSideNavigationRail"
+                    Margin="24,76,0,28"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource FloatingSideNavigationRailStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="64" />
+                            <RowDefinition Height="64" />
+                            <RowDefinition Height="64" />
+                            <RowDefinition Height="64" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <ToggleButton
+                            x:Name="HomeNavigationButton"
+                            AutomationProperties.Name="Navigate Home"
+                            Click="OnHomeNavigationClick"
+                            IsChecked="True"
+                            Style="{StaticResource FloatingSideNavigationButtonStyle}">
+                            <components:Icon
+                                Width="16"
+                                Height="16"
+                                Path="{StaticResource Home}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+                        </ToggleButton>
+
+                        <ToggleButton
+                            x:Name="AnalyticsNavigationButton"
+                            Grid.Row="1"
+                            AutomationProperties.Name="Navigate Analytics"
+                            Click="OnAnalyticsNavigationClick"
+                            Style="{StaticResource FloatingSideNavigationButtonStyle}">
+                            <components:Icon
+                                Width="16"
+                                Height="16"
+                                Path="{StaticResource ChartColumn}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+                        </ToggleButton>
+
+                        <ToggleButton
+                            x:Name="CalendarNavigationButton"
+                            Grid.Row="2"
+                            AutomationProperties.Name="Navigate Calendar"
+                            Click="OnCalendarNavigationClick"
+                            Style="{StaticResource FloatingSideNavigationButtonStyle}">
+                            <components:Icon
+                                Width="16"
+                                Height="16"
+                                Path="{StaticResource Calendar}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+                        </ToggleButton>
+
+                        <ToggleButton
+                            x:Name="LedgerNavigationButton"
+                            Grid.Row="3"
+                            AutomationProperties.Name="Navigate Ledger"
+                            Click="OnLedgerNavigationClick"
+                            Style="{StaticResource FloatingSideNavigationButtonStyle}">
+                            <components:Icon
+                                Width="16"
+                                Height="16"
+                                Path="{StaticResource BookAiFill}"
+                                Color="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+                        </ToggleButton>
+                    </Grid>
+                </Border>
+                <Border
+                    x:Name="PopupOverlay"
+                    Panel.ZIndex="30"
+                    Background="Black"
+                    CornerRadius="16"
+                    IsHitTestVisible="False"
+                    Opacity="0"
+                    Visibility="Collapsed" />
+            </Grid>
+        </Border>
+    </Grid>
 </Window>
