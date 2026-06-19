@@ -152,9 +152,9 @@ public partial class ExpenseDetailPopup : BasePopup
         Close();
     }
 
-    protected override void OnSplitButtonClick()
+    protected override async void OnSplitButtonClick()
     {
-        _viewModel.BeginSplitMode();
+        await _viewModel.BeginSplitModeAsync();
         UpdateButtonStates();
         SyncMoreTagsPopupState();
         SplitExpenseAmountTextBox.Focus();

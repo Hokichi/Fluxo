@@ -670,7 +670,7 @@
                 BorderBrush="{DynamicResource Brush.Border.Subtle}"
                 BorderThickness="1"
                 CornerRadius="8"
-                Visibility="{Binding HasChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}">
+                Visibility="{Binding ShowChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel>
                     <TextBlock
                         FontFamily="{DynamicResource Bold}"

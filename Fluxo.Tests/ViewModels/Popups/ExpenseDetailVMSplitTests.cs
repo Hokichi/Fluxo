@@ -74,6 +74,84 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
+    public void BeginSplitModeAsync_LoadsExistingChildTransactionsIntoSplitRows()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
+            appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(
+                [
+                    new ExpenseLog
+                    {
+                        Id = 200,
+                        ParentLogId = 10,
+                        Amount = 35m,
+                        DeductedOn = new DateTime(2026, 5, 31),
+                        Notes = "Child note",
+                        Account = persistedSource,
+                        Expense = new Expense
+                        {
+                            Name = "Groceries",
+                            ExpenseCategory = ExpenseCategory.Wants,
+                            ExpenseTag = new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6" }
+                        }
+                    },
+                    new ExpenseLog
+                    {
+                        Id = 201,
+                        ParentLogId = 99,
+                        Amount = 15m,
+                        DeductedOn = new DateTime(2026, 5, 31),
+                        Account = persistedSource,
+                        Expense = new Expense { Name = "Other parent" }
+                    }
+                ]));
+
+            vm.BeginSplitModeAsync().GetAwaiter().GetResult();
+
+            var row = Assert.Single(vm.SplitRows);
+            Assert.Equal("Groceries", row.NameText);
+            Assert.Equal(35m, row.AmountText);
+            Assert.Equal(ExpenseCategory.Wants, row.SelectedExpenseCategory);
+            Assert.Equal(2, row.SelectedTag?.Id);
+            Assert.Equal("Travel", row.SelectedTag?.Name);
+        });
+    }
+
+    [Fact]
+    public void BeginSplitModeAsync_HidesChildTransactionsPanelAndUsesCompactWidth()
+    {
+        RunInSta(() =>
+        {
+            var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
+            appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(
+                [
+                    new ExpenseLog
+                    {
+                        Id = 200,
+                        ParentLogId = 10,
+                        Amount = 35m,
+                        DeductedOn = new DateTime(2026, 5, 31),
+                        Account = persistedSource,
+                        Expense = new Expense { Name = "Groceries" }
+                    }
+                ]));
+
+            vm.LoadChildTransactionsAsync().GetAwaiter().GetResult();
+
+            Assert.True(vm.ShowChildTransactions);
+            Assert.Equal(916, vm.DetailPopupWidth);
+
+            vm.BeginSplitModeAsync().GetAwaiter().GetResult();
+
+            Assert.False(vm.ShowChildTransactions);
+            Assert.Equal(640, vm.DetailPopupWidth);
+        });
+    }
+
+    [Fact]
     public void SaveAsync_NormalMode_PersistsPinnedState()
     {
         RunInSta(() =>

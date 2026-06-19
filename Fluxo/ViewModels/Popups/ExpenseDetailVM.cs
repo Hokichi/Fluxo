@@ -85,7 +85,8 @@ public partial class ExpenseDetailVM : ObservableObject
     public bool HasSplitRowsWithAmounts => SplitRows.Any(row => row.HasAmount);
     public bool HasSplitRowsWithoutAmounts => SplitRows.Count > 0 && SplitRows.All(row => !row.HasAmount);
     public bool HasChildTransactions => ChildTransactions.Count > 0;
-    public int DetailPopupWidth => HasChildTransactions ? 916 : 640;
+    public bool ShowChildTransactions => HasChildTransactions && !IsSplitMode;
+    public int DetailPopupWidth => ShowChildTransactions ? 916 : 640;
     public bool ShowSplitButton => !IsSplitMode;
     public bool ShowNormalExpenseFields => !IsSplitMode;
     public IEnumerable<ExpenseTagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
@@ -107,6 +108,8 @@ public partial class ExpenseDetailVM : ObservableObject
     {
         OnPropertyChanged(nameof(ShowSplitButton));
         OnPropertyChanged(nameof(ShowNormalExpenseFields));
+        OnPropertyChanged(nameof(ShowChildTransactions));
+        OnPropertyChanged(nameof(DetailPopupWidth));
         OnPropertyChanged(nameof(HasSplitParentRemainder));
         OnPropertyChanged(nameof(CanCloseSplitModeWithoutSaving));
         OnPropertyChanged(nameof(RequiresEmptySplitConfirmationOnClose));
@@ -160,6 +163,12 @@ public partial class ExpenseDetailVM : ObservableObject
         NegativeRemainderRow = null;
     }
 
+    public async Task BeginSplitModeAsync(CancellationToken cancellationToken = default)
+    {
+        BeginSplitMode();
+        await LoadChildTransactionsIntoSplitRowsAsync(cancellationToken);
+    }
+
     public void AddSplitRow()
     {
         var row = new ExpenseSplitRowVM
@@ -168,6 +177,11 @@ public partial class ExpenseDetailVM : ObservableObject
             SelectedTag = SelectedTag
         };
 
+        AddSplitRow(row);
+    }
+
+    private void AddSplitRow(ExpenseSplitRowVM row)
+    {
         row.PropertyChanged += OnSplitRowPropertyChanged;
         SplitRows.Add(row);
         NotifySplitRowStateChanged();
@@ -184,11 +198,7 @@ public partial class ExpenseDetailVM : ObservableObject
 
     public async Task LoadChildTransactionsAsync(CancellationToken cancellationToken = default)
     {
-        var childTransactions = (await _appData.GetExpenseLogsAsync(cancellationToken))
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId == _expenseLog.Id)
-            .OrderByDescending(log => log.DeductedOn)
-            .ThenBy(log => log.Expense?.Name ?? "Expense", StringComparer.OrdinalIgnoreCase)
+        var childTransactions = (await LoadChildExpenseLogsAsync(cancellationToken))
             .Select(ProjectChildTransaction)
             .ToList();
 
@@ -197,7 +207,33 @@ public partial class ExpenseDetailVM : ObservableObject
             ChildTransactions.Add(childTransaction);
 
         OnPropertyChanged(nameof(HasChildTransactions));
+        OnPropertyChanged(nameof(ShowChildTransactions));
         OnPropertyChanged(nameof(DetailPopupWidth));
+    }
+
+    private async Task LoadChildTransactionsIntoSplitRowsAsync(CancellationToken cancellationToken)
+    {
+        var childLogs = await LoadChildExpenseLogsAsync(cancellationToken);
+        if (childLogs.Count == 0)
+            return;
+
+        foreach (var row in SplitRows)
+            row.PropertyChanged -= OnSplitRowPropertyChanged;
+
+        SplitRows.Clear();
+
+        foreach (var childLog in childLogs)
+            AddSplitRow(ProjectSplitRow(childLog));
+    }
+
+    private async Task<IReadOnlyList<ExpenseLog>> LoadChildExpenseLogsAsync(CancellationToken cancellationToken)
+    {
+        return (await _appData.GetExpenseLogsAsync(cancellationToken))
+            .Where(log => !log.IsForDeletion)
+            .Where(log => log.ParentLogId == _expenseLog.Id)
+            .OrderByDescending(log => log.DeductedOn)
+            .ThenBy(log => log.Expense?.Name ?? "Expense", StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     public void ClearSplitMode()
@@ -758,6 +794,35 @@ public partial class ExpenseDetailVM : ObservableObject
             TagName = log.Expense?.ExpenseTag?.Name ?? string.Empty,
             TagHexCode = log.Expense?.ExpenseTag?.HexCode ?? string.Empty,
             Notes = log.Notes
+        };
+    }
+
+    private ExpenseSplitRowVM ProjectSplitRow(ExpenseLog log)
+    {
+        return new ExpenseSplitRowVM
+        {
+            AmountText = log.Amount,
+            NameText = log.Expense?.Name ?? string.Empty,
+            SelectedExpenseCategory = log.Expense?.ExpenseCategory ?? SelectedExpenseCategory,
+            SelectedTag = ResolveSplitRowTag(log.Expense?.ExpenseTag)
+        };
+    }
+
+    private ExpenseTagVM? ResolveSplitRowTag(ExpenseTag? tag)
+    {
+        if (tag is null)
+            return SelectedTag;
+
+        var existingTag = _orderedTags.FirstOrDefault(candidate => candidate.Id == tag.Id);
+        if (existingTag is not null)
+            return existingTag;
+
+        return new ExpenseTagVM
+        {
+            Id = tag.Id,
+            Name = tag.Name,
+            HexCode = tag.HexCode,
+            IsSystemTag = tag.IsSystemTag
         };
     }
 

@@ -26,8 +26,8 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         var codeBehind = File.ReadAllText(PopupCodeBehindPath);
 
         Assert.Contains("ShowSplitButton=\"{Binding ShowSplitButton}\"", xaml);
-        Assert.Contains("protected override void OnSplitButtonClick()", codeBehind);
-        Assert.Contains("_viewModel.BeginSplitMode();", codeBehind);
+        Assert.Contains("protected override async void OnSplitButtonClick()", codeBehind);
+        Assert.Contains("await _viewModel.BeginSplitModeAsync();", codeBehind);
         Assert.Contains("SplitExpenseAmountTextBox.Focus();", codeBehind);
         Assert.Contains("ShowSplitButton = _viewModel.ShowSplitButton;", codeBehind);
         Assert.Contains("_viewModel.CanCloseSplitModeWithoutSaving", codeBehind);
@@ -108,7 +108,7 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.Contains("Grid.Column=\"2\"", xaml);
         Assert.Contains("Text=\"Child Transactions\"", xaml);
         Assert.Contains("ItemsSource=\"{Binding ChildTransactions}\"", xaml);
-        Assert.Contains("Visibility=\"{Binding HasChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding ShowChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
         Assert.Contains("VerticalScrollBarVisibility=\"Auto\"", xaml);
         Assert.Contains("await _viewModel.LoadChildTransactionsAsync();", codeBehind);
     }
