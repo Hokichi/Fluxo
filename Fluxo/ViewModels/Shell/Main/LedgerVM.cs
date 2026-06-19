@@ -243,10 +243,15 @@ public partial class LedgerVM : ObservableRecipient,
                 return;
 
             transaction.IsEditing = true;
+            if (transaction.HasChildTransactions)
+                transaction.IsChildrenExpanded = true;
             EditingTransaction = transaction;
             RefreshEditDisabledState();
             return;
         }
+
+        if (!transaction.CanApplyEdit)
+            return;
 
         await CommitTransactionEditAsync(transaction);
         transaction.IsEditing = false;
@@ -277,7 +282,7 @@ public partial class LedgerVM : ObservableRecipient,
         if (transaction is null || !transaction.IsEditing)
             return;
 
-        await ReloadTransactionFromStoreAsync(transaction);
+        await ReloadTransactionTreeFromStoreAsync(transaction);
         transaction.IsEditing = false;
         transaction.IsTagPopupOpen = false;
         EditingTransaction = null;
@@ -414,7 +419,11 @@ public partial class LedgerVM : ObservableRecipient,
                 continue;
 
             foreach (var childExpense in childExpenses)
+            {
+                childExpense.ParentTransaction = expense;
                 expense.ChildTransactions.Add(childExpense);
+            }
+
             expense.RefreshChildTransactionState();
         }
 
@@ -1122,10 +1131,18 @@ public partial class LedgerVM : ObservableRecipient,
     {
         return transaction.Kind switch
         {
-            LedgerTransactionKind.Expense => CommitExpenseEditAsync(transaction),
+            LedgerTransactionKind.Expense => CommitExpenseEditTreeAsync(transaction),
             LedgerTransactionKind.Income => CommitIncomeEditAsync(transaction),
             _ => Task.CompletedTask
         };
+    }
+
+    private async Task CommitExpenseEditTreeAsync(LedgerTransactionItemVM transaction)
+    {
+        await CommitExpenseEditAsync(transaction);
+
+        foreach (var child in transaction.ChildTransactions)
+            await CommitExpenseEditAsync(child);
     }
 
     private Task ReloadTransactionFromStoreAsync(LedgerTransactionItemVM transaction)
@@ -1136,6 +1153,14 @@ public partial class LedgerVM : ObservableRecipient,
             LedgerTransactionKind.Income => ReloadIncomeTransactionFromStoreAsync(transaction),
             _ => Task.CompletedTask
         };
+    }
+
+    private async Task ReloadTransactionTreeFromStoreAsync(LedgerTransactionItemVM transaction)
+    {
+        await ReloadTransactionFromStoreAsync(transaction);
+
+        foreach (var child in transaction.ChildTransactions)
+            await ReloadTransactionFromStoreAsync(child);
     }
 
     private async Task ReloadExpenseTransactionFromStoreAsync(LedgerTransactionItemVM transaction)

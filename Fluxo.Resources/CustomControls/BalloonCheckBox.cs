@@ -48,15 +48,30 @@ public class BalloonCheckBox : CheckBox
         DependencyProperty.Register(nameof(CheckedBackground), typeof(Brush), typeof(BalloonCheckBox),
             new PropertyMetadata(Brushes.MintCream, (d, _) => ((BalloonCheckBox)d).UpdateActiveBackground()));
 
-    // --- ButtonIcon ---
-    public static readonly DependencyProperty ButtonIconProperty =
-        DependencyProperty.Register(nameof(ButtonIcon), typeof(object), typeof(BalloonCheckBox),
+    // --- UncheckedIcon ---
+    public static readonly DependencyProperty UncheckedIconProperty =
+        DependencyProperty.Register(nameof(UncheckedIcon), typeof(object), typeof(BalloonCheckBox),
             new PropertyMetadata(null, (d, _) => ((BalloonCheckBox)d).ApplyIcon()));
 
-    // --- ButtonText ---
-    public static readonly DependencyProperty ButtonTextProperty =
-        DependencyProperty.Register(nameof(ButtonText), typeof(string), typeof(BalloonCheckBox),
-            new PropertyMetadata(null, OnLayoutPropertyChanged));
+    // --- CheckedIcon ---
+    public static readonly DependencyProperty CheckedIconProperty =
+        DependencyProperty.Register(nameof(CheckedIcon), typeof(object), typeof(BalloonCheckBox),
+            new PropertyMetadata(null, (d, _) => ((BalloonCheckBox)d).ApplyIcon()));
+
+    // --- UncheckedText ---
+    public static readonly DependencyProperty UncheckedTextProperty =
+        DependencyProperty.Register(nameof(UncheckedText), typeof(string), typeof(BalloonCheckBox),
+            new PropertyMetadata(null, OnTextPropertyChanged));
+
+    // --- CheckedText ---
+    public static readonly DependencyProperty CheckedTextProperty =
+        DependencyProperty.Register(nameof(CheckedText), typeof(string), typeof(BalloonCheckBox),
+            new PropertyMetadata(null, OnTextPropertyChanged));
+
+    // --- ActiveButtonText ---
+    public static readonly DependencyProperty ActiveButtonTextProperty =
+        DependencyProperty.Register(nameof(ActiveButtonText), typeof(string), typeof(BalloonCheckBox),
+            new PropertyMetadata(null));
 
     // --- ShouldExpand ---
     public static readonly DependencyProperty ShouldExpandProperty =
@@ -126,16 +141,34 @@ public class BalloonCheckBox : CheckBox
         set => SetValue(CheckedBackgroundProperty, value);
     }
 
-    public object? ButtonIcon
+    public object? UncheckedIcon
     {
-        get => GetValue(ButtonIconProperty);
-        set => SetValue(ButtonIconProperty, value);
+        get => GetValue(UncheckedIconProperty);
+        set => SetValue(UncheckedIconProperty, value);
     }
 
-    public string? ButtonText
+    public object? CheckedIcon
     {
-        get => (string?)GetValue(ButtonTextProperty);
-        set => SetValue(ButtonTextProperty, value);
+        get => GetValue(CheckedIconProperty);
+        set => SetValue(CheckedIconProperty, value);
+    }
+
+    public string? UncheckedText
+    {
+        get => (string?)GetValue(UncheckedTextProperty);
+        set => SetValue(UncheckedTextProperty, value);
+    }
+
+    public string? CheckedText
+    {
+        get => (string?)GetValue(CheckedTextProperty);
+        set => SetValue(CheckedTextProperty, value);
+    }
+
+    public string? ActiveButtonText
+    {
+        get => (string?)GetValue(ActiveButtonTextProperty);
+        private set => SetValue(ActiveButtonTextProperty, value);
     }
 
     public bool ShouldExpand
@@ -188,6 +221,7 @@ public class BalloonCheckBox : CheckBox
         UpdateActiveBackground();
         ResetShapeFill();
         ApplyIcon();
+        ApplyText();
         ResetExpansion();
         RebuildGeometry();
     }
@@ -214,6 +248,9 @@ public class BalloonCheckBox : CheckBox
         base.OnChecked(e);
         UpdateActiveBackground();
         ResetShapeFill();
+        ApplyIcon();
+        ApplyText();
+        ResetExpansion();
     }
 
     protected override void OnUnchecked(RoutedEventArgs e)
@@ -221,6 +258,9 @@ public class BalloonCheckBox : CheckBox
         base.OnUnchecked(e);
         UpdateActiveBackground();
         ResetShapeFill();
+        ApplyIcon();
+        ApplyText();
+        ResetExpansion();
     }
 
     protected override void OnRenderSizeChanged(SizeChangedInfo info)
@@ -245,6 +285,13 @@ public class BalloonCheckBox : CheckBox
     private static void OnLayoutPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         ((BalloonCheckBox)d).ResetExpansion();
+    }
+
+    private static void OnTextPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var button = (BalloonCheckBox)d;
+        button.ApplyText();
+        button.ResetExpansion();
     }
 
     private static void OnShouldShowTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -301,22 +348,23 @@ public class BalloonCheckBox : CheckBox
 
     private void ResetExpansion()
     {
+        var isExpanded = ShouldShowText || (ShouldExpand && IsMouseOver);
         BeginAnimation(WidthProperty, null);
-        ApplyIconSlotLayout(ShouldShowText);
-        Width = ShouldShowText ? GetEffectiveOpenWidth() : ButtonSize;
+        ApplyIconSlotLayout(isExpanded);
+        Width = isExpanded ? GetEffectiveOpenWidth() : ButtonSize;
 
         if (_textReveal is not null)
         {
             _textReveal.BeginAnimation(WidthProperty, null);
             _textReveal.BeginAnimation(OpacityProperty, null);
-            _textReveal.Width = ShouldShowText ? GetTextRevealWidth(Width) : 0;
-            _textReveal.Opacity = ShouldShowText ? 1 : 0;
+            _textReveal.Width = isExpanded ? GetTextRevealWidth(Width) : 0;
+            _textReveal.Opacity = isExpanded ? 1 : 0;
         }
 
         if (_buttonText is not null)
         {
             _buttonText.BeginAnimation(OpacityProperty, null);
-            _buttonText.Opacity = ShouldShowText ? 1 : 0;
+            _buttonText.Opacity = isExpanded ? 1 : 0;
         }
     }
 
@@ -410,7 +458,8 @@ public class BalloonCheckBox : CheckBox
 
     private double MeasureButtonTextWidth()
     {
-        if (string.IsNullOrEmpty(ButtonText))
+        var buttonText = ResolveText();
+        if (string.IsNullOrEmpty(buttonText))
             return 0;
 
         if (_buttonText is not null)
@@ -421,7 +470,7 @@ public class BalloonCheckBox : CheckBox
 
         var textBlock = new TextBlock
         {
-            Text = ButtonText,
+            Text = buttonText,
             FontFamily = FontFamily,
             FontSize = FontSize,
             FontStretch = FontStretch,
@@ -436,7 +485,22 @@ public class BalloonCheckBox : CheckBox
     private void ApplyIcon()
     {
         if (_icon is not null)
-            _icon.Data = ResolveGeometry(ButtonIcon);
+            _icon.Data = ResolveGeometry(ResolveIcon());
+    }
+
+    private void ApplyText()
+    {
+        ActiveButtonText = ResolveText();
+    }
+
+    private object? ResolveIcon()
+    {
+        return IsChecked == true ? CheckedIcon ?? UncheckedIcon : UncheckedIcon;
+    }
+
+    private string? ResolveText()
+    {
+        return IsChecked == true ? CheckedText ?? UncheckedText : UncheckedText;
     }
 
     private static Geometry? ResolveGeometry(object? source)

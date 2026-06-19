@@ -260,6 +260,27 @@ public sealed class LedgerVMTests
     }
 
     [Fact]
+    public void ParentSelection_PropagatesToChildTransactions()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(expenseLogService: CreateExpenseLogService(CreateBalancedSplitExpenseLogs()));
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+            var children = parent.ChildTransactions.ToList();
+
+            vm.ToggleSelectionModeCommand.Execute(null);
+
+            Assert.True(parent.IsSelectedForBatch);
+            Assert.All(children, child => Assert.True(child.IsSelectedForBatch));
+
+            parent.IsSelectedForBatch = false;
+
+            Assert.All(children, child => Assert.False(child.IsSelectedForBatch));
+        });
+    }
+
+    [Fact]
     public void ToggleVisibleBatchSelection_UnchecksAllOnlyWhenAllVisibleRowsAreChecked()
     {
         RunInSta(() =>
@@ -517,6 +538,33 @@ public sealed class LedgerVMTests
             Assert.False(grocery.IsDisabledByAnotherEdit);
             Assert.False(netflix.IsDisabledByAnotherEdit);
             Assert.Null(vm.EditingTransaction);
+        });
+    }
+
+    [Fact]
+    public void EditingParentTransaction_EnablesChildrenAndBlocksApplyUntilChildAmountsMatchParent()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(expenseLogService: CreateExpenseLogService(CreateBalancedSplitExpenseLogs()));
+            vm.LoadAsync().GetAwaiter().GetResult();
+            var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
+            var children = parent.ChildTransactions.ToList();
+
+            vm.EditTransactionCommand.ExecuteAsync(parent).GetAwaiter().GetResult();
+
+            Assert.True(parent.IsEditing);
+            Assert.True(parent.CanApplyEdit);
+            Assert.All(children, child => Assert.True(child.IsEditing));
+
+            var originalChildAmount = children[0].Amount;
+            children[0].Amount = 10m;
+
+            Assert.False(parent.CanApplyEdit);
+
+            children[0].Amount = originalChildAmount;
+
+            Assert.True(parent.CanApplyEdit);
         });
     }
 
@@ -871,6 +919,14 @@ public sealed class LedgerVMTests
             messenger ?? new WeakReferenceMessenger());
     }
 
+    private static IExpenseLogService CreateExpenseLogService(IReadOnlyList<ExpenseLogDto> expenseLogs)
+    {
+        var expenseLogService = Substitute.For<IExpenseLogService>();
+        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(expenseLogs);
+        return expenseLogService;
+    }
+
     private static IMapper CreateMapper()
     {
         var config = new MapperConfiguration(cfg =>
@@ -1050,6 +1106,24 @@ public sealed class LedgerVMTests
         return
         [
             CreateExpenseLog(1, "FreshMart Grocery", 67.50m, new DateTime(2026, 6, 3, 9, 15, 0), ExpenseCategory.Needs, groceries, checking),
+            CreateExpenseLog(2, "Netflix", 15.99m, new DateTime(2026, 6, 3, 11, 30, 0), ExpenseCategory.Wants, streaming, credit, "Recurring transaction"),
+            CreateExpenseLog(3, "Vacation Goal", 100m, new DateTime(2026, 6, 2, 8, 0, 0), ExpenseCategory.Savings, goal, checking)
+        ];
+    }
+
+    private static IReadOnlyList<ExpenseLogDto> CreateBalancedSplitExpenseLogs()
+    {
+        var groceries = new ExpenseTagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
+        var streaming = new ExpenseTagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" };
+        var goal = new ExpenseTagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
+        var checking = new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true };
+        var credit = new AccountDto { Id = 2, Name = "Citibank Credit", AccountType = AccountType.Credit, IsEnabled = false };
+
+        return
+        [
+            CreateExpenseLog(1, "FreshMart Grocery", 67.50m, new DateTime(2026, 6, 3, 9, 15, 0), ExpenseCategory.Needs, groceries, checking),
+            CreateExpenseLog(4, "FreshMart Produce", 30m, new DateTime(2026, 6, 3, 9, 20, 0), ExpenseCategory.Needs, groceries, checking, parentLogId: 1),
+            CreateExpenseLog(5, "FreshMart Treats", 37.50m, new DateTime(2026, 6, 3, 9, 25, 0), ExpenseCategory.Wants, streaming, credit, parentLogId: 1),
             CreateExpenseLog(2, "Netflix", 15.99m, new DateTime(2026, 6, 3, 11, 30, 0), ExpenseCategory.Wants, streaming, credit, "Recurring transaction"),
             CreateExpenseLog(3, "Vacation Goal", 100m, new DateTime(2026, 6, 2, 8, 0, 0), ExpenseCategory.Savings, goal, checking)
         ];

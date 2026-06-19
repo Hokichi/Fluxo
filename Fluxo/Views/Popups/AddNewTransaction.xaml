@@ -346,24 +346,24 @@
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <customControls:BalloonCheckBox
                                 Grid.Column="2"
-                                ButtonIcon="{StaticResource RegularRepeat}"
                                 ButtonSize="38"
-                                ButtonText="Recurring"
                                 CheckedBackground="{StaticResource Brush.Info}"
                                 CornerRadius="12"
                                 DefaultBackground="{StaticResource Brush.Background.Surface}"
                                 IconSize="14"
                                 IsChecked="{Binding IsRecurring, Mode=TwoWay}"
                                 IsEnabled="{Binding CanToggleRecurring}"
-                                ToolTip="Set as Recurring" />
+                                ToolTip="Set as Recurring"
+                                UncheckedIcon="{StaticResource RegularRepeat}"
+                                UncheckedText="Recurring" />
                             <customControls:BalloonCheckBox
                                 Grid.Column="4"
-                                ButtonIcon="{StaticResource Pin}"
                                 ButtonSize="38"
-                                ButtonText="Pinned"
                                 CheckedBackground="{StaticResource Brush.Info}"
                                 CornerRadius="12"
                                 DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                UncheckedIcon="{StaticResource Pin}"
+                                UncheckedText="Pinned"
                                 IconSize="14"
                                 IsChecked="{Binding IsPinned, Mode=TwoWay}"
                                 IsEnabled="{Binding CanPinTransaction}"
@@ -530,20 +530,20 @@
                                     Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 <customControls:BalloonCheckBox
                                     Grid.Column="2"
-                                    ButtonIcon="{StaticResource RegularRepeat}"
                                     ButtonSize="38"
-                                    ButtonText="Recurring"
                                     IsChecked="{Binding IsRecurring, Mode=TwoWay}"
                                     IsEnabled="{Binding CanToggleRecurring}"
-                                    ToolTip="Recurring" />
+                                    ToolTip="Recurring"
+                                    UncheckedIcon="{StaticResource RegularRepeat}"
+                                    UncheckedText="Recurring" />
                                 <customControls:BalloonCheckBox
                                     Grid.Column="4"
-                                    ButtonIcon="{StaticResource Pin}"
                                     ButtonSize="38"
-                                    ButtonText="Pinned"
                                     IsChecked="{Binding IsPinned, Mode=TwoWay}"
                                     IsEnabled="{Binding CanPinTransaction}"
-                                    ToolTip="Pinned" />
+                                    ToolTip="Pinned"
+                                    UncheckedIcon="{StaticResource Pin}"
+                                    UncheckedText="Pinned" />
                             </Grid>
                             <Popup
                                 x:Name="IncomeNameSuggestionsPopup"

@@ -156,7 +156,7 @@
                                         FontFamily="{StaticResource Bold}"
                                         FontSize="{TemplateBinding FontSize}"
                                         Opacity="0"
-                                        Text="{TemplateBinding ButtonText}"
+                                        Text="{Binding ActiveButtonText, RelativeSource={RelativeSource TemplatedParent}}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap">
                                         <TextBlock.Foreground>

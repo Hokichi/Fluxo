@@ -535,6 +535,20 @@
                         </Border>
                     </StackPanel>
 
+                    <CheckBox
+                        x:Name="ChildRowBatchCheckBox"
+                        Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsChecked="{Binding IsSelectedForBatch, Mode=OneWay}"
+                        IsEnabled="False"
+                        Style="{StaticResource ItemCheckBoxStyle}"
+                        Visibility="{Binding DataContext.IsSelectionModeEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <CheckBox.RenderTransform>
+                            <TranslateTransform />
+                        </CheckBox.RenderTransform>
+                    </CheckBox>
+
                     <Grid
                         x:Name="ChildRowTagCell"
                         Grid.Column="3"
@@ -648,7 +662,7 @@
 
                     <customControls:MoneyTextBox
                         x:Name="ChildRowMoneyEditor"
-                        Grid.Column="6"
+                        Grid.Column="5"
                         Margin="0,8,8,8"
                         VerticalContentAlignment="Center"
                         FontFamily="{StaticResource Bold}"
@@ -667,6 +681,11 @@
                             <Storyboard>
                                 <DoubleAnimation
                                     Storyboard.TargetName="ChildRowNameContent"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="3"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowBatchCheckBox"
                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                                     To="3"
                                     Duration="0:0:0.12" />
@@ -698,6 +717,11 @@
                             <Storyboard>
                                 <DoubleAnimation
                                     Storyboard.TargetName="ChildRowNameContent"
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                    To="0"
+                                    Duration="0:0:0.12" />
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChildRowBatchCheckBox"
                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                                     To="0"
                                     Duration="0:0:0.12" />
@@ -1006,46 +1030,50 @@
                                     IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
                                     Style="{StaticResource HeaderButtonStyle}"
                                     ToolTip="Duplicate" />
-                                <customControls:BalloonButton
+                                <customControls:BalloonCheckBox
                                     Width="30"
                                     Height="30"
+                                    CheckedIcon="{StaticResource Check}"
+                                    CheckedText="Apply"
                                     Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
                                     IconSize="12">
-                                    <customControls:BalloonButton.Style>
-                                        <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
-                                            <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
+                                    <customControls:BalloonCheckBox.Style>
+                                        <Style BasedOn="{StaticResource HeaderCheckBoxStyle}" TargetType="customControls:BalloonCheckBox">
                                             <Setter Property="ToolTip" Value="Edit" />
+                                            <Setter Property="IsChecked" Value="{Binding IsEditing, Mode=OneWay}" />
+                                            <Setter Property="UncheckedIcon" Value="{StaticResource Pen}" />
+                                            <Setter Property="UncheckedText" Value="Edit" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                                                    <Setter Property="ButtonIcon" Value="{StaticResource Check}" />
-                                                    <Setter Property="ToolTip" Value="Save" />
+                                                    <Setter Property="ToolTip" Value="Apply" />
                                                 </DataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsEditing}" Value="True" />
+                                                        <Condition Binding="{Binding CanApplyEdit}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                    <Setter Property="ToolTip" Value="Child amounts must equal parent amount" />
+                                                </MultiDataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </customControls:BalloonButton.Style>
-                                </customControls:BalloonButton>
-                                <customControls:BalloonButton
+                                    </customControls:BalloonCheckBox.Style>
+                                </customControls:BalloonCheckBox>
+                                <customControls:BalloonCheckBox
                                     Width="30"
                                     Height="30"
-                                    ButtonIcon="{StaticResource Delete}"
-                                    Click="OnRemoveTransactionClick"
+                                    CheckedIcon="{StaticResource Ban}"
+                                    CheckedText="Cancel"
+                                    Click="OnDeleteOrDiscardTransactionClick"
                                     CommandParameter="{Binding}"
                                     HoveredBackground="{StaticResource Brush.Danger}"
                                     IconSize="12"
-                                    Style="{StaticResource HeaderButtonStyle}"
-                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                                <customControls:BalloonButton
-                                    Width="30"
-                                    Height="30"
-                                    ButtonIcon="{StaticResource Ban}"
-                                    Command="{Binding DataContext.DiscardTransactionEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"
-                                    HoveredBackground="{StaticResource Brush.Danger}"
-                                    IconSize="12"
-                                    Style="{StaticResource HeaderButtonStyle}"
-                                    ToolTip="Discard"
-                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    IsChecked="{Binding IsEditing, Mode=OneWay}"
+                                    Style="{StaticResource HeaderCheckBoxStyle}"
+                                    ToolTip="Delete"
+                                    UncheckedIcon="{StaticResource Delete}"
+                                    UncheckedText="Delete" />
                             </StackPanel>
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -1310,63 +1338,52 @@
                     IconSize="12"
                     IsEnabled="{Binding HasVisibleTransactions}"
                     ShouldExpand="True" />
-                <customControls:BalloonButton
+                <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
-                    ButtonText="{Binding SelectionModeButtonText}"
+                    CheckedIcon="{StaticResource DisableChecks}"
+                    CheckedText="Disable Selection"
                     Click="OnSelectionModeClick"
                     CornerRadius="8"
                     DefaultBackground="{StaticResource Brush.Mint}"
                     HoveredBackground="{StaticResource Brush.Mint.Muted}"
                     IconSize="12"
+                    IsChecked="{Binding IsSelectionModeEnabled, Mode=OneWay}"
                     IsEnabled="{Binding HasVisibleTransactions}"
-                    ShouldExpand="True">
-                    <customControls:BalloonButton.Style>
-                        <Style BasedOn="{StaticResource {x:Type customControls:BalloonButton}}" TargetType="customControls:BalloonButton">
-                            <Setter Property="ButtonIcon" Value="{StaticResource EnableChecks}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSelectionModeEnabled}" Value="True">
-                                    <Setter Property="ButtonIcon" Value="{StaticResource DisableChecks}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </customControls:BalloonButton.Style>
-                </customControls:BalloonButton>
-                <customControls:BalloonButton
+                    ShouldExpand="True"
+                    UncheckedIcon="{StaticResource EnableChecks}"
+                    UncheckedText="Enable Selection" />
+                <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
-                    ButtonText="{Binding CheckAllButtonText}"
+                    CheckedIcon="{StaticResource UncheckAll}"
+                    CheckedText="Uncheck All"
                     Click="OnToggleVisibleBatchSelectionClick"
                     CornerRadius="8"
                     DefaultBackground="{StaticResource Brush.Mint}"
                     HoveredBackground="{StaticResource Brush.Mint.Muted}"
                     IconSize="12"
+                    IsChecked="{Binding AreAllVisibleTransactionsSelected, Mode=OneWay}"
                     IsEnabled="{Binding HasVisibleTransactions}"
                     ShouldExpand="True"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <customControls:BalloonButton.Style>
-                        <Style BasedOn="{StaticResource {x:Type customControls:BalloonButton}}" TargetType="customControls:BalloonButton">
-                            <Setter Property="ButtonIcon" Value="{StaticResource CheckAll}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding AreAllVisibleTransactionsSelected}" Value="True">
-                                    <Setter Property="ButtonIcon" Value="{StaticResource UncheckAll}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </customControls:BalloonButton.Style>
-                </customControls:BalloonButton>
-                <customControls:BalloonButton
+                    UncheckedIcon="{StaticResource CheckAll}"
+                    UncheckedText="Check All"
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
-                    ButtonIcon="{StaticResource Delete}"
-                    ButtonText="{Binding DeleteSelectedButtonText}"
+                    CheckedIcon="{StaticResource Delete}"
+                    CheckedText="Delete All"
                     Click="OnRemoveSelectedTransactionsClick"
                     CornerRadius="8"
                     DefaultBackground="{StaticResource Brush.Mint}"
                     HoveredBackground="{StaticResource Brush.Mint.Muted}"
                     IconSize="12"
+                    IsChecked="{Binding AreAllVisibleTransactionsSelected, Mode=OneWay}"
                     IsEnabled="{Binding HasSelectedVisibleTransactions}"
                     ShouldExpand="True"
+                    UncheckedIcon="{StaticResource Delete}"
+                    UncheckedText="Delete Selected"
                     Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
 

@@ -368,8 +368,8 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("CreateDuplicateTransactionDraft", ledgerCodeBehind);
         Assert.Contains("ButtonIcon=\"{StaticResource CloneRegular}\"", rowTemplateSection);
         Assert.Contains("IsEnabled=\"{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}\"", rowTemplateSection);
-        Assert.Contains("ButtonIcon=\"{StaticResource Ban}\"", rowTemplateSection);
-        Assert.Contains("DiscardTransactionEditCommand", rowTemplateSection);
+        Assert.Contains("CheckedIcon=\"{StaticResource Ban}\"", rowTemplateSection);
+        Assert.Contains("OnDeleteOrDiscardTransactionClick", rowTemplateSection);
         Assert.Contains("Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.X)\"", rowTemplateSection);
         Assert.Contains("To=\"3\"", rowTemplateSection);
         Assert.Contains("FluxoMessageBox.Show", ledgerCodeBehind);
@@ -401,9 +401,11 @@ public sealed class MainWindowPageRegressionTests
         var childTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerChildRowTemplate\"", "x:Key=\"LedgerRowTemplate\"");
         var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
 
-        Assert.Contains("<ColumnDefinition Width=\"36\" />", rowTemplateSection);
         Assert.Contains("Margin=\"0,0,0,8\"", rowTemplateSection);
         Assert.Contains("x:Name=\"ChildRowNameContent\"", childTemplateSection);
+        Assert.Contains("x:Name=\"ChildRowBatchCheckBox\"", childTemplateSection);
+        Assert.Contains("IsChecked=\"{Binding IsSelectedForBatch, Mode=OneWay}\"", childTemplateSection);
+        Assert.Contains("IsEnabled=\"False\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowTagCell\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowAccountCell\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowSignedAmountText\"", childTemplateSection);
@@ -411,16 +413,14 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("x:Name=\"ChildRowRoot\"", childTemplateSection);
         Assert.DoesNotContain("Width=\"{Binding ActualWidth", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowSurface\"", childTemplateSection);
-        Assert.Contains("Margin=\"36,0,0,8\"", childTemplateSection);
-        Assert.Equal(5, CountOccurrences(childTemplateSection, "<TranslateTransform />"));
-        Assert.Contains("Margin=\"-36,0,0,0\"", childTemplateSection);
-        Assert.Contains("Margin=\"36,8,0,8\"", childTemplateSection);
+        Assert.Equal(6, CountOccurrences(childTemplateSection, "<TranslateTransform />"));
         Assert.Contains("Margin=\"0,8,8,8\"", childTemplateSection);
         Assert.DoesNotContain("Margin=\"-26,0,0,0\"", childTemplateSection);
         Assert.DoesNotContain("Margin=\"-23,0,0,0\"", childTemplateSection);
         Assert.DoesNotContain("Margin=\"0,8,26,8\"", childTemplateSection);
         Assert.Contains("Brush.Background.Hover", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowNameContent\"", childTemplateSection);
+        Assert.Contains("Storyboard.TargetName=\"ChildRowBatchCheckBox\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowTagCell\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowAccountCell\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowSignedAmountText\"", childTemplateSection);
@@ -451,8 +451,7 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("DoubleAnimation", groupStyleSection);
         Assert.Contains("Storyboard.TargetProperty=\"Opacity\"", groupStyleSection);
         Assert.Contains("Storyboard.TargetProperty=\"MaxHeight\"", groupStyleSection);
-        Assert.Contains("x:Name=\"RowSeparator\"", rowTemplateSection);
-        Assert.Contains("IsLastVisibleInGroup", rowTemplateSection);
+        Assert.DoesNotContain("x:Name=\"RowSeparator\"", rowTemplateSection);
         Assert.DoesNotContain("BorderThickness=\"0,0,0,1\"", rowTemplateSection);
     }
 

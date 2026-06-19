@@ -303,16 +303,16 @@
                     <customControls:BalloonCheckBox
                         x:Name="ExpensePinButton"
                         Grid.Column="2"
-                        ButtonIcon="{StaticResource Pin}"
                         ButtonSize="38"
-                        ButtonText="Pinned"
                         CheckedBackground="{StaticResource Brush.Info}"
                         CornerRadius="12"
                         DefaultBackground="{StaticResource Brush.Background.Surface}"
                         IconSize="14"
                         IsChecked="{Binding IsPinned, Mode=TwoWay}"
                         IsEnabled="{Binding CanEditFields}"
-                        ToolTip="Pin transaction" />
+                        ToolTip="Pin transaction"
+                        UncheckedIcon="{StaticResource Pin}"
+                        UncheckedText="Pinned" />
                 </Grid>
             </StackPanel>
 

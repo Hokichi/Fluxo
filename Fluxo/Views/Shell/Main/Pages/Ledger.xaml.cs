@@ -89,6 +89,27 @@ public partial class Ledger : UserControl
         _ = viewModel.RemoveTransactionCommand.ExecuteAsync(transaction);
     }
 
+    private void OnDeleteOrDiscardTransactionClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel)
+        {
+            return;
+        }
+
+        if (transaction.IsEditing)
+        {
+            _ = viewModel.DiscardTransactionEditCommand.ExecuteAsync(transaction);
+            if (sender is ToggleButton toggleButton)
+                toggleButton.IsChecked = transaction.IsEditing;
+            return;
+        }
+
+        OnRemoveTransactionClick(sender, e);
+        if (sender is ToggleButton deleteToggleButton)
+            deleteToggleButton.IsChecked = transaction.IsEditing;
+    }
+
     private void OnLedgerRowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
@@ -356,8 +377,17 @@ public partial class Ledger : UserControl
 
     private async void OnRemoveSelectedTransactionsClick(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not LedgerVM viewModel || !viewModel.HasSelectedVisibleTransactions)
+        if (DataContext is not LedgerVM viewModel)
+        {
+            ResetBatchActionToggle(sender, null);
             return;
+        }
+
+        if (!viewModel.HasSelectedVisibleTransactions)
+        {
+            ResetBatchActionToggle(sender, viewModel);
+            return;
+        }
 
         var count = viewModel.TransactionsView.Cast<LedgerTransactionItemVM>()
             .Count(transaction => transaction.IsSelectedForBatch);
@@ -369,9 +399,19 @@ public partial class Ledger : UserControl
             MessageBoxImage.Warning);
 
         if (result != MessageBoxResult.Yes)
+        {
+            ResetBatchActionToggle(sender, viewModel);
             return;
+        }
 
         await viewModel.RemoveSelectedTransactionsCommand.ExecuteAsync(null);
+        ResetBatchActionToggle(sender, viewModel);
+    }
+
+    private static void ResetBatchActionToggle(object sender, LedgerVM? viewModel)
+    {
+        if (sender is ToggleButton toggleButton && viewModel is not null)
+            toggleButton.IsChecked = viewModel.AreAllVisibleTransactionsSelected;
     }
 
     public async void ExportDataFromShortcutAsync()

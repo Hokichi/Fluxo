@@ -23,6 +23,28 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
     }
 
     [Fact]
+    public void BalloonCheckBox_DefinesCheckedAndUncheckedIconTextDependencyProperties()
+    {
+        var source = File.ReadAllText(ResolveBalloonCheckBoxPath());
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
+        var checkBoxStyle = ExtractSection(
+            xaml,
+            "<Style TargetType=\"{x:Type c:BalloonCheckBox}\">",
+            "<Style TargetType=\"{x:Type c:SwipeRevealContainer}\">");
+
+        Assert.Contains("public static readonly DependencyProperty UncheckedIconProperty =", source);
+        Assert.Contains("public static readonly DependencyProperty CheckedIconProperty =", source);
+        Assert.Contains("public static readonly DependencyProperty UncheckedTextProperty =", source);
+        Assert.Contains("public static readonly DependencyProperty CheckedTextProperty =", source);
+        Assert.Contains("public object? UncheckedIcon", source);
+        Assert.Contains("public object? CheckedIcon", source);
+        Assert.Contains("public string? UncheckedText", source);
+        Assert.Contains("public string? CheckedText", source);
+        Assert.Contains("Text=\"{Binding ActiveButtonText, RelativeSource={RelativeSource TemplatedParent}}\"", checkBoxStyle);
+        Assert.DoesNotContain("Text=\"{TemplateBinding ButtonText}\"", checkBoxStyle);
+    }
+
+    [Fact]
     public void BalloonCheckBox_NoLongerExposesExpandedWidthOverride()
     {
         var source = File.ReadAllText(ResolveBalloonCheckBoxPath());
@@ -65,6 +87,15 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
 
     private static string ResolveBalloonCheckBoxPath() =>
         RepositoryPaths.File("Fluxo.Resources", "CustomControls", "BalloonCheckBox.cs");
+
+    private static string ExtractSection(string source, string startMarker, string endMarker)
+    {
+        var start = source.IndexOf(startMarker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Start marker '{startMarker}' was not found.");
+        var end = source.IndexOf(endMarker, start, StringComparison.Ordinal);
+        Assert.True(end > start, $"End marker '{endMarker}' was not found.");
+        return source[start..end];
+    }
 
     private static void RunOnStaThread(Action action)
     {

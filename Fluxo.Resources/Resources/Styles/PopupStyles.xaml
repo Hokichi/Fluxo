@@ -55,13 +55,15 @@
                                     <!--  History  -->
                                     <c:BalloonCheckBox
                                         x:Name="PART_HistoryButton"
-                                        ButtonIcon="{StaticResource History}"
-                                        ButtonText="Show History"
+                                        CheckedIcon="{StaticResource History}"
+                                        CheckedText="Hide History"
                                         CheckedBackground="{StaticResource Brush.Mint}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
                                         IsChecked="{TemplateBinding IsHistoryOpen}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderCheckBoxStyle}"
+                                        UncheckedIcon="{StaticResource History}"
+                                        UncheckedText="Show History"
                                         Visibility="{TemplateBinding ShowHistoryButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
 
@@ -202,7 +204,6 @@
                             <Setter TargetName="PopupTitleContentPresenter" Property="Visibility" Value="Collapsed" />
                         </Trigger>
                         <Trigger Property="IsHistoryOpen" Value="True">
-                            <Setter TargetName="PART_HistoryButton" Property="ButtonText" Value="Hide History" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -76,7 +76,7 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.True(namePanelIndex >= 0);
         Assert.True(pinIndex > namePanelIndex);
         Assert.True(amountIndex > pinIndex);
-        Assert.Contains("ButtonIcon=\"{StaticResource Pin}\"", xaml);
+        Assert.Contains("UncheckedIcon=\"{StaticResource Pin}\"", xaml);
         Assert.Contains("IsChecked=\"{Binding IsPinned, Mode=TwoWay}\"", xaml);
         Assert.Contains("ShowDeleteButton=\"True\"", xaml);
         Assert.Contains("protected override async void OnDeleteButtonClick()", codeBehind);
