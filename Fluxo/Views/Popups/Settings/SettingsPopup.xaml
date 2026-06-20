@@ -91,6 +91,18 @@
                 </RadioButton>
 
                 <RadioButton
+                    x:Name="DebtIousTabButton"
+                    GroupName="SettingsTabs"
+                    PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
+                    Style="{StaticResource TabButtonStyle}"
+                    Tag="Debt/IoUs">
+                    <components:Icon
+                        Width="12"
+                        Path="{StaticResource CreditCardMinusSolid}"
+                        Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
+                </RadioButton>
+
+                <RadioButton
                     x:Name="TagsTabButton"
                     GroupName="SettingsTabs"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
@@ -150,6 +162,12 @@
             <tabs:SettingsGoalsTab
                 x:Name="GoalsTabContent"
                 DataContext="{Binding GoalsTab}"
+                Opacity="0"
+                Visibility="Collapsed" />
+
+            <tabs:SettingsDebtIousTab
+                x:Name="DebtIousTabContent"
+                DataContext="{Binding DebtIousTab}"
                 Opacity="0"
                 Visibility="Collapsed" />
 

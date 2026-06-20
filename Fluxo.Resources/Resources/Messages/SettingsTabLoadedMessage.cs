@@ -8,7 +8,8 @@ public enum SettingsTabKey
     FixedExpenses = 1 << 2,
     Goals = 1 << 3,
     Tags = 1 << 4,
-    Personalization = 1 << 5
+    DebtIous = 1 << 5,
+    Personalization = 1 << 6
 }
 
 public readonly record struct SettingsTabLoaded(
