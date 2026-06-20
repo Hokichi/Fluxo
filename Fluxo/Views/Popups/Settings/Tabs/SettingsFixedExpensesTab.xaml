@@ -125,7 +125,7 @@
             </DataTemplate.Triggers>
         </DataTemplate>
     </UserControl.Resources>
-    <Border Style="{StaticResource PanelStyle}">
+    <Border>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

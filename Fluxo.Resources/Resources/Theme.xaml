@@ -33,9 +33,11 @@
 
     <Color x:Key="Color.Mint">#3FE0A1</Color>
     <Color x:Key="Color.Mint.Muted">#2BBE89</Color>
+    <Color x:Key="Color.Mint.Dark">#020b07</Color>
 
     <SolidColorBrush x:Key="Brush.Mint" Color="{StaticResource Color.Mint}" />
     <SolidColorBrush x:Key="Brush.Mint.Muted" Color="{StaticResource Color.Mint.Muted}" />
+    <SolidColorBrush x:Key="Brush.Mint.Dark" Color="{StaticResource Color.Mint.Dark}" />
 
     <!--  =============================  -->
     <!--  TEXT COLORS  -->

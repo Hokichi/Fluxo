@@ -327,11 +327,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="RootBorder">
+                    <Border x:Name="RootBorder" CornerRadius="0 8 8 0">
                         <Grid Background="Transparent">
                             <Border
                                 x:Name="SelectedStrip"
-                                Width="4"
+                                Width="2"
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
                                 Visibility="Collapsed" />
@@ -446,7 +446,7 @@
                 <ControlTemplate TargetType="ToggleButton">
                     <Border
                         x:Name="Track"
-                        Background="{StaticResource Brush.Background.Hover}"
+                        Background="{StaticResource Brush.Mint.Dark}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
                         CornerRadius="10">

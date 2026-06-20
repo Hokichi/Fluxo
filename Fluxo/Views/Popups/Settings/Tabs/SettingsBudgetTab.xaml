@@ -5,372 +5,374 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:enums="clr-namespace:Fluxo.Core.Enums;assembly=Fluxo.Core"
     xmlns:viewModels="clr-namespace:Fluxo.ViewModels.Popups.Settings">
-    <!--  TODO: Might consider putting an offset to allocation recalculation time  -->
-    <Border Style="{StaticResource PanelStyle}">
-        <Grid>
-            <StackPanel>
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasAccounts}" Value="False">
-                                <Setter Property="Effect">
-                                    <Setter.Value>
-                                        <BlurEffect Radius="15" />
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter Property="Opacity" Value="0.4" />
-                                <Setter Property="IsHitTestVisible" Value="False" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Style>
-                <Grid>
+
+    <Grid>
+        <StackPanel>
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasAccounts}" Value="False">
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <BlurEffect Radius="15" />
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Opacity" Value="0.4" />
+                            <Setter Property="IsHitTestVisible" Value="False" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <Grid Margin="0,0,0,16">
+                <StackPanel>
                     <TextBlock
-                        VerticalAlignment="Center"
+                        VerticalAlignment="Top"
                         FontFamily="{StaticResource Bold}"
                         FontSize="16"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Budget Management" />
-
-                    <customControls:SegmentedToggleGroup
-                        Width="240"
-                        HorizontalAlignment="Right"
-                        SelectedValue="{Binding SelectedBudgetManagementPage, Mode=TwoWay}">
-                        <customControls:SegmentedToggleOption Content="Allocation" Value="{x:Static viewModels:SettingsBudgetManagementPage.Allocation}" />
-                        <customControls:SegmentedToggleOption Content="Configuration" Value="{x:Static viewModels:SettingsBudgetManagementPage.Configuration}" />
-                    </customControls:SegmentedToggleGroup>
-                </Grid>
-                <TextBlock
-                    Margin="0,8,0,16"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="11"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="Manage allocation targets and budget rules." />
-
-                <StackPanel Visibility="{Binding IsAllocationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Needs" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="-"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Needs:-1" />
-                                    <TextBlock
-                                        Width="56"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
-                                        TextAlignment="Center" />
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="+"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Needs:+1" />
-                                </StackPanel>
-                            </Grid>
-                            <Slider
-                                Grid.Row="1"
-                                IsSnapToTickEnabled="True"
-                                Maximum="100"
-                                Minimum="0"
-                                Style="{StaticResource BudgetSliderStyle}"
-                                TickFrequency="1"
-                                Value="{Binding NeedsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                                Grid.Row="2"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding NeedsAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
-                                ToolTip="{Binding NeedsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Wants" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="-"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Wants:-1" />
-                                    <TextBlock
-                                        Width="56"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
-                                        TextAlignment="Center" />
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="+"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Wants:+1" />
-                                </StackPanel>
-                            </Grid>
-                            <Slider
-                                Grid.Row="1"
-                                IsSnapToTickEnabled="True"
-                                Maximum="100"
-                                Minimum="0"
-                                Style="{StaticResource BudgetSliderStyle}"
-                                TickFrequency="1"
-                                Value="{Binding WantsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                                Grid.Row="2"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding WantsAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
-                                ToolTip="{Binding WantsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    FontFamily="{StaticResource Bold}"
-                                    FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="Invest" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="-"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Invest:-1" />
-                                    <TextBlock
-                                        Width="56"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
-                                        TextAlignment="Center" />
-                                    <Button
-                                        Click="OnAllocationAdjustButtonClick"
-                                        Content="+"
-                                        MouseLeave="OnAllocationAdjustButtonMouseLeave"
-                                        PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
-                                        PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
-                                        Style="{StaticResource StepperButtonStyle}"
-                                        Tag="Invest:+1" />
-                                </StackPanel>
-                            </Grid>
-                            <Slider
-                                Grid.Row="1"
-                                IsSnapToTickEnabled="True"
-                                Maximum="100"
-                                Minimum="0"
-                                Style="{StaticResource BudgetSliderStyle}"
-                                TickFrequency="1"
-                                Value="{Binding InvestAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                                Grid.Row="2"
-                                HorizontalAlignment="Right"
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding InvestAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
-                                ToolTip="{Binding InvestAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
-                        </Grid>
-                    </Border>
-
                     <TextBlock
-                        Margin="0,0,0,12"
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Danger}"
-                        Text="{Binding BudgetAllocationErrorMessage}"
-                        Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Margin="0,8,0,0"
+                        FontFamily="{StaticResource Medium}"
+                        FontSize="11"
+                        Foreground="{StaticResource Brush.Text.Secondary}"
+                        Text="Manage allocation targets and budget rules." />
                 </StackPanel>
 
-                <StackPanel Visibility="{Binding IsConfigurationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                <customControls:SegmentedToggleGroup
+                    Width="240"
+                    Margin="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    SelectedValue="{Binding SelectedBudgetManagementPage, Mode=TwoWay}">
+                    <customControls:SegmentedToggleOption Content="Allocation" Value="{x:Static viewModels:SettingsBudgetManagementPage.Allocation}" />
+                    <customControls:SegmentedToggleOption Content="Configuration" Value="{x:Static viewModels:SettingsBudgetManagementPage.Configuration}" />
+                </customControls:SegmentedToggleGroup>
+            </Grid>
 
-                    <Border Style="{StaticResource RowCardStyle}">
+            <StackPanel Visibility="{Binding IsAllocationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
-                                VerticalAlignment="Center"
                                 FontFamily="{StaticResource Bold}"
+                                FontSize="14"
                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Spending Limit" />
-                            <customControls:MoneyTextBox
-                                Grid.Column="1"
-                                Language="en-US"
-                                Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                Text="{Binding AllocationLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                                Text="Needs" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button
+                                    Click="OnAllocationAdjustButtonClick"
+                                    Content="-"
+                                    MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                    PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                    PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                    Style="{StaticResource StepperButtonStyle}"
+                                    Tag="Needs:-1" />
+                                <TextBlock
+                                    Width="56"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
+                                    TextAlignment="Center" />
+                                <Button
+                                    Click="OnAllocationAdjustButtonClick"
+                                    Content="+"
+                                    MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                    PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                    PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                    Style="{StaticResource StepperButtonStyle}"
+                                    Tag="Needs:+1" />
+                            </StackPanel>
                         </Grid>
-                    </Border>
+                        <Slider
+                            Grid.Row="1"
+                            IsSnapToTickEnabled="True"
+                            Maximum="100"
+                            Minimum="0"
+                            Style="{StaticResource BudgetSliderStyle}"
+                            TickFrequency="1"
+                            Value="{Binding NeedsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            Grid.Row="2"
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding NeedsAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
+                            ToolTip="{Binding NeedsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                    </Grid>
+                </Border>
 
-                    <Border Style="{StaticResource RowCardStyle}">
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="360" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
-                                VerticalAlignment="Center"
                                 FontFamily="{StaticResource Bold}"
+                                FontSize="14"
                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Allocation Period" />
-                            <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding AllocationPeriod, Mode=TwoWay}">
-                                <customControls:SegmentedToggleOption Content="Weekly" Value="{x:Static enums:AllocationPeriod.Weekly}" />
-                                <customControls:SegmentedToggleOption Content="Biweekly" Value="{x:Static enums:AllocationPeriod.Biweekly}" />
-                                <customControls:SegmentedToggleOption Content="Monthly" Value="{x:Static enums:AllocationPeriod.Monthly}" />
-                                <customControls:SegmentedToggleOption Content="Quarterly" Value="{x:Static enums:AllocationPeriod.Quarterly}" />
-                                <customControls:SegmentedToggleOption Content="Yearly" Value="{x:Static enums:AllocationPeriod.Yearly}" />
-                            </customControls:SegmentedToggleGroup>
+                                Text="Wants" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button
+                                    Click="OnAllocationAdjustButtonClick"
+                                    Content="-"
+                                    MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                    PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                    PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                    Style="{StaticResource StepperButtonStyle}"
+                                    Tag="Wants:-1" />
+                                <TextBlock
+                                    Width="56"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
+                                    TextAlignment="Center" />
+                                <Button
+                                    Click="OnAllocationAdjustButtonClick"
+                                    Content="+"
+                                    MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                    PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                    PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                    Style="{StaticResource StepperButtonStyle}"
+                                    Tag="Wants:+1" />
+                            </StackPanel>
                         </Grid>
-                    </Border>
+                        <Slider
+                            Grid.Row="1"
+                            IsSnapToTickEnabled="True"
+                            Maximum="100"
+                            Minimum="0"
+                            Style="{StaticResource BudgetSliderStyle}"
+                            TickFrequency="1"
+                            Value="{Binding WantsAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            Grid.Row="2"
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding WantsAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
+                            ToolTip="{Binding WantsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                    </Grid>
+                </Border>
 
-                    <Border Style="{StaticResource RowCardStyle}">
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="220" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
-                                VerticalAlignment="Center"
                                 FontFamily="{StaticResource Bold}"
+                                FontSize="14"
                                 Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Period Start" />
-                            <Grid Grid.Column="1">
-                                <ComboBox
-                                    DisplayMemberPath="Label"
-                                    ItemsSource="{Binding WeekdayPeriodStartOptions}"
-                                    SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
-                                    SelectedValuePath="Value"
-                                    Style="{StaticResource FluxoComboBoxStyle}"
-                                    Visibility="{Binding IsWeekdayPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                <customControls:NumericUpDown
-                                    LowerLimit="1"
-                                    UpperLimit="28"
-                                    Value="{Binding PeriodStart, Mode=TwoWay}"
-                                    Visibility="{Binding IsMonthlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                <ComboBox
-                                    DisplayMemberPath="Label"
-                                    ItemsSource="{Binding QuarterlyPeriodStartOptions}"
-                                    SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
-                                    SelectedValuePath="Value"
-                                    Style="{StaticResource FluxoComboBoxStyle}"
-                                    Visibility="{Binding IsQuarterlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                <ComboBox
-                                    DisplayMemberPath="Label"
-                                    ItemsSource="{Binding YearlyPeriodStartOptions}"
-                                    SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
-                                    SelectedValuePath="Value"
-                                    Style="{StaticResource FluxoComboBoxStyle}"
-                                    Visibility="{Binding IsYearlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            </Grid>
+                                Text="Invest" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button
+                                    Click="OnAllocationAdjustButtonClick"
+                                    Content="-"
+                                    MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                    PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                    PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                    Style="{StaticResource StepperButtonStyle}"
+                                    Tag="Invest:-1" />
+                                <TextBlock
+                                    Width="56"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
+                                    TextAlignment="Center" />
+                                <Button
+                                    Click="OnAllocationAdjustButtonClick"
+                                    Content="+"
+                                    MouseLeave="OnAllocationAdjustButtonMouseLeave"
+                                    PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
+                                    PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
+                                    Style="{StaticResource StepperButtonStyle}"
+                                    Tag="Invest:+1" />
+                            </StackPanel>
                         </Grid>
-                    </Border>
+                        <Slider
+                            Grid.Row="1"
+                            IsSnapToTickEnabled="True"
+                            Maximum="100"
+                            Minimum="0"
+                            Style="{StaticResource BudgetSliderStyle}"
+                            TickFrequency="1"
+                            Value="{Binding InvestAllocationPercentage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            Grid.Row="2"
+                            HorizontalAlignment="Right"
+                            FontFamily="{StaticResource Medium}"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding InvestAllocationAmountText, Converter={StaticResource MoneyDisplayConverter}}"
+                            ToolTip="{Binding InvestAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                    </Grid>
+                </Border>
 
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="300" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Budget Rollover" />
-                            <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding RolloverPolicy, Mode=TwoWay}">
-                                <customControls:SegmentedToggleOption Content="Ignore" Value="{x:Static enums:RolloverPolicy.None}" />
-                                <customControls:SegmentedToggleOption Content="Matching" Value="{x:Static enums:RolloverPolicy.Matching}" />
-                                <customControls:SegmentedToggleOption Content="Pooled" Value="{x:Static enums:RolloverPolicy.Pooled}" />
-                            </customControls:SegmentedToggleGroup>
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource RowCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="300" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Overspend Behavior" />
-                            <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding OverspendPolicy, Mode=TwoWay}">
-                                <customControls:SegmentedToggleOption Content="Ignore" Value="{x:Static enums:OverspendPolicy.Ignore}" />
-                                <customControls:SegmentedToggleOption Content="Soft Debt" Value="{x:Static enums:OverspendPolicy.SoftDebt}" />
-                                <customControls:SegmentedToggleOption Content="Hard Stop" Value="{x:Static enums:OverspendPolicy.HardStop}" />
-                            </customControls:SegmentedToggleGroup>
-                        </Grid>
-                    </Border>
-                </StackPanel>
+                <TextBlock
+                    Margin="0,0,0,12"
+                    FontFamily="{StaticResource Bold}"
+                    Foreground="{StaticResource Brush.Danger}"
+                    Text="{Binding BudgetAllocationErrorMessage}"
+                    Visibility="{Binding HasBudgetAllocationError, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
-            <Button
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Click="OnSpendingAmountGateActionClick"
-                Content="Add An Account To Adjust Allocation"
-                FontFamily="{StaticResource Bold}"
-                FontSize="13"
-                Style="{StaticResource TextOnlyButtonStyle}"
-                Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-        </Grid>
-    </Border>
+
+            <StackPanel Visibility="{Binding IsConfigurationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="180" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Spending Limit" />
+                        <customControls:MoneyTextBox
+                            Grid.Column="1"
+                            Language="en-US"
+                            Style="{StaticResource RoundedMoneyTextInputStyle}"
+                            Text="{Binding AllocationLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="360" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Allocation Period" />
+                        <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding AllocationPeriod, Mode=TwoWay}">
+                            <customControls:SegmentedToggleOption Content="Weekly" Value="{x:Static enums:AllocationPeriod.Weekly}" />
+                            <customControls:SegmentedToggleOption Content="Biweekly" Value="{x:Static enums:AllocationPeriod.Biweekly}" />
+                            <customControls:SegmentedToggleOption Content="Monthly" Value="{x:Static enums:AllocationPeriod.Monthly}" />
+                            <customControls:SegmentedToggleOption Content="Quarterly" Value="{x:Static enums:AllocationPeriod.Quarterly}" />
+                            <customControls:SegmentedToggleOption Content="Yearly" Value="{x:Static enums:AllocationPeriod.Yearly}" />
+                        </customControls:SegmentedToggleGroup>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="220" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Period Start" />
+                        <Grid Grid.Column="1">
+                            <ComboBox
+                                DisplayMemberPath="Label"
+                                ItemsSource="{Binding WeekdayPeriodStartOptions}"
+                                SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
+                                SelectedValuePath="Value"
+                                Style="{StaticResource FluxoComboBoxStyle}"
+                                Visibility="{Binding IsWeekdayPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <customControls:NumericUpDown
+                                LowerLimit="1"
+                                UpperLimit="28"
+                                Visibility="{Binding IsMonthlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Value="{Binding PeriodStart, Mode=TwoWay}" />
+                            <ComboBox
+                                DisplayMemberPath="Label"
+                                ItemsSource="{Binding QuarterlyPeriodStartOptions}"
+                                SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
+                                SelectedValuePath="Value"
+                                Style="{StaticResource FluxoComboBoxStyle}"
+                                Visibility="{Binding IsQuarterlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <ComboBox
+                                DisplayMemberPath="Label"
+                                ItemsSource="{Binding YearlyPeriodStartOptions}"
+                                SelectedValue="{Binding PeriodStart, Mode=TwoWay}"
+                                SelectedValuePath="Value"
+                                Style="{StaticResource FluxoComboBoxStyle}"
+                                Visibility="{Binding IsYearlyPeriodStartVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="300" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Budget Rollover" />
+                        <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding RolloverPolicy, Mode=TwoWay}">
+                            <customControls:SegmentedToggleOption Content="Ignore" Value="{x:Static enums:RolloverPolicy.None}" />
+                            <customControls:SegmentedToggleOption Content="Matching" Value="{x:Static enums:RolloverPolicy.Matching}" />
+                            <customControls:SegmentedToggleOption Content="Pooled" Value="{x:Static enums:RolloverPolicy.Pooled}" />
+                        </customControls:SegmentedToggleGroup>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource RowCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="300" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Overspend Behavior" />
+                        <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding OverspendPolicy, Mode=TwoWay}">
+                            <customControls:SegmentedToggleOption Content="Ignore" Value="{x:Static enums:OverspendPolicy.Ignore}" />
+                            <customControls:SegmentedToggleOption Content="Soft Debt" Value="{x:Static enums:OverspendPolicy.SoftDebt}" />
+                            <customControls:SegmentedToggleOption Content="Hard Stop" Value="{x:Static enums:OverspendPolicy.HardStop}" />
+                        </customControls:SegmentedToggleGroup>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+        <Button
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Click="OnSpendingAmountGateActionClick"
+            Content="Add An Account To Adjust Allocation"
+            FontFamily="{StaticResource Bold}"
+            FontSize="13"
+            Style="{StaticResource TextOnlyButtonStyle}"
+            Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+    </Grid>
 </UserControl>

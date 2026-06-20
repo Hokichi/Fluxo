@@ -33,8 +33,8 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource PanelStyle}">
-        <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">
+    <Border>
+        <customControls:FadingScrollViewer Margin="0" VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <TextBlock
                     FontFamily="{StaticResource Bold}"
@@ -69,87 +69,90 @@
                     Text="Security" />
 
                 <Border Margin="0,8,0,0" Style="{StaticResource RowCardStyle}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
+                    <StackPanel>
+                        <Grid>
                             <TextBlock
                                 FontFamily="{StaticResource Bold}"
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="Lock UI when away" />
+                            <ToggleButton
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding IsAppAutoLocked, Mode=TwoWay}"
+                                Style="{StaticResource ToggleSwitchStyle}" />
+                        </Grid>
+
+                        <Border
+                            Height="1"
+                            Margin="0,16,0,0"
+                            Background="{StaticResource Brush.Border.Subtle}" />
+
+                        <Grid Margin="0,16,0,0" Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock
-                                Margin="0,6,0,0"
-                                FontFamily="{StaticResource Medium}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="Lock fluxo after inactivity."
-                                TextWrapping="Wrap" />
-                        </StackPanel>
-                        <ToggleButton
-                            Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Auto-lock after" />
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                <customControls:NumericUpDown
+                                    Width="120"
+                                    LowerLimit="1"
+                                    Value="{Binding AppAutoLockedInterval, Mode=TwoWay}" />
+                                <TextBlock
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Regular}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="seconds" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border
+                            Height="1"
+                            Margin="0,16,0,0"
+                            Background="{StaticResource Brush.Border.Subtle}"
+                            Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                        <TextBlock
+                            Margin="0,16,0,0"
                             VerticalAlignment="Center"
-                            IsChecked="{Binding IsAppAutoLocked, Mode=TwoWay}"
-                            Style="{StaticResource ToggleSwitchStyle}" />
-                    </Grid>
-                </Border>
+                            FontFamily="{StaticResource Bold}"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Unlock password" />
 
-                <StackPanel Margin="0,8,0,0" Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="Auto-lock after" />
-                    <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                        <customControls:NumericUpDown
-                            Width="120"
-                            LowerLimit="1"
-                            Value="{Binding AppAutoLockedInterval, Mode=TwoWay}" />
-                        <TextBox
-                            Width="96"
-                            Margin="8,0,0,0"
-                            IsReadOnly="True"
-                            Style="{StaticResource RoundedTextInputStyle}"
-                            Text="seconds" />
+                        <Grid Margin="0,8,0,0">
+                            <Grid>
+                                <PasswordBox
+                                    x:Name="UiLockingPasswordBox"
+                                    PasswordChanged="OnUiLockingPasswordBoxPasswordChanged"
+                                    Style="{StaticResource RoundedPasswordInputStyle}"
+                                    Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+
+                                <TextBox
+                                    x:Name="UiLockingPasswordVisibleTextBox"
+                                    Background="{StaticResource Brush.Background.Surface}"
+                                    Style="{StaticResource RoundedTextInputStyle}"
+                                    Text="{Binding UiLockingPassword, UpdateSourceTrigger=PropertyChanged}"
+                                    TextChanged="OnUiLockingPasswordVisibleTextBoxTextChanged"
+                                    Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                <customControls:BalloonCheckBox
+                                    Margin="8,0,8,0"
+                                    HorizontalAlignment="Right"
+                                    CheckedBackground="Transparent"
+                                    CheckedIcon="{StaticResource EyeOff}"
+                                    CheckedText="Hide password"
+                                    DefaultBackground="Transparent"
+                                    HoveredBackground="Transparent"
+                                    IconSize="14"
+                                    IsChecked="{Binding IsUiLockingPasswordVisible, Mode=TwoWay}"
+                                    ShouldExpand="False"
+                                    UncheckedIcon="{StaticResource Eye}"
+                                    UncheckedText="Show password" />
+                            </Grid>
+                        </Grid>
                     </StackPanel>
-                </StackPanel>
-
-                <TextBlock
-                    Margin="0,16,0,0"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Unlock password" />
-                <Grid Margin="0,8,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid>
-                        <PasswordBox
-                            x:Name="UiLockingPasswordBox"
-                            PasswordChanged="OnUiLockingPasswordBoxPasswordChanged"
-                            Style="{StaticResource RoundedPasswordInputStyle}"
-                            Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                        <TextBox
-                            x:Name="UiLockingPasswordVisibleTextBox"
-                            Background="{StaticResource Brush.Background.Surface}"
-                            Style="{StaticResource RoundedTextInputStyle}"
-                            Text="{Binding UiLockingPassword, UpdateSourceTrigger=PropertyChanged}"
-                            TextChanged="OnUiLockingPasswordVisibleTextBoxTextChanged"
-                            Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    </Grid>
-                    <customControls:BalloonCheckBox
-                        Grid.Column="1"
-                        Margin="8,0,0,0"
-                        CheckedBackground="Transparent"
-                        CheckedIcon="{StaticResource EyeOff}"
-                        CheckedText="Hide password"
-                        DefaultBackground="Transparent"
-                        HoveredBackground="{StaticResource Brush.Background.Hover}"
-                        IsChecked="{Binding IsUiLockingPasswordVisible, Mode=TwoWay}"
-                        ShouldExpand="False"
-                        UncheckedIcon="{StaticResource Eye}"
-                        UncheckedText="Show password" />
-                </Grid>
+                </Border>
 
                 <TextBlock
                     Margin="0,24,0,0"

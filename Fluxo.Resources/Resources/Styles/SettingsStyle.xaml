@@ -4,7 +4,7 @@
     xmlns:components="clr-namespace:Fluxo.Resources.Components">
     <Style x:Key="PanelStyle" TargetType="Border">
         <Setter Property="Padding" Value="18" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="18" />
@@ -15,8 +15,8 @@
         <Setter Property="Padding" Value="14" />
         <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
     </Style>
 
     <Style x:Key="ItemCheckBoxStyle" TargetType="CheckBox">
@@ -109,5 +109,4 @@
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
     </Style>
-
 </ResourceDictionary>

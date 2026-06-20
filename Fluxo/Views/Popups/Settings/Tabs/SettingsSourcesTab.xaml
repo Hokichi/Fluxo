@@ -92,7 +92,7 @@
                             Orientation="Horizontal"
                             Visibility="Collapsed">
                             <customControls:BalloonButton
-                                ButtonIcon="{StaticResource CircleMinusSolid}"
+                                ButtonIcon="{StaticResource Delete}"
                                 Click="OnRowActionClick"
                                 HoveredBackground="{StaticResource Brush.Danger}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
@@ -151,7 +151,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource PanelStyle}">
+    <Border>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -173,7 +173,7 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
                     <customControls:BalloonButton
-                        ButtonIcon="{StaticResource CircleMinusSolid}"
+                        ButtonIcon="{StaticResource Delete}"
                         Click="OnBatchActionClick"
                         HoveredBackground="{StaticResource Brush.Danger}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"

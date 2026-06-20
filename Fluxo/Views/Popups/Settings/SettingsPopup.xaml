@@ -39,9 +39,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border
-            x:Name="SettingsSideMenu"
-            Style="{StaticResource PanelStyle}">
+        <Border x:Name="SettingsSideMenu" Style="{StaticResource PanelStyle}">
             <StackPanel>
                 <RadioButton
                     x:Name="SourcesTabButton"
@@ -133,23 +131,28 @@
         <Grid
             x:Name="SettingsContentHost"
             Grid.Column="2"
+            Margin="0,24"
             Focusable="True">
             <tabs:SettingsBudgetTab
                 x:Name="BudgetTabContent"
                 DataContext="{Binding BudgetTab}"
                 Opacity="0"
                 Visibility="Collapsed" />
+
             <tabs:SettingsSourcesTab x:Name="SourcesTabContent" DataContext="{Binding SourcesTab}" />
+
             <tabs:SettingsFixedExpensesTab
                 x:Name="FixedExpensesTabContent"
                 DataContext="{Binding FixedExpensesTab}"
                 Opacity="0"
                 Visibility="Collapsed" />
+
             <tabs:SettingsGoalsTab
                 x:Name="GoalsTabContent"
                 DataContext="{Binding GoalsTab}"
                 Opacity="0"
                 Visibility="Collapsed" />
+
             <tabs:SettingsTagsTab
                 x:Name="TagsTabContent"
                 DataContext="{Binding TagsTab}"
@@ -161,6 +164,7 @@
                 DataContext="{Binding PersonalizationTab}"
                 Opacity="0"
                 Visibility="Collapsed" />
+
             <tabs:SettingsAboutTab
                 x:Name="AboutTabContent"
                 DataContext="{Binding PersonalizationTab}"
