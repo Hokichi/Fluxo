@@ -57,6 +57,7 @@ public sealed class SettingsSpendingAmountGateTextTests
                 "Budget Management",
                 "Recurring Transactions",
                 "Goals",
+                "Debt/IoUs",
                 "Tags",
                 "Personalization",
                 "About"
@@ -95,7 +96,7 @@ public sealed class SettingsSpendingAmountGateTextTests
             "PreviewMouseLeftButtonDown=\"OnSettingsTabPreviewMouseLeftButtonDown\"",
             StringSplitOptions.None).Length - 1;
 
-        Assert.Equal(7, tabButtonCount);
+        Assert.Equal(8, tabButtonCount);
         Assert.Equal(tabButtonCount, guardedTabButtonCount);
     }
 
