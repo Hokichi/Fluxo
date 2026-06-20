@@ -5,7 +5,6 @@
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     x:Name="Root"
-    Width="1080"
     MaxHeight="800"
     PopupTitle="Income Detail">
 
@@ -160,7 +159,10 @@
         </DataTemplate>
     </customControls:BasePopup.Resources>
 
-    <Grid MaxHeight="600" Margin="24,0,24,24">
+    <Grid
+        Width="720"
+        MaxHeight="600"
+        Margin="24,0,24,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="16" />
@@ -249,7 +251,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="320" />
                 <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="240" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Border Style="{StaticResource PanelStyle}">
@@ -513,7 +515,10 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="History" />
                     <Grid Grid.Row="2">
-                        <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <customControls:FadingScrollViewer
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto"
+                            Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVisibilityConverter}}">
                             <ItemsControl ItemTemplate="{StaticResource AccountRecentActivityItemTemplate}" ItemsSource="{Binding RecentActivities}" />
                         </customControls:FadingScrollViewer>
                         <TextBlock
@@ -530,6 +535,3 @@
         </Grid>
     </Grid>
 </customControls:BasePopup>
-
-
-

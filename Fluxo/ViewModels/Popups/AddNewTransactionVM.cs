@@ -8,6 +8,7 @@ using Fluxo.Core.Budgeting;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Resources.CustomControls;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
@@ -46,41 +47,59 @@ public partial class AddNewTransactionVM : ObservableValidator
     [ObservableProperty]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateAmountText))]
     private decimal _amountText;
+
     [ObservableProperty] private bool _isExpense = true;
     [ObservableProperty] private bool _isGoal;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
     private bool _isUpdatingTagCollections;
     private int _visibleTagSlots = DefaultVisibleTagSlots;
+
     [ObservableProperty]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateNameText))]
     private string _nameText = string.Empty;
+
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private bool _isRecurring;
+    [ObservableProperty] private bool _isInstallments;
+    [ObservableProperty] private DateTime _installmentEndDate = DateTime.Today;
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _isHistoryOpen;
     [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedPinnedHistoryItem;
     [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedHistoryItem;
     [ObservableProperty] private RecurringPeriod _selectedRecurringPeriod = RecurringPeriod.Monthly;
+
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateRecurringTimeText))]
     private string _recurringTimeText = string.Empty;
+
     [ObservableProperty] private bool _isRecurringModeLocked;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
+
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedGoal))]
     private SavingGoalVM? _selectedGoal;
+
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedAccount))]
     private AccountVM? _selectedAccount;
+
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedTag))]
     private ExpenseTagVM? _selectedTag;
+
+    private DateTime? _installmentCalculationDateOverride;
+
+    internal DateTime InstallmentCalculationDate
+    {
+        get => _installmentCalculationDateOverride ?? DateTime.Today;
+        set => _installmentCalculationDateOverride = value.Date;
+    }
 
     public AddNewTransactionVM(
         MainVM mainViewModel,
@@ -126,6 +145,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public ObservableCollection<AddNewTransactionSuggestion> TransactionNameSuggestions { get; } = [];
     public AddNewTransactionHistoryListVM PinnedHistory { get; } = new();
     public AddNewTransactionHistoryListVM TransactionHistory { get; } = new();
+
     public IReadOnlyList<RecurringPeriod> RecurringPeriods { get; } =
     [
         RecurringPeriod.None,
@@ -133,6 +153,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RecurringPeriod.Biweekly,
         RecurringPeriod.Monthly
     ];
+
     public IReadOnlyList<RecurringTimeOption> WeekdayOptions { get; } =
     [
         new("Monday", "1"),
@@ -143,28 +164,37 @@ public partial class AddNewTransactionVM : ObservableValidator
         new("Saturday", "6"),
         new("Sunday", "7")
     ];
+
     public bool CanSave => !IsSaving && IsCurrentInputValid();
     public bool HasChanges => _isChangeTrackingInitialized && HasPendingTransactionInputChanges();
     public bool HasTransactionNameSuggestions => TransactionNameSuggestions.Count > 0;
-    public bool ShowRecurringDayInput => IsRecurring;
-    public bool ShowRecurringNoneInput => IsRecurring && SelectedRecurringPeriod == RecurringPeriod.None;
-    public bool ShowRecurringWeekdayInput => IsRecurring && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
-    public bool ShowRecurringMonthlyInput => IsRecurring && SelectedRecurringPeriod == RecurringPeriod.Monthly;
-    public bool ShowDateSelector => !IsRecurring;
-    public string DateOrRecurrenceLabel => IsRecurring ? "Recurrence" : "Date";
+    public bool IsRecurringTransactionMode => IsRecurring || IsInstallments;
+    public bool ShowRecurringDayInput => IsRecurringTransactionMode;
+    public bool ShowRecurringNoneInput => IsRecurringTransactionMode && SelectedRecurringPeriod == RecurringPeriod.None;
+    public bool ShowRecurringWeekdayInput => IsRecurringTransactionMode && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
+    public bool ShowRecurringMonthlyInput => IsRecurringTransactionMode && SelectedRecurringPeriod == RecurringPeriod.Monthly;
+    public bool ShowDateSelector => !IsRecurringTransactionMode;
+    public bool ShowRecurringToggle => !IsInstallments;
+    public bool ShowInstallmentsToggle => CanUseInstallments && IsInstallments;
+    public bool ShowInstallmentEndDate => IsInstallments;
+    public bool CanUseInstallments => !IsGoal && CanToggleRecurring;
+    public string DateOrRecurrenceLabel => IsRecurringTransactionMode ? "Recurrence" : "Date";
+    public string InstallmentSummaryText => BuildInstallmentSummaryText();
     public bool CanToggleRecurring => !IsRecurringModeLocked;
     public bool CanUseHistory => true;
     public bool CanEditTransactionName => !IsGoal;
     public bool CanEditCategory => IsExpense;
     public bool CanEditTags => IsExpense;
     public bool CanChangeTransactionType => !_isTransactionTypeLocked;
-    public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && !IsRecurring;
+    public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && !IsRecurringTransactionMode;
+
     public string PopupTitle => _popupPurpose switch
     {
         TransactionPopupPurpose.AddRecurringTransaction => "Add Recurring Transaction",
         TransactionPopupPurpose.EditRecurringTransaction => "Edit Recurring Transaction",
         _ => "Add New Transaction"
     };
+
     public bool ShowNoteField => !IsGoal;
     public bool ShowGoalField => IsGoal;
     public string NameValidationHint => GetValidationHint(nameof(NameText));
@@ -230,12 +260,17 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnAmountTextChanged(decimal value)
     {
         RefreshActiveValidation(nameof(AmountText));
+        OnPropertyChanged(nameof(InstallmentSummaryText));
         NotifyFormStateChanged();
     }
+
     partial void OnIsRecurringChanged(bool value)
     {
         if (value && string.IsNullOrWhiteSpace(RecurringTimeText))
             RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
+
+        if (value && IsInstallments)
+            IsInstallments = false;
 
         if (!CanPinTransaction)
             IsPinned = false;
@@ -245,36 +280,96 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowRecurringWeekdayInput));
         OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
         OnPropertyChanged(nameof(ShowDateSelector));
+        OnPropertyChanged(nameof(IsRecurringTransactionMode));
+        OnPropertyChanged(nameof(ShowRecurringToggle));
+        OnPropertyChanged(nameof(ShowInstallmentsToggle));
+        OnPropertyChanged(nameof(ShowInstallmentEndDate));
         OnPropertyChanged(nameof(DateOrRecurrenceLabel));
+        OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
+        RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
+
+    partial void OnIsInstallmentsChanged(bool value)
+    {
+        if (value)
+            IsRecurring = false;
+
+        if (!CanPinTransaction)
+            IsPinned = false;
+
+        OnPropertyChanged(nameof(ShowRecurringToggle));
+        OnPropertyChanged(nameof(ShowInstallmentsToggle));
+        OnPropertyChanged(nameof(IsRecurringTransactionMode));
+        OnPropertyChanged(nameof(ShowRecurringDayInput));
+        OnPropertyChanged(nameof(ShowRecurringNoneInput));
+        OnPropertyChanged(nameof(ShowRecurringWeekdayInput));
+        OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
+        OnPropertyChanged(nameof(ShowDateSelector));
+        OnPropertyChanged(nameof(DateOrRecurrenceLabel));
+        OnPropertyChanged(nameof(ShowInstallmentEndDate));
+        OnPropertyChanged(nameof(InstallmentSummaryText));
+        OnPropertyChanged(nameof(CanPinTransaction));
+        RefreshActiveValidation(nameof(AmountText));
+        NotifyFormStateChanged();
+    }
+
+    partial void OnInstallmentEndDateChanged(DateTime value)
+    {
+        OnPropertyChanged(nameof(InstallmentSummaryText));
+        RefreshActiveValidation(nameof(AmountText));
+        NotifyFormStateChanged();
+    }
+
     partial void OnSelectedRecurringPeriodChanged(RecurringPeriod value)
     {
         RecurringTimeText = GetDefaultRecurringTimeText(value);
         OnPropertyChanged(nameof(ShowRecurringNoneInput));
         OnPropertyChanged(nameof(ShowRecurringWeekdayInput));
         OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
+        OnPropertyChanged(nameof(InstallmentSummaryText));
+        RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
-    partial void OnRecurringTimeTextChanged(string value) => NotifyFormStateChanged();
-    partial void OnIsRecurringModeLockedChanged(bool value) => OnPropertyChanged(nameof(CanToggleRecurring));
+
+    partial void OnRecurringTimeTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(InstallmentSummaryText));
+        RefreshActiveValidation(nameof(AmountText));
+        NotifyFormStateChanged();
+    }
+
+    partial void OnIsRecurringModeLockedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanToggleRecurring));
+        OnPropertyChanged(nameof(CanUseInstallments));
+        OnPropertyChanged(nameof(ShowInstallmentsToggle));
+    }
+
     partial void OnIsPinnedChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnIsSavingChanged(bool value) => NotifyFormStateChanged();
+
     partial void OnNameTextChanged(string value)
     {
         RefreshActiveValidation(nameof(NameText));
         NotifyFormStateChanged();
         _ = RefreshTransactionNameSuggestionsAsync();
     }
+
     partial void OnNoteTextChanged(string value) => NotifyFormStateChanged();
+
     partial void OnSelectedDateChanged(DateTime value)
     {
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
+
     partial void OnSelectedExpenseCategoryChanged(ExpenseCategory value) => NotifyFormStateChanged();
+
     partial void OnSelectedGoalChanged(SavingGoalVM? value)
     {
         if (IsGoal)
@@ -286,6 +381,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         NotifyFormStateChanged();
     }
+
     partial void OnSelectedAccountChanged(AccountVM? value)
     {
         RefreshActiveValidation(nameof(AmountText));
@@ -310,6 +406,39 @@ public partial class AddNewTransactionVM : ObservableValidator
             return;
 
         ValidateAmountField();
+    }
+
+    public void HandleRecurringModeClick()
+    {
+        if (!CanToggleRecurring)
+            return;
+
+        if (!IsRecurring)
+        {
+            IsRecurring = true;
+            return;
+        }
+
+        if (CanUseInstallments)
+            IsInstallments = true;
+        else
+            IsRecurring = false;
+    }
+
+    public void HandleInstallmentsModeClick()
+    {
+        if (!CanToggleRecurring)
+            return;
+
+        if (IsInstallments)
+        {
+            IsInstallments = false;
+            IsRecurring = false;
+        }
+        else if (CanUseInstallments)
+        {
+            IsInstallments = true;
+        }
     }
 
     public void InitializeFromDraft(AddNewTransactionDraft draft)
@@ -348,6 +477,9 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
+        OnPropertyChanged(nameof(CanUseInstallments));
+        OnPropertyChanged(nameof(ShowInstallmentsToggle));
+        OnPropertyChanged(nameof(InstallmentSummaryText));
 
         if (!value || IsGoal)
             IsMoreTagsOpen = false;
@@ -374,9 +506,13 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
+        OnPropertyChanged(nameof(CanUseInstallments));
+        OnPropertyChanged(nameof(ShowInstallmentsToggle));
+        OnPropertyChanged(nameof(InstallmentSummaryText));
 
         if (value)
         {
+            IsInstallments = false;
             IsMoreTagsOpen = false;
             SyncGoalUpdateName();
         }
@@ -460,6 +596,9 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (!TryNormalizeRecurringTime(input.RecurringPeriod, input.RecurringTimeText, out var recurringTime))
                     return AddNewTransactionSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
 
+                if (!TryResolveRecurringSaveAmount(input, out var recurringAmount, out var recurringAmountValidationMessage))
+                    return AddNewTransactionSubmissionResult.Failure(recurringAmountValidationMessage);
+
                 var recurringType = input.IsGoal
                     ? RecurringTransactionType.GoalUpdate
                     : input.IsExpense
@@ -468,13 +607,15 @@ public partial class AddNewTransactionVM : ObservableValidator
 
                 var recurringName = input.IsGoal && input.GoalId is not null
                     ? BuildGoalUpdateName((await _appData.GetSavingGoalByIdAsync(input.GoalId.Value))?.Name ?? string.Empty)
-                    : BuildExpenseName(input.Name, input.Note, input.IsExpense ? "Recurring Expense" : "Recurring Income");
+                    : input.IsInstallments
+                        ? BuildInstallmentRecurringName(input.Name)
+                        : BuildExpenseName(input.Name, input.Note, input.IsExpense ? "Recurring Expense" : "Recurring Income");
 
                 var draftSaveResult = await _saveRecurringDraftAsync(new RecurringDraftSaveInput(
                     input.EditingRecurringTransactionId,
                     recurringType,
                     recurringName,
-                    input.Amount,
+                    recurringAmount,
                     input.RecurringPeriod,
                     recurringTime,
                     input.AccountId,
@@ -497,7 +638,10 @@ public partial class AddNewTransactionVM : ObservableValidator
             if (account is null)
                 return AddNewTransactionSubmissionResult.Failure("Please select a valid account.");
 
-            if (!TryValidateSpendingAmountAgainstSource(input.IsExpense, input.IsGoal, input.Amount, account, out var spendingValidationMessage))
+            if (!TryResolveRecurringSaveAmount(input, out var effectiveSaveAmount, out var recurringAmountMessage))
+                return AddNewTransactionSubmissionResult.Failure(recurringAmountMessage);
+
+            if (!TryValidateSpendingAmountAgainstSource(input.IsExpense, input.IsGoal, effectiveSaveAmount, account, out var spendingValidationMessage))
                 return AddNewTransactionSubmissionResult.Failure(spendingValidationMessage);
 
             var invalidationScope = DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications;
@@ -525,8 +669,10 @@ public partial class AddNewTransactionVM : ObservableValidator
 
                 recurring.Name = input.IsGoal && input.GoalId is not null
                     ? BuildGoalUpdateName((await _appData.GetSavingGoalByIdAsync(input.GoalId.Value))?.Name ?? string.Empty)
-                    : BuildExpenseName(input.Name, input.Note, input.IsExpense ? "Recurring Expense" : "Recurring Income");
-                recurring.Amount = input.Amount;
+                    : input.IsInstallments
+                        ? BuildInstallmentRecurringName(input.Name)
+                        : BuildExpenseName(input.Name, input.Note, input.IsExpense ? "Recurring Expense" : "Recurring Income");
+                recurring.Amount = effectiveSaveAmount;
                 recurring.RecurringPeriod = input.RecurringPeriod;
                 recurring.RecurringTime = recurringTime;
                 recurring.Type = recurringType;
@@ -761,6 +907,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         NameText = string.Empty;
         NoteText = string.Empty;
         SelectedDate = DateTime.Today;
+        InstallmentEndDate = DateTime.Today;
+        IsInstallments = false;
         IsRecurring = false;
         IsPinned = false;
         IsRecurringModeLocked = false;
@@ -833,10 +981,22 @@ public partial class AddNewTransactionVM : ObservableValidator
             return false;
         }
 
+        if (IsInstallments && !TryResolveInstallmentCount(
+                SelectedRecurringPeriod,
+                RecurringTimeText,
+                InstallmentEndDate,
+                InstallmentCalculationDate,
+                out _,
+                out validationMessage))
+        {
+            return false;
+        }
+
         input = new QuickTransactionInput(
             IsExpense,
             IsGoal,
-            IsRecurring,
+            IsRecurringTransactionMode,
+            IsInstallments,
             IsPinned,
             _editingRecurringTransactionId,
             SelectedRecurringPeriod,
@@ -844,6 +1004,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             AmountText,
             SelectedAccount.Id,
             SelectedDate.Date,
+            InstallmentEndDate.Date,
             RecurringTimeText.Trim(),
             NoteText.Trim(),
             category,
@@ -983,9 +1144,11 @@ public partial class AddNewTransactionVM : ObservableValidator
             case ExpenseCategory.Wants:
                 allocation.WantsDebt += debtDelta;
                 break;
+
             case ExpenseCategory.Savings:
                 allocation.InvestDebt += debtDelta;
                 break;
+
             default:
                 allocation.NeedsDebt += debtDelta;
                 break;
@@ -1471,6 +1634,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsExpense,
             IsGoal,
             IsRecurring,
+            IsInstallments,
             IsPinned,
             SelectedRecurringPeriod,
             NameText ?? string.Empty,
@@ -1478,6 +1642,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             RecurringTimeText ?? string.Empty,
             NoteText ?? string.Empty,
             SelectedDate.Date,
+            InstallmentEndDate.Date,
             SelectedExpenseCategory,
             SelectedAccount?.Id ?? NoAccountId,
             SelectedTag?.Id ?? NoTagId,
@@ -1592,7 +1757,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                && IsValidationSuccess(ValidateSelectedAccount(SelectedAccount, CreateValidationContext()))
                && IsValidationSuccess(ValidateSelectedTag(SelectedTag, CreateValidationContext()))
                && IsValidationSuccess(ValidateSelectedGoal(SelectedGoal, CreateValidationContext()))
-               && IsValidationSuccess(ValidateRecurringTimeText(RecurringTimeText, CreateValidationContext()));
+               && IsValidationSuccess(ValidateRecurringTimeText(RecurringTimeText, CreateValidationContext()))
+               && IsInstallmentInputValid();
     }
 
     private ValidationContext CreateValidationContext()
@@ -1660,7 +1826,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             return "Insufficient Balance";
 
         if (message.Contains("maximum spending", StringComparison.OrdinalIgnoreCase))
-            return "Overflow Balance";
+            return "Overflowing Balance";
 
         if (message.Contains("account limit", StringComparison.OrdinalIgnoreCase))
             return "Account Limit";
@@ -1669,6 +1835,18 @@ public partial class AddNewTransactionVM : ObservableValidator
             return "Tag Limit";
 
         return "Invalid Amount";
+    }
+
+    private bool IsInstallmentInputValid()
+    {
+        return !IsInstallments
+               || TryResolveInstallmentCount(
+                   SelectedRecurringPeriod,
+                   RecurringTimeText,
+                   InstallmentEndDate,
+                   InstallmentCalculationDate,
+                   out _,
+                   out _);
     }
 
     private void RefreshAccounts()
@@ -1722,10 +1900,27 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (viewModel.SelectedAccount is null)
             return ValidationResult.Success;
 
-        if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense, viewModel.IsGoal, value, viewModel.SelectedAccount, out var validationMessage))
+        var amountToValidate = value;
+        if (viewModel.IsInstallments)
+        {
+            if (!TryResolveInstallmentCount(
+                viewModel.SelectedRecurringPeriod,
+                viewModel.RecurringTimeText,
+                viewModel.InstallmentEndDate,
+                viewModel.InstallmentCalculationDate,
+                out var installmentCount,
+                out _))
+            {
+                return ValidationResult.Success;
+            }
+
+            amountToValidate = CalculateInstallmentAmount(value, installmentCount);
+        }
+
+        if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense, viewModel.IsGoal, amountToValidate, viewModel.SelectedAccount, out var validationMessage))
             return new ValidationResult(validationMessage);
 
-        if (!viewModel.TryValidateSpendingAmountAgainstTagLimit(value, out var tagLimitValidationMessage))
+        if (!viewModel.TryValidateSpendingAmountAgainstTagLimit(amountToValidate, out var tagLimitValidationMessage))
             return new ValidationResult(tagLimitValidationMessage);
 
         return ValidationResult.Success;
@@ -1796,7 +1991,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public static ValidationResult? ValidateRecurringTimeText(string value, ValidationContext validationContext)
     {
         var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
-        if (!viewModel.IsRecurring || viewModel.SelectedRecurringPeriod == RecurringPeriod.None)
+        if (!viewModel.IsRecurringTransactionMode || viewModel.SelectedRecurringPeriod == RecurringPeriod.None)
             return ValidationResult.Success;
 
         return TryNormalizeRecurringTime(viewModel.SelectedRecurringPeriod, value?.Trim() ?? string.Empty, out _)
@@ -1928,6 +2123,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsExpense,
         bool IsGoal,
         bool IsRecurring,
+        bool IsInstallments,
         bool IsPinned,
         int? EditingRecurringTransactionId,
         RecurringPeriod RecurringPeriod,
@@ -1935,6 +2131,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         decimal Amount,
         int AccountId,
         DateTime Date,
+        DateTime InstallmentEndDate,
         string RecurringTimeText,
         string Note,
         ExpenseCategory? Category,
@@ -1945,6 +2142,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsExpense,
         bool IsGoal,
         bool IsRecurring,
+        bool IsInstallments,
         bool IsPinned,
         RecurringPeriod SelectedRecurringPeriod,
         string NameText,
@@ -1952,6 +2150,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         string RecurringTimeText,
         string NoteText,
         DateTime SelectedDate,
+        DateTime InstallmentEndDate,
         ExpenseCategory SelectedExpenseCategory,
         int SelectedAccountId,
         int SelectedTagId,
@@ -1969,6 +2168,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         _isTransactionTypeLocked = isLocked;
         OnPropertyChanged(nameof(CanChangeTransactionType));
         IsRecurringModeLocked = isLocked;
+        IsInstallments = false;
         IsRecurring = true;
     }
 
@@ -1983,6 +2183,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         _isTransactionTypeLocked = true;
         OnPropertyChanged(nameof(CanChangeTransactionType));
         IsRecurringModeLocked = true;
+        IsInstallments = false;
         IsRecurring = true;
         IsExpense = recurring.Type == RecurringTransactionType.Expense;
         IsGoal = recurring.Type == RecurringTransactionType.GoalUpdate;
@@ -2008,6 +2209,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         _isTransactionTypeLocked = true;
         OnPropertyChanged(nameof(CanChangeTransactionType));
         IsRecurringModeLocked = true;
+        IsInstallments = false;
         IsRecurring = true;
         IsExpense = draft.Type == RecurringTransactionType.Expense;
         IsGoal = draft.Type == RecurringTransactionType.GoalUpdate;
@@ -2057,6 +2259,178 @@ public partial class AddNewTransactionVM : ObservableValidator
         }
 
         return MonthlyDueDateHelper.Normalize(DateTime.Today.Day)?.ToString(CultureInfo.InvariantCulture) ?? "1";
+    }
+
+    private string BuildInstallmentSummaryText()
+    {
+        if (!IsInstallments)
+            return string.Empty;
+
+        if (!TryResolveInstallmentCount(
+                SelectedRecurringPeriod,
+                RecurringTimeText,
+                InstallmentEndDate,
+                InstallmentCalculationDate,
+                out var count,
+                out _))
+            return string.Empty;
+
+        var installmentAmount = CalculateInstallmentAmount(AmountText, count);
+        var amountText = MoneyFormatUtility.ToCompactText(installmentAmount, CultureInfo.CurrentCulture);
+        var recurrenceLabel = FormatRecurringScheduleLabel(SelectedRecurringPeriod, RecurringTimeText);
+        var verb = IsExpense ? "paid" : "earned";
+        return $"The installment will be {amountText}, {verb} every {recurrenceLabel}";
+    }
+
+    private bool TryResolveRecurringSaveAmount(
+        QuickTransactionInput input,
+        out decimal amount,
+        out string validationMessage)
+    {
+        amount = input.Amount;
+        validationMessage = string.Empty;
+
+        if (!input.IsInstallments)
+            return true;
+
+        if (!TryResolveInstallmentCount(
+                input.RecurringPeriod,
+                input.RecurringTimeText,
+                input.InstallmentEndDate,
+                InstallmentCalculationDate,
+                out var count,
+                out validationMessage))
+            return false;
+
+        amount = CalculateInstallmentAmount(input.Amount, count);
+        return true;
+    }
+
+    private static decimal CalculateInstallmentAmount(decimal totalAmount, int count)
+    {
+        return decimal.Round(totalAmount / count, 2, MidpointRounding.AwayFromZero);
+    }
+
+    private static string BuildInstallmentRecurringName(string name)
+    {
+        return $"Installments for {name.Trim()}";
+    }
+
+    private static bool TryResolveInstallmentCount(
+        RecurringPeriod period,
+        string recurringTimeText,
+        DateTime endDate,
+        DateTime today,
+        out int count,
+        out string validationMessage)
+    {
+        count = 0;
+        validationMessage = string.Empty;
+
+        if (period == RecurringPeriod.None)
+        {
+            validationMessage = "Installments need a weekly, biweekly, or monthly recurrence.";
+            return false;
+        }
+
+        if (!TryNormalizeRecurringTime(period, recurringTimeText?.Trim() ?? string.Empty, out var recurringTime))
+        {
+            validationMessage = GetRecurringTimeValidationMessage(period);
+            return false;
+        }
+
+        today = today.Date;
+        endDate = endDate.Date;
+        if (endDate < today)
+        {
+            validationMessage = "Installment end date must be today or later.";
+            return false;
+        }
+
+        var occurrence = FindClosestOccurrence(today, period, recurringTime);
+        while (occurrence <= endDate)
+        {
+            count++;
+            occurrence = AddOccurrence(occurrence, period);
+        }
+
+        if (count > 0)
+            return true;
+
+        validationMessage = "Installment end date must include at least one recurrence.";
+        return false;
+    }
+
+    private static DateTime FindClosestOccurrence(DateTime today, RecurringPeriod period, int recurringTime)
+    {
+        if (period == RecurringPeriod.Monthly)
+        {
+            var candidate = new DateTime(today.Year, today.Month, recurringTime);
+            var previous = candidate <= today ? candidate : candidate.AddMonths(-1);
+            var next = candidate >= today ? candidate : candidate.AddMonths(1);
+            return IsCloserToToday(next, previous, today) ? next : previous;
+        }
+
+        var previousDate = today;
+        while (GetIsoDayOfWeek(previousDate.DayOfWeek) != recurringTime)
+            previousDate = previousDate.AddDays(-1);
+
+        var nextDate = today;
+        while (GetIsoDayOfWeek(nextDate.DayOfWeek) != recurringTime)
+            nextDate = nextDate.AddDays(1);
+
+        return IsCloserToToday(nextDate, previousDate, today) ? nextDate : previousDate;
+    }
+
+    private static bool IsCloserToToday(DateTime candidate, DateTime comparison, DateTime today)
+    {
+        return Math.Abs((candidate.Date - today.Date).TotalDays)
+               < Math.Abs((comparison.Date - today.Date).TotalDays);
+    }
+
+    private static DateTime AddOccurrence(DateTime occurrence, RecurringPeriod period)
+    {
+        return period switch
+        {
+            RecurringPeriod.Weekly => occurrence.AddDays(7),
+            RecurringPeriod.Biweekly => occurrence.AddDays(14),
+            RecurringPeriod.Monthly => occurrence.AddMonths(1),
+            _ => occurrence
+        };
+    }
+
+    private static string FormatRecurringScheduleLabel(RecurringPeriod period, string recurringTimeText)
+    {
+        if (!TryNormalizeRecurringTime(period, recurringTimeText?.Trim() ?? string.Empty, out var recurringTime))
+            return string.Empty;
+
+        if (period == RecurringPeriod.Monthly)
+            return FormatOrdinal(recurringTime);
+
+        var option = recurringTime is >= 1 and <= 7
+            ? CultureInfo.CurrentCulture.DateTimeFormat.DayNames[recurringTime % 7]
+            : string.Empty;
+        return option;
+    }
+
+    private static string FormatOrdinal(int value)
+    {
+        var suffix = (value % 100) is 11 or 12 or 13
+            ? "th"
+            : (value % 10) switch
+            {
+                1 => "st",
+                2 => "nd",
+                3 => "rd",
+                _ => "th"
+            };
+
+        return value.ToString(CultureInfo.InvariantCulture) + suffix;
+    }
+
+    private static int GetIsoDayOfWeek(DayOfWeek dayOfWeek)
+    {
+        return dayOfWeek == DayOfWeek.Sunday ? 7 : (int)dayOfWeek;
     }
 
     private static string GetRecurringTimeValidationMessage(RecurringPeriod period)

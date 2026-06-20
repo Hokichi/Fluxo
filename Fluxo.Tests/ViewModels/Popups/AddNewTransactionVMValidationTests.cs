@@ -1130,6 +1130,299 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void HandleRecurringModeClick_WhenRecurringChecked_SwitchesToInstallments()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
+
+            vm.HandleRecurringModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.True(vm.IsInstallments);
+            Assert.False(vm.ShowRecurringToggle);
+            Assert.True(vm.ShowInstallmentsToggle);
+            Assert.True(vm.ShowInstallmentEndDate);
+            Assert.False(vm.CanPinTransaction);
+        });
+    }
+
+    [Fact]
+    public void InstallmentsToggle_IsHidden_WhenRecurringIsCheckedWithoutInstallments()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
+
+            Assert.True(vm.ShowRecurringToggle);
+            Assert.False(vm.ShowInstallmentsToggle);
+        });
+    }
+
+    [Fact]
+    public void HandleInstallmentsModeClick_WhenInstallmentsChecked_ClearsRecurringMode()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Income, CreateCheckingSource(balance: 0m), isRecurring: true);
+            vm.IsInstallments = true;
+
+            vm.HandleInstallmentsModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.False(vm.IsInstallments);
+            Assert.False(vm.ShowInstallmentEndDate);
+        });
+    }
+
+    [Fact]
+    public void HandleRecurringModeClick_ForGoalUpdate_UnchecksRecurringWithoutInstallments()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Goal, CreateCheckingSource(balance: 500m), isRecurring: true);
+
+            vm.HandleRecurringModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.False(vm.IsInstallments);
+            Assert.False(vm.ShowInstallmentsToggle);
+        });
+    }
+
+    [Fact]
+    public void SwitchingToGoalUpdate_ClearsInstallments()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
+            vm.IsInstallments = true;
+
+            vm.IsGoal = true;
+
+            Assert.False(vm.IsInstallments);
+            Assert.False(vm.CanUseInstallments);
+            Assert.False(vm.ShowInstallmentEndDate);
+        });
+    }
+
+    [Theory]
+    [InlineData(TransactionKind.Expense, "paid")]
+    [InlineData(TransactionKind.Income, "earned")]
+    public void InstallmentSummaryText_UsesSplitAmountRecurrenceLabelAndKindVerb(
+        TransactionKind kind,
+        string expectedVerb)
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(kind, CreateCheckingSource(balance: 500m), isRecurring: true, amount: 21.5m);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "1";
+            vm.InstallmentEndDate = new DateTime(2026, 10, 10);
+            vm.IsInstallments = true;
+
+            Assert.Equal($"The installment will be 5.38, {expectedVerb} every 1st", vm.InstallmentSummaryText);
+        });
+    }
+
+    [Fact]
+    public void Installments_UseClosestMatchingStartDate_WhenNextOccurrenceIsClosest()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: true,
+                amount: 90m,
+                name: "Laptop",
+                appData: appData);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 18);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "20";
+            vm.InstallmentEndDate = new DateTime(2026, 8, 21);
+            vm.IsInstallments = true;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddRecurringTransactionAsync(
+                Arg.Is<RecurringTransaction>(transaction => transaction.Amount == 30m),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void CanSave_Installments_ValidatesSplitAmountAgainstSourceCapacity()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 30m), isRecurring: true, amount: 100m);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "1";
+            vm.InstallmentEndDate = new DateTime(2026, 10, 10);
+            vm.IsInstallments = true;
+
+            Assert.True(vm.CanSave);
+        });
+    }
+
+    [Fact]
+    public void CanSave_Installments_ValidatesSplitAmountAgainstMaximumSpending()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m, maximumSpending: 100m, moneyOut: 70m);
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: true, amount: 100m);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "1";
+            vm.InstallmentEndDate = new DateTime(2026, 10, 10);
+            vm.IsInstallments = true;
+            vm.ValidateAmountField();
+
+            Assert.True(vm.CanSave);
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)));
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_Installments_ValidatesSplitAmountAgainstPersistedMaximumSpending()
+    {
+        RunInSta(() =>
+        {
+            var sourceVm = CreateCheckingSource(balance: 500m, maximumSpending: 100m, moneyOut: 0m);
+            var staleSource = new Account
+            {
+                Id = sourceVm.Id,
+                Name = sourceVm.Name,
+                AccountType = sourceVm.AccountType,
+                Balance = sourceVm.Balance,
+                AccountLimit = 0m,
+                MaximumSpending = 100m,
+                SpentAmount = 70m,
+                IsEnabled = true
+            };
+
+            var appData = CreateAppData();
+            appData.GetAccountByIdAsync(sourceVm.Id, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<Account?>(staleSource));
+
+            var vm = CreateVm(TransactionKind.Expense, sourceVm, isRecurring: true, amount: 100m, appData: appData);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "1";
+            vm.InstallmentEndDate = new DateTime(2026, 10, 10);
+            vm.IsInstallments = true;
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+        });
+    }
+
+    [Fact]
+    public void AmountValidation_Installments_DoesNotValidateTotalWhenRecurrenceCountIsPending()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m, maximumSpending: 100m, moneyOut: 70m);
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: true, amount: 100m);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "1";
+            vm.InstallmentEndDate = new DateTime(2026, 6, 20);
+            vm.IsInstallments = true;
+            vm.ValidateAmountField();
+
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)));
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+            Assert.False(vm.CanSave);
+        });
+    }
+
+    [Fact]
+    public void AmountValidation_WhenActive_RevalidatesAfterSwitchingToInstallments()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 30m), isRecurring: true, amount: 100m);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "1";
+            vm.InstallmentEndDate = new DateTime(2026, 10, 10);
+            vm.ValidateAmountField();
+
+            Assert.Contains(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)),
+                error => error.ErrorMessage == "Amount exceeds this source's available balance.");
+
+            vm.IsInstallments = true;
+
+            Assert.Empty(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)));
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
+    public void CanSave_Installments_ValidatesSplitAmountUsingClosestMatchingStartDate()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 25m), isRecurring: true, amount: 90m);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 18);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "20";
+            vm.InstallmentEndDate = new DateTime(2026, 8, 21);
+            vm.IsInstallments = true;
+            vm.ValidateAmountField();
+
+            Assert.False(vm.CanSave);
+            Assert.Contains(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)),
+                error => error.ErrorMessage == "Amount exceeds this source's available balance.");
+            Assert.Equal("Insufficient Balance", vm.AmountValidationHint);
+        });
+    }
+
+    [Theory]
+    [InlineData(TransactionKind.Expense, RecurringTransactionType.Expense)]
+    [InlineData(TransactionKind.Income, RecurringTransactionType.Income)]
+    public void SaveAsync_Installments_CreatesRecurringWithInstallmentNameAndSplitAmount(
+        TransactionKind kind,
+        RecurringTransactionType expectedType)
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                kind,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: true,
+                amount: 100m,
+                name: "Laptop",
+                appData: appData);
+            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
+            vm.RecurringTimeText = "1";
+            vm.InstallmentEndDate = new DateTime(2026, 10, 10);
+            vm.IsInstallments = true;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddRecurringTransactionAsync(
+                Arg.Is<RecurringTransaction>(transaction =>
+                    transaction.Type == expectedType
+                    && transaction.Name == "Installments for Laptop"
+                    && transaction.Amount == 25m),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
     public void SaveAsync_Income_PersistsPinnedState()
     {
         RunInSta(() =>

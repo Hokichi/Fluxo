@@ -603,7 +603,7 @@ public partial class AccountDetailVM : ObservableObject
         IEnumerable<ExpenseLog> expenseLogs,
         IEnumerable<IncomeLog> incomeLogs)
     {
-        var expenseActivities = expenseLogs.Select(log => new AccountActivityItemVM(
+        var expenseActivities = expenseLogs.Where(c => c.ParentLogId == null).Select(log => new AccountActivityItemVM(
             log.DeductedOn,
             log.Expense?.Name?.Trim() is { Length: > 0 } expenseName ? expenseName : "Expense",
             string.IsNullOrWhiteSpace(log.Notes) ? "Expense" : log.Notes.Trim(),

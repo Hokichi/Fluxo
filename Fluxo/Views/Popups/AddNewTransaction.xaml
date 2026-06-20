@@ -344,30 +344,49 @@
                                 LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <customControls:BalloonCheckBox
-                                Grid.Column="2"
-                                ButtonSize="38"
-                                CheckedBackground="{StaticResource Brush.Info}"
-                                CornerRadius="12"
-                                DefaultBackground="{StaticResource Brush.Background.Surface}"
-                                IconSize="14"
-                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                                IsEnabled="{Binding CanToggleRecurring}"
-                                ToolTip="Set as Recurring"
-                                UncheckedIcon="{StaticResource RegularRepeat}"
-                                UncheckedText="Recurring" />
+                            <StackPanel Grid.Column="2" Orientation="Vertical">
+                                <customControls:BalloonCheckBox
+                                    ButtonSize="38"
+                                    CheckedBackground="{StaticResource Brush.Info}"
+                                    CornerRadius="12"
+                                    DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                    IconSize="14"
+                                    IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                    IsEnabled="{Binding CanToggleRecurring}"
+                                    PreviewMouseLeftButtonDown="OnRecurringModePreviewMouseLeftButtonDown"
+                                    ToolTip="Set as Recurring"
+                                    UncheckedIcon="{StaticResource RegularRepeat}"
+                                    UncheckedText="Recurring"
+                                    Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <customControls:BalloonCheckBox
+                                    Margin="0,8,0,0"
+                                    ButtonSize="38"
+                                    CheckedBackground="{StaticResource Brush.Info}"
+                                    CheckedIcon="{StaticResource CreditCardClockOutline}"
+                                    CheckedText="Installments"
+                                    CornerRadius="12"
+                                    DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                    IconSize="14"
+                                    IsChecked="{Binding IsInstallments, Mode=TwoWay}"
+                                    IsEnabled="{Binding CanToggleRecurring}"
+                                    PreviewMouseLeftButtonDown="OnInstallmentsModePreviewMouseLeftButtonDown"
+                                    ToolTip="Set as installments"
+                                    UncheckedIcon="{StaticResource CreditCardClockOutline}"
+                                    UncheckedText="Installments"
+                                    Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </StackPanel>
                             <customControls:BalloonCheckBox
                                 Grid.Column="4"
                                 ButtonSize="38"
                                 CheckedBackground="{StaticResource Brush.Info}"
                                 CornerRadius="12"
                                 DefaultBackground="{StaticResource Brush.Background.Surface}"
-                                UncheckedIcon="{StaticResource Pin}"
-                                UncheckedText="Pinned"
                                 IconSize="14"
                                 IsChecked="{Binding IsPinned, Mode=TwoWay}"
                                 IsEnabled="{Binding CanPinTransaction}"
-                                ToolTip="Pin transaction" />
+                                ToolTip="Pin transaction"
+                                UncheckedIcon="{StaticResource Pin}"
+                                UncheckedText="Pinned" />
                         </Grid>
                         <Popup
                             x:Name="ExpenseNameSuggestionsPopup"
@@ -408,6 +427,13 @@
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
                                 Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
                                 TextChanged="OnTransactionAmountTextBoxTextChanged" />
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                FontFamily="{DynamicResource Regular}"
+                                FontSize="11"
+                                Foreground="{DynamicResource Brush.Mint.Muted}"
+                                Text="{Binding InstallmentSummaryText}"
+                                TextWrapping="Wrap" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
@@ -436,6 +462,10 @@
                                     UpperLimit="28"
                                     Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,16,0,0" Visibility="{Binding ShowInstallmentEndDate, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Style="{StaticResource SectionLabelStyle}" Text="End Date" />
+                                <components:DateSelector SelectedDate="{Binding InstallmentEndDate, Mode=TwoWay}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -528,14 +558,29 @@
                                     LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                     Style="{StaticResource RoundedTextInputStyle}"
                                     Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <customControls:BalloonCheckBox
-                                    Grid.Column="2"
-                                    ButtonSize="38"
-                                    IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                                    IsEnabled="{Binding CanToggleRecurring}"
-                                    ToolTip="Recurring"
-                                    UncheckedIcon="{StaticResource RegularRepeat}"
-                                    UncheckedText="Recurring" />
+                                <StackPanel Grid.Column="2" Orientation="Vertical">
+                                    <customControls:BalloonCheckBox
+                                        ButtonSize="38"
+                                        IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                        IsEnabled="{Binding CanToggleRecurring}"
+                                        PreviewMouseLeftButtonDown="OnRecurringModePreviewMouseLeftButtonDown"
+                                        ToolTip="Recurring"
+                                        UncheckedIcon="{StaticResource RegularRepeat}"
+                                        UncheckedText="Recurring"
+                                        Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    <customControls:BalloonCheckBox
+                                        Margin="0,8,0,0"
+                                        ButtonSize="38"
+                                        CheckedIcon="{StaticResource CreditCardClockOutline}"
+                                        CheckedText="Installments"
+                                        IsChecked="{Binding IsInstallments, Mode=TwoWay}"
+                                        IsEnabled="{Binding CanToggleRecurring}"
+                                        PreviewMouseLeftButtonDown="OnInstallmentsModePreviewMouseLeftButtonDown"
+                                        ToolTip="Set as installments"
+                                        UncheckedIcon="{StaticResource CreditCardClockOutline}"
+                                        UncheckedText="Installments"
+                                        Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                </StackPanel>
                                 <customControls:BalloonCheckBox
                                     Grid.Column="4"
                                     ButtonSize="38"
@@ -577,6 +622,17 @@
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
                                 Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
                                 TextChanged="OnTransactionAmountTextBoxTextChanged" />
+                            <StackPanel Margin="0,16,0,0" Visibility="{Binding ShowInstallmentEndDate, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Style="{StaticResource SectionLabelStyle}" Text="End Date" />
+                                <components:DateSelector SelectedDate="{Binding InstallmentEndDate, Mode=TwoWay}" />
+                                <TextBlock
+                                    Margin="0,8,0,0"
+                                    FontFamily="{DynamicResource Regular}"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource Brush.Text.Muted}"
+                                    Text="{Binding InstallmentSummaryText}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
 
