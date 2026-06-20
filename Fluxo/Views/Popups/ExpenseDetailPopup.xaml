@@ -558,7 +558,8 @@
                                 Text="Tag" />
                             <TextBlock
                                 Grid.Column="4"
-                                Margin="4,0,0,0"
+                                Margin="0"
+                                HorizontalAlignment="Center"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Set as lend" />
                         </Grid>
@@ -638,6 +639,7 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             IsChecked="{Binding IsLend, Mode=TwoWay}"
+                                            Style="{StaticResource ItemCheckBoxStyle}"
                                             ToolTip="Set as lend" />
 
                                         <customControls:BalloonButton
