@@ -344,9 +344,8 @@
                                 LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <StackPanel Grid.Column="2" Orientation="Vertical">
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
                                 <customControls:BalloonCheckBox
-                                    Margin="0,0,0,8"
                                     ButtonSize="38"
                                     CheckedBackground="{StaticResource Brush.Info}"
                                     CheckedIcon="{StaticResource CreditCardMinusSolid}"
@@ -360,6 +359,7 @@
                                     UncheckedText="{Binding DebtIouTooltip}"
                                     Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <customControls:BalloonCheckBox
+                                    Margin="8,0,0,0"
                                     ButtonSize="38"
                                     CheckedBackground="{StaticResource Brush.Info}"
                                     CornerRadius="12"
@@ -373,7 +373,7 @@
                                     UncheckedText="Recurring"
                                     Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <customControls:BalloonCheckBox
-                                    Margin="0,8,0,0"
+                                    Margin="8,0,0,0"
                                     ButtonSize="38"
                                     CheckedBackground="{StaticResource Brush.Info}"
                                     CheckedIcon="{StaticResource CreditCardClockOutline}"
@@ -572,8 +572,22 @@
                                     LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                     Style="{StaticResource RoundedTextInputStyle}"
                                     Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <StackPanel Grid.Column="2" Orientation="Vertical">
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
                                     <customControls:BalloonCheckBox
+                                        ButtonSize="38"
+                                        CheckedBackground="{StaticResource Brush.Info}"
+                                        CheckedIcon="{StaticResource CreditCardMinusSolid}"
+                                        CheckedText="{Binding DebtIouTooltip}"
+                                        CornerRadius="12"
+                                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                        IconSize="14"
+                                        IsChecked="{Binding IsDebtIou, Mode=TwoWay}"
+                                        ToolTip="{Binding DebtIouTooltip}"
+                                        UncheckedIcon="{StaticResource CreditCardMinusSolid}"
+                                        UncheckedText="{Binding DebtIouTooltip}"
+                                        Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    <customControls:BalloonCheckBox
+                                        Margin="8,0,0,0"
                                         ButtonSize="38"
                                         IsChecked="{Binding IsRecurring, Mode=TwoWay}"
                                         IsEnabled="{Binding CanToggleRecurring}"
@@ -583,7 +597,7 @@
                                         UncheckedText="Recurring"
                                         Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                     <customControls:BalloonCheckBox
-                                        Margin="0,8,0,0"
+                                        Margin="8,0,0,0"
                                         ButtonSize="38"
                                         CheckedIcon="{StaticResource CreditCardClockOutline}"
                                         CheckedText="Installments"
