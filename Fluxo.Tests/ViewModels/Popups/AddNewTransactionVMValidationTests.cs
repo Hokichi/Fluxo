@@ -1168,6 +1168,7 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.True(vm.IsInstallments);
             Assert.False(vm.ShowRecurringToggle);
             Assert.True(vm.ShowInstallmentsToggle);
+            Assert.False(vm.ShowDebtIouToggle);
             Assert.True(vm.ShowInstallmentEndDate);
             Assert.False(vm.CanPinTransaction);
         });
@@ -1182,11 +1183,12 @@ public sealed class AddNewTransactionVMValidationTests
 
             Assert.True(vm.ShowRecurringToggle);
             Assert.False(vm.ShowInstallmentsToggle);
+            Assert.False(vm.ShowDebtIouToggle);
         });
     }
 
     [Fact]
-    public void HandleInstallmentsModeClick_WhenInstallmentsChecked_ClearsRecurringMode()
+    public void HandleInstallmentsModeClick_WhenInstallmentsChecked_SwitchesToDebtIou()
     {
         RunInSta(() =>
         {
@@ -1197,7 +1199,30 @@ public sealed class AddNewTransactionVMValidationTests
 
             Assert.False(vm.IsRecurring);
             Assert.False(vm.IsInstallments);
+            Assert.True(vm.IsDebtIou);
+            Assert.False(vm.ShowRecurringToggle);
+            Assert.False(vm.ShowInstallmentsToggle);
+            Assert.True(vm.ShowDebtIouToggle);
             Assert.False(vm.ShowInstallmentEndDate);
+        });
+    }
+
+    [Fact]
+    public void HandleDebtIouModeClick_WhenDebtIouChecked_ClearsMode()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
+            vm.IsDebtIou = true;
+
+            vm.HandleDebtIouModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.False(vm.IsInstallments);
+            Assert.False(vm.IsDebtIou);
+            Assert.True(vm.ShowRecurringToggle);
+            Assert.False(vm.ShowInstallmentsToggle);
+            Assert.False(vm.ShowDebtIouToggle);
         });
     }
 

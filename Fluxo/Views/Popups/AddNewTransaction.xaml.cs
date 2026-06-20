@@ -386,6 +386,15 @@ public partial class AddNewTransaction : BasePopup
         _viewModel.HandleInstallmentsModeClick();
     }
 
+    private void OnDebtIouModePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not CheckBox { IsChecked: true })
+            return;
+
+        e.Handled = true;
+        _viewModel.HandleDebtIouModeClick();
+    }
+
     private void RecalculateTagLayout()
     {
         if (!IsLoaded || !_viewModel.IsExpense)

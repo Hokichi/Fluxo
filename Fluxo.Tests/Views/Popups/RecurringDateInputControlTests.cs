@@ -27,14 +27,10 @@ public sealed class RecurringDateInputControlTests
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
 
+        Assert.Equal(2, CountOccurrences(xaml, "<StackPanel Grid.Column=\"2\" Orientation=\"Horizontal\">"));
         Assert.Equal(2, CountOccurrences(xaml, "IsChecked=\"{Binding IsDebtIou, Mode=TwoWay}\""));
         Assert.Equal(2, CountOccurrences(xaml, "ToolTip=\"{Binding DebtIouTooltip}\""));
-        Assert.Equal(
-            2,
-            Regex.Matches(
-                xaml,
-                "<StackPanel Grid.Column=\"2\" Orientation=\"Horizontal\">\\s*<customControls:BalloonCheckBox\\s+ButtonSize=\"38\"\\s+CheckedBackground=\"\\{StaticResource Brush.Info\\}\"\\s+CheckedIcon=\"\\{StaticResource CreditCardMinusSolid\\}\"",
-                RegexOptions.Multiline).Count);
+        Assert.Equal(2, CountOccurrences(xaml, "PreviewMouseLeftButtonDown=\"OnDebtIouModePreviewMouseLeftButtonDown\""));
         Assert.DoesNotContain("Margin=\"0,0,0,8\"", xaml);
     }
 

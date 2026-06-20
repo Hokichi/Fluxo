@@ -175,11 +175,12 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowRecurringWeekdayInput => IsRecurringTransactionMode && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
     public bool ShowRecurringMonthlyInput => IsRecurringTransactionMode && SelectedRecurringPeriod == RecurringPeriod.Monthly;
     public bool ShowDateSelector => !IsRecurringTransactionMode;
-    public bool ShowRecurringToggle => !IsInstallments;
+    public bool ShowRecurringToggle => !IsInstallments && !IsDebtIou;
     public bool ShowInstallmentsToggle => CanUseInstallments && IsInstallments;
     public bool ShowInstallmentEndDate => IsInstallments;
-    public bool ShowDebtIouToggle => !IsGoal && !IsRecurringTransactionMode;
+    public bool ShowDebtIouToggle => CanUseDebtIou && IsDebtIou;
     public bool CanUseInstallments => !IsGoal && CanToggleRecurring;
+    public bool CanUseDebtIou => !IsGoal && CanToggleRecurring;
     public string DateOrRecurrenceLabel => IsRecurringTransactionMode ? "Recurrence" : "Date";
     public string InstallmentSummaryText => BuildInstallmentSummaryText();
     public bool CanToggleRecurring => !IsRecurringModeLocked;
@@ -277,7 +278,10 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         if (!CanPinTransaction)
             IsPinned = false;
-        if (!ShowDebtIouToggle)
+        if (value && IsDebtIou)
+            IsDebtIou = false;
+
+        if (!CanUseDebtIou)
             IsDebtIou = false;
 
         OnPropertyChanged(nameof(ShowRecurringDayInput));
@@ -292,6 +296,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(DateOrRecurrenceLabel));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
+        OnPropertyChanged(nameof(CanUseDebtIou));
         OnPropertyChanged(nameof(ShowDebtIouToggle));
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
@@ -300,11 +305,15 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnIsInstallmentsChanged(bool value)
     {
         if (value)
+        {
             IsRecurring = false;
+            if (IsDebtIou)
+                IsDebtIou = false;
+        }
 
         if (!CanPinTransaction)
             IsPinned = false;
-        if (!ShowDebtIouToggle)
+        if (!CanUseDebtIou)
             IsDebtIou = false;
 
         OnPropertyChanged(nameof(ShowRecurringToggle));
@@ -319,6 +328,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowInstallmentEndDate));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
+        OnPropertyChanged(nameof(CanUseDebtIou));
         OnPropertyChanged(nameof(ShowDebtIouToggle));
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
@@ -353,12 +363,27 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         OnPropertyChanged(nameof(CanToggleRecurring));
         OnPropertyChanged(nameof(CanUseInstallments));
+        OnPropertyChanged(nameof(CanUseDebtIou));
         OnPropertyChanged(nameof(ShowInstallmentsToggle));
+        OnPropertyChanged(nameof(ShowDebtIouToggle));
+    }
+
+    partial void OnIsDebtIouChanged(bool value)
+    {
+        if (value)
+        {
+            if (IsRecurring)
+                IsRecurring = false;
+            if (IsInstallments)
+                IsInstallments = false;
+        }
+
+        OnPropertyChanged(nameof(ShowRecurringToggle));
+        OnPropertyChanged(nameof(ShowDebtIouToggle));
+        NotifyFormStateChanged();
     }
 
     partial void OnIsPinnedChanged(bool value) => NotifyFormStateChanged();
-
-    partial void OnIsDebtIouChanged(bool value) => NotifyFormStateChanged();
 
     partial void OnIsMoreTagsOpenChanged(bool value) => NotifyFormStateChanged();
 
@@ -443,13 +468,23 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         if (IsInstallments)
         {
-            IsInstallments = false;
-            IsRecurring = false;
+            if (CanUseDebtIou)
+                IsDebtIou = true;
+            else
+                IsInstallments = false;
         }
         else if (CanUseInstallments)
         {
             IsInstallments = true;
         }
+    }
+
+    public void HandleDebtIouModeClick()
+    {
+        if (!CanUseDebtIou)
+            return;
+
+        IsDebtIou = !IsDebtIou;
     }
 
     public void InitializeFromDraft(AddNewTransactionDraft draft)
@@ -490,12 +525,14 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
         OnPropertyChanged(nameof(CanUseInstallments));
+        OnPropertyChanged(nameof(CanUseDebtIou));
+        OnPropertyChanged(nameof(ShowRecurringToggle));
         OnPropertyChanged(nameof(ShowInstallmentsToggle));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(ShowDebtIouToggle));
         OnPropertyChanged(nameof(DebtIouTooltip));
 
-        if (!ShowDebtIouToggle)
+        if (!CanUseDebtIou)
             IsDebtIou = false;
 
         if (!value || IsGoal)
@@ -524,6 +561,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
         OnPropertyChanged(nameof(CanUseInstallments));
+        OnPropertyChanged(nameof(CanUseDebtIou));
+        OnPropertyChanged(nameof(ShowRecurringToggle));
         OnPropertyChanged(nameof(ShowInstallmentsToggle));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(ShowDebtIouToggle));
