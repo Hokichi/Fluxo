@@ -919,9 +919,7 @@ public partial class ExpenseDetailVM : ObservableObject
             Name = BuildExpenseName(input.Name, input.Note, tag.Name),
             Amount = input.Amount,
             ExpenseCategory = input.Category,
-            Account = account,
             AccountId = account.Id,
-            ExpenseTag = tag,
             ExpenseTagId = tag.Id
         };
     }
@@ -939,7 +937,6 @@ public partial class ExpenseDetailVM : ObservableObject
             DeductedOn = input.Date,
             Notes = input.Note,
             IsForDeletion = false,
-            Account = account,
             AccountId = account.Id,
             ParentLogId = parentLogId
         };

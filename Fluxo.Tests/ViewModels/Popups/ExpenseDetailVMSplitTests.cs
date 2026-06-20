@@ -8,12 +8,18 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Data;
+using Fluxo.Data.Context;
+using Fluxo.Data.Repositories;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
+using Fluxo.Services.Persistence;
 using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.Main;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using Xunit;
 
@@ -707,6 +713,14 @@ public sealed class ExpenseDetailVMSplitTests
     }
 
     [Fact]
+    public void SaveAsync_FromSplitMode_WhenAccountAlreadyTracked_AddsChildExpenses()
+    {
+        RunInSta(() => SaveAsyncFromSplitModeWhenAccountAlreadyTrackedAddsChildExpensesAsync()
+            .GetAwaiter()
+            .GetResult());
+    }
+
+    [Fact]
     public void SaveAsync_FromSplitMode_KeepsBudgetReconciliationParent()
     {
         RunInSta(() =>
@@ -944,6 +958,140 @@ public sealed class ExpenseDetailVMSplitTests
         }, appData), appData, persistedSource);
     }
 
+    private static async Task SaveAsyncFromSplitModeWhenAccountAlreadyTrackedAddsChildExpensesAsync()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<FluxoDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var dbContext = new FluxoDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var account = new Account
+        {
+            Name = "Checking",
+            AccountType = AccountType.Checking,
+            Balance = 1_000m,
+            IsEnabled = true,
+            PinnedOnUI = true
+        };
+        var tag = new ExpenseTag
+        {
+            Name = "General",
+            HexCode = "#22C55E",
+            IsSystemTag = false
+        };
+        var parentExpense = new Expense
+        {
+            Name = "Parent expense",
+            Amount = 100m,
+            ExpenseCategory = ExpenseCategory.Needs,
+            Account = account,
+            ExpenseTag = tag
+        };
+        var parentLog = new ExpenseLog
+        {
+            Expense = parentExpense,
+            Account = account,
+            Amount = 100m,
+            DeductedOn = new DateTime(2026, 5, 31),
+            Notes = "Original note",
+            IsForDeletion = false
+        };
+
+        await dbContext.ExpenseLogs.AddAsync(parentLog);
+        await dbContext.SaveChangesAsync();
+
+        var accountId = account.Id;
+        var tagId = tag.Id;
+        var parentExpenseId = parentExpense.Id;
+        var parentLogId = parentLog.Id;
+
+        dbContext.Entry(parentLog).State = EntityState.Detached;
+        dbContext.Entry(parentExpense).State = EntityState.Detached;
+        dbContext.Entry(tag).State = EntityState.Detached;
+        Assert.Single(dbContext.ChangeTracker.Entries<Account>());
+
+        using var unitOfWork = CreateUnitOfWork(dbContext);
+        var appData = new AppDataService(unitOfWork);
+        var sourceVm = new AccountVM
+        {
+            Id = accountId,
+            Name = "Checking",
+            AccountType = AccountType.Checking,
+            Balance = 1_000m,
+            IsEnabled = true
+        };
+        var tagVm = new ExpenseTagVM
+        {
+            Id = tagId,
+            Name = "General",
+            HexCode = "#22C55E",
+            IsSystemTag = false
+        };
+        var main = CreateMainViewModel(sourceVm, tagVm);
+        var vm = new ExpenseDetailVM(main, new ExpenseLogVM
+        {
+            Id = parentLogId,
+            Amount = 100m,
+            DeductedOn = new DateTime(2026, 5, 31),
+            Notes = "Original note",
+            Account = sourceVm,
+            Expense = new ExpenseVM
+            {
+                Id = parentExpenseId,
+                Name = "Parent expense",
+                Amount = 100m,
+                ExpenseCategory = ExpenseCategory.Needs,
+                Account = sourceVm,
+                ExpenseTag = tagVm
+            }
+        }, appData);
+
+        vm.BeginSplitMode();
+        vm.AddSplitRow();
+        vm.SplitRows[0].NameText = "Groceries";
+        vm.SplitRows[0].AmountText = 30m;
+        vm.AddSplitRow();
+        vm.SplitRows[1].NameText = "Transport";
+        vm.SplitRows[1].AmountText = 20m;
+
+        var result = await vm.SaveAsync();
+
+        Assert.True(result.IsSuccess, result.ErrorMessage);
+
+        var parent = await dbContext.ExpenseLogs
+            .AsNoTracking()
+            .SingleAsync(log => log.Id == parentLogId);
+        Assert.Equal(100m, parent.Amount);
+        Assert.Null(parent.ParentLogId);
+        Assert.False(parent.IsForDeletion);
+
+        var children = await dbContext.ExpenseLogs
+            .AsNoTracking()
+            .Include(log => log.Expense)
+            .Where(log => log.ParentLogId == parentLogId)
+            .OrderBy(log => log.Amount)
+            .ToListAsync();
+
+        Assert.Equal(2, children.Count);
+        Assert.Contains(children, log =>
+            log.Amount == 20m &&
+            log.AccountId == accountId &&
+            log.Expense.AccountId == accountId &&
+            log.Expense.ExpenseTagId == tagId &&
+            log.Expense.Name == "Transport");
+        Assert.Contains(children, log =>
+            log.Amount == 30m &&
+            log.AccountId == accountId &&
+            log.Expense.AccountId == accountId &&
+            log.Expense.ExpenseTagId == tagId &&
+            log.Expense.Name == "Groceries");
+    }
+
     private static MainVM CreateMainViewModel(AccountVM source, ExpenseTagVM tag)
     {
         var messenger = new WeakReferenceMessenger();
@@ -1000,6 +1148,22 @@ public sealed class ExpenseDetailVMSplitTests
         ]);
 
         return main;
+    }
+
+    private static UnitOfWork CreateUnitOfWork(FluxoDbContext dbContext)
+    {
+        return new UnitOfWork(
+            dbContext,
+            new ExpenseRepository(dbContext),
+            new ExpenseLogRepository(dbContext),
+            new IncomeLogRepository(dbContext),
+            new ExpenseTagRepository(dbContext),
+            new SavingGoalRepository(dbContext),
+            new AccountRepository(dbContext),
+            new RecurringTransactionRepository(dbContext),
+            new NotificationRepository(dbContext),
+            new UserSettingsRepository(dbContext),
+            new BudgetAllocationRepository(dbContext));
     }
 
     private static void RunInSta(Action action)
