@@ -11,4 +11,5 @@ public sealed class IncomeLog
     public string Notes { get; set; }
     public bool IsForDeletion { get; set; }
     public bool IsPinned { get; set; }
+    public bool IsDebt { get; set; }
 }

@@ -14,4 +14,5 @@ public sealed class ExpenseLog
     public string Notes { get; set; }
     public bool IsForDeletion { get; set; }
     public bool IsPinned { get; set; }
+    public bool IsLend { get; set; }
 }
