@@ -1085,6 +1085,32 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void SaveAsync_Expense_PersistsLendState()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+            vm.IsDebtIou = true;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddExpenseAsync(
+                Arg.Is<Expense>(expense => expense.IsLend),
+                Arg.Any<CancellationToken>());
+            appData.Received(1).AddExpenseLogAsync(
+                Arg.Is<ExpenseLog>(log => log.IsLend),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
     public void SaveAsync_RecurringExpense_PersistsCategory()
     {
         RunInSta(() =>
@@ -1441,6 +1467,29 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.True(result.IsSuccess);
             appData.Received(1).AddIncomeLogAsync(
                 Arg.Is<IncomeLog>(log => log.IsPinned),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_Income_PersistsDebtState()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Income,
+                CreateCheckingSource(balance: 0m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+            vm.IsDebtIou = true;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            appData.Received(1).AddIncomeLogAsync(
+                Arg.Is<IncomeLog>(log => log.IsDebt),
                 Arg.Any<CancellationToken>());
         });
     }

@@ -346,6 +346,20 @@
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <StackPanel Grid.Column="2" Orientation="Vertical">
                                 <customControls:BalloonCheckBox
+                                    Margin="0,0,0,8"
+                                    ButtonSize="38"
+                                    CheckedBackground="{StaticResource Brush.Info}"
+                                    CheckedIcon="{StaticResource CreditCardMinusSolid}"
+                                    CheckedText="{Binding DebtIouTooltip}"
+                                    CornerRadius="12"
+                                    DefaultBackground="{StaticResource Brush.Background.Surface}"
+                                    IconSize="14"
+                                    IsChecked="{Binding IsDebtIou, Mode=TwoWay}"
+                                    ToolTip="{Binding DebtIouTooltip}"
+                                    UncheckedIcon="{StaticResource CreditCardMinusSolid}"
+                                    UncheckedText="{Binding DebtIouTooltip}"
+                                    Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <customControls:BalloonCheckBox
                                     ButtonSize="38"
                                     CheckedBackground="{StaticResource Brush.Info}"
                                     CornerRadius="12"
