@@ -777,7 +777,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 ExpenseTagId = tagId,
                 Name = backupExpense.Name,
                 Amount = backupExpense.Amount,
-                ExpenseCategory = ParseEnumValue<ExpenseCategory>(backupExpense.ExpenseCategory, "expenseCategory")
+                ExpenseCategory = ParseEnumValue<ExpenseCategory>(backupExpense.ExpenseCategory, "expenseCategory"),
+                IsLend = backupExpense.IsLend
             };
 
             await appData.AddExpenseAsync(expense, cancellationToken);
@@ -801,7 +802,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 DeductedOn = backupExpenseLog.DeductedOn,
                 Notes = backupExpenseLog.Notes,
                 IsForDeletion = backupExpenseLog.IsForDeletion,
-                IsPinned = backupExpenseLog.IsPinned
+                IsPinned = backupExpenseLog.IsPinned,
+                IsLend = backupExpenseLog.IsLend
             };
 
             await appData.AddExpenseLogAsync(expenseLog, cancellationToken);
@@ -844,7 +846,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 Amount = backupIncome.Amount,
                 AddedOn = backupIncome.AddedOn,
                 Notes = backupIncome.Notes,
-                IsPinned = backupIncome.IsPinned
+                IsPinned = backupIncome.IsPinned,
+                IsDebt = backupIncome.IsDebt
             }, cancellationToken);
         }
     }
@@ -1072,7 +1075,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 tagBackupId,
                 expense.Name,
                 expense.Amount,
-                expense.ExpenseCategory.ToString()));
+                expense.ExpenseCategory.ToString(),
+                expense.IsLend));
         }
 
         var logs = await appData.GetExpenseLogsAsync(cancellationToken);
@@ -1102,7 +1106,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 log.Notes,
                 log.IsForDeletion,
                 log.IsPinned,
-                parentLogBackupId));
+                parentLogBackupId,
+                log.IsLend || log.Expense?.IsLend == true));
         }
     }
 
@@ -1124,7 +1129,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 log.Amount,
                 log.AddedOn,
                 log.Notes,
-                log.IsPinned));
+                log.IsPinned,
+                log.IsDebt));
         }
     }
 

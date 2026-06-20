@@ -68,7 +68,8 @@ public sealed record BackupExpense(
     int ExpenseTagBackupId,
     string Name,
     decimal Amount,
-    string ExpenseCategory);
+    string ExpenseCategory,
+    bool IsLend = false);
 
 public sealed record BackupExpenseLog(
     int BackupId,
@@ -79,7 +80,8 @@ public sealed record BackupExpenseLog(
     string Notes,
     bool IsForDeletion,
     bool IsPinned = false,
-    int? ParentLogBackupId = null);
+    int? ParentLogBackupId = null,
+    bool IsLend = false);
 
 public sealed record BackupIncomeLog(
     int BackupId,
@@ -88,7 +90,8 @@ public sealed record BackupIncomeLog(
     decimal Amount,
     DateTime AddedOn,
     string Notes,
-    bool IsPinned = false);
+    bool IsPinned = false,
+    bool IsDebt = false);
 
 public sealed record BackupRecurringTransaction(
     int BackupId,

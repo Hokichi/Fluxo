@@ -171,6 +171,80 @@ public sealed class UserBackupServiceExportTests
     }
 
     [Fact]
+    public async Task BackupAsync_WhenDebtIouFlagsSet_ExportsFlags()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        var account = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking };
+        var tag = new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff" };
+        var expense = new Expense
+        {
+            Id = 20,
+            AccountId = account.Id,
+            ExpenseTagId = tag.Id,
+            Name = "Loan",
+            Amount = 100m,
+            ExpenseTag = tag,
+            Account = account,
+            IsLend = true
+        };
+        var expenseLog = new ExpenseLog
+        {
+            Id = 10,
+            ExpenseId = expense.Id,
+            AccountId = account.Id,
+            Expense = expense,
+            Account = account,
+            Amount = 100m,
+            Notes = string.Empty,
+            IsLend = true
+        };
+        var incomeLog = new IncomeLog
+        {
+            Id = 11,
+            AccountId = account.Id,
+            Account = account,
+            Name = "Borrowed cash",
+            Amount = 50m,
+            Notes = string.Empty,
+            IsDebt = true
+        };
+
+        appData.GetAccountsAsync(Arg.Any<CancellationToken>()).Returns([account]);
+        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
+        appData.GetExpensesAsync(Arg.Any<CancellationToken>()).Returns([expense]);
+        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([expenseLog]);
+        appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>()).Returns([incomeLog]);
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+        var service = new UserBackupService(appData);
+
+        try
+        {
+            var result = await service.BackupAsync(new UserBackupSelection(new HashSet<DataManagementEntityKind>
+            {
+                DataManagementEntityKind.Accounts,
+                DataManagementEntityKind.Tags,
+                DataManagementEntityKind.Expenses,
+                DataManagementEntityKind.Incomes
+            }), tempFile);
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            var json = await File.ReadAllTextAsync(tempFile);
+            var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
+            Assert.NotNull(document);
+
+            Assert.True(Assert.Single(document.Entities.Expenses).IsLend);
+            Assert.True(Assert.Single(document.Entities.ExpenseLogs).IsLend);
+            Assert.True(Assert.Single(document.Entities.IncomeLogs).IsDebt);
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
     public async Task BackupAsync_WhenDeductSourceAppearsAfterDependent_MapsDeductSourceByBackupId()
     {
         var appData = Substitute.For<IAppDataService>();

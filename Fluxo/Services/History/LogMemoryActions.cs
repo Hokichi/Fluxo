@@ -49,7 +49,8 @@ public sealed record ExpenseMemorySnapshot(
     int TagId,
     string Name,
     decimal Amount,
-    ExpenseCategory ExpenseCategory)
+    ExpenseCategory ExpenseCategory,
+    bool IsLend = false)
 {
     public static ExpenseMemorySnapshot Create(Expense expense)
     {
@@ -61,7 +62,8 @@ public sealed record ExpenseMemorySnapshot(
             expense.ExpenseTagId,
             expense.Name,
             expense.Amount,
-            expense.ExpenseCategory);
+            expense.ExpenseCategory,
+            expense.IsLend);
     }
 }
 
@@ -138,7 +140,8 @@ public sealed record ExpenseLogMemorySnapshot(
     DateTime DeductedOn,
     string Notes,
     bool IsForDeletion,
-    int? ParentLogId)
+    int? ParentLogId,
+    bool IsLend = false)
 {
     public static ExpenseLogMemorySnapshot Create(ExpenseLog expenseLog)
     {
@@ -158,7 +161,8 @@ public sealed record ExpenseLogMemorySnapshot(
             expenseLog.DeductedOn,
             expenseLog.Notes,
             expenseLog.IsForDeletion,
-            expenseLog.ParentLogId);
+            expenseLog.ParentLogId,
+            expenseLog.IsLend || expenseLog.Expense.IsLend);
     }
 }
 
@@ -168,7 +172,8 @@ public sealed record IncomeLogMemorySnapshot(
     string Name,
     decimal Amount,
     DateTime AddedOn,
-    string Notes)
+    string Notes,
+    bool IsDebt = false)
 {
     public static IncomeLogMemorySnapshot Create(IncomeLog incomeLog)
     {
@@ -181,7 +186,8 @@ public sealed record IncomeLogMemorySnapshot(
             incomeLog.Name,
             incomeLog.Amount,
             incomeLog.AddedOn,
-            incomeLog.Notes);
+            incomeLog.Notes,
+            incomeLog.IsDebt);
     }
 }
 
@@ -241,7 +247,8 @@ public sealed class AddExpenseLogMemoryAction(
             Amount = snapshot.Amount,
             ExpenseCategory = snapshot.ExpenseCategory,
             AccountId = snapshot.AccountId,
-            ExpenseTagId = snapshot.TagId
+            ExpenseTagId = snapshot.TagId,
+            IsLend = snapshot.IsLend
         };
 
         var expenseLog = new ExpenseLog
@@ -253,7 +260,8 @@ public sealed class AddExpenseLogMemoryAction(
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
             AccountId = snapshot.AccountId,
-            ParentLogId = snapshot.ParentLogId
+            ParentLogId = snapshot.ParentLogId,
+            IsLend = snapshot.IsLend
         };
 
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
@@ -307,7 +315,8 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
             Amount = snapshot.Amount,
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,
-            AccountId = snapshot.AccountId
+            AccountId = snapshot.AccountId,
+            IsDebt = snapshot.IsDebt
         };
 
         await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
@@ -357,6 +366,7 @@ public sealed class EditIncomeLogMemoryAction(
         incomeLog.Amount = snapshot.Amount;
         incomeLog.AddedOn = snapshot.AddedOn;
         incomeLog.Notes = snapshot.Notes;
+        incomeLog.IsDebt = snapshot.IsDebt;
         incomeLog.Account = targetAccount;
         incomeLog.AccountId = snapshot.AccountId;
 
@@ -393,7 +403,8 @@ public sealed class DeleteIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot
             AddedOn = snapshot.AddedOn,
             Notes = snapshot.Notes,
             AccountId = snapshot.AccountId,
-            Account = account
+            Account = account,
+            IsDebt = snapshot.IsDebt
         };
 
         await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
@@ -477,11 +488,13 @@ public sealed class EditExpenseLogMemoryAction(
         expenseLog.Expense.ExpenseCategory = snapshot.ExpenseCategory;
         expenseLog.Expense.Account = targetAccount;
         expenseLog.Expense.ExpenseTag = expenseTag;
+        expenseLog.Expense.IsLend = snapshot.IsLend;
 
         expenseLog.Amount = snapshot.Amount;
         expenseLog.DeductedOn = snapshot.DeductedOn;
         expenseLog.Notes = snapshot.Notes;
         expenseLog.IsForDeletion = snapshot.IsForDeletion;
+        expenseLog.IsLend = snapshot.IsLend;
         expenseLog.Account = targetAccount;
         expenseLog.ParentLogId = snapshot.ParentLogId;
 
@@ -692,6 +705,7 @@ public sealed class EditExpenseMemoryAction(
         expense.ExpenseCategory = snapshot.ExpenseCategory;
         expense.AccountId = snapshot.AccountId;
         expense.ExpenseTagId = snapshot.TagId;
+        expense.IsLend = snapshot.IsLend;
 
         unitOfWork.Expenses.Update(expense);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -722,7 +736,8 @@ public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : 
             AccountId = snapshot.AccountId,
             ExpenseTagId = snapshot.TagId,
             Account = account,
-            ExpenseTag = expenseTag
+            ExpenseTag = expenseTag,
+            IsLend = snapshot.IsLend
         };
 
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
