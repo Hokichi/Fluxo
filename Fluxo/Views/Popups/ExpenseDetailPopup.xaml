@@ -261,6 +261,17 @@
                             Foreground="{DynamicResource Brush.Text.Muted}"
                             Text="{Binding CategoryLabel}" />
                     </StackPanel>
+                    <Path
+                        Grid.Row="2"
+                        Width="13"
+                        Height="13"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Data="{StaticResource CreditCardMinusSolid}"
+                        Fill="{DynamicResource Brush.Info}"
+                        Stretch="Uniform"
+                        ToolTip="Lend"
+                        Visibility="{Binding IsLend, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </Grid>
             </Border>
         </DataTemplate>
@@ -522,6 +533,7 @@
                                 <ColumnDefinition Width="1.5*" />
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="0.75*" />
+                                <ColumnDefinition Width="82" />
                                 <ColumnDefinition Width="40" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
@@ -544,6 +556,11 @@
                                 Margin="4,0,0,0"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Tag" />
+                            <TextBlock
+                                Grid.Column="4"
+                                Margin="4,0,0,0"
+                                Style="{StaticResource SectionLabelStyle}"
+                                Text="Set as lend" />
                         </Grid>
 
                         <ItemsControl x:Name="SplitRowsItemsControl" ItemsSource="{Binding SplitRows}">
@@ -555,6 +572,7 @@
                                             <ColumnDefinition Width="1.5*" />
                                             <ColumnDefinition Width="1*" />
                                             <ColumnDefinition Width="0.75*" />
+                                            <ColumnDefinition Width="82" />
                                             <ColumnDefinition Width="40" />
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0" Margin="0,0,8,0">
@@ -615,8 +633,15 @@
                                             </Popup>
                                         </Grid>
 
-                                        <customControls:BalloonButton
+                                        <CheckBox
                                             Grid.Column="4"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            IsChecked="{Binding IsLend, Mode=TwoWay}"
+                                            ToolTip="Set as lend" />
+
+                                        <customControls:BalloonButton
+                                            Grid.Column="5"
                                             Width="28"
                                             Height="28"
                                             Margin="0,0,0,0"

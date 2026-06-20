@@ -573,7 +573,8 @@ public partial class ExpenseDetailVM : ObservableObject
                 row.SelectedExpenseCategory,
                 row.SelectedTag.Id,
                 string.Empty,
-                SelectedDate.Date));
+                SelectedDate.Date,
+                row.IsLend));
         }
 
         if (result.Count == 0 && _removedSplitRows.All(row => row.ExpenseLogId is null))
@@ -686,7 +687,8 @@ public partial class ExpenseDetailVM : ObservableObject
                     removedRow.SelectedExpenseCategory,
                     removedRow.SelectedTag.Id,
                     string.Empty,
-                    SelectedDate.Date);
+                    SelectedDate.Date,
+                    removedRow.IsLend);
                 var beforeSnapshot = ExpenseLogMemorySnapshot.Create(removedChild);
                 ApplySplitInputToExistingChild(removedChild, input, removedTag, account);
                 removedChild.IsForDeletion = true;
@@ -718,7 +720,8 @@ public partial class ExpenseDetailVM : ObservableObject
                 entry.ExpenseLog.DeductedOn,
                 entry.ExpenseLog.Notes,
                 entry.ExpenseLog.IsForDeletion,
-                entry.ExpenseLog.ParentLogId)).ToList();
+                entry.ExpenseLog.ParentLogId,
+                entry.ExpenseLog.IsLend)).ToList();
 
             var historyActions = changedSnapshots
                 .Select(snapshots => (ILogMemoryAction)new EditExpenseLogMemoryAction(snapshots.Before, snapshots.After))
@@ -860,7 +863,8 @@ public partial class ExpenseDetailVM : ObservableObject
             AccountName = log.Account?.Name ?? string.Empty,
             TagName = log.Expense?.ExpenseTag?.Name ?? string.Empty,
             TagHexCode = log.Expense?.ExpenseTag?.HexCode ?? string.Empty,
-            Notes = log.Notes
+            Notes = log.Notes,
+            IsLend = log.IsLend || log.Expense?.IsLend == true
         };
     }
 
@@ -872,7 +876,8 @@ public partial class ExpenseDetailVM : ObservableObject
             AmountText = log.Amount,
             NameText = log.Expense?.Name ?? string.Empty,
             SelectedExpenseCategory = log.Expense?.ExpenseCategory ?? SelectedExpenseCategory,
-            SelectedTag = ResolveSplitRowTag(log.Expense?.ExpenseTag)
+            SelectedTag = ResolveSplitRowTag(log.Expense?.ExpenseTag),
+            IsLend = log.IsLend || log.Expense?.IsLend == true
         };
     }
 
@@ -920,7 +925,8 @@ public partial class ExpenseDetailVM : ObservableObject
             Amount = input.Amount,
             ExpenseCategory = input.Category,
             AccountId = account.Id,
-            ExpenseTagId = tag.Id
+            ExpenseTagId = tag.Id,
+            IsLend = input.IsLend
         };
     }
 
@@ -938,7 +944,8 @@ public partial class ExpenseDetailVM : ObservableObject
             Notes = input.Note,
             IsForDeletion = false,
             AccountId = account.Id,
-            ParentLogId = parentLogId
+            ParentLogId = parentLogId,
+            IsLend = input.IsLend
         };
     }
 
@@ -955,12 +962,14 @@ public partial class ExpenseDetailVM : ObservableObject
         expenseLog.Expense.AccountId = account.Id;
         expenseLog.Expense.ExpenseTag = tag;
         expenseLog.Expense.ExpenseTagId = tag.Id;
+        expenseLog.Expense.IsLend = input.IsLend;
 
         expenseLog.Amount = input.Amount;
         expenseLog.DeductedOn = input.Date;
         expenseLog.Notes = input.Note;
         expenseLog.Account = account;
         expenseLog.AccountId = account.Id;
+        expenseLog.IsLend = input.IsLend;
         expenseLog.IsForDeletion = false;
         expenseLog.ParentLogId = input.ParentLogId;
     }
@@ -1123,7 +1132,8 @@ public partial class ExpenseDetailVM : ObservableObject
         ExpenseCategory Category,
         int TagId,
         string Note,
-        DateTime Date);
+        DateTime Date,
+        bool IsLend);
 
     private readonly record struct ExpenseDetailSavedState(
         string Name,

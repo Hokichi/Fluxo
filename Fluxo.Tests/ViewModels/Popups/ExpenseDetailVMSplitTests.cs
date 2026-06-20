@@ -95,12 +95,14 @@ public sealed class ExpenseDetailVMSplitTests
                         Amount = 35m,
                         DeductedOn = new DateTime(2026, 5, 31),
                         Notes = "Child note",
+                        IsLend = true,
                         Account = persistedSource,
                         Expense = new Expense
                         {
                             Name = "Groceries",
                             ExpenseCategory = ExpenseCategory.Wants,
-                            ExpenseTag = new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6" }
+                            ExpenseTag = new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6" },
+                            IsLend = true
                         }
                     },
                     new ExpenseLog
@@ -122,6 +124,7 @@ public sealed class ExpenseDetailVMSplitTests
             Assert.Equal(ExpenseCategory.Wants, row.SelectedExpenseCategory);
             Assert.Equal(2, row.SelectedTag?.Id);
             Assert.Equal("Travel", row.SelectedTag?.Name);
+            Assert.True(row.IsLend);
         });
     }
 
@@ -190,6 +193,7 @@ public sealed class ExpenseDetailVMSplitTests
                         Amount = 35m,
                         DeductedOn = new DateTime(2026, 5, 31),
                         Notes = "Child note",
+                        IsLend = true,
                         Account = persistedSource,
                         Expense = new Expense
                         {
@@ -217,6 +221,7 @@ public sealed class ExpenseDetailVMSplitTests
             Assert.Equal("Groceries", child.Name);
             Assert.Equal(35m, child.Amount);
             Assert.Equal("General", child.TagName);
+            Assert.True(child.IsLend);
         });
     }
 
@@ -650,6 +655,7 @@ public sealed class ExpenseDetailVMSplitTests
             vm.AddSplitRow();
             vm.SplitRows[0].NameText = "Groceries";
             vm.SplitRows[0].AmountText = 30m;
+            vm.SplitRows[0].IsLend = true;
             vm.AddSplitRow();
             vm.SplitRows[1].NameText = "Transport";
             vm.SplitRows[1].AmountText = 20m;
@@ -671,13 +677,21 @@ public sealed class ExpenseDetailVMSplitTests
                 Arg.Is<ExpenseLog>(log =>
                     log.Amount == 30m &&
                     log.ParentLogId == 10 &&
-                    log.AccountId == 1),
+                    log.AccountId == 1 &&
+                    log.IsLend),
                 Arg.Any<CancellationToken>());
             _ = appData.Received(1).AddExpenseLogAsync(
                 Arg.Is<ExpenseLog>(log =>
                     log.Amount == 20m &&
                     log.ParentLogId == 10 &&
-                    log.AccountId == 1),
+                    log.AccountId == 1 &&
+                    !log.IsLend),
+                Arg.Any<CancellationToken>());
+            _ = appData.Received(1).AddExpenseAsync(
+                Arg.Is<Expense>(expense => expense.Amount == 30m && expense.IsLend),
+                Arg.Any<CancellationToken>());
+            _ = appData.Received(1).AddExpenseAsync(
+                Arg.Is<Expense>(expense => expense.Amount == 20m && !expense.IsLend),
                 Arg.Any<CancellationToken>());
 
             _ = appData.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -698,12 +712,14 @@ public sealed class ExpenseDetailVMSplitTests
                 action.Snapshot.Amount == 30m &&
                 action.Snapshot.ExpenseName == "Groceries" &&
                 action.Snapshot.Notes == string.Empty &&
-                !action.Snapshot.IsForDeletion);
+                !action.Snapshot.IsForDeletion &&
+                action.Snapshot.IsLend);
             Assert.Contains(addActions, action =>
                 action.Snapshot.Amount == 20m &&
                 action.Snapshot.ExpenseName == "Transport" &&
                 action.Snapshot.Notes == string.Empty &&
-                !action.Snapshot.IsForDeletion);
+                !action.Snapshot.IsForDeletion &&
+                !action.Snapshot.IsLend);
             }
             finally
             {
