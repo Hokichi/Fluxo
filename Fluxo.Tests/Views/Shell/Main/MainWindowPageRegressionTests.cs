@@ -147,7 +147,8 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Text=\"{Binding ActivePageTitle", xaml);
         Assert.DoesNotContain("Welcome back,", xaml);
         Assert.DoesNotContain("Text=\"{Binding Username}\"", xaml);
-        Assert.Contains("ActivePageTitle = GetMainPageTitle(_activeMainPage);", source);
+        Assert.Contains("RefreshActivePageTitle();", source);
+        Assert.Contains("ActivePageTitle = _mainVM.IsAppLocked ? \"Locked\" : GetMainPageTitle(_activeMainPage);", source);
         Assert.Contains("=> page switch", source);
         Assert.Contains("MainPage.Dashboard => \"Dashboard\"", source);
         Assert.Contains("MainPage.Analytics => \"Analytics\"", source);

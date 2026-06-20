@@ -87,13 +87,26 @@
                             Margin="0,16,0,0"
                             Background="{StaticResource Brush.Border.Subtle}" />
 
-                        <Grid Margin="0,16,0,0" Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel Margin="0,16,0,0" Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock
-                                VerticalAlignment="Center"
                                 FontFamily="{StaticResource Bold}"
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="Auto-lock after" />
-                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <customControls:SegmentedToggleGroup
+                                Margin="0,10,0,0"
+                                SelectedValue="{Binding SelectedAppAutoLockPreset, Mode=TwoWay}">
+                                <customControls:SegmentedToggleOption Content="30 seconds" Value="30" />
+                                <customControls:SegmentedToggleOption Content="1 minute" Value="60" />
+                                <customControls:SegmentedToggleOption Content="3 minutes" Value="180" />
+                                <customControls:SegmentedToggleOption Content="5 minutes" Value="300" />
+                                <customControls:SegmentedToggleOption Content="10 minutes" Value="600" />
+                                <customControls:SegmentedToggleOption Content="Custom" Value="Custom" />
+                            </customControls:SegmentedToggleGroup>
+                            <StackPanel
+                                Margin="0,10,0,0"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal"
+                                Visibility="{Binding IsCustomAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <customControls:NumericUpDown
                                     Width="120"
                                     LowerLimit="1"
@@ -105,7 +118,7 @@
                                     Foreground="{StaticResource Brush.Text.Primary}"
                                     Text="seconds" />
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
 
                         <Border
                             Height="1"

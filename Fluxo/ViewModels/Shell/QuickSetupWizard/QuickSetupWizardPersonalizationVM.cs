@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Shell.QuickSetupWizard;
 
@@ -13,7 +14,8 @@ public partial class QuickSetupWizardPersonalizationVM : ObservableObject
 
     [ObservableProperty] private bool _isStep6Active;
     [ObservableProperty] private bool _isAppAutoLocked;
-    [ObservableProperty] private int _appAutoLockedInterval = 100;
+    [ObservableProperty] private int _appAutoLockedInterval = AutoLockPreset.DefaultIntervalSeconds;
+    [ObservableProperty] private string _selectedAppAutoLockPreset = AutoLockPreset.Seconds30;
     [ObservableProperty] private string _uiLockingPassword = string.Empty;
     [ObservableProperty] private bool _isUiLockingPasswordVisible;
 
@@ -27,6 +29,8 @@ public partial class QuickSetupWizardPersonalizationVM : ObservableObject
 
     public bool HasAutoLockInterval => IsAppAutoLocked;
 
+    public bool IsCustomAutoLockInterval => AutoLockPreset.IsCustom(SelectedAppAutoLockPreset);
+
     public async Task LoadAsync()
     {
         var settings = await _appData.GetUserSettingsAsync();
@@ -36,7 +40,8 @@ public partial class QuickSetupWizardPersonalizationVM : ObservableObject
         AppAutoLockedInterval = QuickSetupWizardShared.ParsePositiveInt(
             settingsByName,
             UserSettingNames.AppAutoLockedInterval,
-            100);
+            AutoLockPreset.DefaultIntervalSeconds);
+        SelectedAppAutoLockPreset = AutoLockPreset.FromIntervalSeconds(AppAutoLockedInterval);
         UiLockingPassword = _passwordProtector.Unprotect(
             QuickSetupWizardShared.ParseString(settingsByName, UserSettingNames.UILockingPassword, string.Empty));
     }
@@ -74,6 +79,24 @@ public partial class QuickSetupWizardPersonalizationVM : ObservableObject
     partial void OnAppAutoLockedIntervalChanged(int value)
     {
         if (value <= 0)
+        {
             AppAutoLockedInterval = 1;
+            return;
+        }
+
+        var preset = AutoLockPreset.FromIntervalSeconds(value);
+        if (!string.Equals(SelectedAppAutoLockPreset, preset, StringComparison.Ordinal))
+            SelectedAppAutoLockPreset = preset;
+    }
+
+    partial void OnSelectedAppAutoLockPresetChanged(string value)
+    {
+        if (AutoLockPreset.TryGetSeconds(value, out var seconds) &&
+            AppAutoLockedInterval != seconds)
+        {
+            AppAutoLockedInterval = seconds;
+        }
+
+        OnPropertyChanged(nameof(IsCustomAutoLockInterval));
     }
 }

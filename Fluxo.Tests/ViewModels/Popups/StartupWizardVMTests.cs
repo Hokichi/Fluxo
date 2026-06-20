@@ -270,6 +270,72 @@ public sealed class QuickSetupWizardVMTests
         Assert.Equal(OverspendPolicy.SoftDebt, unitOfWork.BudgetAllocationEntity.OverspendPolicy);
     }
 
+    [Fact]
+    public async Task Personalization_LoadAsync_DefaultsAutoLockIntervalToThirtySecondPreset()
+    {
+        var unitOfWork = new TestUnitOfWork(new TestUserSettingsRepository([]));
+        var appData = new AppDataService(unitOfWork);
+        var vm = new QuickSetupWizardPersonalizationVM(appData, new TestPasswordProtector());
+
+        await vm.LoadAsync();
+
+        Assert.Equal(30, vm.AppAutoLockedInterval);
+        Assert.Equal("30", vm.SelectedAppAutoLockPreset);
+        Assert.False(vm.IsCustomAutoLockInterval);
+    }
+
+    [Fact]
+    public void Personalization_SelectingFixedAutoLockPreset_UpdatesInterval()
+    {
+        var unitOfWork = new TestUnitOfWork(new TestUserSettingsRepository([]));
+        var appData = new AppDataService(unitOfWork);
+        var vm = new QuickSetupWizardPersonalizationVM(appData, new TestPasswordProtector());
+
+        vm.SelectedAppAutoLockPreset = "300";
+
+        Assert.Equal(300, vm.AppAutoLockedInterval);
+        Assert.False(vm.IsCustomAutoLockInterval);
+    }
+
+    [Fact]
+    public async Task Personalization_LoadAsync_SelectsCustomPresetForNonPresetInterval()
+    {
+        var unitOfWork = new TestUnitOfWork(new TestUserSettingsRepository(
+        [
+            new UserSettings { Name = UserSettingNames.AppAutoLockedInterval, Value = "45" }
+        ]));
+        var appData = new AppDataService(unitOfWork);
+        var vm = new QuickSetupWizardPersonalizationVM(appData, new TestPasswordProtector());
+
+        await vm.LoadAsync();
+
+        Assert.Equal(45, vm.AppAutoLockedInterval);
+        Assert.Equal("Custom", vm.SelectedAppAutoLockPreset);
+        Assert.True(vm.IsCustomAutoLockInterval);
+    }
+
+    [Fact]
+    public void PersonalizationStep_UsesSegmentedAutoLockPresetSelector()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "Views",
+            "Shell",
+            "Wizard",
+            "Pages",
+            "Steps",
+            "Personalization.xaml"));
+
+        Assert.Contains("SelectedValue=\"{Binding SelectedAppAutoLockPreset, Mode=TwoWay}\"", xaml);
+        Assert.Contains("Content=\"30 seconds\"", xaml);
+        Assert.Contains("Content=\"1 minute\"", xaml);
+        Assert.Contains("Content=\"3 minutes\"", xaml);
+        Assert.Contains("Content=\"5 minutes\"", xaml);
+        Assert.Contains("Content=\"10 minutes\"", xaml);
+        Assert.Contains("Content=\"Custom\"", xaml);
+        Assert.Contains("Visibility=\"{Binding IsCustomAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+    }
+
     private static QuickSetupWizardVM CreateViewModel(TestUnitOfWork? unitOfWork = null)
     {
         unitOfWork ??= new TestUnitOfWork(new TestUserSettingsRepository([]));

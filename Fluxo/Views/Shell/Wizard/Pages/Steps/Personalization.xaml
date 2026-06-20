@@ -34,17 +34,26 @@
             Margin="0,0,0,12"
             Style="{StaticResource CardStyle}"
             Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <StackPanel>
                 <TextBlock
-                    VerticalAlignment="Center"
                     FontFamily="{StaticResource Bold}"
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Auto-lock after" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <customControls:SegmentedToggleGroup
+                    Margin="0,10,0,0"
+                    SelectedValue="{Binding SelectedAppAutoLockPreset, Mode=TwoWay}">
+                    <customControls:SegmentedToggleOption Content="30 seconds" Value="30" />
+                    <customControls:SegmentedToggleOption Content="1 minute" Value="60" />
+                    <customControls:SegmentedToggleOption Content="3 minutes" Value="180" />
+                    <customControls:SegmentedToggleOption Content="5 minutes" Value="300" />
+                    <customControls:SegmentedToggleOption Content="10 minutes" Value="600" />
+                    <customControls:SegmentedToggleOption Content="Custom" Value="Custom" />
+                </customControls:SegmentedToggleGroup>
+                <StackPanel
+                    Margin="0,10,0,0"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Visibility="{Binding IsCustomAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
                     <customControls:NumericUpDown
                         Width="96"
                         LowerLimit="1"
@@ -56,7 +65,7 @@
                         Style="{StaticResource RoundedTextInputStyle}"
                         Text="seconds" />
                 </StackPanel>
-            </Grid>
+            </StackPanel>
         </Border>
 
         <Border Style="{StaticResource CardStyle}">

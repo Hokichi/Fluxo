@@ -147,6 +147,7 @@ public partial class MainWindow : Window, IPopupHost
             }
 
             EnsureDashboardPageLoaded();
+            SetDashboardMainContentHitTestVisible(!_mainVM.IsAppLocked);
             MainPageHost.Content = _dashboardPageView;
             UpdateMainNavigationCheckedState(_activeMainPage);
             UpdateHeaderDateSelectorEnabledState(_activeMainPage);
@@ -1564,7 +1565,7 @@ public partial class MainWindow : Window, IPopupHost
                     await TransitionToMainPageAsync(nextPage);
                     await PrepareMainPageContentAsync(page);
                     _activeMainPage = page;
-                    ActivePageTitle = GetMainPageTitle(_activeMainPage);
+                    RefreshActivePageTitle();
                     UpdateMainNavigationCheckedState(_activeMainPage);
                     UpdateHeaderDateSelectorEnabledState(_activeMainPage);
                     UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);
@@ -1653,6 +1654,7 @@ public partial class MainWindow : Window, IPopupHost
 
         _dashboardPageScope = _serviceProvider.CreateScope();
         _dashboardPageView = _dashboardPageScope.ServiceProvider.GetRequiredService<Dashboard>();
+        SetDashboardMainContentHitTestVisible(!_mainVM.IsAppLocked);
     }
 
     private void EnsureAnalyticsPageLoaded()
@@ -2195,6 +2197,12 @@ public partial class MainWindow : Window, IPopupHost
         if (!CanAutoLockUi())
             return;
 
+        if (IsWindowActiveForAutoLock())
+        {
+            ResetAppAutoLockActivity();
+            return;
+        }
+
         LockAppUiFromUser();
     }
 
@@ -2262,7 +2270,17 @@ public partial class MainWindow : Window, IPopupHost
 
     private bool IsWindowActiveForAutoLock()
     {
-        return IsVisible && IsActive && WindowState != WindowState.Minimized;
+        return IsVisible && WindowState != WindowState.Minimized &&
+               (IsActive || HasActiveOwnedWindow());
+    }
+
+    private bool HasActiveOwnedWindow()
+    {
+        foreach (Window ownedWindow in OwnedWindows)
+            if (ownedWindow.IsVisible && ownedWindow.IsActive)
+                return true;
+
+        return false;
     }
 
     private void StopAppAutoLockTimers()
@@ -2307,6 +2325,7 @@ public partial class MainWindow : Window, IPopupHost
         if (HeaderAppLockButton is not null)
             HeaderAppLockButton.IsChecked = _mainVM.IsAppLocked;
 
+        RefreshActivePageTitle();
         SetDashboardMainContentHitTestVisible(!_mainVM.IsAppLocked);
 
         if (_mainVM.IsAppLocked)
@@ -2339,6 +2358,11 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         _dashboardPageView.MainContentGrid.IsHitTestVisible = isHitTestVisible;
+    }
+
+    private void RefreshActivePageTitle()
+    {
+        ActivePageTitle = _mainVM.IsAppLocked ? "Locked" : GetMainPageTitle(_activeMainPage);
     }
 
     private bool ShouldCollapseHeaderSearchOnExternalClick()

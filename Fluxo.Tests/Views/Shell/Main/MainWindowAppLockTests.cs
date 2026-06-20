@@ -66,7 +66,21 @@ public sealed class MainWindowAppLockTests
         Assert.Contains("_appAutoLockActiveDelayTimer.Start();", source);
         Assert.Contains("StartAppAutoLockCountdown();", source);
         Assert.Contains("_appAutoLockCountdownTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, _mainVM.AppAutoLockedInterval));", source);
-        Assert.Contains("return IsVisible && IsActive && WindowState != WindowState.Minimized;", source);
+        Assert.Contains("return IsVisible && WindowState != WindowState.Minimized &&", source);
+        Assert.Contains("HasActiveOwnedWindow()", source);
+        Assert.Contains("if (IsWindowActiveForAutoLock())", source);
+        Assert.Contains("ResetAppAutoLockActivity();", source);
+    }
+
+    [Fact]
+    public void LockedStateUpdatesTitleAndReappliesDashboardHitTesting()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("private void RefreshActivePageTitle()", source);
+        Assert.Contains("ActivePageTitle = _mainVM.IsAppLocked ? \"Locked\" : GetMainPageTitle(_activeMainPage);", source);
+        Assert.Contains("SetDashboardMainContentHitTestVisible(!_mainVM.IsAppLocked);", source);
+        Assert.Contains("RefreshActivePageTitle();", source);
     }
 
     private static string ReadMainWindowXaml()

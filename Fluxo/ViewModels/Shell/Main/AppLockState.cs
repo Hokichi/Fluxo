@@ -3,6 +3,7 @@ using Fluxo.Core.Constants;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
@@ -12,7 +13,7 @@ public partial class AppLockState : ObservableObject
     private string _uiLockingPassword = string.Empty;
 
     [ObservableProperty] private bool _isAppAutoLocked;
-    [ObservableProperty] private int _appAutoLockedInterval = 100;
+    [ObservableProperty] private int _appAutoLockedInterval = AutoLockPreset.DefaultIntervalSeconds;
     [ObservableProperty] private bool _isAppLocked;
 
     public AppLockState(IUiLockPasswordProtector? passwordProtector = null)
@@ -29,7 +30,7 @@ public partial class AppLockState : ObservableObject
         AppAutoLockedInterval = SettingsShared.ParsePositiveInt(
             settingsByName,
             UserSettingNames.AppAutoLockedInterval,
-            100);
+            AutoLockPreset.DefaultIntervalSeconds);
 
         _uiLockingPassword = _passwordProtector.Unprotect(
             settingsByName.TryGetValue(UserSettingNames.UILockingPassword, out var protectedPassword)

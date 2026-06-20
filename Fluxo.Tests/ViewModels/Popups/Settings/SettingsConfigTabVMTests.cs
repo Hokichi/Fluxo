@@ -345,6 +345,63 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
+    public async Task PersonalizationTab_LoadAsync_DefaultsAutoLockIntervalToThirtySecondPreset()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+
+        await vm.LoadAsync();
+
+        Assert.Equal(30, vm.AppAutoLockedInterval);
+        Assert.Equal("30", vm.SelectedAppAutoLockPreset);
+        Assert.False(vm.IsCustomAutoLockInterval);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_SelectingFixedAutoLockPreset_UpdatesIntervalAndPublishesPendingState()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var captured = new List<SettingsPendingChangesChangedMessage>();
+        var recipient = new PendingRecipient(captured);
+        messenger.Register<PendingRecipient, SettingsPendingChangesChangedMessage>(recipient,
+            static (r, m) => r.Messages.Add(m));
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            messenger,
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.SelectedAppAutoLockPreset = "180";
+
+        Assert.Equal(180, vm.AppAutoLockedInterval);
+        Assert.False(vm.IsCustomAutoLockInterval);
+        Assert.Contains(captured, m =>
+            m.Value.TabKey == SettingsTabKey.Personalization &&
+            m.Value.HasPendingChanges);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_LoadAsync_SelectsCustomPresetForNonPresetInterval()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork(
+        [
+            new UserSettings { Name = UserSettingNames.AppAutoLockedInterval, Value = "45" }
+        ]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+
+        await vm.LoadAsync();
+
+        Assert.Equal(45, vm.AppAutoLockedInterval);
+        Assert.Equal("Custom", vm.SelectedAppAutoLockPreset);
+        Assert.True(vm.IsCustomAutoLockInterval);
+    }
+
+    [Fact]
     public async Task PersonalizationTab_LoadAsync_DecryptsUiLockPassword()
     {
         var unitOfWork = new TestSettingsUnitOfWork(

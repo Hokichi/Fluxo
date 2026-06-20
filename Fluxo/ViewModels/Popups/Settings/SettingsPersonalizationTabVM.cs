@@ -12,6 +12,7 @@ using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Ui;
 using Fluxo.Services.Updates;
+using Fluxo.ViewModels.Shell;
 
 namespace Fluxo.ViewModels.Popups.Settings;
 
@@ -27,7 +28,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private bool _savedShouldRunAtStartup;
     private AppCloseBehavior _savedCloseBehavior = AppCloseBehavior.Exit;
     private bool _savedIsAppAutoLocked;
-    private int _savedAppAutoLockedInterval = 100;
+    private int _savedAppAutoLockedInterval = AutoLockPreset.DefaultIntervalSeconds;
     private string _savedUiLockingPassword = string.Empty;
 
     [ObservableProperty] private string _preferredAppName = string.Empty;
@@ -35,7 +36,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     [ObservableProperty] private AppCloseBehavior _closeBehavior = AppCloseBehavior.Exit;
     [ObservableProperty] private bool _isCheckingForUpdates;
     [ObservableProperty] private bool _isAppAutoLocked;
-    [ObservableProperty] private int _appAutoLockedInterval = 100;
+    [ObservableProperty] private int _appAutoLockedInterval = AutoLockPreset.DefaultIntervalSeconds;
+    [ObservableProperty] private string _selectedAppAutoLockPreset = AutoLockPreset.Seconds30;
     [ObservableProperty] private string _uiLockingPassword = string.Empty;
     [ObservableProperty] private bool _isUiLockingPasswordVisible;
 
@@ -63,6 +65,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     public bool HasAutoLockInterval => IsAppAutoLocked;
 
+    public bool IsCustomAutoLockInterval => AutoLockPreset.IsCustom(SelectedAppAutoLockPreset);
+
     public bool HasPendingChanges =>
         !string.Equals((PreferredAppName ?? string.Empty).Trim(), _savedPreferredAppName, StringComparison.Ordinal) ||
         ShouldRunAtStartup != _savedShouldRunAtStartup ||
@@ -83,7 +87,11 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         CloseBehavior = SettingsShared.ParseCloseBehavior(settingsByName, UserSettingNames.CloseBehavior, AppCloseBehavior.Exit);
         IsAppAutoLocked = SettingsShared.ParseBool(settingsByName, UserSettingNames.IsAppAutoLocked, false);
         AppAutoLockedInterval =
-            SettingsShared.ParsePositiveInt(settingsByName, UserSettingNames.AppAutoLockedInterval, 100);
+            SettingsShared.ParsePositiveInt(
+                settingsByName,
+                UserSettingNames.AppAutoLockedInterval,
+                AutoLockPreset.DefaultIntervalSeconds);
+        SelectedAppAutoLockPreset = AutoLockPreset.FromIntervalSeconds(AppAutoLockedInterval);
         UiLockingPassword = _passwordProtector.Unprotect(
             SettingsShared.ParseString(settingsByName, UserSettingNames.UILockingPassword, string.Empty));
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
@@ -210,6 +218,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         CloseBehavior = _savedCloseBehavior;
         IsAppAutoLocked = _savedIsAppAutoLocked;
         AppAutoLockedInterval = _savedAppAutoLockedInterval;
+        SelectedAppAutoLockPreset = AutoLockPreset.FromIntervalSeconds(AppAutoLockedInterval);
         UiLockingPassword = _savedUiLockingPassword;
         foreach (var setting in NotificationSettings)
             if (_savedNotificationSettings.TryGetValue(setting.SettingName, out var value))
@@ -248,6 +257,22 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
             return;
         }
 
+        var preset = AutoLockPreset.FromIntervalSeconds(value);
+        if (!string.Equals(SelectedAppAutoLockPreset, preset, StringComparison.Ordinal))
+            SelectedAppAutoLockPreset = preset;
+
+        PublishPendingState();
+    }
+
+    partial void OnSelectedAppAutoLockPresetChanged(string value)
+    {
+        if (AutoLockPreset.TryGetSeconds(value, out var seconds) &&
+            AppAutoLockedInterval != seconds)
+        {
+            AppAutoLockedInterval = seconds;
+        }
+
+        OnPropertyChanged(nameof(IsCustomAutoLockInterval));
         PublishPendingState();
     }
 
