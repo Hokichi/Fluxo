@@ -99,6 +99,11 @@ public partial class MainVM : ObservableRecipient
             await Ledger.LoadAsync();
     }
 
+    public Task ReloadUserSettingsAsync()
+    {
+        return LoadUserSettingsAsync();
+    }
+
     private async Task LoadUserSettingsAsync()
     {
         var settingsByName = await _dataOperationRunner.RunAsync(async (scope, ct) =>

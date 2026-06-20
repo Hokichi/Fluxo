@@ -20,6 +20,38 @@ public sealed class SettingsAutosaveAnimationTests
         Assert.DoesNotContain("await LoadAsync();", methodBody);
     }
 
+    [Fact]
+    public void ApplyConfigurationAsync_RefreshesMainUserSettings_AfterAutosave()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "ViewModels",
+            "Popups",
+            "Settings",
+            "SettingsVM.cs"));
+
+        var methodBody = ExtractMethodBody(source, "ApplyConfigurationAsync");
+
+        Assert.Contains("await _mainViewModel.ReloadUserSettingsAsync();", methodBody);
+    }
+
+    [Theory]
+    [InlineData("ResetAllSettingsAsync")]
+    [InlineData("DeleteAllDataAsync")]
+    public void SettingsMaintenance_RefreshesMainUserSettings_AfterSavingSettings(string methodName)
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo",
+            "ViewModels",
+            "Popups",
+            "Settings",
+            "SettingsVM.cs"));
+
+        var methodBody = ExtractMethodBody(source, methodName);
+
+        Assert.Contains("await _mainViewModel.ReloadUserSettingsAsync();", methodBody);
+    }
+
     private static string ExtractMethodBody(string source, string methodName)
     {
         var methodStart = source.IndexOf(methodName, StringComparison.Ordinal);
