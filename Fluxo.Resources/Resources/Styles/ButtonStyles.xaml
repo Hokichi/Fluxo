@@ -357,7 +357,7 @@
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-                            <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                            <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             <Setter TargetName="SelectedStrip" Property="Visibility" Value="Visible" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -383,7 +383,7 @@
         TargetType="{x:Type c:BalloonButton}">
         <Setter Property="IconSize" Value="10" />
         <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Surface}" />
-        <Setter Property="HoveredBackground" Value="{StaticResource Brush.Background.Hovered}" />
+        <Setter Property="HoveredBackground" Value="{StaticResource Brush.Background.Hover}" />
     </Style>
 
     <Style x:Key="TagDeleteButtonStyle" TargetType="Button">
@@ -428,7 +428,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="TagBorder" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                            <Setter TargetName="TagBorder" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             <Setter TargetName="DotCloseIcon" Property="Opacity" Value="1" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -907,7 +907,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="OptionCard" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                            <Setter TargetName="OptionCard" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             <Setter TargetName="OptionCard" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
                             <Setter TargetName="OptionCard" Property="RenderTransform">
                                 <Setter.Value>

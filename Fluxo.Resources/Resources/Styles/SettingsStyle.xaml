@@ -39,7 +39,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                            <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="CheckSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
@@ -83,10 +83,10 @@
                     </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                            <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                            <Setter TargetName="CheckSurface" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                             <Setter TargetName="CheckSurface" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
                             <Setter TargetName="CheckGlyph" Property="Path" Value="{StaticResource EnableChecks}" />
                             <Setter TargetName="CheckGlyph" Property="Color" Value="{StaticResource Brush.Mint}" />

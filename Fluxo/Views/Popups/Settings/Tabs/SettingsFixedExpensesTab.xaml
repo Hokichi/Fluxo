@@ -113,7 +113,7 @@
             </StackPanel>
             <DataTemplate.Triggers>
                 <Trigger SourceName="ItemRoot" Property="IsMouseOver" Value="True">
-                    <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                    <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                     <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
                     <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
                     <Setter TargetName="RowActions" Property="Opacity" Value="1" />
@@ -241,11 +241,4 @@
             </StackPanel>
         </Grid>
     </Border>
-
 </UserControl>
-
-
-
-
-
-

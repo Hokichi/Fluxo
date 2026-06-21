@@ -37,7 +37,7 @@
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="InputRoot" Property="Opacity" Value="0.4" />
@@ -82,7 +82,7 @@
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="InputRoot" Property="Opacity" Value="0.4" />
@@ -157,7 +157,7 @@
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="InputRoot" Property="Opacity" Value="0.4" />
@@ -239,7 +239,7 @@
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="InputRoot" Property="Opacity" Value="0.4" />
@@ -350,7 +350,7 @@
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hovered}" />
+                            <Setter TargetName="InputRoot" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
                         </Trigger>
                         <Trigger SourceName="PART_UpButton" Property="IsMouseOver" Value="True">
                             <Setter TargetName="UpIcon" Property="Color" Value="{StaticResource Brush.Mint}" />
