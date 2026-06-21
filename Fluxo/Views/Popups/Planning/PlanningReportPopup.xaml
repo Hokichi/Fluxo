@@ -626,8 +626,32 @@
                         </Border.Style>
                         <StackPanel>
                             <StackPanel>
+                                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                    <customControls:BalloonButton
+                                        Margin="0,0,8,0"
+                                        ButtonIcon="{StaticResource RegularRepeat}"
+                                        ButtonText="Load Recurring"
+                                        Click="OnLoadRecurringIncomesClick"
+                                        CornerRadius="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
+                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        IconSize="10"
+                                        ShouldExpand="True" />
+
+                                    <customControls:BalloonButton
+                                        Margin="0,0,0,0"
+                                        ButtonIcon="{StaticResource PlusSolid}"
+                                        ButtonText="Add Income"
+                                        Click="OnAddIncomeClick"
+                                        CornerRadius="8"
+                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
+                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        IconSize="8"
+                                        ShouldExpand="True" />
+                                </StackPanel>
+
                                 <Border>
-                                    <Border Style="{StaticResource CardBorderStyle}">
+                                    <Border Margin="0,8,0,0" Style="{StaticResource CardBorderStyle}">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -670,13 +694,15 @@
                                         </Grid>
                                     </Border>
                                 </Border>
+                            </StackPanel>
 
+                            <StackPanel Margin="0,8,0,0">
                                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                     <customControls:BalloonButton
-                                        Margin="0,10,8,0"
+                                        Margin="0,0,8,0"
                                         ButtonIcon="{StaticResource RegularRepeat}"
                                         ButtonText="Load Recurring"
-                                        Click="OnLoadRecurringIncomesClick"
+                                        Click="OnLoadRecurringExpensesClick"
                                         CornerRadius="8"
                                         DefaultBackground="{StaticResource Brush.Background.Elevated}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
@@ -684,20 +710,18 @@
                                         ShouldExpand="True" />
 
                                     <customControls:BalloonButton
-                                        Margin="0,10,0,0"
+                                        Margin="0,0,0,0"
                                         ButtonIcon="{StaticResource PlusSolid}"
-                                        ButtonText="Add Income"
-                                        Click="OnAddIncomeClick"
+                                        ButtonText="Add Expense"
+                                        Click="OnAddExpenseClick"
                                         CornerRadius="8"
                                         DefaultBackground="{StaticResource Brush.Background.Elevated}"
                                         HoveredBackground="{StaticResource Brush.Mint}"
                                         IconSize="8"
                                         ShouldExpand="True" />
                                 </StackPanel>
-                            </StackPanel>
 
-                            <StackPanel Margin="0,12,0,0">
-                                <Border Style="{StaticResource CardBorderStyle}">
+                                <Border Margin="0,8,0,0" Style="{StaticResource CardBorderStyle}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -729,7 +753,6 @@
                                         <Border
                                             Grid.Row="1"
                                             Height="1"
-                                            Margin="0,0,0,10"
                                             Background="{StaticResource Brush.Text.Muted}"
                                             Opacity="0.25" />
 
@@ -742,30 +765,6 @@
                                         </customControls:FadingScrollViewer>
                                     </Grid>
                                 </Border>
-
-                                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                    <customControls:BalloonButton
-                                        Margin="0,10,8,0"
-                                        ButtonIcon="{StaticResource RegularRepeat}"
-                                        ButtonText="Load Recurring"
-                                        Click="OnLoadRecurringExpensesClick"
-                                        CornerRadius="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
-                                        IconSize="10"
-                                        ShouldExpand="True" />
-
-                                    <customControls:BalloonButton
-                                        Margin="0,10,0,0"
-                                        ButtonIcon="{StaticResource PlusSolid}"
-                                        ButtonText="Add Expense"
-                                        Click="OnAddExpenseClick"
-                                        CornerRadius="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
-                                        IconSize="8"
-                                        ShouldExpand="True" />
-                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
                     </Border>
