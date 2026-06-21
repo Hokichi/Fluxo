@@ -63,7 +63,7 @@
                     <TextBox
                         x:Name="UsernameTextBox"
                         Margin="0,8,0,0"
-                        Background="{StaticResource Brush.Background.Surface}"
+                        Background="{StaticResource Brush.Background.Elevated}"
                         LostFocus="OnUsernameTextBoxLostFocus"
                         Style="{StaticResource RoundedTextInputStyle}"
                         Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}"
@@ -148,7 +148,7 @@
 
                                     <TextBox
                                         x:Name="UiLockingPasswordVisibleTextBox"
-                                        Background="{StaticResource Brush.Background.Surface}"
+                                        Background="{StaticResource Brush.Background.Elevated}"
                                         Style="{StaticResource RoundedTextInputStyle}"
                                         Text="{Binding UiLockingPassword, UpdateSourceTrigger=PropertyChanged}"
                                         TextChanged="OnUiLockingPasswordVisibleTextBoxTextChanged"

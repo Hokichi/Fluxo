@@ -93,7 +93,7 @@
             <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="Height" Value="34" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />

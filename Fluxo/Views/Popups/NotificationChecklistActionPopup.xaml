@@ -102,7 +102,7 @@
                                 <Border
                                     x:Name="DropDownBorder"
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                    Background="{StaticResource Brush.Background.Surface}"
+                                    Background="{StaticResource Brush.Background.Elevated}"
                                     BorderBrush="{StaticResource Brush.Border.Subtle}"
                                     BorderThickness="1"
                                     CornerRadius="8">

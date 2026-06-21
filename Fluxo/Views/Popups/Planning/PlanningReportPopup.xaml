@@ -627,12 +627,7 @@
                         <StackPanel>
                             <StackPanel>
                                 <Border>
-                                    <Border
-                                        Padding="12"
-                                        Background="{StaticResource Brush.Background.Main}"
-                                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                        BorderThickness="1"
-                                        CornerRadius="14">
+                                    <Border Style="{StaticResource CardBorderStyle}">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -702,12 +697,7 @@
                             </StackPanel>
 
                             <StackPanel Margin="0,12,0,0">
-                                <Border
-                                    Padding="12"
-                                    Background="{StaticResource Brush.Background.Main}"
-                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                    BorderThickness="1"
-                                    CornerRadius="14">
+                                <Border Style="{StaticResource CardBorderStyle}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -780,7 +770,7 @@
                         </StackPanel>
                     </Border>
                     <Border
-                        Background="{StaticResource Brush.Background.Main}"
+                        Background="{StaticResource Brush.Background.Surface}"
                         CornerRadius="14"
                         Opacity="0.62"
                         Visibility="{Binding IsAllocationInvalid, Converter={StaticResource BoolToVisibilityConverter}}" />

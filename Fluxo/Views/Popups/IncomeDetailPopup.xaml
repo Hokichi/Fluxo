@@ -21,7 +21,7 @@
 
         <Style x:Key="PopupFieldBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="12" />
-            <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="12" />
