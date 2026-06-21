@@ -104,7 +104,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddSavingGoalVM>();
         services.AddTransient<NotificationChecklistActionVM>();
         services.AddTransient<GoalDeadlineActionVM>();
-        services.AddTransient<PlanningPopupVM>();
         services.AddTransient<PlanningReportVM>();
         services.AddTransient<AnalyticsVM>();
         services.AddTransient<CalendarVM>();
@@ -141,7 +140,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SettingsPopup>();
         services.AddTransient<DataManagementPopup>();
         services.AddTransient<QuickSetupWizard>();
-        services.AddTransient<PlanningPopup>();
         services.AddTransient<PlanningReportPopup>();
         services.AddTransient<Dashboard>();
         services.AddTransient<Analytics>();

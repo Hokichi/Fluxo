@@ -10,7 +10,6 @@ public sealed class PopupHandoffCallsiteTests
     [InlineData("Fluxo", "Views", "Popups", "ExpenseDetailPopup.xaml.cs")]
     [InlineData("Fluxo", "Views", "Popups", "AccountsListPopup.xaml.cs")]
     [InlineData("Fluxo", "Views", "Popups", "AccountDetailPopup.xaml.cs")]
-    [InlineData("Fluxo", "Views", "Popups", "Planning", "PlanningPopup.xaml.cs")]
     public void PopupHandoffCallsites_UseCloseForPopupHandoff(params string[] relativePathSegments)
     {
         var filePath = Path.Combine(GetRepositoryRootPath(), Path.Combine(relativePathSegments));

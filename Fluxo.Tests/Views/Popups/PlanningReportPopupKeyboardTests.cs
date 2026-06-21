@@ -31,6 +31,29 @@ public sealed class PlanningReportPopupKeyboardTests
         Assert.Contains("AddExpenseRow();", addExpenseBody);
     }
 
+    [Fact]
+    public void Loaded_LoadsReportDataBeforeAnimatingMetrics()
+    {
+        var source = File.ReadAllText(ResolvePlanningReportPopupPath());
+        var methodBody = ExtractMethodBodyBySignature(source, "private async void OnLoaded(object sender, RoutedEventArgs e)");
+
+        Assert.Contains("await _viewModel.LoadAsync();", methodBody);
+        Assert.True(
+            methodBody.IndexOf("await _viewModel.LoadAsync();", StringComparison.Ordinal) <
+            methodBody.IndexOf("AnimateAllocationMetricsToCurrentTargets();", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Xaml_InvalidAllocationOverlay_DimsAndBlursRightSection()
+    {
+        var source = File.ReadAllText(ResolvePlanningReportXamlPath());
+
+        Assert.Contains("BlurEffect", source);
+        Assert.Contains("IsAllocationInvalid", source);
+        Assert.Contains("InvalidAllocationMessage", source);
+        Assert.Contains("Opacity=\"0.62\"", source);
+    }
+
     private static string ResolvePlanningReportPopupPath()
     {
         var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -48,6 +71,32 @@ public sealed class PlanningReportPopupKeyboardTests
                     "Popups",
                     "Planning",
                     "PlanningReportPopup.xaml.cs");
+            }
+
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
+    }
+
+    private static string ResolvePlanningReportXamlPath()
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (currentDirectory is not null)
+        {
+            var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
+            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
+            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
+            {
+                return Path.Combine(
+                    currentDirectory.FullName,
+                    "Fluxo",
+                    "Views",
+                    "Popups",
+                    "Planning",
+                    "PlanningReportPopup.xaml");
             }
 
             currentDirectory = currentDirectory.Parent;

@@ -835,7 +835,7 @@ public partial class MainWindow : Window, IPopupHost
                 return;
             }
 
-            OpenPlanningPopup();
+            OpenPlanningReport();
             e.Handled = true;
             return;
         }
@@ -1329,15 +1329,6 @@ public partial class MainWindow : Window, IPopupHost
         OpenSettingsPopup();
     }
 
-    private void OnPlanningButtonClick(object sender, RoutedEventArgs e)
-    {
-        CloseHeaderMenu();
-        if (IsSufficientFundsActionGateLocked())
-            return;
-
-        OpenPlanningPopup();
-    }
-
     private async void OnHomeNavigationClick(object sender, RoutedEventArgs e)
     {
         await NavigateToMainPageAsync(MainPage.Dashboard);
@@ -1515,12 +1506,12 @@ public partial class MainWindow : Window, IPopupHost
         await SettingsUpdateCheckFlow.CheckForUpdatesAsync(this, viewModel);
     }
 
-    public void OpenPlanningPopup()
+    public void OpenPlanningReport()
     {
         if (IsSufficientFundsActionGateLocked())
             return;
 
-        _dialogService.ShowPlanningPopup(this);
+        _dialogService.ShowPlanningReport(this);
     }
 
     public void OpenAnalyticsPopup()

@@ -167,8 +167,9 @@ public partial class PlanningReportPopup : BasePopup
         ];
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        await _viewModel.LoadAsync();
         StopAllocationAnimations();
         SetAnimatedAllocationValues(
             needsUsage: 0d,

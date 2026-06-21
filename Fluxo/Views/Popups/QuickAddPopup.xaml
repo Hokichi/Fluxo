@@ -341,8 +341,8 @@
         </Button>
 
         <Button
-            x:Name="StartPlanningModeQuickAddButton"
-            Click="OnStartPlanningModeClick"
+            x:Name="PlanningReportQuickAddButton"
+            Click="OnPlanningReportClick"
             Style="{StaticResource LockedDisabledQuickAddTileButtonStyle}">
             <StackPanel VerticalAlignment="Center">
                 <components:Icon
@@ -357,7 +357,7 @@
                     FontFamily="{DynamicResource Bold}"
                     FontSize="13"
                     Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="Start Planning Mode"
+                    Text="Planning Report"
                     TextAlignment="Center" />
                 <TextBlock
                     Margin="0,8,0,0"

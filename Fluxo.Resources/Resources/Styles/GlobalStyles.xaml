@@ -481,15 +481,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
-                    <Ellipse x:Name="ThumbCircle" Fill="{StaticResource Brush.Mint}" />
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="ThumbCircle" Property="Fill" Value="{StaticResource Brush.Mint.Muted}" />
-                        </Trigger>
-                        <Trigger Property="IsDragging" Value="True">
-                            <Setter TargetName="ThumbCircle" Property="Fill" Value="{StaticResource Brush.Mint.Muted}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
+                    <Ellipse x:Name="ThumbCircle" Fill="{TemplateBinding Foreground}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -512,6 +504,7 @@
 
     <Style x:Key="BudgetSliderStyle" TargetType="Slider">
         <Setter Property="Height" Value="24" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Slider">
@@ -524,12 +517,12 @@
                         <Track x:Name="PART_Track" VerticalAlignment="Center">
                             <Track.DecreaseRepeatButton>
                                 <RepeatButton
-                                    Background="{StaticResource Brush.Mint}"
+                                    Background="{TemplateBinding Foreground}"
                                     Command="Slider.DecreaseLarge"
                                     Style="{StaticResource BudgetTrackButtonStyle}" />
                             </Track.DecreaseRepeatButton>
                             <Track.Thumb>
-                                <Thumb Style="{StaticResource BudgetSliderThumbStyle}" />
+                                <Thumb Foreground="{TemplateBinding Foreground}" Style="{StaticResource BudgetSliderThumbStyle}" />
                             </Track.Thumb>
                             <Track.IncreaseRepeatButton>
                                 <RepeatButton

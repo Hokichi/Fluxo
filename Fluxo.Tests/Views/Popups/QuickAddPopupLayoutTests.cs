@@ -33,7 +33,7 @@ public sealed class QuickAddPopupLayoutTests
         Assert.Contains("x:Name=\"CheckForUpdatesQuickAddButton\"", xaml);
         Assert.Contains("x:Name=\"NewRecurringTransactionQuickAddButton\"", xaml);
         Assert.Contains("x:Name=\"ViewAccountsQuickAddButton\"", xaml);
-        Assert.Contains("x:Name=\"StartPlanningModeQuickAddButton\"", xaml);
+        Assert.Contains("x:Name=\"PlanningReportQuickAddButton\"", xaml);
         Assert.Contains("x:Name=\"OpenSettingsQuickAddButton\"", xaml);
         Assert.Equal(4, xaml.Split("Style=\"{StaticResource LockedDisabledQuickAddTileButtonStyle}\"").Length - 1);
         Assert.Contains("Style=\"{StaticResource QuickAddTileButtonStyle}\"", xaml);
@@ -63,8 +63,8 @@ public sealed class QuickAddPopupLayoutTests
         Assert.Contains("mainWindow.OpenRecurringAddNewTransactionPopup()", source);
         Assert.Contains("OnViewAccountsClick", source);
         Assert.Contains("mainWindow.OpenAccountsListPopup()", source);
-        Assert.Contains("OnStartPlanningModeClick", source);
-        Assert.Contains("mainWindow.OpenPlanningPopup()", source);
+        Assert.Contains("OnPlanningReportClick", source);
+        Assert.Contains("mainWindow.OpenPlanningReport()", source);
         Assert.Contains("OnOpenSettingsClick", source);
         Assert.Contains("mainWindow.OpenSettingsPopup()", source);
     }

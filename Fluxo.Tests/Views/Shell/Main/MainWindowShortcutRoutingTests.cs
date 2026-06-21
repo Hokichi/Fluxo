@@ -107,7 +107,7 @@ public sealed class MainWindowShortcutRoutingTests
         var xaml = ReadMainWindowXaml();
 
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenPlanningShortcut(e.Key, Keyboard.Modifiers))", source);
-        Assert.Contains("OpenPlanningPopup();", source);
+        Assert.Contains("OpenPlanningReport();", source);
         Assert.DoesNotContain("x:Name=\"PlanningMenuButton\"", xaml);
         Assert.DoesNotContain("Click=\"OnPlanningButtonClick\"", xaml);
     }

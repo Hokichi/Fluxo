@@ -22,11 +22,9 @@ public interface IDialogService
 
     bool? ShowQuickSetupWizard(Window? owner = null);
 
-    bool? ShowPlanningPopup(Window? owner = null);
-
     bool? ShowAppUnlock(Func<string, bool> tryUnlock, Window? owner = null);
 
-    bool? ShowPlanningReport(PlanningSnapshot snapshot, Window? owner = null);
+    bool? ShowPlanningReport(Window? owner = null);
 
     bool? ShowAddNewTransaction(AddNewTransactionVM viewModel, Window? owner = null);
 

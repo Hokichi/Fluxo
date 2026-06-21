@@ -65,20 +65,15 @@ public sealed class DialogService : IDialogService
         return ShowScopedDialog<QuickSetupWizard>(owner);
     }
 
-    public bool? ShowPlanningPopup(Window? owner = null)
-    {
-        return ShowScopedDialog<PlanningPopup>(owner);
-    }
-
     public bool? ShowAppUnlock(Func<string, bool> tryUnlock, Window? owner = null)
     {
         return ShowDialog(new AppUnlockPopup(tryUnlock), owner);
     }
 
-    public bool? ShowPlanningReport(PlanningSnapshot snapshot, Window? owner = null)
+    public bool? ShowPlanningReport(Window? owner = null)
     {
         using var scope = _serviceProvider.CreateScope();
-        var viewModel = ActivatorUtilities.CreateInstance<PlanningReportVM>(scope.ServiceProvider, snapshot);
+        var viewModel = ActivatorUtilities.CreateInstance<PlanningReportVM>(scope.ServiceProvider);
         var popup = ActivatorUtilities.CreateInstance<PlanningReportPopup>(scope.ServiceProvider, viewModel);
         return ShowDialog(popup, owner);
     }
