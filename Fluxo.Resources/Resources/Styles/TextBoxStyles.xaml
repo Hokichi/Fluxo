@@ -7,7 +7,7 @@
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="4,0" />
-        <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
@@ -52,7 +52,7 @@
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="4,0" />
-        <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CaretBrush" Value="{DynamicResource Brush.Text.Primary}" />
@@ -98,6 +98,7 @@
         BasedOn="{StaticResource RoundedTextInputStyle}"
         TargetType="{x:Type customControls:MoneyTextBox}">
         <Setter Property="Padding" Value="4,0" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type customControls:MoneyTextBox}">
@@ -126,6 +127,7 @@
                         <Trigger Property="Text" Value="">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Hidden" />
+                            <Setter Property="Foreground" Value="Transparent" />
                         </Trigger>
                         <Trigger Property="Text" Value="{x:Null}">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
@@ -133,6 +135,7 @@
                         <Trigger Property="IsZeroAmount" Value="True">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Hidden" />
+                            <Setter Property="Foreground" Value="Transparent" />
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -141,6 +144,7 @@
                             </MultiTrigger.Conditions>
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
                         </MultiTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -149,6 +153,7 @@
                             </MultiTrigger.Conditions>
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Collapsed" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
                         </MultiTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
@@ -173,6 +178,7 @@
         BasedOn="{StaticResource RoundedMoneyTextInputStyle}"
         TargetType="{x:Type customControls:SuffixTextBox}">
         <Setter Property="Padding" Value="4,0,28,0" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type customControls:SuffixTextBox}">
@@ -208,6 +214,7 @@
                         <Trigger Property="Text" Value="">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Hidden" />
+                            <Setter Property="Foreground" Value="Transparent" />
                         </Trigger>
                         <Trigger Property="Text" Value="{x:Null}">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
@@ -215,6 +222,7 @@
                         <Trigger Property="IsZeroAmount" Value="True">
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Hidden" />
+                            <Setter Property="Foreground" Value="Transparent" />
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -223,6 +231,7 @@
                             </MultiTrigger.Conditions>
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
                         </MultiTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -231,6 +240,7 @@
                             </MultiTrigger.Conditions>
                             <Setter TargetName="PlaceholderText" Property="Visibility" Value="Collapsed" />
                             <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />
                         </MultiTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="InputRoot" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
@@ -270,7 +280,7 @@
 
     <Style x:Key="NumericUpDownStyle" TargetType="{x:Type customControls:NumericUpDown}">
         <Setter Property="Height" Value="40" />
-        <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}" />

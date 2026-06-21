@@ -10,9 +10,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type c:BasePopup}">
                     <Border
-                        Background="{StaticResource Brush.Background.Main}"
-                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                        BorderThickness="1"
+                        Background="{StaticResource Brush.Background.Popup}"
                         CornerRadius="16">
                         <Grid x:Name="PART_ContentRoot">
                             <Grid.RowDefinitions>
