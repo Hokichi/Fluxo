@@ -94,7 +94,7 @@
                     x:Name="DebtIousTabButton"
                     GroupName="SettingsTabs"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
-                    Style="{StaticResource TabButtonStyle}"
+                    Style="{StaticResource LockedSettingsTabButtonStyle}"
                     Tag="Debt/IoUs">
                     <components:Icon
                         Width="12"

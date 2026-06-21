@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
@@ -57,6 +58,8 @@ public partial class SettingsDebtIousTabVM : ObservableObject
 
     public bool HasItems => Items.Count > 0;
 
+    public string TotalAmountText => $"Total: {Items.Sum(item => item.Amount).ToString("#,0.##", CultureInfo.CurrentCulture)}";
+
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
@@ -95,6 +98,7 @@ public partial class SettingsDebtIousTabVM : ObservableObject
             Items.Add(item);
 
         OnPropertyChanged(nameof(HasItems));
+        OnPropertyChanged(nameof(TotalAmountText));
     }
 
     public async Task<SettingsOperationResult> ResolveAsync(

@@ -59,6 +59,44 @@ public sealed class SettingsDebtIousTabVMTests
     }
 
     [Fact]
+    public async Task LoadAsync_UpdatesTotalAmountText()
+    {
+        var account = new Account { Id = 10, Name = "Checking", AccountType = AccountType.Checking };
+        var appData = CreateAppData(
+            [
+                new ExpenseLog
+                {
+                    Id = 1,
+                    Amount = 25m,
+                    DeductedOn = new DateTime(2026, 6, 20),
+                    IsLend = true,
+                    Account = account,
+                    AccountId = account.Id,
+                    Expense = new Expense { Id = 2, Name = "Lunch lend", IsLend = true }
+                }
+            ],
+            [
+                new IncomeLog
+                {
+                    Id = 3,
+                    Name = "Advance",
+                    Amount = 40m,
+                    AddedOn = new DateTime(2026, 6, 20),
+                    IsDebt = true,
+                    Account = account,
+                    AccountId = account.Id
+                }
+            ],
+            [],
+            [account]);
+        var vm = CreateVm(appData);
+
+        await vm.LoadAsync();
+
+        Assert.Equal("Total: 65", vm.TotalAmountText);
+    }
+
+    [Fact]
     public async Task ResolveAsync_LendCreatesIncomeAndClearsFlags()
     {
         var account = new Account

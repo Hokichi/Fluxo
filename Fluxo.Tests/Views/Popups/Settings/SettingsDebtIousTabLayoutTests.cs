@@ -16,6 +16,8 @@ public sealed class SettingsDebtIousTabLayoutTests
         Assert.Contains("Debt/IoUs", xaml);
         Assert.Contains("CreditCardMinusSolid", xaml);
         Assert.Contains("SettingsDebtIousTab", xaml);
+        Assert.Contains("x:Name=\"DebtIousTabButton\"", xaml);
+        Assert.Contains("Style=\"{StaticResource LockedSettingsTabButtonStyle}\"", xaml);
         Assert.Contains("DebtIousTabButton", codeBehind);
         Assert.Contains("DebtIousTabContent", codeBehind);
     }
@@ -30,6 +32,22 @@ public sealed class SettingsDebtIousTabLayoutTests
         Assert.Contains("ButtonIcon=\"{StaticResource Check}\"", xaml);
         Assert.Contains("Click=\"OnResolveClick\"", xaml);
         Assert.Contains("Visibility=\"{Binding HasItems, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
+        Assert.Contains("Text=\"{Binding TotalAmountText}\"", xaml);
         Assert.Contains("await viewModel.ResolveAsync(item);", codeBehind);
+    }
+
+    [Fact]
+    public void SettingsDebtIousTab_UsesSettingsListItemHoverTemplate()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml"));
+
+        Assert.Contains("x:Name=\"ItemRoot\"", xaml);
+        Assert.Contains("BorderBrush=\"Transparent\"", xaml);
+        Assert.Contains("x:Name=\"RowActions\"", xaml);
+        Assert.Contains("Visibility=\"Collapsed\"", xaml);
+        Assert.Contains("SourceName=\"ItemRoot\" Property=\"IsMouseOver\" Value=\"True\"", xaml);
+        Assert.Contains("TargetName=\"RowActions\" Property=\"Visibility\" Value=\"Visible\"", xaml);
+        Assert.Contains("Height=\"1\"", xaml);
+        Assert.Contains("Background=\"{StaticResource Brush.Border.Subtle}\"", xaml);
     }
 }

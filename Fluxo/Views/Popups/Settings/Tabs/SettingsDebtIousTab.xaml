@@ -5,58 +5,83 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources">
     <UserControl.Resources>
         <DataTemplate x:Key="DebtIouItemTemplate">
-            <Border
-                Margin="0,0,0,10"
-                Padding="12"
-                Background="Transparent"
-                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                BorderThickness="1"
-                CornerRadius="12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+            <StackPanel>
+                <Border
+                    x:Name="ItemRoot"
+                    Padding="12"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="1"
+                    CornerRadius="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="{Binding Name}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="11"
+                                Foreground="{StaticResource Brush.Text.Secondary}">
+                                <Run Text="{Binding TypeLabel, Mode=OneWay}" />
+                                <Run Text=" - " />
+                                <Run Text="{Binding AccountName}" />
+                                <Run Text=" - " />
+                                <Run Text="{Binding Date, StringFormat={}{0:MMM d, yyyy}}" />
+                            </TextBlock>
+                        </StackPanel>
+
                         <TextBlock
+                            Grid.Column="1"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding Name}"
-                            TextTrimming="CharacterEllipsis" />
-                        <TextBlock
-                            Margin="0,5,0,0"
-                            FontFamily="{StaticResource Medium}"
-                            FontSize="11"
-                            Foreground="{StaticResource Brush.Text.Secondary}">
-                            <Run Text="{Binding TypeLabel}" />
-                            <Run Text=" - " />
-                            <Run Text="{Binding AccountName}" />
-                            <Run Text=" - " />
-                            <Run Text="{Binding Date, StringFormat={}{0:MMM d, yyyy}}" />
-                        </TextBlock>
-                    </StackPanel>
+                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
+                            ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
 
-                    <TextBlock
-                        Grid.Column="1"
-                        Margin="16,0,0,0"
-                        VerticalAlignment="Center"
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
-                        ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
-
-                    <customControls:BalloonButton
-                        Grid.Column="2"
-                        Margin="10,0,0,0"
-                        ButtonIcon="{StaticResource Check}"
-                        Click="OnResolveClick"
-                        HoveredBackground="{StaticResource Brush.Mint}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        ToolTip="Resolve" />
-                </Grid>
-            </Border>
+                        <StackPanel
+                            x:Name="RowActions"
+                            Grid.Column="2"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False"
+                            Opacity="0"
+                            Orientation="Horizontal"
+                            Visibility="Collapsed">
+                            <customControls:BalloonButton
+                                ButtonIcon="{StaticResource Check}"
+                                ButtonText="Reconcile"
+                                Click="OnResolveClick"
+                                HoveredBackground="{StaticResource Brush.Mint}"
+                                ShouldExpand="True"
+                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                                ToolTip="Resolve" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border
+                    Height="1"
+                    Margin="12,8,12,8"
+                    Background="{StaticResource Brush.Border.Subtle}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <Trigger SourceName="ItemRoot" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource Brush.Background.Hovered}" />
+                    <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+                    <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="RowActions" Property="Opacity" Value="1" />
+                    <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="True" />
+                </Trigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
     </UserControl.Resources>
 
@@ -73,21 +98,30 @@
                 FontSize="16"
                 Foreground="{StaticResource Brush.Text.Primary}"
                 Text="Debt/IoUs" />
-            <TextBlock
-                Grid.Row="1"
-                Margin="0,0,0,16"
-                FontFamily="{StaticResource Medium}"
-                FontSize="11"
-                Foreground="{StaticResource Brush.Text.Secondary}"
-                Text="Resolve tracked debts and IOUs with balancing transactions." />
+            <Grid Grid.Row="1" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="Resolve tracked debts and IOUs with balancing transactions." />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="16,0,0,0"
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="{Binding TotalAmountText}" />
+            </Grid>
 
             <customControls:FadingScrollViewer
                 Grid.Row="2"
                 Margin="0,8,0,0"
                 VerticalScrollBarVisibility="Auto">
-                <ItemsControl
-                    ItemTemplate="{StaticResource DebtIouItemTemplate}"
-                    ItemsSource="{Binding Items}" />
+                <ItemsControl ItemTemplate="{StaticResource DebtIouItemTemplate}" ItemsSource="{Binding Items}" />
             </customControls:FadingScrollViewer>
 
             <StackPanel
