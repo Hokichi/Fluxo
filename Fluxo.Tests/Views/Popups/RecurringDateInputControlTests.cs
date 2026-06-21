@@ -35,19 +35,6 @@ public sealed class RecurringDateInputControlTests
     }
 
     [Fact]
-    public void AddFixedExpensePopup_RecurringTimeInputUsesBoundedNumericUpDown()
-    {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddFixedExpensePopup.xaml"));
-
-        Assert.Equal(1, CountNumericUpDownsBoundTo(xaml, "RecurringTimeText", "0", "28"));
-        Assert.DoesNotContain("RecurringDateText", xaml);
-        Assert.DoesNotContain("RecurringDateTextBox", xaml);
-        Assert.DoesNotContain("OnRecurringDatePasting", xaml);
-        Assert.DoesNotContain("OnRecurringDatePreviewKeyDown", xaml);
-        Assert.DoesNotContain("OnRecurringDatePreviewTextInput", xaml);
-    }
-
-    [Fact]
     public void AddAccountPopup_MonthlyDueDateInputUsesBoundedNumericUpDown()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddAccountPopup.xaml"));

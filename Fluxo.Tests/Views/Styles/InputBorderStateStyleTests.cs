@@ -200,7 +200,8 @@ public sealed class InputBorderStateStyleTests
         var styleSection = ExtractSection(textBoxStylesXaml, "x:Key=\"NumericUpDownStyle\"", "</Style>");
 
         Assert.Contains("CornerRadius=\"8\"", styleSection);
-        Assert.Contains("Brush.Background.Surface", styleSection);
+        Assert.Contains("Brush.Background.Elevated", styleSection);
+        Assert.DoesNotContain("Brush.Background.Surface", styleSection);
         Assert.Contains("Brush.Border.Subtle", styleSection);
         Assert.Contains("Path=\"{StaticResource AngleUp}\"", styleSection);
         Assert.Contains("Path=\"{StaticResource AngleDown}\"", styleSection);
