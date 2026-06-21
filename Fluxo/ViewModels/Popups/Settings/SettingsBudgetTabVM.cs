@@ -324,8 +324,8 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     private string BuildAllocationAmountText(int percentage)
     {
-        var allocatedAmount = decimal.Round(ResolveAllocationBaseAmount() * percentage / 100m, 2);
-        return allocatedAmount.ToString("N2", CultureInfo.CurrentCulture);
+        var allocatedAmount = decimal.Round(ResolveAllocationBaseAmount() * percentage / 100m, 0);
+        return allocatedAmount.ToString("N0", CultureInfo.CurrentCulture);
     }
 
     private void OnAllocationChanged()

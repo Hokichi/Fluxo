@@ -36,24 +36,30 @@
     <Border>
         <customControls:FadingScrollViewer Margin="0" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <TextBlock
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="16"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Preferences" />
-                <TextBlock
-                    Margin="0,8,0,16"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="11"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="Set your app display preferences and notification behavior." />
+                <Grid Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="16"
+                            Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="Preferences" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="Set your app display preferences and notification behavior." />
+                    </StackPanel>
 
-                <customControls:SegmentedToggleGroup
-                    Margin="0,0,0,16"
-                    SelectedValue="{Binding SelectedPreferencesPage, Mode=TwoWay}">
-                    <customControls:SegmentedToggleOption Content="Personalization" Value="Personalization" />
-                    <customControls:SegmentedToggleOption Content="Notification" Value="Notification" />
-                </customControls:SegmentedToggleGroup>
+                    <customControls:SegmentedToggleGroup
+                        Width="240"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        SelectedValue="{Binding SelectedPreferencesPage, Mode=TwoWay}">
+                        <customControls:SegmentedToggleOption Content="Personalization" Value="Personalization" />
+                        <customControls:SegmentedToggleOption Content="Notification" Value="Notification" />
+                    </customControls:SegmentedToggleGroup>
+                </Grid>
 
                 <StackPanel Visibility="{Binding IsPersonalizationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
                     <TextBlock

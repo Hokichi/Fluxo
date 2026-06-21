@@ -4,11 +4,11 @@
     <!--  BASE BACKGROUND COLORS  -->
     <!--  =============================  -->
 
-    <Color x:Key="Color.Background.Main">#121417</Color>
-    <Color x:Key="Color.Background.Popup">#121417</Color>
-    <Color x:Key="Color.Background.Surface">#1A1D21</Color>
-    <Color x:Key="Color.Background.Elevated">#20242A</Color>
-    <Color x:Key="Color.Background.Hover">#232830</Color>
+    <Color x:Key="Color.Background.Main">#0D0F12</Color>
+    <Color x:Key="Color.Background.Popup">#181B20</Color>
+    <Color x:Key="Color.Background.Surface">#1E2228</Color>
+    <Color x:Key="Color.Background.Elevated">#262B33</Color>
+    <Color x:Key="Color.Background.Hover">#2E3540</Color>
 
     <SolidColorBrush x:Key="Brush.Background.Main" Color="{StaticResource Color.Background.Main}" />
     <SolidColorBrush x:Key="Brush.Background.Popup" Color="{StaticResource Color.Background.Popup}" />
