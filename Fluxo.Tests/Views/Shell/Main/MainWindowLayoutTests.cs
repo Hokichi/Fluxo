@@ -330,7 +330,7 @@ public sealed class MainWindowLayoutTests
             .Where(element => element.Name.LocalName == "BalloonButton")
             .ToArray();
 
-        Assert.Equal(2, actionButtons.Length);
+        Assert.True(actionButtons.Length >= 2);
         AssertBalloonButtonExpandsWithText(actionButtons[0], "Process");
         AssertBalloonButtonExpandsWithText(actionButtons[1], "Clear");
     }
@@ -348,9 +348,15 @@ public sealed class MainWindowLayoutTests
 
         AssertElementHasName(xamlDocument, "ScrollViewer", "NotificationListScrollViewer");
         AssertElementHasName(xamlDocument, "ItemsControl", "NotificationItemsList");
-        AssertElementHasName(xamlDocument, "Button", "ClearAllNotificationsButton");
+        AssertElementHasName(xamlDocument, "BalloonButton", "SnoozeAllNotificationsButton");
+        AssertElementHasName(xamlDocument, "BalloonButton", "ClearAllNotificationsButton");
         Assert.Contains("ItemsSource=\"{Binding NotificationItems}\"", xaml);
+        Assert.Contains("Command=\"{Binding SnoozeAllNotificationsCommand}\"", xaml);
         Assert.Contains("Command=\"{Binding ClearAllNotificationsCommand}\"", xaml);
+        Assert.Contains("ButtonIcon=\"{StaticResource SleepLine}\"", xaml);
+        Assert.Contains("ButtonIcon=\"{StaticResource Delete}\"", xaml);
+        Assert.Contains("ButtonText=\"Snooze\"", xaml);
+        Assert.Contains("ButtonText=\"Clear All\"", xaml);
     }
 
     [Fact]

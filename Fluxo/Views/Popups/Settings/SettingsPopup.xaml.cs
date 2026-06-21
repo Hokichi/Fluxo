@@ -234,7 +234,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
             GoalsTabButton,
             DebtIousTabButton,
             TagsTabButton,
-            PersonalizationTabButton,
+            PreferencesTabButton,
             AboutTabButton
         ];
     }
@@ -295,8 +295,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         if (DebtIousTabButton.IsChecked.GetValueOrDefault())
             return DebtIousTabButton;
 
-        if (PersonalizationTabButton.IsChecked.GetValueOrDefault())
-            return PersonalizationTabButton;
+        if (PreferencesTabButton.IsChecked.GetValueOrDefault())
+            return PreferencesTabButton;
 
         if (AboutTabButton.IsChecked.GetValueOrDefault())
             return AboutTabButton;
@@ -324,7 +324,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         if (ReferenceEquals(tabButton, TagsTabButton))
             return TagsTabContent;
 
-        if (ReferenceEquals(tabButton, PersonalizationTabButton))
+        if (ReferenceEquals(tabButton, PreferencesTabButton))
             return PersonalizationTabContent;
 
         if (ReferenceEquals(tabButton, AboutTabButton))

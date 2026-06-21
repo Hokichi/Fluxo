@@ -360,6 +360,53 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
+    public async Task PersonalizationTab_LoadAsync_DefaultsNotificationsSnoozePeriodTo24Hours()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+
+        await vm.LoadAsync();
+
+        Assert.Equal(24, vm.NotificationsSnoozePeriod);
+        Assert.Equal("24", vm.SelectedNotificationsSnoozePreset);
+        Assert.False(vm.IsCustomNotificationsSnoozePeriod);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_NotificationsSnoozePreset_MapsDayPresetToHours()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.SelectedNotificationsSnoozePreset = "48";
+
+        Assert.Equal(48, vm.NotificationsSnoozePeriod);
+        Assert.False(vm.IsCustomNotificationsSnoozePeriod);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_CustomNotificationsSnoozePeriod_ConvertsDaysToHours()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.SelectedNotificationsSnoozePreset = "Custom";
+        vm.CustomNotificationsSnoozeValue = 3;
+        vm.SelectedNotificationsSnoozeUnit = "day";
+
+        Assert.Equal(72, vm.NotificationsSnoozePeriod);
+        Assert.True(vm.IsCustomNotificationsSnoozePeriod);
+    }
+
+    [Fact]
     public async Task PersonalizationTab_SelectingFixedAutoLockPreset_UpdatesIntervalAndPublishesPendingState()
     {
         var messenger = new WeakReferenceMessenger();

@@ -52,6 +52,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private bool _isLatePaymentNotifEnabled = true;
     private bool _isLowAccountBalanceNotifEnabled;
     private bool _isLowCreditNotifEnabled;
+    private int _notificationsSnoozePeriod = 24;
     private decimal _lowAccountBalancePercentage = 0.20m;
     private (DateTime From, DateTime To)? _selectedRange;
     private decimal _creditUsageWarningPercentage = 0.30m;
@@ -146,6 +147,49 @@ public partial class NotificationPanelVM : ObservableRecipient,
         {
             _notificationSyncGate.Release();
         }
+    }
+
+    [RelayCommand]
+    private async Task SnoozeAllNotificationsAsync()
+    {
+        if (Notifications.Count == 0)
+            return;
+
+        await _notificationSyncGate.WaitAsync();
+
+        try
+        {
+            var selectedKeys = Notifications
+                .Select(notification => (notification.Type, notification.Message))
+                .ToHashSet();
+            var snoozedUntil = DateTime.Now.AddHours(Math.Max(1, _notificationsSnoozePeriod));
+
+            await _dataOperationRunner.RunAsync(async (scope, ct) =>
+            {
+                var unitOfWork = scope.UnitOfWork;
+                var persistedNotifications = await unitOfWork.Notifications.GetAllAsync(ct);
+                var hasChanges = false;
+
+                foreach (var persisted in persistedNotifications.Where(persisted =>
+                             !persisted.IsCleared &&
+                             !persisted.IsForDeletion &&
+                             selectedKeys.Contains((persisted.Type, persisted.Message))))
+                {
+                    persisted.CreatedOn = snoozedUntil;
+                    unitOfWork.Notifications.Update(persisted);
+                    hasChanges = true;
+                }
+
+                if (hasChanges)
+                    await unitOfWork.Notifications.SaveChangesAsync(ct);
+            });
+        }
+        finally
+        {
+            _notificationSyncGate.Release();
+        }
+
+        await RefreshNotificationsAsync();
     }
 
     [RelayCommand]
@@ -545,8 +589,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
                     var duplicate = persistedNotifications
                         .Where(notification =>
                             string.Equals(notification.Type, evaluated.Type, StringComparison.Ordinal) &&
-                            string.Equals(notification.Message, evaluated.Message, StringComparison.Ordinal) &&
-                            notification.CreatedOn <= now)
+                            string.Equals(notification.Message, evaluated.Message, StringComparison.Ordinal))
                         .OrderByDescending(notification => notification.CreatedOn)
                         .FirstOrDefault();
                     if (duplicate is not null)
@@ -587,7 +630,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
                         StringComparer.Ordinal);
 
                 return persistedNotifications
-                    .Where(notification => !notification.IsCleared && !notification.IsForDeletion)
+                    .Where(notification => !notification.IsCleared &&
+                                           !notification.IsForDeletion &&
+                                           notification.CreatedOn <= DateTime.Now)
                     .Select(notification => new NotificationVM
                     {
                         Type = notification.Type,
@@ -775,6 +820,9 @@ public partial class NotificationPanelVM : ObservableRecipient,
             ParseBool(settingsByName, UserSettingNames.IsGoalDeadlineNotifEnabled, true);
         _isLatePaymentNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsLatePaymentNotifEnabled, true);
+        _notificationsSnoozePeriod = ParseInt(settingsByName, UserSettingNames.NotificationsSnoozePeriod, 24);
+        if (_notificationsSnoozePeriod <= 0)
+            _notificationsSnoozePeriod = 24;
 
         _hiddenSavingGoalIds.Clear();
         _hiddenSavingGoalIds.UnionWith(ParseIdSet(settingsByName, UserSettingNames.HiddenSavingGoalIds));

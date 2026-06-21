@@ -96,6 +96,74 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task SnoozeAllNotificationsAsync_UsesConfiguredPeriodAndHidesVisibleNotifications()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            accounts: [],
+            out var persistedNotifications,
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.NotificationsSnoozePeriod, Value = "12" }
+            ]);
+        SeedDistinctCategoryNotifications(persistedNotifications);
+
+        await vm.LoadAsync();
+        await vm.SnoozeAllNotificationsCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasNotifications);
+        Assert.All(persistedNotifications, notification =>
+            Assert.True(notification.CreatedOn > DateTime.Now.AddHours(11)));
+    }
+
+    [Fact]
+    public async Task LoadAsync_DoesNotRecreateSnoozedDuplicateBeforeCreatedOn()
+    {
+        var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
+            ? 7
+            : (int)DateTime.Today.DayOfWeek;
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            accounts: [],
+            out var persistedNotifications,
+            recurringTransactions:
+            [
+                new RecurringTransaction
+                {
+                    Id = 10,
+                    Name = "Rent",
+                    Amount = 1200m,
+                    RecurringPeriod = RecurringPeriod.Weekly,
+                    RecurringTime = currentWeekday,
+                    Type = RecurringTransactionType.Expense,
+                    IsEnabled = true
+                }
+            ],
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+            ]);
+
+        persistedNotifications.Add(new Notification
+        {
+            Id = 1,
+            Type = $"RecurringTransactionDue-10_{DateTime.Today:yyyyMMdd}",
+            Header = "Recurring Transaction Due - Rent",
+            Message = $"Rent is scheduled for {DateTime.Today:MMM d}.",
+            CreatedOn = DateTime.Now.AddHours(24),
+            IsCleared = false,
+            IsForDeletion = false
+        });
+
+        await vm.LoadAsync();
+
+        Assert.Empty(vm.Notifications);
+        Assert.Single(persistedNotifications);
+    }
+
+    [Fact]
     public async Task LoadAsync_WithMultipleNotifications_InitializesCarouselState()
     {
         var vm = CreateVm(

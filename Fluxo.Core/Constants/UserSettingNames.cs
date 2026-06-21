@@ -24,4 +24,5 @@ public static class UserSettingNames
     public const string IsAppAutoLocked = nameof(IsAppAutoLocked);
     public const string AppAutoLockedInterval = nameof(AppAutoLockedInterval);
     public const string UILockingPassword = nameof(UILockingPassword);
+    public const string NotificationsSnoozePeriod = nameof(NotificationsSnoozePeriod);
 }

@@ -136,15 +136,34 @@
                 </TextBlock>
             </Grid>
 
-            <Button
-                x:Name="ClearAllNotificationsButton"
+            <StackPanel
                 Grid.Row="3"
                 Margin="0,12,0,0"
                 HorizontalAlignment="Right"
-                Command="{Binding ClearAllNotificationsCommand}"
-                Content="Clear All Notifications"
-                Style="{StaticResource TextOnlyButtonStyle}"
-                Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
+                Orientation="Horizontal"
+                Visibility="{Binding HasNotifications, Converter={StaticResource BoolToVisibilityConverter}}">
+                <customControls:BalloonButton
+                    x:Name="SnoozeAllNotificationsButton"
+                    Width="24"
+                    Height="24"
+                    ButtonIcon="{StaticResource SleepLine}"
+                    ButtonText="Snooze"
+                    Command="{Binding SnoozeAllNotificationsCommand}"
+                    HoveredBackground="{StaticResource Brush.Mint}"
+                    ShouldExpand="True"
+                    Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                <customControls:BalloonButton
+                    x:Name="ClearAllNotificationsButton"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    ButtonIcon="{StaticResource Delete}"
+                    ButtonText="Clear All"
+                    Command="{Binding ClearAllNotificationsCommand}"
+                    HoveredBackground="{StaticResource Brush.Danger}"
+                    ShouldExpand="True"
+                    Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

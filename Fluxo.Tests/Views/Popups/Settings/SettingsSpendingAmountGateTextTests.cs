@@ -59,7 +59,7 @@ public sealed class SettingsSpendingAmountGateTextTests
                 "Goals",
                 "Debt/IoUs",
                 "Tags",
-                "Personalization",
+                "Preferences",
                 "About"
             ],
             tabNames);

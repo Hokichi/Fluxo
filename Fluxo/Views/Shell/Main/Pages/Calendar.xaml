@@ -538,8 +538,11 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Border HorizontalAlignment="Stretch" Style="{StaticResource CalendarCardStyle}">
-                        <StackPanel>
+                    <Border
+                        Padding="16,0"
+                        HorizontalAlignment="Stretch"
+                        Style="{StaticResource CalendarCardStyle}">
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource CalendarCardLabelStyle}" Text="Total Spent" />
                             <TextBlock
                                 Foreground="{StaticResource Brush.Danger}"
@@ -550,9 +553,10 @@
 
                     <Border
                         Grid.Column="2"
+                        Padding="16,0"
                         HorizontalAlignment="Stretch"
                         Style="{StaticResource CalendarCardStyle}">
-                        <StackPanel>
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource CalendarCardLabelStyle}" Text="Total Earned" />
                             <TextBlock
                                 Foreground="{StaticResource Brush.Mint}"
@@ -563,9 +567,10 @@
 
                     <Border
                         Grid.Row="2"
+                        Padding="16,0"
                         HorizontalAlignment="Stretch"
                         Style="{StaticResource CalendarCardStyle}">
-                        <StackPanel>
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource CalendarCardLabelStyle}" Text="Goals Due" />
                             <TextBlock
                                 Foreground="{StaticResource Brush.Warning}"
@@ -577,9 +582,10 @@
                     <Border
                         Grid.Row="2"
                         Grid.Column="2"
+                        Padding="16,0"
                         HorizontalAlignment="Stretch"
                         Style="{StaticResource CalendarCardStyle}">
-                        <StackPanel>
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource CalendarCardLabelStyle}" Text="Payment Due" />
                             <TextBlock
                                 Foreground="{StaticResource Brush.Info}"

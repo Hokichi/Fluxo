@@ -30,7 +30,9 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private bool _savedIsAppAutoLocked;
     private int _savedAppAutoLockedInterval = AutoLockPreset.DefaultIntervalSeconds;
     private string _savedUiLockingPassword = string.Empty;
+    private int _savedNotificationsSnoozePeriod = 24;
 
+    [ObservableProperty] private string _selectedPreferencesPage = "Personalization";
     [ObservableProperty] private string _preferredAppName = string.Empty;
     [ObservableProperty] private bool _shouldRunAtStartup;
     [ObservableProperty] private AppCloseBehavior _closeBehavior = AppCloseBehavior.Exit;
@@ -40,6 +42,10 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     [ObservableProperty] private string _selectedAppAutoLockPreset = AutoLockPreset.Seconds30;
     [ObservableProperty] private string _uiLockingPassword = string.Empty;
     [ObservableProperty] private bool _isUiLockingPasswordVisible;
+    [ObservableProperty] private int _notificationsSnoozePeriod = 24;
+    [ObservableProperty] private string _selectedNotificationsSnoozePreset = "24";
+    [ObservableProperty] private int _customNotificationsSnoozeValue = 1;
+    [ObservableProperty] private string _selectedNotificationsSnoozeUnit = "hour";
 
     public SettingsPersonalizationTabVM(
         IAppDataService appData,
@@ -67,12 +73,22 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     public bool IsCustomAutoLockInterval => AutoLockPreset.IsCustom(SelectedAppAutoLockPreset);
 
+    public bool IsPersonalizationPageSelected =>
+        string.Equals(SelectedPreferencesPage, "Personalization", StringComparison.Ordinal);
+
+    public bool IsNotificationPageSelected =>
+        string.Equals(SelectedPreferencesPage, "Notification", StringComparison.Ordinal);
+
+    public bool IsCustomNotificationsSnoozePeriod =>
+        string.Equals(SelectedNotificationsSnoozePreset, "Custom", StringComparison.Ordinal);
+
     public bool HasPendingChanges =>
         !string.Equals((PreferredAppName ?? string.Empty).Trim(), _savedPreferredAppName, StringComparison.Ordinal) ||
         ShouldRunAtStartup != _savedShouldRunAtStartup ||
         CloseBehavior != _savedCloseBehavior ||
         IsAppAutoLocked != _savedIsAppAutoLocked ||
         AppAutoLockedInterval != _savedAppAutoLockedInterval ||
+        NotificationsSnoozePeriod != _savedNotificationsSnoozePeriod ||
         !string.Equals(UiLockingPassword ?? string.Empty, _savedUiLockingPassword, StringComparison.Ordinal) ||
         NotificationSettings.Any(setting =>
             _savedNotificationSettings.TryGetValue(setting.SettingName, out var savedValue)
@@ -92,6 +108,12 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
                 UserSettingNames.AppAutoLockedInterval,
                 AutoLockPreset.DefaultIntervalSeconds);
         SelectedAppAutoLockPreset = AutoLockPreset.FromIntervalSeconds(AppAutoLockedInterval);
+        NotificationsSnoozePeriod =
+            SettingsShared.ParsePositiveInt(
+                settingsByName,
+                UserSettingNames.NotificationsSnoozePeriod,
+                24);
+        ApplyNotificationsSnoozePeriodToSelection();
         UiLockingPassword = _passwordProtector.Unprotect(
             SettingsShared.ParseString(settingsByName, UserSettingNames.UILockingPassword, string.Empty));
         _savedPreferredAppName = (PreferredAppName ?? string.Empty).Trim();
@@ -99,6 +121,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         _savedCloseBehavior = CloseBehavior;
         _savedIsAppAutoLocked = IsAppAutoLocked;
         _savedAppAutoLockedInterval = AppAutoLockedInterval;
+        _savedNotificationsSnoozePeriod = NotificationsSnoozePeriod;
         _savedUiLockingPassword = UiLockingPassword;
         LoadNotificationSettings(settingsByName);
         PublishPendingState();
@@ -188,6 +211,9 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.AppAutoLockedInterval,
             Math.Max(1, AppAutoLockedInterval).ToString(CultureInfo.InvariantCulture), actions);
 
+        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.NotificationsSnoozePeriod,
+            Math.Max(1, NotificationsSnoozePeriod).ToString(CultureInfo.InvariantCulture), actions);
+
         var protectedPassword = _passwordProtector.Protect(UiLockingPassword);
         await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.UILockingPassword,
             string.IsNullOrWhiteSpace(protectedPassword) ? null : protectedPassword, actions);
@@ -204,6 +230,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         _savedCloseBehavior = CloseBehavior;
         _savedIsAppAutoLocked = IsAppAutoLocked;
         _savedAppAutoLockedInterval = AppAutoLockedInterval;
+        _savedNotificationsSnoozePeriod = NotificationsSnoozePeriod;
         _savedUiLockingPassword = UiLockingPassword;
         _savedNotificationSettings.Clear();
         foreach (var setting in NotificationSettings)
@@ -219,11 +246,19 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         IsAppAutoLocked = _savedIsAppAutoLocked;
         AppAutoLockedInterval = _savedAppAutoLockedInterval;
         SelectedAppAutoLockPreset = AutoLockPreset.FromIntervalSeconds(AppAutoLockedInterval);
+        NotificationsSnoozePeriod = _savedNotificationsSnoozePeriod;
+        ApplyNotificationsSnoozePeriodToSelection();
         UiLockingPassword = _savedUiLockingPassword;
         foreach (var setting in NotificationSettings)
             if (_savedNotificationSettings.TryGetValue(setting.SettingName, out var value))
                 setting.IsEnabled = value;
         PublishPendingState();
+    }
+
+    partial void OnSelectedPreferencesPageChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsPersonalizationPageSelected));
+        OnPropertyChanged(nameof(IsNotificationPageSelected));
     }
 
     partial void OnPreferredAppNameChanged(string value)
@@ -274,6 +309,59 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
         OnPropertyChanged(nameof(IsCustomAutoLockInterval));
         PublishPendingState();
+    }
+
+    partial void OnNotificationsSnoozePeriodChanged(int value)
+    {
+        if (value < 1)
+        {
+            NotificationsSnoozePeriod = 1;
+            return;
+        }
+
+        var preset = NotificationsSnoozePresetFromHours(value);
+        if (!string.Equals(SelectedNotificationsSnoozePreset, preset, StringComparison.Ordinal))
+            SelectedNotificationsSnoozePreset = preset;
+
+        if (IsCustomNotificationsSnoozePeriod)
+            ApplyNotificationsSnoozePeriodToCustomFields();
+
+        PublishPendingState();
+    }
+
+    partial void OnSelectedNotificationsSnoozePresetChanged(string value)
+    {
+        if (TryGetNotificationsSnoozePresetHours(value, out var hours) &&
+            NotificationsSnoozePeriod != hours)
+        {
+            NotificationsSnoozePeriod = hours;
+        }
+
+        OnPropertyChanged(nameof(IsCustomNotificationsSnoozePeriod));
+        PublishPendingState();
+    }
+
+    partial void OnCustomNotificationsSnoozeValueChanged(int value)
+    {
+        if (value < 1)
+        {
+            CustomNotificationsSnoozeValue = 1;
+            return;
+        }
+
+        UpdateCustomNotificationsSnoozePeriod();
+    }
+
+    partial void OnSelectedNotificationsSnoozeUnitChanged(string value)
+    {
+        if (!string.Equals(value, "day", StringComparison.Ordinal) &&
+            !string.Equals(value, "hour", StringComparison.Ordinal))
+        {
+            SelectedNotificationsSnoozeUnit = "hour";
+            return;
+        }
+
+        UpdateCustomNotificationsSnoozePeriod();
     }
 
     partial void OnUiLockingPasswordChanged(string value)
@@ -355,6 +443,58 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         _messenger.Send(new SettingsPendingChangesChangedMessage(
             new SettingsPendingChangesChanged(SettingsTabKey.Personalization, HasPendingChanges)));
+    }
+
+    private static string NotificationsSnoozePresetFromHours(int hours)
+    {
+        return hours switch
+        {
+            6 => "6",
+            12 => "12",
+            24 => "24",
+            48 => "48",
+            168 => "168",
+            _ => "Custom"
+        };
+    }
+
+    private static bool TryGetNotificationsSnoozePresetHours(string? value, out int hours)
+    {
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out hours) &&
+               hours is 6 or 12 or 24 or 48 or 168;
+    }
+
+    private void ApplyNotificationsSnoozePeriodToSelection()
+    {
+        SelectedNotificationsSnoozePreset = NotificationsSnoozePresetFromHours(NotificationsSnoozePeriod);
+        if (IsCustomNotificationsSnoozePeriod)
+            ApplyNotificationsSnoozePeriodToCustomFields();
+    }
+
+    private void ApplyNotificationsSnoozePeriodToCustomFields()
+    {
+        if (NotificationsSnoozePeriod % 24 == 0)
+        {
+            CustomNotificationsSnoozeValue = Math.Max(1, NotificationsSnoozePeriod / 24);
+            SelectedNotificationsSnoozeUnit = "day";
+            return;
+        }
+
+        CustomNotificationsSnoozeValue = Math.Max(1, NotificationsSnoozePeriod);
+        SelectedNotificationsSnoozeUnit = "hour";
+    }
+
+    private void UpdateCustomNotificationsSnoozePeriod()
+    {
+        if (!IsCustomNotificationsSnoozePeriod)
+            return;
+
+        var multiplier = string.Equals(SelectedNotificationsSnoozeUnit, "day", StringComparison.Ordinal) ? 24 : 1;
+        var hours = Math.Max(1, CustomNotificationsSnoozeValue) * multiplier;
+        if (NotificationsSnoozePeriod != hours)
+            NotificationsSnoozePeriod = hours;
+
+        PublishPendingState();
     }
 
     private async Task<SettingsMaintenanceResult> SendMaintenanceRequestAsync(SettingsMaintenanceRequestType requestType,

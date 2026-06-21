@@ -48,157 +48,199 @@
                     Foreground="{StaticResource Brush.Text.Secondary}"
                     Text="Set your app display preferences and notification behavior." />
 
+                <customControls:SegmentedToggleGroup
+                    Margin="0,0,0,16"
+                    SelectedValue="{Binding SelectedPreferencesPage, Mode=TwoWay}">
+                    <customControls:SegmentedToggleOption Content="Personalization" Value="Personalization" />
+                    <customControls:SegmentedToggleOption Content="Notification" Value="Notification" />
+                </customControls:SegmentedToggleGroup>
 
-                <TextBlock
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Username" />
-                <TextBox
-                    x:Name="UsernameTextBox"
-                    Margin="0,8,0,0"
-                    Background="{StaticResource Brush.Background.Surface}"
-                    LostFocus="OnUsernameTextBoxLostFocus"
-                    Style="{StaticResource RoundedTextInputStyle}"
-                    Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}"
-                    TextChanged="OnUsernameTextBoxTextChanged" />
+                <StackPanel Visibility="{Binding IsPersonalizationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Username" />
+                    <TextBox
+                        x:Name="UsernameTextBox"
+                        Margin="0,8,0,0"
+                        Background="{StaticResource Brush.Background.Surface}"
+                        LostFocus="OnUsernameTextBoxLostFocus"
+                        Style="{StaticResource RoundedTextInputStyle}"
+                        Text="{Binding PreferredAppName, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanged="OnUsernameTextBoxTextChanged" />
 
-                <TextBlock
-                    Margin="0,24,0,0"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Security" />
+                    <TextBlock
+                        Margin="0,24,0,0"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Security" />
 
-                <Border Margin="0,8,0,0" Style="{StaticResource RowCardStyle}">
-                    <StackPanel>
-                        <Grid>
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Lock UI when away" />
-                            <ToggleButton
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                IsChecked="{Binding IsAppAutoLocked, Mode=TwoWay}"
-                                Style="{StaticResource ToggleSwitchStyle}" />
-                        </Grid>
-
-                        <Border
-                            Height="1"
-                            Margin="0,16,0,0"
-                            Background="{StaticResource Brush.Border.Subtle}" />
-
-                        <StackPanel Margin="0,16,0,0" Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="Auto-lock after" />
-                            <customControls:SegmentedToggleGroup Margin="0,10,0,0" SelectedValue="{Binding SelectedAppAutoLockPreset, Mode=TwoWay}">
-                                <customControls:SegmentedToggleOption Content="30 seconds" Value="30" />
-                                <customControls:SegmentedToggleOption Content="1 minute" Value="60" />
-                                <customControls:SegmentedToggleOption Content="3 minutes" Value="180" />
-                                <customControls:SegmentedToggleOption Content="5 minutes" Value="300" />
-                                <customControls:SegmentedToggleOption Content="10 minutes" Value="600" />
-                                <customControls:SegmentedToggleOption Content="Custom" Value="Custom" />
-                            </customControls:SegmentedToggleGroup>
-                            <StackPanel
-                                Margin="0,10,0,0"
-                                HorizontalAlignment="Right"
-                                Orientation="Horizontal"
-                                Visibility="{Binding IsCustomAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <customControls:NumericUpDown
-                                    Width="120"
-                                    LowerLimit="1"
-                                    Value="{Binding AppAutoLockedInterval, Mode=TwoWay}" />
-                                <TextBlock
-                                    Margin="8,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource Regular}"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="seconds" />
-                            </StackPanel>
-                        </StackPanel>
-
-                        <Border
-                            Height="1"
-                            Margin="0,16,0,0"
-                            Background="{StaticResource Brush.Border.Subtle}"
-                            Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                        <TextBlock
-                            Margin="0,16,0,0"
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="Unlock password" />
-
-                        <Grid Margin="0,8,0,0">
+                    <Border Margin="0,8,0,0" Style="{StaticResource RowCardStyle}">
+                        <StackPanel>
                             <Grid>
-                                <PasswordBox
-                                    x:Name="UiLockingPasswordBox"
-                                    PasswordChanged="OnUiLockingPasswordBoxPasswordChanged"
-                                    Style="{StaticResource RoundedPasswordInputStyle}"
-                                    Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-
-                                <TextBox
-                                    x:Name="UiLockingPasswordVisibleTextBox"
-                                    Background="{StaticResource Brush.Background.Surface}"
-                                    Style="{StaticResource RoundedTextInputStyle}"
-                                    Text="{Binding UiLockingPassword, UpdateSourceTrigger=PropertyChanged}"
-                                    TextChanged="OnUiLockingPasswordVisibleTextBoxTextChanged"
-                                    Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                                <customControls:BalloonCheckBox
-                                    Margin="8,0,8,0"
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Lock UI when away" />
+                                <ToggleButton
                                     HorizontalAlignment="Right"
-                                    CheckedBackground="Transparent"
-                                    CheckedIcon="{StaticResource EyeOff}"
-                                    CheckedText="Hide password"
-                                    DefaultBackground="Transparent"
-                                    HoveredBackground="Transparent"
-                                    IconSize="14"
-                                    IsChecked="{Binding IsUiLockingPasswordVisible, Mode=TwoWay}"
-                                    ShouldExpand="False"
-                                    UncheckedIcon="{StaticResource Eye}"
-                                    UncheckedText="Show password" />
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding IsAppAutoLocked, Mode=TwoWay}"
+                                    Style="{StaticResource ToggleSwitchStyle}" />
                             </Grid>
-                        </Grid>
+
+                            <Border
+                                Height="1"
+                                Margin="0,16,0,0"
+                                Background="{StaticResource Brush.Border.Subtle}" />
+
+                            <StackPanel Margin="0,16,0,0" Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="Auto-lock after" />
+                                <customControls:SegmentedToggleGroup Margin="0,10,0,0" SelectedValue="{Binding SelectedAppAutoLockPreset, Mode=TwoWay}">
+                                    <customControls:SegmentedToggleOption Content="30 seconds" Value="30" />
+                                    <customControls:SegmentedToggleOption Content="1 minute" Value="60" />
+                                    <customControls:SegmentedToggleOption Content="3 minutes" Value="180" />
+                                    <customControls:SegmentedToggleOption Content="5 minutes" Value="300" />
+                                    <customControls:SegmentedToggleOption Content="10 minutes" Value="600" />
+                                    <customControls:SegmentedToggleOption Content="Custom" Value="Custom" />
+                                </customControls:SegmentedToggleGroup>
+                                <StackPanel
+                                    Margin="0,10,0,0"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal"
+                                    Visibility="{Binding IsCustomAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <customControls:NumericUpDown
+                                        Width="120"
+                                        LowerLimit="1"
+                                        Value="{Binding AppAutoLockedInterval, Mode=TwoWay}" />
+                                    <TextBlock
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{StaticResource Regular}"
+                                        Foreground="{StaticResource Brush.Text.Primary}"
+                                        Text="seconds" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border
+                                Height="1"
+                                Margin="0,16,0,0"
+                                Background="{StaticResource Brush.Border.Subtle}"
+                                Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <TextBlock
+                                Margin="0,16,0,0"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Bold}"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="Unlock password" />
+
+                            <Grid Margin="0,8,0,0">
+                                <Grid>
+                                    <PasswordBox
+                                        x:Name="UiLockingPasswordBox"
+                                        PasswordChanged="OnUiLockingPasswordBoxPasswordChanged"
+                                        Style="{StaticResource RoundedPasswordInputStyle}"
+                                        Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+
+                                    <TextBox
+                                        x:Name="UiLockingPasswordVisibleTextBox"
+                                        Background="{StaticResource Brush.Background.Surface}"
+                                        Style="{StaticResource RoundedTextInputStyle}"
+                                        Text="{Binding UiLockingPassword, UpdateSourceTrigger=PropertyChanged}"
+                                        TextChanged="OnUiLockingPasswordVisibleTextBoxTextChanged"
+                                        Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                    <customControls:BalloonCheckBox
+                                        Margin="8,0,8,0"
+                                        HorizontalAlignment="Right"
+                                        CheckedBackground="Transparent"
+                                        CheckedIcon="{StaticResource EyeOff}"
+                                        CheckedText="Hide password"
+                                        DefaultBackground="Transparent"
+                                        HoveredBackground="Transparent"
+                                        IconSize="14"
+                                        IsChecked="{Binding IsUiLockingPasswordVisible, Mode=TwoWay}"
+                                        ShouldExpand="False"
+                                        UncheckedIcon="{StaticResource Eye}"
+                                        UncheckedText="Show password" />
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock
+                        Margin="0,24,0,0"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Data Management" />
+
+                    <Grid Margin="0,8,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            Grid.Column="0"
+                            MinWidth="132"
+                            VerticalAlignment="Center"
+                            Click="OnDataManagementClick"
+                            Content="Data Backup/Restore"
+                            Style="{StaticResource PopupTextButtonStyle}" />
+                        <Button
+                            Grid.Column="2"
+                            MinWidth="132"
+                            VerticalAlignment="Center"
+                            Click="OnRunSetupWizardClick"
+                            Content="Run Setup Wizard"
+                            Style="{StaticResource PopupTextButtonStyle}" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding IsNotificationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Snooze notifications for" />
+                    <customControls:SegmentedToggleGroup Margin="0,10,0,0" SelectedValue="{Binding SelectedNotificationsSnoozePreset, Mode=TwoWay}">
+                        <customControls:SegmentedToggleOption Content="6 hours" Value="6" />
+                        <customControls:SegmentedToggleOption Content="12 hours" Value="12" />
+                        <customControls:SegmentedToggleOption Content="1 day" Value="24" />
+                        <customControls:SegmentedToggleOption Content="2 days" Value="48" />
+                        <customControls:SegmentedToggleOption Content="7 days" Value="168" />
+                        <customControls:SegmentedToggleOption Content="Custom" Value="Custom" />
+                    </customControls:SegmentedToggleGroup>
+                    <StackPanel
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Visibility="{Binding IsCustomNotificationsSnoozePeriod, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <customControls:NumericUpDown
+                            Width="120"
+                            LowerLimit="1"
+                            Value="{Binding CustomNotificationsSnoozeValue, Mode=TwoWay}" />
+                        <ComboBox
+                            Width="96"
+                            Margin="8,0,0,0"
+                            SelectedValue="{Binding SelectedNotificationsSnoozeUnit, Mode=TwoWay}"
+                            SelectedValuePath="Content"
+                            Style="{StaticResource FluxoComboBoxStyle}">
+                            <ComboBoxItem Content="hour" />
+                            <ComboBoxItem Content="day" />
+                        </ComboBox>
                     </StackPanel>
-                </Border>
 
-                <TextBlock
-                    Margin="0,24,0,0"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Data Management" />
-
-                <Grid Margin="0,8,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Button
-                        Grid.Column="0"
-                        MinWidth="132"
-                        VerticalAlignment="Center"
-                        Click="OnDataManagementClick"
-                        Content="Data Backup/Restore"
-                        Style="{StaticResource PopupTextButtonStyle}" />
-                    <Button
-                        Grid.Column="2"
-                        MinWidth="132"
-                        VerticalAlignment="Center"
-                        Click="OnRunSetupWizardClick"
-                        Content="Run Setup Wizard"
-                        Style="{StaticResource PopupTextButtonStyle}" />
-                </Grid>
-
-                <TextBlock
-                    Margin="0,8,0,8"
-                    FontFamily="{StaticResource Bold}"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Notifications" />
-                <ItemsControl ItemTemplate="{StaticResource SettingsNotificationItemTemplate}" ItemsSource="{Binding NotificationSettings}" />
+                    <TextBlock
+                        Margin="0,24,0,8"
+                        FontFamily="{StaticResource Bold}"
+                        Foreground="{StaticResource Brush.Text.Primary}"
+                        Text="Notifications" />
+                    <ItemsControl ItemTemplate="{StaticResource SettingsNotificationItemTemplate}" ItemsSource="{Binding NotificationSettings}" />
+                </StackPanel>
             </StackPanel>
         </customControls:FadingScrollViewer>
     </Border>
