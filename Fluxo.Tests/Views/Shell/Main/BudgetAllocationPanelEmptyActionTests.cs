@@ -10,13 +10,12 @@ public sealed class BudgetAllocationPanelEmptyActionTests
     {
         var xaml = File.ReadAllText(ResolveBudgetAllocationPanelXamlPath());
 
-        Assert.Contains("EmptyActionText=\"Log a Need\"", xaml);
-        Assert.Contains("EmptyActionParameter=\"{x:Static enums:ExpenseCategory.Needs}\"", xaml);
-        Assert.Contains("EmptyActionText=\"Log a Want\"", xaml);
-        Assert.Contains("EmptyActionParameter=\"{x:Static enums:ExpenseCategory.Wants}\"", xaml);
-        Assert.Contains("EmptyActionText=\"Log an Investment/Saving\"", xaml);
-        Assert.Contains("EmptyActionParameter=\"{x:Static enums:ExpenseCategory.Savings}\"", xaml);
-        Assert.Equal(3, CountOccurrences(xaml, "EmptyActionClick=\"OnEmptyExpenseActionClick\""));
+        Assert.Contains("EmptyActionText=\"No transaction found\"", xaml);
+        Assert.DoesNotContain("EmptyActionText=\"Log a Need\"", xaml);
+        Assert.DoesNotContain("EmptyActionText=\"Log a Want\"", xaml);
+        Assert.DoesNotContain("EmptyActionText=\"Log an Investment/Saving\"", xaml);
+        Assert.Equal(1, CountOccurrences(xaml, "<components:ExpensesList"));
+        Assert.DoesNotContain("EmptyActionClick=\"OnEmptyExpenseActionClick\"", xaml);
     }
 
     [Fact]
@@ -27,7 +26,7 @@ public sealed class BudgetAllocationPanelEmptyActionTests
         Assert.Contains("x:Key=\"BudgetAllocationExpensesListStyle\"", xaml);
         Assert.Contains("DataContext.IsSufficientFundsActionGateLocked", xaml);
         Assert.Contains("Property=\"IsEmptyActionVisible\" Value=\"False\"", xaml);
-        Assert.Equal(3, CountOccurrences(xaml, "Style=\"{StaticResource BudgetAllocationExpensesListStyle}\""));
+        Assert.Equal(1, CountOccurrences(xaml, "Style=\"{StaticResource BudgetAllocationExpensesListStyle}\""));
     }
 
     [Fact]

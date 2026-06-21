@@ -4,7 +4,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls">
 
     <Style TargetType="ToolTip">
-        <Setter Property="Background" Value="{StaticResource Brush.Primary}" />
+        <Setter Property="Background" Value="{StaticResource Brush.BalloonButton.Background.Default}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
@@ -124,14 +124,14 @@
     <Style x:Key="RoundedVerticalScrollBarStyle" TargetType="ScrollBar">
         <Setter Property="Width" Value="12" />
         <Setter Property="Margin" Value="12,0,0,0" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Deepened}" />
         <Setter Property="Template" Value="{StaticResource RoundedVerticalScrollBarTemplate}" />
     </Style>
 
     <Style TargetType="ScrollBar">
         <Setter Property="Height" Value="12" />
         <Setter Property="Margin" Value="0,12,0,0" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Deepened}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
@@ -185,6 +185,68 @@
         </Style.Triggers>
     </Style>
 
+    <Style TargetType="{x:Type ScrollViewer}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                    <Grid x:Name="Grid" Background="{TemplateBinding Background}">
+                        <ScrollContentPresenter
+                            x:Name="PART_ScrollContentPresenter"
+                            Margin="{TemplateBinding Padding}"
+                            CanContentScroll="{TemplateBinding CanContentScroll}"
+                            CanHorizontallyScroll="False"
+                            CanVerticallyScroll="False"
+                            Content="{TemplateBinding Content}" />
+
+                        <ScrollBar
+                            x:Name="PART_VerticalScrollBar"
+                            Margin="0"
+                            HorizontalAlignment="Right"
+                            AutomationProperties.AutomationId="VerticalScrollBar"
+                            Cursor="Arrow"
+                            IsHitTestVisible="False"
+                            Maximum="{TemplateBinding ScrollableHeight}"
+                            Minimum="0"
+                            Opacity="0"
+                            ViewportSize="{TemplateBinding ViewportHeight}"
+                            Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                            Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                        <ScrollBar
+                            x:Name="PART_HorizontalScrollBar"
+                            Margin="0"
+                            VerticalAlignment="Bottom"
+                            AutomationProperties.AutomationId="HorizontalScrollBar"
+                            Cursor="Arrow"
+                            IsHitTestVisible="False"
+                            Maximum="{TemplateBinding ScrollableWidth}"
+                            Minimum="0"
+                            Opacity="0"
+                            Orientation="Horizontal"
+                            ViewportSize="{TemplateBinding ViewportWidth}"
+                            Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                            Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="PART_VerticalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="1" />
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger SourceName="PART_VerticalScrollBar" Property="IsMouseCaptureWithin" Value="True">
+                            <Setter TargetName="PART_VerticalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger SourceName="PART_HorizontalScrollBar" Property="IsMouseCaptureWithin" Value="True">
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="{x:Type customControls:FadingScrollViewer}">
         <Setter Property="Margin" Value="10" />
         <Setter Property="HorizontalScrollBarVisibility" Value="Visible" />
@@ -193,15 +255,6 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type customControls:FadingScrollViewer}">
                     <Grid x:Name="Grid" Background="{TemplateBinding Background}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
                         <Border x:Name="PART_ScrollContentPresenterContainer">
                             <ScrollContentPresenter
                                 x:Name="PART_ScrollContentPresenter"
@@ -214,28 +267,48 @@
 
                         <ScrollBar
                             x:Name="PART_VerticalScrollBar"
-                            Grid.Row="0"
-                            Grid.Column="1"
+                            Margin="0"
+                            HorizontalAlignment="Right"
                             AutomationProperties.AutomationId="VerticalScrollBar"
                             Cursor="Arrow"
+                            IsHitTestVisible="False"
                             Maximum="{TemplateBinding ScrollableHeight}"
                             Minimum="0"
+                            Opacity="0"
                             ViewportSize="{TemplateBinding ViewportHeight}"
                             Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                             Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
                         <ScrollBar
                             x:Name="PART_HorizontalScrollBar"
-                            Grid.Row="1"
-                            Grid.Column="0"
+                            Margin="0"
+                            VerticalAlignment="Bottom"
                             AutomationProperties.AutomationId="HorizontalScrollBar"
                             Cursor="Arrow"
+                            IsHitTestVisible="False"
                             Maximum="{TemplateBinding ScrollableWidth}"
                             Minimum="0"
+                            Opacity="0"
                             Orientation="Horizontal"
                             ViewportSize="{TemplateBinding ViewportWidth}"
                             Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
                             Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="PART_VerticalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="1" />
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger SourceName="PART_VerticalScrollBar" Property="IsMouseCaptureWithin" Value="True">
+                            <Setter TargetName="PART_VerticalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger SourceName="PART_HorizontalScrollBar" Property="IsMouseCaptureWithin" Value="True">
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

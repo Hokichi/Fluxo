@@ -184,56 +184,17 @@
         </StackPanel>
 
         <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-
             <components:ExpensesList
                 Title="NEEDS"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Needs}"
-                EmptyActionClick="OnEmptyExpenseActionClick"
-                EmptyActionParameter="{x:Static enums:ExpenseCategory.Needs}"
-                EmptyActionText="Log a Need"
-                HasMoreItems="{Binding NeedsHasMoreItems}"
-                IsListEmpty="{Binding IsNeedsEmpty}"
-                IsLoading="{Binding IsNeedsLoading}"
-                ItemsSource="{Binding Needs}"
-                LoadMoreCommand="{Binding LoadMoreNeedsCommand}"
-                Style="{StaticResource BudgetAllocationExpensesListStyle}" />
-
-            <components:ExpensesList
-                Title="WANTS"
-                Grid.Column="2"
-                DeleteCommand="{Binding DeleteExpenseLogCommand}"
-                DotColor="{StaticResource Brush.Category.Wants}"
-                EmptyActionClick="OnEmptyExpenseActionClick"
-                EmptyActionParameter="{x:Static enums:ExpenseCategory.Wants}"
-                EmptyActionText="Log a Want"
-                HasMoreItems="{Binding WantsHasMoreItems}"
-                IsListEmpty="{Binding IsWantsEmpty}"
-                IsLoading="{Binding IsWantsLoading}"
-                ItemsSource="{Binding Wants}"
-                LoadMoreCommand="{Binding LoadMoreWantsCommand}"
-                Style="{StaticResource BudgetAllocationExpensesListStyle}" />
-
-            <components:ExpensesList
-                Title="INVEST"
-                Grid.Column="4"
-                DeleteCommand="{Binding DeleteExpenseLogCommand}"
-                DotColor="{StaticResource Brush.Category.Investments}"
-                EmptyActionClick="OnEmptyExpenseActionClick"
-                EmptyActionParameter="{x:Static enums:ExpenseCategory.Savings}"
-                EmptyActionText="Log an Investment/Saving"
-                HasMoreItems="{Binding InvestHasMoreItems}"
-                IsListEmpty="{Binding IsInvestEmpty}"
-                IsLoading="{Binding IsInvestLoading}"
-                ItemsSource="{Binding Invest}"
-                LoadMoreCommand="{Binding LoadMoreInvestCommand}"
+                EmptyActionText="No transaction found"
+                HasMoreItems="{Binding TransactionsHasMoreItems}"
+                IsEmptyActionVisible="False"
+                IsListEmpty="{Binding IsTransactionsEmpty}"
+                IsLoading="{Binding IsTransactionsLoading}"
+                ItemsSource="{Binding Transactions}"
+                LoadMoreCommand="{Binding LoadMoreTransactionsCommand}"
                 Style="{StaticResource BudgetAllocationExpensesListStyle}" />
         </Grid>
     </Grid>

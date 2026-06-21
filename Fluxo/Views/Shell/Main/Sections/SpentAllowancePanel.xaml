@@ -7,7 +7,9 @@
     <customControls:SpacedUniformGrid
         Width="400"
         VerticalAlignment="Center"
+        Columns="2"
         HorizontalGap="8"
+        Rows="2"
         VerticalGap="8">
         <Border Style="{StaticResource CardBorderStyle}">
             <Grid VerticalAlignment="Center">

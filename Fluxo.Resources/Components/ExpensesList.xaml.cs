@@ -125,11 +125,15 @@ public partial class ExpensesList : UserControl
         if (sender is not FrameworkElement { DataContext: { } expenseLog })
             return;
 
+        var rowExpenseLog = expenseLog.GetType().GetProperty("ExpenseLog")?.GetValue(expenseLog);
+        if (rowExpenseLog is null && expenseLog.GetType().GetProperty("ExpenseLog") is not null)
+            return;
+
         // Reset the swipe on the container
         if (DependencyObjectTree.FindAncestor<SwipeRevealContainer>((DependencyObject)sender) is { } container)
             container.ResetSwipe();
 
-        WindowMethodInvoker.TryInvoke(this, "OpenExpenseDetailPopup", expenseLog);
+        WindowMethodInvoker.TryInvoke(this, "OpenExpenseDetailPopup", rowExpenseLog ?? expenseLog);
     }
 
     private void OnEmptyActionButtonClick(object sender, RoutedEventArgs e)

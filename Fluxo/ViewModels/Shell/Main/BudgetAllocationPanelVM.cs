@@ -37,6 +37,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
     private readonly HashSet<ExpenseLogVM> _needsVisibleWindow = [];
     private readonly ObservableCollection<ExpenseLogVM> _needsSource = [];
+    private readonly HashSet<BudgetTransactionLogVM> _transactionsVisibleWindow = [];
+    private readonly ObservableCollection<BudgetTransactionLogVM> _transactionsSource = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly IAccountService _accountService;
     private readonly ITagService _tagService;
@@ -57,6 +59,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private bool _suppressFilterFeedback;
     private int _needsVisibleCount = BucketPageSize;
     private (DateTime From, DateTime To)? _selectedRange = (DateTime.Today, DateTime.Today);
+    private int _transactionsVisibleCount = BucketPageSize;
     private int _wantsVisibleCount = BucketPageSize;
 
     public BudgetAllocationPanelVM(
@@ -124,6 +127,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private ICollectionView _invest = CollectionViewSource.GetDefaultView(Array.Empty<ExpenseLogVM>());
 
     [ObservableProperty]
+    private ICollectionView _transactions = CollectionViewSource.GetDefaultView(Array.Empty<BudgetTransactionLogVM>());
+
+    [ObservableProperty]
     private bool _isNeedsEmpty;
 
     [ObservableProperty]
@@ -131,6 +137,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     [ObservableProperty]
     private bool _isInvestEmpty;
+
+    [ObservableProperty]
+    private bool _isTransactionsEmpty;
 
     [ObservableProperty]
     private bool _needsHasMoreItems;
@@ -142,6 +151,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private bool _investHasMoreItems;
 
     [ObservableProperty]
+    private bool _transactionsHasMoreItems;
+
+    [ObservableProperty]
     private bool _isNeedsLoading;
 
     [ObservableProperty]
@@ -149,6 +161,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     [ObservableProperty]
     private bool _isInvestLoading;
+
+    [ObservableProperty]
+    private bool _isTransactionsLoading;
 
     [ObservableProperty]
     private ObservableCollection<ExpenseTagVM> _tags = [];
@@ -365,6 +380,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         LoadMoreInvestCommand.NotifyCanExecuteChanged();
     }
 
+    partial void OnTransactionsHasMoreItemsChanged(bool value)
+    {
+        LoadMoreTransactionsCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnIsNeedsLoadingChanged(bool value)
     {
         LoadMoreNeedsCommand.NotifyCanExecuteChanged();
@@ -378,6 +398,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     partial void OnIsInvestLoadingChanged(bool value)
     {
         LoadMoreInvestCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsTransactionsLoadingChanged(bool value)
+    {
+        LoadMoreTransactionsCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
@@ -440,6 +465,24 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }
     }
 
+    [RelayCommand(CanExecute = nameof(CanLoadMoreTransactions))]
+    private void LoadMoreTransactions()
+    {
+        if (!CanLoadMoreTransactions())
+            return;
+
+        IsTransactionsLoading = true;
+        try
+        {
+            _transactionsVisibleCount += BucketPageSize;
+            RefreshExpenseViews();
+        }
+        finally
+        {
+            IsTransactionsLoading = false;
+        }
+    }
+
     public void ToggleSelectedAccount(AccountVM? source)
     {
         var selectedId = source?.Id;
@@ -465,8 +508,15 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     }
 
     [RelayCommand]
-    private async Task DeleteExpenseLog(ExpenseLogVM? expenseLog)
+    private async Task DeleteExpenseLog(object? item)
     {
+        var expenseLog = item switch
+        {
+            ExpenseLogVM log => log,
+            BudgetTransactionLogVM { ExpenseLog: { } log } => log,
+            _ => null
+        };
+
         if (expenseLog is null || expenseLog.IsForDeletion)
             return;
 
@@ -532,10 +582,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         Needs = CollectionViewSource.GetDefaultView(_needsSource);
         Wants = CollectionViewSource.GetDefaultView(_wantsSource);
         Invest = CollectionViewSource.GetDefaultView(_investSource);
+        Transactions = CollectionViewSource.GetDefaultView(_transactionsSource);
 
         Needs.Filter = FilterNeedsExpenseLog;
         Wants.Filter = FilterWantsExpenseLog;
         Invest.Filter = FilterInvestExpenseLog;
+        Transactions.Filter = FilterTransactionLog;
     }
 
     private async Task<BudgetAllocation> LoadBudgetAllocationAsync(CancellationToken cancellationToken)
@@ -556,6 +608,15 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             ? budgetEffectiveLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
             : budgetEffectiveLogs)
             .ToList();
+        var visibleTransactionExpenseLogs = (_selectedRange is { } transactionRange
+            ? _allExpenseLogs.Where(log =>
+                !log.IsForDeletion &&
+                log.ParentLogId is null &&
+                log.DeductedOn.Date >= transactionRange.From.Date &&
+                log.DeductedOn.Date <= transactionRange.To.Date)
+            : _allExpenseLogs.Where(log => !log.IsForDeletion && log.ParentLogId is null))
+            .ToList();
+        var visibleIncomeLogs = EnumerateVisibleIncomeLogs().ToList();
 
         ReplaceExpenseLogs(
             _needsSource,
@@ -566,6 +627,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         ReplaceExpenseLogs(
             _investSource,
             visibleExpenseLogs.Where(log => log.Expense?.ExpenseCategory == ExpenseCategory.Savings));
+        ReplaceTransactionLogs(_transactionsSource, visibleTransactionExpenseLogs, visibleIncomeLogs);
         LoadRangeTags(visibleExpenseLogs);
 
         if (resetPaginationWindows)
@@ -589,6 +651,17 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         return FilterPagedExpenseLog(item, _investVisibleWindow);
     }
 
+    private bool FilterTransactionLog(object item)
+    {
+        if (item is not BudgetTransactionLogVM transactionLog)
+            return false;
+
+        if (!MatchesSelectedFilters(transactionLog))
+            return false;
+
+        return _transactionsVisibleWindow.Contains(transactionLog);
+    }
+
     private bool FilterPagedExpenseLog(object item, HashSet<ExpenseLogVM> visibleWindow)
     {
         if (item is not ExpenseLogVM expenseLog)
@@ -608,6 +681,15 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
         return SelectedAccountId is null ||
                expenseLog.Account?.Id == SelectedAccountId;
+    }
+
+    private bool MatchesSelectedFilters(BudgetTransactionLogVM transactionLog)
+    {
+        if (SelectedTag is not null)
+            return transactionLog.ExpenseLog?.Expense?.ExpenseTag?.Id == SelectedTag.Id;
+
+        return SelectedAccountId is null ||
+               transactionLog.Account.Id == SelectedAccountId;
     }
 
     private void SynchronizeTagSelections(ExpenseTagVM? selectedTag)
@@ -696,10 +778,12 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         Needs.Refresh();
         Wants.Refresh();
         Invest.Refresh();
+        Transactions.Refresh();
 
         IsNeedsEmpty = Needs.IsEmpty;
         IsWantsEmpty = Wants.IsEmpty;
         IsInvestEmpty = Invest.IsEmpty;
+        IsTransactionsEmpty = Transactions.IsEmpty;
     }
 
     private void SynchronizeAccountSelections(int? selectedAccountId)
@@ -811,12 +895,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             UpsertIncomeLog(snapshot);
             ApplyIncomeToTrackedSource(snapshot);
             AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, -snapshot.Amount);
+            ApplyVisibleExpenseLogs(resetPaginationWindows: false);
             return;
         }
 
         RemoveIncomeLog(snapshot.IncomeLogId);
         RestoreIncomeFromTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, snapshot.Amount);
+        ApplyVisibleExpenseLogs(resetPaginationWindows: false);
     }
 
     private void ApplyEditedExpenseAction(EditExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
@@ -842,6 +928,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         ApplyIncomeToTrackedSource(target);
         AdjustSourceDifference(previous.AccountId, previous.AddedOn, previous.Amount);
         AdjustSourceDifference(target.AccountId, target.AddedOn, -target.Amount);
+        ApplyVisibleExpenseLogs(resetPaginationWindows: false);
     }
 
     private void ApplyDeletedExpenseAction(DeleteExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
@@ -873,12 +960,14 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             RemoveIncomeLog(snapshot.IncomeLogId);
             RestoreIncomeFromTrackedSource(snapshot);
             AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, snapshot.Amount);
+            ApplyVisibleExpenseLogs(resetPaginationWindows: false);
             return;
         }
 
         UpsertIncomeLog(snapshot);
         ApplyIncomeToTrackedSource(snapshot);
         AdjustSourceDifference(snapshot.AccountId, snapshot.AddedOn, -snapshot.Amount);
+        ApplyVisibleExpenseLogs(resetPaginationWindows: false);
     }
 
     private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
@@ -1028,15 +1117,22 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         return InvestHasMoreItems && !IsInvestLoading;
     }
 
+    private bool CanLoadMoreTransactions()
+    {
+        return TransactionsHasMoreItems && !IsTransactionsLoading;
+    }
+
     private void ResetPaginationWindows()
     {
         _needsVisibleCount = BucketPageSize;
         _wantsVisibleCount = BucketPageSize;
         _investVisibleCount = BucketPageSize;
+        _transactionsVisibleCount = BucketPageSize;
 
         IsNeedsLoading = false;
         IsWantsLoading = false;
         IsInvestLoading = false;
+        IsTransactionsLoading = false;
     }
 
     private void RecomputePagedVisibleWindows()
@@ -1044,11 +1140,31 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         NeedsHasMoreItems = UpdatePagedVisibleWindow(_needsSource, _needsVisibleWindow, _needsVisibleCount);
         WantsHasMoreItems = UpdatePagedVisibleWindow(_wantsSource, _wantsVisibleWindow, _wantsVisibleCount);
         InvestHasMoreItems = UpdatePagedVisibleWindow(_investSource, _investVisibleWindow, _investVisibleCount);
+        TransactionsHasMoreItems = UpdatePagedVisibleWindow(
+            _transactionsSource,
+            _transactionsVisibleWindow,
+            _transactionsVisibleCount);
     }
 
     private bool UpdatePagedVisibleWindow(
         IEnumerable<ExpenseLogVM> source,
         HashSet<ExpenseLogVM> visibleWindow,
+        int visibleCount)
+    {
+        var filteredLogs = source
+            .Where(MatchesSelectedFilters)
+            .ToList();
+
+        visibleWindow.Clear();
+        foreach (var log in filteredLogs.Take(visibleCount))
+            visibleWindow.Add(log);
+
+        return filteredLogs.Count > visibleCount;
+    }
+
+    private bool UpdatePagedVisibleWindow(
+        IEnumerable<BudgetTransactionLogVM> source,
+        HashSet<BudgetTransactionLogVM> visibleWindow,
         int visibleCount)
     {
         var filteredLogs = source
@@ -1215,5 +1331,41 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
         foreach (var item in items.OrderByDescending(log => log.DeductedOn))
             target.Add(item);
+    }
+
+    private static void ReplaceTransactionLogs(
+        ObservableCollection<BudgetTransactionLogVM> target,
+        IEnumerable<ExpenseLogVM> expenseLogs,
+        IEnumerable<IncomeLogVM> incomeLogs)
+    {
+        target.Clear();
+
+        var rows = expenseLogs
+            .Select(log => new BudgetTransactionLogVM
+            {
+                Id = log.Id,
+                Name = log.Expense?.Name ?? "Expense",
+                Amount = log.Amount,
+                AmountText = $"-{log.Amount:N0}",
+                OccurredOn = log.DeductedOn,
+                Account = log.Account,
+                TagHexCode = log.Expense?.ExpenseTag?.HexCode,
+                ExpenseLog = log
+            })
+            .Concat(incomeLogs.Select(log => new BudgetTransactionLogVM
+            {
+                Id = log.Id,
+                Name = log.Name,
+                Amount = log.Amount,
+                AmountText = $"+{log.Amount:N0}",
+                OccurredOn = log.AddedOn,
+                Account = log.Account
+            }))
+            .OrderByDescending(log => log.OccurredOn)
+            .ThenBy(log => log.Id)
+            .ThenBy(log => log.IsExpense ? 0 : 1);
+
+        foreach (var row in rows)
+            target.Add(row);
     }
 }

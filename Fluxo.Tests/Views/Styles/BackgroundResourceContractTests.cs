@@ -47,6 +47,36 @@ public sealed partial class BackgroundResourceContractTests
     }
 
     [Fact]
+    public void ScrollBars_UseDeepenedTrackColor()
+    {
+        var xaml = Read("Fluxo.Resources", "Resources", "Styles", "GlobalStyles.xaml");
+        var globalScrollBarStyle = ExtractSection(xaml, "<Style TargetType=\"ScrollBar\">", "</Style>");
+        var roundedVerticalScrollBarStyle = ExtractStyleByKey(xaml, "RoundedVerticalScrollBarStyle");
+
+        Assert.Contains("Property=\"Background\" Value=\"{StaticResource Brush.Background.Deepened}\"", globalScrollBarStyle);
+        Assert.Contains("Property=\"Background\" Value=\"{StaticResource Brush.Background.Deepened}\"", roundedVerticalScrollBarStyle);
+    }
+
+    [Theory]
+    [InlineData("TargetType=\"{x:Type ScrollViewer}\"")]
+    [InlineData("TargetType=\"{x:Type customControls:FadingScrollViewer}\"")]
+    public void SharedScrollViewerTemplates_FloatScrollBarsAndRevealThemOnHoverOrDrag(string targetTypeMarker)
+    {
+        var xaml = Read("Fluxo.Resources", "Resources", "Styles", "GlobalStyles.xaml");
+        var section = ExtractSection(xaml, targetTypeMarker, "</Style>");
+
+        Assert.Contains("HorizontalAlignment=\"Right\"", section);
+        Assert.Contains("VerticalAlignment=\"Bottom\"", section);
+        Assert.Contains("Opacity=\"0\"", section);
+        Assert.Contains("IsHitTestVisible=\"False\"", section);
+        Assert.Contains("Property=\"IsHitTestVisible\" Value=\"True\"", section);
+        Assert.Contains("Property=\"IsMouseOver\" Value=\"True\"", section);
+        Assert.Contains("Property=\"IsMouseCaptureWithin\" Value=\"True\"", section);
+        Assert.DoesNotContain("<ColumnDefinition Width=\"Auto\"", section);
+        Assert.DoesNotContain("<RowDefinition Height=\"Auto\"", section);
+    }
+
+    [Fact]
     public void SharedCardStyle_UsesUnifiedCardValues()
     {
         var xaml = Read("Fluxo.Resources", "Resources", "Styles", "ContainerStyles.xaml");

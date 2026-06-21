@@ -74,7 +74,7 @@ public partial class MessageBoxPopup : BasePopup
         {
             MessageBoxImage.Error or MessageBoxImage.Stop or MessageBoxImage.Hand => ("Ban", "Brush.Danger"),
             MessageBoxImage.Warning or MessageBoxImage.Exclamation => ("Info", "Brush.Warning"),
-            MessageBoxImage.Question => ("Info", "Brush.Primary.Hover"),
+            MessageBoxImage.Question => ("Info", "Brush.BalloonButton.Background.Hovered"),
             MessageBoxImage.Information or MessageBoxImage.Asterisk => ("Info", "Brush.Info"),
             _ => ("Info", "Brush.Text.Secondary")
         };

@@ -16,9 +16,13 @@
         <DataTemplate x:Key="SavingGoalTemplate">
             <Border Margin="0,0,0,8" Padding="4,0">
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="24" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*" />
-                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="8" />
                         <ColumnDefinition Width="*" />
@@ -26,7 +30,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Grid>
+                    <Grid Grid.ColumnSpan="5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="10" />
@@ -90,7 +94,8 @@
                     </Grid>
 
                     <Border
-                        Grid.Column="2"
+                        Grid.Row="2"
+                        Grid.Column="0"
                         Padding="8"
                         Background="{StaticResource Brush.Background.Deepened}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
@@ -114,7 +119,8 @@
                     </Border>
 
                     <Border
-                        Grid.Column="4"
+                        Grid.Row="2"
+                        Grid.Column="2"
                         Padding="8"
                         Background="{StaticResource Brush.Background.Deepened}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
@@ -138,6 +144,7 @@
                     </Border>
 
                     <Border
+                        Grid.Row="2"
                         Grid.Column="6"
                         Padding="8"
                         Background="{StaticResource Brush.Background.Deepened}"

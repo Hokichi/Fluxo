@@ -1595,7 +1595,7 @@
                     ItemTemplate="{StaticResource LedgerRowTemplate}"
                     ItemsSource="{Binding TransactionsView}"
                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                    ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    ScrollViewer.VerticalScrollBarVisibility="Auto">
                     <ListView.GroupStyle>
                         <StaticResource ResourceKey="LedgerGroupStyle" />
                     </ListView.GroupStyle>

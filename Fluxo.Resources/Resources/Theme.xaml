@@ -19,15 +19,15 @@
     <SolidColorBrush x:Key="Brush.Background.Hover" Color="{StaticResource Color.Background.Hover}" />
 
     <!--  =============================  -->
-    <!--  PRIMARY ACCENT (MIDNIGHT BLUE)  -->
+    <!--  BALLOON BUTTON BACKGROUND (MIDNIGHT BLUE)  -->
     <!--  =============================  -->
 
-    <Color x:Key="Color.Primary">#0B1F3B</Color>
-    <Color x:Key="Color.Primary.Hover">#132A52</Color>
+    <Color x:Key="Color.BalloonButton.Background.Default">#0B1F3B</Color>
+    <Color x:Key="Color.BalloonButton.Background.Hovered">#132A52</Color>
     <Color x:Key="Color.Primary.Pressed">#08162B</Color>
 
-    <SolidColorBrush x:Key="Brush.Primary" Color="{StaticResource Color.Primary}" />
-    <SolidColorBrush x:Key="Brush.Primary.Hover" Color="{StaticResource Color.Primary.Hover}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.Default" Color="{StaticResource Color.BalloonButton.Background.Default}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.Hovered" Color="{StaticResource Color.BalloonButton.Background.Hovered}" />
     <SolidColorBrush x:Key="Brush.Primary.Pressed" Color="{StaticResource Color.Primary.Pressed}" />
 
     <!--  =============================  -->

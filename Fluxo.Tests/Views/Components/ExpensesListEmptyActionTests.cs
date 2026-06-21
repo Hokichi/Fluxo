@@ -54,9 +54,9 @@ public sealed class ExpensesListEmptyActionTests
         var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
 
         Assert.Contains("Background=\"Transparent\"", xaml);
-        Assert.Contains("Background=\"{Binding Expense.ExpenseTag.HexCode", xaml);
+        Assert.Contains("Background=\"{Binding TagHexCode", xaml);
         Assert.DoesNotContain("Background=\"{Binding DotColor", xaml);
-        Assert.DoesNotContain("Background=\"{StaticResource Brush.Background.Hover}\"", xaml);
+        Assert.Contains("Background=\"{StaticResource Brush.Background.Hover}\"", xaml);
     }
 
     private static string ResolveExpensesListXamlPath() =>

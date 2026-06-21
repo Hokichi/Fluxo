@@ -66,7 +66,7 @@
                 <Grid>
                     <Border
                         Margin="0,1,16,1"
-                        Background="{Binding Expense.ExpenseTag.HexCode, FallbackValue=Transparent, TargetNullValue=Transparent}"
+                        Background="{Binding TagHexCode, FallbackValue=Transparent, TargetNullValue=Transparent}"
                         CornerRadius="12 0 0 12">
                         <Border.Style>
                             <Style TargetType="Border">
@@ -220,7 +220,7 @@
                                         FontFamily="{StaticResource Bold}"
                                         FontSize="14"
                                         Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="{Binding Expense.Name}"
+                                        Text="{Binding Name}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap" />
                                     <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
@@ -240,9 +240,19 @@
                                     HorizontalAlignment="Right"
                                     FontFamily="{StaticResource Bold}"
                                     FontSize="14"
-                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                    Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
-                                    ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                                    Text="{Binding AmountText}"
+                                    ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Mint}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsExpense}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock
                                     MaxWidth="120"
                                     Margin="0,4,0,0"
@@ -250,7 +260,7 @@
                                     FontFamily="{StaticResource Regular}"
                                     FontSize="12"
                                     Foreground="{StaticResource Brush.Text.Muted}"
-                                    Text="{Binding DeductedOn, Converter={StaticResource DateTimeToRelativeDateConverter}}"
+                                    Text="{Binding OccurredOn, Converter={StaticResource DateTimeToRelativeDateConverter}}"
                                     TextTrimming="CharacterEllipsis"
                                     TextWrapping="NoWrap" />
                             </StackPanel>
@@ -340,6 +350,28 @@
                         Content="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
                         Style="{StaticResource AccountAddButtonStyle}" />
                 </StackPanel>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="14"
+                    Foreground="{StaticResource Brush.Text.Muted}"
+                    Text="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsListEmpty, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Value="True" />
+                                        <Condition Binding="{Binding IsEmptyActionVisible, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
 
                 <customControls:FadingScrollViewer
                     Margin="12,0,12,0"
@@ -351,11 +383,6 @@
                     <customControls:FadingScrollViewer.Template>
                         <ControlTemplate TargetType="{x:Type customControls:FadingScrollViewer}">
                             <Grid x:Name="Grid" Background="{TemplateBinding Background}">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
                                 <Border x:Name="PART_ScrollContentPresenterContainer">
                                     <ScrollContentPresenter
                                         x:Name="PART_ScrollContentPresenter"
@@ -368,29 +395,49 @@
 
                                 <ScrollBar
                                     x:Name="PART_VerticalScrollBar"
-                                    Grid.Row="0"
                                     Margin="0,0,-16,0"
                                     HorizontalAlignment="Right"
                                     AutomationProperties.AutomationId="VerticalScrollBar"
                                     Cursor="Arrow"
+                                    IsHitTestVisible="False"
                                     Maximum="{TemplateBinding ScrollableHeight}"
                                     Minimum="0"
+                                    Opacity="0"
                                     ViewportSize="{TemplateBinding ViewportHeight}"
                                     Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                                     Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
 
                                 <ScrollBar
                                     x:Name="PART_HorizontalScrollBar"
-                                    Grid.Row="1"
+                                    Margin="0"
+                                    VerticalAlignment="Bottom"
                                     AutomationProperties.AutomationId="HorizontalScrollBar"
                                     Cursor="Arrow"
+                                    IsHitTestVisible="False"
                                     Maximum="{TemplateBinding ScrollableWidth}"
                                     Minimum="0"
+                                    Opacity="0"
                                     Orientation="Horizontal"
                                     ViewportSize="{TemplateBinding ViewportWidth}"
                                     Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
                                     Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
                             </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="PART_VerticalScrollBar" Property="IsHitTestVisible" Value="True" />
+                                    <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="1" />
+                                    <Setter TargetName="PART_HorizontalScrollBar" Property="IsHitTestVisible" Value="True" />
+                                    <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="1" />
+                                </Trigger>
+                                <Trigger SourceName="PART_VerticalScrollBar" Property="IsMouseCaptureWithin" Value="True">
+                                    <Setter TargetName="PART_VerticalScrollBar" Property="IsHitTestVisible" Value="True" />
+                                    <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="1" />
+                                </Trigger>
+                                <Trigger SourceName="PART_HorizontalScrollBar" Property="IsMouseCaptureWithin" Value="True">
+                                    <Setter TargetName="PART_HorizontalScrollBar" Property="IsHitTestVisible" Value="True" />
+                                    <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="1" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </customControls:FadingScrollViewer.Template>
                     <ListView

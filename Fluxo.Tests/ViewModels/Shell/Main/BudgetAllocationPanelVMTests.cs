@@ -27,7 +27,7 @@ public class BudgetAllocationPanelVMTests
         RunInSta(() =>
         {
             var messenger = new WeakReferenceMessenger();
-            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts());
+            var vm = CreateVm(messenger, CreateExpenseLogs(), CreateTags(), CreateAccounts(), CreateIncomeLogs());
             vm.LoadAsync().GetAwaiter().GetResult();
 
             messenger.Send(new DateRangeSelectionChangedMessage(
@@ -35,12 +35,10 @@ public class BudgetAllocationPanelVMTests
                 new DateTime(2026, 4, 12)));
 
             Assert.Collection(
-                GetItems(vm.Needs),
-                item => Assert.Equal(1, item.Id));
-            Assert.Collection(
-                GetItems(vm.Wants),
-                item => Assert.Equal(2, item.Id));
-            Assert.Empty(GetItems(vm.Invest));
+                GetTransactionItems(vm.Transactions),
+                item => Assert.Equal("Movie", item.Name),
+                item => Assert.Equal("Refund", item.Name),
+                item => Assert.Equal("Groceries", item.Name));
         });
     }
 
@@ -96,12 +94,9 @@ public class BudgetAllocationPanelVMTests
 
             Assert.Equal(1, vm.SelectedTag?.Id);
             Assert.Collection(
-                GetItems(vm.Needs),
+                GetTransactionItems(vm.Transactions),
+                item => Assert.Equal(3, item.Id),
                 item => Assert.Equal(1, item.Id));
-            Assert.Empty(GetItems(vm.Wants));
-            Assert.Collection(
-                GetItems(vm.Invest),
-                item => Assert.Equal(3, item.Id));
         });
     }
 
@@ -181,8 +176,98 @@ public class BudgetAllocationPanelVMTests
             Assert.Null(vm.SelectedOtherTag);
             Assert.False(vm.HasOtherTags);
             Assert.Collection(
-                GetItems(vm.Wants),
+                GetTransactionItems(vm.Transactions),
                 item => Assert.Equal(2, item.Id));
+        });
+    }
+
+    [Fact]
+    public void LoadAsync_CombinesNonChildExpensesAndIncomeLogsWithSignedAmounts()
+    {
+        RunInSta(() =>
+        {
+            var messenger = new WeakReferenceMessenger();
+            var source = CreateAccounts().Single();
+            var groceries = new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" };
+            var expenses = new[]
+            {
+                new ExpenseLogVM
+                {
+                    Id = 4,
+                    Amount = 10m,
+                    DeductedOn = new DateTime(2026, 4, 12, 8, 0, 0),
+                    Expense = new ExpenseVM
+                    {
+                        Id = 14,
+                        Name = "Coffee",
+                        ExpenseCategory = ExpenseCategory.Needs,
+                        ExpenseTag = groceries
+                    },
+                    Account = source
+                },
+                new ExpenseLogVM
+                {
+                    Id = 5,
+                    ParentLogId = 4,
+                    Amount = 6m,
+                    DeductedOn = new DateTime(2026, 4, 13, 8, 0, 0),
+                    Expense = new ExpenseVM
+                    {
+                        Id = 15,
+                        Name = "Child split",
+                        ExpenseCategory = ExpenseCategory.Needs,
+                        ExpenseTag = groceries
+                    },
+                    Account = source
+                }
+            };
+            var incomes = new[]
+            {
+                new IncomeLogVM
+                {
+                    Id = 4,
+                    Name = "Allowance",
+                    Amount = 20m,
+                    AddedOn = new DateTime(2026, 4, 12, 8, 0, 0),
+                    Account = source
+                },
+                new IncomeLogVM
+                {
+                    Id = 3,
+                    Name = "Paycheck",
+                    Amount = 100m,
+                    AddedOn = new DateTime(2026, 4, 14, 8, 0, 0),
+                    Account = source
+                }
+            };
+            var vm = CreateVm(messenger, expenses, [groceries], [source], incomes);
+
+            vm.LoadAsync().GetAwaiter().GetResult();
+            messenger.Send(new DateRangeSelectionChangedMessage(
+                new DateTime(2026, 4, 1),
+                new DateTime(2026, 4, 30)));
+
+            Assert.Collection(
+                GetTransactionItems(vm.Transactions),
+                item =>
+                {
+                    Assert.False(item.IsExpense);
+                    Assert.Equal("Paycheck", item.Name);
+                    Assert.Equal("+100", item.AmountText);
+                },
+                item =>
+                {
+                    Assert.True(item.IsExpense);
+                    Assert.Equal("Coffee", item.Name);
+                    Assert.Equal("-10", item.AmountText);
+                    Assert.Same(expenses[0], item.ExpenseLog);
+                },
+                item =>
+                {
+                    Assert.False(item.IsExpense);
+                    Assert.Equal("Allowance", item.Name);
+                    Assert.Equal("+20", item.AmountText);
+                });
         });
     }
 
@@ -464,13 +549,9 @@ public class BudgetAllocationPanelVMTests
             Assert.Equal(40m, vm.WantsSpent);
             Assert.Equal(60m, vm.InvestSpent);
             Assert.Equal(100m, vm.TotalSpent);
-            Assert.Empty(GetItems(vm.Needs));
             Assert.Collection(
-                GetItems(vm.Wants),
-                item => Assert.Equal(2, item.Id));
-            Assert.Collection(
-                GetItems(vm.Invest),
-                item => Assert.Equal(3, item.Id));
+                GetTransactionItems(vm.Transactions),
+                item => Assert.Equal(1, item.Id));
         });
     }
 
@@ -923,9 +1004,9 @@ public class BudgetAllocationPanelVMTests
         }
     }
 
-    private static List<ExpenseLogVM> GetItems(ICollectionView view)
+    private static List<BudgetTransactionLogVM> GetTransactionItems(ICollectionView view)
     {
-        return view.Cast<ExpenseLogVM>().ToList();
+        return view.Cast<BudgetTransactionLogVM>().ToList();
     }
 
     private static void RunInSta(Action action)
