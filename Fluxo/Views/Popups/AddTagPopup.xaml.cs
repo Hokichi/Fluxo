@@ -69,7 +69,7 @@ public partial class AddTagPopup : BasePopup
         if (_viewModel.HasChanges)
         {
             var confirmation = FluxoMessageBox.Show(this,
-                "Discard all changes?",
+                "Close and discard changes?",
                 _viewModel.PopupTitle,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);

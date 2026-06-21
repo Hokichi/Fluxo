@@ -196,7 +196,7 @@ public partial class ExpenseDetailPopup : BasePopup
             {
                 var closeWithoutSaving = FluxoMessageBox.Show(
                     this,
-                    "You have split rows without amounts. Close without saving?",
+                    "Close and discard unsaved changes?",
                     "Expense Detail",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
