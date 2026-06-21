@@ -8,7 +8,7 @@
                 x:Name="UpcomingEventItemSurface"
                 Height="{Binding UpcomingEventItemHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 Margin="0,0,0,10"
-                Padding="8"
+                Padding="4,4,8,4"
                 Background="Transparent"
                 BorderBrush="{StaticResource Brush.Border.Subtle}"
                 BorderThickness="1"
@@ -23,12 +23,12 @@
                     </Grid.ColumnDefinitions>
 
                     <Border
-                        Width="40"
-                        Height="40"
+                        Width="36"
+                        Height="36"
                         Background="{StaticResource Brush.Background.Surface}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
-                        CornerRadius="8">
+                        CornerRadius="4">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock
                                 HorizontalAlignment="Center"
@@ -40,7 +40,7 @@
                                 Margin="0,2,0,0"
                                 HorizontalAlignment="Center"
                                 FontFamily="{StaticResource Black}"
-                                FontSize="16"
+                                FontSize="14"
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="{Binding DayText}" />
                         </StackPanel>

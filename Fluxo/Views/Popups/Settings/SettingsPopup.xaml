@@ -115,11 +115,11 @@
                 </RadioButton>
 
                 <RadioButton
-                    x:Name="PersonalizationTabButton"
+                    x:Name="PreferencesTabButton"
                     GroupName="SettingsTabs"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource TabButtonStyle}"
-                    Tag="Personalization">
+                    Tag="Preferences">
                     <components:Icon
                         Width="12"
                         Path="{StaticResource AccountCircle}"
