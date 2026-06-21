@@ -1069,7 +1069,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             NameText.Trim(),
             AmountText,
             SelectedAccount.Id,
-            SelectedDate.Date,
+            SelectedDate.Date.Add(DateTime.Now.TimeOfDay),
             InstallmentEndDate.Date,
             RecurringTimeText.Trim(),
             NoteText.Trim(),

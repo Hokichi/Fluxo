@@ -1085,6 +1085,32 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void SaveAsync_Expense_PersistsSelectedDateWithCurrentTime()
+    {
+        RunInSta(() =>
+        {
+            ExpenseLog? savedLog = null;
+            var appData = CreateAppData();
+            appData.AddExpenseLogAsync(Arg.Do<ExpenseLog>(log => savedLog = log), Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+            vm.SelectedDate = new DateTime(2026, 6, 20);
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(savedLog);
+            Assert.Equal(new DateTime(2026, 6, 20), savedLog!.DeductedOn.Date);
+            Assert.NotEqual(TimeSpan.Zero, savedLog.DeductedOn.TimeOfDay);
+        });
+    }
+
+    [Fact]
     public void SaveAsync_Expense_PersistsLendState()
     {
         RunInSta(() =>
@@ -1493,6 +1519,32 @@ public sealed class AddNewTransactionVMValidationTests
             appData.Received(1).AddIncomeLogAsync(
                 Arg.Is<IncomeLog>(log => log.IsPinned),
                 Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_Income_PersistsSelectedDateWithCurrentTime()
+    {
+        RunInSta(() =>
+        {
+            IncomeLog? savedLog = null;
+            var appData = CreateAppData();
+            appData.AddIncomeLogAsync(Arg.Do<IncomeLog>(log => savedLog = log), Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+            var vm = CreateVm(
+                TransactionKind.Income,
+                CreateCheckingSource(balance: 0m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+            vm.SelectedDate = new DateTime(2026, 6, 20);
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(savedLog);
+            Assert.Equal(new DateTime(2026, 6, 20), savedLog!.AddedOn.Date);
+            Assert.NotEqual(TimeSpan.Zero, savedLog.AddedOn.TimeOfDay);
         });
     }
 
