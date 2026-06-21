@@ -5,11 +5,13 @@
     <!--  =============================  -->
 
     <Color x:Key="Color.Background.Main">#121417</Color>
+    <Color x:Key="Color.Background.Popup">#121417</Color>
     <Color x:Key="Color.Background.Surface">#1A1D21</Color>
     <Color x:Key="Color.Background.Elevated">#20242A</Color>
     <Color x:Key="Color.Background.Hover">#232830</Color>
 
     <SolidColorBrush x:Key="Brush.Background.Main" Color="{StaticResource Color.Background.Main}" />
+    <SolidColorBrush x:Key="Brush.Background.Popup" Color="{StaticResource Color.Background.Popup}" />
     <SolidColorBrush x:Key="Brush.Background.Surface" Color="{StaticResource Color.Background.Surface}" />
     <SolidColorBrush x:Key="Brush.Background.Elevated" Color="{StaticResource Color.Background.Elevated}" />
     <SolidColorBrush x:Key="Brush.Background.Hover" Color="{StaticResource Color.Background.Hover}" />
