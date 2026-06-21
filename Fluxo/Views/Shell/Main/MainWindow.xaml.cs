@@ -1429,11 +1429,12 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 
-    public void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
+    public async void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
     {
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, appData);
+        var targetExpenseLog = await ExpenseDetailTargetResolver.ResolveAsync(expenseLog, appData);
+        var popupViewModel = new ExpenseDetailVM(_mainVM, targetExpenseLog, appData);
         _dialogService.ShowExpenseDetail(popupViewModel, this);
     }
 

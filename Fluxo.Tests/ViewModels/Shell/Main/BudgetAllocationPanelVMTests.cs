@@ -394,7 +394,7 @@ public class BudgetAllocationPanelVMTests
     }
 
     [Fact]
-    public void LoadAsync_BudgetMetricsExcludeSplitParentLogsAndIncludeChildLogs()
+    public void LoadAsync_BudgetMetricsAndExpenseListsExcludeSplitParentLogsAndIncludeChildLogs()
     {
         RunInSta(() =>
         {
@@ -464,11 +464,13 @@ public class BudgetAllocationPanelVMTests
             Assert.Equal(40m, vm.WantsSpent);
             Assert.Equal(60m, vm.InvestSpent);
             Assert.Equal(100m, vm.TotalSpent);
+            Assert.Empty(GetItems(vm.Needs));
             Assert.Collection(
-                GetItems(vm.Needs),
-                item => Assert.Equal(1, item.Id));
-            Assert.Empty(GetItems(vm.Wants));
-            Assert.Empty(GetItems(vm.Invest));
+                GetItems(vm.Wants),
+                item => Assert.Equal(2, item.Id));
+            Assert.Collection(
+                GetItems(vm.Invest),
+                item => Assert.Equal(3, item.Id));
         });
     }
 

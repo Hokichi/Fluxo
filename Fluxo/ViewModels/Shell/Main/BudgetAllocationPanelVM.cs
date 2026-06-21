@@ -551,12 +551,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void ApplyVisibleExpenseLogs(bool resetPaginationWindows = true)
     {
-        var topLevelLogs = _allExpenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null);
+        var budgetEffectiveLogs = BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs);
         var visibleExpenseLogs = (_selectedRange is { } range
-            ? topLevelLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
-            : topLevelLogs)
+            ? budgetEffectiveLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
+            : budgetEffectiveLogs)
             .ToList();
 
         ReplaceExpenseLogs(
@@ -739,9 +737,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private IEnumerable<ExpenseLogVM> EnumerateVisibleExpenseLogs()
     {
-        var source = _allExpenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.ParentLogId is null);
+        var source = BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs);
         if (_selectedRange is not { } range)
             return source;
 
