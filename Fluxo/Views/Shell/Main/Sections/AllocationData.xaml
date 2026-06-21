@@ -96,9 +96,7 @@
 
             <Border
                 Grid.Column="1"
-                Width="1.5"
-                Margin="16,0"
-                Background="{StaticResource Brush.Border.Subtle}" />
+                Style="{StaticResource VerticalSeparatorBorderStyle}" />
 
             <Grid Grid.Column="2">
                 <StackPanel>
@@ -182,9 +180,7 @@
 
             <Border
                 Grid.Column="3"
-                Width="1.5"
-                Margin="16,0"
-                Background="{StaticResource Brush.Border.Subtle}" />
+                Style="{StaticResource VerticalSeparatorBorderStyle}" />
 
             <Grid Grid.Column="4">
                 <StackPanel>

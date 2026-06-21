@@ -107,8 +107,8 @@
                     </Grid>
                 </Border>
                 <Border
-                    Height="1"
-                    Margin="12,8,12,8"
+                    Height="1.5"
+                    Margin="12"
                     Background="{StaticResource Brush.Border.Subtle}" />
             </StackPanel>
             <DataTemplate.Triggers>

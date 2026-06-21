@@ -122,7 +122,8 @@
                                             Style="{StaticResource ActionTextButtonStyle}" />
                                         <Border
                                             Grid.Row="1"
-                                            Margin="4,4"
+                                            Height="1.5"
+                                            Margin="12"
                                             Background="{StaticResource Brush.Border.Subtle}" />
                                         <customControls:FadingScrollViewer
                                             Grid.Row="2"

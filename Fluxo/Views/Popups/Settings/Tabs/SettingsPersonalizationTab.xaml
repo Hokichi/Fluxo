@@ -90,8 +90,8 @@
                             </Grid>
 
                             <Border
-                                Height="1"
-                                Margin="0,16,0,0"
+                                Height="1.5"
+                                Margin="0,12"
                                 Background="{StaticResource Brush.Border.Subtle}" />
 
                             <StackPanel Margin="0,16,0,0" Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -126,8 +126,8 @@
                             </StackPanel>
 
                             <Border
-                                Height="1"
-                                Margin="0,16,0,0"
+                                Height="1.5"
+                                Margin="0,12"
                                 Background="{StaticResource Brush.Border.Subtle}"
                                 Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}" />
 
