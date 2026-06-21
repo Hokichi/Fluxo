@@ -492,7 +492,7 @@
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Back to sources" />
                         <customControls:BalloonButton
-                            ButtonIcon="{StaticResource CircleMinusSolid}"
+                            ButtonIcon="{StaticResource Delete}"
                             Click="OnDeleteButtonClick"
                             HoveredBackground="{StaticResource Brush.Danger}"
                             IsEnabled="{Binding CanDelete}"

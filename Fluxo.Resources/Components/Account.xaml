@@ -153,7 +153,7 @@
                             <components:Icon
                                 Width="14"
                                 Height="14"
-                                Path="{StaticResource CircleMinusSolid}"
+                                Path="{StaticResource Delete}"
                                 Color="{StaticResource Brush.Danger}" />
                             <TextBlock
                                 Grid.Column="2"

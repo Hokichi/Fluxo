@@ -58,7 +58,7 @@ public partial class SettingsDebtIousTabVM : ObservableObject
 
     public bool HasItems => Items.Count > 0;
 
-    public string TotalAmountText => $"Total: {Items.Sum(item => item.Amount).ToString("#,0.##", CultureInfo.CurrentCulture)}";
+    public string TotalAmountText => $"{Items.Sum(item => item.Amount).ToString("#,0.##", CultureInfo.CurrentCulture)}";
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {

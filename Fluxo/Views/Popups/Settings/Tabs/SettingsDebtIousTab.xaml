@@ -110,11 +110,13 @@
                     Text="Resolve tracked debts and IOUs with balancing transactions." />
                 <TextBlock
                     Grid.Column="1"
-                    Margin="16,0,0,0"
-                    FontFamily="{StaticResource Medium}"
-                    FontSize="11"
-                    Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="{Binding TotalAmountText}" />
+                    Margin="16,0,12,0"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="12"
+                    Foreground="{StaticResource Brush.Mint}">
+                    <Run Text="Total:" />
+                    <Run Text="{Binding TotalAmountText, Mode=OneWay, Converter={StaticResource MoneyDisplayConverter}}" />
+                </TextBlock>
             </Grid>
 
             <customControls:FadingScrollViewer
