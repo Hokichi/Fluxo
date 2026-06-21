@@ -9,14 +9,6 @@
     PopupTitle="Income Detail">
 
     <customControls:BasePopup.Resources>
-        <Style x:Key="PanelStyle" TargetType="Border">
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-        </Style>
-
         <Style x:Key="LeftSideLabelStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
@@ -169,7 +161,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border Style="{StaticResource PanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -254,7 +246,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource PanelStyle}">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -502,7 +494,7 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource PanelStyle}">
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

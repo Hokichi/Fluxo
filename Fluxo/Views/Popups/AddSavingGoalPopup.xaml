@@ -9,13 +9,6 @@
     ShowSaveButton="True">
 
     <customControls:BasePopup.Resources>
-        <Style x:Key="PanelStyle" TargetType="Border">
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-        </Style>
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="0,0,0,8" />
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
@@ -69,8 +62,7 @@
     </customControls:BasePopup.Resources>
 
     <Grid Width="480" Margin="24,0,24,24">
-        <Border Style="{StaticResource PanelStyle}">
-            <StackPanel>
+        <StackPanel>
                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Goal Name" />
                 <TextBox
                     x:Name="NameTextBox"
@@ -116,8 +108,7 @@
                         IsChecked="{Binding HasDefiniteEndDate, Mode=TwoWay, Converter={StaticResource BoolNegationConverter}}"
                         Style="{StaticResource EndDateInfinityToggleStyle}" />
                 </Grid>
-            </StackPanel>
-        </Border>
+        </StackPanel>
     </Grid>
 </customControls:BasePopup>
 

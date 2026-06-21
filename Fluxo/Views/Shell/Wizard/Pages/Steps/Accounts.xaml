@@ -14,7 +14,7 @@
         </Style>
 
         <DataTemplate x:Key="WizardAccountsItemTemplate">
-            <Border Style="{StaticResource CardStyle}">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <StackPanel
                         HorizontalAlignment="Right"

@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources">
     <StackPanel Visibility="{Binding IsStep6Active, Converter={StaticResource BoolToVisibilityConverter}}">
-        <Border Margin="0,0,0,12" Style="{StaticResource CardStyle}">
+        <Border Margin="0,0,0,12" Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -32,7 +32,7 @@
 
         <Border
             Margin="0,0,0,12"
-            Style="{StaticResource CardStyle}"
+            Style="{StaticResource CardBorderStyle}"
             Visibility="{Binding HasAutoLockInterval, Converter={StaticResource BoolToVisibilityConverter}}">
             <StackPanel>
                 <TextBlock
@@ -68,7 +68,7 @@
             </StackPanel>
         </Border>
 
-        <Border Style="{StaticResource CardStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

@@ -11,13 +11,6 @@
     ShowSaveButton="True">
 
     <customControls:BasePopup.Resources>
-        <Style x:Key="PanelStyle" TargetType="Border">
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-        </Style>
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="0,0,0,8" />
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
@@ -37,9 +30,8 @@
     </customControls:BasePopup.Resources>
 
     <Grid Width="640" Margin="24,0,24,24">
-        <Border Style="{StaticResource PanelStyle}">
-            <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
+        <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -198,8 +190,7 @@
                             IsChecked="{Binding IsEnabled, Mode=TwoWay}"
                             Style="{StaticResource ItemCheckBoxWithContentStyle}" />
                     </StackPanel>
-                </StackPanel>
-            </customControls:FadingScrollViewer>
-        </Border>
+            </StackPanel>
+        </customControls:FadingScrollViewer>
     </Grid>
 </customControls:BasePopup>

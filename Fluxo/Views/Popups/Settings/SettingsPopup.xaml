@@ -39,7 +39,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border x:Name="SettingsSideMenu" Style="{StaticResource PanelStyle}">
+        <Border x:Name="SettingsSideMenu" Style="{StaticResource CardBorderStyle}">
             <StackPanel>
                 <RadioButton
                     x:Name="SourcesTabButton"

@@ -7,20 +7,8 @@
 Width="460"
     PopupTitle="Custom Tag Color">
 
-    <customControls:BasePopup.Resources>
-        <Style x:Key="PanelStyle" TargetType="Border">
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-        </Style>
-
-    </customControls:BasePopup.Resources>
-
     <Grid Margin="24,0,24,24">
-        <Border Style="{StaticResource PanelStyle}">
-            <StackPanel>
+        <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -143,8 +131,7 @@ Width="460"
                         Content="Confirm"
                         Style="{StaticResource ActionTextButtonStyle}" />
                 </StackPanel>
-            </StackPanel>
-        </Border>
+        </StackPanel>
     </Grid>
 </customControls:BasePopup>
 

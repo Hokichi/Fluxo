@@ -15,7 +15,7 @@ xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=Pres
         </Style>
 
         <DataTemplate x:Key="WizardSavingGoalsItemTemplate">
-            <Border Style="{StaticResource CardStyle}">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <StackPanel
                         HorizontalAlignment="Right"

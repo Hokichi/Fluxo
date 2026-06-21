@@ -2,21 +2,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Resources.Components">
-    <Style x:Key="PanelStyle" TargetType="Border">
-        <Setter Property="Padding" Value="18" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="18" />
-    </Style>
-
-    <Style x:Key="RowCardStyle" TargetType="Border">
+    <Style
+        x:Key="RowCardStyle"
+        BasedOn="{StaticResource CardBorderStyle}"
+        TargetType="Border">
         <Setter Property="Margin" Value="0,0,0,10" />
-        <Setter Property="Padding" Value="14" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="CornerRadius" Value="8" />
     </Style>
 
     <Style x:Key="ItemCheckBoxStyle" TargetType="CheckBox">

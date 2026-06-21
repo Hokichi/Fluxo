@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources">
-    <Border Style="{StaticResource PanelStyle}">
+    <Border Style="{StaticResource CardBorderStyle}">
         <Grid>
 
             <components:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />

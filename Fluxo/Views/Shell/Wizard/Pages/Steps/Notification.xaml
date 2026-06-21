@@ -7,7 +7,7 @@
     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
     <UserControl.Resources>
         <DataTemplate x:Key="WizardNotificationSettingItemTemplate">
-            <Border Margin="0,0,0,12" Style="{StaticResource CardStyle}">
+            <Border Margin="0,0,0,12" Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -37,7 +37,7 @@
 
     <!--  Step 7: Notifications  -->
     <StackPanel Visibility="{Binding IsStep7Active, Converter={StaticResource BoolToVisibilityConverter}}">
-        <Border Margin="0,0,0,12" Style="{StaticResource CardStyle}">
+        <Border Margin="0,0,0,12" Style="{StaticResource CardBorderStyle}">
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>

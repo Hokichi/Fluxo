@@ -13,14 +13,6 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <Style x:Key="AnalyticsCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Main}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
-        </Style>
-
         <Style x:Key="AnalyticsSectionTitleStyle" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
             <Setter Property="FontSize" Value="14" />
@@ -202,7 +194,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource AnalyticsCardStyle}">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <StackPanel>
                     <TextBlock Style="{StaticResource AnalyticsCardLabelStyle}" Text="TOTAL INCOME" />
                     <TextBlock
@@ -214,7 +206,7 @@
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource AnalyticsCardStyle}">
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                 <StackPanel>
                     <TextBlock Style="{StaticResource AnalyticsCardLabelStyle}" Text="TOTAL EXPENSE" />
                     <TextBlock
@@ -226,7 +218,7 @@
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="4" Style="{StaticResource AnalyticsCardStyle}">
+            <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}">
                 <StackPanel>
                     <TextBlock Style="{StaticResource AnalyticsCardLabelStyle}" Text="NET VALUE" />
                     <TextBlock
@@ -247,7 +239,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource AnalyticsCardStyle}">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -304,7 +296,7 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource AnalyticsCardStyle}">
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -480,7 +472,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource AnalyticsCardStyle}">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -501,7 +493,7 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource AnalyticsCardStyle}">
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

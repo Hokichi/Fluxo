@@ -6,7 +6,7 @@
     <!--  Step 8: Report Summary  -->
     <StackPanel Visibility="{Binding IsStep8Active, Converter={StaticResource BoolToVisibilityConverter}}">
         <!--  Profile  -->
-        <Border Style="{StaticResource CardStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <StackPanel>
                 <TextBlock
                     FontFamily="{StaticResource Medium}"
@@ -31,7 +31,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock
                         HorizontalAlignment="Center"
@@ -57,7 +57,7 @@
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock
                         HorizontalAlignment="Center"
@@ -83,7 +83,7 @@
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="4" Style="{StaticResource CardStyle}">
+            <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock
                         HorizontalAlignment="Center"
@@ -103,7 +103,7 @@
         </Grid>
 
         <!--  Budget Allocation  -->
-        <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+        <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
             <StackPanel>
                 <TextBlock
                     FontFamily="{StaticResource Medium}"
@@ -119,7 +119,7 @@
         </Border>
 
         <!--  Notifications  -->
-        <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+        <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
             <StackPanel>
                 <TextBlock
                     FontFamily="{StaticResource Medium}"

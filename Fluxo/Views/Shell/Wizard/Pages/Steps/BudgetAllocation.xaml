@@ -7,7 +7,7 @@
     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
     <!--  Step 5: Budget Allocation  -->
     <StackPanel Visibility="{Binding IsStep5Active, Converter={StaticResource BoolToVisibilityConverter}}">
-        <Border Style="{StaticResource CardStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -68,7 +68,7 @@
                     ToolTip="{Binding NeedsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
             </Grid>
         </Border>
-        <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+        <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -129,7 +129,7 @@
                     ToolTip="{Binding WantsAllocationAmountText, Converter={StaticResource MoneyFullDisplayConverter}}" />
             </Grid>
         </Border>
-        <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+        <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -205,7 +205,7 @@
             Foreground="{StaticResource Brush.Text.Primary}"
             Text="Configuration" />
 
-        <Border Style="{StaticResource CardStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -224,7 +224,7 @@
             </Grid>
         </Border>
 
-        <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+        <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -257,7 +257,7 @@
             </Grid>
         </Border>
 
-        <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+        <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -284,7 +284,7 @@
             </Grid>
         </Border>
 
-        <Border Margin="0,12,0,0" Style="{StaticResource CardStyle}">
+        <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

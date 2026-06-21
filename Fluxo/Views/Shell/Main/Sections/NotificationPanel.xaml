@@ -84,7 +84,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource DashboardPanelStyle}">
+    <Border Style="{StaticResource CardBorderStyle}">
         <Border.Background>
             <SolidColorBrush Opacity="1" Color="{StaticResource Color.Background.Elevated}" />
         </Border.Background>

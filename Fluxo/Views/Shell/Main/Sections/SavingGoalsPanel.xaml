@@ -165,7 +165,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource DashboardPanelStyle}">
+    <Border Style="{StaticResource CardBorderStyle}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

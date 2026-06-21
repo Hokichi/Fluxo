@@ -13,7 +13,7 @@
         </Grid.ColumnDefinitions>
 
         <!--  Sidebar  -->
-        <Border Style="{StaticResource PanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <StackPanel>
                 <TextBlock
                     FontFamily="{StaticResource Bold}"
@@ -446,7 +446,7 @@
         <Border
             x:Name="ContentColumn"
             Grid.Column="2"
-            Style="{StaticResource PanelStyle}">
+            Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

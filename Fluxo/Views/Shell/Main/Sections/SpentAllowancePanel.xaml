@@ -9,7 +9,7 @@
         VerticalAlignment="Center"
         HorizontalGap="8"
         VerticalGap="8">
-        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"
@@ -28,7 +28,7 @@
             </Grid>
         </Border>
 
-        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"
@@ -47,7 +47,7 @@
             </Grid>
         </Border>
 
-        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"
@@ -73,7 +73,7 @@
             </Grid>
         </Border>
 
-        <Border Padding="12,8" Style="{StaticResource DashboardPanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid VerticalAlignment="Center">
                 <TextBlock
                     VerticalAlignment="Center"

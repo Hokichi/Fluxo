@@ -59,8 +59,7 @@
         Height="320"
         Margin="24,0,24,24">
         <Grid Style="{StaticResource InitialPageStyle}">
-            <Border Style="{StaticResource PanelStyle}">
-                <StackPanel>
+            <StackPanel>
                     <customControls:SegmentedToggleGroup Width="360" Height="40">
                         <customControls:SegmentedToggleOption
                             Click="OnBackupModeClick"
@@ -142,8 +141,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </StackPanel>
-            </Border>
+            </StackPanel>
             <customControls:BalloonButton
                 Margin="24"
                 HorizontalAlignment="Right"
@@ -155,8 +153,7 @@
         </Grid>
 
         <Grid Style="{StaticResource ProcessingPageStyle}">
-            <Border Style="{StaticResource PanelStyle}">
-                <Grid>
+            <Grid>
                     <components:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
 
                     <StackPanel
@@ -198,13 +195,11 @@
                         Margin="0,200,0,0"
                         VerticalAlignment="Bottom"
                         ClipToBounds="True" />
-                </Grid>
-            </Border>
+            </Grid>
         </Grid>
 
         <Grid Style="{StaticResource ConflictPageStyle}">
-            <Border Style="{StaticResource PanelStyle}">
-                <Grid>
+            <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -233,13 +228,7 @@
                         <ItemsControl ItemsSource="{Binding Conflicts}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border
-                                        Margin="0,0,0,8"
-                                        Padding="12"
-                                        Background="{StaticResource Brush.Background.Surface}"
-                                        BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                        BorderThickness="1"
-                                        CornerRadius="12">
+                                    <Border Margin="0,0,0,8" Style="{StaticResource CardBorderStyle}">
                                         <StackPanel>
                                             <TextBlock
                                                 FontFamily="{StaticResource Bold}"
@@ -287,13 +276,11 @@
                             Click="OnStartClick"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
                     </StackPanel>
-                </Grid>
-            </Border>
+            </Grid>
         </Grid>
 
         <Grid Style="{StaticResource ResultPageStyle}">
-            <Border Style="{StaticResource PanelStyle}">
-                <StackPanel VerticalAlignment="Center">
+            <StackPanel VerticalAlignment="Center">
                     <TextBlock
                         HorizontalAlignment="Center"
                         FontFamily="{StaticResource Bold}"
@@ -316,8 +303,7 @@
                         Click="OnCloseClick"
                         Content="Close"
                         Style="{StaticResource PopupTextButtonStyle}" />
-                </StackPanel>
-            </Border>
+            </StackPanel>
         </Grid>
     </Grid>
 </customControls:BasePopup>

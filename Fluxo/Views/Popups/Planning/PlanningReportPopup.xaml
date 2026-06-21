@@ -12,14 +12,6 @@
     <customControls:BasePopup.Resources>
         <converters:SourceSequenceLabelConverter x:Key="SourceSequenceLabelConverter" />
 
-        <Style x:Key="SectionCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-        </Style>
-
         <Style x:Key="SummaryLabelStyle" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
             <Setter Property="FontSize" Value="11" />
@@ -337,7 +329,7 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
 
-                        <Border Style="{StaticResource SectionCardStyle}">
+                        <Border Style="{StaticResource CardBorderStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -412,7 +404,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}">
+                        <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -487,7 +479,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Column="4" Style="{StaticResource SectionCardStyle}">
+                        <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -574,7 +566,7 @@
                             <ColumnDefinition Width="8" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <Border Style="{StaticResource SectionCardStyle}">
+                        <Border Style="{StaticResource CardBorderStyle}">
                             <Grid>
                                 <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="INCOME" />
                                 <TextBlock
@@ -588,7 +580,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}">
+                        <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                             <Grid>
                                 <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="EXPENSES" />
                                 <TextBlock
@@ -602,7 +594,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Column="4" Style="{StaticResource SectionCardStyle}">
+                        <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}">
                             <Grid>
                                 <TextBlock Style="{StaticResource SummaryLabelStyle}" Text="BALANCE" />
                                 <TextBlock
