@@ -118,6 +118,28 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task SnoozeAllNotificationsAsync_WithNoneConfigured_DoesNotMutateNotifications()
+    {
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            accounts: [],
+            out var persistedNotifications,
+            userSettings:
+            [
+                new UserSettings { Name = UserSettingNames.NotificationsSnoozePeriod, Value = "0" }
+            ]);
+        SeedDistinctCategoryNotifications(persistedNotifications);
+        var originalCreatedOnValues = persistedNotifications.Select(notification => notification.CreatedOn).ToArray();
+
+        await vm.LoadAsync();
+        await vm.SnoozeAllNotificationsCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasNotifications);
+        Assert.Equal(originalCreatedOnValues, persistedNotifications.Select(notification => notification.CreatedOn));
+    }
+
+    [Fact]
     public async Task LoadAsync_DoesNotRecreateSnoozedDuplicateBeforeCreatedOn()
     {
         var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday

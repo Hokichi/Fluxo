@@ -92,7 +92,7 @@
                     <Border
                         Grid.Column="2"
                         Padding="8"
-                        Background="{StaticResource Brush.Background.Surface}"
+                        Background="{StaticResource Brush.Background.Deepened}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
                         CornerRadius="8">
@@ -116,7 +116,7 @@
                     <Border
                         Grid.Column="4"
                         Padding="8"
-                        Background="{StaticResource Brush.Background.Surface}"
+                        Background="{StaticResource Brush.Background.Deepened}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
                         CornerRadius="8">
@@ -140,7 +140,7 @@
                     <Border
                         Grid.Column="6"
                         Padding="8"
-                        Background="{StaticResource Brush.Background.Surface}"
+                        Background="{StaticResource Brush.Background.Deepened}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
                         CornerRadius="8">

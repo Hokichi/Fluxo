@@ -152,7 +152,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     [RelayCommand]
     private async Task SnoozeAllNotificationsAsync()
     {
-        if (Notifications.Count == 0)
+        if (Notifications.Count == 0 || _notificationsSnoozePeriod <= 0)
             return;
 
         await _notificationSyncGate.WaitAsync();
@@ -821,7 +821,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _isLatePaymentNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsLatePaymentNotifEnabled, true);
         _notificationsSnoozePeriod = ParseInt(settingsByName, UserSettingNames.NotificationsSnoozePeriod, 24);
-        if (_notificationsSnoozePeriod <= 0)
+        if (_notificationsSnoozePeriod < 0)
             _notificationsSnoozePeriod = 24;
 
         _hiddenSavingGoalIds.Clear();

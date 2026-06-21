@@ -92,16 +92,6 @@
                         Text="{Binding Difference, Converter={StaticResource NumberWithCommasConverter}}"
                         ToolTip="{Binding SpentAmount, Converter={StaticResource MoneyFullDisplayConverter}}" />
                 </StackPanel>
-
-                <Border
-                    x:Name="AccentBorder"
-                    Width="7"
-                    Height="7"
-                    Margin="0,10,10,0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    CornerRadius="16"
-                    Style="{StaticResource AccountAccentStyle}" />
             </Grid>
         </Border>
 

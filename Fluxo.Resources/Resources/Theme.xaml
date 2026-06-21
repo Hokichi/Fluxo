@@ -8,12 +8,14 @@
     <Color x:Key="Color.Background.Popup">#181B20</Color>
     <Color x:Key="Color.Background.Surface">#1E2228</Color>
     <Color x:Key="Color.Background.Elevated">#262B33</Color>
+    <Color x:Key="Color.Background.Deepened">#15171B</Color>
     <Color x:Key="Color.Background.Hover">#2E3540</Color>
 
     <SolidColorBrush x:Key="Brush.Background.Main" Color="{StaticResource Color.Background.Main}" />
     <SolidColorBrush x:Key="Brush.Background.Popup" Color="{StaticResource Color.Background.Popup}" />
     <SolidColorBrush x:Key="Brush.Background.Surface" Color="{StaticResource Color.Background.Surface}" />
     <SolidColorBrush x:Key="Brush.Background.Elevated" Color="{StaticResource Color.Background.Elevated}" />
+    <SolidColorBrush x:Key="Brush.Background.Deepened" Color="{StaticResource Color.Background.Deepened}" />
     <SolidColorBrush x:Key="Brush.Background.Hover" Color="{StaticResource Color.Background.Hover}" />
 
     <!--  =============================  -->

@@ -108,11 +108,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
                 UserSettingNames.AppAutoLockedInterval,
                 AutoLockPreset.DefaultIntervalSeconds);
         SelectedAppAutoLockPreset = AutoLockPreset.FromIntervalSeconds(AppAutoLockedInterval);
-        NotificationsSnoozePeriod =
-            SettingsShared.ParsePositiveInt(
-                settingsByName,
-                UserSettingNames.NotificationsSnoozePeriod,
-                24);
+        NotificationsSnoozePeriod = ParseNotificationsSnoozePeriod(settingsByName);
         ApplyNotificationsSnoozePeriodToSelection();
         UiLockingPassword = _passwordProtector.Unprotect(
             SettingsShared.ParseString(settingsByName, UserSettingNames.UILockingPassword, string.Empty));
@@ -212,7 +208,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
             Math.Max(1, AppAutoLockedInterval).ToString(CultureInfo.InvariantCulture), actions);
 
         await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.NotificationsSnoozePeriod,
-            Math.Max(1, NotificationsSnoozePeriod).ToString(CultureInfo.InvariantCulture), actions);
+            Math.Max(0, NotificationsSnoozePeriod).ToString(CultureInfo.InvariantCulture), actions);
 
         var protectedPassword = _passwordProtector.Protect(UiLockingPassword);
         await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.UILockingPassword,
@@ -313,9 +309,9 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     partial void OnNotificationsSnoozePeriodChanged(int value)
     {
-        if (value < 1)
+        if (value < 0)
         {
-            NotificationsSnoozePeriod = 1;
+            NotificationsSnoozePeriod = 0;
             return;
         }
 
@@ -449,6 +445,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         return hours switch
         {
+            0 => "0",
             6 => "6",
             12 => "12",
             24 => "24",
@@ -461,7 +458,19 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private static bool TryGetNotificationsSnoozePresetHours(string? value, out int hours)
     {
         return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out hours) &&
-               hours is 6 or 12 or 24 or 48 or 168;
+               hours is 0 or 6 or 12 or 24 or 48 or 168;
+    }
+
+    private static int ParseNotificationsSnoozePeriod(IReadOnlyDictionary<string, string> settingsByName)
+    {
+        if (!settingsByName.TryGetValue(UserSettingNames.NotificationsSnoozePeriod, out var value) ||
+            !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue) ||
+            parsedValue < 0)
+        {
+            return 24;
+        }
+
+        return parsedValue;
     }
 
     private void ApplyNotificationsSnoozePeriodToSelection()

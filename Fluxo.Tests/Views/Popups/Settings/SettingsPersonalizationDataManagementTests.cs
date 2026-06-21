@@ -72,6 +72,7 @@ public sealed class SettingsPersonalizationDataManagementTests
             "SettingsPersonalizationTab.xaml"));
 
         Assert.Contains("SelectedValue=\"{Binding SelectedNotificationsSnoozePreset, Mode=TwoWay}\"", xaml);
+        Assert.Contains("Content=\"None\" Value=\"0\"", xaml);
         Assert.Contains("Content=\"6 hours\" Value=\"6\"", xaml);
         Assert.Contains("Content=\"12 hours\" Value=\"12\"", xaml);
         Assert.Contains("Content=\"1 day\" Value=\"24\"", xaml);

@@ -390,6 +390,55 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
+    public async Task PersonalizationTab_NotificationsSnoozePreset_MapsNonePresetToZeroHours()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.SelectedNotificationsSnoozePreset = "0";
+
+        Assert.Equal(0, vm.NotificationsSnoozePeriod);
+        Assert.False(vm.IsCustomNotificationsSnoozePeriod);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_LoadAsync_SelectsNonePresetForZeroNotificationsSnoozePeriod()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork(
+        [
+            new UserSettings { Name = UserSettingNames.NotificationsSnoozePeriod, Value = "0" }
+        ]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+
+        await vm.LoadAsync();
+
+        Assert.Equal(0, vm.NotificationsSnoozePeriod);
+        Assert.Equal("0", vm.SelectedNotificationsSnoozePreset);
+        Assert.False(vm.IsCustomNotificationsSnoozePeriod);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_BuildApplyChangesAsync_PersistsNoneNotificationsSnoozePeriodAsZero()
+    {
+        var unitOfWork = new TestSettingsUnitOfWork([]);
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(unitOfWork),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.SelectedNotificationsSnoozePreset = "0";
+        var (result, _, _, _, _) = await vm.BuildApplyChangesAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("0", unitOfWork.GetValue(UserSettingNames.NotificationsSnoozePeriod));
+    }
+
+    [Fact]
     public async Task PersonalizationTab_CustomNotificationsSnoozePeriod_ConvertsDaysToHours()
     {
         var unitOfWork = new TestSettingsUnitOfWork([]);
