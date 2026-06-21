@@ -95,7 +95,6 @@ public partial class ExpenseDetailPopup : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
-        var wasSplitModeSave = _viewModel.IsSplitMode;
         var result = await TrySaveWithSplitRemainderConfirmationAsync();
         if (result is null)
             return;
@@ -103,13 +102,6 @@ public partial class ExpenseDetailPopup : BasePopup
         if (!result.Value.IsSuccess)
         {
             ShowValidationMessage(result.Value.ErrorMessage);
-            return;
-        }
-
-        if (wasSplitModeSave)
-        {
-            _allowClose = true;
-            Close();
             return;
         }
 

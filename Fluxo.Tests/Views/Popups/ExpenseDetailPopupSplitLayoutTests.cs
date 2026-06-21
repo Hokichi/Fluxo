@@ -35,6 +35,16 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
     }
 
     [Fact]
+    public void ExpenseDetailPopup_SplitSaveReturnsToViewModeWithoutClosingPopup()
+    {
+        var codeBehind = File.ReadAllText(PopupCodeBehindPath);
+
+        Assert.DoesNotContain("if (wasSplitModeSave)", codeBehind);
+        Assert.DoesNotContain("_allowClose = true;\r\n            Close();", codeBehind);
+        Assert.Contains("SyncNoteDocumentFromViewModel();", codeBehind);
+    }
+
+    [Fact]
     public void ExpenseDetailPopup_SplitModeLayout_HidesNormalFieldsAndShowsSplitRows()
     {
         var xaml = File.ReadAllText(PopupXamlPath);
