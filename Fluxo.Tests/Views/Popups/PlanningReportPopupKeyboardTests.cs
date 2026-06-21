@@ -32,6 +32,18 @@ public sealed class PlanningReportPopupKeyboardTests
     }
 
     [Fact]
+    public void LoadRecurringButtons_UseDedicatedHandlers()
+    {
+        var xaml = File.ReadAllText(ResolvePlanningReportXamlPath());
+        var source = File.ReadAllText(ResolvePlanningReportPopupPath());
+
+        Assert.Contains("Click=\"OnLoadRecurringIncomesClick\"", xaml);
+        Assert.Contains("Click=\"OnLoadRecurringExpensesClick\"", xaml);
+        Assert.Contains("private async void OnLoadRecurringIncomesClick(object sender, RoutedEventArgs e)", source);
+        Assert.Contains("private async void OnLoadRecurringExpensesClick(object sender, RoutedEventArgs e)", source);
+    }
+
+    [Fact]
     public void Loaded_LoadsReportDataBeforeAnimatingMetrics()
     {
         var source = File.ReadAllText(ResolvePlanningReportPopupPath());

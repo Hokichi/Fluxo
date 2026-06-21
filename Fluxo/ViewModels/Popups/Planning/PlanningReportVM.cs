@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
@@ -131,6 +132,47 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
     public void AddExpense(ExpenseVM expense)
     {
         Expenses.Add(CopyExpense(expense));
+    }
+
+    public async Task LoadRecurringIncomesAsync(CancellationToken cancellationToken = default)
+    {
+        var recurringTransactions = await _appData.GetRecurringTransactionsAsync(cancellationToken);
+        foreach (var recurring in recurringTransactions.Where(transaction =>
+                     transaction.IsEnabled && transaction.Type == RecurringTransactionType.Income))
+        {
+            if (Incomes.Any(income => income.Id == recurring.Id))
+                continue;
+
+            AddIncome(new IncomeLogVM
+            {
+                Id = recurring.Id,
+                Name = recurring.Name,
+                Amount = recurring.Amount,
+                AddedOn = DateTime.Now,
+                Account = CopyAccount(recurring.Source, recurring.SourceId)
+            });
+        }
+    }
+
+    public async Task LoadRecurringExpensesAsync(CancellationToken cancellationToken = default)
+    {
+        var recurringTransactions = await _appData.GetRecurringTransactionsAsync(cancellationToken);
+        foreach (var recurring in recurringTransactions.Where(transaction =>
+                     transaction.IsEnabled && transaction.Type == RecurringTransactionType.Expense))
+        {
+            if (Expenses.Any(expense => expense.Id == recurring.Id))
+                continue;
+
+            AddExpense(new ExpenseVM
+            {
+                Id = recurring.Id,
+                Name = recurring.Name,
+                Amount = recurring.Amount,
+                ExpenseCategory = recurring.Category ?? ExpenseCategory.Needs,
+                ExpenseTag = CopyExpenseTag(recurring.Tag, recurring.TagId),
+                Account = CopyAccount(recurring.Source, recurring.SourceId)
+            });
+        }
     }
 
     public bool RemoveIncome(IncomeLogVM income)
@@ -477,6 +519,21 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
         };
     }
 
+    private static ExpenseTagVM CopyExpenseTag(ExpenseTag? source, int? fallbackId)
+    {
+        if (source is null)
+            return new ExpenseTagVM { Id = fallbackId ?? 0 };
+
+        return new ExpenseTagVM
+        {
+            Id = source.Id,
+            Name = source.Name,
+            HexCode = source.HexCode,
+            IsSystemTag = source.IsSystemTag,
+            SpendingLimit = source.SpendingLimit
+        };
+    }
+
     private static AccountVM CopyAccount(AccountVM source)
     {
         return new AccountVM
@@ -497,6 +554,29 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
             MoneyIn = source.MoneyIn,
             MoneyOut = source.MoneyOut,
             IsSelected = source.IsSelected
+        };
+    }
+
+    private static AccountVM CopyAccount(Account? source, int fallbackId)
+    {
+        if (source is null)
+            return new AccountVM { Id = fallbackId };
+
+        return new AccountVM
+        {
+            Id = source.Id,
+            Name = source.Name,
+            AccountType = source.AccountType,
+            AccountLimit = source.AccountLimit,
+            MaximumSpending = source.MaximumSpending,
+            MinimumPayment = source.MinimumPayment,
+            SpentAmount = source.SpentAmount,
+            Balance = source.Balance,
+            MonthlyDueDate = source.MonthlyDueDate,
+            DeductSource = source.DeductSource,
+            InterestRate = source.InterestRate,
+            PinnedOnUI = source.PinnedOnUI,
+            IsEnabled = source.IsEnabled
         };
     }
 

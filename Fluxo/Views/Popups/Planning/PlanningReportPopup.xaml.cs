@@ -307,6 +307,12 @@ public partial class PlanningReportPopup : BasePopup
         AddIncomeRow();
     }
 
+    private async void OnLoadRecurringIncomesClick(object sender, RoutedEventArgs e)
+    {
+        await _viewModel.LoadRecurringIncomesAsync();
+        QueueScrollToBottom(IncomeScrollViewer);
+    }
+
     private void OnRemoveIncomeClick(object sender, RoutedEventArgs e)
     {
         if (sender is Button { DataContext: IncomeLogVM income })
@@ -316,6 +322,12 @@ public partial class PlanningReportPopup : BasePopup
     private void OnAddExpenseClick(object sender, RoutedEventArgs e)
     {
         AddExpenseRow();
+    }
+
+    private async void OnLoadRecurringExpensesClick(object sender, RoutedEventArgs e)
+    {
+        await _viewModel.LoadRecurringExpensesAsync();
+        QueueScrollToBottom(ExpenseScrollViewer);
     }
 
     private void AddIncomeRow()

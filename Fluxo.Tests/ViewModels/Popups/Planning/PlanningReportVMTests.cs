@@ -137,6 +137,50 @@ public class PlanningReportVMTests
         Assert.Equal(320, report.WantsUsagePercent);
     }
 
+    [Fact]
+    public async Task LoadRecurringIncomesAsync_AddsOnlyEnabledRecurringIncomes()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetRecurringTransactionsAsync(Arg.Any<CancellationToken>())
+            .Returns([
+                CreateRecurring(1, "Salary", 2500m, RecurringTransactionType.Income, isEnabled: true),
+                CreateRecurring(2, "Disabled income", 75m, RecurringTransactionType.Income, isEnabled: false),
+                CreateRecurring(3, "Rent", 900m, RecurringTransactionType.Expense, isEnabled: true)
+            ]);
+        var report = new PlanningReportVM(appData);
+
+        await report.LoadRecurringIncomesAsync();
+
+        var income = Assert.Single(report.Incomes);
+        Assert.Equal("Salary", income.Name);
+        Assert.Equal(2500m, income.Amount);
+        Assert.Equal("Account 1", income.Account.Name);
+        Assert.Empty(report.Expenses);
+    }
+
+    [Fact]
+    public async Task LoadRecurringExpensesAsync_AddsOnlyEnabledRecurringExpenses()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetRecurringTransactionsAsync(Arg.Any<CancellationToken>())
+            .Returns([
+                CreateRecurring(1, "Salary", 2500m, RecurringTransactionType.Income, isEnabled: true),
+                CreateRecurring(2, "Disabled rent", 900m, RecurringTransactionType.Expense, isEnabled: false),
+                CreateRecurring(3, "Groceries", 300m, RecurringTransactionType.Expense, isEnabled: true, ExpenseCategory.Wants)
+            ]);
+        var report = new PlanningReportVM(appData);
+
+        await report.LoadRecurringExpensesAsync();
+
+        var expense = Assert.Single(report.Expenses);
+        Assert.Equal("Groceries", expense.Name);
+        Assert.Equal(300m, expense.Amount);
+        Assert.Equal(ExpenseCategory.Wants, expense.ExpenseCategory);
+        Assert.Equal("Tag 3", expense.ExpenseTag.Name);
+        Assert.Equal("Account 3", expense.Account.Name);
+        Assert.Empty(report.Incomes);
+    }
+
     private static async Task<PlanningReportVM> CreateLoadedReportAsync(int needs, int wants, int invest)
     {
         var appData = Substitute.For<IAppDataService>();
@@ -218,6 +262,43 @@ public class PlanningReportVMTests
                 IsEnabled = true,
                 PinnedOnUI = true
             }
+        };
+    }
+
+    private static RecurringTransaction CreateRecurring(
+        int id,
+        string name,
+        decimal amount,
+        RecurringTransactionType type,
+        bool isEnabled,
+        ExpenseCategory? category = null)
+    {
+        return new RecurringTransaction
+        {
+            Id = id,
+            Name = name,
+            Amount = amount,
+            Type = type,
+            Category = category,
+            SourceId = id,
+            TagId = type == RecurringTransactionType.Expense ? id : null,
+            IsEnabled = isEnabled,
+            Source = new Account
+            {
+                Id = id,
+                Name = $"Account {id}",
+                AccountType = AccountType.Checking,
+                Balance = 1000m,
+                IsEnabled = true
+            },
+            Tag = type == RecurringTransactionType.Expense
+                ? new ExpenseTag
+                {
+                    Id = id,
+                    Name = $"Tag {id}",
+                    HexCode = "#000000"
+                }
+                : null
         };
     }
 }
