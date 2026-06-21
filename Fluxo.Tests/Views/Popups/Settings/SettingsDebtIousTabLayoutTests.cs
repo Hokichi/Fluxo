@@ -47,7 +47,7 @@ public sealed class SettingsDebtIousTabLayoutTests
         Assert.Contains("Visibility=\"Collapsed\"", xaml);
         Assert.Contains("SourceName=\"ItemRoot\" Property=\"IsMouseOver\" Value=\"True\"", xaml);
         Assert.Contains("TargetName=\"RowActions\" Property=\"Visibility\" Value=\"Visible\"", xaml);
-        Assert.Contains("Height=\"1\"", xaml);
+        Assert.Contains("Height=\"1.5\"", xaml);
         Assert.Contains("Background=\"{StaticResource Brush.Border.Subtle}\"", xaml);
     }
 }
