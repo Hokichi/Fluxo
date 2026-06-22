@@ -58,7 +58,7 @@ public sealed class BasePopupHistoryButtonTests
         Assert.Contains("UncheckedText=\"Show History\"", source);
         Assert.Contains("CheckedIcon=\"{StaticResource History}\"", source);
         Assert.Contains("CheckedText=\"Hide History\"", source);
-        Assert.Contains("CheckedBackground=\"{StaticResource Brush.Mint}\"", source);
+        Assert.Contains("CheckedBackground=\"{StaticResource Brush.BalloonButton.Background.Surface}\"", source);
         Assert.Contains("IsChecked=\"{TemplateBinding IsHistoryOpen}\"", source);
         Assert.Contains("Visibility=\"{TemplateBinding ShowHistoryButton,", source);
         Assert.Contains("PopupBoolToVisibility", source);

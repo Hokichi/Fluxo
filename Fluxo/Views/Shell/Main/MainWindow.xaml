@@ -387,9 +387,7 @@
                                 Foreground="{StaticResource Brush.Mint}"
                                 Text="o" />
 
-                            <Border
-                                Height="32"
-                                Style="{StaticResource VerticalSeparatorBorderStyle}" />
+                            <Border Height="32" Style="{StaticResource VerticalSeparatorBorderStyle}" />
 
                             <TextBlock
                                 Margin="0,4,0,0"
@@ -421,6 +419,8 @@
                                     x:Name="HeaderSearchButton"
                                     ButtonIcon="{StaticResource MagnifyingGlass}"
                                     Click="OnHeaderSearchButtonClick"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                                     IconSize="11"
                                     Style="{StaticResource HeaderButtonStyle}" />
 
@@ -508,6 +508,8 @@
                                     x:Name="HeaderNotificationButton"
                                     ButtonIcon="{StaticResource Bell}"
                                     Click="OnHeaderNotificationButtonClick"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                                     IconSize="11"
                                     Style="{StaticResource HeaderButtonDisableWhenAppLockedStyle}" />
 
@@ -549,7 +551,8 @@
                                 ButtonIcon="{StaticResource BarsSolid}"
                                 Click="OnHeaderMenuButtonClick"
                                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                                HoveredBackground="{StaticResource Brush.Background.Hover}"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                                 IconSize="9"
                                 MouseEnter="OnHeaderMenuButtonMouseEnter"
                                 MouseLeave="OnHeaderMenuButtonMouseLeave"
@@ -777,12 +780,12 @@
 
                             <customControls:BalloonCheckBox
                                 x:Name="HeaderAppLockButton"
-                                CheckedBackground="{StaticResource Brush.Mint}"
+                                CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                 CheckedIcon="{StaticResource LockOpen}"
                                 CheckedText="Unlock fluxo"
                                 Click="OnHeaderAppLockButtonClick"
-                                DefaultBackground="{StaticResource Brush.Background.Surface}"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                                 IconSize="12"
                                 IsChecked="{Binding IsAppLocked, Mode=OneWay}"
                                 ShouldExpand="True"
@@ -813,7 +816,8 @@
                                 ButtonText="Minimize"
                                 Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                                 ShouldExpand="True"
                                 Style="{StaticResource HeaderButtonStyle}" />
 
@@ -822,7 +826,8 @@
                                 ButtonIcon="{StaticResource ExpandAlt}"
                                 ButtonText="Maximize"
                                 Click="OnExpandRestoreWindow"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                                 ShouldExpand="True"
                                 Style="{StaticResource HeaderButtonStyle}" />
 
@@ -831,7 +836,8 @@
                                 ButtonText="Close"
                                 Command="{x:Static SystemCommands.CloseWindowCommand}"
                                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                                HoveredBackground="{StaticResource Brush.Danger}"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                                 ShouldExpand="True"
                                 Style="{StaticResource HeaderButtonStyle}" />
                         </StackPanel>

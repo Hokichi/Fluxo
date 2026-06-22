@@ -64,7 +64,7 @@ public class DashboardLayoutTests
         Assert.True(legendIndex > scrollerIndex);
         Assert.Contains("Text=\"Credit\"", xaml);
         Assert.Contains("Text=\"Saving\"", xaml);
-        Assert.Contains("Brush.Account.Checking.Cash", xaml);
+        Assert.Contains("Brush.Account.Checking.CashCash", xaml);
         Assert.Contains("Brush.Account.Credit", xaml);
         Assert.Contains("Brush.Account.Saving", xaml);
     }

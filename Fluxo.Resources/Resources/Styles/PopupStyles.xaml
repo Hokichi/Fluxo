@@ -55,128 +55,139 @@
                                         x:Name="PART_HistoryButton"
                                         CheckedIcon="{StaticResource History}"
                                         CheckedText="Hide History"
-                                        CheckedBackground="{StaticResource Brush.Mint}"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         IsChecked="{TemplateBinding IsHistoryOpen}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderCheckBoxStyle}"
                                         UncheckedIcon="{StaticResource History}"
                                         UncheckedText="Show History"
                                         Visibility="{TemplateBinding ShowHistoryButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
 
                                     <!--  Clone  -->
                                     <c:BalloonButton
                                         x:Name="PART_CloneButton"
                                         ButtonIcon="{StaticResource CloneRegular}"
                                         ButtonText="Clone"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCloneButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
 
                                     <!--  Split  -->
                                     <c:BalloonButton
                                         x:Name="PART_SplitButton"
                                         ButtonIcon="{StaticResource ArrowsOutLineVertical}"
                                         ButtonText="Split"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSplitButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
 
                                     <!--  Delete  -->
                                     <c:BalloonButton
                                         x:Name="PART_DeleteButton"
                                         ButtonIcon="{StaticResource Delete}"
                                         ButtonText="Delete"
-                                        HoveredBackground="{StaticResource Brush.Danger}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowDeleteButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
 
                                     <!--  Edit  -->
                                     <c:BalloonButton
                                         x:Name="PART_EditButton"
                                         ButtonIcon="{StaticResource Pen}"
                                         ButtonText="Edit"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowEditButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
 
                                     <!--  Revert  -->
                                     <c:BalloonButton
                                         x:Name="PART_RevertButton"
                                         ButtonIcon="{StaticResource RegularUndo}"
                                         ButtonText="Revert"
-                                        HoveredBackground="{StaticResource Brush.Warning}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                                         IsEnabled="{TemplateBinding IsRevertButtonEnabled}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowRevertButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}" />
 
                                     <!--  Apply  -->
                                     <c:BalloonButton
                                         x:Name="PART_ApplyButton"
                                         ButtonIcon="{StaticResource Check}"
                                         ButtonText="Apply"
-                                        HoveredBackground="{StaticResource Brush.Success}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowApplyButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
 
                                     <!--  Cancel  -->
                                     <c:BalloonButton
                                         x:Name="PART_CancelButton"
                                         ButtonIcon="{StaticResource Ban}"
                                         ButtonText="Cancel"
-                                        HoveredBackground="{StaticResource Brush.Warning}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCancelButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
 
                                     <!--  Save and Create New  -->
                                     <c:BalloonButton
                                         x:Name="PART_SaveAndCreateNewButton"
                                         ButtonIcon="{StaticResource ContentSaveMove}"
                                         ButtonText="Save and create new"
-                                        HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                         IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSaveAndCreateNewButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
 
                                     <!--  Save  -->
                                     <c:BalloonButton
                                         x:Name="PART_SaveButton"
                                         ButtonIcon="{StaticResource ContentSave}"
                                         ButtonText="Save"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSaveButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}" />
 
                                     <!--  Close (always visible)  -->
                                     <c:BalloonButton
                                         x:Name="PART_CloseButton"
                                         ButtonIcon="{StaticResource Close}"
                                         ButtonText="Close"
-                                        HoveredBackground="{StaticResource Brush.Danger}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowCloseButton,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                                                     Converter={StaticResource PopupBoolToVisibility}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
                                 </StackPanel>
                             </Grid>
 

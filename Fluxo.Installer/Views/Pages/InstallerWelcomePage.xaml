@@ -113,8 +113,8 @@
                     Command="{Binding ChangeDirectoryCommand}"
                     CornerRadius="8"
                     Cursor="Hand"
-                    DefaultBackground="{DynamicResource Brush.Mint}"
-                    HoveredBackground="{DynamicResource Brush.Mint.Muted}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                     IconSize="16"
                     ToolTip="Change Directory" />
                 <customControls:BalloonButton
@@ -127,8 +127,8 @@
                     Command="{Binding InstallCommand}"
                     CornerRadius="8"
                     Cursor="Hand"
-                    DefaultBackground="{DynamicResource Brush.Mint}"
-                    HoveredBackground="{DynamicResource Brush.Mint.Muted}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                     IconSize="12" />
             </Grid>
         </Grid>

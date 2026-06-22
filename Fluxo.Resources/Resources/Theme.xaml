@@ -7,7 +7,7 @@
     <Color x:Key="Color.Background.Main">#0D1014</Color>
     <Color x:Key="Color.Background.Deepened">#13171C</Color>
     <Color x:Key="Color.Background.Surface">#1A1D22</Color>
-    <Color x:Key="Color.Background.Popup">#1F2329</Color>
+    <Color x:Key="Color.Background.Popup">#181B20</Color>
     <Color x:Key="Color.Background.Elevated">#252B33</Color>
     <Color x:Key="Color.Background.Hover">#2D3440</Color>
 
@@ -37,6 +37,9 @@
     <Color x:Key="Color.BalloonButton.Background.NavInfo">#181E28</Color>
     <Color x:Key="Color.BalloonButton.Background.NavInfo.Hovered">#1E2535</Color>
 
+    <Color x:Key="Color.BalloonButton.Background.Surface">#1A1D21</Color>
+    <Color x:Key="Color.BalloonButton.Background.Surface.Hovered">#252B33</Color>
+
     <Color x:Key="Color.BalloonButton.Background.Neutral.Hovered">#1A1D21</Color>
 
     <SolidColorBrush x:Key="Brush.BalloonButton.Background.Default" Color="{StaticResource Color.BalloonButton.Background.Default}" />
@@ -53,6 +56,9 @@
 
     <SolidColorBrush x:Key="Brush.BalloonButton.Background.NavInfo" Color="{StaticResource Color.BalloonButton.Background.NavInfo}" />
     <SolidColorBrush x:Key="Brush.BalloonButton.Background.NavInfo.Hovered" Color="{StaticResource Color.BalloonButton.Background.NavInfo.Hovered}" />
+
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.Surface" Color="{StaticResource Color.BalloonButton.Background.Surface}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.Surface.Hovered" Color="{StaticResource Color.BalloonButton.Background.Surface.Hovered}" />
 
     <SolidColorBrush x:Key="Brush.BalloonButton.Background.Neutral" Color="Transparent" />
     <SolidColorBrush x:Key="Brush.BalloonButton.Background.Neutral.Hovered" Color="{StaticResource Color.BalloonButton.Background.Neutral.Hovered}" />
@@ -76,12 +82,15 @@
     <Color x:Key="Color.Text.Primary">#E6EAF0</Color>
     <Color x:Key="Color.Text.Secondary">#9BA3AE</Color>
     <Color x:Key="Color.Text.Muted">#6B7280</Color>
-    <Color x:Key="Color.Text.Disabled">#4A5260</Color>
+    <Color x:Key="Color.Text.Primary.Dark">#1A1D21</Color>
+    <Color x:Key="Color.Text.Secondary.Dark">#20242A</Color>
+    <Color x:Key="Color.Text.Muted.Dark">#232830</Color>
 
     <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Primary}" />
     <SolidColorBrush x:Key="Brush.Text.Secondary" Color="{StaticResource Color.Text.Secondary}" />
     <SolidColorBrush x:Key="Brush.Text.Muted" Color="{StaticResource Color.Text.Muted}" />
-    <SolidColorBrush x:Key="Brush.Text.Disabled" Color="{StaticResource Color.Text.Disabled}" />
+    <SolidColorBrush x:Key="Brush.Text.Primary.Dark" Color="{StaticResource Color.Text.Primary.Dark}" />
+    <SolidColorBrush x:Key="Brush.Text.Secondary.Dark" Color="{StaticResource Color.Text.Secondary.Dark}" />
 
     <!--  =============================  -->
     <!--  BORDER  -->
@@ -146,11 +155,11 @@
 
     <Color x:Key="Color.Category.Needs">#E6EAF0</Color>
     <Color x:Key="Color.Category.Wants">#FFB86C</Color>
-    <Color x:Key="Color.Category.Savings">#3FE0A1</Color>
+    <Color x:Key="Color.Category.Investments">#3FE0A1</Color>
 
     <SolidColorBrush x:Key="Brush.Category.Needs" Color="{StaticResource Color.Category.Needs}" />
     <SolidColorBrush x:Key="Brush.Category.Wants" Color="{StaticResource Color.Category.Wants}" />
-    <SolidColorBrush x:Key="Brush.Category.Savings" Color="{StaticResource Color.Category.Savings}" />
+    <SolidColorBrush x:Key="Brush.Category.Investments" Color="{StaticResource Color.Category.Investments}" />
 
     <!--  =============================  -->
     <!--  ACCOUNTS  -->
@@ -160,25 +169,21 @@
     <Color x:Key="Color.Account.Checking">#5ABAFF</Color>
     <Color x:Key="Color.Account.Cash">#3FE0A1</Color>
     <Color x:Key="Color.Account.Credit">#C4AAFF</Color>
-    <Color x:Key="Color.Account.BNPL">#E090B0</Color>
     <Color x:Key="Color.Account.Saving">#E8A855</Color>
 
     <!--  Background fill for account badges/chips  -->
     <Color x:Key="Color.Account.Checking.Dark">#1B3F6A</Color>
     <Color x:Key="Color.Account.Cash.Dark">#1A4035</Color>
     <Color x:Key="Color.Account.Credit.Dark">#3B2D5C</Color>
-    <Color x:Key="Color.Account.BNPL.Dark">#3D2240</Color>
     <Color x:Key="Color.Account.Saving.Dark">#3D2E0F</Color>
 
     <SolidColorBrush x:Key="Brush.Account.Checking" Color="{StaticResource Color.Account.Checking}" />
     <SolidColorBrush x:Key="Brush.Account.Cash" Color="{StaticResource Color.Account.Cash}" />
     <SolidColorBrush x:Key="Brush.Account.Credit" Color="{StaticResource Color.Account.Credit}" />
-    <SolidColorBrush x:Key="Brush.Account.BNPL" Color="{StaticResource Color.Account.BNPL}" />
     <SolidColorBrush x:Key="Brush.Account.Saving" Color="{StaticResource Color.Account.Saving}" />
     <SolidColorBrush x:Key="Brush.Account.Checking.Dark" Color="{StaticResource Color.Account.Checking.Dark}" />
     <SolidColorBrush x:Key="Brush.Account.Cash.Dark" Color="{StaticResource Color.Account.Cash.Dark}" />
     <SolidColorBrush x:Key="Brush.Account.Credit.Dark" Color="{StaticResource Color.Account.Credit.Dark}" />
-    <SolidColorBrush x:Key="Brush.Account.BNPL.Dark" Color="{StaticResource Color.Account.BNPL.Dark}" />
     <SolidColorBrush x:Key="Brush.Account.Saving.Dark" Color="{StaticResource Color.Account.Saving.Dark}" />
 
     <!--  =============================  -->

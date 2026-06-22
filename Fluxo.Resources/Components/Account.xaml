@@ -12,13 +12,13 @@
 
     <UserControl.Resources>
         <Style x:Key="AccountAccentStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
+            <Setter Property="Background" Value="{StaticResource Brush.Account.Checking}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding AccountType}" Value="Checking">
-                    <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Checking}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding AccountType}" Value="Cash">
-                    <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Checking}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding AccountType}" Value="Credit">
                     <Setter Property="Background" Value="{StaticResource Brush.Account.Credit}" />

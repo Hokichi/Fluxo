@@ -2,7 +2,7 @@
     x:Class="Fluxo.Views.Shell.Wizard.Pages.Steps.FixedExpenses"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    
+
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
 xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
     <UserControl.Resources>
@@ -21,8 +21,12 @@ xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=Pres
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom"
                         Orientation="Horizontal">
-                        <customControls:BalloonButton Click="OnEditFixedExpenseClick" Style="{StaticResource EditButton}" />
-                        <customControls:BalloonButton Click="OnDeleteFixedExpenseClick" Style="{StaticResource DeleteButton}" />
+                        <customControls:BalloonButton Click="OnEditFixedExpenseClick" Style="{StaticResource EditButton}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                        <customControls:BalloonButton Click="OnDeleteFixedExpenseClick" Style="{StaticResource DeleteButton}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}" />
                     </StackPanel>
                     <StackPanel Margin="0,4,0,0">
                         <TextBlock

@@ -186,8 +186,14 @@
                         <Ellipse
                             Width="6"
                             Height="6"
-                            Fill="{StaticResource Brush.Account.Checking.Cash}" />
-                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Checking/Cash" />
+                            Fill="{StaticResource Brush.Account.Checking}" />
+                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Checking" />
+                        <Ellipse
+                            Width="6"
+                            Height="6"
+                            Margin="8,0,0,0"
+                            Fill="{StaticResource Brush.Account.Cash}" />
+                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Cash" />
                         <Ellipse
                             Width="6"
                             Height="6"

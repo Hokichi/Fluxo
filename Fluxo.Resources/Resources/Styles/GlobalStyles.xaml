@@ -315,7 +315,7 @@
     </Style>
 
     <Style x:Key="RoundedProgressBarStyle" TargetType="ProgressBar">
-        <Setter Property="Background" Value="{StaticResource Brush.Reserved}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Deepened}" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Account.Credit}" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="Template">

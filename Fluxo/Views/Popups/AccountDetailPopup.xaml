@@ -428,7 +428,9 @@
                         VerticalAlignment="Bottom"
                         Columns="3"
                         Rows="2">
-                        <customControls:BalloonButton Click="OnDisableButtonClick">
+                        <customControls:BalloonButton Click="OnDisableButtonClick"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
                                     <Setter Property="ButtonIcon" Value="{StaticResource LightningSlashFill}" />
@@ -443,7 +445,9 @@
                                 </Style>
                             </customControls:BalloonButton.Style>
                         </customControls:BalloonButton>
-                        <customControls:BalloonButton Click="OnEditButtonClick" ToolTip="{Binding EditButtonLabel}">
+                        <customControls:BalloonButton Click="OnEditButtonClick" ToolTip="{Binding EditButtonLabel}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
                                     <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
@@ -458,11 +462,14 @@
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Exchange}"
                             Click="OnTransferButtonClick"
-                            HoveredBackground="{StaticResource Brush.Mint}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                             IsEnabled="{Binding CanTransfer}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
-                            ToolTip="Transfer funds" />
-                        <customControls:BalloonButton Click="OnPinOrUnpinButtonClick" IsEnabled="{Binding CanPinOrUnpin}">
+                            ToolTip="Transfer funds"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}" />
+                        <customControls:BalloonButton Click="OnPinOrUnpinButtonClick" IsEnabled="{Binding CanPinOrUnpin}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
                                     <Setter Property="ButtonIcon" Value="{StaticResource EyeOff}" />
@@ -480,16 +487,18 @@
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource SourceSwitch}"
                             Click="OnBackToSourcesButtonClick"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
-                            ToolTip="Back to sources" />
+                            ToolTip="Back to sources"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}" />
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Delete}"
                             Click="OnDeleteButtonClick"
-                            HoveredBackground="{StaticResource Brush.Danger}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                             IsEnabled="{Binding CanDelete}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
-                            ToolTip="Delete source" />
+                            ToolTip="Delete source"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
                     </UniformGrid>
                 </Grid>
             </Border>

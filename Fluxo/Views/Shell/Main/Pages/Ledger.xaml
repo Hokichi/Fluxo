@@ -1027,7 +1027,9 @@
                                     IconSize="12"
                                     IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
                                     Style="{StaticResource HeaderButtonStyle}"
-                                    ToolTip="Duplicate" />
+                                    ToolTip="Duplicate"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                                 <customControls:BalloonCheckBox
                                     Width="30"
                                     Height="30"
@@ -1035,7 +1037,10 @@
                                     CheckedText="Apply"
                                     Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
-                                    IconSize="12">
+                                    IconSize="12"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}">
                                     <customControls:BalloonCheckBox.Style>
                                         <Style BasedOn="{StaticResource HeaderCheckBoxStyle}" TargetType="customControls:BalloonCheckBox">
                                             <Setter Property="ToolTip" Value="Edit" />
@@ -1065,13 +1070,15 @@
                                     CheckedText="Cancel"
                                     Click="OnDeleteOrDiscardTransactionClick"
                                     CommandParameter="{Binding}"
-                                    HoveredBackground="{StaticResource Brush.Danger}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IconSize="12"
                                     IsChecked="{Binding IsEditing, Mode=OneWay}"
                                     Style="{StaticResource HeaderCheckBoxStyle}"
                                     ToolTip="Delete"
                                     UncheckedIcon="{StaticResource Delete}"
-                                    UncheckedText="Delete" />
+                                    UncheckedText="Delete"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
                             </StackPanel>
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -1331,8 +1338,8 @@
                     ButtonText="Export Data"
                     Click="OnExportDataClick"
                     CornerRadius="8"
-                    DefaultBackground="{StaticResource Brush.Mint}"
-                    HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                     IconSize="12"
                     IsEnabled="{Binding HasVisibleTransactions}"
                     ShouldExpand="True" />
@@ -1343,14 +1350,15 @@
                     CheckedText="Disable Selection"
                     Click="OnSelectionModeClick"
                     CornerRadius="8"
-                    DefaultBackground="{StaticResource Brush.Mint}"
-                    HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                     IconSize="12"
                     IsChecked="{Binding IsSelectionModeEnabled, Mode=OneWay}"
                     IsEnabled="{Binding HasVisibleTransactions}"
                     ShouldExpand="True"
                     UncheckedIcon="{StaticResource EnableChecks}"
-                    UncheckedText="Enable Selection" />
+                    UncheckedText="Enable Selection"
+                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
@@ -1358,15 +1366,16 @@
                     CheckedText="Uncheck All"
                     Click="OnToggleVisibleBatchSelectionClick"
                     CornerRadius="8"
-                    DefaultBackground="{StaticResource Brush.Mint}"
-                    HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                     IconSize="12"
                     IsChecked="{Binding AreAllVisibleTransactionsSelected, Mode=OneWay}"
                     IsEnabled="{Binding HasVisibleTransactions}"
                     ShouldExpand="True"
                     UncheckedIcon="{StaticResource CheckAll}"
                     UncheckedText="Check All"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
+                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
@@ -1374,15 +1383,16 @@
                     CheckedText="Delete All"
                     Click="OnRemoveSelectedTransactionsClick"
                     CornerRadius="8"
-                    DefaultBackground="{StaticResource Brush.Mint}"
-                    HoveredBackground="{StaticResource Brush.Mint.Muted}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                     IconSize="12"
                     IsChecked="{Binding AreAllVisibleTransactionsSelected, Mode=OneWay}"
                     IsEnabled="{Binding HasSelectedVisibleTransactions}"
                     ShouldExpand="True"
                     UncheckedIcon="{StaticResource Delete}"
                     UncheckedText="Delete Selected"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
+                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
             </StackPanel>
 
             <StackPanel
@@ -1540,7 +1550,9 @@
                     Click="OnClearFiltersClick"
                     IconSize="14"
                     Style="{StaticResource HeaderButtonStyle}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}" />
                 <customControls:BalloonButton
                     Grid.Column="5"
                     ButtonIcon="{StaticResource Check}"
@@ -1548,7 +1560,9 @@
                     Click="OnApplyBatchUpdatesClick"
                     IconSize="14"
                     Style="{StaticResource HeaderButtonStyle}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}" />
                 <Border
                     Grid.Column="6"
                     Width="1"
@@ -1571,7 +1585,9 @@
                     ButtonSize="34"
                     Click="OnOrderingButtonClick"
                     IconSize="14"
-                    IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}">
+                    IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}">
                     <customControls:BalloonButton.Style>
                         <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
                             <Setter Property="ButtonIcon" Value="{StaticResource ArrowDownWideNarrow}" />

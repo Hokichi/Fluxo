@@ -204,7 +204,9 @@
                         Click="OnEditSavingGoalClick"
                         ShouldExpand="True"
                         Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Edit Goal" />
+                        ToolTip="Edit Goal"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
 
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource TrackChanges}"
@@ -212,7 +214,9 @@
                         Click="OnAddGoalFundsClick"
                         ShouldExpand="True"
                         Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Update Funds" />
+                        ToolTip="Update Funds"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}" />
 
                     <Border
                         Width="1"
@@ -226,7 +230,9 @@
                         Click="OnAddSavingGoalClick"
                         ShouldExpand="True"
                         Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Add Saving Goal" />
+                        ToolTip="Add Saving Goal"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}" />
                 </StackPanel>
             </Grid>
 
@@ -272,7 +278,9 @@
                     RenderTransformOrigin="0.5,0.5"
                     Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
                     ToolTip="Previous Goal"
-                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}">
                     <customControls:BalloonButton.RenderTransform>
                         <ScaleTransform ScaleX="-1" />
                     </customControls:BalloonButton.RenderTransform>
@@ -295,7 +303,9 @@
                     Click="OnNavigateNextClick"
                     Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
                     ToolTip="Next Goal"
-                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
             </Grid>
         </Grid>
     </Border>

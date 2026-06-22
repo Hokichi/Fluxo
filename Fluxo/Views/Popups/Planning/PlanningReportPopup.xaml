@@ -107,7 +107,9 @@
                     VerticalAlignment="Center"
                     ButtonIcon="{StaticResource Close}"
                     Click="OnRemoveIncomeClick"
-                    Style="{StaticResource ReportIconBalloonButtonStyle}" />
+                    Style="{StaticResource ReportIconBalloonButtonStyle}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}" />
             </Grid>
         </DataTemplate>
 
@@ -147,7 +149,9 @@
                     VerticalAlignment="Center"
                     ButtonIcon="{StaticResource Close}"
                     Click="OnRemoveExpenseClick"
-                    Style="{StaticResource ReportIconBalloonButtonStyle}" />
+                    Style="{StaticResource ReportIconBalloonButtonStyle}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}" />
             </Grid>
         </DataTemplate>
     </customControls:BasePopup.Resources>
@@ -633,8 +637,8 @@
                                         ButtonText="Load Recurring"
                                         Click="OnLoadRecurringIncomesClick"
                                         CornerRadius="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                                         IconSize="10"
                                         ShouldExpand="True" />
 
@@ -644,8 +648,8 @@
                                         ButtonText="Add Income"
                                         Click="OnAddIncomeClick"
                                         CornerRadius="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                         IconSize="8"
                                         ShouldExpand="True" />
                                 </StackPanel>
@@ -704,8 +708,8 @@
                                         ButtonText="Load Recurring"
                                         Click="OnLoadRecurringExpensesClick"
                                         CornerRadius="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                                         IconSize="10"
                                         ShouldExpand="True" />
 
@@ -715,8 +719,8 @@
                                         ButtonText="Add Expense"
                                         Click="OnAddExpenseClick"
                                         CornerRadius="8"
-                                        DefaultBackground="{StaticResource Brush.Background.Elevated}"
-                                        HoveredBackground="{StaticResource Brush.Mint}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                         IconSize="8"
                                         ShouldExpand="True" />
                                 </StackPanel>

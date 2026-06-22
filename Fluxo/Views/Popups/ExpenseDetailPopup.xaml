@@ -315,15 +315,16 @@
                         x:Name="ExpensePinButton"
                         Grid.Column="2"
                         ButtonSize="38"
-                        CheckedBackground="{StaticResource Brush.Info}"
+                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         CornerRadius="12"
-                        DefaultBackground="{StaticResource Brush.Background.Surface}"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         IconSize="14"
                         IsChecked="{Binding IsPinned, Mode=TwoWay}"
                         IsEnabled="{Binding CanEditFields}"
                         ToolTip="Pin transaction"
                         UncheckedIcon="{StaticResource Pin}"
-                        UncheckedText="Pinned" />
+                        UncheckedText="Pinned"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                 </Grid>
             </StackPanel>
 
@@ -649,8 +650,8 @@
                                             Margin="0,0,0,0"
                                             ButtonIcon="{StaticResource Close}"
                                             Click="OnRemoveSplitRowClick"
-                                            DefaultBackground="{DynamicResource Brush.Background.Surface}"
-                                            HoveredBackground="{DynamicResource Brush.Danger}"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                                             Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
                                     </Grid>
                                 </DataTemplate>

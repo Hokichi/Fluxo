@@ -20,8 +20,12 @@
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom"
                         Orientation="Horizontal">
-                        <customControls:BalloonButton Click="OnEditAccountClick" Style="{StaticResource EditButton}" />
-                        <customControls:BalloonButton Click="OnDeleteAccountClick" Style="{StaticResource DeleteButton}" />
+                        <customControls:BalloonButton Click="OnEditAccountClick" Style="{StaticResource EditButton}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                        <customControls:BalloonButton Click="OnDeleteAccountClick" Style="{StaticResource DeleteButton}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}" />
                     </StackPanel>
                     <StackPanel Margin="0,4,0,0">
                         <TextBlock

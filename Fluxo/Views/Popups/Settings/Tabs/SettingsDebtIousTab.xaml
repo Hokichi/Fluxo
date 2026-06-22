@@ -61,10 +61,11 @@
                                 ButtonIcon="{StaticResource Check}"
                                 ButtonText="Reconcile"
                                 Click="OnResolveClick"
-                                HoveredBackground="{StaticResource Brush.Mint}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                 ShouldExpand="True"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                ToolTip="Resolve" />
+                                ToolTip="Resolve"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
                         </StackPanel>
                     </Grid>
                 </Border>

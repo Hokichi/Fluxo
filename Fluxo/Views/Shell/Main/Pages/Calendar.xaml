@@ -363,18 +363,24 @@
                             ButtonIcon="{StaticResource AngleUp}"
                             Command="{Binding NavigateToPreviousMonthCommand}"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Previous month" />
+                            ToolTip="Previous month"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource CalendarTodayOutline}"
                             Click="OnCalendarTodayButtonClick"
                             IsEnabled="{Binding IsAtCurrentDay, Converter={StaticResource BoolNegationConverter}}"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Today" />
+                            ToolTip="Today"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}" />
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource AngleDown}"
                             Command="{Binding NavigateToNextMonthCommand}"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Next month" />
+                            ToolTip="Next month"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                     </StackPanel>
                 </Grid>
             </Border>

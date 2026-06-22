@@ -2,20 +2,22 @@
     x:Class="Fluxo.Views.Popups.AccountsListPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    
-    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     PopupTitle="Accounts">
 
     <customControls:BasePopup.Resources>
         <Style x:Key="AccentStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource Brush.Account.Checking.Cash}" />
+            <Setter Property="Background" Value="{StaticResource Brush.Account.Checking}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding AccountType}" Value="Credit">
                     <Setter Property="Background" Value="{StaticResource Brush.Account.Credit}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding AccountType}" Value="Saving">
                     <Setter Property="Background" Value="{StaticResource Brush.Account.Saving}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding AccountType}" Value="Cash">
+                    <Setter Property="Background" Value="{StaticResource Brush.Account.Cash}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -74,18 +76,18 @@
                         <Grid>
                             <components:Icon
                                 Margin="10"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
                                 Path="{StaticResource Bank}"
-                                Style="{StaticResource BankIconStyle}" />
+                                Style="{StaticResource BankIconStyle}"
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
                             <components:Icon
                                 Margin="10"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
                                 Path="{StaticResource CreditCardAlt}"
-                                Style="{StaticResource CreditIconStyle}" />
+                                Style="{StaticResource CreditIconStyle}"
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
                             <components:Icon
                                 Margin="10"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}"
-                                Path="{StaticResource PiggyBank}">
+                                Path="{StaticResource PiggyBank}"
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}">
                                 <components:Icon.Style>
                                     <Style TargetType="components:Icon">
                                         <Setter Property="Visibility" Value="Collapsed" />

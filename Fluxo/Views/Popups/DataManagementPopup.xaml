@@ -116,7 +116,9 @@
                             VerticalAlignment="Center"
                             ButtonIcon="{StaticResource DotsHorizontal}"
                             Click="OnBrowseClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                     </Grid>
 
                     <TextBlock
@@ -148,8 +150,9 @@
                 VerticalAlignment="Bottom"
                 ButtonIcon="{StaticResource ControllerPlay}"
                 Click="OnStartClick"
-                HoveredBackground="{StaticResource Brush.Mint}"
-                Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}" />
         </Grid>
 
         <Grid Style="{StaticResource ProcessingPageStyle}">
@@ -274,7 +277,9 @@
                             Margin="0"
                             ButtonIcon="{StaticResource ControllerPlay}"
                             Click="OnStartClick"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}" />
                     </StackPanel>
             </Grid>
         </Grid>

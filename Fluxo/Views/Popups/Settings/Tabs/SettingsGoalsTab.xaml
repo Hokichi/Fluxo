@@ -83,26 +83,29 @@
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource Delete}"
                                 Click="OnRowActionClick"
-                                HoveredBackground="{StaticResource Brush.Danger}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                 Tag="Goals:Delete"
-                                ToolTip="Delete" />
+                                ToolTip="Delete"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource LightningSlashFill}"
                                 Click="OnRowActionClick"
-                                HoveredBackground="{StaticResource Brush.Warning}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                 Tag="Goals:Disable"
                                 ToolTip="Disable"
-                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource LightningFill}"
                                 Click="OnRowActionClick"
-                                HoveredBackground="{StaticResource Brush.Mint}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                 Tag="Goals:Enable"
                                 ToolTip="Enable"
-                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -149,63 +152,75 @@
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource Delete}"
                         Click="OnBatchActionClick"
-                        HoveredBackground="{StaticResource Brush.Danger}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Goals:Delete"
                         ToolTip="Delete selected"
-                        Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource LightningSlashFill}"
                         Click="OnBatchActionClick"
-                        HoveredBackground="{StaticResource Brush.Warning}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Goals:Disable"
                         ToolTip="Disable selected"
-                        Visibility="{Binding ShowGoalDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowGoalDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource LightningFill}"
                         Click="OnBatchActionClick"
-                        HoveredBackground="{StaticResource Brush.Mint}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Goals:Enable"
                         ToolTip="Enable selected"
-                        Visibility="{Binding ShowGoalEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowGoalEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource CheckAll}"
                         Click="OnSelectionActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Goals:CheckAll"
                         ToolTip="Check all"
-                        Visibility="{Binding ShowGoalCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowGoalCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource UncheckAll}"
                         Click="OnSelectionActionClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Goals:UncheckAll"
                         ToolTip="Uncheck all"
-                        Visibility="{Binding ShowGoalUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowGoalUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource EnableChecks}"
                         Click="OnChecksToggleClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Goals:EnableChecks"
                         ToolTip="Enable selection"
-                        Visibility="{Binding ShowGoalEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding ShowGoalEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource DisableChecks}"
                         Click="OnChecksToggleClick"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Goals:DisableChecks"
                         ToolTip="Disable selection"
-                        Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding IsGoalChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource PlusSolid}"
                         Click="OnAddPlaceholderClick"
-                        HoveredBackground="{StaticResource Brush.Mint}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Add New Goal"
                         ToolTip="Add goal"
-                        Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                        Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityInvertedConverter}}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}" />
                 </StackPanel>
             </Grid>
             <TextBlock

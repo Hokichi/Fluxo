@@ -105,11 +105,12 @@
                         VerticalAlignment="Center"
                         CheckedIcon="{StaticResource EyeOff}"
                         CheckedText="Hide password"
-                        DefaultBackground="Transparent"
-                        HoveredBackground="{StaticResource Brush.Background.Hover}"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                         IsChecked="{Binding IsUiLockingPasswordVisible, Mode=TwoWay}"
                         UncheckedIcon="{StaticResource Eye}"
-                        UncheckedText="Show password" />
+                        UncheckedText="Show password"
+                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
                 </Grid>
             </Grid>
         </Border>
