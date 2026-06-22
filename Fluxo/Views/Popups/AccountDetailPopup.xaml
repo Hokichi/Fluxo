@@ -466,7 +466,7 @@
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
                                     <Setter Property="ButtonIcon" Value="{StaticResource EyeOff}" />
-                                    <Setter Property="HoveredBackground" Value="{StaticResource Brush.BalloonButton.Background.Hovered}" />
+                                    <Setter Property="HoveredBackground" Value="{StaticResource Brush.BalloonButton.Background.Default.Hovered}" />
                                     <Setter Property="ToolTip" Value="Unpin source" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsUnpinned}" Value="True">
@@ -480,7 +480,7 @@
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource SourceSwitch}"
                             Click="OnBackToSourcesButtonClick"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Hovered}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
                             ToolTip="Back to sources" />
                         <customControls:BalloonButton

@@ -782,7 +782,7 @@
                                 CheckedText="Unlock fluxo"
                                 Click="OnHeaderAppLockButtonClick"
                                 DefaultBackground="{StaticResource Brush.Background.Surface}"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Hovered}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                 IconSize="12"
                                 IsChecked="{Binding IsAppLocked, Mode=OneWay}"
                                 ShouldExpand="True"
@@ -813,7 +813,7 @@
                                 ButtonText="Minimize"
                                 Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Hovered}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                 ShouldExpand="True"
                                 Style="{StaticResource HeaderButtonStyle}" />
 
@@ -822,7 +822,7 @@
                                 ButtonIcon="{StaticResource ExpandAlt}"
                                 ButtonText="Maximize"
                                 Click="OnExpandRestoreWindow"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Hovered}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                 ShouldExpand="True"
                                 Style="{StaticResource HeaderButtonStyle}" />
 

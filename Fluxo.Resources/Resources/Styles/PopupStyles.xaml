@@ -81,7 +81,7 @@
                                         x:Name="PART_SplitButton"
                                         ButtonIcon="{StaticResource ArrowsOutLineVertical}"
                                         ButtonText="Split"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Hovered}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowSplitButton,
@@ -103,7 +103,7 @@
                                         x:Name="PART_EditButton"
                                         ButtonIcon="{StaticResource Pen}"
                                         ButtonText="Edit"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Hovered}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         ShouldExpand="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding ShowEditButton,
