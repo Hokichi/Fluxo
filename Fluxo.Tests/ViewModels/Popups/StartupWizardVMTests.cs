@@ -234,9 +234,9 @@ public sealed class QuickSetupWizardVMTests
     {
         var allocation = new BudgetAllocation
         {
-            NeedsThreshold = 40,
+            NeedsThreshold = 60,
             WantsThreshold = 30,
-            InvestThreshold = 30,
+            InvestThreshold = 20,
             AllocationLimit = 500m,
             AllocationPeriod = AllocationPeriod.Biweekly,
             RolloverPolicy = RolloverPolicy.Matching,
@@ -246,28 +246,42 @@ public sealed class QuickSetupWizardVMTests
             new TestUserSettingsRepository([]),
             new TestBudgetAllocationRepository(allocation));
         var appData = new AppDataService(unitOfWork);
-        var viewModel = new QuickSetupWizardBudgetAllocationVM(appData, new WeakReferenceMessenger())
-        {
-            NeedsAllocationPercentage = 60,
-            WantsAllocationPercentage = 30,
-            InvestAllocationPercentage = 20,
-            AllocationLimit = 1200m,
-            AllocationPeriod = AllocationPeriod.Monthly,
-            RolloverPolicy = RolloverPolicy.Pooled,
-            OverspendPolicy = OverspendPolicy.HardStop
-        };
+        var viewModel = new QuickSetupWizardBudgetAllocationVM(appData, new WeakReferenceMessenger());
+
+        await viewModel.LoadAsync();
+        viewModel.AllocationLimit = 1200m;
+        viewModel.AllocationPeriod = AllocationPeriod.Monthly;
+        viewModel.RolloverPolicy = RolloverPolicy.Pooled;
+        viewModel.OverspendPolicy = OverspendPolicy.HardStop;
 
         var result = await viewModel.ApplyAsync(appData);
 
         Assert.False(result.IsSuccess);
         Assert.Equal("Needs, Wants, and Invest must add up to 100%. Current total: 110%", result.ErrorMessage);
-        Assert.Equal(40, unitOfWork.BudgetAllocationEntity!.NeedsThreshold);
+        Assert.Equal(60, unitOfWork.BudgetAllocationEntity!.NeedsThreshold);
         Assert.Equal(30, unitOfWork.BudgetAllocationEntity.WantsThreshold);
-        Assert.Equal(30, unitOfWork.BudgetAllocationEntity.InvestThreshold);
+        Assert.Equal(20, unitOfWork.BudgetAllocationEntity.InvestThreshold);
         Assert.Equal(500m, unitOfWork.BudgetAllocationEntity.AllocationLimit);
         Assert.Equal(AllocationPeriod.Biweekly, unitOfWork.BudgetAllocationEntity.AllocationPeriod);
         Assert.Equal(RolloverPolicy.Matching, unitOfWork.BudgetAllocationEntity.RolloverPolicy);
         Assert.Equal(OverspendPolicy.SoftDebt, unitOfWork.BudgetAllocationEntity.OverspendPolicy);
+    }
+
+    [Fact]
+    public async Task BudgetAllocation_SettingAllocation_BalancesOtherBuckets()
+    {
+        var unitOfWork = new TestUnitOfWork(new TestUserSettingsRepository([]));
+        var viewModel = new QuickSetupWizardBudgetAllocationVM(
+            new AppDataService(unitOfWork),
+            new WeakReferenceMessenger());
+
+        await viewModel.LoadAsync();
+        viewModel.IncrementAllocation(BudgetAllocationSegment.Invest, 1);
+
+        Assert.Equal(50, viewModel.NeedsAllocationPercentage);
+        Assert.Equal(29, viewModel.WantsAllocationPercentage);
+        Assert.Equal(21, viewModel.InvestAllocationPercentage);
+        Assert.False(viewModel.HasBudgetAllocationError);
     }
 
     [Fact]

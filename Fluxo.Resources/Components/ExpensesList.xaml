@@ -278,24 +278,13 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel
-            x:Name="ExpenseListCompactHeader"
-            Margin="12,0,12,0"
-            Orientation="Horizontal">
-            <Ellipse
-                Width="8"
-                Height="8"
-                Margin="0,2,0,0"
-                Fill="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
-
-            <TextBlock
-                Margin="12,2,0,0"
-                VerticalAlignment="Center"
-                FontFamily="{StaticResource ExtraBold}"
-                FontSize="14"
-                Foreground="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                Text="{Binding Title, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" />
-        </StackPanel>
+        <TextBlock
+            Margin="12,2,0,0"
+            VerticalAlignment="Center"
+            FontFamily="{StaticResource ExtraBold}"
+            FontSize="14"
+            Foreground="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+            Text="RECENT ACTIVITIES" />
 
         <customControls:BalloonButton
             Margin="12,0"
