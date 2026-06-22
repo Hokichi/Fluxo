@@ -78,6 +78,14 @@ public sealed class DialogService : IDialogService
         return ShowDialog(popup, owner);
     }
 
+    public bool? ShowBudgetForecast(Window? owner = null)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var viewModel = ActivatorUtilities.CreateInstance<BudgetForecastVM>(scope.ServiceProvider);
+        var popup = ActivatorUtilities.CreateInstance<BudgetForecastPopup>(scope.ServiceProvider, viewModel);
+        return ShowDialog(popup, owner);
+    }
+
     public bool? ShowAddNewTransaction(AddNewTransactionVM viewModel, Window? owner = null)
     {
         using var scope = _serviceProvider.CreateScope();

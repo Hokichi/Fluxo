@@ -19,19 +19,27 @@
     <SolidColorBrush x:Key="Brush.Background.Hover" Color="{StaticResource Color.Background.Hover}" />
 
     <!--  =============================  -->
-    <!--  BALLOON BUTTON BACKGROUND (MIDNIGHT BLUE)  -->
+    <!--  BALLOON BUTTON BACKGROUND  -->
     <!--  =============================  -->
 
     <Color x:Key="Color.BalloonButton.Background.Default">#0B1F3B</Color>
     <Color x:Key="Color.BalloonButton.Background.Hovered">#132A52</Color>
-    <Color x:Key="Color.Primary.Pressed">#08162B</Color>
+    <Color x:Key="Color.BalloonButton.Background.ConfirmSave">#182218</Color>
+    <Color x:Key="Color.BalloonButton.Background.Destructive">#221818</Color>
+    <Color x:Key="Color.BalloonButton.Background.Caution">#262018</Color>
+    <Color x:Key="Color.BalloonButton.Background.NavInfo">#181E28</Color>
+    <Color x:Key="Color.BalloonButton.Background.Neutral">#1A1D21</Color>
 
     <SolidColorBrush x:Key="Brush.BalloonButton.Background.Default" Color="{StaticResource Color.BalloonButton.Background.Default}" />
     <SolidColorBrush x:Key="Brush.BalloonButton.Background.Hovered" Color="{StaticResource Color.BalloonButton.Background.Hovered}" />
-    <SolidColorBrush x:Key="Brush.Primary.Pressed" Color="{StaticResource Color.Primary.Pressed}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.ConfirmSave" Color="{StaticResource Color.BalloonButton.Background.ConfirmSave}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.Destructive" Color="{StaticResource Color.BalloonButton.Background.Destructive}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.Caution" Color="{StaticResource Color.BalloonButton.Background.Caution}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.NavInfo" Color="{StaticResource Color.BalloonButton.Background.NavInfo}" />
+    <SolidColorBrush x:Key="Brush.BalloonButton.Background.Neutral" Color="{StaticResource Color.BalloonButton.Background.Neutral}" />
 
     <!--  =============================  -->
-    <!--  SECONDARY ACCENT (MINT GREEN)  -->
+    <!--  ACCENT (MINT GREEN)  -->
     <!--  =============================  -->
 
     <Color x:Key="Color.Mint">#3FE0A1</Color>

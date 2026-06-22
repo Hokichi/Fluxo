@@ -1,0 +1,641 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Globalization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Fluxo.Core.Budgeting;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
+using Fluxo.Core.Interfaces.Services;
+
+namespace Fluxo.ViewModels.Popups;
+
+public sealed partial class BudgetForecastVM : ObservableObject
+{
+    private readonly IAppDataService _appData;
+    private BudgetAllocation _allocation = new();
+    private decimal _baseNeeds;
+    private decimal _baseWants;
+    private decimal _baseInvest;
+    private int _allocationPeriodDays = 1;
+    private int _nextEventId = 1;
+
+    [ObservableProperty] private DateTime _selectedDate = DateTime.Today.AddDays(1);
+    [ObservableProperty] private decimal _net;
+    [ObservableProperty] private decimal _needs;
+    [ObservableProperty] private decimal _wants;
+    [ObservableProperty] private decimal _invest;
+    [ObservableProperty] private string _eventNameText = string.Empty;
+    [ObservableProperty] private BudgetForecastAccountRowVM? _selectedDailyExpenseAccount;
+    [ObservableProperty] private BudgetForecastCategoryOption? _selectedDailyExpenseCategory;
+    [ObservableProperty] private BudgetForecastEventTypeOption? _selectedEventType;
+    [ObservableProperty] private string _dailyExpenseAmountText = string.Empty;
+    [ObservableProperty] private BudgetForecastAccountRowVM? _selectedPurchaseAccount;
+    [ObservableProperty] private BudgetForecastCategoryOption? _selectedPurchaseCategory;
+    [ObservableProperty] private string _purchaseAmountText = string.Empty;
+    [ObservableProperty] private bool _isPurchaseInstallment;
+    [ObservableProperty] private decimal _purchaseInstallmentCount = 1m;
+    [ObservableProperty] private string _purchaseMessage = string.Empty;
+    [ObservableProperty] private string _purchaseMessageBrushKey = "Brush.Text.Muted";
+
+    public BudgetForecastVM(IAppDataService appData)
+    {
+        _appData = appData;
+        Events.CollectionChanged += OnEventsChanged;
+    }
+
+    public ObservableCollection<BudgetForecastAccountRowVM> Accounts { get; } = [];
+    public ObservableCollection<BudgetForecastRecurringRowVM> RecurringTransactions { get; } = [];
+    public ObservableCollection<BudgetForecastEventRowVM> Events { get; } = [];
+
+    public IReadOnlyList<BudgetForecastEventTypeOption> EventTypes { get; } =
+    [
+        new("Daily Expense", BudgetForecastEventKind.Expense, IsDaily: true),
+        new("One-time Expense", BudgetForecastEventKind.Expense, IsDaily: false),
+        new("Income", BudgetForecastEventKind.Income, IsDaily: false)
+    ];
+
+    public IReadOnlyList<BudgetForecastCategoryOption> Categories { get; } =
+    [
+        new("Needs", ExpenseCategory.Needs),
+        new("Wants", ExpenseCategory.Wants),
+        new("Invest", ExpenseCategory.Savings)
+    ];
+
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        _allocation = await _appData.GetBudgetAllocationAsync(cancellationToken);
+        var accounts = await _appData.GetAccountsAsync(cancellationToken);
+        var recurringTransactions = await _appData.GetRecurringTransactionsAsync(cancellationToken);
+        var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+
+        Accounts.Clear();
+        foreach (var account in accounts.Where(account => account.IsEnabled && !account.IsForDeletion).OrderBy(account => account.Name))
+        {
+            Accounts.Add(new BudgetForecastAccountRowVM(account.Id, account.Name, GetAvailableBalance(account)));
+        }
+
+        RecurringTransactions.Clear();
+        foreach (var row in recurringTransactions
+                     .Where(transaction => transaction.IsEnabled)
+                     .OrderBy(transaction => transaction.Name)
+                     .Select(transaction => ToRecurringRow(transaction, accounts)))
+        {
+            row.PropertyChanged += OnRecurringRowChanged;
+            RecurringTransactions.Add(row);
+        }
+
+        ApplyCurrentBudgetRemaining(expenseLogs, accounts);
+
+        SelectedDailyExpenseAccount ??= Accounts.FirstOrDefault();
+        SelectedPurchaseAccount ??= Accounts.FirstOrDefault();
+        SelectedEventType ??= EventTypes.FirstOrDefault();
+        SelectedDailyExpenseCategory ??= Categories.FirstOrDefault();
+        SelectedPurchaseCategory ??= Categories.FirstOrDefault();
+
+        Recalculate();
+    }
+
+    public bool IsEventCategoryVisible => SelectedEventType?.Kind != BudgetForecastEventKind.Income;
+    public bool IsPurchaseInstallmentCountVisible => IsPurchaseInstallment;
+
+    public void AddEvent()
+    {
+        if (SelectedDailyExpenseAccount is null ||
+            SelectedEventType is null ||
+            (IsEventCategoryVisible && SelectedDailyExpenseCategory is null) ||
+            !TryParseMoney(DailyExpenseAmountText, out var amount) ||
+            amount <= 0m)
+        {
+            return;
+        }
+
+        var totalAmount = CalculateEventAmount(amount, DayCount, SelectedEventType.IsDaily);
+        if (totalAmount <= 0m)
+            return;
+
+        var eventName = string.IsNullOrWhiteSpace(EventNameText)
+            ? SelectedEventType.Label
+            : EventNameText.Trim();
+
+        Events.Add(new BudgetForecastEventRowVM(
+            _nextEventId++,
+            eventName,
+            totalAmount,
+            SelectedDailyExpenseAccount.Id,
+            SelectedEventType.Kind == BudgetForecastEventKind.Income ? null : SelectedDailyExpenseCategory!.Value,
+            SelectedEventType.Kind));
+        EventNameText = string.Empty;
+        DailyExpenseAmountText = string.Empty;
+        Recalculate();
+    }
+
+    public void DeleteEvent(BudgetForecastEventRowVM row)
+    {
+        Events.Remove(row);
+        Recalculate();
+    }
+
+    public void Recalculate()
+    {
+        var balances = Accounts.ToDictionary(account => account.Id, account => account.CurrentBalance);
+        var needs = CalculateCategoryBudget(_baseNeeds, DayCount, _allocationPeriodDays);
+        var wants = CalculateCategoryBudget(_baseWants, DayCount, _allocationPeriodDays);
+        var invest = CalculateCategoryBudget(_baseInvest, DayCount, _allocationPeriodDays);
+
+        foreach (var recurring in RecurringTransactions.Where(row => row.IsIncluded))
+        {
+            var occurrences = CountRecurringOccurrences(
+                recurring.RecurringPeriod,
+                recurring.RecurringTime,
+                DateTime.Today,
+                SelectedDate);
+            if (occurrences <= 0)
+                continue;
+
+            var total = recurring.Amount * occurrences;
+            ApplyProjection(
+                balances,
+                recurring.AccountId,
+                recurring.Type == RecurringTransactionType.Income ? BudgetForecastEventKind.Income : BudgetForecastEventKind.Expense,
+                total,
+                recurring.Category,
+                ref needs,
+                ref wants,
+                ref invest);
+        }
+
+        foreach (var budgetEvent in Events)
+        {
+            ApplyProjection(
+                balances,
+                budgetEvent.AccountId,
+                budgetEvent.Kind,
+                budgetEvent.Amount,
+                budgetEvent.Category,
+                ref needs,
+                ref wants,
+                ref invest);
+        }
+
+        foreach (var account in Accounts)
+        {
+            account.Balance = balances.TryGetValue(account.Id, out var balance)
+                ? RoundMoney(balance)
+                : account.CurrentBalance;
+        }
+
+        Needs = RoundMoney(needs);
+        Wants = RoundMoney(wants);
+        Invest = RoundMoney(invest);
+        Net = RoundMoney(Accounts.Sum(account => account.Balance) - Accounts.Sum(account => account.CurrentBalance));
+        RefreshPurchaseMessage();
+    }
+
+    public static int CountRecurringOccurrences(
+        RecurringPeriod period,
+        int recurringTime,
+        DateTime today,
+        DateTime targetDate)
+    {
+        var start = today.Date.AddDays(1);
+        var end = targetDate.Date;
+        if (end < start)
+            return 0;
+
+        return period switch
+        {
+            RecurringPeriod.None => 0,
+            RecurringPeriod.Monthly => CountMonthlyOccurrences(recurringTime, start, end),
+            RecurringPeriod.Weekly => CountDayIntervalOccurrences(recurringTime, start, end, 7),
+            // ponytail: recurring data has no biweekly anchor; add one to the schema before making true alternating-week forecasts.
+            RecurringPeriod.Biweekly => CountDayIntervalOccurrences(recurringTime, start, end, 14),
+            _ => 0
+        };
+    }
+
+    public static decimal CalculateDailyProjection(decimal amount, int dayCount)
+    {
+        return RoundMoney(amount * Math.Max(0, dayCount));
+    }
+
+    public static decimal CalculateEventAmount(decimal amount, int dayCount, bool isDaily)
+    {
+        return isDaily ? CalculateDailyProjection(amount, dayCount) : RoundMoney(amount);
+    }
+
+    public static int CountAllocationPeriods(int dayCount, int allocationPeriodDays)
+    {
+        if (dayCount <= 0 || allocationPeriodDays <= 0)
+            return 0;
+
+        return (int)Math.Ceiling(dayCount / (decimal)allocationPeriodDays);
+    }
+
+    public static decimal CalculateCategoryBudget(decimal baseAllocation, int dayCount, int allocationPeriodDays)
+    {
+        return RoundMoney(baseAllocation * CountAllocationPeriods(dayCount, allocationPeriodDays));
+    }
+
+    public static decimal CalculateInstallmentValidationAmount(
+        decimal amount,
+        decimal installmentCount,
+        decimal allocationPeriodWeeks)
+    {
+        if (amount <= 0m || installmentCount <= 0m || allocationPeriodWeeks <= 0m)
+            return amount;
+
+        return RoundMoney(amount / installmentCount / (4m / allocationPeriodWeeks));
+    }
+
+    public static decimal GetAllocationPeriodWeeks(AllocationPeriod period)
+    {
+        return period switch
+        {
+            AllocationPeriod.Weekly => 1m,
+            AllocationPeriod.Biweekly => 2m,
+            AllocationPeriod.Quarterly => 12m,
+            AllocationPeriod.Yearly => 52m,
+            _ => 4m
+        };
+    }
+
+    public static BudgetForecastPurchaseResult BuildPurchaseResult(
+        decimal purchaseAmount,
+        decimal accountBalance,
+        decimal categoryRemaining,
+        string categoryName,
+        string accountName)
+    {
+        if (purchaseAmount <= 0m)
+            return new BudgetForecastPurchaseResult(string.Empty, "Brush.Text.Muted");
+
+        if (purchaseAmount > accountBalance)
+        {
+            var shortage = RoundMoney(purchaseAmount - accountBalance);
+            return new BudgetForecastPurchaseResult(
+                $"Not affordable - {FormatMoney(shortage)} short from {accountName}.",
+                "Brush.Danger");
+        }
+
+        if (purchaseAmount > categoryRemaining)
+        {
+            var overflow = RoundMoney(purchaseAmount - categoryRemaining);
+            return new BudgetForecastPurchaseResult(
+                $"Not recommended - {FormatMoney(overflow)} over {categoryName} budget. You might want to reconsider.",
+                "Brush.Warning");
+        }
+
+        return new BudgetForecastPurchaseResult(
+            $"Affordable - {FormatMoney(categoryRemaining - purchaseAmount)} left in {categoryName}, {FormatMoney(accountBalance - purchaseAmount)} left in {accountName}",
+            "Brush.Success");
+    }
+
+    private int DayCount => Math.Max(0, (SelectedDate.Date - DateTime.Today).Days);
+
+    partial void OnSelectedDateChanged(DateTime value)
+    {
+        Recalculate();
+    }
+
+    partial void OnPurchaseAmountTextChanged(string value)
+    {
+        RefreshPurchaseMessage();
+    }
+
+    partial void OnIsPurchaseInstallmentChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsPurchaseInstallmentCountVisible));
+        RefreshPurchaseMessage();
+    }
+
+    partial void OnPurchaseInstallmentCountChanged(decimal value)
+    {
+        RefreshPurchaseMessage();
+    }
+
+    partial void OnSelectedPurchaseAccountChanged(BudgetForecastAccountRowVM? value)
+    {
+        RefreshPurchaseMessage();
+    }
+
+    partial void OnSelectedPurchaseCategoryChanged(BudgetForecastCategoryOption? value)
+    {
+        RefreshPurchaseMessage();
+    }
+
+    partial void OnSelectedEventTypeChanged(BudgetForecastEventTypeOption? value)
+    {
+        OnPropertyChanged(nameof(IsEventCategoryVisible));
+    }
+
+    private void ApplyCurrentBudgetRemaining(IReadOnlyList<ExpenseLog> expenseLogs, IReadOnlyList<Account> accounts)
+    {
+        var budgetEffectiveLogs = SelectBudgetEffectiveLogs(expenseLogs);
+        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(
+            _allocation.AllocationPeriod,
+            DateTime.Today,
+            _allocation.PeriodStart);
+        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(
+            _allocation.AllocationPeriod,
+            DateTime.Today,
+            _allocation.PeriodStart);
+
+        var currentSpent = SumSpentByCategory(budgetEffectiveLogs, currentPeriod.Start, currentPeriod.End);
+        var previousSpent = SumSpentByCategory(budgetEffectiveLogs, previousPeriod.Start, previousPeriod.End);
+        var fallbackBudgetBase = accounts
+            .Where(account => account.IsEnabled && !account.IsForDeletion)
+            .Sum(GetAvailableBalance);
+        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
+            _allocation,
+            currentSpent,
+            previousSpent,
+            DateTime.Today,
+            fallbackBudgetBase);
+
+        _baseNeeds = snapshot.Needs.BaseAllocation;
+        _baseWants = snapshot.Wants.BaseAllocation;
+        _baseInvest = snapshot.Invest.BaseAllocation;
+        _allocationPeriodDays = Math.Max(1, snapshot.CurrentPeriod.DayCount);
+    }
+
+    private void ApplyProjection(
+        IDictionary<int, decimal> balances,
+        int accountId,
+        BudgetForecastEventKind kind,
+        decimal amount,
+        ExpenseCategory? category,
+        ref decimal needs,
+        ref decimal wants,
+        ref decimal invest)
+    {
+        if (!balances.ContainsKey(accountId))
+            return;
+
+        if (kind == BudgetForecastEventKind.Income)
+        {
+            balances[accountId] += amount;
+            return;
+        }
+
+        balances[accountId] -= amount;
+        ApplyExpenseToCategory(amount, category ?? ExpenseCategory.Needs, ref needs, ref wants, ref invest);
+    }
+
+    private static void ApplyExpenseToCategory(
+        decimal amount,
+        ExpenseCategory category,
+        ref decimal needs,
+        ref decimal wants,
+        ref decimal invest)
+    {
+        switch (category)
+        {
+            case ExpenseCategory.Wants:
+                wants -= amount;
+                break;
+            case ExpenseCategory.Savings:
+                invest -= amount;
+                break;
+            default:
+                needs -= amount;
+                break;
+        }
+    }
+
+    private void RefreshPurchaseMessage()
+    {
+        if (SelectedPurchaseAccount is null ||
+            SelectedPurchaseCategory is null ||
+            !TryParseMoney(PurchaseAmountText, out var amount) ||
+            amount <= 0m)
+        {
+            PurchaseMessage = string.Empty;
+            PurchaseMessageBrushKey = "Brush.Text.Muted";
+            return;
+        }
+
+        var amountToValidate = IsPurchaseInstallment
+            ? CalculateInstallmentValidationAmount(
+                amount,
+                PurchaseInstallmentCount,
+                GetAllocationPeriodWeeks(_allocation.AllocationPeriod))
+            : amount;
+
+        var result = BuildPurchaseResult(
+            amountToValidate,
+            SelectedPurchaseAccount.Balance,
+            GetCategoryRemaining(SelectedPurchaseCategory.Value),
+            SelectedPurchaseCategory.Label,
+            SelectedPurchaseAccount.Name);
+        PurchaseMessage = result.Message;
+        PurchaseMessageBrushKey = result.BrushKey;
+    }
+
+    private decimal GetCategoryRemaining(ExpenseCategory category)
+    {
+        return category switch
+        {
+            ExpenseCategory.Wants => Wants,
+            ExpenseCategory.Savings => Invest,
+            _ => Needs
+        };
+    }
+
+    private static BudgetForecastRecurringRowVM ToRecurringRow(
+        RecurringTransaction transaction,
+        IReadOnlyList<Account> accounts)
+    {
+        var accountName = accounts.FirstOrDefault(account => account.Id == transaction.SourceId)?.Name ?? "Account";
+        return new BudgetForecastRecurringRowVM(
+            transaction.Id,
+            transaction.Name,
+            transaction.Amount,
+            transaction.SourceId,
+            accountName,
+            transaction.Type,
+            transaction.Category ?? ExpenseCategory.Needs,
+            transaction.RecurringPeriod,
+            transaction.RecurringTime,
+            isIncluded: true);
+    }
+
+    public static decimal GetAvailableBalance(Account account)
+    {
+        return account.AccountType == AccountType.Credit
+            ? account.AccountLimit - account.SpentAmount
+            : account.Balance;
+    }
+
+    private static IReadOnlyDictionary<ExpenseCategory, decimal> SumSpentByCategory(
+        IEnumerable<ExpenseLog> logs,
+        DateTime start,
+        DateTime end)
+    {
+        return logs
+            .Where(log => log.DeductedOn.Date >= start.Date && log.DeductedOn.Date <= end.Date)
+            .GroupBy(log => log.Expense?.ExpenseCategory ?? ExpenseCategory.Needs)
+            .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
+    }
+
+    private static IReadOnlyList<ExpenseLog> SelectBudgetEffectiveLogs(IReadOnlyList<ExpenseLog> expenseLogs)
+    {
+        var activeLogs = expenseLogs.Where(log => !log.IsForDeletion).ToList();
+        var parentLogIds = activeLogs
+            .Where(log => log.ParentLogId is > 0)
+            .Select(log => log.ParentLogId!.Value)
+            .ToHashSet();
+
+        return activeLogs
+            .Where(log => !parentLogIds.Contains(log.Id))
+            .ToList();
+    }
+
+    private static int CountMonthlyOccurrences(int recurringTime, DateTime start, DateTime end)
+    {
+        if (recurringTime is < 1 or > 28)
+            return 0;
+
+        var count = 0;
+        var cursor = new DateTime(start.Year, start.Month, recurringTime);
+        if (cursor < start)
+            cursor = cursor.AddMonths(1);
+
+        while (cursor <= end)
+        {
+            count++;
+            cursor = cursor.AddMonths(1);
+        }
+
+        return count;
+    }
+
+    private static int CountDayIntervalOccurrences(int recurringTime, DateTime start, DateTime end, int intervalDays)
+    {
+        if (recurringTime is < 1 or > 7)
+            return 0;
+
+        var cursor = start;
+        while (GetIsoDayOfWeek(cursor.DayOfWeek) != recurringTime)
+            cursor = cursor.AddDays(1);
+
+        var count = 0;
+        while (cursor <= end)
+        {
+            count++;
+            cursor = cursor.AddDays(intervalDays);
+        }
+
+        return count;
+    }
+
+    private static int GetIsoDayOfWeek(DayOfWeek dayOfWeek)
+    {
+        return dayOfWeek == DayOfWeek.Sunday ? 7 : (int)dayOfWeek;
+    }
+
+    private static bool TryParseMoney(string text, out decimal amount)
+    {
+        return decimal.TryParse(
+            text?.Trim(),
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out amount);
+    }
+
+    private static string FormatMoney(decimal amount)
+    {
+        return amount.ToString("N0", CultureInfo.InvariantCulture);
+    }
+
+    private static decimal RoundMoney(decimal value)
+    {
+        return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+    }
+
+    private void OnRecurringRowChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(BudgetForecastRecurringRowVM.IsIncluded))
+            Recalculate();
+    }
+
+    private void OnEventsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        Recalculate();
+    }
+}
+
+public sealed partial class BudgetForecastAccountRowVM(
+    int id,
+    string name,
+    decimal currentBalance) : ObservableObject
+{
+    [ObservableProperty] private decimal _balance = currentBalance;
+
+    public int Id { get; } = id;
+    public string Name { get; } = name;
+    public decimal CurrentBalance { get; } = currentBalance;
+}
+
+public sealed partial class BudgetForecastRecurringRowVM : ObservableObject
+{
+    [ObservableProperty] private bool _isIncluded;
+
+    public BudgetForecastRecurringRowVM(
+        int id,
+        string name,
+        decimal amount,
+        int accountId,
+        string accountName,
+        RecurringTransactionType type,
+        ExpenseCategory category,
+        RecurringPeriod recurringPeriod,
+        int recurringTime,
+        bool isIncluded)
+    {
+        Id = id;
+        Name = name;
+        Amount = amount;
+        AccountId = accountId;
+        AccountName = accountName;
+        Type = type;
+        Category = category;
+        RecurringPeriod = recurringPeriod;
+        RecurringTime = recurringTime;
+        _isIncluded = isIncluded;
+    }
+
+    public int Id { get; }
+    public string Name { get; }
+    public decimal Amount { get; }
+    public decimal SignedAmount => Type == RecurringTransactionType.Income ? Amount : -Amount;
+    public int AccountId { get; }
+    public string AccountName { get; }
+    public RecurringTransactionType Type { get; }
+    public ExpenseCategory Category { get; }
+    public RecurringPeriod RecurringPeriod { get; }
+    public int RecurringTime { get; }
+}
+
+public sealed record BudgetForecastEventRowVM(
+    int Id,
+    string Name,
+    decimal Amount,
+    int AccountId,
+    ExpenseCategory? Category,
+    BudgetForecastEventKind Kind)
+{
+    public decimal SignedAmount => Kind == BudgetForecastEventKind.Income ? Amount : -Amount;
+}
+
+public sealed record BudgetForecastCategoryOption(string Label, ExpenseCategory Value);
+
+public sealed record BudgetForecastEventTypeOption(string Label, BudgetForecastEventKind Kind, bool IsDaily);
+
+public sealed record BudgetForecastPurchaseResult(string Message, string BrushKey);
+
+public enum BudgetForecastEventKind
+{
+    Expense,
+    Income
+}

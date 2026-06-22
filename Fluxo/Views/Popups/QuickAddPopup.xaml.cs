@@ -52,6 +52,11 @@ public partial class QuickAddPopup : BasePopup
         OpenSelectedPopup(mainWindow => mainWindow.OpenPlanningReport());
     }
 
+    private void OnBudgetForecastClick(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedPopup(mainWindow => mainWindow.OpenBudgetForecast());
+    }
+
     private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
     {
         OpenSelectedPopup(mainWindow => mainWindow.OpenSettingsPopup());

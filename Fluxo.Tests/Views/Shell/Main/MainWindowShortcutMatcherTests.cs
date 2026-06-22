@@ -45,6 +45,23 @@ public class MainWindowShortcutMatcherTests
     }
 
     [Fact]
+    public void IsOpenBudgetForecastShortcut_ReturnsTrue_ForCtrlShiftP()
+    {
+        Assert.True(MainWindowShortcutMatcher.IsOpenBudgetForecastShortcut(
+            Key.P,
+            ModifierKeys.Control | ModifierKeys.Shift));
+    }
+
+    [Theory]
+    [InlineData(Key.P, ModifierKeys.Control)]
+    [InlineData(Key.P, ModifierKeys.None)]
+    [InlineData(Key.O, ModifierKeys.Control | ModifierKeys.Shift)]
+    public void IsOpenBudgetForecastShortcut_ReturnsFalse_ForOtherKeysOrModifiers(Key key, ModifierKeys modifiers)
+    {
+        Assert.False(MainWindowShortcutMatcher.IsOpenBudgetForecastShortcut(key, modifiers));
+    }
+
+    [Fact]
     public void IsOpenQuickAccessShortcut_ReturnsTrue_ForCtrlK()
     {
         var isShortcut = MainWindowShortcutMatcher.IsOpenQuickAccessShortcut(Key.K, ModifierKeys.Control);

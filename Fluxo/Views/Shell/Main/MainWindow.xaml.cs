@@ -840,6 +840,19 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
+        if (MainWindowShortcutMatcher.IsOpenBudgetForecastShortcut(e.Key, Keyboard.Modifiers))
+        {
+            if (IsSufficientFundsActionGateLocked())
+            {
+                e.Handled = true;
+                return;
+            }
+
+            OpenBudgetForecast();
+            e.Handled = true;
+            return;
+        }
+
         if (MainWindowShortcutMatcher.IsOpenDataManagementShortcut(e.Key, Keyboard.Modifiers))
         {
             OpenDataManagementPopup();
@@ -1512,6 +1525,14 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         _dialogService.ShowPlanningReport(this);
+    }
+
+    public void OpenBudgetForecast()
+    {
+        if (IsSufficientFundsActionGateLocked())
+            return;
+
+        _dialogService.ShowBudgetForecast(this);
     }
 
     public void OpenAnalyticsPopup()

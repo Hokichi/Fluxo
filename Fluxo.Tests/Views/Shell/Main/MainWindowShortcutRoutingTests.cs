@@ -113,6 +113,15 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
+    public void BudgetForecastShortcut_RoutesToBudgetForecastPopup()
+    {
+        var source = ReadMainWindowSource();
+
+        Assert.Contains("if (MainWindowShortcutMatcher.IsOpenBudgetForecastShortcut(e.Key, Keyboard.Modifiers))", source);
+        Assert.Contains("OpenBudgetForecast();", source);
+    }
+
+    [Fact]
     public void SpendingAmountGateHelper_IsDeclared()
     {
         var source = ReadMainWindowSource();

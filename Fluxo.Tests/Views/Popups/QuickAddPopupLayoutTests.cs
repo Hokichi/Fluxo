@@ -34,8 +34,11 @@ public sealed class QuickAddPopupLayoutTests
         Assert.Contains("x:Name=\"NewRecurringTransactionQuickAddButton\"", xaml);
         Assert.Contains("x:Name=\"ViewAccountsQuickAddButton\"", xaml);
         Assert.Contains("x:Name=\"PlanningReportQuickAddButton\"", xaml);
+        Assert.Contains("x:Name=\"BudgetForecastQuickAddButton\"", xaml);
+        Assert.Contains("Path=\"{StaticResource CalendarFuture}\"", xaml);
+        Assert.Contains("Text=\"Budget Forecast\"", xaml);
         Assert.Contains("x:Name=\"OpenSettingsQuickAddButton\"", xaml);
-        Assert.Equal(4, xaml.Split("Style=\"{StaticResource LockedDisabledQuickAddTileButtonStyle}\"").Length - 1);
+        Assert.Equal(5, xaml.Split("Style=\"{StaticResource LockedDisabledQuickAddTileButtonStyle}\"").Length - 1);
         Assert.Contains("Style=\"{StaticResource QuickAddTileButtonStyle}\"", xaml);
         Assert.Contains("<DataTrigger Binding=\"{Binding IsSufficientFundsActionGateLocked}\" Value=\"True\">", xaml);
         Assert.Contains("<Setter Property=\"IsEnabled\" Value=\"False\" />", xaml);
@@ -65,6 +68,8 @@ public sealed class QuickAddPopupLayoutTests
         Assert.Contains("mainWindow.OpenAccountsListPopup()", source);
         Assert.Contains("OnPlanningReportClick", source);
         Assert.Contains("mainWindow.OpenPlanningReport()", source);
+        Assert.Contains("OnBudgetForecastClick", source);
+        Assert.Contains("mainWindow.OpenBudgetForecast()", source);
         Assert.Contains("OnOpenSettingsClick", source);
         Assert.Contains("mainWindow.OpenSettingsPopup()", source);
     }

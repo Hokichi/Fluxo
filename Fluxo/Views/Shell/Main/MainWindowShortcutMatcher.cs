@@ -10,6 +10,11 @@ public static class MainWindowShortcutMatcher
         return key == Key.P && modifiers == ModifierKeys.Control;
     }
 
+    public static bool IsOpenBudgetForecastShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.P && modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
+    }
+
     public static bool IsOpenAnalyticsShortcut(Key key, ModifierKeys modifiers)
     {
         return IsNumberKey(key, 2) && modifiers == ModifierKeys.Control;
