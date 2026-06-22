@@ -14,10 +14,12 @@ namespace Fluxo.ViewModels.Popups.Settings;
 
 public partial class SettingsBudgetTabVM : ObservableObject
 {
+    private readonly BudgetAllocationBalancer _allocationBalancer = new();
     private readonly Func<decimal> _totalBudgetAmountProvider;
     private readonly Func<DateTime> _todayProvider;
     private readonly IMessenger _messenger;
     private readonly IAppDataService _appData;
+    private bool _isApplyingAllocation;
     private bool _suppressPendingStatePublish;
     private BudgetAllocationSnapshot _savedBudgetAllocation = new(
         50,
@@ -136,9 +138,10 @@ public partial class SettingsBudgetTabVM : ObservableObject
         _suppressPendingStatePublish = true;
         try
         {
-            NeedsAllocationPercentage = allocation.NeedsThreshold;
-            WantsAllocationPercentage = allocation.WantsThreshold;
-            InvestAllocationPercentage = allocation.InvestThreshold;
+            ApplyAllocationPercentages(
+                allocation.NeedsThreshold,
+                allocation.WantsThreshold,
+                allocation.InvestThreshold);
             AllocationLimit = allocation.AllocationLimit;
             AllocationPeriod = allocation.AllocationPeriod;
             PeriodStart = BudgetAllocationPeriodRules.ClampPeriodStart(AllocationPeriod, allocation.PeriodStart);
@@ -214,9 +217,10 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     public void RevertChanges()
     {
-        NeedsAllocationPercentage = _savedBudgetAllocation.Needs;
-        WantsAllocationPercentage = _savedBudgetAllocation.Wants;
-        InvestAllocationPercentage = _savedBudgetAllocation.Invest;
+        ApplyAllocationPercentages(
+            _savedBudgetAllocation.Needs,
+            _savedBudgetAllocation.Wants,
+            _savedBudgetAllocation.Invest);
         AllocationLimit = _savedBudgetAllocation.AllocationLimit;
         AllocationPeriod = _savedBudgetAllocation.AllocationPeriod;
         PeriodStart = _savedBudgetAllocation.PeriodStart;
@@ -228,54 +232,27 @@ public partial class SettingsBudgetTabVM : ObservableObject
 
     public void IncrementAllocation(BudgetAllocationSegment segment, int delta)
     {
-        switch (segment)
-        {
-            case BudgetAllocationSegment.Needs:
-                NeedsAllocationPercentage = Math.Clamp(NeedsAllocationPercentage + delta, 0, 100);
-                break;
-
-            case BudgetAllocationSegment.Wants:
-                WantsAllocationPercentage = Math.Clamp(WantsAllocationPercentage + delta, 0, 100);
-                break;
-
-            case BudgetAllocationSegment.Invest:
-                InvestAllocationPercentage = Math.Clamp(InvestAllocationPercentage + delta, 0, 100);
-                break;
-        }
+        SetAllocation(segment, GetAllocation(segment) + delta);
     }
 
     public void SetAllocation(BudgetAllocationSegment segment, double value)
     {
-        var roundedValue = Math.Clamp((int)Math.Round(value, MidpointRounding.AwayFromZero), 0, 100);
-        switch (segment)
-        {
-            case BudgetAllocationSegment.Needs:
-                NeedsAllocationPercentage = roundedValue;
-                break;
-
-            case BudgetAllocationSegment.Wants:
-                WantsAllocationPercentage = roundedValue;
-                break;
-
-            case BudgetAllocationSegment.Invest:
-                InvestAllocationPercentage = roundedValue;
-                break;
-        }
+        ApplyBalancedAllocation(segment, GetAllocation(segment), (int)Math.Round(value, MidpointRounding.AwayFromZero));
     }
 
-    partial void OnNeedsAllocationPercentageChanged(int value)
+    partial void OnNeedsAllocationPercentageChanged(int oldValue, int newValue)
     {
-        OnAllocationChanged();
+        ApplyBalancedAllocation(BudgetAllocationSegment.Needs, oldValue, newValue);
     }
 
-    partial void OnWantsAllocationPercentageChanged(int value)
+    partial void OnWantsAllocationPercentageChanged(int oldValue, int newValue)
     {
-        OnAllocationChanged();
+        ApplyBalancedAllocation(BudgetAllocationSegment.Wants, oldValue, newValue);
     }
 
-    partial void OnInvestAllocationPercentageChanged(int value)
+    partial void OnInvestAllocationPercentageChanged(int oldValue, int newValue)
     {
-        OnAllocationChanged();
+        ApplyBalancedAllocation(BudgetAllocationSegment.Invest, oldValue, newValue);
     }
 
     partial void OnAllocationLimitChanged(decimal value)
@@ -333,6 +310,46 @@ public partial class SettingsBudgetTabVM : ObservableObject
         ValidateBudgetAllocation();
         RaiseAmountProperties();
         PublishPendingState();
+    }
+
+    private int GetAllocation(BudgetAllocationSegment segment) => segment switch
+    {
+        BudgetAllocationSegment.Needs => NeedsAllocationPercentage,
+        BudgetAllocationSegment.Wants => WantsAllocationPercentage,
+        BudgetAllocationSegment.Invest => InvestAllocationPercentage,
+        _ => 0
+    };
+
+    private void ApplyBalancedAllocation(BudgetAllocationSegment segment, int oldValue, int newValue)
+    {
+        if (_isApplyingAllocation)
+            return;
+
+        var balanced = _allocationBalancer.Balance(
+            segment == BudgetAllocationSegment.Needs ? oldValue : NeedsAllocationPercentage,
+            segment == BudgetAllocationSegment.Wants ? oldValue : WantsAllocationPercentage,
+            segment == BudgetAllocationSegment.Invest ? oldValue : InvestAllocationPercentage,
+            segment,
+            newValue);
+
+        ApplyAllocationPercentages(balanced.Needs, balanced.Wants, balanced.Invest);
+    }
+
+    private void ApplyAllocationPercentages(int needs, int wants, int invest)
+    {
+        _isApplyingAllocation = true;
+        try
+        {
+            NeedsAllocationPercentage = needs;
+            WantsAllocationPercentage = wants;
+            InvestAllocationPercentage = invest;
+        }
+        finally
+        {
+            _isApplyingAllocation = false;
+        }
+
+        OnAllocationChanged();
     }
 
     private decimal ResolveAllocationBaseAmount()

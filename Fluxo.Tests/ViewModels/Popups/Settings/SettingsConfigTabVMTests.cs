@@ -34,18 +34,39 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
-    public void BudgetTab_InvalidAllocation_BlocksConfigurationSave()
+    public async Task BudgetTab_InvalidAllocation_BlocksConfigurationSave()
     {
-        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()));
+        var unitOfWork = new NullUnitOfWork
+        {
+            BudgetAllocationEntity = new BudgetAllocation
+            {
+                NeedsThreshold = 60,
+                WantsThreshold = 30,
+                InvestThreshold = 20
+            }
+        };
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(unitOfWork));
 
-        vm.NeedsAllocationPercentage = 60;
-        vm.WantsAllocationPercentage = 30;
-        vm.InvestAllocationPercentage = 20;
+        await vm.LoadAsync();
 
         Assert.False(vm.CanSaveConfiguration);
         Assert.Equal(
             "Needs, Wants, and Invest must add up to 100%. Current total: 110%",
             vm.ConfigurationErrorMessage);
+    }
+
+    [Fact]
+    public async Task BudgetTab_SettingAllocation_BalancesOtherBuckets()
+    {
+        var vm = new SettingsBudgetTabVM(() => 1000m, new AppDataService(new NullUnitOfWork()));
+        await vm.LoadAsync();
+
+        vm.NeedsAllocationPercentage = 60;
+
+        Assert.Equal(60, vm.NeedsAllocationPercentage);
+        Assert.Equal(25, vm.WantsAllocationPercentage);
+        Assert.Equal(15, vm.InvestAllocationPercentage);
+        Assert.True(vm.CanSaveConfiguration);
     }
 
     [Fact]
