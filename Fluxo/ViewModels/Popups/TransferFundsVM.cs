@@ -82,37 +82,30 @@ public partial class TransferFundsVM : ObservableObject
             if (tag is null)
                 return TransferFundsResult.Failure("Add at least one expense tag before creating a transfer.");
 
-            var expense = new Expense
+            var expense = new Transaction
             {
+                Type = TransactionType.Expense,
                 Name = $"Transfer to {target.Name}",
                 Amount = input.Amount,
+                OccurredOn = input.Date,
+                Notes = BuildExpenseNote(target.Name, input.Note),
                 ExpenseCategory = ExpenseCategory.Savings,
                 AccountId = source.Id,
                 TagId = tag.Id
             };
 
-            var expenseLog = new ExpenseLog
+            var income = new Transaction
             {
-                Expense = expense,
-                Amount = input.Amount,
-                DeductedOn = input.Date,
-                Notes = BuildExpenseNote(target.Name, input.Note),
-                IsForDeletion = false,
-                AccountId = source.Id
-            };
-
-            var incomeLog = new IncomeLog
-            {
+                Type = TransactionType.Income,
                 Name = BuildIncomeName(source.Name),
                 Amount = input.Amount,
-                AddedOn = input.Date,
+                OccurredOn = input.Date,
                 Notes = input.Note,
                 AccountId = target.Id
             };
 
-            await _appData.AddExpenseAsync(expense);
-            await _appData.AddExpenseLogAsync(expenseLog);
-            await _appData.AddIncomeLogAsync(incomeLog);
+            await _appData.AddTransactionAsync(expense);
+            await _appData.AddTransactionAsync(income);
 
             ApplyExpenseToAccount(source, input.Amount);
             ApplyIncomeToAccount(target, input.Amount);
@@ -126,25 +119,8 @@ public partial class TransferFundsVM : ObservableObject
                 new CompositeLogMemoryAction(
                     "Transfer funds",
                     [
-                        new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
-                            expense.Id,
-                            expenseLog.Id,
-                            expense.Name,
-                            expenseLog.Amount,
-                            expense.ExpenseCategory,
-                            source.Id,
-                            tag.Id,
-                            expenseLog.DeductedOn,
-                            expenseLog.Notes,
-                            expenseLog.IsForDeletion,
-                            expenseLog.ParentLogId)),
-                        new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
-                            incomeLog.Id,
-                            target.Id,
-                            incomeLog.Name,
-                            incomeLog.Amount,
-                            incomeLog.AddedOn,
-                            incomeLog.Notes))
+                        new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(expense)),
+                        new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(income))
                     ])));
 
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
