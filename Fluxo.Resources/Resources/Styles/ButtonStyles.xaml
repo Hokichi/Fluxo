@@ -78,6 +78,32 @@
                                 </Border>
                             </StackPanel>
                         </Grid>
+                        <Popup
+                            x:Name="PART_StatePopup"
+                            AllowsTransparency="True"
+                            Placement="Bottom"
+                            PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                            StaysOpen="False">
+                            <Border
+                                Padding="4"
+                                Background="{StaticResource Brush.Background.Surface}"
+                                CornerRadius="8">
+                                <ItemsControl ItemsSource="{Binding States, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <c:BalloonButton
+                                                Margin="2"
+                                                ButtonIcon="{Binding ButtonIcon}"
+                                                ButtonText="{Binding ButtonText}"
+                                                CommandParameter="{Binding}"
+                                                DefaultBackground="{Binding DefaultBackground}"
+                                                HoveredBackground="{Binding HoverBackground}"
+                                                ShouldShowText="True" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsPressed" Value="True">
@@ -99,6 +125,8 @@
     </Style>
 
     <Style TargetType="{x:Type c:BalloonButton}" BasedOn="{StaticResource {x:Type c:BalloonControl}}" />
+
+    <Style TargetType="{x:Type c:BalloonToggle}" BasedOn="{StaticResource {x:Type c:BalloonControl}}" />
 
     <Style TargetType="{x:Type c:BalloonCheckBox}" BasedOn="{StaticResource {x:Type c:BalloonControl}}">
         <Setter Property="CheckedBackground" Value="{StaticResource Brush.Mint}" />

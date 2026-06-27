@@ -82,6 +82,68 @@ public sealed class BalloonToggleTests
         });
     }
 
+    [Fact]
+    public void OpenStatePopup_SuppressesCycle_AndSelectionActivatesState()
+    {
+        RunOnStaThread(() =>
+        {
+            var command = new CountingCommand();
+            var state = new BalloonToggleState { ButtonText = "Chosen", OnChecked = command };
+            var toggle = new TestBalloonToggle();
+            toggle.States.Add(state);
+
+            Assert.True(toggle.TryOpenStatePopup());
+            toggle.InvokeClick();
+            Assert.False(toggle.IsCycling);
+
+            toggle.SelectState(state);
+            Assert.True(toggle.IsCycling);
+            Assert.Equal("Chosen", toggle.ButtonText);
+            Assert.Equal(1, command.ExecuteCount);
+        });
+    }
+
+    [Fact]
+    public void OpenStatePopup_WithNoStates_DoesNothing()
+    {
+        RunOnStaThread(() => Assert.False(new BalloonToggle().TryOpenStatePopup()));
+    }
+
+    [Fact]
+    public void SelectingActivePopupState_ExecutesCommandAgain()
+    {
+        RunOnStaThread(() =>
+        {
+            var command = new CountingCommand();
+            var state = new BalloonToggleState { OnChecked = command };
+            var toggle = new BalloonToggle();
+            toggle.States.Add(state);
+
+            toggle.SelectState(state);
+            toggle.SelectState(state);
+
+            Assert.True(toggle.IsCycling);
+            Assert.Equal(2, command.ExecuteCount);
+        });
+    }
+
+    [Fact]
+    public void DefaultStyle_ContainsStatePopupAndStateButtons()
+    {
+        var xaml = File.ReadAllText(Fluxo.Tests.TestSupport.RepositoryPaths.File(
+            "Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
+
+        Assert.Contains("x:Name=\"PART_StatePopup\"", xaml);
+        Assert.Contains("ItemsSource=\"{Binding States, RelativeSource={RelativeSource TemplatedParent}}\"", xaml);
+        Assert.Contains("CommandParameter=\"{Binding}\"", xaml);
+    }
+
+    [Fact]
+    public void LongPressThreshold_IsThreeHundredMilliseconds()
+    {
+        Assert.Equal(TimeSpan.FromMilliseconds(300), BalloonToggle.LongPressDuration);
+    }
+
     private sealed class TestBalloonToggle : BalloonToggle
     {
         public void InvokeClick() => OnClick();
