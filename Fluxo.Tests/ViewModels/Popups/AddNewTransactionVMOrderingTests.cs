@@ -109,7 +109,7 @@ public class AddNewTransactionVMOrderingTests
             }
         };
 
-        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions(logs, [], isExpense: true, query: "gro").ToList();
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions(logs.Select(ToTransaction), [], isExpense: true, query: "gro").ToList();
 
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Market Groceries", suggestion.Name);
@@ -149,7 +149,7 @@ public class AddNewTransactionVMOrderingTests
             }
         };
 
-        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sal").ToList();
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs.Select(ToTransaction), isExpense: false, query: "sal").ToList();
 
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Monthly Salary", suggestion.Name);
@@ -178,10 +178,37 @@ public class AddNewTransactionVMOrderingTests
             }
         };
 
-        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sa");
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs.Select(ToTransaction), isExpense: false, query: "sa");
 
         Assert.Empty(suggestions);
     }
+
+    private static Transaction ToTransaction(ExpenseLog log) => new()
+    {
+        Id = log.Id,
+        Type = TransactionType.Expense,
+        AccountId = log.AccountId,
+        Account = log.Account,
+        Name = log.Expense.Name,
+        Amount = log.Amount,
+        OccurredOn = log.DeductedOn,
+        Notes = log.Notes,
+        ExpenseCategory = log.Expense.ExpenseCategory,
+        TagId = log.Expense.TagId,
+        Tag = log.Expense.Tag
+    };
+
+    private static Transaction ToTransaction(IncomeLog log) => new()
+    {
+        Id = log.Id,
+        Type = TransactionType.Income,
+        AccountId = log.AccountId,
+        Account = log.Account,
+        Name = log.Name,
+        Amount = log.Amount,
+        OccurredOn = log.AddedOn,
+        Notes = log.Notes
+    };
 
     [Theory]
     [InlineData(RecurringPeriod.None, "", 0)]

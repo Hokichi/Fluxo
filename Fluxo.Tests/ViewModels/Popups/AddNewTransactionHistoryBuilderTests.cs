@@ -93,7 +93,7 @@ public sealed class AddNewTransactionHistoryBuilderTests
         Assert.All(result, item => Assert.False(item.IsPinned));
     }
 
-    private static ExpenseLog CreateExpenseLog(
+    private static Transaction CreateExpenseLog(
         int id,
         string name,
         decimal amount,
@@ -101,46 +101,43 @@ public sealed class AddNewTransactionHistoryBuilderTests
         bool isPinned,
         bool isSystemTag = false)
     {
-        return new ExpenseLog
+        return new Transaction
         {
             Id = id,
+            Type = TransactionType.Expense,
+            Name = name,
             Amount = amount,
-            DeductedOn = date,
+            OccurredOn = date,
             Notes = "note",
             IsPinned = isPinned,
             AccountId = 10,
             Account = new Account { Id = 10, Name = "Checking" },
-            Expense = new Expense
+            ExpenseCategory = ExpenseCategory.Needs,
+            TagId = 20,
+            Tag = new Tag
             {
-                Id = id + 100,
-                Name = name,
-                Amount = amount,
-                ExpenseCategory = ExpenseCategory.Needs,
-                TagId = 20,
-                Tag = new Tag
-                {
-                    Id = 20,
-                    Name = "Food",
-                    HexCode = "#22C55E",
-                    IsSystemTag = isSystemTag
-                }
+                Id = 20,
+                Name = "Food",
+                HexCode = "#22C55E",
+                IsSystemTag = isSystemTag
             }
         };
     }
 
-    private static IncomeLog CreateIncomeLog(
+    private static Transaction CreateIncomeLog(
         int id,
         string name,
         decimal amount,
         DateTime date,
         bool isPinned)
     {
-        return new IncomeLog
+        return new Transaction
         {
             Id = id,
+            Type = TransactionType.Income,
             Name = name,
             Amount = amount,
-            AddedOn = date,
+            OccurredOn = date,
             Notes = "note",
             IsPinned = isPinned,
             AccountId = 10,
@@ -148,35 +145,31 @@ public sealed class AddNewTransactionHistoryBuilderTests
         };
     }
 
-    private static ExpenseLog CreateGoalUpdateLog(
+    private static Transaction CreateGoalUpdateLog(
         int id,
         string goalName,
         decimal amount,
         DateTime date)
     {
-        return new ExpenseLog
+        return new Transaction
         {
             Id = id,
+            Type = TransactionType.Expense,
+            Name = $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {goalName}",
             Amount = amount,
-            DeductedOn = date,
+            OccurredOn = date,
             Notes = $"Goal update for {goalName}",
             IsPinned = false,
             AccountId = 10,
             Account = new Account { Id = 10, Name = "Checking" },
-            Expense = new Expense
+            ExpenseCategory = ExpenseCategory.Savings,
+            TagId = 20,
+            Tag = new Tag
             {
-                Id = id + 100,
-                Name = $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {goalName}",
-                Amount = amount,
-                ExpenseCategory = ExpenseCategory.Savings,
-                TagId = 20,
-                Tag = new Tag
-                {
-                    Id = 20,
-                    Name = GoalUpdateTransactionSupport.GoalUpdateTagName,
-                    HexCode = GoalUpdateTransactionSupport.GoalUpdateTagColor,
-                    IsSystemTag = false
-                }
+                Id = 20,
+                Name = GoalUpdateTransactionSupport.GoalUpdateTagName,
+                HexCode = GoalUpdateTransactionSupport.GoalUpdateTagColor,
+                IsSystemTag = false
             }
         };
     }

@@ -6,7 +6,7 @@ namespace Fluxo.ViewModels.Popups;
 public static class AddNewTransactionHistoryBuilder
 {
     public static IReadOnlyList<AddNewTransactionHistoryItemVM> BuildPinnedExpenses(
-        IEnumerable<ExpenseLog> expenseLogs,
+        IEnumerable<Transaction> expenseLogs,
         int pageSize = int.MaxValue)
     {
         return ProjectExpenses(expenseLogs, isPinned: true)
@@ -25,7 +25,7 @@ public static class AddNewTransactionHistoryBuilder
     }
 
     public static IReadOnlyList<AddNewTransactionHistoryItemVM> BuildExpenseHistory(
-        IEnumerable<ExpenseLog> expenseLogs,
+        IEnumerable<Transaction> expenseLogs,
         int pageSize = int.MaxValue)
     {
         return ProjectExpenses(expenseLogs, isPinned: false)
@@ -42,7 +42,7 @@ public static class AddNewTransactionHistoryBuilder
     }
 
     public static IReadOnlyList<AddNewTransactionHistoryItemVM> BuildPinnedIncomes(
-        IEnumerable<IncomeLog> incomeLogs,
+        IEnumerable<Transaction> incomeLogs,
         int pageSize = int.MaxValue)
     {
         return ProjectIncomes(incomeLogs, isPinned: true)
@@ -59,7 +59,7 @@ public static class AddNewTransactionHistoryBuilder
     }
 
     public static IReadOnlyList<AddNewTransactionHistoryItemVM> BuildIncomeHistory(
-        IEnumerable<IncomeLog> incomeLogs,
+        IEnumerable<Transaction> incomeLogs,
         int pageSize = int.MaxValue)
     {
         return ProjectIncomes(incomeLogs, isPinned: false)
@@ -75,7 +75,7 @@ public static class AddNewTransactionHistoryBuilder
     }
 
     public static IReadOnlyList<AddNewTransactionHistoryItemVM> BuildGoalUpdateHistory(
-        IEnumerable<ExpenseLog> expenseLogs,
+        IEnumerable<Transaction> expenseLogs,
         string goalName,
         int pageSize = int.MaxValue)
     {
@@ -83,8 +83,8 @@ public static class AddNewTransactionHistoryBuilder
         return expenseLogs
             .Where(log => !log.IsForDeletion)
             .Where(log => IsGoalUpdateLog(log))
-            .Where(log => string.Equals(log.Expense?.Name, expectedName, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(log => log.DeductedOn)
+            .Where(log => string.Equals(log.Name, expectedName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(log => log.OccurredOn)
             .ThenByDescending(log => log.Id)
             .Take(pageSize)
             .Select(log => new AddNewTransactionHistoryItemVM
@@ -92,52 +92,53 @@ public static class AddNewTransactionHistoryBuilder
                 Id = log.Id,
                 IsExpense = false,
                 IsGoalUpdate = true,
-                Name = log.Expense?.Name ?? GoalUpdateTransactionSupport.GoalUpdateTagName,
+                Name = log.Name,
                 Amount = log.Amount,
                 AccountId = log.AccountId,
-                AccountName = log.Account?.Name ?? log.Expense?.Account?.Name ?? string.Empty,
+                AccountName = log.Account?.Name ?? string.Empty,
                 Note = log.Notes ?? string.Empty,
-                Date = log.DeductedOn,
+                Date = log.OccurredOn,
                 Category = ExpenseCategory.Savings,
-                TagId = log.Expense?.TagId,
-                TagHexCode = log.Expense?.Tag?.HexCode,
+                TagId = log.TagId,
+                TagHexCode = log.Tag?.HexCode,
                 IsPinned = false
             })
             .ToList();
     }
 
     private static IEnumerable<AddNewTransactionHistoryItemVM> ProjectExpenses(
-        IEnumerable<ExpenseLog> expenseLogs,
+        IEnumerable<Transaction> expenseLogs,
         bool isPinned)
     {
         return expenseLogs
             .Where(log => !log.IsForDeletion)
             .Where(log => log.IsPinned == isPinned)
-            .Where(log => log.Expense?.Tag?.IsSystemTag != true)
-            .Where(log => !string.IsNullOrWhiteSpace(log.Expense?.Name))
+            .Where(log => log.Type == TransactionType.Expense)
+            .Where(log => log.Tag?.IsSystemTag != true)
+            .Where(log => !string.IsNullOrWhiteSpace(log.Name))
             .Select(log => new AddNewTransactionHistoryItemVM
             {
                 Id = log.Id,
                 IsExpense = true,
-                Name = log.Expense.Name,
+                Name = log.Name,
                 Amount = log.Amount,
                 AccountId = log.AccountId,
-                AccountName = log.Account?.Name ?? log.Expense.Account?.Name ?? string.Empty,
+                AccountName = log.Account?.Name ?? string.Empty,
                 Note = log.Notes ?? string.Empty,
-                Date = log.DeductedOn,
-                Category = log.Expense.ExpenseCategory,
-                TagId = log.Expense.TagId,
-                TagHexCode = log.Expense.Tag?.HexCode,
+                Date = log.OccurredOn,
+                Category = log.ExpenseCategory,
+                TagId = log.TagId,
+                TagHexCode = log.Tag?.HexCode,
                 IsPinned = log.IsPinned
             });
     }
 
     private static IEnumerable<AddNewTransactionHistoryItemVM> ProjectIncomes(
-        IEnumerable<IncomeLog> incomeLogs,
+        IEnumerable<Transaction> incomeLogs,
         bool isPinned)
     {
         return incomeLogs
-            .Where(log => !log.IsForDeletion)
+            .Where(log => log.Type == TransactionType.Income && !log.IsForDeletion)
             .Where(log => log.IsPinned == isPinned)
             .Where(log => !string.IsNullOrWhiteSpace(log.Name))
             .Select(log => new AddNewTransactionHistoryItemVM
@@ -149,7 +150,7 @@ public static class AddNewTransactionHistoryBuilder
                 AccountId = log.AccountId,
                 AccountName = log.Account?.Name ?? string.Empty,
                 Note = log.Notes ?? string.Empty,
-                Date = log.AddedOn,
+                Date = log.OccurredOn,
                 IsPinned = log.IsPinned
             });
     }
@@ -167,10 +168,10 @@ public static class AddNewTransactionHistoryBuilder
         return value.Trim().ToUpperInvariant();
     }
 
-    private static bool IsGoalUpdateLog(ExpenseLog log)
+    private static bool IsGoalUpdateLog(Transaction log)
     {
-        var tagName = log.Expense?.Tag?.Name;
-        var expenseName = log.Expense?.Name;
+        var tagName = log.Tag?.Name;
+        var expenseName = log.Name;
         return string.Equals(tagName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
                string.Equals(expenseName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
                expenseName?.StartsWith($"{GoalUpdateTransactionSupport.GoalUpdateTagName}:", StringComparison.OrdinalIgnoreCase) == true;

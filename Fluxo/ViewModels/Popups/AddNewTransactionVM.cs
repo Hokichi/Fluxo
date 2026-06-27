@@ -887,11 +887,13 @@ public partial class AddNewTransactionVM : ObservableValidator
 
             if (!input.IsExpense && !input.IsGoal)
             {
-                var incomeLogs = await _appData.GetIncomeLogsAsync(cancellationToken);
+                var incomeLogs = (await _appData.GetTransactionsAsync(cancellationToken))
+                    .Where(transaction => transaction.Type == TransactionType.Income);
                 return incomeLogs.Any(log => IsSimilarIncomeTransaction(log, input, candidateName));
             }
 
-            var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+            var expenseLogs = (await _appData.GetTransactionsAsync(cancellationToken))
+                .Where(transaction => transaction.Type == TransactionType.Expense);
             var goalUpdateTagIds = await GetGoalUpdateTagIdsAsync(cancellationToken);
             return expenseLogs.Any(log => IsSimilarExpenseTransaction(
                 log,
@@ -1116,7 +1118,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         BudgetAllocation allocation,
         DateTime allocationDate)
     {
-        var expenseLogs = await _appData.GetExpenseLogsAsync();
+        var expenseLogs = (await _appData.GetTransactionsAsync())
+            .Where(transaction => transaction.Type == TransactionType.Expense);
         var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(
             allocation.AllocationPeriod,
             allocationDate,
@@ -1135,14 +1138,15 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     private static IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(
-        IEnumerable<ExpenseLog> expenseLogs,
+        IEnumerable<Transaction> expenseLogs,
         BudgetAllocationPeriod period)
     {
         return expenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.DeductedOn.Date >= period.Start && log.DeductedOn.Date <= period.End)
-            .Where(log => log.Expense is not null)
-            .GroupBy(log => log.Expense!.ExpenseCategory)
+            .Where(log => !log.IsExcludedFromBudget)
+            .Where(log => log.OccurredOn.Date >= period.Start && log.OccurredOn.Date <= period.End)
+            .Where(log => log.ExpenseCategory.HasValue)
+            .GroupBy(log => log.ExpenseCategory!.Value)
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
     }
 
@@ -1295,7 +1299,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     private static bool IsSimilarExpenseTransaction(
-        ExpenseLog log,
+        Transaction log,
         QuickTransactionInput input,
         string candidateName,
         bool candidateIsGoalUpdate,
@@ -1303,8 +1307,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         if (log.IsForDeletion ||
             log.AccountId != input.AccountId ||
-            log.Expense is null ||
-            !IsSameTransactionName(log.Expense.Name, candidateName) ||
+            log.Type != TransactionType.Expense ||
+            !IsSameTransactionName(log.Name, candidateName) ||
             !IsSimilarAmount(log.Amount, input.Amount))
         {
             return false;
@@ -1314,28 +1318,28 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     private static bool IsSimilarIncomeTransaction(
-        IncomeLog log,
+        Transaction log,
         QuickTransactionInput input,
         string candidateName)
     {
-        return log.AccountId == input.AccountId &&
+        return log.Type == TransactionType.Income && log.AccountId == input.AccountId &&
                IsSameTransactionName(log.Name, candidateName) &&
                IsSimilarAmount(log.Amount, input.Amount);
     }
 
-    private static bool IsGoalUpdateExpenseLog(ExpenseLog log, IReadOnlySet<int> goalUpdateTagIds)
+    private static bool IsGoalUpdateExpenseLog(Transaction log, IReadOnlySet<int> goalUpdateTagIds)
     {
-        var tagName = log.Expense?.Tag?.Name;
+        var tagName = log.Tag?.Name;
         if (!string.IsNullOrWhiteSpace(tagName))
             return string.Equals(
                 tagName.Trim(),
                 GoalUpdateTransactionSupport.GoalUpdateTagName,
                 StringComparison.OrdinalIgnoreCase);
 
-        if (log.Expense is not null && log.Expense.TagId > 0 && goalUpdateTagIds.Count > 0)
-            return goalUpdateTagIds.Contains(log.Expense.TagId);
+        if (log.TagId is > 0 && goalUpdateTagIds.Count > 0)
+            return goalUpdateTagIds.Contains(log.TagId.Value);
 
-        var expenseName = log.Expense?.Name?.Trim();
+        var expenseName = log.Name.Trim();
         return string.Equals(expenseName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
                expenseName?.StartsWith($"{GoalUpdateTransactionSupport.GoalUpdateTagName}:", StringComparison.OrdinalIgnoreCase) == true;
     }
@@ -1373,21 +1377,14 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         try
         {
-            var expenseLogsTask = IsExpense
-                ? _appData.GetExpenseLogsAsync()
-                : Task.FromResult<IReadOnlyList<ExpenseLog>>([]);
-            var incomeLogsTask = IsIncome
-                ? _appData.GetIncomeLogsAsync()
-                : Task.FromResult<IReadOnlyList<IncomeLog>>([]);
-
-            await Task.WhenAll(expenseLogsTask, incomeLogsTask);
+            var transactions = await _appData.GetTransactionsAsync();
 
             if (requestVersion != _transactionNameSuggestionRequestVersion)
                 return;
 
             var suggestions = BuildTransactionNameSuggestions(
-                expenseLogsTask.Result,
-                incomeLogsTask.Result,
+                transactions.Where(transaction => transaction.Type == TransactionType.Expense),
+                transactions.Where(transaction => transaction.Type == TransactionType.Income),
                 IsExpense,
                 query);
             ReplaceCollection(TransactionNameSuggestions, suggestions);
@@ -1415,8 +1412,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     internal static IEnumerable<AddNewTransactionSuggestion> BuildTransactionNameSuggestions(
-        IEnumerable<ExpenseLog> expenseLogs,
-        IEnumerable<IncomeLog> incomeLogs,
+        IEnumerable<Transaction> expenseLogs,
+        IEnumerable<Transaction> incomeLogs,
         bool isExpense,
         string query)
     {
@@ -1430,33 +1427,33 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     private static IEnumerable<AddNewTransactionSuggestion> BuildExpenseTransactionNameSuggestions(
-        IEnumerable<ExpenseLog> expenseLogs,
+        IEnumerable<Transaction> expenseLogs,
         string query)
     {
         return expenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => !string.IsNullOrWhiteSpace(log.Expense?.Name))
-            .Where(log => log.Expense.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(log => log.DeductedOn)
+            .Where(log => log.Type == TransactionType.Expense && !string.IsNullOrWhiteSpace(log.Name))
+            .Where(log => log.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(log => log.OccurredOn)
             .Select(log => new AddNewTransactionSuggestion(
-                log.Expense.Name,
+                log.Name,
                 log.Amount,
                 log.AccountId,
-                log.Account?.Name ?? log.Expense.Account?.Name ?? string.Empty,
+                log.Account?.Name ?? string.Empty,
                 log.Notes,
-                log.Expense.ExpenseCategory,
-                log.Expense.TagId,
+                log.ExpenseCategory,
+                log.TagId,
                 null));
     }
 
     private static IEnumerable<AddNewTransactionSuggestion> BuildIncomeTransactionNameSuggestions(
-        IEnumerable<IncomeLog> incomeLogs,
+        IEnumerable<Transaction> incomeLogs,
         string query)
     {
         return incomeLogs
-            .Where(log => !string.IsNullOrWhiteSpace(log.Name))
+            .Where(log => log.Type == TransactionType.Income && !string.IsNullOrWhiteSpace(log.Name))
             .Where(log => log.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(log => log.AddedOn)
+            .OrderByDescending(log => log.OccurredOn)
             .Select(log => new AddNewTransactionSuggestion(
                 log.Name,
                 log.Amount,
@@ -1708,7 +1705,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         {
             if (IsGoal)
             {
-                var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+                var expenseLogs = await _appData.GetTransactionsAsync(cancellationToken);
                 PinnedHistory.Reset([]);
                 TransactionHistory.Reset(SelectedGoal is null
                     ? []
@@ -1718,13 +1715,13 @@ public partial class AddNewTransactionVM : ObservableValidator
 
             if (IsExpense)
             {
-                var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+                var expenseLogs = await _appData.GetTransactionsAsync(cancellationToken);
                 PinnedHistory.Reset(AddNewTransactionHistoryBuilder.BuildPinnedExpenses(expenseLogs));
                 TransactionHistory.Reset(AddNewTransactionHistoryBuilder.BuildExpenseHistory(expenseLogs));
                 return;
             }
 
-            var incomeLogs = await _appData.GetIncomeLogsAsync(cancellationToken);
+            var incomeLogs = await _appData.GetTransactionsAsync(cancellationToken);
             PinnedHistory.Reset(AddNewTransactionHistoryBuilder.BuildPinnedIncomes(incomeLogs));
             TransactionHistory.Reset(AddNewTransactionHistoryBuilder.BuildIncomeHistory(incomeLogs));
         }
@@ -1963,10 +1960,10 @@ public partial class AddNewTransactionVM : ObservableValidator
                 allocation.AllocationPeriod,
                 SelectedDate.Date,
                 allocation.PeriodStart);
-            var currentTagSpending = _appData.GetExpenseLogsAsync().GetAwaiter().GetResult()
-                .Where(log => !log.IsForDeletion)
-                .Where(log => log.DeductedOn.Date >= currentPeriod.Start && log.DeductedOn.Date <= currentPeriod.End)
-                .Where(log => log.Expense?.TagId == tag.Id || log.Expense?.Tag?.Id == tag.Id)
+            var currentTagSpending = _appData.GetTransactionsAsync().GetAwaiter().GetResult()
+                .Where(log => log.Type == TransactionType.Expense && !log.IsForDeletion && !log.IsExcludedFromBudget)
+                .Where(log => log.OccurredOn.Date >= currentPeriod.Start && log.OccurredOn.Date <= currentPeriod.End)
+                .Where(log => log.TagId == tag.Id || log.Tag?.Id == tag.Id)
                 .Sum(log => log.Amount);
 
             if (currentTagSpending + amount <= tag.SpendingLimit.Value)
