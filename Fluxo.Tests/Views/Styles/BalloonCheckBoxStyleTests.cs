@@ -10,10 +10,10 @@ public sealed class BalloonCheckBoxStyleTests
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
 
-        Assert.Contains("<Style TargetType=\"{x:Type c:BalloonCheckBox}\">", xaml);
+        Assert.Contains("<Style TargetType=\"{x:Type c:BalloonCheckBox}\" BasedOn=\"{StaticResource {x:Type c:BalloonControl}}\">", xaml);
         Assert.Contains("<Setter Property=\"CheckedBackground\" Value=\"{StaticResource Brush.Mint}\" />", xaml);
-        Assert.Contains("ControlTemplate TargetType=\"{x:Type c:BalloonCheckBox}\"", xaml);
+        Assert.Contains("ControlTemplate TargetType=\"{x:Type c:BalloonControl}\"", xaml);
         Assert.Contains("x:Name=\"PART_Icon\"", xaml);
-        Assert.Contains("Path=\"ActiveBackground\"", xaml);
+        Assert.DoesNotContain("ActiveBackground", xaml);
     }
 }

@@ -3,7 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:Fluxo.Resources.CustomControls"
     xmlns:components="clr-namespace:Fluxo.Resources.Components">
-    <Style TargetType="{x:Type c:BalloonButton}">
+    <Style TargetType="{x:Type c:BalloonControl}">
+        <Setter Property="Background" Value="{Binding DefaultBackground, RelativeSource={RelativeSource Self}}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -11,7 +12,7 @@
         <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type c:BalloonButton}">
+                <ControlTemplate TargetType="{x:Type c:BalloonControl}">
                     <Grid>
                         <!--  Balloon shape  -->
                         <Path x:Name="PART_Shape" Fill="{TemplateBinding DefaultBackground}" />
@@ -46,7 +47,7 @@
                                         Stretch="Uniform">
                                         <Path.Fill>
                                             <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
                                                 <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
                                             </MultiBinding>
                                         </Path.Fill>
@@ -69,7 +70,7 @@
                                         TextWrapping="NoWrap">
                                         <TextBlock.Foreground>
                                             <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
                                                 <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
                                             </MultiBinding>
                                         </TextBlock.Foreground>
@@ -87,6 +88,9 @@
             </Setter.Value>
         </Setter>
         <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{Binding HoveredBackground, RelativeSource={RelativeSource Self}}" />
+            </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Opacity" Value="0.4" />
                 <Setter Property="Cursor" Value="Arrow" />
@@ -94,95 +98,21 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="{x:Type c:BalloonCheckBox}">
+    <Style TargetType="{x:Type c:BalloonButton}" BasedOn="{StaticResource {x:Type c:BalloonControl}}" />
+
+    <Style TargetType="{x:Type c:BalloonCheckBox}" BasedOn="{StaticResource {x:Type c:BalloonControl}}">
         <Setter Property="CheckedBackground" Value="{StaticResource Brush.Mint}" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Foreground" Value="White" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
-        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type c:BalloonCheckBox}">
-                    <Grid>
-                        <!--  Balloon shape  -->
-                        <Path x:Name="PART_Shape" Fill="{TemplateBinding DefaultBackground}" />
-                        <!--  Pressed overlay shares geometry with PART_Shape via code-behind  -->
-                        <Path
-                            x:Name="PART_Overlay"
-                            Fill="Black"
-                            IsHitTestVisible="False"
-                            Opacity="0" />
-                        <!--  Content area, inset by Padding to clear the bulging edges  -->
-                        <Grid
-                            x:Name="PART_ContentHost"
-                            Margin="{TemplateBinding Padding}"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            ClipToBounds="True">
-                            <StackPanel
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal">
-                                <Grid
-                                    x:Name="PART_IconSlot"
-                                    Width="{TemplateBinding IconSize}"
-                                    VerticalAlignment="Center">
-                                    <Path
-                                        x:Name="PART_Icon"
-                                        Width="{TemplateBinding IconSize}"
-                                        Height="{TemplateBinding IconSize}"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        IsHitTestVisible="False"
-                                        Stretch="Uniform">
-                                        <Path.Fill>
-                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
-                                                <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
-                                            </MultiBinding>
-                                        </Path.Fill>
-                                    </Path>
-                                </Grid>
-                                <Border
-                                    x:Name="PART_TextReveal"
-                                    Width="0"
-                                    ClipToBounds="True"
-                                    Opacity="0">
-                                    <TextBlock
-                                        x:Name="PART_ButtonText"
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="{TemplateBinding FontSize}"
-                                        Opacity="0"
-                                        Text="{Binding ActiveButtonText, RelativeSource={RelativeSource TemplatedParent}}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="NoWrap">
-                                        <TextBlock.Foreground>
-                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding Path="ActiveBackground" RelativeSource="{RelativeSource TemplatedParent}" />
-                                                <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
-                                            </MultiBinding>
-                                        </TextBlock.Foreground>
-                                    </TextBlock>
-                                </Border>
-                            </StackPanel>
-                        </Grid>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="PART_Overlay" Property="Opacity" Value="0.3" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
         <Style.Triggers>
-            <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Opacity" Value="0.4" />
-                <Setter Property="Cursor" Value="Arrow" />
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background" Value="{Binding CheckedBackground, RelativeSource={RelativeSource Self}}" />
             </Trigger>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}" Value="True" />
+                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Background" Value="{Binding HoveredBackground, RelativeSource={RelativeSource Self}}" />
+            </MultiDataTrigger>
         </Style.Triggers>
     </Style>
 

@@ -14,7 +14,7 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
     {
         var source = File.ReadAllText(ResolveBalloonCheckBoxPath());
 
-        Assert.Contains("public class BalloonCheckBox : CheckBox", source);
+        Assert.Contains("public class BalloonCheckBox : BalloonControl", source);
         Assert.Contains("public static readonly DependencyProperty CheckedBackgroundProperty =", source);
         Assert.Contains("DependencyProperty.Register(nameof(CheckedBackground), typeof(Brush), typeof(BalloonCheckBox),", source);
         Assert.Contains("public Brush CheckedBackground", source);
@@ -23,14 +23,31 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
     }
 
     [Fact]
+    public void BalloonCheckBox_ClickTogglesAndRaisesEvents()
+    {
+        RunOnStaThread(() =>
+        {
+            var checkBox = new TestBalloonCheckBox();
+            var checkedCount = 0;
+            var uncheckedCount = 0;
+            checkBox.Checked += (_, _) => checkedCount++;
+            checkBox.Unchecked += (_, _) => uncheckedCount++;
+
+            checkBox.InvokeClick();
+            Assert.True(checkBox.IsChecked);
+            Assert.Equal(1, checkedCount);
+
+            checkBox.InvokeClick();
+            Assert.False(checkBox.IsChecked);
+            Assert.Equal(1, uncheckedCount);
+        });
+    }
+
+    [Fact]
     public void BalloonCheckBox_DefinesCheckedAndUncheckedIconTextDependencyProperties()
     {
         var source = File.ReadAllText(ResolveBalloonCheckBoxPath());
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
-        var checkBoxStyle = ExtractSection(
-            xaml,
-            "<Style TargetType=\"{x:Type c:BalloonCheckBox}\">",
-            "<Style TargetType=\"{x:Type c:SwipeRevealContainer}\">");
 
         Assert.Contains("public static readonly DependencyProperty UncheckedIconProperty =", source);
         Assert.Contains("public static readonly DependencyProperty CheckedIconProperty =", source);
@@ -40,8 +57,8 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
         Assert.Contains("public object? CheckedIcon", source);
         Assert.Contains("public string? UncheckedText", source);
         Assert.Contains("public string? CheckedText", source);
-        Assert.Contains("Text=\"{Binding ActiveButtonText, RelativeSource={RelativeSource TemplatedParent}}\"", checkBoxStyle);
-        Assert.DoesNotContain("Text=\"{TemplateBinding ButtonText}\"", checkBoxStyle);
+        Assert.Contains("Text=\"{TemplateBinding ButtonText}\"", xaml);
+        Assert.DoesNotContain("ActiveButtonText", xaml);
     }
 
     [Fact]
@@ -55,18 +72,12 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
     }
 
     [Fact]
-    public void BalloonCheckBox_UsesCheckedBackgroundWhenCheckedAndNotHovered()
+    public void BalloonCheckBox_StoresCheckedBackground()
     {
         RunOnStaThread(() =>
         {
-            var checkBox = new BalloonCheckBox
-            {
-                DefaultBackground = Brushes.CornflowerBlue,
-                CheckedBackground = Brushes.MintCream,
-                IsChecked = true
-            };
-
-            Assert.Equal(Brushes.MintCream, checkBox.ActiveBackground);
+            var checkBox = new BalloonCheckBox { CheckedBackground = Brushes.MintCream };
+            Assert.Equal(Brushes.MintCream, checkBox.CheckedBackground);
         });
     }
 
@@ -87,6 +98,11 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
 
     private static string ResolveBalloonCheckBoxPath() =>
         RepositoryPaths.File("Fluxo.Resources", "CustomControls", "BalloonCheckBox.cs");
+
+    private sealed class TestBalloonCheckBox : BalloonCheckBox
+    {
+        public void InvokeClick() => OnClick();
+    }
 
     private static string ExtractSection(string source, string startMarker, string endMarker)
     {

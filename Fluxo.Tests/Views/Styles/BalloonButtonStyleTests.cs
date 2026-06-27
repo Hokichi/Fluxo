@@ -36,7 +36,7 @@ public sealed class BalloonButtonStyleTests
 
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);
         Assert.Matches(
-            new Regex("Path=\"ActiveBackground\"[\\s\\S]*RelativeSource=\"\\{RelativeSource TemplatedParent\\}\"", RegexOptions.Singleline),
+            new Regex("Path=\"Background\"[\\s\\S]*RelativeSource=\"\\{RelativeSource TemplatedParent\\}\"", RegexOptions.Singleline),
             style);
         Assert.Contains("Path=\"Foreground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
         Assert.Contains("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", style);
@@ -133,10 +133,10 @@ public sealed class BalloonButtonStyleTests
     private static string ReadDefaultBalloonButtonStyle()
     {
         var xaml = ReadButtonStylesXaml();
-        var styleStart = xaml.IndexOf("<Style TargetType=\"{x:Type c:BalloonButton}\">", StringComparison.Ordinal);
+        var styleStart = xaml.IndexOf("<Style TargetType=\"{x:Type c:BalloonControl}\">", StringComparison.Ordinal);
         Assert.True(styleStart >= 0, "Could not find the default BalloonButton style start.");
 
-        var nextStyleStart = xaml.IndexOf("x:Key=\"MainWindowBalloonButtonChromeStyle\"", styleStart, StringComparison.Ordinal);
+        var nextStyleStart = xaml.IndexOf("<Style TargetType=\"{x:Type c:BalloonButton}\"", styleStart, StringComparison.Ordinal);
         Assert.True(nextStyleStart > styleStart, "Could not find the next BalloonButton chrome style.");
 
         return xaml[styleStart..nextStyleStart];
