@@ -152,7 +152,7 @@ public sealed class IncomeDetailVMTests
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
-                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ITransactionService>(),
                 Substitute.For<IAccountService>(),
                 Substitute.For<ITagService>(),
                 dataOperationRunner,

@@ -30,7 +30,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private const int VisibleTagSlots = 5;
 
     private readonly IDataOperationRunner _dataOperationRunner;
-    private readonly IExpenseLogService _expenseLogService;
+    private readonly ITransactionService _transactionService;
     private readonly HashSet<ExpenseLogVM> _investVisibleWindow = [];
     private readonly Dictionary<int, TagVM> _knownTagsById = [];
     private readonly IMapper _mapper;
@@ -63,7 +63,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private int _wantsVisibleCount = BucketPageSize;
 
     public BudgetAllocationPanelVM(
-        IExpenseLogService expenseLogService,
+        ITransactionService transactionService,
         IAccountService accountService,
         ITagService tagService,
         IDataOperationRunner dataOperationRunner,
@@ -74,7 +74,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         AllocationDataVM? allocationData = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
-        _expenseLogService = expenseLogService;
+        _transactionService = transactionService;
         _accountService = accountService;
         _tagService = tagService;
         _dataOperationRunner = dataOperationRunner;
@@ -262,9 +262,16 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         WantsThreshold = _budgetAllocation.WantsThreshold / 100m;
         InvestThreshold = _budgetAllocation.InvestThreshold / 100m;
 
-        var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
-            await _expenseLogService.GetAllAsync(cancellationToken));
-        var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
+        var transactions = _mapper.Map<IReadOnlyList<TransactionVM>>(
+            await _transactionService.GetAllAsync(cancellationToken));
+        var expenseLogs = transactions
+            .Where(transaction => transaction.Type == TransactionType.Expense)
+            .Select(ToExpenseLogVm)
+            .ToList();
+        var incomeLogs = transactions
+            .Where(transaction => transaction.Type == TransactionType.Income)
+            .Select(ToIncomeLogVm)
+            .ToList();
         var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
         var tags = _mapper.Map<IReadOnlyList<TagVM>>(
@@ -520,7 +527,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         if (expenseLog is null || expenseLog.IsForDeletion)
             return;
 
-        await _expenseLogService.DeleteAsync(expenseLog.Id);
+        await _transactionService.DeleteAsync(expenseLog.Id);
 
         ApplyDeletedExpenseLogToUi(expenseLog);
     }
@@ -546,28 +553,46 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }
     }
 
-    private async Task<IReadOnlyList<IncomeLogVM>> LoadIncomeLogsAsync(CancellationToken cancellationToken)
+    private static ExpenseLogVM ToExpenseLogVm(TransactionVM transaction)
     {
-        return await _dataOperationRunner.RunAsync(async (scope, ct) =>
+        return new ExpenseLogVM
         {
-            var incomeLogs = await scope.UnitOfWork.IncomeLogs.GetAllAsync(ct);
-            return incomeLogs
-                .Select(log => new IncomeLogVM
-                {
-                    Id = log.Id,
-                    Name = log.Name,
-                    Amount = log.Amount,
-                    AddedOn = log.AddedOn,
-                    Notes = log.Notes,
-                    Account = new AccountVM
-                    {
-                        Id = log.AccountId,
-                        Name = log.Account?.Name ?? string.Empty,
-                        AccountType = log.Account?.AccountType ?? AccountType.Checking
-                    }
-                })
-                .ToList();
-        }, cancellationToken);
+            Id = transaction.Id,
+            Amount = transaction.Amount,
+            DeductedOn = transaction.OccurredOn,
+            Notes = transaction.Notes,
+            Account = transaction.Account,
+            ParentLogId = transaction.ParentTransactionId,
+            IsPinned = transaction.IsPinned,
+            IsForDeletion = transaction.IsForDeletion,
+            IsIoU = transaction.IsIoU,
+            IsExcludedFromBudget = transaction.IsExcludedFromBudget,
+            Expense = new ExpenseVM
+            {
+                Id = transaction.Id,
+                Name = transaction.Name,
+                Amount = transaction.Amount,
+                ExpenseCategory = transaction.ExpenseCategory ?? ExpenseCategory.Needs,
+                Account = transaction.Account,
+                Tag = transaction.Tag ?? new TagVM()
+            }
+        };
+    }
+
+    private static IncomeLogVM ToIncomeLogVm(TransactionVM transaction)
+    {
+        return new IncomeLogVM
+        {
+            Id = transaction.Id,
+            Name = transaction.Name,
+            Amount = transaction.Amount,
+            AddedOn = transaction.OccurredOn,
+            Notes = transaction.Notes,
+            Account = transaction.Account,
+            IsPinned = transaction.IsPinned,
+            IsIoU = transaction.IsIoU,
+            IsExcludedFromBudget = transaction.IsExcludedFromBudget
+        };
     }
 
     private void CacheKnownTags(IEnumerable<TagVM> allTags)

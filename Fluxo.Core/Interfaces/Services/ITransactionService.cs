@@ -6,4 +6,5 @@ public interface ITransactionService
 {
     Task<IReadOnlyList<TransactionDto>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<TransactionDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

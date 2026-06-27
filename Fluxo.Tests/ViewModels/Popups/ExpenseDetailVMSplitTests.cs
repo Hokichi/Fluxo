@@ -1117,7 +1117,7 @@ public sealed class ExpenseDetailVMSplitTests
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
-                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ITransactionService>(),
                 Substitute.For<IAccountService>(),
                 Substitute.For<ITagService>(),
                 runner,

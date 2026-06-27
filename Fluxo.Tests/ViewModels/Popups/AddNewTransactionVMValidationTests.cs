@@ -1792,7 +1792,7 @@ public sealed class AddNewTransactionVMValidationTests
                 mapper,
                 messenger: messenger),
             new BudgetAllocationPanelVM(
-                expenseLogService,
+                transactionService,
                 accountService,
                 tagService,
                 dataOperationRunner,

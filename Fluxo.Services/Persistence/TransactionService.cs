@@ -17,4 +17,16 @@ public sealed class TransactionService(IDataOperationRunner runner, IMapper mapp
             var transaction = await scope.UnitOfWork.Transactions.GetByIdAsync(id, ct);
             return transaction is null ? null : mapper.Map<TransactionDto>(transaction);
         }, cancellationToken);
+
+    public Task DeleteAsync(int id, CancellationToken cancellationToken = default) =>
+        runner.RunAsync("delete transaction", async (scope, ct) =>
+        {
+            var transaction = await scope.UnitOfWork.Transactions.GetByIdAsync(id, ct);
+            if (transaction is null)
+                return;
+
+            transaction.IsForDeletion = true;
+            scope.UnitOfWork.Transactions.Update(transaction);
+            await scope.UnitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
 }

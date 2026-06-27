@@ -260,7 +260,7 @@ public class BudgetAllocationPanelVMTests
                     Assert.True(item.IsExpense);
                     Assert.Equal("Coffee", item.Name);
                     Assert.Equal("-10", item.AmountText);
-                    Assert.Same(expenses[0], item.ExpenseLog);
+                    Assert.Equal(expenses[0].Id, item.ExpenseLog?.Id);
                 },
                 item =>
                 {
@@ -751,6 +751,11 @@ public class BudgetAllocationPanelVMTests
             .Returns(Task.FromResult<IReadOnlyList<ExpenseLogDto>>([]));
         expenseLogService.DeleteAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
+        var transactionService = Substitute.For<ITransactionService>();
+        transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<TransactionDto>>([]));
+        transactionService.DeleteAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
 
         var accountService = Substitute.For<IAccountService>();
         accountService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -792,6 +797,37 @@ public class BudgetAllocationPanelVMTests
 
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
+        mapper.Map<IReadOnlyList<TransactionVM>>(Arg.Any<object>()).Returns(
+            expenseLogs.Select(log => new TransactionVM
+                {
+                    Id = log.Id,
+                    Type = TransactionType.Expense,
+                    Account = log.Account,
+                    Name = log.Expense.Name,
+                    Amount = log.Amount,
+                    OccurredOn = log.DeductedOn,
+                    Notes = log.Notes,
+                    ExpenseCategory = log.Expense.ExpenseCategory,
+                    Tag = log.Expense.Tag,
+                    ParentTransactionId = log.ParentLogId,
+                    IsPinned = log.IsPinned,
+                    IsForDeletion = log.IsForDeletion,
+                    IsIoU = log.IsIoU,
+                    IsExcludedFromBudget = log.IsExcludedFromBudget
+                })
+                .Concat((incomeLogs ?? []).Select(log => new TransactionVM
+                {
+                    Id = log.Id,
+                    Type = TransactionType.Income,
+                    Account = log.Account,
+                    Name = log.Name,
+                    Amount = log.Amount,
+                    OccurredOn = log.AddedOn,
+                    Notes = log.Notes,
+                    IsPinned = log.IsPinned,
+                    IsIoU = log.IsIoU,
+                    IsExcludedFromBudget = log.IsExcludedFromBudget
+                })).ToList());
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
         mapper.Map<IReadOnlyList<TagVM>>(Arg.Any<object>()).Returns(tags);
         var allocationData = new AllocationDataVM(
@@ -802,7 +838,7 @@ public class BudgetAllocationPanelVMTests
             messenger);
 
         return new BudgetAllocationPanelVM(
-            expenseLogService,
+            transactionService,
             accountService,
             tagService,
             dataOperationRunner,
