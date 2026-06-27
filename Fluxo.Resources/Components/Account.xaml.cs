@@ -51,7 +51,7 @@ public partial class Account : UserControl
 
     private async void OnHideActionClick(object sender, RoutedEventArgs e)
     {
-        await ExecuteAsyncAction("ExecuteHideAccountActionAsync");
+        await ExecuteAsyncAction("ExecuteUnpinAccountActionAsync");
     }
 
     private async void OnDisableActionClick(object sender, RoutedEventArgs e)

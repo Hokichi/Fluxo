@@ -2214,6 +2214,7 @@ public partial class MainWindow : Window, IPopupHost
                 else
                     ResetAppAutoLockActivity();
                 break;
+
             case nameof(MainVM.IsAppAutoLocked):
             case nameof(MainVM.AppAutoLockedInterval):
                 ResetAppAutoLockActivity();
