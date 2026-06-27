@@ -831,7 +831,7 @@ public class BudgetAllocationPanelVMTests
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
         mapper.Map<IReadOnlyList<TagVM>>(Arg.Any<object>()).Returns(tags);
         var allocationData = new AllocationDataVM(
-            expenseLogService,
+            transactionService,
             accountService,
             dataOperationRunner,
             mapper,
