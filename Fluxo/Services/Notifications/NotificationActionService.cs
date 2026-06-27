@@ -242,37 +242,29 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
 
         var amount = targetSource.SpentAmount;
         var processedOn = DateTime.Now;
-        var expense = new Expense
+        var expense = new Transaction
         {
+            Type = TransactionType.Expense,
             Name = $"Payment to {targetSource.Name}",
             Amount = amount,
+            OccurredOn = processedOn,
+            Notes = $"Payment to {targetSource.Name}",
             ExpenseCategory = ExpenseCategory.Savings,
             AccountId = deductingSource.Id,
             TagId = paymentTag.Id
         };
+        await unitOfWork.Transactions.AddAsync(expense, cancellationToken);
 
-        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
-
-        var expenseLog = new ExpenseLog
+        var income = new Transaction
         {
-            Expense = expense,
-            AccountId = deductingSource.Id,
-            Amount = amount,
-            DeductedOn = processedOn,
-            Notes = $"Payment to {targetSource.Name}",
-            IsForDeletion = false
-        };
-        await unitOfWork.ExpenseLogs.AddAsync(expenseLog, cancellationToken);
-
-        var incomeLog = new IncomeLog
-        {
+            Type = TransactionType.Income,
             AccountId = targetSource.Id,
             Name = $"Payment from {deductingSource.Name}",
             Amount = amount,
-            AddedOn = processedOn,
+            OccurredOn = processedOn,
             Notes = string.Empty
         };
-        await unitOfWork.IncomeLogs.AddAsync(incomeLog, cancellationToken);
+        await unitOfWork.Transactions.AddAsync(income, cancellationToken);
 
         ApplyExpenseToAccount(deductingSource, amount);
         ApplyIncomeToAccount(targetSource, amount);
@@ -339,24 +331,18 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         if (tag is null)
             return false;
 
-        var expense = new Expense
+        var expense = new Transaction
         {
+            Type = TransactionType.Expense,
             Name = recurring.Name,
             Amount = amount,
+            OccurredOn = DateTime.Now,
+            Notes = recurring.Name,
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = source.Id,
             TagId = tag.Id
         };
-        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
-        await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
-        {
-            Expense = expense,
-            AccountId = source.Id,
-            Amount = amount,
-            DeductedOn = DateTime.Now,
-            Notes = recurring.Name,
-            IsForDeletion = false
-        }, cancellationToken);
+        await unitOfWork.Transactions.AddAsync(expense, cancellationToken);
         ApplyExpenseToAccount(source, amount);
         unitOfWork.Accounts.Update(source);
         return true;
@@ -369,12 +355,13 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         decimal amount,
         CancellationToken cancellationToken)
     {
-        await unitOfWork.IncomeLogs.AddAsync(new IncomeLog
+        await unitOfWork.Transactions.AddAsync(new Transaction
         {
+            Type = TransactionType.Income,
             AccountId = source.Id,
             Name = recurring.Name,
             Amount = amount,
-            AddedOn = DateTime.Now,
+            OccurredOn = DateTime.Now,
             Notes = string.Empty
         }, cancellationToken);
         ApplyIncomeToAccount(source, amount);
@@ -401,24 +388,18 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         if (goalUpdateTag is null)
             return false;
 
-        var expense = new Expense
+        var expense = new Transaction
         {
+            Type = TransactionType.Expense,
             Name = recurring.Name,
             Amount = amount,
+            OccurredOn = DateTime.Now,
+            Notes = recurring.Name,
             ExpenseCategory = ExpenseCategory.Savings,
             AccountId = source.Id,
             TagId = goalUpdateTag.Id
         };
-        await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
-        await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
-        {
-            Expense = expense,
-            AccountId = source.Id,
-            Amount = amount,
-            DeductedOn = DateTime.Now,
-            Notes = recurring.Name,
-            IsForDeletion = false
-        }, cancellationToken);
+        await unitOfWork.Transactions.AddAsync(expense, cancellationToken);
         goal.CurrentAmount += amount;
         unitOfWork.SavingGoals.Update(goal);
         ApplyExpenseToAccount(source, amount);

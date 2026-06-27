@@ -40,14 +40,12 @@ public sealed class NotificationActionServiceTests
             NotificationGroupCategory.UpcomingPayment,
             "UpcomingPayment-10_20260501",
             "UpcomingPayment-20_20260501");
-        var expenseLogs = new List<ExpenseLog>();
-        var incomeLogs = new List<IncomeLog>();
+        var transactions = new List<Transaction>();
 
         var sut = CreateSut(
             persistedNotifications,
             accounts: accounts,
-            expenseLogs: expenseLogs,
-            incomeLogs: incomeLogs,
+            transactions: transactions,
             tags: [new Tag { Id = 1, Name = "Transfer", HexCode = "#000000" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
@@ -59,8 +57,7 @@ public sealed class NotificationActionServiceTests
         Assert.False(persistedNotifications.Single(notification => notification.Id == 2).IsCleared);
         Assert.Equal(200m, accounts.Single(source => source.Id == 1).Balance);
         Assert.Equal(75m, accounts.Single(source => source.Id == 10).SpentAmount);
-        Assert.Empty(expenseLogs);
-        Assert.Empty(incomeLogs);
+        Assert.Empty(transactions);
     }
 
     [Fact]
@@ -83,17 +80,13 @@ public sealed class NotificationActionServiceTests
                 DeductSource = 1
             }
         };
-        var expenses = new List<Expense>();
-        var expenseLogs = new List<ExpenseLog>();
-        var incomeLogs = new List<IncomeLog>();
+        var transactions = new List<Transaction>();
         var card = BuildChecklistCard(NotificationGroupCategory.UpcomingPayment, "UpcomingPayment-10_20260501");
 
         var sut = CreateSut(
             persistedNotifications,
             accounts: accounts,
-            expenses: expenses,
-            expenseLogs: expenseLogs,
-            incomeLogs: incomeLogs,
+            transactions: transactions,
             tags: [new Tag { Id = 9, Name = "Transfer", HexCode = "#000000" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
@@ -103,13 +96,13 @@ public sealed class NotificationActionServiceTests
         Assert.True(succeeded);
         Assert.Equal(190m, accounts.Single(source => source.Id == 1).Balance);
         Assert.Equal(0m, accounts.Single(source => source.Id == 10).SpentAmount);
-        Assert.Single(expenses);
-        Assert.Single(expenseLogs);
-        Assert.Single(incomeLogs);
-        Assert.Equal(60m, expenseLogs[0].Amount);
-        Assert.Equal(1, expenseLogs[0].AccountId);
-        Assert.Equal(60m, incomeLogs[0].Amount);
-        Assert.Equal(10, incomeLogs[0].AccountId);
+        Assert.Equal(2, transactions.Count);
+        var expense = Assert.Single(transactions, transaction => transaction.Type == TransactionType.Expense);
+        var income = Assert.Single(transactions, transaction => transaction.Type == TransactionType.Income);
+        Assert.Equal(60m, expense.Amount);
+        Assert.Equal(1, expense.AccountId);
+        Assert.Equal(60m, income.Amount);
+        Assert.Equal(10, income.AccountId);
         Assert.True(persistedNotifications.Single(notification => notification.Id == 1).IsCleared);
         Assert.False(persistedNotifications.Single(notification => notification.Id == 2).IsCleared);
     }
@@ -133,14 +126,14 @@ public sealed class NotificationActionServiceTests
                 Id = 8, Name = "Checking", AccountType = AccountType.Checking, Balance = 100m
             }
         };
-        var expenseLogs = new List<ExpenseLog>();
+        var transactions = new List<Transaction>();
         var card = BuildChecklistCard(NotificationGroupCategory.RecurringTransactionDue, "RecurringTransactionDue-77_20260501");
 
         var sut = CreateSut(
             persistedNotifications,
             accounts: accounts,
             recurringTransactions: recurring,
-            expenseLogs: expenseLogs,
+            transactions: transactions,
             tags: [new Tag { Id = 5, Name = "Needs", HexCode = "#111111" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
@@ -149,10 +142,10 @@ public sealed class NotificationActionServiceTests
 
         Assert.True(succeeded);
         Assert.Equal(75m, accounts.Single(source => source.Id == 8).Balance);
-        Assert.Single(expenseLogs);
-        Assert.Equal("Rent", expenseLogs[0].Expense.Name);
-        Assert.Equal(8, expenseLogs[0].AccountId);
-        Assert.Equal(25m, expenseLogs[0].Amount);
+        var expense = Assert.Single(transactions);
+        Assert.Equal("Rent", expense.Name);
+        Assert.Equal(8, expense.AccountId);
+        Assert.Equal(25m, expense.Amount);
         Assert.True(persistedNotifications[0].IsCleared);
     }
 
@@ -206,9 +199,7 @@ public sealed class NotificationActionServiceTests
                 DeductSource = 1
             }
         };
-        var expenses = new List<Expense>();
-        var expenseLogs = new List<ExpenseLog>();
-        var incomeLogs = new List<IncomeLog>();
+        var transactions = new List<Transaction>();
         var card = BuildChecklistCard(
             NotificationGroupCategory.UpcomingPayment,
             "UpcomingPayment-10_20260501",
@@ -218,9 +209,7 @@ public sealed class NotificationActionServiceTests
         var sut = CreateSut(
             persistedNotifications,
             accounts: accounts,
-            expenses: expenses,
-            expenseLogs: expenseLogs,
-            incomeLogs: incomeLogs,
+            transactions: transactions,
             tags: [new Tag { Id = 11, Name = "Transfer", HexCode = "#555555" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
@@ -239,11 +228,9 @@ public sealed class NotificationActionServiceTests
         Assert.Equal(30m, accounts.Single(source => source.Id == 10).SpentAmount);
         Assert.Equal(0m, accounts.Single(source => source.Id == 20).SpentAmount);
         Assert.Equal(60m, accounts.Single(source => source.Id == 30).SpentAmount);
-        Assert.Single(expenses);
-        Assert.Single(expenseLogs);
-        Assert.Single(incomeLogs);
-        Assert.Equal(50m, expenseLogs[0].Amount);
-        Assert.Equal(50m, incomeLogs[0].Amount);
+        Assert.Equal(2, transactions.Count);
+        Assert.Equal(50m, Assert.Single(transactions, transaction => transaction.Type == TransactionType.Expense).Amount);
+        Assert.Equal(50m, Assert.Single(transactions, transaction => transaction.Type == TransactionType.Income).Amount);
     }
 
     [Fact]
@@ -318,18 +305,14 @@ public sealed class NotificationActionServiceTests
         List<Notification> persistedNotifications,
         List<SavingGoal>? persistedGoals = null,
         List<Account>? accounts = null,
-        List<Expense>? expenses = null,
         List<RecurringTransaction>? recurringTransactions = null,
-        List<ExpenseLog>? expenseLogs = null,
-        List<IncomeLog>? incomeLogs = null,
+        List<Transaction>? transactions = null,
         List<Tag>? tags = null)
     {
         persistedGoals ??= [];
         accounts ??= [];
-        expenses ??= [];
         recurringTransactions ??= [];
-        expenseLogs ??= [];
-        incomeLogs ??= [];
+        transactions ??= [];
         tags ??= [];
 
         var notificationRepository = Substitute.For<INotificationRepository>();
@@ -420,60 +403,17 @@ public sealed class NotificationActionServiceTests
                 existing.IsForDeletion = updated.IsForDeletion;
             });
 
-        var expenseRepository = Substitute.For<IExpenseRepository>();
-        expenseRepository.GetByExpenseIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+        var transactionRepository = Substitute.For<ITransactionRepository>();
+        transactionRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IReadOnlyList<Transaction>>(transactions.ToList()));
+        transactionRepository.AddAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                var id = call.Arg<int>();
-                return Task.FromResult<Expense?>(expenses.FirstOrDefault(expense => expense.Id == id));
-            });
-        expenseRepository.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                var id = call.Arg<int>();
-                return Task.FromResult<Expense?>(expenses.FirstOrDefault(expense => expense.Id == id));
-            });
-        expenseRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<Expense>>(expenses.ToList()));
-        expenseRepository.AddAsync(Arg.Any<Expense>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                var expense = call.Arg<Expense>();
-                if (expense.Id <= 0)
-                    expense.Id = expenses.Count == 0 ? 1 : expenses.Max(item => item.Id) + 1;
+                var transaction = call.Arg<Transaction>();
+                if (transaction.Id <= 0)
+                    transaction.Id = transactions.Count == 0 ? 1 : transactions.Max(item => item.Id) + 1;
 
-                expenses.Add(expense);
-                return Task.CompletedTask;
-            });
-
-        var expenseLogRepository = Substitute.For<IExpenseLogRepository>();
-        expenseLogRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<ExpenseLog>>(expenseLogs.ToList()));
-        expenseLogRepository.AddAsync(Arg.Any<ExpenseLog>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                var expenseLog = call.Arg<ExpenseLog>();
-                if (expenseLog.Id <= 0)
-                    expenseLog.Id = expenseLogs.Count == 0 ? 1 : expenseLogs.Max(item => item.Id) + 1;
-
-                if (expenseLog.ExpenseId <= 0 && expenseLog.Expense is not null)
-                    expenseLog.ExpenseId = expenseLog.Expense.Id;
-
-                expenseLogs.Add(expenseLog);
-                return Task.CompletedTask;
-            });
-
-        var incomeLogRepository = Substitute.For<IIncomeLogRepository>();
-        incomeLogRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<IncomeLog>>(incomeLogs.ToList()));
-        incomeLogRepository.AddAsync(Arg.Any<IncomeLog>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                var incomeLog = call.Arg<IncomeLog>();
-                if (incomeLog.Id <= 0)
-                    incomeLog.Id = incomeLogs.Count == 0 ? 1 : incomeLogs.Max(item => item.Id) + 1;
-
-                incomeLogs.Add(incomeLog);
+                transactions.Add(transaction);
                 return Task.CompletedTask;
             });
 
@@ -518,9 +458,7 @@ public sealed class NotificationActionServiceTests
         unitOfWork.Notifications.Returns(notificationRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);
         unitOfWork.Accounts.Returns(accountRepository);
-        unitOfWork.Expenses.Returns(expenseRepository);
-        unitOfWork.ExpenseLogs.Returns(expenseLogRepository);
-        unitOfWork.IncomeLogs.Returns(incomeLogRepository);
+        unitOfWork.Transactions.Returns(transactionRepository);
         unitOfWork.Tags.Returns(tagRepository);
         unitOfWork.RecurringTransactions.Returns(recurringRepository);
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
