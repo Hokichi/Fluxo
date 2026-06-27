@@ -526,6 +526,7 @@ public partial class MainWindow : Window, IPopupHost
         {
             RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);
             MainGrid.Margin = maximizing ? new Thickness(0) : new Thickness(8);
+            RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(8);
             IsWindowLayoutMaximized = maximizing;
 
             AnimateBounds(from, to, maximizing, () =>

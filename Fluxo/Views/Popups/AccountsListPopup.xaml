@@ -78,16 +78,16 @@
                                 Margin="10"
                                 Path="{StaticResource Bank}"
                                 Style="{StaticResource BankIconStyle}"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BackgroundToForegroundConverter}}" />
                             <components:Icon
                                 Margin="10"
                                 Path="{StaticResource CreditCardAlt}"
                                 Style="{StaticResource CreditIconStyle}"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}" />
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BackgroundToForegroundConverter}}" />
                             <components:Icon
                                 Margin="10"
                                 Path="{StaticResource PiggyBank}"
-                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BrushToLighterBrushConverter}}">
+                                Color="{Binding Background, ElementName=AccentBorder, Converter={StaticResource BackgroundToForegroundConverter}}">
                                 <components:Icon.Style>
                                     <Style TargetType="components:Icon">
                                         <Setter Property="Visibility" Value="Collapsed" />
@@ -134,7 +134,7 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <components:Icon Path="{StaticResource EyeOff}" Color="{StaticResource Brush.Warning}" />
+                                <components:Icon Path="{StaticResource Unpin}" Color="{StaticResource Brush.Warning}" />
                             </Border>
                         </StackPanel>
                         <TextBlock
@@ -169,37 +169,35 @@
 
     <Grid
         Width="400"
-        Height="336"
+        Height="300"
         Margin="24,0,24,24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock
-            FontFamily="{StaticResource Medium}"
-            FontSize="12"
-            Foreground="{StaticResource Brush.Text.Secondary}"
-            Text="Open any account to inspect or edit it." />
-
-        <Button
+        <customControls:BalloonButton
             x:Name="AddNewSourceButton"
             Grid.Row="2"
-            HorizontalAlignment="Stretch"
+            HorizontalAlignment="Right"
+            ButtonIcon="{StaticResource PlusSolid}"
+            ButtonText="Add New Account"
             Click="OnAddNewSourceClick"
-            Content="+ Add New Source"
-            Style="{StaticResource TextOnlyButtonStyle}" />
+            CornerRadius="8"
+            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+            IconSize="10"
+            ShouldExpand="True" />
 
         <Border
-            Grid.Row="4"
+            Grid.Row="0"
+            Padding="0,0,0,12"
             Background="{StaticResource Brush.Background.Surface}"
             BorderBrush="{StaticResource Brush.Border.Subtle}"
             BorderThickness="1"
             CornerRadius="18">
-            <customControls:FadingScrollViewer Margin="0,12,0,-12" VerticalScrollBarVisibility="Auto">
+            <customControls:FadingScrollViewer Margin="0" VerticalScrollBarVisibility="Hidden">
                 <ItemsControl x:Name="SourcesList" ItemTemplate="{StaticResource AccountsListItemTemplate}" />
             </customControls:FadingScrollViewer>
         </Border>

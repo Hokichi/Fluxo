@@ -149,7 +149,7 @@
                             x:Name="ItemBackground"
                             Padding="10,8"
                             Background="{TemplateBinding Background}"
-                            BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                            BorderBrush="{DynamicResource Brush.Border.Default}"
                             BorderThickness="1"
                             CornerRadius="8">
                             <ContentPresenter />
@@ -157,9 +157,13 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Background.Hover}" />
+                                <Setter TargetName="ItemBackground" Property="BorderBrush" Value="{DynamicResource Brush.Border.Accent.Muted}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="False">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBackground" Property="BorderBrush" Value="{DynamicResource Brush.Mint}" />
+                                <Setter TargetName="ItemBackground" Property="BorderBrush" Value="{DynamicResource Brush.Border.Focus}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -350,6 +354,7 @@
                                     CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
                                     CornerRadius="12"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IconSize="14"
                                     IsChecked="{Binding IsRecurring, Mode=TwoWay}"
                                     IsEnabled="{Binding CanToggleRecurring}"
@@ -357,8 +362,7 @@
                                     ToolTip="Set as Recurring"
                                     UncheckedIcon="{StaticResource RegularRepeat}"
                                     UncheckedText="Recurring"
-                                    Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                                    Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <customControls:BalloonCheckBox
                                     ButtonSize="38"
                                     CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
@@ -366,6 +370,7 @@
                                     CheckedText="Installments"
                                     CornerRadius="12"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IconSize="14"
                                     IsChecked="{Binding IsInstallments, Mode=TwoWay}"
                                     IsEnabled="{Binding CanToggleRecurring}"
@@ -373,8 +378,7 @@
                                     ToolTip="Set as installments"
                                     UncheckedIcon="{StaticResource CreditCardClockOutline}"
                                     UncheckedText="Installments"
-                                    Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                                    Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <customControls:BalloonCheckBox
                                     ButtonSize="38"
                                     CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
@@ -382,28 +386,28 @@
                                     CheckedText="{Binding DebtIouTooltip}"
                                     CornerRadius="12"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IconSize="14"
                                     IsChecked="{Binding IsDebtIou, Mode=TwoWay}"
                                     PreviewMouseLeftButtonDown="OnDebtIouModePreviewMouseLeftButtonDown"
                                     ToolTip="{Binding DebtIouTooltip}"
                                     UncheckedIcon="{StaticResource CreditCardMinusSolid}"
                                     UncheckedText="{Binding DebtIouTooltip}"
-                                    Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                                    Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                             </StackPanel>
                             <customControls:BalloonCheckBox
                                 Grid.Column="4"
                                 ButtonSize="38"
-                                CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                 CornerRadius="12"
                                 DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                 IconSize="14"
                                 IsChecked="{Binding IsPinned, Mode=TwoWay}"
                                 IsEnabled="{Binding CanPinTransaction}"
                                 ToolTip="Pin transaction"
                                 UncheckedIcon="{StaticResource Pin}"
-                                UncheckedText="Pinned"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                                UncheckedText="Pinned" />
                         </Grid>
                         <Popup
                             x:Name="ExpenseNameSuggestionsPopup"
@@ -578,30 +582,30 @@
                                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                                     <customControls:BalloonCheckBox
                                         ButtonSize="38"
+                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         IsChecked="{Binding IsRecurring, Mode=TwoWay}"
                                         IsEnabled="{Binding CanToggleRecurring}"
                                         PreviewMouseLeftButtonDown="OnRecurringModePreviewMouseLeftButtonDown"
                                         ToolTip="Recurring"
                                         UncheckedIcon="{StaticResource RegularRepeat}"
                                         UncheckedText="Recurring"
-                                        Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}" />
+                                        Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                     <customControls:BalloonCheckBox
                                         ButtonSize="38"
+                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
                                         CheckedIcon="{StaticResource CreditCardClockOutline}"
                                         CheckedText="Installments"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         IsChecked="{Binding IsInstallments, Mode=TwoWay}"
                                         IsEnabled="{Binding CanToggleRecurring}"
                                         PreviewMouseLeftButtonDown="OnInstallmentsModePreviewMouseLeftButtonDown"
                                         ToolTip="Set as installments"
                                         UncheckedIcon="{StaticResource CreditCardClockOutline}"
                                         UncheckedText="Installments"
-                                        Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}" />
+                                        Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                     <customControls:BalloonCheckBox
                                         ButtonSize="38"
                                         CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
@@ -609,26 +613,26 @@
                                         CheckedText="{Binding DebtIouTooltip}"
                                         CornerRadius="12"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         IconSize="14"
                                         IsChecked="{Binding IsDebtIou, Mode=TwoWay}"
                                         PreviewMouseLeftButtonDown="OnDebtIouModePreviewMouseLeftButtonDown"
                                         ToolTip="{Binding DebtIouTooltip}"
                                         UncheckedIcon="{StaticResource CreditCardMinusSolid}"
                                         UncheckedText="{Binding DebtIouTooltip}"
-                                        Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                                        Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 </StackPanel>
                                 <customControls:BalloonCheckBox
                                     Grid.Column="4"
                                     ButtonSize="38"
+                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IsChecked="{Binding IsPinned, Mode=TwoWay}"
                                     IsEnabled="{Binding CanPinTransaction}"
                                     ToolTip="Pinned"
                                     UncheckedIcon="{StaticResource Pin}"
-                                    UncheckedText="Pinned"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
+                                    UncheckedText="Pinned" />
                             </Grid>
                             <Popup
                                 x:Name="IncomeNameSuggestionsPopup"

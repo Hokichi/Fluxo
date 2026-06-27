@@ -2,11 +2,8 @@
     x:Class="Fluxo.Views.Popups.TransferFundsPopup"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    
-    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources"
-    Width="460"
-    Height="420"
+    xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     PopupTitle="Transfer Funds"
     ShowApplyButton="True">
 
@@ -18,7 +15,7 @@
         </Style>
     </customControls:BasePopup.Resources>
 
-    <Grid Margin="24,0,24,24">
+    <Grid Width="480" Margin="24,0,24,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="12" />

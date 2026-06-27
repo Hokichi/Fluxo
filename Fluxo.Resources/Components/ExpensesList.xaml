@@ -290,7 +290,7 @@
             Margin="12,0"
             HorizontalAlignment="Right"
             ButtonIcon="{StaticResource BookAiFill}"
-            ButtonText="View all in Ledger"
+            ButtonText="View in Ledger"
             CornerRadius="8"
             DefaultBackground="{StaticResource Brush.Mint.Muted}"
             HoveredBackground="{StaticResource Brush.Mint}"

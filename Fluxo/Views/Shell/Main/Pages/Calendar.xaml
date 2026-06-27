@@ -129,7 +129,7 @@
             <Setter Property="Margin" Value="2" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Default}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -362,25 +362,25 @@
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource AngleUp}"
                             Command="{Binding NavigateToPreviousMonthCommand}"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Previous month"
                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            ToolTip="Previous month" />
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource CalendarTodayOutline}"
                             Click="OnCalendarTodayButtonClick"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                             IsEnabled="{Binding IsAtCurrentDay, Converter={StaticResource BoolNegationConverter}}"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Today"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}" />
+                            ToolTip="Today" />
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource AngleDown}"
                             Command="{Binding NavigateToNextMonthCommand}"
-                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            ToolTip="Next month"
                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            Style="{StaticResource ToolbarActionBalloonButtonStyle}"
+                            ToolTip="Next month" />
                     </StackPanel>
                 </Grid>
             </Border>

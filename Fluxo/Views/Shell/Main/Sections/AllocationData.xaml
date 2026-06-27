@@ -35,7 +35,7 @@
                             Padding="12,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            Background="{StaticResource Brush.Background.Surface}"
+                            Background="{StaticResource Brush.Background.Deepened}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="2"
                             CornerRadius="4">
@@ -94,9 +94,7 @@
                 </StackPanel>
             </Grid>
 
-            <Border
-                Grid.Column="1"
-                Style="{StaticResource VerticalSeparatorBorderStyle}" />
+            <Border Grid.Column="1" Style="{StaticResource VerticalSeparatorBorderStyle}" />
 
             <Grid Grid.Column="2">
                 <StackPanel>
@@ -119,7 +117,7 @@
                             Margin="12,0,0,0"
                             Padding="12,0"
                             HorizontalAlignment="Right"
-                            Background="{StaticResource Brush.Background.Surface}"
+                            Background="{StaticResource Brush.Background.Deepened}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="2"
                             CornerRadius="4">
@@ -178,9 +176,7 @@
                 </StackPanel>
             </Grid>
 
-            <Border
-                Grid.Column="3"
-                Style="{StaticResource VerticalSeparatorBorderStyle}" />
+            <Border Grid.Column="3" Style="{StaticResource VerticalSeparatorBorderStyle}" />
 
             <Grid Grid.Column="4">
                 <StackPanel>
@@ -204,7 +200,7 @@
                             Padding="12,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            Background="{StaticResource Brush.Background.Surface}"
+                            Background="{StaticResource Brush.Background.Deepened}"
                             BorderBrush="{StaticResource Brush.Border.Subtle}"
                             BorderThickness="2"
                             CornerRadius="4">

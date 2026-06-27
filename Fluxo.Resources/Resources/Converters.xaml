@@ -20,4 +20,5 @@
     <converters:NumberWithCommasConverter x:Key="NumberWithCommasConverter" />
     <converters:ObjectToNullConverter x:Key="ObjectToNullConverter" />
     <converters:ProgressToArcGeometryConverter x:Key="ProgressToArcGeometryConverter" />
+    <converters:BackgroundToForegroundConverter x:Key="BackgroundToForegroundConverter" />
 </ResourceDictionary>

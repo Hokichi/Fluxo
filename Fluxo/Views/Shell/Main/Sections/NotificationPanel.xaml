@@ -8,7 +8,7 @@
             <Border
                 Margin="0,0,0,10"
                 Padding="10"
-                Background="{StaticResource Brush.Background.Hover}"
+                Background="{StaticResource Brush.Background.Elevated}"
                 BorderBrush="{StaticResource Brush.Border.Subtle}"
                 BorderThickness="1"
                 CornerRadius="16">
@@ -61,11 +61,11 @@
                             ButtonText="Process"
                             Command="{Binding DataContext.OpenNotificationActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                             HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                             ShouldExpand="True"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Visibility="{Binding HasActionCta, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
+                            Visibility="{Binding HasActionCta, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                         <customControls:BalloonButton
                             Width="24"
@@ -74,22 +74,22 @@
                             ButtonText="Clear"
                             Command="{Binding DataContext.ClearNotificationGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                             HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                             IconSize="11"
                             ShouldExpand="True"
                             Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
+                            Visibility="{Binding HasMultipleNotifications, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
                 </Grid>
             </Border>
         </DataTemplate>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource CardBorderStyle}">
-        <Border.Background>
-            <SolidColorBrush Opacity="1" Color="{StaticResource Color.Background.Elevated}" />
-        </Border.Background>
+    <Border
+        Width="480"
+        Background="{StaticResource Brush.Background.Popup}"
+        Style="{StaticResource CardBorderStyle}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -151,10 +151,10 @@
                     ButtonIcon="{StaticResource SleepLine}"
                     ButtonText="Snooze"
                     Command="{Binding SnoozeAllNotificationsCommand}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                     ShouldExpand="True"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}" />
+                    Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
                 <customControls:BalloonButton
                     x:Name="ClearAllNotificationsButton"
                     Width="24"
@@ -163,10 +163,10 @@
                     ButtonIcon="{StaticResource Delete}"
                     ButtonText="Clear All"
                     Command="{Binding ClearAllNotificationsCommand}"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                     ShouldExpand="True"
-                    Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
+                    Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
             </StackPanel>
         </Grid>
     </Border>

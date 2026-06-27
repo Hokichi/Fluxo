@@ -327,7 +327,7 @@
                     BlurRadius="10"
                     Opacity="1"
                     ShadowDepth="0"
-                    Color="{StaticResource Color.Background.Main}" />
+                    Color="{StaticResource Color.Background.Deepened}" />
             </Border.Effect>
         </Border>
 
@@ -538,7 +538,6 @@
                                 StaysOpen="True"
                                 VerticalOffset="8">
                                 <Border
-                                    Width="360"
                                     MinHeight="150"
                                     MaxHeight="420"
                                     Background="Transparent">

@@ -36,7 +36,7 @@
                         FontFamily="{StaticResource Medium}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Secondary}"
-                        Text="Manage allocation targets and budget rules." />
+                        Text="Set your budget allocation and configuration" />
                 </StackPanel>
 
                 <customControls:SegmentedToggleGroup
@@ -69,9 +69,9 @@
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="Needs" />
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <Button
+                                <customControls:BalloonButton
+                                    ButtonIcon="{StaticResource Minus}"
                                     Click="OnAllocationAdjustButtonClick"
-                                    Content="-"
                                     MouseLeave="OnAllocationAdjustButtonMouseLeave"
                                     PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                                     PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -84,9 +84,9 @@
                                     Foreground="{StaticResource Brush.Text.Primary}"
                                     Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
                                     TextAlignment="Center" />
-                                <Button
+                                <customControls:BalloonButton
+                                    ButtonIcon="{StaticResource PlusSolid}"
                                     Click="OnAllocationAdjustButtonClick"
-                                    Content="+"
                                     MouseLeave="OnAllocationAdjustButtonMouseLeave"
                                     PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                                     PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -130,9 +130,9 @@
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="Wants" />
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <Button
+                                <customControls:BalloonButton
+                                    ButtonIcon="{StaticResource Minus}"
                                     Click="OnAllocationAdjustButtonClick"
-                                    Content="-"
                                     MouseLeave="OnAllocationAdjustButtonMouseLeave"
                                     PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                                     PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -145,9 +145,9 @@
                                     Foreground="{StaticResource Brush.Text.Primary}"
                                     Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
                                     TextAlignment="Center" />
-                                <Button
+                                <customControls:BalloonButton
+                                    ButtonIcon="{StaticResource PlusSolid}"
                                     Click="OnAllocationAdjustButtonClick"
-                                    Content="+"
                                     MouseLeave="OnAllocationAdjustButtonMouseLeave"
                                     PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                                     PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -191,9 +191,9 @@
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="Invest" />
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <Button
+                                <customControls:BalloonButton
+                                    ButtonIcon="{StaticResource Minus}"
                                     Click="OnAllocationAdjustButtonClick"
-                                    Content="-"
                                     MouseLeave="OnAllocationAdjustButtonMouseLeave"
                                     PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                                     PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -206,9 +206,9 @@
                                     Foreground="{StaticResource Brush.Text.Primary}"
                                     Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
                                     TextAlignment="Center" />
-                                <Button
+                                <customControls:BalloonButton
+                                    ButtonIcon="{StaticResource PlusSolid}"
                                     Click="OnAllocationAdjustButtonClick"
-                                    Content="+"
                                     MouseLeave="OnAllocationAdjustButtonMouseLeave"
                                     PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                                     PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"

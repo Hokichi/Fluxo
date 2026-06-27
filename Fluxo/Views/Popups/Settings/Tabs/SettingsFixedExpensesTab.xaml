@@ -83,29 +83,29 @@
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource Delete}"
                                 Click="OnRowActionClick"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                 Tag="FixedExpenses:Delete"
-                                ToolTip="Delete"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
+                                ToolTip="Delete" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource LightningSlashFill}"
                                 Click="OnRowActionClick"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                 Tag="FixedExpenses:Disable"
                                 ToolTip="Disable"
-                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}" />
+                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <customControls:BalloonButton
                                 ButtonIcon="{StaticResource LightningFill}"
                                 Click="OnRowActionClick"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                 Tag="FixedExpenses:Enable"
                                 ToolTip="Enable"
-                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
+                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -152,75 +152,75 @@
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource Delete}"
                         Click="OnBatchActionClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="FixedExpenses:Delete"
                         ToolTip="Delete selected"
-                        Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
+                        Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource LightningSlashFill}"
                         Click="OnBatchActionClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="FixedExpenses:Disable"
                         ToolTip="Disable selected"
-                        Visibility="{Binding ShowFixedExpenseDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}" />
+                        Visibility="{Binding ShowFixedExpenseDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource LightningFill}"
                         Click="OnBatchActionClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="FixedExpenses:Enable"
                         ToolTip="Enable selected"
-                        Visibility="{Binding ShowFixedExpenseEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
+                        Visibility="{Binding ShowFixedExpenseEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource CheckAll}"
                         Click="OnSelectionActionClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="FixedExpenses:CheckAll"
                         ToolTip="Check all"
-                        Visibility="{Binding ShowFixedExpenseCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                        Visibility="{Binding ShowFixedExpenseCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource UncheckAll}"
                         Click="OnSelectionActionClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="FixedExpenses:UncheckAll"
                         ToolTip="Uncheck all"
-                        Visibility="{Binding ShowFixedExpenseUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                        Visibility="{Binding ShowFixedExpenseUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource EnableChecks}"
                         Click="OnChecksToggleClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="FixedExpenses:EnableChecks"
                         ToolTip="Enable selection"
-                        Visibility="{Binding ShowFixedExpenseEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                        Visibility="{Binding ShowFixedExpenseEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource DisableChecks}"
                         Click="OnChecksToggleClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="FixedExpenses:DisableChecks"
                         ToolTip="Disable selection"
-                        Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                        Visibility="{Binding IsFixedExpenseChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource PlusSolid}"
                         Click="OnAddPlaceholderClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Add Recurring Transaction"
                         ToolTip="Add recurring transaction"
-                        Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityInvertedConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}" />
+                        Visibility="{Binding IsDashboardSpendingAmountGateLocked, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 </StackPanel>
             </Grid>
             <TextBlock
@@ -229,7 +229,7 @@
                 FontFamily="{StaticResource Medium}"
                 FontSize="11"
                 Foreground="{StaticResource Brush.Text.Secondary}"
-                Text="Review recurring entries and quickly update their availability." />
+                Text="Modify, disable or remove recurring transactions" />
             <customControls:FadingScrollViewer
                 Grid.Row="2"
                 Margin="0,8,0,0"

@@ -25,9 +25,9 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Needs" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource Minus}"
                             Click="OnAllocationAdjustButtonClick"
-                            Content="-"
                             MouseLeave="OnAllocationAdjustButtonMouseLeave"
                             PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                             PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -40,9 +40,9 @@
                             Foreground="{StaticResource Brush.Text.Primary}"
                             Text="{Binding NeedsAllocationPercentage, StringFormat={}{0}%}"
                             TextAlignment="Center" />
-                        <Button
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource PlusSolid}"
                             Click="OnAllocationAdjustButtonClick"
-                            Content="+"
                             MouseLeave="OnAllocationAdjustButtonMouseLeave"
                             PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                             PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -86,9 +86,9 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Wants" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource Minus}"
                             Click="OnAllocationAdjustButtonClick"
-                            Content="-"
                             MouseLeave="OnAllocationAdjustButtonMouseLeave"
                             PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                             PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -101,9 +101,9 @@
                             Foreground="{StaticResource Brush.Text.Primary}"
                             Text="{Binding WantsAllocationPercentage, StringFormat={}{0}%}"
                             TextAlignment="Center" />
-                        <Button
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource PlusSolid}"
                             Click="OnAllocationAdjustButtonClick"
-                            Content="+"
                             MouseLeave="OnAllocationAdjustButtonMouseLeave"
                             PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                             PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -147,9 +147,9 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Invest" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource Minus}"
                             Click="OnAllocationAdjustButtonClick"
-                            Content="-"
                             MouseLeave="OnAllocationAdjustButtonMouseLeave"
                             PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                             PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -162,9 +162,9 @@
                             Foreground="{StaticResource Brush.Text.Primary}"
                             Text="{Binding InvestAllocationPercentage, StringFormat={}{0}%}"
                             TextAlignment="Center" />
-                        <Button
+                        <customControls:BalloonButton
+                            ButtonIcon="{StaticResource PlusSolid}"
                             Click="OnAllocationAdjustButtonClick"
-                            Content="+"
                             MouseLeave="OnAllocationAdjustButtonMouseLeave"
                             PreviewMouseLeftButtonDown="OnAllocationAdjustButtonMouseDown"
                             PreviewMouseLeftButtonUp="OnAllocationAdjustButtonMouseUp"
@@ -235,24 +235,12 @@
                     FontFamily="{StaticResource Bold}"
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Allocation Period" />
-                <customControls:SegmentedToggleGroup
-                    Grid.Column="1"
-                    SelectedValue="{Binding AllocationPeriod, Mode=TwoWay}">
-                    <customControls:SegmentedToggleOption
-                        Content="Weekly"
-                        Value="{x:Static enums:AllocationPeriod.Weekly}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Biweekly"
-                        Value="{x:Static enums:AllocationPeriod.Biweekly}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Monthly"
-                        Value="{x:Static enums:AllocationPeriod.Monthly}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Quarterly"
-                        Value="{x:Static enums:AllocationPeriod.Quarterly}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Yearly"
-                        Value="{x:Static enums:AllocationPeriod.Yearly}" />
+                <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding AllocationPeriod, Mode=TwoWay}">
+                    <customControls:SegmentedToggleOption Content="Weekly" Value="{x:Static enums:AllocationPeriod.Weekly}" />
+                    <customControls:SegmentedToggleOption Content="Biweekly" Value="{x:Static enums:AllocationPeriod.Biweekly}" />
+                    <customControls:SegmentedToggleOption Content="Monthly" Value="{x:Static enums:AllocationPeriod.Monthly}" />
+                    <customControls:SegmentedToggleOption Content="Quarterly" Value="{x:Static enums:AllocationPeriod.Quarterly}" />
+                    <customControls:SegmentedToggleOption Content="Yearly" Value="{x:Static enums:AllocationPeriod.Yearly}" />
                 </customControls:SegmentedToggleGroup>
             </Grid>
         </Border>
@@ -268,18 +256,10 @@
                     FontFamily="{StaticResource Bold}"
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Budget Rollover" />
-                <customControls:SegmentedToggleGroup
-                    Grid.Column="1"
-                    SelectedValue="{Binding RolloverPolicy, Mode=TwoWay}">
-                    <customControls:SegmentedToggleOption
-                        Content="Ignore"
-                        Value="{x:Static enums:RolloverPolicy.None}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Matching"
-                        Value="{x:Static enums:RolloverPolicy.Matching}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Pooled"
-                        Value="{x:Static enums:RolloverPolicy.Pooled}" />
+                <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding RolloverPolicy, Mode=TwoWay}">
+                    <customControls:SegmentedToggleOption Content="Ignore" Value="{x:Static enums:RolloverPolicy.None}" />
+                    <customControls:SegmentedToggleOption Content="Matching" Value="{x:Static enums:RolloverPolicy.Matching}" />
+                    <customControls:SegmentedToggleOption Content="Pooled" Value="{x:Static enums:RolloverPolicy.Pooled}" />
                 </customControls:SegmentedToggleGroup>
             </Grid>
         </Border>
@@ -295,18 +275,10 @@
                     FontFamily="{StaticResource Bold}"
                     Foreground="{StaticResource Brush.Text.Primary}"
                     Text="Overspend Behavior" />
-                <customControls:SegmentedToggleGroup
-                    Grid.Column="1"
-                    SelectedValue="{Binding OverspendPolicy, Mode=TwoWay}">
-                    <customControls:SegmentedToggleOption
-                        Content="Ignore"
-                        Value="{x:Static enums:OverspendPolicy.Ignore}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Soft Debt"
-                        Value="{x:Static enums:OverspendPolicy.SoftDebt}" />
-                    <customControls:SegmentedToggleOption
-                        Content="Hard Stop"
-                        Value="{x:Static enums:OverspendPolicy.HardStop}" />
+                <customControls:SegmentedToggleGroup Grid.Column="1" SelectedValue="{Binding OverspendPolicy, Mode=TwoWay}">
+                    <customControls:SegmentedToggleOption Content="Ignore" Value="{x:Static enums:OverspendPolicy.Ignore}" />
+                    <customControls:SegmentedToggleOption Content="Soft Debt" Value="{x:Static enums:OverspendPolicy.SoftDebt}" />
+                    <customControls:SegmentedToggleOption Content="Hard Stop" Value="{x:Static enums:OverspendPolicy.HardStop}" />
                 </customControls:SegmentedToggleGroup>
             </Grid>
         </Border>

@@ -286,7 +286,7 @@
     <Style x:Key="PopupTextButtonStyle" TargetType="Button">
         <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="14,0" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
@@ -327,13 +327,15 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="RootBorder" CornerRadius="0 8 8 0">
+                    <Border x:Name="RootBorder" CornerRadius="8">
                         <Grid Background="Transparent">
                             <Border
                                 x:Name="SelectedStrip"
-                                Width="2"
+                                Width="4"
+                                Margin="0,8"
                                 HorizontalAlignment="Left"
                                 Background="{StaticResource Brush.Mint}"
+                                CornerRadius="0 4 4 0"
                                 Visibility="Collapsed" />
                             <StackPanel
                                 Margin="16,0,12,0"
@@ -368,13 +370,12 @@
 
     <Style
         x:Key="StepperButtonStyle"
-        BasedOn="{StaticResource PopupTextButtonStyle}"
-        TargetType="Button">
-        <Setter Property="Width" Value="32" />
-        <Setter Property="Height" Value="32" />
-        <Setter Property="MinWidth" Value="32" />
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="Margin" Value="0" />
+        BasedOn="{StaticResource {x:Type c:BalloonButton}}"
+        TargetType="c:BalloonButton">
+        <Setter Property="ButtonSize" Value="24" />
+        <Setter Property="IconSize" Value="8" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Deepened}" />
     </Style>
 
     <Style
@@ -446,7 +447,7 @@
                 <ControlTemplate TargetType="ToggleButton">
                     <Border
                         x:Name="Track"
-                        Background="{StaticResource Brush.Mint.Dark}"
+                        Background="{StaticResource Brush.Background.Deepened}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
                         CornerRadius="10">
@@ -599,7 +600,7 @@
     </Style>
 
     <Style x:Key="SelectorButtonStyle" TargetType="ToggleButton">
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
@@ -1017,10 +1018,10 @@
                     <Border
                         x:Name="RootBorder"
                         Padding="16"
-                        Background="{TemplateBinding Background}"
+                        Background="{StaticResource Brush.Background.Elevated}"
                         BorderBrush="{StaticResource Brush.Border.Subtle}"
                         BorderThickness="1"
-                        CornerRadius="16">
+                        CornerRadius="8">
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -1041,7 +1042,7 @@
     <Style TargetType="{x:Type c:SegmentedToggleGroup}">
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="4" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Deepened}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="OptionSpacing" Value="4" />
@@ -1386,7 +1387,7 @@
 
     <Style x:Key="AccountAddButtonStyle" TargetType="Button">
         <Setter Property="Width" Value="60" />
-        <Setter Property="Height" Value="80" />
+        <Setter Property="Height" Value="60" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -1412,8 +1413,8 @@
 
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <components:Icon
-                                Width="24"
-                                Height="24"
+                                Width="16"
+                                Height="16"
                                 Margin="0,0,0,8"
                                 HorizontalAlignment="Center"
                                 Path="{StaticResource CircleWithPlus}"

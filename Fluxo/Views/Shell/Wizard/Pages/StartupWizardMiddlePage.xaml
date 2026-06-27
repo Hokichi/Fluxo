@@ -44,7 +44,7 @@
                             Width="4"
                             HorizontalAlignment="Left"
                             Background="{StaticResource Brush.Mint}"
-                            CornerRadius="2"
+                            CornerRadius="0"
                             Opacity="0" />
                         <StackPanel
                             Margin="14,0,0,0"

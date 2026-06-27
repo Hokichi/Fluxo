@@ -218,7 +218,7 @@
                         Foreground="{StaticResource Brush.Text.Primary}"
                         ToolTip="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                        <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
+                        <Run Text="{Binding DisplayPrimaryAmount, Mode=OneWay, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                     </TextBlock>
                     <StackPanel
                         Margin="0,6,0,0"
@@ -274,7 +274,7 @@
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
                                 ToolTip="{Binding MoneyIn, Converter={StaticResource MoneyFullDisplayConverter}}">
-                                <Run Text="{Binding MoneyIn, Converter={StaticResource NumberWithCommasConverter}}" />
+                                <Run Text="{Binding MoneyIn, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </TextBlock>
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsCashOrChecking, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -288,7 +288,7 @@
                                 FontFamily="{StaticResource Medium}"
                                 Foreground="{StaticResource Brush.Text.Secondary}"
                                 ToolTip="{Binding MoneyOut, Converter={StaticResource MoneyFullDisplayConverter}}">
-                                <Run Text="{Binding MoneyOut, Converter={StaticResource NumberWithCommasConverter}}" />
+                                <Run Text="{Binding MoneyOut, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </TextBlock>
                         </Grid>
                         <Grid Margin="0,0,0,10" Visibility="{Binding IsCredit, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -303,7 +303,7 @@
                                 Foreground="{StaticResource Brush.Text.Secondary}"
                                 ToolTip="{Binding SpentAmountText, Converter={StaticResource MoneyFullDisplayConverter}}"
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}">
-                                <Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyDisplayConverter}}" />
+                                <Run Text="{Binding SpentAmountText, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                             </TextBlock>
                             <customControls:MoneyTextBox
                                 x:Name="CreditSpentAmountTextBox"
@@ -428,7 +428,8 @@
                         VerticalAlignment="Bottom"
                         Columns="3"
                         Rows="2">
-                        <customControls:BalloonButton Click="OnDisableButtonClick"
+                        <customControls:BalloonButton
+                            Click="OnDisableButtonClick"
                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                             HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}">
                             <customControls:BalloonButton.Style>
@@ -445,9 +446,11 @@
                                 </Style>
                             </customControls:BalloonButton.Style>
                         </customControls:BalloonButton>
-                        <customControls:BalloonButton Click="OnEditButtonClick" ToolTip="{Binding EditButtonLabel}"
+                        <customControls:BalloonButton
+                            Click="OnEditButtonClick"
                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}">
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            ToolTip="{Binding EditButtonLabel}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
                                     <Setter Property="ButtonIcon" Value="{StaticResource Pen}" />
@@ -462,22 +465,24 @@
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Exchange}"
                             Click="OnTransferButtonClick"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
                             HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                             IsEnabled="{Binding CanTransfer}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
-                            ToolTip="Transfer funds"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}" />
-                        <customControls:BalloonButton Click="OnPinOrUnpinButtonClick" IsEnabled="{Binding CanPinOrUnpin}"
+                            ToolTip="Transfer funds" />
+                        <customControls:BalloonButton
+                            Click="OnPinOrUnpinButtonClick"
                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}">
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            IsEnabled="{Binding CanPinOrUnpin}">
                             <customControls:BalloonButton.Style>
                                 <Style BasedOn="{StaticResource DetailActionBalloonButtonStyle}" TargetType="{x:Type customControls:BalloonButton}">
-                                    <Setter Property="ButtonIcon" Value="{StaticResource EyeOff}" />
+                                    <Setter Property="ButtonIcon" Value="{StaticResource Unpin}" />
                                     <Setter Property="HoveredBackground" Value="{StaticResource Brush.BalloonButton.Background.Default.Hovered}" />
                                     <Setter Property="ToolTip" Value="Unpin source" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsUnpinned}" Value="True">
-                                            <Setter Property="ButtonIcon" Value="{StaticResource Eye}" />
+                                            <Setter Property="ButtonIcon" Value="{StaticResource Pin}" />
                                             <Setter Property="ToolTip" Value="Pin source" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -487,18 +492,18 @@
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource SourceSwitch}"
                             Click="OnBackToSourcesButtonClick"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
                             HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
-                            ToolTip="Back to sources"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}" />
+                            ToolTip="Back to sources" />
                         <customControls:BalloonButton
                             ButtonIcon="{StaticResource Delete}"
                             Click="OnDeleteButtonClick"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                             HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                             IsEnabled="{Binding CanDelete}"
                             Style="{StaticResource DetailActionBalloonButtonStyle}"
-                            ToolTip="Delete source"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
+                            ToolTip="Delete source" />
                     </UniformGrid>
                 </Grid>
             </Border>
@@ -517,6 +522,7 @@
                         Text="History" />
                     <Grid Grid.Row="2">
                         <customControls:FadingScrollViewer
+                            Margin="0,8"
                             HorizontalScrollBarVisibility="Disabled"
                             VerticalScrollBarVisibility="Auto"
                             Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVisibilityConverter}}">

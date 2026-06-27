@@ -19,7 +19,7 @@
         <Style x:Key="DashboardAccountLegendLabelStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="6,0,14,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="FontFamily" Value="{StaticResource Medium}" />
+            <Setter Property="FontFamily" Value="{StaticResource SemiBold}" />
             <Setter Property="FontSize" Value="10" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
         </Style>
@@ -115,11 +115,15 @@
 
                 <Border
                     Grid.Column="1"
-                    Margin="12,12,12,0"
+                    Margin="12,12,0,12"
                     Style="{StaticResource VerticalSeparatorBorderStyle}" />
 
                 <Grid Grid.Column="2">
-                    <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Margin="0,0,0,0">
                         <customControls:FadingScrollViewer
                             x:Name="DashboardAccountsScrollViewer"
                             HorizontalAlignment="Stretch"
@@ -178,35 +182,42 @@
                         </Button>
                     </Grid>
 
-                    <StackPanel
+                    <customControls:SpacedUniformGrid
+                        Grid.Column="1"
                         Margin="12,0,0,0"
                         HorizontalAlignment="Left"
-                        VerticalAlignment="Bottom"
-                        Orientation="Horizontal">
-                        <Ellipse
-                            Width="6"
-                            Height="6"
-                            Fill="{StaticResource Brush.Account.Checking}" />
-                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Checking" />
-                        <Ellipse
-                            Width="6"
-                            Height="6"
-                            Margin="8,0,0,0"
-                            Fill="{StaticResource Brush.Account.Cash}" />
-                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Cash" />
-                        <Ellipse
-                            Width="6"
-                            Height="6"
-                            Margin="8,0,0,0"
-                            Fill="{StaticResource Brush.Account.Credit}" />
-                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Credit" />
-                        <Ellipse
-                            Width="6"
-                            Height="6"
-                            Margin="8,0,0,0"
-                            Fill="{StaticResource Brush.Account.Saving}" />
-                        <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Saving" />
-                    </StackPanel>
+                        VerticalAlignment="Center"
+                        Columns="1"
+                        VerticalGap="4">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{StaticResource Brush.Account.Checking}" />
+                            <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Checking" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{StaticResource Brush.Account.Cash}" />
+                            <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Cash" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{StaticResource Brush.Account.Credit}" />
+                            <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Credit" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{StaticResource Brush.Account.Saving}" />
+                            <TextBlock Style="{StaticResource DashboardAccountLegendLabelStyle}" Text="Saving" />
+                        </StackPanel>
+                    </customControls:SpacedUniformGrid>
                 </Grid>
             </Grid>
 

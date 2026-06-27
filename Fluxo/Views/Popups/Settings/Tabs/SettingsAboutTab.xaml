@@ -9,13 +9,13 @@
             FontFamily="{StaticResource Bold}"
             FontSize="16"
             Foreground="{StaticResource Brush.Text.Primary}"
-            Text="About" />
+            Text="Configuration" />
         <TextBlock
             Margin="0,8,0,16"
             FontFamily="{StaticResource Medium}"
             FontSize="11"
             Foreground="{StaticResource Brush.Text.Secondary}"
-            Text="Manage app startup behavior, version info, and maintenance actions." />
+            Text="Configure how the app behaves" />
 
         <Border Style="{StaticResource RowCardStyle}">
             <Grid>

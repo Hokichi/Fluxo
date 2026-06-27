@@ -61,11 +61,11 @@
                                 ButtonIcon="{StaticResource Check}"
                                 ButtonText="Reconcile"
                                 Click="OnResolveClick"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                 ShouldExpand="True"
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                ToolTip="Resolve"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}" />
+                                ToolTip="Resolve" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -95,6 +95,7 @@
             </Grid.RowDefinitions>
 
             <TextBlock
+                Margin="0,0,0,8"
                 FontFamily="{StaticResource Bold}"
                 FontSize="16"
                 Foreground="{StaticResource Brush.Text.Primary}"
@@ -108,7 +109,7 @@
                     FontFamily="{StaticResource Medium}"
                     FontSize="11"
                     Foreground="{StaticResource Brush.Text.Secondary}"
-                    Text="Resolve tracked debts and IOUs with balancing transactions." />
+                    Text="Manage loans, debts and IoUs" />
                 <TextBlock
                     Grid.Column="1"
                     Margin="16,0,12,0"

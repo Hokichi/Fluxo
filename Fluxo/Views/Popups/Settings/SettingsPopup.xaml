@@ -39,7 +39,11 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border x:Name="SettingsSideMenu" Style="{StaticResource CardBorderStyle}">
+        <Border
+            x:Name="SettingsSideMenu"
+            Padding="12"
+            Background="{StaticResource Brush.Background.Surface}"
+            CornerRadius="8">
             <StackPanel>
                 <RadioButton
                     x:Name="SourcesTabButton"
@@ -131,10 +135,10 @@
                     GroupName="SettingsTabs"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource TabButtonStyle}"
-                    Tag="About">
+                    Tag="Configuration">
                     <components:Icon
                         Width="12"
-                        Path="{StaticResource InvoiceLight}"
+                        Path="{StaticResource Cog}"
                         Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RadioButton}, Path=Foreground}" />
                 </RadioButton>
             </StackPanel>

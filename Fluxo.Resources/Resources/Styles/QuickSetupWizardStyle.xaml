@@ -40,7 +40,7 @@
     <Style x:Key="SidebarStepStyle" TargetType="Border">
         <Setter Property="Height" Value="38" />
         <Setter Property="Margin" Value="0,0,0,4" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="0 8 8 0" />
         <Setter Property="Background" Value="Transparent" />
     </Style>
 </ResourceDictionary>

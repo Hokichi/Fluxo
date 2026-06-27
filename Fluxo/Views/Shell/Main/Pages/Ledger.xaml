@@ -15,13 +15,6 @@
     <UserControl.Resources>
         <main:LedgerGroupingModeDisplayConverter x:Key="LedgerGroupingModeDisplayConverter" />
 
-        <Style
-            x:Key="LedgerSummaryCardStyle"
-            BasedOn="{StaticResource CardBorderStyle}"
-            TargetType="Border">
-            <Setter Property="MinHeight" Value="84" />
-        </Style>
-
         <Style x:Key="LedgerFilterComboBoxItemStyle" TargetType="ComboBoxItem">
             <Setter Property="Height" Value="36" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
@@ -1024,23 +1017,23 @@
                                     Height="30"
                                     ButtonIcon="{StaticResource CloneRegular}"
                                     Click="OnDuplicateTransactionClick"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IconSize="12"
                                     IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
                                     Style="{StaticResource HeaderButtonStyle}"
-                                    ToolTip="Duplicate"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                                    ToolTip="Duplicate" />
                                 <customControls:BalloonCheckBox
                                     Width="30"
                                     Height="30"
+                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                     CheckedIcon="{StaticResource Check}"
                                     CheckedText="Apply"
                                     Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
-                                    IconSize="12"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}">
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                    IconSize="12">
                                     <customControls:BalloonCheckBox.Style>
                                         <Style BasedOn="{StaticResource HeaderCheckBoxStyle}" TargetType="customControls:BalloonCheckBox">
                                             <Setter Property="ToolTip" Value="Edit" />
@@ -1066,19 +1059,19 @@
                                 <customControls:BalloonCheckBox
                                     Width="30"
                                     Height="30"
+                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                                     CheckedIcon="{StaticResource Ban}"
                                     CheckedText="Cancel"
                                     Click="OnDeleteOrDiscardTransactionClick"
                                     CommandParameter="{Binding}"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IconSize="12"
                                     IsChecked="{Binding IsEditing, Mode=OneWay}"
                                     Style="{StaticResource HeaderCheckBoxStyle}"
                                     ToolTip="Delete"
                                     UncheckedIcon="{StaticResource Delete}"
-                                    UncheckedText="Delete"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
+                                    UncheckedText="Delete" />
                             </StackPanel>
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -1346,6 +1339,7 @@
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
+                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                     CheckedIcon="{StaticResource DisableChecks}"
                     CheckedText="Disable Selection"
                     Click="OnSelectionModeClick"
@@ -1357,11 +1351,11 @@
                     IsEnabled="{Binding HasVisibleTransactions}"
                     ShouldExpand="True"
                     UncheckedIcon="{StaticResource EnableChecks}"
-                    UncheckedText="Enable Selection"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
+                    UncheckedText="Enable Selection" />
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
+                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                     CheckedIcon="{StaticResource UncheckAll}"
                     CheckedText="Uncheck All"
                     Click="OnToggleVisibleBatchSelectionClick"
@@ -1374,11 +1368,11 @@
                     ShouldExpand="True"
                     UncheckedIcon="{StaticResource CheckAll}"
                     UncheckedText="Check All"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
+                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                     CheckedIcon="{StaticResource Delete}"
                     CheckedText="Delete All"
                     Click="OnRemoveSelectedTransactionsClick"
@@ -1391,8 +1385,7 @@
                     ShouldExpand="True"
                     UncheckedIcon="{StaticResource Delete}"
                     UncheckedText="Delete Selected"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
-                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
 
             <StackPanel
@@ -1430,45 +1423,73 @@
                 Grid.Row="1"
                 Margin="0,18,0,0"
                 Columns="4">
-                <Border Margin="0,0,8,0" Style="{StaticResource LedgerSummaryCardStyle}">
-                    <StackPanel>
-                        <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Spent" />
+                <Border Margin="0,0,8,0" Style="{StaticResource CardBorderStyle}">
+                    <Grid VerticalAlignment="Center">
                         <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="SPENT" />
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="22"
                             Foreground="{StaticResource Brush.Danger}"
                             Text="{Binding SpentAmount, StringFormat={}{0:#,##0}}" />
-                    </StackPanel>
+                    </Grid>
                 </Border>
-                <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
-                    <StackPanel>
-                        <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Earned" />
+                <Border Margin="8,0" Style="{StaticResource CardBorderStyle}">
+                    <Grid VerticalAlignment="Center">
                         <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="EARNED" />
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="22"
                             Foreground="{StaticResource Brush.Success}"
                             Text="{Binding EarnedAmount, StringFormat={}{0:#,##0}}" />
-                    </StackPanel>
+                    </Grid>
                 </Border>
-                <Border Margin="8,0" Style="{StaticResource LedgerSummaryCardStyle}">
-                    <StackPanel>
-                        <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Goals" />
+                <Border Margin="8,0" Style="{StaticResource CardBorderStyle}">
+                    <Grid VerticalAlignment="Center">
                         <TextBlock
+                            VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
-                            FontSize="22"
-                            Foreground="{StaticResource Brush.Mint}"
-                            Text="{Binding GoalAmount, StringFormat={}{0:#,##0}}" />
-                    </StackPanel>
-                </Border>
-                <Border Margin="8,0,0,0" Style="{StaticResource LedgerSummaryCardStyle}">
-                    <StackPanel>
-                        <TextBlock Foreground="{StaticResource Brush.Text.Muted}" Text="Net" />
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="GOAL" />
                         <TextBlock
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="22"
                             Foreground="{StaticResource Brush.Text.Primary}"
+                            Text="{Binding GoalAmount, StringFormat={}{0:#,##0}}" />
+                    </Grid>
+                </Border>
+                <Border Margin="8,0,0,0" Style="{StaticResource CardBorderStyle}">
+                    <Grid VerticalAlignment="Center">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="12"
+                            Foreground="{StaticResource Brush.Text.Muted}"
+                            Text="NET" />
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
+                            FontSize="22"
+                            Foreground="{StaticResource Brush.Info}"
                             Text="{Binding NetAmount, StringFormat={}{0:#,##0}}" />
-                    </StackPanel>
+                    </Grid>
                 </Border>
             </UniformGrid>
 
@@ -1548,21 +1569,21 @@
                     ButtonIcon="{StaticResource Ban}"
                     ButtonSize="34"
                     Click="OnClearFiltersClick"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                     IconSize="14"
                     Style="{StaticResource HeaderButtonStyle}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 <customControls:BalloonButton
                     Grid.Column="5"
                     ButtonIcon="{StaticResource Check}"
                     ButtonSize="34"
                     Click="OnApplyBatchUpdatesClick"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                     IconSize="14"
                     Style="{StaticResource HeaderButtonStyle}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}" />
+                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <Border
                     Grid.Column="6"
                     Width="1"
@@ -1584,10 +1605,10 @@
                     Grid.Column="8"
                     ButtonSize="34"
                     Click="OnOrderingButtonClick"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                     IconSize="14"
-                    IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}"
-                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}">
+                    IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}">
                     <customControls:BalloonButton.Style>
                         <Style BasedOn="{StaticResource HeaderButtonStyle}" TargetType="customControls:BalloonButton">
                             <Setter Property="ButtonIcon" Value="{StaticResource ArrowDownWideNarrow}" />
