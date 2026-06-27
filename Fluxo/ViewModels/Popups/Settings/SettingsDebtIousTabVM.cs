@@ -67,7 +67,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
 
         var items = expenseLogs
             .Where(log => !log.IsForDeletion)
-            .Where(log => log.IsLend || log.Expense?.IsLend == true)
+            .Where(log => log.IsIoU || log.Expense?.IsIoU == true)
             .Select(log => new IoUItemVM
             {
                 Kind = IoUKind.Lend,
@@ -79,7 +79,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
             })
             .Concat(incomeLogs
                 .Where(log => !log.IsForDeletion)
-                .Where(log => log.IsDebt)
+                .Where(log => log.IsIoU)
                 .Select(log => new IoUItemVM
                 {
                     Kind = IoUKind.Debt,
@@ -139,7 +139,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
         CancellationToken cancellationToken)
     {
         var source = await _appData.GetExpenseLogByLogIdAsync(expenseLogId, cancellationToken);
-        if (source?.Expense is null || !(source.IsLend || source.Expense.IsLend))
+        if (source?.Expense is null || !(source.IsIoU || source.Expense.IsIoU))
         {
             await LoadAsync(cancellationToken);
             return SettingsOperationResult.Success();
@@ -158,14 +158,14 @@ public partial class SettingsIoUsTabVM : ObservableObject
             Notes = $"Resolved lend from expense #{source.Id}",
             AccountId = account.Id,
             Account = account,
-            IsDebt = false
+            IsIoU = false
         };
 
         await _appData.AddIncomeLogAsync(incomeLog, cancellationToken);
         ApplyIncomeToAccount(account, source.Amount);
 
-        source.IsLend = false;
-        source.Expense.IsLend = false;
+        source.IsIoU = false;
+        source.Expense.IsIoU = false;
         _appData.UpdateIncomeLog(incomeLog);
         _appData.UpdateExpense(source.Expense);
         _appData.UpdateExpenseLog(source);
@@ -186,7 +186,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
         CancellationToken cancellationToken)
     {
         var source = await _appData.GetIncomeLogByIdAsync(incomeLogId, cancellationToken);
-        if (source is null || !source.IsDebt)
+        if (source is null || !source.IsIoU)
         {
             await LoadAsync(cancellationToken);
             return SettingsOperationResult.Success();
@@ -223,7 +223,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
         await _appData.AddExpenseLogAsync(expenseLog, cancellationToken);
         ApplyExpenseToAccount(account, source.Amount);
 
-        source.IsDebt = false;
+        source.IsIoU = false;
         _appData.UpdateIncomeLog(source);
         _appData.UpdateAccount(account);
 

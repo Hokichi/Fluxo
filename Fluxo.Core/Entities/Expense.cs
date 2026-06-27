@@ -12,5 +12,5 @@ public sealed class Expense
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public ExpenseCategory ExpenseCategory { get; set; }
-    public bool IsLend { get; set; }
+    public bool IsIoU { get; set; }
 }

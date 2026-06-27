@@ -13,5 +13,5 @@ public class ExpenseLogDto
     public string Notes { get; set; } = string.Empty;
     public bool IsForDeletion { get; set; }
     public bool IsPinned { get; set; }
-    public bool IsLend { get; set; }
+    public bool IsIoU { get; set; }
 }

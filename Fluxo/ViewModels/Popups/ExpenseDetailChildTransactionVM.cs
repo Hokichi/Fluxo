@@ -13,7 +13,7 @@ public sealed class ExpenseDetailChildTransactionVM
     public string TagName { get; init; } = string.Empty;
     public string TagHexCode { get; init; } = string.Empty;
     public string Notes { get; init; } = string.Empty;
-    public bool IsLend { get; init; }
+    public bool IsIoU { get; init; }
 
     public string CategoryLabel => Category switch
     {

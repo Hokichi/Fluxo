@@ -22,7 +22,7 @@ public sealed class LogMemorySnapshotTests
             Name = "Lend",
             Amount = 10m,
             ExpenseCategory = ExpenseCategory.Needs,
-            IsLend = true
+            IsIoU = true
         };
         var expenseLog = new ExpenseLog
         {
@@ -31,7 +31,7 @@ public sealed class LogMemorySnapshotTests
             Account = account,
             Amount = 10m,
             Notes = string.Empty,
-            IsLend = true
+            IsIoU = true
         };
         var incomeLog = new IncomeLog
         {
@@ -40,11 +40,11 @@ public sealed class LogMemorySnapshotTests
             Name = "Debt",
             Amount = 10m,
             Notes = string.Empty,
-            IsDebt = true
+            IsIoU = true
         };
 
-        Assert.True(ExpenseMemorySnapshot.Create(expense).IsLend);
-        Assert.True(ExpenseLogMemorySnapshot.Create(expenseLog).IsLend);
-        Assert.True(IncomeLogMemorySnapshot.Create(incomeLog).IsDebt);
+        Assert.True(ExpenseMemorySnapshot.Create(expense).IsIoU);
+        Assert.True(ExpenseLogMemorySnapshot.Create(expenseLog).IsIoU);
+        Assert.True(IncomeLogMemorySnapshot.Create(incomeLog).IsIoU);
     }
 }

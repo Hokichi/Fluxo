@@ -823,7 +823,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     ExpenseCategory = input.Category!.Value,
                     AccountId = account.Id,
                     TagId = tag.Id,
-                    IsLend = input.IsIoU
+                    IsIoU = input.IsIoU
                 };
 
                 var expenseLog = new ExpenseLog
@@ -835,7 +835,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     IsForDeletion = false,
                     AccountId = account.Id,
                     IsPinned = input.IsPinned,
-                    IsLend = input.IsIoU
+                    IsIoU = input.IsIoU
                 };
 
                 await _appData.AddExpenseAsync(expense);
@@ -858,7 +858,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                         expenseLog.Notes,
                         expenseLog.IsForDeletion,
                         expenseLog.ParentLogId,
-                        expenseLog.IsLend))));
+                        expenseLog.IsIoU))));
             }
             else
             {
@@ -870,7 +870,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Notes = input.Note,
                     AccountId = account.Id,
                     IsPinned = input.IsPinned,
-                    IsDebt = input.IsIoU
+                    IsIoU = input.IsIoU
                 };
 
                 await _appData.AddIncomeLogAsync(incomeLog);
@@ -887,7 +887,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                         incomeLog.Amount,
                         incomeLog.AddedOn,
                         incomeLog.Notes,
-                        incomeLog.IsDebt))));
+                        incomeLog.IsIoU))));
             }
 
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(invalidationScope));

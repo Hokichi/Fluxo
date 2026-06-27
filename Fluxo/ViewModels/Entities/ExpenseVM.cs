@@ -11,5 +11,5 @@ public partial class ExpenseVM : ObservableObject
     [ObservableProperty] private int _id;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private AccountVM _account = new();
-    [ObservableProperty] private bool _isLend;
+    [ObservableProperty] private bool _isIoU;
 }

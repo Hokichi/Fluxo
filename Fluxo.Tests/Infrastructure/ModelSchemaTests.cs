@@ -35,12 +35,12 @@ public sealed class ModelSchemaTests
         Assert.True(tag.FindProperty(nameof(Tag.SpendingLimit))!.IsNullable);
 
         var expense = model.FindEntityType(typeof(Expense))!;
-        Assert.False(expense.FindProperty(nameof(Expense.IsLend))!.IsNullable);
-        Assert.Equal(false, expense.FindProperty(nameof(Expense.IsLend))!.GetDefaultValue());
+        Assert.False(expense.FindProperty(nameof(Expense.IsIoU))!.IsNullable);
+        Assert.Equal(false, expense.FindProperty(nameof(Expense.IsIoU))!.GetDefaultValue());
 
         var expenseLog = model.FindEntityType(typeof(ExpenseLog))!;
-        Assert.False(expenseLog.FindProperty(nameof(ExpenseLog.IsLend))!.IsNullable);
-        Assert.Equal(false, expenseLog.FindProperty(nameof(ExpenseLog.IsLend))!.GetDefaultValue());
+        Assert.False(expenseLog.FindProperty(nameof(ExpenseLog.IsIoU))!.IsNullable);
+        Assert.Equal(false, expenseLog.FindProperty(nameof(ExpenseLog.IsIoU))!.GetDefaultValue());
         Assert.False(expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.IsNullable);
         Assert.Equal(false, expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.GetDefaultValue());
         var parentLogId = expenseLog.FindProperty(nameof(ExpenseLog.ParentLogId));
@@ -57,8 +57,8 @@ public sealed class ModelSchemaTests
         Assert.True(expenseLog.FindNavigation(nameof(ExpenseLog.Account))!.IsEagerLoaded);
 
         var incomeLog = model.FindEntityType(typeof(IncomeLog))!;
-        Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsDebt))!.IsNullable);
-        Assert.Equal(false, incomeLog.FindProperty(nameof(IncomeLog.IsDebt))!.GetDefaultValue());
+        Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsIoU))!.IsNullable);
+        Assert.Equal(false, incomeLog.FindProperty(nameof(IncomeLog.IsIoU))!.GetDefaultValue());
         Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsForDeletion))!.IsNullable);
         Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.IsNullable);
         Assert.Equal(false, incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.GetDefaultValue());
@@ -131,49 +131,49 @@ public sealed class ModelSchemaTests
         var tagVm = new TagVM { SpendingLimit = tag.SpendingLimit };
         Assert.Equal(250m, tagVm.SpendingLimit);
 
-        var expense = new Expense { IsLend = true };
-        var expenseDto = new ExpenseDto { IsLend = expense.IsLend };
-        var expenseVm = new ExpenseVM { IsLend = expenseDto.IsLend };
-        Assert.True(expenseDto.IsLend);
-        Assert.True(expenseVm.IsLend);
+        var expense = new Expense { IsIoU = true };
+        var expenseDto = new ExpenseDto { IsIoU = expense.IsIoU };
+        var expenseVm = new ExpenseVM { IsIoU = expenseDto.IsIoU };
+        Assert.True(expenseDto.IsIoU);
+        Assert.True(expenseVm.IsIoU);
 
-        var expenseLog = new ExpenseLog { IsPinned = true, ParentLogId = 10, IsLend = true };
+        var expenseLog = new ExpenseLog { IsPinned = true, ParentLogId = 10, IsIoU = true };
         var expenseLogDto = new ExpenseLogDto
         {
             IsPinned = expenseLog.IsPinned,
             ParentLogId = expenseLog.ParentLogId,
-            IsLend = expenseLog.IsLend
+            IsIoU = expenseLog.IsIoU
         };
         var expenseLogVm = new ExpenseLogVM
         {
             IsPinned = expenseLog.IsPinned,
             ParentLogId = expenseLogDto.ParentLogId,
-            IsLend = expenseLogDto.IsLend
+            IsIoU = expenseLogDto.IsIoU
         };
         Assert.True(expenseLogDto.IsPinned);
         Assert.True(expenseLogVm.IsPinned);
-        Assert.True(expenseLogDto.IsLend);
-        Assert.True(expenseLogVm.IsLend);
+        Assert.True(expenseLogDto.IsIoU);
+        Assert.True(expenseLogVm.IsIoU);
         Assert.Equal(10, expenseLogDto.ParentLogId);
         Assert.Equal(10, expenseLogVm.ParentLogId);
 
-        var incomeLog = new IncomeLog { IsForDeletion = true, IsPinned = true, IsDebt = true };
+        var incomeLog = new IncomeLog { IsForDeletion = true, IsPinned = true, IsIoU = true };
         var incomeLogDto = new IncomeLogDto
         {
             IsForDeletion = incomeLog.IsForDeletion,
             IsPinned = incomeLog.IsPinned,
-            IsDebt = incomeLog.IsDebt
+            IsIoU = incomeLog.IsIoU
         };
         var incomeLogVm = new IncomeLogVM
         {
             IsPinned = incomeLog.IsPinned,
-            IsDebt = incomeLogDto.IsDebt
+            IsIoU = incomeLogDto.IsIoU
         };
         Assert.True(incomeLogDto.IsForDeletion);
         Assert.True(incomeLogDto.IsPinned);
         Assert.True(incomeLogVm.IsPinned);
-        Assert.True(incomeLogDto.IsDebt);
-        Assert.True(incomeLogVm.IsDebt);
+        Assert.True(incomeLogDto.IsIoU);
+        Assert.True(incomeLogVm.IsIoU);
 
         var goal = new SavingGoal { SavingEndDate = null };
         var goalVm = new SavingGoalVM

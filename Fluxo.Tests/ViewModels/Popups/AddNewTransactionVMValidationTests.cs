@@ -1128,10 +1128,10 @@ public sealed class AddNewTransactionVMValidationTests
 
             Assert.True(result.IsSuccess);
             appData.Received(1).AddExpenseAsync(
-                Arg.Is<Expense>(expense => expense.IsLend),
+                Arg.Is<Expense>(expense => expense.IsIoU),
                 Arg.Any<CancellationToken>());
             appData.Received(1).AddExpenseLogAsync(
-                Arg.Is<ExpenseLog>(log => log.IsLend),
+                Arg.Is<ExpenseLog>(log => log.IsIoU),
                 Arg.Any<CancellationToken>());
         });
     }
@@ -1576,7 +1576,7 @@ public sealed class AddNewTransactionVMValidationTests
 
             Assert.True(result.IsSuccess);
             appData.Received(1).AddIncomeLogAsync(
-                Arg.Is<IncomeLog>(log => log.IsDebt),
+                Arg.Is<IncomeLog>(log => log.IsIoU),
                 Arg.Any<CancellationToken>());
         });
     }

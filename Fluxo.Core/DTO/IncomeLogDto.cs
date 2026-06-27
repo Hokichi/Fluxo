@@ -11,5 +11,5 @@ public class IncomeLogDto
     public string Notes { get; set; } = string.Empty;
     public bool IsForDeletion { get; set; }
     public bool IsPinned { get; set; }
-    public bool IsDebt { get; set; }
+    public bool IsIoU { get; set; }
 }

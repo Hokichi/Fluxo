@@ -28,7 +28,7 @@ internal static class ExpenseDetailTargetResolver
             Notes = log.Notes,
             IsForDeletion = log.IsForDeletion,
             IsPinned = log.IsPinned,
-            IsLend = log.IsLend,
+            IsIoU = log.IsIoU,
             ParentLogId = log.ParentLogId,
             Account = new AccountVM
             {
@@ -52,7 +52,7 @@ internal static class ExpenseDetailTargetResolver
                 Name = log.Expense?.Name ?? string.Empty,
                 Amount = log.Expense?.Amount ?? log.Amount,
                 ExpenseCategory = log.Expense?.ExpenseCategory ?? default,
-                IsLend = log.Expense?.IsLend ?? false,
+                IsIoU = log.Expense?.IsIoU ?? false,
                 Tag = new TagVM
                 {
                     Id = log.Expense?.Tag?.Id ?? log.Expense?.TagId ?? 0,

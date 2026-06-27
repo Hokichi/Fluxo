@@ -63,7 +63,7 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.Contains("x:Key=\"SplitRowTagToggleStyle\"", xaml);
         Assert.Contains("x:Name=\"SplitRowsHeaderGrid\"", xaml);
         Assert.Contains("Text=\"Set as lend\"", xaml);
-        Assert.Contains("IsChecked=\"{Binding IsLend, Mode=TwoWay}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsIoU, Mode=TwoWay}\"", xaml);
 
         var addExpenseButtonIndex = xaml.IndexOf("Content=\"Add Sub-expense\"", StringComparison.Ordinal);
         var splitRowsHeaderIndex = xaml.IndexOf("x:Name=\"SplitRowsHeaderGrid\"", StringComparison.Ordinal);
@@ -121,7 +121,7 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
         Assert.Contains("Text=\"Sub-transactions\"", xaml);
         Assert.Contains("ItemsSource=\"{Binding ChildTransactions}\"", xaml);
         Assert.Contains("Data=\"{StaticResource CreditCardMinusSolid}\"", xaml);
-        Assert.Contains("Visibility=\"{Binding IsLend, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding IsIoU, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
         Assert.Contains("Visibility=\"{Binding ShowChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
         Assert.Contains("VerticalScrollBarVisibility=\"Auto\"", xaml);
         Assert.Contains("await _viewModel.LoadChildTransactionsAsync();", codeBehind);

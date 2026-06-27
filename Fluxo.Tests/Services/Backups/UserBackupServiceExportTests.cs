@@ -185,7 +185,7 @@ public sealed class UserBackupServiceExportTests
             Amount = 100m,
             Tag = tag,
             Account = account,
-            IsLend = true
+            IsIoU = true
         };
         var expenseLog = new ExpenseLog
         {
@@ -196,7 +196,7 @@ public sealed class UserBackupServiceExportTests
             Account = account,
             Amount = 100m,
             Notes = string.Empty,
-            IsLend = true
+            IsIoU = true
         };
         var incomeLog = new IncomeLog
         {
@@ -206,7 +206,7 @@ public sealed class UserBackupServiceExportTests
             Name = "Borrowed cash",
             Amount = 50m,
             Notes = string.Empty,
-            IsDebt = true
+            IsIoU = true
         };
 
         appData.GetAccountsAsync(Arg.Any<CancellationToken>()).Returns([account]);
@@ -233,9 +233,9 @@ public sealed class UserBackupServiceExportTests
             var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
             Assert.NotNull(document);
 
-            Assert.True(Assert.Single(document.Entities.Expenses).IsLend);
-            Assert.True(Assert.Single(document.Entities.ExpenseLogs).IsLend);
-            Assert.True(Assert.Single(document.Entities.IncomeLogs).IsDebt);
+            Assert.True(Assert.Single(document.Entities.Expenses).IsIoU);
+            Assert.True(Assert.Single(document.Entities.ExpenseLogs).IsIoU);
+            Assert.True(Assert.Single(document.Entities.IncomeLogs).IsIoU);
         }
         finally
         {

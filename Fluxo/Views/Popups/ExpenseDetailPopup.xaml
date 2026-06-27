@@ -271,7 +271,7 @@
                         Fill="{DynamicResource Brush.Info}"
                         Stretch="Uniform"
                         ToolTip="Lend"
-                        Visibility="{Binding IsLend, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding IsIoU, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </Grid>
             </Border>
         </DataTemplate>
@@ -639,7 +639,7 @@
                                             Grid.Column="4"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
-                                            IsChecked="{Binding IsLend, Mode=TwoWay}"
+                                            IsChecked="{Binding IsIoU, Mode=TwoWay}"
                                             Style="{StaticResource ItemCheckBoxStyle}"
                                             ToolTip="Set as lend" />
 

@@ -9,7 +9,7 @@ public partial class ExpenseSplitRowVM : ObservableObject
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private int? _expenseLogId;
     [ObservableProperty] private bool _isCausingNegativeRemainder;
-    [ObservableProperty] private bool _isLend;
+    [ObservableProperty] private bool _isIoU;
     [ObservableProperty] private bool _isTagPopupOpen;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
@@ -19,7 +19,7 @@ public partial class ExpenseSplitRowVM : ObservableObject
 
     public bool HasMeaningfulValue =>
         AmountText > 0m ||
-        IsLend ||
+        IsIoU ||
         !string.IsNullOrWhiteSpace(NameText) ||
         SelectedTag is not null;
 
@@ -39,7 +39,7 @@ public partial class ExpenseSplitRowVM : ObservableObject
         OnPropertyChanged(nameof(HasMeaningfulValue));
     }
 
-    partial void OnIsLendChanged(bool value)
+    partial void OnIsIoUChanged(bool value)
     {
         OnPropertyChanged(nameof(HasMeaningfulValue));
     }

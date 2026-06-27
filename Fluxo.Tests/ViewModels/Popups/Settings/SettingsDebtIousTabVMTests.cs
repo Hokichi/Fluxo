@@ -29,10 +29,10 @@ public sealed class SettingsIoUsTabVMTests
                     Id = 1,
                     Amount = 25m,
                     DeductedOn = new DateTime(2026, 6, 20),
-                    IsLend = true,
+                    IsIoU = true,
                     Account = account,
                     AccountId = account.Id,
-                    Expense = new Expense { Id = 2, Name = "Lunch lend", IsLend = true }
+                    Expense = new Expense { Id = 2, Name = "Lunch lend", IsIoU = true }
                 }
             ],
             [
@@ -42,7 +42,7 @@ public sealed class SettingsIoUsTabVMTests
                     Name = "Advance",
                     Amount = 40m,
                     AddedOn = new DateTime(2026, 6, 20),
-                    IsDebt = true,
+                    IsIoU = true,
                     Account = account,
                     AccountId = account.Id
                 }
@@ -69,10 +69,10 @@ public sealed class SettingsIoUsTabVMTests
                     Id = 1,
                     Amount = 25m,
                     DeductedOn = new DateTime(2026, 6, 20),
-                    IsLend = true,
+                    IsIoU = true,
                     Account = account,
                     AccountId = account.Id,
-                    Expense = new Expense { Id = 2, Name = "Lunch lend", IsLend = true }
+                    Expense = new Expense { Id = 2, Name = "Lunch lend", IsIoU = true }
                 }
             ],
             [
@@ -82,7 +82,7 @@ public sealed class SettingsIoUsTabVMTests
                     Name = "Advance",
                     Amount = 40m,
                     AddedOn = new DateTime(2026, 6, 20),
-                    IsDebt = true,
+                    IsIoU = true,
                     Account = account,
                     AccountId = account.Id
                 }
@@ -110,7 +110,7 @@ public sealed class SettingsIoUsTabVMTests
         {
             Id = 2,
             Name = "Lunch lend",
-            IsLend = true,
+            IsIoU = true,
             ExpenseCategory = ExpenseCategory.Needs,
             Tag = new Tag { Id = 20, Name = "Food", HexCode = "#22C55E" }
         };
@@ -118,7 +118,7 @@ public sealed class SettingsIoUsTabVMTests
         {
             Id = 1,
             Amount = 25m,
-            IsLend = true,
+            IsIoU = true,
             Account = account,
             AccountId = account.Id,
             Expense = expense,
@@ -131,14 +131,14 @@ public sealed class SettingsIoUsTabVMTests
         var result = await vm.ResolveAsync(vm.Items.Single());
 
         Assert.True(result.IsSuccess, result.ErrorMessage);
-        Assert.False(log.IsLend);
-        Assert.False(expense.IsLend);
+        Assert.False(log.IsIoU);
+        Assert.False(expense.IsIoU);
         Assert.Equal(125m, account.Balance);
         _ = appData.Received(1).AddIncomeLogAsync(
             Arg.Is<IncomeLog>(income =>
                 income.Amount == 25m &&
                 income.AccountId == 10 &&
-                !income.IsDebt &&
+                !income.IsIoU &&
                 income.Name == "Lunch lend - IOU resolved"),
             Arg.Any<CancellationToken>());
         appData.Received(1).UpdateExpense(expense);
@@ -161,7 +161,7 @@ public sealed class SettingsIoUsTabVMTests
             Id = 3,
             Name = "Advance",
             Amount = 40m,
-            IsDebt = true,
+            IsIoU = true,
             Account = account,
             AccountId = account.Id,
             Notes = string.Empty
@@ -174,7 +174,7 @@ public sealed class SettingsIoUsTabVMTests
         var result = await vm.ResolveAsync(vm.Items.Single());
 
         Assert.True(result.IsSuccess, result.ErrorMessage);
-        Assert.False(income.IsDebt);
+        Assert.False(income.IsIoU);
         Assert.Equal(60m, account.Balance);
         _ = appData.Received(1).AddTagAsync(
             Arg.Is<Tag>(tag =>

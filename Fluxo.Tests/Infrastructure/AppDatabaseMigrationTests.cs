@@ -265,9 +265,9 @@ public sealed class AppDatabaseMigrationTests
             await using var connection = new SqliteConnection($"Data Source={databasePath}");
             await connection.OpenAsync();
 
-            Assert.True(await ColumnExistsAsync(connection, "Expenses", "IsLend"));
-            Assert.True(await ColumnExistsAsync(connection, "ExpenseLogs", "IsLend"));
-            Assert.True(await ColumnExistsAsync(connection, "IncomeLogs", "IsDebt"));
+            Assert.True(await ColumnExistsAsync(connection, "Expenses", "IsIoU"));
+            Assert.True(await ColumnExistsAsync(connection, "ExpenseLogs", "IsIoU"));
+            Assert.True(await ColumnExistsAsync(connection, "IncomeLogs", "IsIoU"));
         }
         finally
         {
