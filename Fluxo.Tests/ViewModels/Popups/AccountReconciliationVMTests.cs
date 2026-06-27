@@ -45,17 +45,14 @@ public sealed class AccountReconciliationVMTests
             IsSystemTag = true
         };
 
-        Expense? savedExpense = null;
-        ExpenseLog? savedLog = null;
+        Transaction? savedTransaction = null;
         var reloadCount = 0;
 
         appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Account?>(persistedSource));
         appData.GetTagsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Tag>>([reconciliationTag]));
-        appData.AddExpenseAsync(Arg.Do<Expense>(expense => savedExpense = expense), Arg.Any<CancellationToken>())
-            .Returns(Task.CompletedTask);
-        appData.AddExpenseLogAsync(Arg.Do<ExpenseLog>(log => savedLog = log), Arg.Any<CancellationToken>())
+        appData.AddTransactionAsync(Arg.Do<Transaction>(transaction => savedTransaction = transaction), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         appData.SaveChangesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
@@ -73,17 +70,15 @@ public sealed class AccountReconciliationVMTests
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.CreatedExpenseLog);
-        Assert.NotNull(savedExpense);
-        Assert.NotNull(savedLog);
-        Assert.Equal("Checking - Budget Reconciliation", savedExpense.Name);
-        Assert.Equal(42.50m, savedExpense.Amount);
-        Assert.Equal(ExpenseCategory.Needs, savedExpense.ExpenseCategory);
-        Assert.Equal(3, savedExpense.AccountId);
-        Assert.Equal(9, savedExpense.TagId);
-        Assert.Equal(42.50m, savedLog.Amount);
-        Assert.Equal(DateTime.Today, savedLog.DeductedOn);
-        Assert.Equal(3, savedLog.AccountId);
-        Assert.False(savedLog.IsForDeletion);
+        Assert.NotNull(savedTransaction);
+        Assert.Equal(TransactionType.Expense, savedTransaction.Type);
+        Assert.Equal("Checking - Budget Reconciliation", savedTransaction.Name);
+        Assert.Equal(42.50m, savedTransaction.Amount);
+        Assert.Equal(ExpenseCategory.Needs, savedTransaction.ExpenseCategory);
+        Assert.Equal(3, savedTransaction.AccountId);
+        Assert.Equal(9, savedTransaction.TagId);
+        Assert.Equal(DateTime.Today, savedTransaction.OccurredOn);
+        Assert.False(savedTransaction.IsForDeletion);
         Assert.Equal(457.50m, persistedSource.Balance);
         Assert.Equal(1, reloadCount);
         appData.Received(1).UpdateAccount(persistedSource);

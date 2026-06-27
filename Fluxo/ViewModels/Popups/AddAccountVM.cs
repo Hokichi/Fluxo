@@ -496,7 +496,7 @@ public partial class AddAccountVM : ObservableValidator
                     sourceAction.Description,
                     [
                         sourceAction,
-                        new AddExpenseLogMemoryAction(
+                        new AddTransactionMemoryAction(
                             autoTransactionSnapshot,
                             shouldAdjustAccountTotals: false)
                     ]);
@@ -563,7 +563,7 @@ public partial class AddAccountVM : ObservableValidator
             .FirstOrDefault();
     }
 
-    private static async Task<ExpenseLogMemorySnapshot?> TryCreateBalanceUpdateTransactionAsync(
+    private static async Task<TransactionMemorySnapshot?> TryCreateBalanceUpdateTransactionAsync(
         IAppDataService appData,
         Account account,
         decimal previousSpentAmount,
@@ -579,42 +579,22 @@ public partial class AddAccountVM : ObservableValidator
             return null;
 
         var balanceUpdateTag = await ResolveBalanceUpdateTagAsync(appData);
-        var expense = new Expense
+        var transaction = new Transaction
         {
+            Type = TransactionType.Expense,
             Name = $"Balance Update",
             Amount = triggerAmount,
+            OccurredOn = DateTime.Now,
+            Notes = string.Empty,
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = account.Id,
             TagId = balanceUpdateTag.Id
         };
 
-        await appData.AddExpenseAsync(expense);
-
-        var expenseLog = new ExpenseLog
-        {
-            Expense = expense,
-            AccountId = account.Id,
-            Amount = triggerAmount,
-            DeductedOn = DateTime.Now,
-            Notes = string.Empty,
-            IsForDeletion = false
-        };
-
-        await appData.AddExpenseLogAsync(expenseLog);
+        await appData.AddTransactionAsync(transaction);
         await appData.SaveChangesAsync();
 
-        return new ExpenseLogMemorySnapshot(
-            expense.Id,
-            expenseLog.Id,
-            expense.Name,
-            expense.Amount,
-            expense.ExpenseCategory,
-            account.Id,
-            balanceUpdateTag.Id,
-            expenseLog.DeductedOn,
-            expenseLog.Notes,
-            expenseLog.IsForDeletion,
-            expenseLog.ParentLogId);
+        return TransactionMemorySnapshot.Create(transaction);
     }
 
     private bool TryBuildInput(

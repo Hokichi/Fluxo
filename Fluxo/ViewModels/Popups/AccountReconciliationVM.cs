@@ -87,48 +87,29 @@ public partial class AccountReconciliationVM : ObservableObject
 
             var reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
             var expenseName = $"{account.Name} - {SystemTags.BudgetReconciliationName}";
-            var expense = new Expense
+            var transaction = new Transaction
             {
+                Type = TransactionType.Expense,
                 Name = expenseName,
                 Amount = input.Amount,
+                OccurredOn = DateTime.Today,
+                Notes = string.Empty,
                 ExpenseCategory = ExpenseCategory.Needs,
                 AccountId = account.Id,
                 TagId = reconciliationTag.Id
             };
             if (reconciliationTag.Id <= 0)
-                expense.Tag = reconciliationTag;
+                transaction.Tag = reconciliationTag;
 
-            var expenseLog = new ExpenseLog
-            {
-                Expense = expense,
-                AccountId = account.Id,
-                Amount = input.Amount,
-                DeductedOn = DateTime.Today,
-                Notes = string.Empty,
-                IsForDeletion = false
-            };
-
-            await _appData.AddExpenseAsync(expense, cancellationToken);
-            await _appData.AddExpenseLogAsync(expenseLog, cancellationToken);
+            await _appData.AddTransactionAsync(transaction, cancellationToken);
             ApplyExpenseToAccount(account, input.Amount);
             _appData.UpdateAccount(account);
 
             await _appData.SaveChangesAsync(cancellationToken);
 
-            var createdExpenseLog = CreateExpenseLogViewModel(expense, expenseLog, account, reconciliationTag);
+            var createdExpenseLog = CreateExpenseLogViewModel(transaction, account, reconciliationTag);
             WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
-                new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
-                    expense.Id,
-                    expenseLog.Id,
-                    expense.Name,
-                    expenseLog.Amount,
-                    expense.ExpenseCategory,
-                    account.Id,
-                    reconciliationTag.Id,
-                    expenseLog.DeductedOn,
-                    expenseLog.Notes,
-                    expenseLog.IsForDeletion,
-                    expenseLog.ParentLogId))));
+                new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(transaction))));
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _reloadCurrentDataAsync();
@@ -200,8 +181,7 @@ public partial class AccountReconciliationVM : ObservableObject
     }
 
     private static ExpenseLogVM CreateExpenseLogViewModel(
-        Expense expense,
-        ExpenseLog expenseLog,
+        Transaction transaction,
         Account account,
         Tag reconciliationTag)
     {
@@ -225,18 +205,18 @@ public partial class AccountReconciliationVM : ObservableObject
 
         return new ExpenseLogVM
         {
-            Id = expenseLog.Id,
-            Amount = expenseLog.Amount,
-            DeductedOn = expenseLog.DeductedOn,
-            Notes = expenseLog.Notes,
-            IsForDeletion = expenseLog.IsForDeletion,
+            Id = transaction.Id,
+            Amount = transaction.Amount,
+            DeductedOn = transaction.OccurredOn,
+            Notes = transaction.Notes,
+            IsForDeletion = transaction.IsForDeletion,
             Account = sourceVm,
             Expense = new ExpenseVM
             {
-                Id = expense.Id,
-                Name = expense.Name,
-                Amount = expense.Amount,
-                ExpenseCategory = expense.ExpenseCategory,
+                Id = transaction.Id,
+                Name = transaction.Name,
+                Amount = transaction.Amount,
+                ExpenseCategory = transaction.ExpenseCategory!.Value,
                 Account = sourceVm,
                 Tag = tagVm
             }

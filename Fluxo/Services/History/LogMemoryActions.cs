@@ -368,7 +368,9 @@ public sealed record TransactionMemorySnapshot(
     }
 }
 
-public sealed class AddTransactionMemoryAction(TransactionMemorySnapshot snapshot) : ILogMemoryAction
+public sealed class AddTransactionMemoryAction(
+    TransactionMemorySnapshot snapshot,
+    bool shouldAdjustAccountTotals = true) : ILogMemoryAction
 {
     public TransactionMemorySnapshot Snapshot => snapshot;
     public string Description => snapshot.Type == TransactionType.Expense ? "Add expense" : "Add income";
@@ -379,8 +381,11 @@ public sealed class AddTransactionMemoryAction(TransactionMemorySnapshot snapsho
         if (transaction is null)
             return;
 
-        LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
-        unitOfWork.Accounts.Update(transaction.Account);
+        if (shouldAdjustAccountTotals)
+        {
+            LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
+            unitOfWork.Accounts.Update(transaction.Account);
+        }
         unitOfWork.Transactions.Remove(transaction);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -394,8 +399,11 @@ public sealed class AddTransactionMemoryAction(TransactionMemorySnapshot snapsho
             unitOfWork, snapshot.AccountId, cancellationToken);
         var transaction = CreateTransaction(snapshot, account);
         await unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
-        LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
-        unitOfWork.Accounts.Update(account);
+        if (shouldAdjustAccountTotals)
+        {
+            LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
+            unitOfWork.Accounts.Update(account);
+        }
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
