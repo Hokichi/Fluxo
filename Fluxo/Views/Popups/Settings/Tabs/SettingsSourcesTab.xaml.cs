@@ -3,8 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using Fluxo.Core.Enums;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.ViewModels.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
@@ -161,27 +161,13 @@ public partial class SettingsSourcesTab : UserControl
 
     private static bool ShouldIgnoreRowClick(DependencyObject? source)
     {
-        var clickedButton = FindAncestor<ButtonBase>(source);
+        var clickedButton = DependencyObjectTree.FindAncestor<ButtonBase>(source);
         return clickedButton is not null && clickedButton is not CheckBox;
     }
 
     private static bool IsCheckBoxClick(DependencyObject? source)
     {
-        return FindAncestor<CheckBox>(source) is not null;
-    }
-
-    private static T? FindAncestor<T>(DependencyObject? source)
-        where T : DependencyObject
-    {
-        while (source is not null)
-        {
-            if (source is T typedSource)
-                return typedSource;
-
-            source = VisualTreeHelper.GetParent(source);
-        }
-
-        return null;
+        return DependencyObjectTree.FindAncestor<CheckBox>(source) is not null;
     }
 
     private void ShowResult(SettingsOperationResult result)

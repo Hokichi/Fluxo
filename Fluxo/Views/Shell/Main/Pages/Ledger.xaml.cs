@@ -3,9 +3,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell.Main;
@@ -133,14 +133,14 @@ public partial class Ledger : UserControl
 
             if (source is TextBox { IsReadOnly: true })
             {
-                source = VisualTreeHelper.GetParent(source);
+                source = DependencyObjectTree.GetParent(source);
                 continue;
             }
 
             if (source is TextBox or ButtonBase or CheckBox or ComboBox or ListBox or Popup)
                 return true;
 
-            source = VisualTreeHelper.GetParent(source);
+            source = DependencyObjectTree.GetParent(source);
         }
 
         return false;

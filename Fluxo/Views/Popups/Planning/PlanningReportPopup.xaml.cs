@@ -2,11 +2,10 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Planning;
 using Fluxo.Views.Behaviors;
@@ -351,38 +350,7 @@ public partial class PlanningReportPopup : BasePopup
         if (container is null || Keyboard.FocusedElement is not DependencyObject focusedElement)
             return false;
 
-        return IsDescendantOf(focusedElement, container);
-    }
-
-    private static bool IsDescendantOf(DependencyObject? element, DependencyObject ancestor)
-    {
-        while (element is not null)
-        {
-            if (ReferenceEquals(element, ancestor))
-                return true;
-
-            element = GetVisualOrLogicalParent(element);
-        }
-
-        return false;
-    }
-
-    private static DependencyObject? GetVisualOrLogicalParent(DependencyObject element)
-    {
-        if (element is Visual || element is Visual3D)
-        {
-            var visualParent = VisualTreeHelper.GetParent(element);
-            if (visualParent is not null)
-                return visualParent;
-        }
-
-        if (element is FrameworkContentElement frameworkContentElement)
-            return frameworkContentElement.Parent;
-
-        if (element is ContentElement contentElement)
-            return ContentOperations.GetParent(contentElement);
-
-        return LogicalTreeHelper.GetParent(element);
+        return DependencyObjectTree.IsDescendantOf(focusedElement, container);
     }
 
     private void OnRemoveExpenseClick(object sender, RoutedEventArgs e)

@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.Services.Logging;
 
 namespace Fluxo.Views.Behaviors;
@@ -180,11 +180,7 @@ public static class ScrollOnDemandBehavior
                 return descendantTemplateScrollViewer;
         }
 
-        for (var current = VisualTreeHelper.GetParent(start); current is not null; current = VisualTreeHelper.GetParent(current))
-            if (current is ScrollViewer ancestorViewer)
-                return ancestorViewer;
-
-        return null;
+        return DependencyObjectTree.FindAncestor<ScrollViewer>(DependencyObjectTree.GetParent(start));
     }
 
     private static bool ShouldUseOwnedScrollViewer(ItemsControl itemsControl) =>
@@ -192,10 +188,8 @@ public static class ScrollOnDemandBehavior
 
     private static ScrollViewer? FindTemplateOwnedDescendantScrollViewer(DependencyObject root, ItemsControl owner)
     {
-        var childCount = VisualTreeHelper.GetChildrenCount(root);
-        for (var i = 0; i < childCount; i++)
+        foreach (var child in DependencyObjectTree.GetChildren(root))
         {
-            var child = VisualTreeHelper.GetChild(root, i);
             if (child is ScrollViewer scrollViewer && ReferenceEquals(scrollViewer.TemplatedParent, owner))
                 return scrollViewer;
 

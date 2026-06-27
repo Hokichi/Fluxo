@@ -337,7 +337,7 @@ public sealed class MainWindowShortcutRoutingTests
     {
         var source = ReadMainWindowSource();
 
-        Assert.Contains("!IsDescendantOf(source, HeaderSearchRegion) &&", source);
+        Assert.Contains("!DependencyObjectTree.IsDescendantOf(source, HeaderSearchRegion) &&", source);
         Assert.Contains("ShouldCollapseHeaderSearchOnExternalClick())", source);
         Assert.Contains("private bool ShouldCollapseHeaderSearchOnExternalClick()", source);
         Assert.Contains(

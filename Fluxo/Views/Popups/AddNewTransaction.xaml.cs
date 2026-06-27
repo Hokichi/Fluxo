@@ -7,8 +7,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.Services.Dialogs;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -254,7 +254,7 @@ public partial class AddNewTransaction : BasePopup
         if (sender is not DependencyObject source)
             return;
 
-        var scrollViewer = FindAncestor<ScrollViewer>(source);
+        var scrollViewer = DependencyObjectTree.FindAncestor<ScrollViewer>(DependencyObjectTree.GetParent(source));
         if (scrollViewer is null)
             return;
 
@@ -327,7 +327,7 @@ public partial class AddNewTransaction : BasePopup
         if (e.OriginalSource is not DependencyObject source)
             return;
 
-        if (IsDescendantOf(source, MoreTagsButton))
+        if (DependencyObjectTree.IsDescendantOf(source, MoreTagsButton))
             return;
 
         _viewModel.IsMoreTagsOpen = false;
@@ -423,35 +423,6 @@ public partial class AddNewTransaction : BasePopup
     private bool IsPointerOverMoreRegion()
     {
         return MoreTagsButton.IsMouseOver || MoreTagsPopupContent.IsMouseOver;
-    }
-
-    private static bool IsDescendantOf(DependencyObject source, DependencyObject ancestor)
-    {
-        var current = source;
-        while (current is not null)
-        {
-            if (ReferenceEquals(current, ancestor))
-                return true;
-
-            current = System.Windows.Media.VisualTreeHelper.GetParent(current);
-        }
-
-        return false;
-    }
-
-    private static T? FindAncestor<T>(DependencyObject source)
-        where T : DependencyObject
-    {
-        var current = VisualTreeHelper.GetParent(source);
-        while (current is not null)
-        {
-            if (current is T match)
-                return match;
-
-            current = VisualTreeHelper.GetParent(current);
-        }
-
-        return null;
     }
 
     private bool CanShowMoreTagsPopup()

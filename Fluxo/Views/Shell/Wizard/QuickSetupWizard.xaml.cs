@@ -3,10 +3,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Fluxo.Core.Enums;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Popups;
@@ -372,7 +372,7 @@ public partial class QuickSetupWizard : BasePopup
             if (current is ButtonBase or Thumb or TextBoxBase)
                 return true;
 
-            current = VisualTreeHelper.GetParent(current);
+            current = DependencyObjectTree.GetParent(current);
         }
 
         return false;

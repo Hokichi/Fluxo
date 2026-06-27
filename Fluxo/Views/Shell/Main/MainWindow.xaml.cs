@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
@@ -674,26 +675,8 @@ public partial class MainWindow : Window, IPopupHost
 
     private static bool IsInteractiveElement(DependencyObject source)
     {
-        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
+        for (var current = source; current is not null; current = DependencyObjectTree.GetParent(current))
             if (current is ScrollBar or Thumb or ButtonBase or ListViewItem or TextBoxBase or Selector)
-                return true;
-
-        return false;
-    }
-
-    private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
-    {
-        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
-            if (current is T match)
-                return match;
-
-        return null;
-    }
-
-    private static bool IsDescendantOf(DependencyObject source, DependencyObject ancestor)
-    {
-        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
-            if (ReferenceEquals(current, ancestor))
                 return true;
 
         return false;
@@ -1126,7 +1109,7 @@ public partial class MainWindow : Window, IPopupHost
         if (!_isHeaderSearchExpanded || e.NewFocus is not DependencyObject newFocus)
             return;
 
-        if (IsDescendantOf(newFocus, HeaderSearchRegion))
+        if (DependencyObjectTree.IsDescendantOf(newFocus, HeaderSearchRegion))
             return;
 
         if (_activeMainPage == MainPage.Ledger && !ShouldCollapseHeaderSearchOnExternalClick())
@@ -2162,19 +2145,19 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         if (_isHeaderSearchExpanded &&
-            !IsDescendantOf(source, HeaderSearchRegion) &&
+            !DependencyObjectTree.IsDescendantOf(source, HeaderSearchRegion) &&
             ShouldCollapseHeaderSearchOnExternalClick())
             CollapseHeaderSearch();
 
         if (HeaderNotificationPopup.IsOpen &&
-            !IsDescendantOf(source, HeaderNotificationPanel) &&
-            FindAncestor<BalloonButton>(source) != HeaderNotificationButton)
+            !DependencyObjectTree.IsDescendantOf(source, HeaderNotificationPanel) &&
+            DependencyObjectTree.FindAncestor<BalloonButton>(source) != HeaderNotificationButton)
             CloseHeaderNotificationPopup();
 
         if (!_isHeaderMenuPinned)
             return;
 
-        if (FindAncestor<BalloonButton>(source) == HeaderMenuButton)
+        if (DependencyObjectTree.FindAncestor<BalloonButton>(source) == HeaderMenuButton)
             return;
 
         CloseHeaderMenu();

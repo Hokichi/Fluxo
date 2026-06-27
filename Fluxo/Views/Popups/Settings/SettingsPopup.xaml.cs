@@ -4,10 +4,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Resources.Infrastructure;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Logging;
@@ -164,7 +164,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
     private static bool IsFocusWithin(DependencyObject container)
     {
         return Keyboard.FocusedElement is DependencyObject focusedElement &&
-               IsDescendantOf(focusedElement, container);
+               DependencyObjectTree.IsDescendantOf(focusedElement, container);
     }
 
     private static bool FocusFirstFocusableDescendant(DependencyObject container)
@@ -175,20 +175,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
             return true;
         }
 
-        var childCount = VisualTreeHelper.GetChildrenCount(container);
-        for (var index = 0; index < childCount; index++)
-        {
-            if (FocusFirstFocusableDescendant(VisualTreeHelper.GetChild(container, index)))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsDescendantOf(DependencyObject element, DependencyObject ancestor)
-    {
-        for (var current = element; current is not null; current = VisualTreeHelper.GetParent(current))
-            if (ReferenceEquals(current, ancestor))
+        foreach (var child in DependencyObjectTree.GetChildren(container))
+            if (FocusFirstFocusableDescendant(child))
                 return true;
 
         return false;

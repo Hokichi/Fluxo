@@ -2,9 +2,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using Fluxo.Core.Enums;
 using Fluxo.Resources.Components;
+using Fluxo.Resources.Infrastructure;
 
 namespace Fluxo.Views.Shell.Main.Sections;
 
@@ -20,7 +20,7 @@ public partial class BudgetAllocationPanel : UserControl
         if (sender is not ListView listView || e.OriginalSource is not DependencyObject source)
             return;
 
-        var listViewItem = FindAncestor<ListViewItem>(source);
+        var listViewItem = DependencyObjectTree.FindAncestor<ListViewItem>(source);
         if (listViewItem is null || !listViewItem.IsSelected)
             return;
 
@@ -50,12 +50,4 @@ public partial class BudgetAllocationPanel : UserControl
         mainWindow.OpenAddNewTransactionPopupForCategory(category);
     }
 
-    private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
-    {
-        for (var current = source; current is not null; current = VisualTreeHelper.GetParent(current))
-            if (current is T match)
-                return match;
-
-        return null;
-    }
 }
