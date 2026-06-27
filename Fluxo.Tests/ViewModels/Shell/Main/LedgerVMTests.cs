@@ -264,7 +264,7 @@ public sealed class LedgerVMTests
     {
         RunInSta(() =>
         {
-            var vm = CreateVm(expenseLogService: CreateExpenseLogService(CreateBalancedSplitExpenseLogs()));
+            var vm = CreateVm(transactionService: CreateTransactionService(CreateBalancedSplitExpenseLogs()));
             vm.LoadAsync().GetAwaiter().GetResult();
             var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
             var children = parent.ChildTransactions.ToList();
@@ -306,22 +306,22 @@ public sealed class LedgerVMTests
     {
         RunInSta(() =>
         {
-            var expenseLogService = Substitute.For<IExpenseLogService>();
-            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-                .Returns(CreateExpenseLogs());
-            var vm = CreateVm(expenseLogService: expenseLogService);
+            var transactionService = Substitute.For<ITransactionService>();
+            transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(ToTransactionDtos(CreateExpenseLogs()));
+            var vm = CreateVm(transactionService: transactionService);
             vm.LoadAsync().GetAwaiter().GetResult();
 
             vm.SearchText = "fresh";
             vm.SearchText = string.Empty;
-            expenseLogService.Received(1).GetAllAsync(Arg.Any<CancellationToken>());
+            transactionService.Received(1).GetAllAsync(Arg.Any<CancellationToken>());
 
             vm.Receive(new DateRangeSelectionChangedMessage(new DateTime(2026, 6, 2), new DateTime(2026, 6, 2)));
             SpinWait.SpinUntil(() =>
             {
                 try
                 {
-                    expenseLogService.Received(2).GetAllAsync(Arg.Any<CancellationToken>());
+                    transactionService.Received(2).GetAllAsync(Arg.Any<CancellationToken>());
                     return true;
                 }
                 catch
@@ -330,7 +330,7 @@ public sealed class LedgerVMTests
                 }
             }, TimeSpan.FromSeconds(2));
 
-            expenseLogService.Received(2).GetAllAsync(Arg.Any<CancellationToken>());
+            transactionService.Received(2).GetAllAsync(Arg.Any<CancellationToken>());
             Assert.All(GetItems(vm.TransactionsView), item => Assert.Equal(new DateTime(2026, 6, 2), item.OccurredOn.Date));
         });
     }
@@ -354,10 +354,10 @@ public sealed class LedgerVMTests
     {
         RunInSta(() =>
         {
-            var expenseLogService = Substitute.For<IExpenseLogService>();
-            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-                .Returns(CreateExpenseLogs());
-            var vm = CreateVm(expenseLogService: expenseLogService);
+            var transactionService = Substitute.For<ITransactionService>();
+            transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(ToTransactionDtos(CreateExpenseLogs()));
+            var vm = CreateVm(transactionService: transactionService);
             vm.LoadAsync().GetAwaiter().GetResult();
 
             vm.StartDate = new DateTime(2026, 6, 2);
@@ -367,7 +367,7 @@ public sealed class LedgerVMTests
             {
                 try
                 {
-                    expenseLogService.Received(3).GetAllAsync(Arg.Any<CancellationToken>());
+                    transactionService.Received(3).GetAllAsync(Arg.Any<CancellationToken>());
                     return true;
                 }
                 catch
@@ -460,10 +460,10 @@ public sealed class LedgerVMTests
                 ])
                 .ToList();
             Assert.Equal(1, expenseLogs.Single(log => log.Id == 4).ParentLogId);
-            var expenseLogService = Substitute.For<IExpenseLogService>();
-            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-                .Returns(expenseLogs);
-            var vm = CreateVm(expenseLogService: expenseLogService);
+            var transactionService = Substitute.For<ITransactionService>();
+            transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(ToTransactionDtos(expenseLogs));
+            var vm = CreateVm(transactionService: transactionService);
 
             vm.LoadAsync().GetAwaiter().GetResult();
 
@@ -546,7 +546,7 @@ public sealed class LedgerVMTests
     {
         RunInSta(() =>
         {
-            var vm = CreateVm(expenseLogService: CreateExpenseLogService(CreateBalancedSplitExpenseLogs()));
+            var vm = CreateVm(transactionService: CreateTransactionService(CreateBalancedSplitExpenseLogs()));
             vm.LoadAsync().GetAwaiter().GetResult();
             var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
             var children = parent.ChildTransactions.ToList();
@@ -586,7 +586,7 @@ public sealed class LedgerVMTests
                 .Returns(childLog5);
 
             var vm = CreateVm(
-                expenseLogService: CreateExpenseLogService(CreateBalancedSplitExpenseLogs()),
+                transactionService: CreateTransactionService(CreateBalancedSplitExpenseLogs()),
                 unitOfWork: unitOfWork);
             vm.LoadAsync().GetAwaiter().GetResult();
             var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
@@ -677,10 +677,10 @@ public sealed class LedgerVMTests
                         parentLogId: 1)
                 ])
                 .ToList();
-            var expenseLogService = Substitute.For<IExpenseLogService>();
-            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-                .Returns(expenseLogs);
-            var vm = CreateVm(expenseLogService: expenseLogService, unitOfWork: CreateUnitOfWork());
+            var transactionService = Substitute.For<ITransactionService>();
+            transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(ToTransactionDtos(expenseLogs));
+            var vm = CreateVm(transactionService: transactionService, unitOfWork: CreateUnitOfWork());
             vm.LoadAsync().GetAwaiter().GetResult();
             var parent = GetItems(vm.TransactionsView).Single(item => item.Name == "FreshMart Grocery");
             var child = Assert.Single(parent.ChildTransactions);
@@ -918,17 +918,17 @@ public sealed class LedgerVMTests
     }
 
     private static LedgerVM CreateVm(
-        IExpenseLogService? expenseLogService = null,
+        ITransactionService? transactionService = null,
         IAccountService? accountService = null,
         ITagService? tagService = null,
         IUnitOfWork? unitOfWork = null,
         IMessenger? messenger = null)
     {
-        if (expenseLogService is null)
+        if (transactionService is null)
         {
-            expenseLogService = Substitute.For<IExpenseLogService>();
-            expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-                .Returns(CreateExpenseLogs());
+            transactionService = Substitute.For<ITransactionService>();
+            transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+                .Returns(ToTransactionDtos(CreateExpenseLogs()));
         }
 
         if (accountService is null)
@@ -948,7 +948,7 @@ public sealed class LedgerVMTests
         unitOfWork ??= CreateUnitOfWork();
 
         return new LedgerVM(
-            expenseLogService,
+            transactionService,
             accountService,
             tagService,
             new InlineDataOperationRunner(unitOfWork),
@@ -956,12 +956,53 @@ public sealed class LedgerVMTests
             messenger ?? new WeakReferenceMessenger());
     }
 
-    private static IExpenseLogService CreateExpenseLogService(IReadOnlyList<ExpenseLogDto> expenseLogs)
+    private static ITransactionService CreateTransactionService(IReadOnlyList<ExpenseLogDto> expenseLogs)
     {
-        var expenseLogService = Substitute.For<IExpenseLogService>();
-        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(expenseLogs);
-        return expenseLogService;
+        var transactionService = Substitute.For<ITransactionService>();
+        transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(ToTransactionDtos(expenseLogs));
+        return transactionService;
+    }
+
+    private static IReadOnlyList<TransactionDto> ToTransactionDtos(IReadOnlyList<ExpenseLogDto> expenseLogs)
+    {
+        return expenseLogs.Select(log => new TransactionDto
+            {
+                Id = log.Id,
+                Type = TransactionType.Expense,
+                AccountId = log.AccountId,
+                Account = log.Account,
+                Name = log.Expense.Name,
+                Amount = log.Amount,
+                OccurredOn = log.DeductedOn,
+                Notes = log.Notes,
+                ExpenseCategory = log.Expense.ExpenseCategory,
+                TagId = log.Expense.TagId,
+                Tag = log.Expense.Tag,
+                ParentTransactionId = log.ParentLogId,
+                IsPinned = log.IsPinned,
+                IsForDeletion = log.IsForDeletion,
+                IsIoU = log.IsIoU,
+                IsExcludedFromBudget = log.IsExcludedFromBudget
+            })
+            .Concat(CreateIncomeLogs().Select(log => new TransactionDto
+            {
+                Id = log.Id,
+                Type = TransactionType.Income,
+                AccountId = log.AccountId,
+                Account = new AccountDto
+                {
+                    Id = log.Account.Id,
+                    Name = log.Account.Name,
+                    AccountType = log.Account.AccountType,
+                    IsEnabled = log.Account.IsEnabled
+                },
+                Name = log.Name,
+                Amount = log.Amount,
+                OccurredOn = log.AddedOn,
+                Notes = log.Notes
+            }))
+            .ToList();
     }
 
     private static IMapper CreateMapper()
