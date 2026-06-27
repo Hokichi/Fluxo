@@ -9,16 +9,16 @@ namespace Fluxo.Services.Persistence;
 
 public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper mapper) : ITagService
 {
-    public async Task<IReadOnlyList<ExpenseTagDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TagDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dataOperationRunner.RunAsync("load expense tags", async (scope, ct) =>
         {
-            var tags = await scope.UnitOfWork.ExpenseTags.GetAllAsync(ct);
-            return mapper.Map<IReadOnlyList<ExpenseTagDto>>(tags);
+            var tags = await scope.UnitOfWork.Tags.GetAllAsync(ct);
+            return mapper.Map<IReadOnlyList<TagDto>>(tags);
         }, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ExpenseTagDto>> GetTagsOrderedByExpenseCountAsync(ExpenseFilter filter,
+    public async Task<IReadOnlyList<TagDto>> GetTagsOrderedByExpenseCountAsync(ExpenseFilter filter,
         CancellationToken cancellationToken = default)
     {
         return await dataOperationRunner.RunAsync("load tags ordered by expense count", async (scope, ct) =>
@@ -27,38 +27,38 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
             var expenses = await scope.UnitOfWork.Expenses.SearchAsync(filter, ct);
 
             var tags = expenses
-                .Where(e => e.ExpenseTag is not null)
-                .GroupBy(e => e.ExpenseTagId)
+                .Where(e => e.Tag is not null)
+                .GroupBy(e => e.TagId)
                 .OrderByDescending(g => g.Count())
-                .Select(g => g.First().ExpenseTag!)
+                .Select(g => g.First().Tag!)
                 .ToList();
 
-            return mapper.Map<IReadOnlyList<ExpenseTagDto>>(tags);
+            return mapper.Map<IReadOnlyList<TagDto>>(tags);
         }, cancellationToken);
     }
 
-    public async Task AddAsync(ExpenseTagDto dto, CancellationToken cancellationToken = default)
+    public async Task AddAsync(TagDto dto, CancellationToken cancellationToken = default)
     {
         await dataOperationRunner.RunAsync("create tag", async (scope, ct) =>
         {
-            var tag = mapper.Map<ExpenseTag>(dto);
+            var tag = mapper.Map<Tag>(dto);
             tag.Id = 0;
-            await scope.UnitOfWork.ExpenseTags.AddAsync(tag, ct);
+            await scope.UnitOfWork.Tags.AddAsync(tag, ct);
             await scope.UnitOfWork.SaveChangesAsync(ct);
         }, cancellationToken);
     }
 
-    public async Task UpdateAsync(ExpenseTagDto dto, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(TagDto dto, CancellationToken cancellationToken = default)
     {
         await dataOperationRunner.RunAsync("update tag", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
-            var tag = await unitOfWork.ExpenseTags.GetByIdAsync(dto.Id, ct);
+            var tag = await unitOfWork.Tags.GetByIdAsync(dto.Id, ct);
             if (tag is null)
                 return;
 
             mapper.Map(dto, tag);
-            unitOfWork.ExpenseTags.Update(tag);
+            unitOfWork.Tags.Update(tag);
             await unitOfWork.SaveChangesAsync(ct);
         }, cancellationToken);
     }
@@ -68,12 +68,12 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
         await dataOperationRunner.RunAsync("delete tag", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
-            var tag = await unitOfWork.ExpenseTags.GetByIdAsync(id, ct);
+            var tag = await unitOfWork.Tags.GetByIdAsync(id, ct);
             if (tag is null)
                 return;
 
             // If Expense rows still reference this tag, FK (Restrict) will reject delete.
-            unitOfWork.ExpenseTags.Remove(tag);
+            unitOfWork.Tags.Remove(tag);
             await unitOfWork.SaveChangesAsync(ct);
         }, cancellationToken);
     }

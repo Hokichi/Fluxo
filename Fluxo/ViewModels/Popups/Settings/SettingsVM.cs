@@ -16,30 +16,30 @@ namespace Fluxo.ViewModels.Popups.Settings;
 public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendingChangesChangedMessage>,
     IRecipient<SettingsMaintenanceRequestedMessage>, IRecipient<SettingsDataChangedMessage>, IDisposable
 {
-    private static readonly IReadOnlyList<ExpenseTag> RequiredDeleteAllDataSystemTags =
+    private static readonly IReadOnlyList<Tag> RequiredDeleteAllDataSystemTags =
     [
         new()
         {
-            Name = SystemExpenseTags.BalanceUpdateName,
-            HexCode = SystemExpenseTags.BalanceUpdateHexCode,
+            Name = SystemTags.BalanceUpdateName,
+            HexCode = SystemTags.BalanceUpdateHexCode,
             IsSystemTag = true
         },
         new()
         {
-            Name = SystemExpenseTags.GoalUpdateName,
-            HexCode = SystemExpenseTags.GoalUpdateHexCode,
+            Name = SystemTags.GoalUpdateName,
+            HexCode = SystemTags.GoalUpdateHexCode,
             IsSystemTag = true
         },
         new()
         {
-            Name = SystemExpenseTags.DataRestorationName,
-            HexCode = SystemExpenseTags.DataRestorationHexCode,
+            Name = SystemTags.DataRestorationName,
+            HexCode = SystemTags.DataRestorationHexCode,
             IsSystemTag = true
         },
         new()
         {
-            Name = SystemExpenseTags.BudgetReconciliationName,
-            HexCode = SystemExpenseTags.BudgetReconciliationHexCode,
+            Name = SystemTags.BudgetReconciliationName,
+            HexCode = SystemTags.BudgetReconciliationHexCode,
             IsSystemTag = true
         }
     ];
@@ -356,7 +356,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return TagsTab.CreateTagAsync(name, hexCode);
     }
 
-    public Task<SettingsOperationResult> DeleteTagAsync(ExpenseTagVM tag)
+    public Task<SettingsOperationResult> DeleteTagAsync(TagVM tag)
     {
         return TagsTab.DeleteTagAsync(tag);
     }
@@ -399,7 +399,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             var expenses = await _appData.GetExpensesAsync();
             var savingGoals = await _appData.GetSavingGoalsAsync();
             var accounts = await _appData.GetAccountsAsync();
-            var tags = await _appData.GetExpenseTagsAsync();
+            var tags = await _appData.GetTagsAsync();
             var recurringTransactions = await _appData.GetRecurringTransactionsAsync();
             var notifications = await _appData.GetNotificationsAsync();
             var settings = keepSettings ? [] : await _appData.GetUserSettingsAsync();
@@ -562,7 +562,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
     }
 
-    internal static bool ShouldDeleteTagOnDeleteAllData(ExpenseTag tag)
+    internal static bool ShouldDeleteTagOnDeleteAllData(Tag tag)
     {
         ArgumentNullException.ThrowIfNull(tag);
         return !tag.IsSystemTag;
@@ -576,7 +576,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     internal static async Task EnsureDeleteAllDataSystemTagsAsync(
         IAppDataService appData,
-        IReadOnlyList<ExpenseTag> existingTags,
+        IReadOnlyList<Tag> existingTags,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(appData);
@@ -595,13 +595,13 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                     existingSystemTag.Name = requiredTag.Name;
                     existingSystemTag.HexCode = requiredTag.HexCode;
                     existingSystemTag.IsSystemTag = true;
-                    appData.UpdateExpenseTag(existingSystemTag);
+                    appData.UpdateTag(existingSystemTag);
                 }
 
                 continue;
             }
 
-            await appData.AddExpenseTagAsync(new ExpenseTag
+            await appData.AddTagAsync(new Tag
             {
                 Name = requiredTag.Name,
                 HexCode = requiredTag.HexCode,
@@ -612,7 +612,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     internal static void ApplyDeleteAllDataRemovalPolicy(
         IAppDataService appData,
-        IReadOnlyList<ExpenseTag> tags,
+        IReadOnlyList<Tag> tags,
         IReadOnlyList<Account> accounts,
         IReadOnlyList<Expense> expenses,
         IReadOnlyList<ExpenseLog> expenseLogs,
@@ -651,7 +651,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
         foreach (var tag in tags)
             if (ShouldDeleteTagOnDeleteAllData(tag))
-                appData.RemoveExpenseTag(tag);
+                appData.RemoveTag(tag);
 
         foreach (var notification in notifications)
             if (ShouldDeleteNotificationOnDeleteAllData(notification))

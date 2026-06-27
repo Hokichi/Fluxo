@@ -34,7 +34,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     private readonly Func<RecurringDraftSaveInput, Task<AddNewTransactionSubmissionResult>>? _saveRecurringDraftAsync;
     private readonly List<SavingGoalVM> _orderedGoals = [];
     private readonly MainVM _mainViewModel;
-    private readonly List<ExpenseTagVM> _orderedTags = [];
+    private readonly List<TagVM> _orderedTags = [];
     private readonly IAppDataService _appData;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
@@ -92,7 +92,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedTag))]
-    private ExpenseTagVM? _selectedTag;
+    private TagVM? _selectedTag;
 
     private DateTime? _installmentCalculationDateOverride;
 
@@ -141,8 +141,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     public ObservableCollection<AccountVM> Accounts { get; } = [];
     public ICollectionView AccountsView { get; }
     public ObservableCollection<SavingGoalVM> Goals { get; } = [];
-    public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
-    public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
+    public ObservableCollection<TagVM> VisibleTags { get; } = [];
+    public ObservableCollection<TagVM> OverflowTags { get; } = [];
     public ObservableCollection<AddNewTransactionSuggestion> TransactionNameSuggestions { get; } = [];
     public AddNewTransactionHistoryListVM PinnedHistory { get; } = new();
     public AddNewTransactionHistoryListVM TransactionHistory { get; } = new();
@@ -210,10 +210,10 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     public async Task EnsureTagsLoadedAsync(CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<ExpenseTag> allTags;
+        IReadOnlyList<Tag> allTags;
         try
         {
-            allTags = await _appData.GetExpenseTagsAsync(cancellationToken);
+            allTags = await _appData.GetTagsAsync(cancellationToken);
         }
         catch
         {
@@ -605,7 +605,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         NotifyFormStateChanged();
     }
 
-    partial void OnSelectedTagChanged(ExpenseTagVM? value)
+    partial void OnSelectedTagChanged(TagVM? value)
     {
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
@@ -755,7 +755,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Amount = input.Amount,
                     ExpenseCategory = ExpenseCategory.Savings,
                     AccountId = account.Id,
-                    ExpenseTagId = goalUpdateTag.Id
+                    TagId = goalUpdateTag.Id
                 };
 
                 var expenseLog = new ExpenseLog
@@ -797,8 +797,8 @@ public partial class AddNewTransactionVM : ObservableValidator
             }
             else if (input.IsExpense)
             {
-                var expenseTag = await _appData.GetExpenseTagByIdAsync(input.TagId!.Value);
-                if (expenseTag is null)
+                var tag = await _appData.GetTagByIdAsync(input.TagId!.Value);
+                if (tag is null)
                     return AddNewTransactionSubmissionResult.Failure("Please select a valid tag.");
 
                 var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(input.Category!.Value, input.Amount, input.Date);
@@ -807,11 +807,11 @@ public partial class AddNewTransactionVM : ObservableValidator
 
                 var expense = new Expense
                 {
-                    Name = BuildExpenseName(input.Name, input.Note, expenseTag.Name),
+                    Name = BuildExpenseName(input.Name, input.Note, tag.Name),
                     Amount = input.Amount,
                     ExpenseCategory = input.Category!.Value,
                     AccountId = account.Id,
-                    ExpenseTagId = expenseTag.Id,
+                    TagId = tag.Id,
                     IsLend = input.IsDebtIou
                 };
 
@@ -842,7 +842,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                         expenseLog.Amount,
                         expense.ExpenseCategory,
                         account.Id,
-                        expenseTag.Id,
+                        tag.Id,
                         expenseLog.DeductedOn,
                         expenseLog.Notes,
                         expenseLog.IsForDeletion,
@@ -1218,7 +1218,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             option.IsEnabled = isEnabled;
     }
 
-    private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
+    private void PromoteTagToVisibleStart(TagVM selectedTag)
     {
         var reorderedTags = _orderedTags
             .Where(tag => tag.Id != selectedTag.Id)
@@ -1310,7 +1310,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private async Task<HashSet<int>> GetGoalUpdateTagIdsAsync(CancellationToken cancellationToken)
     {
-        var tags = await _appData.GetExpenseTagsAsync(cancellationToken);
+        var tags = await _appData.GetTagsAsync(cancellationToken);
         return tags
             .Where(tag => string.Equals(
                 tag.Name?.Trim(),
@@ -1351,15 +1351,15 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private static bool IsGoalUpdateExpenseLog(ExpenseLog log, IReadOnlySet<int> goalUpdateTagIds)
     {
-        var tagName = log.Expense?.ExpenseTag?.Name;
+        var tagName = log.Expense?.Tag?.Name;
         if (!string.IsNullOrWhiteSpace(tagName))
             return string.Equals(
                 tagName.Trim(),
                 GoalUpdateTransactionSupport.GoalUpdateTagName,
                 StringComparison.OrdinalIgnoreCase);
 
-        if (log.Expense is not null && log.Expense.ExpenseTagId > 0 && goalUpdateTagIds.Count > 0)
-            return goalUpdateTagIds.Contains(log.Expense.ExpenseTagId);
+        if (log.Expense is not null && log.Expense.TagId > 0 && goalUpdateTagIds.Count > 0)
+            return goalUpdateTagIds.Contains(log.Expense.TagId);
 
         var expenseName = log.Expense?.Name?.Trim();
         return string.Equals(expenseName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
@@ -1471,7 +1471,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 log.Account?.Name ?? log.Expense.Account?.Name ?? string.Empty,
                 log.Notes,
                 log.Expense.ExpenseCategory,
-                log.Expense.ExpenseTagId,
+                log.Expense.TagId,
                 null));
     }
 
@@ -1991,7 +1991,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             var currentTagSpending = _appData.GetExpenseLogsAsync().GetAwaiter().GetResult()
                 .Where(log => !log.IsForDeletion)
                 .Where(log => log.DeductedOn.Date >= currentPeriod.Start && log.DeductedOn.Date <= currentPeriod.End)
-                .Where(log => log.Expense?.ExpenseTagId == tag.Id || log.Expense?.ExpenseTag?.Id == tag.Id)
+                .Where(log => log.Expense?.TagId == tag.Id || log.Expense?.Tag?.Id == tag.Id)
                 .Sum(log => log.Amount);
 
             if (currentTagSpending + amount <= tag.SpendingLimit.Value)
@@ -2014,7 +2014,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             : ValidationResult.Success;
     }
 
-    public static ValidationResult? ValidateSelectedTag(ExpenseTagVM? value, ValidationContext validationContext)
+    public static ValidationResult? ValidateSelectedTag(TagVM? value, ValidationContext validationContext)
     {
         var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
         if (!viewModel.IsExpense)
@@ -2047,12 +2047,12 @@ public partial class AddNewTransactionVM : ObservableValidator
             : new ValidationResult(GetRecurringTimeValidationMessage(viewModel.SelectedRecurringPeriod));
     }
 
-    internal static IEnumerable<ExpenseTagVM> ProjectNonSystemTags(IEnumerable<ExpenseTag> tags)
+    internal static IEnumerable<TagVM> ProjectNonSystemTags(IEnumerable<Tag> tags)
     {
         return tags
             .Where(tag => !tag.IsSystemTag)
             .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(tag => new ExpenseTagVM
+            .Select(tag => new TagVM
             {
                 Id = tag.Id,
                 Name = tag.Name,
@@ -2062,7 +2062,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             });
     }
 
-    internal static IEnumerable<ExpenseTagVM> OrderNonSystemTags(IEnumerable<ExpenseTagVM> tags)
+    internal static IEnumerable<TagVM> OrderNonSystemTags(IEnumerable<TagVM> tags)
     {
         return tags
             .Where(tag => !tag.IsSystemTag)

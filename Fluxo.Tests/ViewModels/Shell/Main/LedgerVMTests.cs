@@ -454,7 +454,7 @@ public sealed class LedgerVMTests
                         12.25m,
                         new DateTime(2026, 6, 3, 10, 0, 0),
                         ExpenseCategory.Needs,
-                        new ExpenseTagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" },
+                        new TagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" },
                         new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true },
                         parentLogId: 1)
                 ])
@@ -672,7 +672,7 @@ public sealed class LedgerVMTests
                         12.25m,
                         new DateTime(2026, 6, 3, 10, 0, 0),
                         ExpenseCategory.Wants,
-                        new ExpenseTagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" },
+                        new TagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" },
                         new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true },
                         parentLogId: 1)
                 ])
@@ -783,7 +783,7 @@ public sealed class LedgerVMTests
                 log.Id == 1 &&
                 log.AccountId == 2 &&
                 log.Expense.AccountId == 2 &&
-                log.Expense.ExpenseTagId == 2));
+                log.Expense.TagId == 2));
             unitOfWork.IncomeLogs.Received(1).Update(Arg.Is<IncomeLog>(log =>
                 log.Id == 10 &&
                 log.AccountId == 2));
@@ -997,12 +997,12 @@ public sealed class LedgerVMTests
             .Returns(CreateCreditSource());
         unitOfWork.Accounts.Returns(accounts);
 
-        var tags = Substitute.For<IExpenseTagRepository>();
+        var tags = Substitute.For<ITagRepository>();
         tags.GetByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(new ExpenseTag { Id = 1, Name = "Groceries", HexCode = "#53A96B" });
+            .Returns(new Tag { Id = 1, Name = "Groceries", HexCode = "#53A96B" });
         tags.GetByIdAsync(2, Arg.Any<CancellationToken>())
-            .Returns(new ExpenseTag { Id = 2, Name = "Streaming", HexCode = "#D97936" });
-        unitOfWork.ExpenseTags.Returns(tags);
+            .Returns(new Tag { Id = 2, Name = "Streaming", HexCode = "#D97936" });
+        unitOfWork.Tags.Returns(tags);
 
         var incomeLogs = Substitute.For<IIncomeLogRepository>();
         incomeLogs.GetAllAsync(Arg.Any<CancellationToken>())
@@ -1026,7 +1026,7 @@ public sealed class LedgerVMTests
     private static ExpenseLog CreateEditableExpenseLog()
     {
         var source = CreateCheckingSource();
-        var tag = new ExpenseTag { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
+        var tag = new Tag { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
         var expense = new Expense
         {
             Id = 1,
@@ -1035,8 +1035,8 @@ public sealed class LedgerVMTests
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = source.Id,
             Account = source,
-            ExpenseTagId = tag.Id,
-            ExpenseTag = tag
+            TagId = tag.Id,
+            Tag = tag
         };
 
         return new ExpenseLog
@@ -1059,7 +1059,7 @@ public sealed class LedgerVMTests
         int? parentLogId = null)
     {
         var source = CreateCheckingSource();
-        var tag = new ExpenseTag { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
+        var tag = new Tag { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
         var expense = new Expense
         {
             Id = id,
@@ -1068,8 +1068,8 @@ public sealed class LedgerVMTests
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = source.Id,
             Account = source,
-            ExpenseTagId = tag.Id,
-            ExpenseTag = tag
+            TagId = tag.Id,
+            Tag = tag
         };
 
         return new ExpenseLog
@@ -1089,7 +1089,7 @@ public sealed class LedgerVMTests
     private static ExpenseLog CreateNetflixExpenseLog()
     {
         var source = CreateCreditSource();
-        var tag = new ExpenseTag { Id = 2, Name = "Streaming", HexCode = "#D97936" };
+        var tag = new Tag { Id = 2, Name = "Streaming", HexCode = "#D97936" };
         var expense = new Expense
         {
             Id = 2,
@@ -1098,8 +1098,8 @@ public sealed class LedgerVMTests
             ExpenseCategory = ExpenseCategory.Wants,
             AccountId = source.Id,
             Account = source,
-            ExpenseTagId = tag.Id,
-            ExpenseTag = tag
+            TagId = tag.Id,
+            Tag = tag
         };
 
         return new ExpenseLog
@@ -1118,7 +1118,7 @@ public sealed class LedgerVMTests
     private static ExpenseLog CreateGoalExpenseLog()
     {
         var source = CreateCheckingSource();
-        var tag = new ExpenseTag { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
+        var tag = new Tag { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
         var expense = new Expense
         {
             Id = 3,
@@ -1127,8 +1127,8 @@ public sealed class LedgerVMTests
             ExpenseCategory = ExpenseCategory.Savings,
             AccountId = source.Id,
             Account = source,
-            ExpenseTagId = tag.Id,
-            ExpenseTag = tag
+            TagId = tag.Id,
+            Tag = tag
         };
 
         return new ExpenseLog
@@ -1168,9 +1168,9 @@ public sealed class LedgerVMTests
 
     private static IReadOnlyList<ExpenseLogDto> CreateExpenseLogs()
     {
-        var groceries = new ExpenseTagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
-        var streaming = new ExpenseTagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" };
-        var goal = new ExpenseTagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
+        var groceries = new TagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
+        var streaming = new TagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" };
+        var goal = new TagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
         var checking = new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true };
         var credit = new AccountDto { Id = 2, Name = "Citibank Credit", AccountType = AccountType.Credit, IsEnabled = false };
 
@@ -1184,9 +1184,9 @@ public sealed class LedgerVMTests
 
     private static IReadOnlyList<ExpenseLogDto> CreateBalancedSplitExpenseLogs()
     {
-        var groceries = new ExpenseTagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
-        var streaming = new ExpenseTagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" };
-        var goal = new ExpenseTagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
+        var groceries = new TagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" };
+        var streaming = new TagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" };
+        var goal = new TagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true };
         var checking = new AccountDto { Id = 1, Name = "DBS Checking", AccountType = AccountType.Checking, IsEnabled = true };
         var credit = new AccountDto { Id = 2, Name = "Citibank Credit", AccountType = AccountType.Credit, IsEnabled = false };
 
@@ -1206,7 +1206,7 @@ public sealed class LedgerVMTests
         decimal amount,
         DateTime deductedOn,
         ExpenseCategory category,
-        ExpenseTagDto tag,
+        TagDto tag,
         AccountDto source,
         string notes = "",
         int? parentLogId = null)
@@ -1224,8 +1224,8 @@ public sealed class LedgerVMTests
                 Name = name,
                 Amount = amount,
                 ExpenseCategory = category,
-                ExpenseTag = tag,
-                ExpenseTagId = tag.Id,
+                Tag = tag,
+                TagId = tag.Id,
                 Account = source,
                 AccountId = source.Id
             },
@@ -1265,13 +1265,13 @@ public sealed class LedgerVMTests
         ];
     }
 
-    private static IReadOnlyList<ExpenseTagDto> CreateTags()
+    private static IReadOnlyList<TagDto> CreateTags()
     {
         return
         [
-            new ExpenseTagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" },
-            new ExpenseTagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" },
-            new ExpenseTagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true }
+            new TagDto { Id = 1, Name = "Groceries", HexCode = "#53A96B" },
+            new TagDto { Id = 2, Name = "Streaming", HexCode = "#D97936" },
+            new TagDto { Id = 3, Name = "Goal Update", HexCode = "#EAABF2", IsSystemTag = true }
         ];
     }
 

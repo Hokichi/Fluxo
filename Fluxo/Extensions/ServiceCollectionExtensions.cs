@@ -95,7 +95,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ExpenseVM>();
         services.AddTransient<ExpenseLogVM>();
         services.AddTransient<IncomeLogVM>();
-        services.AddTransient<ExpenseTagVM>();
+        services.AddTransient<TagVM>();
         services.AddTransient<SavingGoalVM>();
         services.AddTransient<AccountVM>();
         services.AddTransient<UserSettingsVM>();

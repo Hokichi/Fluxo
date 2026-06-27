@@ -15,8 +15,8 @@ public sealed record HeaderQuickSearchResult(
     decimal Amount,
     DateTime Date,
     string AccountName,
-    string? ExpenseTagName,
-    string? ExpenseTagBrush,
+    string? TagName,
+    string? TagBrush,
     ExpenseLogVM? ExpenseLog,
     IncomeLogVM? IncomeLog)
 {
@@ -56,8 +56,8 @@ public static class HeaderQuickSearchEngine
                 log.Amount,
                 log.DeductedOn,
                 log.Account?.Name?.Trim() ?? string.Empty,
-                log.Expense?.ExpenseTag?.Name,
-                log.Expense?.ExpenseTag?.HexCode,
+                log.Expense?.Tag?.Name,
+                log.Expense?.Tag?.HexCode,
                 log,
                 null));
 

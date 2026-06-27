@@ -176,7 +176,7 @@ public class PlanningReportVMTests
         Assert.Equal("Groceries", expense.Name);
         Assert.Equal(300m, expense.Amount);
         Assert.Equal(ExpenseCategory.Wants, expense.ExpenseCategory);
-        Assert.Equal("Tag 3", expense.ExpenseTag.Name);
+        Assert.Equal("Tag 3", expense.Tag.Name);
         Assert.Equal("Account 3", expense.Account.Name);
         Assert.Empty(report.Incomes);
     }
@@ -246,7 +246,7 @@ public class PlanningReportVMTests
             Name = name,
             Amount = amount ?? id * 100m,
             ExpenseCategory = category,
-            ExpenseTag = new ExpenseTagVM
+            Tag = new TagVM
             {
                 Id = id,
                 Name = $"Tag {id}",
@@ -292,7 +292,7 @@ public class PlanningReportVMTests
                 IsEnabled = true
             },
             Tag = type == RecurringTransactionType.Expense
-                ? new ExpenseTag
+                ? new Tag
                 {
                     Id = id,
                     Name = $"Tag {id}",

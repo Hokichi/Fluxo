@@ -12,45 +12,45 @@ public sealed class GoalUpdateTransactionSupportTests
     [Fact]
     public async Task ResolveGoalUpdateTagAsync_ReturnsExistingTag_WhenItAlreadyExists()
     {
-        var existingTag = new ExpenseTag
+        var existingTag = new Tag
         {
             Id = 42,
             Name = "Goal Update",
             HexCode = "#ffffff"
         };
 
-        var expenseTagRepository = new TestExpenseTagRepository([existingTag]);
-        var unitOfWork = new TestUnitOfWork(expenseTagRepository);
+        var tagRepository = new TestTagRepository([existingTag]);
+        var unitOfWork = new TestUnitOfWork(tagRepository);
 
         var resolvedTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(new AppDataService(unitOfWork));
 
         Assert.Equal(existingTag.Id, resolvedTag.Id);
-        Assert.Equal(1, expenseTagRepository.Tags.Count);
+        Assert.Equal(1, tagRepository.Tags.Count);
         Assert.Equal(0, unitOfWork.SaveChangesCalls);
     }
 
     [Fact]
     public async Task ResolveGoalUpdateTagAsync_CreatesGoalUpdateTag_WhenMissing()
     {
-        var expenseTagRepository = new TestExpenseTagRepository([]);
-        var unitOfWork = new TestUnitOfWork(expenseTagRepository);
+        var tagRepository = new TestTagRepository([]);
+        var unitOfWork = new TestUnitOfWork(tagRepository);
 
         var resolvedTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(new AppDataService(unitOfWork));
 
         Assert.Equal("Goal Update", resolvedTag.Name);
         Assert.Equal("#aed4e1", resolvedTag.HexCode);
-        Assert.Single(expenseTagRepository.Tags);
+        Assert.Single(tagRepository.Tags);
         Assert.Equal(1, unitOfWork.SaveChangesCalls);
     }
 
-    private sealed class TestUnitOfWork(TestExpenseTagRepository expenseTags) : IUnitOfWork
+    private sealed class TestUnitOfWork(TestTagRepository tags) : IUnitOfWork
     {
         public int SaveChangesCalls { get; private set; }
 
         public IExpenseRepository Expenses => throw new NotSupportedException();
         public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
-        public IExpenseTagRepository ExpenseTags => expenseTags;
+        public ITagRepository Tags => tags;
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts => throw new NotSupportedException();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
@@ -74,23 +74,23 @@ public sealed class GoalUpdateTransactionSupportTests
         }
     }
 
-    private sealed class TestExpenseTagRepository(IReadOnlyList<ExpenseTag> initialTags) : IExpenseTagRepository
+    private sealed class TestTagRepository(IReadOnlyList<Tag> initialTags) : ITagRepository
     {
         private int _nextId = initialTags.Count == 0 ? 1 : initialTags.Max(tag => tag.Id) + 1;
 
-        public List<ExpenseTag> Tags { get; } = [.. initialTags];
+        public List<Tag> Tags { get; } = [.. initialTags];
 
-        public Task<IReadOnlyList<ExpenseTag>> GetAllAsync(CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<Tag>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<IReadOnlyList<ExpenseTag>>(Tags);
+            return Task.FromResult<IReadOnlyList<Tag>>(Tags);
         }
 
-        public Task<ExpenseTag?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public Task<Tag?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(Tags.FirstOrDefault(tag => tag.Id == id));
         }
 
-        public Task AddAsync(ExpenseTag entity, CancellationToken cancellationToken = default)
+        public Task AddAsync(Tag entity, CancellationToken cancellationToken = default)
         {
             if (entity.Id <= 0)
                 entity.Id = _nextId++;
@@ -99,14 +99,14 @@ public sealed class GoalUpdateTransactionSupportTests
             return Task.CompletedTask;
         }
 
-        public void Update(ExpenseTag entity)
+        public void Update(Tag entity)
         {
             var index = Tags.FindIndex(tag => tag.Id == entity.Id);
             if (index >= 0)
                 Tags[index] = entity;
         }
 
-        public void Remove(ExpenseTag entity)
+        public void Remove(Tag entity)
         {
             Tags.RemoveAll(tag => tag.Id == entity.Id);
         }
@@ -116,16 +116,16 @@ public sealed class GoalUpdateTransactionSupportTests
             return Task.FromResult(1);
         }
 
-        public Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTagsByCountDescendingAsync(
+        public Task<IReadOnlyList<(Tag Tag, int Count)>> GetTagsByCountDescendingAsync(
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<IReadOnlyList<(ExpenseTag Tag, int Count)>>([]);
+            return Task.FromResult<IReadOnlyList<(Tag Tag, int Count)>>([]);
         }
 
-        public Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
+        public Task<IReadOnlyList<(Tag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<IReadOnlyList<(ExpenseTag Tag, int Count)>>([]);
+            return Task.FromResult<IReadOnlyList<(Tag Tag, int Count)>>([]);
         }
     }
 }

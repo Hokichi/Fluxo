@@ -1,6 +1,6 @@
 namespace Fluxo.Core.DTO;
 
-public class ExpenseTagDto
+public class TagDto
 {
     public int Id { get; set; }
     public bool IsSystemTag { get; set; } = false;

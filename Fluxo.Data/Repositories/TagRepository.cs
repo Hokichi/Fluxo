@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fluxo.Data.Repositories;
 
-public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
-    : Repository<ExpenseTag>(dbContext), IExpenseTagRepository
+public sealed class TagRepository(FluxoDbContext dbContext)
+    : Repository<Tag>(dbContext), ITagRepository
 {
-    public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTagsByCountDescendingAsync(
+    public async Task<IReadOnlyList<(Tag Tag, int Count)>> GetTagsByCountDescendingAsync(
         CancellationToken cancellationToken = default)
     {
         var countsByTagId = await DbContext.Expenses
-            .GroupBy(expense => EF.Property<int>(expense, "ExpenseTagId"))
+            .GroupBy(expense => EF.Property<int>(expense, "TagId"))
             .Select(group => new { TagId = group.Key, Count = group.Count() })
             .ToDictionaryAsync(item => item.TagId, item => item.Count, cancellationToken);
 
@@ -25,11 +25,11 @@ public sealed class ExpenseTagRepository(FluxoDbContext dbContext)
             .ToList();
     }
 
-    public async Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
+    public async Task<IReadOnlyList<(Tag Tag, int Count)>> GetTodayTagsByCountDescendingAsync(
         CancellationToken cancellationToken = default)
     {
         var countsByTagId = await DbContext.Expenses
-            .GroupBy(expense => EF.Property<int>(expense, "ExpenseTagId"))
+            .GroupBy(expense => EF.Property<int>(expense, "TagId"))
             .Select(group => new { TagId = group.Key, Count = group.Count() })
             .ToDictionaryAsync(item => item.TagId, item => item.Count, cancellationToken);
 

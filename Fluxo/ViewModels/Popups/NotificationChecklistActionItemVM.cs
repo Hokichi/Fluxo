@@ -20,7 +20,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
     [ObservableProperty] private bool _updateRecurringAmount;
 
     public ObservableCollection<AccountVM> AvailableSources { get; } = [];
-    public ObservableCollection<ExpenseTagVM> AvailableTags { get; } = [];
+    public ObservableCollection<TagVM> AvailableTags { get; } = [];
     public ObservableCollection<SavingGoalVM> AvailableGoals { get; } = [];
 
     public bool IsRecurringTransaction => RecurringTransactionType.HasValue;

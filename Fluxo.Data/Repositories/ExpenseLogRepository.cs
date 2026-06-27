@@ -45,7 +45,7 @@ public sealed class ExpenseLogRepository(FluxoDbContext dbContext)
         return DbSet
             .AsNoTrackingWithIdentityResolution()
             .Include(log => log.Expense)
-            .ThenInclude(e => e.ExpenseTag)
+            .ThenInclude(e => e.Tag)
             .Include(log => log.Expense)
             .ThenInclude(e => e.Account)
             .Include(log => log.Account);

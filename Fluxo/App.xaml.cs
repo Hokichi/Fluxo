@@ -944,13 +944,13 @@ public partial class App : Application
             return "20260421180000_AddSavingGoalCreatedOn";
 
         var hasMonthlyDueDate = await ColumnExistsAsync(dbContext, "Accounts", "MonthlyDueDate", cancellationToken);
-        var hasIsSystemTag = await ColumnExistsAsync(dbContext, "ExpenseTags", "IsSystemTag", cancellationToken);
+        var hasIsSystemTag = await ColumnExistsAsync(dbContext, "Tags", "IsSystemTag", cancellationToken);
         var hasDeductSource = await ColumnExistsAsync(dbContext, "Accounts", "DeductSource", cancellationToken);
         var hasNotificationsTable = await TableExistsAsync(dbContext, "Notifications", cancellationToken);
-        var hasIconName = await ColumnExistsAsync(dbContext, "ExpenseTags", "IconName", cancellationToken);
+        var hasIconName = await ColumnExistsAsync(dbContext, "Tags", "IconName", cancellationToken);
 
         if (hasMonthlyDueDate && hasIsSystemTag && hasDeductSource && hasNotificationsTable && !hasIconName)
-            return "20260421165000_RemoveIconNameFromExpenseTag";
+            return "20260421165000_RemoveIconNameFromTag";
 
         if (hasMonthlyDueDate && hasIsSystemTag && hasDeductSource && hasNotificationsTable)
         {
@@ -962,7 +962,7 @@ public partial class App : Application
         }
 
         if (hasMonthlyDueDate && hasIsSystemTag)
-            return "20260417064811_AddIsSystemTagToExpenseTag";
+            return "20260417064811_AddIsSystemTagToTag";
 
         if (hasMonthlyDueDate)
         {

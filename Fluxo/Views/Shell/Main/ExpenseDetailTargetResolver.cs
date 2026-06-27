@@ -53,13 +53,13 @@ internal static class ExpenseDetailTargetResolver
                 Amount = log.Expense?.Amount ?? log.Amount,
                 ExpenseCategory = log.Expense?.ExpenseCategory ?? default,
                 IsLend = log.Expense?.IsLend ?? false,
-                ExpenseTag = new ExpenseTagVM
+                Tag = new TagVM
                 {
-                    Id = log.Expense?.ExpenseTag?.Id ?? log.Expense?.ExpenseTagId ?? 0,
-                    Name = log.Expense?.ExpenseTag?.Name ?? string.Empty,
-                    HexCode = log.Expense?.ExpenseTag?.HexCode ?? string.Empty,
-                    IsSystemTag = log.Expense?.ExpenseTag?.IsSystemTag ?? false,
-                    SpendingLimit = log.Expense?.ExpenseTag?.SpendingLimit
+                    Id = log.Expense?.Tag?.Id ?? log.Expense?.TagId ?? 0,
+                    Name = log.Expense?.Tag?.Name ?? string.Empty,
+                    HexCode = log.Expense?.Tag?.HexCode ?? string.Empty,
+                    IsSystemTag = log.Expense?.Tag?.IsSystemTag ?? false,
+                    SpendingLimit = log.Expense?.Tag?.SpendingLimit
                 }
             }
         };

@@ -24,7 +24,7 @@ public sealed class CalendarServiceTests
                 Amount = 74m,
                 DeductedOn = new DateTime(2026, 6, 12, 9, 0, 0),
                 IsForDeletion = false,
-                Expense = new Expense { Name = "Groceries", ExpenseTag = new ExpenseTag { Name = "Food", HexCode = "#00FF00" } },
+                Expense = new Expense { Name = "Groceries", Tag = new Tag { Name = "Food", HexCode = "#00FF00" } },
                 Account = new Account { Name = "Checking" }
             },
             new ExpenseLog

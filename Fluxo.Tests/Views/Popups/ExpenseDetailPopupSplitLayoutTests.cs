@@ -51,7 +51,7 @@ public sealed class ExpenseDetailPopupSplitLayoutTests
 
         Assert.Contains("x:Name=\"NormalExpenseNameDatePanel\"", xaml);
         Assert.Contains("x:Name=\"NormalExpenseCategorySourcePanel\"", xaml);
-        Assert.Contains("x:Name=\"NormalExpenseTagsPanel\"", xaml);
+        Assert.Contains("x:Name=\"NormalTagsPanel\"", xaml);
         Assert.Contains("x:Name=\"NormalExpenseNotePanel\"", xaml);
         Assert.Contains("ShowNormalExpenseFields", xaml);
         Assert.Contains("x:Name=\"SplitRowsPanel\"", xaml);

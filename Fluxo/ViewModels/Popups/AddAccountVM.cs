@@ -534,28 +534,28 @@ public partial class AddAccountVM : ObservableValidator
             : currentSpentAmount;
     }
 
-    private static async Task<ExpenseTag> ResolveBalanceUpdateTagAsync(IAppDataService appData)
+    private static async Task<Tag> ResolveBalanceUpdateTagAsync(IAppDataService appData)
     {
-        var tags = await appData.GetExpenseTagsAsync();
+        var tags = await appData.GetTagsAsync();
         var existingTag = tags.FirstOrDefault(tag =>
             string.Equals(tag.Name, BalanceUpdateTagName, StringComparison.OrdinalIgnoreCase));
         if (existingTag is not null)
             return existingTag;
 
-        var balanceUpdateTag = new ExpenseTag
+        var balanceUpdateTag = new Tag
         {
             Name = BalanceUpdateTagName,
             HexCode = BalanceUpdateTagColor
         };
 
-        await appData.AddExpenseTagAsync(balanceUpdateTag);
+        await appData.AddTagAsync(balanceUpdateTag);
         await appData.SaveChangesAsync();
         return balanceUpdateTag;
     }
 
-    private static async Task<ExpenseTag?> ResolvePaymentOrTransferTagAsync(IAppDataService appData)
+    private static async Task<Tag?> ResolvePaymentOrTransferTagAsync(IAppDataService appData)
     {
-        var tags = await appData.GetExpenseTagsAsync();
+        var tags = await appData.GetTagsAsync();
         return tags
             .OrderByDescending(tag => string.Equals(tag.Name, "Payment", StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(tag => string.Equals(tag.Name, "Transfer", StringComparison.OrdinalIgnoreCase))
@@ -585,7 +585,7 @@ public partial class AddAccountVM : ObservableValidator
             Amount = triggerAmount,
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = account.Id,
-            ExpenseTagId = balanceUpdateTag.Id
+            TagId = balanceUpdateTag.Id
         };
 
         await appData.AddExpenseAsync(expense);

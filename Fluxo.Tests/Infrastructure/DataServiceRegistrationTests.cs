@@ -29,7 +29,7 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IExpenseRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IExpenseLogRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IIncomeLogRepository>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IExpenseTagRepository>(services, ServiceLifetime.Scoped);
+        AssertLifetime<ITagRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<ISavingGoalRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IAccountRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRecurringTransactionRepository>(services, ServiceLifetime.Scoped);
@@ -39,7 +39,7 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IRepository<Expense>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<ExpenseLog>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<IncomeLog>>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IRepository<ExpenseTag>>(services, ServiceLifetime.Scoped);
+        AssertLifetime<IRepository<Tag>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<SavingGoal>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<Account>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<RecurringTransaction>>(services, ServiceLifetime.Scoped);
@@ -104,7 +104,7 @@ public sealed class DataServiceRegistrationTests
             new ExpenseRepository(dbContext),
             new ExpenseLogRepository(dbContext),
             new IncomeLogRepository(dbContext),
-            new ExpenseTagRepository(dbContext),
+            new TagRepository(dbContext),
             new SavingGoalRepository(dbContext),
             new AccountRepository(dbContext),
             new RecurringTransactionRepository(dbContext),

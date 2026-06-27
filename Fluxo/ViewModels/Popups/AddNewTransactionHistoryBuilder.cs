@@ -99,8 +99,8 @@ public static class AddNewTransactionHistoryBuilder
                 Note = log.Notes ?? string.Empty,
                 Date = log.DeductedOn,
                 Category = ExpenseCategory.Savings,
-                TagId = log.Expense?.ExpenseTagId,
-                TagHexCode = log.Expense?.ExpenseTag?.HexCode,
+                TagId = log.Expense?.TagId,
+                TagHexCode = log.Expense?.Tag?.HexCode,
                 IsPinned = false
             })
             .ToList();
@@ -113,7 +113,7 @@ public static class AddNewTransactionHistoryBuilder
         return expenseLogs
             .Where(log => !log.IsForDeletion)
             .Where(log => log.IsPinned == isPinned)
-            .Where(log => log.Expense?.ExpenseTag?.IsSystemTag != true)
+            .Where(log => log.Expense?.Tag?.IsSystemTag != true)
             .Where(log => !string.IsNullOrWhiteSpace(log.Expense?.Name))
             .Select(log => new AddNewTransactionHistoryItemVM
             {
@@ -126,8 +126,8 @@ public static class AddNewTransactionHistoryBuilder
                 Note = log.Notes ?? string.Empty,
                 Date = log.DeductedOn,
                 Category = log.Expense.ExpenseCategory,
-                TagId = log.Expense.ExpenseTagId,
-                TagHexCode = log.Expense.ExpenseTag?.HexCode,
+                TagId = log.Expense.TagId,
+                TagHexCode = log.Expense.Tag?.HexCode,
                 IsPinned = log.IsPinned
             });
     }
@@ -169,7 +169,7 @@ public static class AddNewTransactionHistoryBuilder
 
     private static bool IsGoalUpdateLog(ExpenseLog log)
     {
-        var tagName = log.Expense?.ExpenseTag?.Name;
+        var tagName = log.Expense?.Tag?.Name;
         var expenseName = log.Expense?.Name;
         return string.Equals(tagName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||
                string.Equals(expenseName, GoalUpdateTransactionSupport.GoalUpdateTagName, StringComparison.OrdinalIgnoreCase) ||

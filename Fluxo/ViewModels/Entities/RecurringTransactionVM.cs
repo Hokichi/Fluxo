@@ -13,7 +13,7 @@ public partial class RecurringTransactionVM : ObservableObject
     [ObservableProperty] private RecurringTransactionType _type;
     [ObservableProperty] private ExpenseCategory? _category;
     [ObservableProperty] private AccountVM _source = new();
-    [ObservableProperty] private ExpenseTagVM? _tag;
+    [ObservableProperty] private TagVM? _tag;
     [ObservableProperty] private SavingGoalVM? _goal;
     [ObservableProperty] private bool _isEnabled = true;
 }

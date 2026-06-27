@@ -485,7 +485,7 @@ public partial class ExpenseDetailPopup : BasePopup
         TryCloseMoreTagsPopup();
     }
 
-    private double MeasureTagWidth(ExpenseTagVM tag)
+    private double MeasureTagWidth(TagVM tag)
     {
         var tagChip = new ToggleButton
         {

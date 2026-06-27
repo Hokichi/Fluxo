@@ -7,7 +7,7 @@ public partial class ExpenseVM : ObservableObject
 {
     [ObservableProperty] private decimal _amount;
     [ObservableProperty] private ExpenseCategory _expenseCategory;
-    [ObservableProperty] private ExpenseTagVM _expenseTag = new();
+    [ObservableProperty] private TagVM _tag = new();
     [ObservableProperty] private int _id;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private AccountVM _account = new();

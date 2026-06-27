@@ -22,7 +22,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private readonly List<AccountVM> _availableAccounts = [];
     private readonly ExpenseLogVM _expenseLog;
     private readonly MainVM _mainViewModel;
-    private readonly List<ExpenseTagVM> _orderedTags = [];
+    private readonly List<TagVM> _orderedTags = [];
     private readonly List<ExpenseSplitRowVM> _removedSplitRows = [];
     private readonly IAppDataService _appData;
 
@@ -47,7 +47,7 @@ public partial class ExpenseDetailVM : ObservableObject
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
     [ObservableProperty] private AccountVM? _selectedAccount;
-    [ObservableProperty] private ExpenseTagVM? _selectedTag;
+    [ObservableProperty] private TagVM? _selectedTag;
 
     public ExpenseDetailVM(MainVM mainViewModel, ExpenseLogVM expenseLog, IAppDataService appData)
     {
@@ -76,8 +76,8 @@ public partial class ExpenseDetailVM : ObservableObject
     public ICollectionView AccountsView { get; }
     public ObservableCollection<ExpenseSplitRowVM> SplitRows { get; } = [];
     public ObservableCollection<ExpenseDetailChildTransactionVM> ChildTransactions { get; } = [];
-    public ObservableCollection<ExpenseTagVM> VisibleTags { get; } = [];
-    public ObservableCollection<ExpenseTagVM> OverflowTags { get; } = [];
+    public ObservableCollection<TagVM> VisibleTags { get; } = [];
+    public ObservableCollection<TagVM> OverflowTags { get; } = [];
 
     public bool AreFieldsReadOnly => !IsEditing;
     public bool CanEditFields => IsEditing;
@@ -90,7 +90,7 @@ public partial class ExpenseDetailVM : ObservableObject
     public int DetailPopupWidth => ShowChildTransactions ? 916 : 640;
     public bool ShowSplitButton => !IsSplitMode;
     public bool ShowNormalExpenseFields => !IsSplitMode;
-    public IEnumerable<ExpenseTagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
+    public IEnumerable<TagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
     public bool HasSplitParentRemainder => IsSplitMode && AmountText > 0m;
     public bool CanCloseSplitModeWithoutSaving => IsSplitMode && !HasSplitRows;
     public bool RequiresEmptySplitConfirmationOnClose => IsSplitMode && HasSplitRowsWithoutAmounts;
@@ -126,7 +126,7 @@ public partial class ExpenseDetailVM : ObservableObject
         UpdateSplitNegativeRemainderState(value, SplitRows.LastOrDefault(row => row.HasAmount));
     }
 
-    partial void OnSelectedTagChanged(ExpenseTagVM? value)
+    partial void OnSelectedTagChanged(TagVM? value)
     {
         if (_isUpdatingTagCollections || value is null)
             return;
@@ -272,10 +272,10 @@ public partial class ExpenseDetailVM : ObservableObject
 
     public async Task EnsureTagsLoadedAsync(CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<ExpenseTag> allTags;
+        IReadOnlyList<Tag> allTags;
         try
         {
-            allTags = await _appData.GetExpenseTagsAsync(cancellationToken);
+            allTags = await _appData.GetTagsAsync(cancellationToken);
         }
         catch
         {
@@ -349,11 +349,11 @@ public partial class ExpenseDetailVM : ObservableObject
             if (newAccount is null)
                 return ExpenseDetailSaveResult.Failure("Please select a valid account.");
 
-            var expenseTag = await _appData.GetExpenseTagByIdAsync(input.TagId);
-            if (expenseTag is null)
+            var tag = await _appData.GetTagByIdAsync(input.TagId);
+            if (tag is null)
                 return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
 
-            var resolvedName = BuildExpenseName(input.Name, input.Note, expenseTag.Name);
+            var resolvedName = BuildExpenseName(input.Name, input.Note, tag.Name);
 
             var sourceChanged = currentAccount.Id != newAccount.Id;
             if (!sourceChanged)
@@ -372,7 +372,7 @@ public partial class ExpenseDetailVM : ObservableObject
             expense.Amount = input.Amount;
             expense.ExpenseCategory = input.Category;
             expense.Account = newAccount;
-            expense.ExpenseTag = expenseTag;
+            expense.Tag = tag;
 
             expenseLog.Amount = input.Amount;
             expenseLog.IsPinned = input.IsPinned;
@@ -613,10 +613,10 @@ public partial class ExpenseDetailVM : ObservableObject
             if (account is null)
                 return ExpenseDetailSaveResult.Failure("Unable to load this expense source.");
 
-            var splitEntries = new List<(ExpenseSplitInput Input, ExpenseTag Tag)>();
+            var splitEntries = new List<(ExpenseSplitInput Input, Tag Tag)>();
             foreach (var input in inputs)
             {
-                var tag = await _appData.GetExpenseTagByIdAsync(input.TagId);
+                var tag = await _appData.GetTagByIdAsync(input.TagId);
                 if (tag is null)
                     return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
 
@@ -629,7 +629,7 @@ public partial class ExpenseDetailVM : ObservableObject
                 .ToDictionary(log => log.Id);
 
             var changedSnapshots = new List<(ExpenseLogMemorySnapshot Before, ExpenseLogMemorySnapshot After)>();
-            var createdLogs = new List<(Expense Expense, ExpenseLog ExpenseLog, ExpenseTag Tag)>(splitEntries.Count);
+            var createdLogs = new List<(Expense Expense, ExpenseLog ExpenseLog, Tag Tag)>(splitEntries.Count);
             foreach (var (input, tag) in splitEntries)
             {
                 if (input.ExpenseLogId is { } childLogId &&
@@ -675,7 +675,7 @@ public partial class ExpenseDetailVM : ObservableObject
                     continue;
                 }
 
-                var removedTag = await _appData.GetExpenseTagByIdAsync(removedRow.SelectedTag.Id);
+                var removedTag = await _appData.GetTagByIdAsync(removedRow.SelectedTag.Id);
                 if (removedTag is null)
                     return ExpenseDetailSaveResult.Failure("Please select a valid tag.");
 
@@ -768,7 +768,7 @@ public partial class ExpenseDetailVM : ObservableObject
         RefreshAccounts();
     }
 
-    private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
+    private void PromoteTagToVisibleStart(TagVM selectedTag)
     {
         var reorderedTags = _orderedTags
             .Where(tag => tag.Id != selectedTag.Id)
@@ -861,8 +861,8 @@ public partial class ExpenseDetailVM : ObservableObject
             DeductedOn = log.DeductedOn,
             Category = log.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
             AccountName = log.Account?.Name ?? string.Empty,
-            TagName = log.Expense?.ExpenseTag?.Name ?? string.Empty,
-            TagHexCode = log.Expense?.ExpenseTag?.HexCode ?? string.Empty,
+            TagName = log.Expense?.Tag?.Name ?? string.Empty,
+            TagHexCode = log.Expense?.Tag?.HexCode ?? string.Empty,
             Notes = log.Notes,
             IsLend = log.IsLend || log.Expense?.IsLend == true
         };
@@ -876,12 +876,12 @@ public partial class ExpenseDetailVM : ObservableObject
             AmountText = log.Amount,
             NameText = log.Expense?.Name ?? string.Empty,
             SelectedExpenseCategory = log.Expense?.ExpenseCategory ?? SelectedExpenseCategory,
-            SelectedTag = ResolveSplitRowTag(log.Expense?.ExpenseTag),
+            SelectedTag = ResolveSplitRowTag(log.Expense?.Tag),
             IsLend = log.IsLend || log.Expense?.IsLend == true
         };
     }
 
-    private ExpenseTagVM? ResolveSplitRowTag(ExpenseTag? tag)
+    private TagVM? ResolveSplitRowTag(Tag? tag)
     {
         if (tag is null)
             return SelectedTag;
@@ -890,7 +890,7 @@ public partial class ExpenseDetailVM : ObservableObject
         if (existingTag is not null)
             return existingTag;
 
-        return new ExpenseTagVM
+        return new TagVM
         {
             Id = tag.Id,
             Name = tag.Name,
@@ -917,7 +917,7 @@ public partial class ExpenseDetailVM : ObservableObject
         }
     }
 
-    private static Expense CreateSplitExpense(ExpenseSplitInput input, ExpenseTag tag, Account account)
+    private static Expense CreateSplitExpense(ExpenseSplitInput input, Tag tag, Account account)
     {
         return new Expense
         {
@@ -925,7 +925,7 @@ public partial class ExpenseDetailVM : ObservableObject
             Amount = input.Amount,
             ExpenseCategory = input.Category,
             AccountId = account.Id,
-            ExpenseTagId = tag.Id,
+            TagId = tag.Id,
             IsLend = input.IsLend
         };
     }
@@ -952,7 +952,7 @@ public partial class ExpenseDetailVM : ObservableObject
     private static void ApplySplitInputToExistingChild(
         ExpenseLog expenseLog,
         ExpenseSplitInput input,
-        ExpenseTag tag,
+        Tag tag,
         Account account)
     {
         expenseLog.Expense!.Name = BuildExpenseName(input.Name, input.Note, tag.Name);
@@ -960,8 +960,8 @@ public partial class ExpenseDetailVM : ObservableObject
         expenseLog.Expense.ExpenseCategory = input.Category;
         expenseLog.Expense.Account = account;
         expenseLog.Expense.AccountId = account.Id;
-        expenseLog.Expense.ExpenseTag = tag;
-        expenseLog.Expense.ExpenseTagId = tag.Id;
+        expenseLog.Expense.Tag = tag;
+        expenseLog.Expense.TagId = tag.Id;
         expenseLog.Expense.IsLend = input.IsLend;
 
         expenseLog.Amount = input.Amount;
@@ -987,9 +987,9 @@ public partial class ExpenseDetailVM : ObservableObject
 
     private static bool IsBudgetReconciliationExpenseLog(ExpenseLog expenseLog)
     {
-        var tag = expenseLog.Expense?.ExpenseTag;
+        var tag = expenseLog.Expense?.Tag;
         return tag is { IsSystemTag: true } &&
-               string.Equals(tag.Name, SystemExpenseTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase);
+               string.Equals(tag.Name, SystemTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase);
     }
 
     private static void RevertExpenseFromAccount(Account account, decimal amount)
@@ -1021,7 +1021,7 @@ public partial class ExpenseDetailVM : ObservableObject
             expenseLog.DeductedOn == default ? DateTime.Today : expenseLog.DeductedOn.Date,
             expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
             expenseLog.Account?.Id ?? 0,
-            expenseLog.Expense?.ExpenseTag?.Id ?? 0);
+            expenseLog.Expense?.Tag?.Id ?? 0);
     }
 
     private static ExpenseDetailSnapshot CreateMessageSnapshot(ExpenseDetailSavedState savedState)

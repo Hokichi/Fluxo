@@ -114,14 +114,14 @@ public sealed class NotificationChecklistActionVMTests
     public async Task RefreshAvailableTagsAsync_UpdatesItems_AndPreservesSelectedTag()
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>()).Returns(
+        appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns(
         [
-            new ExpenseTag { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
-            new ExpenseTag { Id = 2, Name = "Transport", HexCode = "#38BDF8" }
+            new Tag { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
+            new Tag { Id = 2, Name = "Transport", HexCode = "#38BDF8" }
         ]);
 
         var item = new NotificationChecklistActionItemVM { SelectedTagId = 1 };
-        item.AvailableTags.Add(new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" });
+        item.AvailableTags.Add(new TagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" });
         var vm = new NotificationChecklistActionVM(appData, [item]);
 
         await vm.RefreshAvailableTagsAsync();

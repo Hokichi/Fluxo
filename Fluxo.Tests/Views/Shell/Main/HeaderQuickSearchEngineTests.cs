@@ -111,7 +111,7 @@ public class HeaderQuickSearchEngineTests
             Expense = new ExpenseVM
             {
                 Name = expenseName,
-                ExpenseTag = new ExpenseTagVM
+                Tag = new TagVM
                 {
                     Id = 10 + id,
                     Name = "Tag",

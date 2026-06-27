@@ -906,10 +906,10 @@ public partial class NotificationPanelVM : ObservableRecipient,
             .OrderBy(source => source.AccountType)
             .ThenBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
-        var tagVm = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
-            _mapper.Map<IReadOnlyList<ExpenseTagDto>>(
+        var tagVm = _mapper.Map<IReadOnlyList<TagVM>>(
+            _mapper.Map<IReadOnlyList<TagDto>>(
                 await _dataOperationRunner.RunAsync(async (scope, ct) =>
-                    await scope.UnitOfWork.ExpenseTags.GetAllAsync(ct))));
+                    await scope.UnitOfWork.Tags.GetAllAsync(ct))));
 
         var items = card.Notifications
             .Select(notification => new

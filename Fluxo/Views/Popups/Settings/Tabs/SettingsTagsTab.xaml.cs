@@ -23,7 +23,7 @@ public partial class SettingsTagsTab : UserControl
     private async void OnTagPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (_viewModel is null ||
-            sender is not FrameworkElement { DataContext: ExpenseTagVM tag })
+            sender is not FrameworkElement { DataContext: TagVM tag })
             return;
 
         var isDotClick = IsDotClick(sender, e);
@@ -47,7 +47,7 @@ public partial class SettingsTagsTab : UserControl
     private async void OnTagMouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (_viewModel is null ||
-            sender is not FrameworkElement { DataContext: ExpenseTagVM tag } ||
+            sender is not FrameworkElement { DataContext: TagVM tag } ||
             IsDotClick(sender, e))
             return;
 

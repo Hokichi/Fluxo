@@ -24,7 +24,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
     private QuickSetupWizardAccountsVM? _accounts;
     private readonly Dictionary<int, QuickSetupWizardDraftFixedExpense> _draftExpenses = [];
     private readonly HashSet<int> _removedPersistedIds = [];
-    private readonly Dictionary<int, ExpenseTagVM> _tagCatalog = [];
+    private readonly Dictionary<int, TagVM> _tagCatalog = [];
     private int _nextTemporaryId = -1;
     private int _nextDraftTagId = -1;
     private bool _isLoaded;
@@ -83,7 +83,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
                 draft.RecurringTime,
                 draft.AccountId,
                 draft.Category,
-                draft.ExpenseTagId > 0 ? draft.ExpenseTagId : null,
+                draft.TagId > 0 ? draft.TagId : null,
                 null));
             return vm;
         }
@@ -168,11 +168,11 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
     private async Task LoadDraftExpensesAsync()
     {
-        var persistedTags = await _appData.GetExpenseTagsAsync();
+        var persistedTags = await _appData.GetTagsAsync();
         _tagCatalog.Clear();
         foreach (var tag in persistedTags.Where(tag => !tag.IsSystemTag))
         {
-            _tagCatalog[tag.Id] = new ExpenseTagVM
+            _tagCatalog[tag.Id] = new TagVM
             {
                 Id = tag.Id,
                 Name = tag.Name,
@@ -274,9 +274,9 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
 
     private async Task<int> ResolveTagIdAsync(IAppDataService appData, QuickSetupWizardDraftFixedExpense draft)
     {
-        if (draft.ExpenseTagId > 0)
+        if (draft.TagId > 0)
         {
-            var existingById = await appData.GetExpenseTagByIdAsync(draft.ExpenseTagId);
+            var existingById = await appData.GetTagByIdAsync(draft.TagId);
             if (existingById is not null && !existingById.IsSystemTag)
                 return existingById.Id;
         }
@@ -285,19 +285,19 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
             ? "General"
             : draft.TagName.Trim();
 
-        var existingTags = await appData.GetExpenseTagsAsync();
+        var existingTags = await appData.GetTagsAsync();
         var existingByName = existingTags.FirstOrDefault(tag =>
             !tag.IsSystemTag &&
             string.Equals(tag.Name, desiredTagName, StringComparison.OrdinalIgnoreCase));
         if (existingByName is not null)
             return existingByName.Id;
 
-        var createdTag = new ExpenseTag
+        var createdTag = new Tag
         {
             Name = desiredTagName,
             HexCode = DefaultTagColor
         };
-        await appData.AddExpenseTagAsync(createdTag);
+        await appData.AddTagAsync(createdTag);
         await appData.SaveChangesAsync();
         return createdTag.Id;
     }
@@ -316,7 +316,7 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         if (_tagCatalog.Values.Any(tag => string.Equals(tag.Name, trimmedName, StringComparison.OrdinalIgnoreCase)))
             return Task.FromResult(SettingsOperationResult.Failure($"A tag named \"{trimmedName}\" already exists."));
 
-        _tagCatalog[_nextDraftTagId] = new ExpenseTagVM
+        _tagCatalog[_nextDraftTagId] = new TagVM
         {
             Id = _nextDraftTagId,
             Name = trimmedName,
@@ -328,12 +328,12 @@ public partial class QuickSetupWizardFixedExpensesVM : ObservableObject
         return Task.FromResult(SettingsOperationResult.Success());
     }
 
-    private IReadOnlyList<ExpenseTagVM> BuildTagOptions()
+    private IReadOnlyList<TagVM> BuildTagOptions()
     {
         return _tagCatalog.Values
             .Where(tag => !tag.IsSystemTag)
             .OrderBy(tag => tag.Name)
-            .Select(tag => new ExpenseTagVM
+            .Select(tag => new TagVM
             {
                 Id = tag.Id,
                 Name = tag.Name,

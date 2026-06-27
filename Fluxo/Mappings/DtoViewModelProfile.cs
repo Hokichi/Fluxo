@@ -14,7 +14,7 @@ public sealed class DtoViewModelProfile : Profile
             .ReverseMap()
             .ForMember(dest => dest.ParentLogId, opt => opt.MapFrom(src => src.ParentLogId));
         CreateMap<IncomeLogDto, IncomeLogVM>().ReverseMap();
-        CreateMap<ExpenseTagDto, ExpenseTagVM>().ReverseMap();
+        CreateMap<TagDto, TagVM>().ReverseMap();
         CreateMap<SavingGoalDto, SavingGoalVM>().ReverseMap();
         CreateMap<AccountDto, AccountVM>().ReverseMap();
         CreateMap<RecurringTransactionDto, RecurringTransactionVM>().ReverseMap();

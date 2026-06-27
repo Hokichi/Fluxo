@@ -58,7 +58,7 @@ public sealed class ExpenseDetailVMSplitTests
 
             var row = vm.SplitRows[0];
             row.IsTagPopupOpen = true;
-            row.SelectedTag = new ExpenseTagVM { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false };
+            row.SelectedTag = new TagVM { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false };
 
             Assert.False(row.IsTagPopupOpen);
         });
@@ -101,7 +101,7 @@ public sealed class ExpenseDetailVMSplitTests
                         {
                             Name = "Groceries",
                             ExpenseCategory = ExpenseCategory.Wants,
-                            ExpenseTag = new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6" },
+                            Tag = new Tag { Id = 2, Name = "Travel", HexCode = "#3B82F6" },
                             IsLend = true
                         }
                     },
@@ -182,7 +182,7 @@ public sealed class ExpenseDetailVMSplitTests
         RunInSta(() =>
         {
             var (vm, appData, persistedSource) = CreateVmWithDependencies();
-            var tag = new ExpenseTag { Id = 1, Name = "General", HexCode = "#22C55E" };
+            var tag = new Tag { Id = 1, Name = "General", HexCode = "#22C55E" };
             appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(
                 [
@@ -199,7 +199,7 @@ public sealed class ExpenseDetailVMSplitTests
                         {
                             Name = "Groceries",
                             ExpenseCategory = ExpenseCategory.Needs,
-                            ExpenseTag = tag
+                            Tag = tag
                         }
                     },
                     new ExpenseLog
@@ -209,7 +209,7 @@ public sealed class ExpenseDetailVMSplitTests
                         Amount = 15m,
                         DeductedOn = new DateTime(2026, 5, 31),
                         Account = persistedSource,
-                        Expense = new Expense { Name = "Other parent", ExpenseTag = tag }
+                        Expense = new Expense { Name = "Other parent", Tag = tag }
                     }
                 ]));
 
@@ -410,7 +410,7 @@ public sealed class ExpenseDetailVMSplitTests
         RunInSta(() =>
         {
             var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
-            var childTag = new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6" };
+            var childTag = new Tag { Id = 2, Name = "Travel", HexCode = "#3B82F6" };
             var childExpense = new Expense
             {
                 Id = 30,
@@ -419,8 +419,8 @@ public sealed class ExpenseDetailVMSplitTests
                 ExpenseCategory = ExpenseCategory.Needs,
                 Account = persistedSource,
                 AccountId = persistedSource.Id,
-                ExpenseTag = childTag,
-                ExpenseTagId = childTag.Id
+                Tag = childTag,
+                TagId = childTag.Id
             };
             var childLog = new ExpenseLog
             {
@@ -435,15 +435,15 @@ public sealed class ExpenseDetailVMSplitTests
             };
             appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([childLog]));
-            appData.GetExpenseTagByIdAsync(2, Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<ExpenseTag?>(childTag));
+            appData.GetTagByIdAsync(2, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<Tag?>(childTag));
 
             vm.BeginSplitModeAsync().GetAwaiter().GetResult();
             var row = Assert.Single(vm.SplitRows);
             row.NameText = "Updated child";
             row.AmountText = 40m;
             row.SelectedExpenseCategory = ExpenseCategory.Wants;
-            row.SelectedTag = new ExpenseTagVM { Id = 2, Name = "Travel", HexCode = "#3B82F6" };
+            row.SelectedTag = new TagVM { Id = 2, Name = "Travel", HexCode = "#3B82F6" };
 
             var result = vm.SaveAsync().GetAwaiter().GetResult();
 
@@ -453,7 +453,7 @@ public sealed class ExpenseDetailVMSplitTests
                 expense.Name == "Updated child" &&
                 expense.Amount == 40m &&
                 expense.ExpenseCategory == ExpenseCategory.Wants &&
-                expense.ExpenseTagId == 2));
+                expense.TagId == 2));
             appData.Received(1).UpdateExpenseLog(Arg.Is<ExpenseLog>(log =>
                 log.Id == 200 &&
                 log.Amount == 40m &&
@@ -471,7 +471,7 @@ public sealed class ExpenseDetailVMSplitTests
         RunInSta(() =>
         {
             var (vm, appData, persistedSource) = CreateVmWithDependencies(amount: 100m);
-            var tag = new ExpenseTag { Id = 1, Name = "General", HexCode = "#22C55E" };
+            var tag = new Tag { Id = 1, Name = "General", HexCode = "#22C55E" };
             var childExpense = new Expense
             {
                 Id = 30,
@@ -480,8 +480,8 @@ public sealed class ExpenseDetailVMSplitTests
                 ExpenseCategory = ExpenseCategory.Needs,
                 Account = persistedSource,
                 AccountId = persistedSource.Id,
-                ExpenseTag = tag,
-                ExpenseTagId = tag.Id
+                Tag = tag,
+                TagId = tag.Id
             };
             var childLog = new ExpenseLog
             {
@@ -799,13 +799,13 @@ public sealed class ExpenseDetailVMSplitTests
                     Arg.Is<Expense>(expense =>
                         expense.Amount == 30m &&
                         expense.ExpenseCategory == ExpenseCategory.Wants &&
-                        expense.ExpenseTagId == 1),
+                        expense.TagId == 1),
                     Arg.Any<CancellationToken>());
                 _ = appData.Received(1).AddExpenseAsync(
                     Arg.Is<Expense>(expense =>
                         expense.Amount == 20m &&
                         expense.ExpenseCategory == ExpenseCategory.Wants &&
-                        expense.ExpenseTagId == 1),
+                        expense.TagId == 1),
                     Arg.Any<CancellationToken>());
                 _ = appData.DidNotReceive().AddExpenseAsync(
                     Arg.Is<Expense>(expense => expense.Amount == 50m),
@@ -869,7 +869,7 @@ public sealed class ExpenseDetailVMSplitTests
             IsEnabled = true
         };
 
-        var tag = new ExpenseTagVM
+        var tag = new TagVM
         {
             Id = 1,
             Name = "General",
@@ -879,11 +879,11 @@ public sealed class ExpenseDetailVMSplitTests
 
         var main = CreateMainViewModel(source, tag);
         var appData = Substitute.For<IAppDataService>();
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>(
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Tag>>(
             [
-                new ExpenseTag { Id = 1, Name = "General", HexCode = "#22C55E", IsSystemTag = false },
-                new ExpenseTag { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false }
+                new Tag { Id = 1, Name = "General", HexCode = "#22C55E", IsSystemTag = false },
+                new Tag { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false }
             ]));
         appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([]));
@@ -897,11 +897,11 @@ public sealed class ExpenseDetailVMSplitTests
             IsEnabled = true
         };
 
-        var persistedTag = new ExpenseTag
+        var persistedTag = new Tag
         {
             Id = 1,
-            Name = isBudgetReconciliation ? SystemExpenseTags.BudgetReconciliationName : "General",
-            HexCode = isBudgetReconciliation ? SystemExpenseTags.BudgetReconciliationHexCode : "#22C55E",
+            Name = isBudgetReconciliation ? SystemTags.BudgetReconciliationName : "General",
+            HexCode = isBudgetReconciliation ? SystemTags.BudgetReconciliationHexCode : "#22C55E",
             IsSystemTag = isBudgetReconciliation
         };
 
@@ -913,8 +913,8 @@ public sealed class ExpenseDetailVMSplitTests
             ExpenseCategory = ExpenseCategory.Needs,
             Account = persistedSource,
             AccountId = persistedSource.Id,
-            ExpenseTag = persistedTag,
-            ExpenseTagId = persistedTag.Id
+            Tag = persistedTag,
+            TagId = persistedTag.Id
         };
 
         var persistedLog = new ExpenseLog
@@ -933,8 +933,8 @@ public sealed class ExpenseDetailVMSplitTests
             .Returns(Task.FromResult<ExpenseLog?>(persistedLog));
         appData.GetAccountByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Account?>(persistedSource));
-        appData.GetExpenseTagByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<ExpenseTag?>(persistedTag));
+        appData.GetTagByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Tag?>(persistedTag));
         appData.SaveChangesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         var nextExpenseId = 100;
@@ -969,7 +969,7 @@ public sealed class ExpenseDetailVMSplitTests
                 Amount = amount,
                 ExpenseCategory = ExpenseCategory.Needs,
                 Account = source,
-                ExpenseTag = tag
+                Tag = tag
             }
         }, appData), appData, persistedSource);
     }
@@ -994,7 +994,7 @@ public sealed class ExpenseDetailVMSplitTests
             IsEnabled = true,
             PinnedOnUI = true
         };
-        var tag = new ExpenseTag
+        var tag = new Tag
         {
             Name = "General",
             HexCode = "#22C55E",
@@ -1006,7 +1006,7 @@ public sealed class ExpenseDetailVMSplitTests
             Amount = 100m,
             ExpenseCategory = ExpenseCategory.Needs,
             Account = account,
-            ExpenseTag = tag
+            Tag = tag
         };
         var parentLog = new ExpenseLog
         {
@@ -1041,7 +1041,7 @@ public sealed class ExpenseDetailVMSplitTests
             Balance = 1_000m,
             IsEnabled = true
         };
-        var tagVm = new ExpenseTagVM
+        var tagVm = new TagVM
         {
             Id = tagId,
             Name = "General",
@@ -1063,7 +1063,7 @@ public sealed class ExpenseDetailVMSplitTests
                 Amount = 100m,
                 ExpenseCategory = ExpenseCategory.Needs,
                 Account = sourceVm,
-                ExpenseTag = tagVm
+                Tag = tagVm
             }
         }, appData);
 
@@ -1098,17 +1098,17 @@ public sealed class ExpenseDetailVMSplitTests
             log.Amount == 20m &&
             log.AccountId == accountId &&
             log.Expense.AccountId == accountId &&
-            log.Expense.ExpenseTagId == tagId &&
+            log.Expense.TagId == tagId &&
             log.Expense.Name == "Transport");
         Assert.Contains(children, log =>
             log.Amount == 30m &&
             log.AccountId == accountId &&
             log.Expense.AccountId == accountId &&
-            log.Expense.ExpenseTagId == tagId &&
+            log.Expense.TagId == tagId &&
             log.Expense.Name == "Groceries");
     }
 
-    private static MainVM CreateMainViewModel(AccountVM source, ExpenseTagVM tag)
+    private static MainVM CreateMainViewModel(AccountVM source, TagVM tag)
     {
         var messenger = new WeakReferenceMessenger();
         var mapper = Substitute.For<IMapper>();
@@ -1157,10 +1157,10 @@ public sealed class ExpenseDetailVMSplitTests
             null);
 
         main.BudgetPanel.Accounts.Add(source);
-        main.BudgetPanel.Tags = new ObservableCollection<ExpenseTagVM>([tag]);
-        main.BudgetPanel.OtherTags = new ObservableCollection<ExpenseTagVM>(
+        main.BudgetPanel.Tags = new ObservableCollection<TagVM>([tag]);
+        main.BudgetPanel.OtherTags = new ObservableCollection<TagVM>(
         [
-            new ExpenseTagVM { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false }
+            new TagVM { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false }
         ]);
 
         return main;
@@ -1173,7 +1173,7 @@ public sealed class ExpenseDetailVMSplitTests
             new ExpenseRepository(dbContext),
             new ExpenseLogRepository(dbContext),
             new IncomeLogRepository(dbContext),
-            new ExpenseTagRepository(dbContext),
+            new TagRepository(dbContext),
             new SavingGoalRepository(dbContext),
             new AccountRepository(dbContext),
             new RecurringTransactionRepository(dbContext),

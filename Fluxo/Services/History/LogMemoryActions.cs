@@ -61,7 +61,7 @@ public sealed record ExpenseMemorySnapshot(
         return new ExpenseMemorySnapshot(
             expense.Id,
             expense.AccountId,
-            expense.ExpenseTagId,
+            expense.TagId,
             expense.Name,
             expense.Amount,
             expense.ExpenseCategory,
@@ -69,21 +69,21 @@ public sealed record ExpenseMemorySnapshot(
     }
 }
 
-public sealed record ExpenseTagMemorySnapshot(
-    int ExpenseTagId,
+public sealed record TagMemorySnapshot(
+    int TagId,
     string Name,
     string HexCode,
     decimal? SpendingLimit)
 {
-    public static ExpenseTagMemorySnapshot Create(ExpenseTag expenseTag)
+    public static TagMemorySnapshot Create(Tag tag)
     {
-        ArgumentNullException.ThrowIfNull(expenseTag);
+        ArgumentNullException.ThrowIfNull(tag);
 
-        return new ExpenseTagMemorySnapshot(
-            expenseTag.Id,
-            expenseTag.Name,
-            expenseTag.HexCode,
-            expenseTag.SpendingLimit);
+        return new TagMemorySnapshot(
+            tag.Id,
+            tag.Name,
+            tag.HexCode,
+            tag.SpendingLimit);
     }
 }
 
@@ -150,7 +150,7 @@ public sealed record ExpenseLogMemorySnapshot(
         ArgumentNullException.ThrowIfNull(expenseLog);
         ArgumentNullException.ThrowIfNull(expenseLog.Expense);
         ArgumentNullException.ThrowIfNull(expenseLog.Account);
-        ArgumentNullException.ThrowIfNull(expenseLog.Expense.ExpenseTag);
+        ArgumentNullException.ThrowIfNull(expenseLog.Expense.Tag);
 
         return new ExpenseLogMemorySnapshot(
             expenseLog.Expense.Id,
@@ -159,7 +159,7 @@ public sealed record ExpenseLogMemorySnapshot(
             expenseLog.Amount,
             expenseLog.Expense.ExpenseCategory,
             expenseLog.Account.Id,
-            expenseLog.Expense.ExpenseTag.Id,
+            expenseLog.Expense.Tag.Id,
             expenseLog.DeductedOn,
             expenseLog.Notes,
             expenseLog.IsForDeletion,
@@ -249,7 +249,7 @@ public sealed class AddExpenseLogMemoryAction(
             Amount = snapshot.Amount,
             ExpenseCategory = snapshot.ExpenseCategory,
             AccountId = snapshot.AccountId,
-            ExpenseTagId = snapshot.TagId,
+            TagId = snapshot.TagId,
             IsLend = snapshot.IsLend
         };
 
@@ -479,8 +479,8 @@ public sealed class EditExpenseLogMemoryAction(
         var targetAccount =
             await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
-        var expenseTag =
-            await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId, cancellationToken);
+        var tag =
+            await LogMemoryPersistence.GetRequiredTagAsync(unitOfWork, snapshot.TagId, cancellationToken);
 
         LogMemoryPersistence.RevertExpenseFromAccount(currentAccount, expenseLog.Amount);
         LogMemoryPersistence.ApplyExpenseToAccount(targetAccount, snapshot.Amount);
@@ -489,7 +489,7 @@ public sealed class EditExpenseLogMemoryAction(
         expenseLog.Expense.Amount = snapshot.Amount;
         expenseLog.Expense.ExpenseCategory = snapshot.ExpenseCategory;
         expenseLog.Expense.Account = targetAccount;
-        expenseLog.Expense.ExpenseTag = expenseTag;
+        expenseLog.Expense.Tag = tag;
         expenseLog.Expense.IsLend = snapshot.IsLend;
 
         expenseLog.Amount = snapshot.Amount;
@@ -709,7 +709,7 @@ public sealed class EditExpenseMemoryAction(
         expense.Amount = snapshot.Amount;
         expense.ExpenseCategory = snapshot.ExpenseCategory;
         expense.AccountId = snapshot.AccountId;
-        expense.ExpenseTagId = snapshot.TagId;
+        expense.TagId = snapshot.TagId;
         expense.IsLend = snapshot.IsLend;
 
         unitOfWork.Expenses.Update(expense);
@@ -729,7 +729,7 @@ public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : 
         var account =
             await LogMemoryPersistence.GetRequiredAccountAsync(unitOfWork, snapshot.AccountId,
                 cancellationToken);
-        var expenseTag = await LogMemoryPersistence.GetRequiredExpenseTagAsync(unitOfWork, snapshot.TagId,
+        var tag = await LogMemoryPersistence.GetRequiredTagAsync(unitOfWork, snapshot.TagId,
             cancellationToken);
 
         var expense = new Expense
@@ -739,9 +739,9 @@ public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : 
             Amount = snapshot.Amount,
             ExpenseCategory = snapshot.ExpenseCategory,
             AccountId = snapshot.AccountId,
-            ExpenseTagId = snapshot.TagId,
+            TagId = snapshot.TagId,
             Account = account,
-            ExpenseTag = expenseTag,
+            Tag = tag,
             IsLend = snapshot.IsLend
         };
 
@@ -760,41 +760,41 @@ public sealed class DeleteExpenseMemoryAction(ExpenseMemorySnapshot snapshot) : 
     }
 }
 
-public sealed class DeleteExpenseTagMemoryAction(ExpenseTagMemorySnapshot snapshot) : ILogMemoryAction
+public sealed class DeleteTagMemoryAction(TagMemorySnapshot snapshot) : ILogMemoryAction
 {
     public string Description => "Delete tag";
 
     public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        if (await unitOfWork.ExpenseTags.GetByIdAsync(snapshot.ExpenseTagId, cancellationToken) is not null)
+        if (await unitOfWork.Tags.GetByIdAsync(snapshot.TagId, cancellationToken) is not null)
             return;
 
-        var expenseTag = new ExpenseTag
+        var tag = new Tag
         {
-            Id = snapshot.ExpenseTagId,
+            Id = snapshot.TagId,
             Name = snapshot.Name,
             HexCode = snapshot.HexCode,
             SpendingLimit = snapshot.SpendingLimit
         };
 
-        await unitOfWork.ExpenseTags.AddAsync(expenseTag, cancellationToken);
+        await unitOfWork.Tags.AddAsync(tag, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
-        var expenseTag = await unitOfWork.ExpenseTags.GetByIdAsync(snapshot.ExpenseTagId, cancellationToken);
-        if (expenseTag is null)
+        var tag = await unitOfWork.Tags.GetByIdAsync(snapshot.TagId, cancellationToken);
+        if (tag is null)
             return;
 
-        unitOfWork.ExpenseTags.Remove(expenseTag);
+        unitOfWork.Tags.Remove(tag);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
 
-public sealed class EditExpenseTagMemoryAction(
-    ExpenseTagMemorySnapshot before,
-    ExpenseTagMemorySnapshot after) : ILogMemoryAction
+public sealed class EditTagMemoryAction(
+    TagMemorySnapshot before,
+    TagMemorySnapshot after) : ILogMemoryAction
 {
     public string Description => "Edit tag";
 
@@ -808,17 +808,17 @@ public sealed class EditExpenseTagMemoryAction(
         return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
     }
 
-    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, ExpenseTagMemorySnapshot snapshot,
+    private static async Task ApplySnapshotAsync(IUnitOfWork unitOfWork, TagMemorySnapshot snapshot,
         CancellationToken cancellationToken)
     {
-        var expenseTag = await unitOfWork.ExpenseTags.GetByIdAsync(snapshot.ExpenseTagId, cancellationToken);
-        if (expenseTag is null)
+        var tag = await unitOfWork.Tags.GetByIdAsync(snapshot.TagId, cancellationToken);
+        if (tag is null)
             return;
 
-        expenseTag.Name = snapshot.Name;
-        expenseTag.HexCode = snapshot.HexCode;
-        expenseTag.SpendingLimit = snapshot.SpendingLimit;
-        unitOfWork.ExpenseTags.Update(expenseTag);
+        tag.Name = snapshot.Name;
+        tag.HexCode = snapshot.HexCode;
+        tag.SpendingLimit = snapshot.SpendingLimit;
+        unitOfWork.Tags.Update(tag);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
@@ -960,10 +960,10 @@ internal static class LogMemoryPersistence
                throw new InvalidOperationException($"Unable to find account {accountId}.");
     }
 
-    internal static async Task<ExpenseTag> GetRequiredExpenseTagAsync(IUnitOfWork unitOfWork, int expenseTagId,
+    internal static async Task<Tag> GetRequiredTagAsync(IUnitOfWork unitOfWork, int tagId,
         CancellationToken cancellationToken)
     {
-        var expenseTag = await unitOfWork.ExpenseTags.GetByIdAsync(expenseTagId, cancellationToken);
-        return expenseTag ?? throw new InvalidOperationException($"Unable to find expense tag {expenseTagId}.");
+        var tag = await unitOfWork.Tags.GetByIdAsync(tagId, cancellationToken);
+        return tag ?? throw new InvalidOperationException($"Unable to find expense tag {tagId}.");
     }
 }

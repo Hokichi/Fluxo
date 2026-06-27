@@ -14,7 +14,7 @@ public sealed class FluxoUserBackupDocument
 public sealed class FluxoUserBackupEntities
 {
     public List<BackupAccount> Accounts { get; set; } = [];
-    public List<BackupExpenseTag> Tags { get; set; } = [];
+    public List<BackupTag> Tags { get; set; } = [];
     public List<BackupSavingGoal> Goals { get; set; } = [];
     public List<BackupExpense> Expenses { get; set; } = [];
     public List<BackupExpenseLog> ExpenseLogs { get; set; } = [];
@@ -47,7 +47,7 @@ public sealed record BackupAccount(
     public bool RestoredPinnedOnUI => LegacyShowOnUI ?? PinnedOnUI;
 }
 
-public sealed record BackupExpenseTag(
+public sealed record BackupTag(
     int BackupId,
     string Name,
     string HexCode,
@@ -65,7 +65,7 @@ public sealed record BackupSavingGoal(
 public sealed record BackupExpense(
     int BackupId,
     int AccountBackupId,
-    int ExpenseTagBackupId,
+    int TagBackupId,
     string Name,
     decimal Amount,
     string ExpenseCategory,

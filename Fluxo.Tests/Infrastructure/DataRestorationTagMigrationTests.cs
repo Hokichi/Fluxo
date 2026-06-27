@@ -42,7 +42,7 @@ public sealed class DataRestorationTagMigrationTests
                 .Options;
             await using var dbContext = new FluxoDbContext(options);
 
-            var tags = await dbContext.ExpenseTags
+            var tags = await dbContext.Tags
                 .Where(tag => tag.Name == "Data Restoration")
                 .ToListAsync();
 
@@ -80,7 +80,7 @@ public sealed class DataRestorationTagMigrationTests
             await App.MigrateDatabaseAsync(runner, () => databasePath);
             await InsertNonSystemTagAsync(
                 databasePath,
-                SystemExpenseTags.BudgetReconciliationName,
+                SystemTags.BudgetReconciliationName,
                 "#123456");
             await RemoveMigrationHistoryEntryAsync(databasePath, SeedBudgetReconciliationMigrationId);
             await App.MigrateDatabaseAsync(runner, () => databasePath);
@@ -90,13 +90,13 @@ public sealed class DataRestorationTagMigrationTests
                 .Options;
             await using var dbContext = new FluxoDbContext(options);
 
-            var tags = await dbContext.ExpenseTags
-                .Where(tag => tag.Name == SystemExpenseTags.BudgetReconciliationName)
+            var tags = await dbContext.Tags
+                .Where(tag => tag.Name == SystemTags.BudgetReconciliationName)
                 .ToListAsync();
 
             var systemTag = tags.SingleOrDefault(tag => tag.IsSystemTag);
             Assert.NotNull(systemTag);
-            Assert.Equal(SystemExpenseTags.BudgetReconciliationHexCode, systemTag.HexCode);
+            Assert.Equal(SystemTags.BudgetReconciliationHexCode, systemTag.HexCode);
 
             var customTag = tags.SingleOrDefault(tag => !tag.IsSystemTag);
             Assert.NotNull(customTag);
@@ -129,7 +129,7 @@ public sealed class DataRestorationTagMigrationTests
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IExpenseLogRepository, ExpenseLogRepository>();
         services.AddScoped<IIncomeLogRepository, IncomeLogRepository>();
-        services.AddScoped<IExpenseTagRepository, ExpenseTagRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
@@ -172,7 +172,7 @@ public sealed class DataRestorationTagMigrationTests
 
         await using var command = connection.CreateCommand();
         command.CommandText = """
-                              INSERT INTO ExpenseTags (Name, HexCode, IsSystemTag)
+                              INSERT INTO Tags (Name, HexCode, IsSystemTag)
                               VALUES ($name, $hexCode, 0);
                               """;
         command.Parameters.AddWithValue("$name", name);

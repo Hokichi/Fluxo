@@ -601,7 +601,7 @@ public sealed class SettingsConfigTabVMTests
         public IExpenseRepository Expenses => throw new NotSupportedException();
         public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
-        public IExpenseTagRepository ExpenseTags => throw new NotSupportedException();
+        public ITagRepository Tags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts { get; } = new TestAccountRepository();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
@@ -673,7 +673,7 @@ public sealed class SettingsConfigTabVMTests
         public IExpenseRepository Expenses => throw new NotSupportedException();
         public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
-        public IExpenseTagRepository ExpenseTags => throw new NotSupportedException();
+        public ITagRepository Tags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts { get; } = new TestAccountRepository();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();

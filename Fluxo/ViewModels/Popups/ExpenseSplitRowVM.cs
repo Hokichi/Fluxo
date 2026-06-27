@@ -13,7 +13,7 @@ public partial class ExpenseSplitRowVM : ObservableObject
     [ObservableProperty] private bool _isTagPopupOpen;
     [ObservableProperty] private string _nameText = string.Empty;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
-    [ObservableProperty] private ExpenseTagVM? _selectedTag;
+    [ObservableProperty] private TagVM? _selectedTag;
 
     public bool HasAmount => AmountText > 0m;
 
@@ -44,7 +44,7 @@ public partial class ExpenseSplitRowVM : ObservableObject
         OnPropertyChanged(nameof(HasMeaningfulValue));
     }
 
-    partial void OnSelectedTagChanged(ExpenseTagVM? value)
+    partial void OnSelectedTagChanged(TagVM? value)
     {
         OnPropertyChanged(nameof(HasMeaningfulValue));
         OnPropertyChanged(nameof(TagDisplayName));

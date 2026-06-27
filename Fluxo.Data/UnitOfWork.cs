@@ -9,7 +9,7 @@ public sealed class UnitOfWork(
     IExpenseRepository expenses,
     IExpenseLogRepository expenseLogs,
     IIncomeLogRepository incomeLogs,
-    IExpenseTagRepository expenseTags,
+    ITagRepository tags,
     ISavingGoalRepository savingGoals,
     IAccountRepository accounts,
     IRecurringTransactionRepository recurringTransactions,
@@ -22,7 +22,7 @@ public sealed class UnitOfWork(
     public IExpenseRepository Expenses { get; } = expenses;
     public IExpenseLogRepository ExpenseLogs { get; } = expenseLogs;
     public IIncomeLogRepository IncomeLogs { get; } = incomeLogs;
-    public IExpenseTagRepository ExpenseTags { get; } = expenseTags;
+    public ITagRepository Tags { get; } = tags;
     public ISavingGoalRepository SavingGoals { get; } = savingGoals;
     public IAccountRepository Accounts { get; } = accounts;
     public IRecurringTransactionRepository RecurringTransactions { get; } = recurringTransactions;

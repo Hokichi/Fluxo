@@ -102,35 +102,35 @@ public sealed class AppDataService(IUnitOfWork unitOfWork) : IAppDataService
         unitOfWork.IncomeLogs.Remove(entity);
     }
 
-    public Task<IReadOnlyList<ExpenseTag>> GetExpenseTagsAsync(CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<Tag>> GetTagsAsync(CancellationToken cancellationToken = default)
     {
-        return unitOfWork.ExpenseTags.GetAllAsync(cancellationToken);
+        return unitOfWork.Tags.GetAllAsync(cancellationToken);
     }
 
-    public Task<ExpenseTag?> GetExpenseTagByIdAsync(int id, CancellationToken cancellationToken = default)
+    public Task<Tag?> GetTagByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return unitOfWork.ExpenseTags.GetByIdAsync(id, cancellationToken);
+        return unitOfWork.Tags.GetByIdAsync(id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetExpenseTagsByCountDescendingAsync(
+    public Task<IReadOnlyList<(Tag Tag, int Count)>> GetTagsByCountDescendingAsync(
         CancellationToken cancellationToken = default)
     {
-        return unitOfWork.ExpenseTags.GetTagsByCountDescendingAsync(cancellationToken);
+        return unitOfWork.Tags.GetTagsByCountDescendingAsync(cancellationToken);
     }
 
-    public Task AddExpenseTagAsync(ExpenseTag entity, CancellationToken cancellationToken = default)
+    public Task AddTagAsync(Tag entity, CancellationToken cancellationToken = default)
     {
-        return unitOfWork.ExpenseTags.AddAsync(entity, cancellationToken);
+        return unitOfWork.Tags.AddAsync(entity, cancellationToken);
     }
 
-    public void UpdateExpenseTag(ExpenseTag entity)
+    public void UpdateTag(Tag entity)
     {
-        unitOfWork.ExpenseTags.Update(entity);
+        unitOfWork.Tags.Update(entity);
     }
 
-    public void RemoveExpenseTag(ExpenseTag entity)
+    public void RemoveTag(Tag entity)
     {
-        unitOfWork.ExpenseTags.Remove(entity);
+        unitOfWork.Tags.Remove(entity);
     }
 
     public Task<IReadOnlyList<SavingGoal>> GetSavingGoalsAsync(CancellationToken cancellationToken = default)

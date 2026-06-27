@@ -48,8 +48,8 @@ public sealed class ExpenseDetailTargetResolverTests
                     Name = "Parent expense",
                     Amount = 100m,
                     ExpenseCategory = ExpenseCategory.Needs,
-                    ExpenseTagId = 5,
-                    ExpenseTag = new ExpenseTag
+                    TagId = 5,
+                    Tag = new Tag
                     {
                         Id = 5,
                         Name = "Groceries",

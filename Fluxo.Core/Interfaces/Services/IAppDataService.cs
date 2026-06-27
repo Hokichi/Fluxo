@@ -27,13 +27,13 @@ public interface IAppDataService
     void UpdateIncomeLog(IncomeLog entity);
     void RemoveIncomeLog(IncomeLog entity);
 
-    Task<IReadOnlyList<ExpenseTag>> GetExpenseTagsAsync(CancellationToken cancellationToken = default);
-    Task<ExpenseTag?> GetExpenseTagByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<(ExpenseTag Tag, int Count)>> GetExpenseTagsByCountDescendingAsync(
+    Task<IReadOnlyList<Tag>> GetTagsAsync(CancellationToken cancellationToken = default);
+    Task<Tag?> GetTagByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<(Tag Tag, int Count)>> GetTagsByCountDescendingAsync(
         CancellationToken cancellationToken = default);
-    Task AddExpenseTagAsync(ExpenseTag entity, CancellationToken cancellationToken = default);
-    void UpdateExpenseTag(ExpenseTag entity);
-    void RemoveExpenseTag(ExpenseTag entity);
+    Task AddTagAsync(Tag entity, CancellationToken cancellationToken = default);
+    void UpdateTag(Tag entity);
+    void RemoveTag(Tag entity);
 
     Task<IReadOnlyList<SavingGoal>> GetSavingGoalsAsync(CancellationToken cancellationToken = default);
     Task<SavingGoal?> GetSavingGoalByIdAsync(int id, CancellationToken cancellationToken = default);

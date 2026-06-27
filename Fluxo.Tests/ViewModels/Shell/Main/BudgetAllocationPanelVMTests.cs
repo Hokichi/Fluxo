@@ -188,7 +188,7 @@ public class BudgetAllocationPanelVMTests
         {
             var messenger = new WeakReferenceMessenger();
             var source = CreateAccounts().Single();
-            var groceries = new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" };
+            var groceries = new TagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" };
             var expenses = new[]
             {
                 new ExpenseLogVM
@@ -201,7 +201,7 @@ public class BudgetAllocationPanelVMTests
                         Id = 14,
                         Name = "Coffee",
                         ExpenseCategory = ExpenseCategory.Needs,
-                        ExpenseTag = groceries
+                        Tag = groceries
                     },
                     Account = source
                 },
@@ -216,7 +216,7 @@ public class BudgetAllocationPanelVMTests
                         Id = 15,
                         Name = "Child split",
                         ExpenseCategory = ExpenseCategory.Needs,
-                        ExpenseTag = groceries
+                        Tag = groceries
                     },
                     Account = source
                 }
@@ -503,7 +503,7 @@ public class BudgetAllocationPanelVMTests
                     Id = 10,
                     Name = "Split parent",
                     ExpenseCategory = ExpenseCategory.Needs,
-                    ExpenseTag = new ExpenseTagVM { Id = 1, Name = "Parent", HexCode = "#22C55E" }
+                    Tag = new TagVM { Id = 1, Name = "Parent", HexCode = "#22C55E" }
                 },
                 Account = source
             };
@@ -518,7 +518,7 @@ public class BudgetAllocationPanelVMTests
                     Id = 11,
                     Name = "Wants split",
                     ExpenseCategory = ExpenseCategory.Wants,
-                    ExpenseTag = new ExpenseTagVM { Id = 2, Name = "Wants", HexCode = "#F97316" }
+                    Tag = new TagVM { Id = 2, Name = "Wants", HexCode = "#F97316" }
                 },
                 Account = source
             };
@@ -533,7 +533,7 @@ public class BudgetAllocationPanelVMTests
                     Id = 12,
                     Name = "Savings split",
                     ExpenseCategory = ExpenseCategory.Savings,
-                    ExpenseTag = new ExpenseTagVM { Id = 3, Name = "Savings", HexCode = "#0EA5E9" }
+                    Tag = new TagVM { Id = 3, Name = "Savings", HexCode = "#0EA5E9" }
                 },
                 Account = source
             };
@@ -733,14 +733,14 @@ public class BudgetAllocationPanelVMTests
 
             var updated = vm.GetAllExpenseLogs().Single(log => log.Id == 1);
             Assert.Equal("Checking", updated.Account.Name);
-            Assert.Equal("#F97316", updated.Expense.ExpenseTag.HexCode);
+            Assert.Equal("#F97316", updated.Expense.Tag.HexCode);
         });
     }
 
     private static BudgetAllocationPanelVM CreateVm(
         IMessenger messenger,
         IReadOnlyList<ExpenseLogVM> expenseLogs,
-        IReadOnlyList<ExpenseTagVM> tags,
+        IReadOnlyList<TagVM> tags,
         IReadOnlyList<AccountVM> accounts,
         IReadOnlyList<IncomeLogVM>? incomeLogs = null,
         IReadOnlyList<UserSettings>? settings = null,
@@ -758,7 +758,7 @@ public class BudgetAllocationPanelVMTests
 
         var tagService = Substitute.For<ITagService>();
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseTagDto>>([]));
+            .Returns(Task.FromResult<IReadOnlyList<TagDto>>([]));
 
         var userSettingsRepository = Substitute.For<Fluxo.Core.Interfaces.Repositories.IUserSettingsRepository>();
         userSettingsRepository.GetAllAsync(Arg.Any<CancellationToken>())
@@ -793,7 +793,7 @@ public class BudgetAllocationPanelVMTests
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
-        mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns(tags);
+        mapper.Map<IReadOnlyList<TagVM>>(Arg.Any<object>()).Returns(tags);
         var allocationData = new AllocationDataVM(
             expenseLogService,
             accountService,
@@ -813,8 +813,8 @@ public class BudgetAllocationPanelVMTests
 
     private static IReadOnlyList<ExpenseLogVM> CreateExpenseLogs()
     {
-        var groceries = new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" };
-        var fun = new ExpenseTagVM { Id = 2, Name = "Fun", HexCode = "#F97316" };
+        var groceries = new TagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" };
+        var fun = new TagVM { Id = 2, Name = "Fun", HexCode = "#F97316" };
         var source = new AccountVM
         {
             Id = 1,
@@ -837,7 +837,7 @@ public class BudgetAllocationPanelVMTests
                     Id = 11,
                     Name = "Groceries",
                     ExpenseCategory = ExpenseCategory.Needs,
-                    ExpenseTag = groceries
+                    Tag = groceries
                 },
                 Account = source
             },
@@ -851,7 +851,7 @@ public class BudgetAllocationPanelVMTests
                     Id = 12,
                     Name = "Movie",
                     ExpenseCategory = ExpenseCategory.Wants,
-                    ExpenseTag = fun
+                    Tag = fun
                 },
                 Account = source
             },
@@ -865,19 +865,19 @@ public class BudgetAllocationPanelVMTests
                     Id = 13,
                     Name = "ETF",
                     ExpenseCategory = ExpenseCategory.Savings,
-                    ExpenseTag = groceries
+                    Tag = groceries
                 },
                 Account = source
             }
         ];
     }
 
-    private static IReadOnlyList<ExpenseTagVM> CreateTags()
+    private static IReadOnlyList<TagVM> CreateTags()
     {
         return
         [
-            new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
-            new ExpenseTagVM { Id = 2, Name = "Fun", HexCode = "#F97316" }
+            new TagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
+            new TagVM { Id = 2, Name = "Fun", HexCode = "#F97316" }
         ];
     }
 
@@ -918,16 +918,16 @@ public class BudgetAllocationPanelVMTests
         ];
     }
 
-    private static IReadOnlyList<ExpenseTagVM> CreateTagsForUsageOrdering()
+    private static IReadOnlyList<TagVM> CreateTagsForUsageOrdering()
     {
         return
         [
-            new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
-            new ExpenseTagVM { Id = 2, Name = "Transport", HexCode = "#06B6D4" },
-            new ExpenseTagVM { Id = 3, Name = "Dining", HexCode = "#F97316" },
-            new ExpenseTagVM { Id = 4, Name = "Bills", HexCode = "#0EA5E9" },
-            new ExpenseTagVM { Id = 5, Name = "Health", HexCode = "#10B981" },
-            new ExpenseTagVM { Id = 6, Name = "System", HexCode = "#9333EA", IsSystemTag = true }
+            new TagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
+            new TagVM { Id = 2, Name = "Transport", HexCode = "#06B6D4" },
+            new TagVM { Id = 3, Name = "Dining", HexCode = "#F97316" },
+            new TagVM { Id = 4, Name = "Bills", HexCode = "#0EA5E9" },
+            new TagVM { Id = 5, Name = "Health", HexCode = "#10B981" },
+            new TagVM { Id = 6, Name = "System", HexCode = "#9333EA", IsSystemTag = true }
         ];
     }
 
@@ -948,16 +948,16 @@ public class BudgetAllocationPanelVMTests
         return logs;
     }
 
-    private static IReadOnlyList<ExpenseTagVM> CreateTagsForTagPromotion()
+    private static IReadOnlyList<TagVM> CreateTagsForTagPromotion()
     {
         return
         [
-            new ExpenseTagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
-            new ExpenseTagVM { Id = 2, Name = "Transport", HexCode = "#06B6D4" },
-            new ExpenseTagVM { Id = 3, Name = "Dining", HexCode = "#F97316" },
-            new ExpenseTagVM { Id = 4, Name = "Bills", HexCode = "#0EA5E9" },
-            new ExpenseTagVM { Id = 5, Name = "Health", HexCode = "#10B981" },
-            new ExpenseTagVM { Id = 6, Name = "Pets", HexCode = "#A855F7" }
+            new TagVM { Id = 1, Name = "Groceries", HexCode = "#22C55E" },
+            new TagVM { Id = 2, Name = "Transport", HexCode = "#06B6D4" },
+            new TagVM { Id = 3, Name = "Dining", HexCode = "#F97316" },
+            new TagVM { Id = 4, Name = "Bills", HexCode = "#0EA5E9" },
+            new TagVM { Id = 5, Name = "Health", HexCode = "#10B981" },
+            new TagVM { Id = 6, Name = "Pets", HexCode = "#A855F7" }
         ];
     }
 
@@ -981,7 +981,7 @@ public class BudgetAllocationPanelVMTests
     private static void AddLogs(
         ICollection<ExpenseLogVM> logs,
         ref int nextId,
-        ExpenseTagVM tag,
+        TagVM tag,
         int count,
         AccountVM source)
     {
@@ -997,7 +997,7 @@ public class BudgetAllocationPanelVMTests
                     Id = 1000 + nextId,
                     Name = $"{tag.Name} #{index + 1}",
                     ExpenseCategory = ExpenseCategory.Needs,
-                    ExpenseTag = tag
+                    Tag = tag
                 },
                 Account = source
             });

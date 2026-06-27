@@ -205,8 +205,8 @@ public partial class SettingsDebtIousTabVM : ObservableObject
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = account.Id,
             Account = account,
-            ExpenseTagId = reconciliationTag.Id,
-            ExpenseTag = reconciliationTag
+            TagId = reconciliationTag.Id,
+            Tag = reconciliationTag
         };
         var expenseLog = new ExpenseLog
         {
@@ -237,34 +237,34 @@ public partial class SettingsDebtIousTabVM : ObservableObject
         return SettingsOperationResult.Success();
     }
 
-    private async Task<ExpenseTag> EnsureBudgetReconciliationTagAsync(CancellationToken cancellationToken)
+    private async Task<Tag> EnsureBudgetReconciliationTagAsync(CancellationToken cancellationToken)
     {
-        var tags = await _appData.GetExpenseTagsAsync(cancellationToken);
+        var tags = await _appData.GetTagsAsync(cancellationToken);
         var existingSystemTag = tags.FirstOrDefault(tag =>
             tag.IsSystemTag &&
-            string.Equals(tag.Name, SystemExpenseTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(tag.Name, SystemTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase));
 
         if (existingSystemTag is not null)
         {
-            if (!string.Equals(existingSystemTag.HexCode, SystemExpenseTags.BudgetReconciliationHexCode,
+            if (!string.Equals(existingSystemTag.HexCode, SystemTags.BudgetReconciliationHexCode,
                     StringComparison.Ordinal))
             {
-                existingSystemTag.Name = SystemExpenseTags.BudgetReconciliationName;
-                existingSystemTag.HexCode = SystemExpenseTags.BudgetReconciliationHexCode;
+                existingSystemTag.Name = SystemTags.BudgetReconciliationName;
+                existingSystemTag.HexCode = SystemTags.BudgetReconciliationHexCode;
                 existingSystemTag.IsSystemTag = true;
-                _appData.UpdateExpenseTag(existingSystemTag);
+                _appData.UpdateTag(existingSystemTag);
             }
 
             return existingSystemTag;
         }
 
-        var tag = new ExpenseTag
+        var tag = new Tag
         {
-            Name = SystemExpenseTags.BudgetReconciliationName,
-            HexCode = SystemExpenseTags.BudgetReconciliationHexCode,
+            Name = SystemTags.BudgetReconciliationName,
+            HexCode = SystemTags.BudgetReconciliationHexCode,
             IsSystemTag = true
         };
-        await _appData.AddExpenseTagAsync(tag, cancellationToken);
+        await _appData.AddTagAsync(tag, cancellationToken);
         return tag;
     }
 

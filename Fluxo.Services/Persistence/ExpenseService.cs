@@ -44,7 +44,7 @@ public sealed class ExpenseService(IDataOperationRunner dataOperationRunner, IMa
             var expense = new Expense
             {
                 AccountId = dto.AccountId,
-                ExpenseTagId = dto.ExpenseTagId,
+                TagId = dto.TagId,
                 Name = dto.Name,
                 Amount = dto.Amount,
                 ExpenseCategory = dto.ExpenseCategory

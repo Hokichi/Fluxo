@@ -315,7 +315,7 @@ public class NotificationPanelVMTests
     [Fact]
     public async Task LoadAsync_TagSpendingLimitExceeded_DoesNotCreateTagLimitNotification()
     {
-        var groceriesTag = new ExpenseTagVM
+        var groceriesTag = new TagVM
         {
             Id = 11,
             Name = "Groceries",
@@ -336,7 +336,7 @@ public class NotificationPanelVMTests
                         Id = 1,
                         Name = "Market",
                         ExpenseCategory = ExpenseCategory.Needs,
-                        ExpenseTag = groceriesTag
+                        Tag = groceriesTag
                     }
                 },
                 new ExpenseLogVM
@@ -349,7 +349,7 @@ public class NotificationPanelVMTests
                         Id = 2,
                         Name = "Snacks",
                         ExpenseCategory = ExpenseCategory.Wants,
-                        ExpenseTag = groceriesTag
+                        Tag = groceriesTag
                     }
                 }
             ],
@@ -1174,9 +1174,9 @@ public class NotificationPanelVMTests
         var savingGoalRepository = Substitute.For<ISavingGoalRepository>();
         savingGoalRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<SavingGoal>>([]));
-        var expenseTagRepository = Substitute.For<IExpenseTagRepository>();
-        expenseTagRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>([]));
+        var tagRepository = Substitute.For<ITagRepository>();
+        tagRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Tag>>([]));
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.UserSettings.Returns(userSettingsRepository);
         var budgetAllocationRepository = Substitute.For<IBudgetAllocationRepository>();
@@ -1186,7 +1186,7 @@ public class NotificationPanelVMTests
         unitOfWork.RecurringTransactions.Returns(recurringTransactionRepository);
         unitOfWork.Notifications.Returns(notificationRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);
-        unitOfWork.ExpenseTags.Returns(expenseTagRepository);
+        unitOfWork.Tags.Returns(tagRepository);
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
@@ -1220,8 +1220,8 @@ public class NotificationPanelVMTests
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
         mapper.Map<IReadOnlyList<RecurringTransactionDto>>(Arg.Any<object>()).Returns(recurringDtos);
         mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns(recurringVms);
-        mapper.Map<IReadOnlyList<ExpenseTagDto>>(Arg.Any<object>()).Returns([]);
-        mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<TagDto>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<TagVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<SavingGoalDto>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns([]);
 

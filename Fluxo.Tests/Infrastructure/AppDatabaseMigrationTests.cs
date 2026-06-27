@@ -294,7 +294,7 @@ public sealed class AppDatabaseMigrationTests
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IExpenseLogRepository, ExpenseLogRepository>();
         services.AddScoped<IIncomeLogRepository, IncomeLogRepository>();
-        services.AddScoped<IExpenseTagRepository, ExpenseTagRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
@@ -519,7 +519,7 @@ public sealed class AppDatabaseMigrationTests
                  "Name" TEXT NOT NULL,
                  "Amount" NUMERIC NOT NULL,
                  "{legacyEntityName}Id" INTEGER NOT NULL,
-                 "ExpenseTagId" INTEGER NOT NULL,
+                 "TagId" INTEGER NOT NULL,
                  "Date" TEXT NOT NULL,
                  "IsRecurring" INTEGER NOT NULL
              );

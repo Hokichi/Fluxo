@@ -34,7 +34,7 @@ public sealed class UserBackupServiceOverwriteTests
                 DataManagementEntityKind.Tags
             }));
 
-        Assert.Equal(["RecurringTransactions", "ExpenseTags"], order);
+        Assert.Equal(["RecurringTransactions", "Tags"], order);
     }
 
     [Fact]

@@ -45,8 +45,8 @@ public sealed class UserBackupServiceAppendTests
             .Returns([new Account { Id = 1, Name = "Wallet" }]);
         appData.GetSavingGoalsAsync(Arg.Any<CancellationToken>())
             .Returns([new SavingGoal { Id = 2, Name = "Trip" }]);
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns([new ExpenseTag { Id = 3, Name = "Food", HexCode = "#fff" }]);
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns([new Tag { Id = 3, Name = "Food", HexCode = "#fff" }]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """
@@ -87,17 +87,17 @@ public sealed class UserBackupServiceAppendTests
     public async Task AppendAsync_WhenTagsNotSelected_MapsUnresolvedExpenseAndRecurringTagsToDataRestorationTag()
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => (IReadOnlyList<ExpenseTag>)[]);
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => (IReadOnlyList<Tag>)[]);
         appData.GetAccountsAsync(Arg.Any<CancellationToken>())
             .Returns(_ => (IReadOnlyList<Account>)[]);
         appData.GetSavingGoalsAsync(Arg.Any<CancellationToken>())
             .Returns(_ => (IReadOnlyList<SavingGoal>)[]);
 
-        appData.AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>())
+        appData.AddTagAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                call.Arg<ExpenseTag>().Id = 77;
+                call.Arg<Tag>().Id = 77;
                 return Task.CompletedTask;
             });
 
@@ -140,7 +140,7 @@ public sealed class UserBackupServiceAppendTests
               { "backupId": 2, "name": "Missing Tag", "hexCode": "#123456", "isSystemTag": false }
             ],
             "expenses": [
-              { "backupId": 3, "accountBackupId": 1, "expenseTagBackupId": 2, "name": "Lunch", "amount": 10, "expenseCategory": "Needs" }
+              { "backupId": 3, "accountBackupId": 1, "tagBackupId": 2, "name": "Lunch", "amount": 10, "expenseCategory": "Needs" }
             ],
             "expenseLogs": [],
             "recurringTransactions": [
@@ -165,7 +165,7 @@ public sealed class UserBackupServiceAppendTests
 
             Assert.True(result.IsSuccess, result.ErrorMessage);
             var appendedExpense = Assert.Single(appendedExpenses);
-            Assert.Equal(77, appendedExpense.ExpenseTagId);
+            Assert.Equal(77, appendedExpense.TagId);
 
             var recurring = Assert.Single(appendedRecurring);
             Assert.Equal(77, recurring.TagId);
@@ -179,14 +179,14 @@ public sealed class UserBackupServiceAppendTests
     [Fact]
     public async Task AppendAsync_WhenTagsSelected_RestoresSpendingLimit()
     {
-        var appendedTags = new List<ExpenseTag>();
+        var appendedTags = new List<Tag>();
         var appData = Substitute.For<IAppDataService>();
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
             .Returns(_ => appendedTags.ToList());
-        appData.AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>())
+        appData.AddTagAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                var tag = call.Arg<ExpenseTag>();
+                var tag = call.Arg<Tag>();
                 tag.Id = 12;
                 appendedTags.Add(tag);
                 return Task.CompletedTask;
@@ -383,8 +383,8 @@ public sealed class UserBackupServiceAppendTests
             .Returns([existingSource]);
         appData.GetSavingGoalsAsync(Arg.Any<CancellationToken>())
             .Returns([existingGoal]);
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => (IReadOnlyList<ExpenseTag>)[]);
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => (IReadOnlyList<Tag>)[]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """

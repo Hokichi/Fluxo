@@ -9,7 +9,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<ExpenseLog> ExpenseLogs => Set<ExpenseLog>();
     public DbSet<IncomeLog> IncomeLogs => Set<IncomeLog>();
-    public DbSet<ExpenseTag> ExpenseTags => Set<ExpenseTag>();
+    public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
@@ -22,7 +22,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureExpense(modelBuilder.Entity<Expense>());
         ConfigureExpenseLog(modelBuilder.Entity<ExpenseLog>());
         ConfigureIncomeLog(modelBuilder.Entity<IncomeLog>());
-        ConfigureExpenseTag(modelBuilder.Entity<ExpenseTag>());
+        ConfigureTag(modelBuilder.Entity<Tag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
         ConfigureAccount(modelBuilder.Entity<Account>());
         ConfigureRecurringTransaction(modelBuilder.Entity<RecurringTransaction>());
@@ -47,9 +47,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
             .HasForeignKey(expense => expense.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        entity.HasOne(expense => expense.ExpenseTag)
+        entity.HasOne(expense => expense.Tag)
             .WithMany()
-            .HasForeignKey(expense => expense.ExpenseTagId)
+            .HasForeignKey(expense => expense.TagId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 
@@ -101,9 +101,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
             .OnDelete(DeleteBehavior.Restrict);
     }
 
-    private static void ConfigureExpenseTag(EntityTypeBuilder<ExpenseTag> entity)
+    private static void ConfigureTag(EntityTypeBuilder<Tag> entity)
     {
-        entity.ToTable("ExpenseTags");
+        entity.ToTable("Tags");
         entity.Property(tag => tag.Id).ValueGeneratedOnAdd();
         entity.HasKey(tag => tag.Id);
 

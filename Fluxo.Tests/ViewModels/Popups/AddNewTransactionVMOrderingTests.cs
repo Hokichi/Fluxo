@@ -13,9 +13,9 @@ public class AddNewTransactionVMOrderingTests
     {
         var tags = new[]
         {
-            new ExpenseTag { Id = 1, Name = "zeta", HexCode = "#111111", IsSystemTag = false },
-            new ExpenseTag { Id = 2, Name = "Alpha", HexCode = "#222222", IsSystemTag = false },
-            new ExpenseTag { Id = 3, Name = "System", HexCode = "#333333", IsSystemTag = true }
+            new Tag { Id = 1, Name = "zeta", HexCode = "#111111", IsSystemTag = false },
+            new Tag { Id = 2, Name = "Alpha", HexCode = "#222222", IsSystemTag = false },
+            new Tag { Id = 3, Name = "System", HexCode = "#333333", IsSystemTag = true }
         };
 
         var projected = AddNewTransactionVM.ProjectNonSystemTags(tags).ToList();
@@ -64,7 +64,7 @@ public class AddNewTransactionVMOrderingTests
     public void BuildTransactionNameSuggestions_MatchesExpenseNamesAnywhere_AndLoadsExpenseData()
     {
         var checking = new Account { Id = 3, Name = "Checking", IsEnabled = true };
-        var groceries = new ExpenseTag { Id = 7, Name = "Groceries", HexCode = "#22C55E" };
+        var groceries = new Tag { Id = 7, Name = "Groceries", HexCode = "#22C55E" };
         var logs = new[]
         {
             new ExpenseLog
@@ -83,8 +83,8 @@ public class AddNewTransactionVMOrderingTests
                     ExpenseCategory = ExpenseCategory.Needs,
                     AccountId = checking.Id,
                     Account = checking,
-                    ExpenseTagId = groceries.Id,
-                    ExpenseTag = groceries
+                    TagId = groceries.Id,
+                    Tag = groceries
                 }
             },
             new ExpenseLog
@@ -103,8 +103,8 @@ public class AddNewTransactionVMOrderingTests
                     ExpenseCategory = ExpenseCategory.Wants,
                     AccountId = checking.Id,
                     Account = checking,
-                    ExpenseTagId = groceries.Id,
-                    ExpenseTag = groceries
+                    TagId = groceries.Id,
+                    Tag = groceries
                 }
             }
         };

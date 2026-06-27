@@ -31,7 +31,7 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
                     log.Expense?.Name ?? string.Empty,
                     log.Amount,
                     log.Account?.Name ?? string.Empty,
-                    log.Expense?.ExpenseTag?.Name))
+                    log.Expense?.Tag?.Name))
                 .ToArray();
 
             var incomes = incomeLogs

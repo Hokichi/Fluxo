@@ -1,6 +1,6 @@
 namespace Fluxo.Core.Constants;
 
-public static class SystemExpenseTags
+public static class SystemTags
 {
     public const string BalanceUpdateName = "Balance Update";
     public const string BalanceUpdateHexCode = "#a3e5d6";

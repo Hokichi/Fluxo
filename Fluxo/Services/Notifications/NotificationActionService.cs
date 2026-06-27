@@ -248,7 +248,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             Amount = amount,
             ExpenseCategory = ExpenseCategory.Savings,
             AccountId = deductingSource.Id,
-            ExpenseTagId = paymentTag.Id
+            TagId = paymentTag.Id
         };
 
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
@@ -335,7 +335,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         if (selectedTagId is not > 0)
             return false;
 
-        var tag = await unitOfWork.ExpenseTags.GetByIdAsync(selectedTagId.Value, cancellationToken);
+        var tag = await unitOfWork.Tags.GetByIdAsync(selectedTagId.Value, cancellationToken);
         if (tag is null)
             return false;
 
@@ -345,7 +345,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             Amount = amount,
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = source.Id,
-            ExpenseTagId = tag.Id
+            TagId = tag.Id
         };
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
         await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
@@ -407,7 +407,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             Amount = amount,
             ExpenseCategory = ExpenseCategory.Savings,
             AccountId = source.Id,
-            ExpenseTagId = goalUpdateTag.Id
+            TagId = goalUpdateTag.Id
         };
         await unitOfWork.Expenses.AddAsync(expense, cancellationToken);
         await unitOfWork.ExpenseLogs.AddAsync(new ExpenseLog
@@ -426,9 +426,9 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         return true;
     }
 
-    private static async Task<ExpenseTag?> ResolvePaymentTagAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken)
+    private static async Task<Tag?> ResolvePaymentTagAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken)
     {
-        var tags = await unitOfWork.ExpenseTags.GetAllAsync(cancellationToken);
+        var tags = await unitOfWork.Tags.GetAllAsync(cancellationToken);
         return tags
             .OrderByDescending(tag => string.Equals(tag.Name, "Transfer", StringComparison.OrdinalIgnoreCase))
             .ThenBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)

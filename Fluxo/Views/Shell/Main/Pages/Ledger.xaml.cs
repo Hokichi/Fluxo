@@ -222,7 +222,7 @@ public partial class Ledger : UserControl
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
             DataContext is not LedgerVM viewModel ||
             e.AddedItems.Count == 0 ||
-            e.AddedItems[0] is not ExpenseTagVM tag)
+            e.AddedItems[0] is not TagVM tag)
         {
             return;
         }

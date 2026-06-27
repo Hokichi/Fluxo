@@ -14,21 +14,21 @@ public static class GoalUpdateTransactionSupport
         return sourceType is AccountType.Cash or AccountType.Checking;
     }
 
-    public static async Task<ExpenseTag> ResolveGoalUpdateTagAsync(IAppDataService appData)
+    public static async Task<Tag> ResolveGoalUpdateTagAsync(IAppDataService appData)
     {
-        var tags = await appData.GetExpenseTagsAsync();
+        var tags = await appData.GetTagsAsync();
         var existingTag = tags.FirstOrDefault(tag =>
             string.Equals(tag.Name, GoalUpdateTagName, StringComparison.OrdinalIgnoreCase));
         if (existingTag is not null)
             return existingTag;
 
-        var goalUpdateTag = new ExpenseTag
+        var goalUpdateTag = new Tag
         {
             Name = GoalUpdateTagName,
             HexCode = GoalUpdateTagColor
         };
 
-        await appData.AddExpenseTagAsync(goalUpdateTag);
+        await appData.AddTagAsync(goalUpdateTag);
         await appData.SaveChangesAsync();
         return goalUpdateTag;
     }

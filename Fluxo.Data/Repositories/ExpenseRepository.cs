@@ -35,9 +35,9 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
             query = query.Where(e => e.ExpenseCategory == filter.Category);
 
         if (filter.TagId.HasValue)
-            query = query.Where(e => e.ExpenseTagId == filter.TagId);
+            query = query.Where(e => e.TagId == filter.TagId);
         else if (filter.Tag is not null)
-            query = query.Where(e => e.ExpenseTagId == filter.Tag.Id);
+            query = query.Where(e => e.TagId == filter.Tag.Id);
 
         return await query.ToListAsync(cancellationToken);
     }
@@ -46,7 +46,7 @@ public sealed class ExpenseRepository(FluxoDbContext dbContext)
     {
         return DbSet
             .AsNoTrackingWithIdentityResolution()
-            .Include(e => e.ExpenseTag)
+            .Include(e => e.Tag)
             .Include(e => e.Account);
     }
 }

@@ -37,11 +37,11 @@ public sealed class AccountReconciliationVMTests
             AccountType = AccountType.Checking,
             Balance = 500m
         };
-        var reconciliationTag = new ExpenseTag
+        var reconciliationTag = new Tag
         {
             Id = 9,
-            Name = SystemExpenseTags.BudgetReconciliationName,
-            HexCode = SystemExpenseTags.BudgetReconciliationHexCode,
+            Name = SystemTags.BudgetReconciliationName,
+            HexCode = SystemTags.BudgetReconciliationHexCode,
             IsSystemTag = true
         };
 
@@ -51,8 +51,8 @@ public sealed class AccountReconciliationVMTests
 
         appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Account?>(persistedSource));
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>([reconciliationTag]));
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Tag>>([reconciliationTag]));
         appData.AddExpenseAsync(Arg.Do<Expense>(expense => savedExpense = expense), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         appData.AddExpenseLogAsync(Arg.Do<ExpenseLog>(log => savedLog = log), Arg.Any<CancellationToken>())
@@ -79,7 +79,7 @@ public sealed class AccountReconciliationVMTests
         Assert.Equal(42.50m, savedExpense.Amount);
         Assert.Equal(ExpenseCategory.Needs, savedExpense.ExpenseCategory);
         Assert.Equal(3, savedExpense.AccountId);
-        Assert.Equal(9, savedExpense.ExpenseTagId);
+        Assert.Equal(9, savedExpense.TagId);
         Assert.Equal(42.50m, savedLog.Amount);
         Assert.Equal(DateTime.Today, savedLog.DeductedOn);
         Assert.Equal(3, savedLog.AccountId);
@@ -102,13 +102,13 @@ public sealed class AccountReconciliationVMTests
             AccountType = AccountType.Checking,
             Balance = 500m
         };
-        ExpenseTag? addedTag = null;
+        Tag? addedTag = null;
 
         appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Account?>(persistedSource));
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>([]));
-        appData.AddExpenseTagAsync(Arg.Do<ExpenseTag>(tag =>
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Tag>>([]));
+        appData.AddTagAsync(Arg.Do<Tag>(tag =>
             {
                 tag.Id = 14;
                 addedTag = tag;
@@ -126,10 +126,10 @@ public sealed class AccountReconciliationVMTests
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(addedTag);
-        Assert.Equal(SystemExpenseTags.BudgetReconciliationName, addedTag.Name);
-        Assert.Equal(SystemExpenseTags.BudgetReconciliationHexCode, addedTag.HexCode);
+        Assert.Equal(SystemTags.BudgetReconciliationName, addedTag.Name);
+        Assert.Equal(SystemTags.BudgetReconciliationHexCode, addedTag.HexCode);
         Assert.True(addedTag.IsSystemTag);
-        await appData.Received(1).AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>());
+        await appData.Received(1).AddTagAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

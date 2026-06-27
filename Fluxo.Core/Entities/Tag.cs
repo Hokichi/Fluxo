@@ -1,6 +1,6 @@
-﻿namespace Fluxo.Core.Entities;
+namespace Fluxo.Core.Entities;
 
-public sealed class ExpenseTag
+public sealed class Tag
 {
     public int Id { get; set; }
     public bool IsSystemTag { get; set; } = false;

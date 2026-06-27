@@ -11,14 +11,14 @@ public sealed class LogMemorySnapshotTests
     public void Create_CapturesDebtIouFlags()
     {
         var account = new Account { Id = 1, Name = "Checking" };
-        var tag = new ExpenseTag { Id = 2, Name = "Budget Reconciliation", HexCode = "#9ca3af" };
+        var tag = new Tag { Id = 2, Name = "Budget Reconciliation", HexCode = "#9ca3af" };
         var expense = new Expense
         {
             Id = 3,
             AccountId = account.Id,
             Account = account,
-            ExpenseTagId = tag.Id,
-            ExpenseTag = tag,
+            TagId = tag.Id,
+            Tag = tag,
             Name = "Lend",
             Amount = 10m,
             ExpenseCategory = ExpenseCategory.Needs,

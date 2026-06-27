@@ -241,7 +241,7 @@ public sealed class AddNewTransactionVMValidationTests
                 CreateExpenseLog("Groceries", 90m, tagId: 1, sourceId: source.Id)
             ]);
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 5m, appData: appData);
-            vm.SelectedTag = new ExpenseTagVM
+            vm.SelectedTag = new TagVM
             {
                 Id = 1,
                 Name = "General",
@@ -269,7 +269,7 @@ public sealed class AddNewTransactionVMValidationTests
                 CreateExpenseLog("Groceries", 90m, tagId: 1, sourceId: source.Id)
             ]);
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 15m, appData: appData);
-            vm.SelectedTag = new ExpenseTagVM
+            vm.SelectedTag = new TagVM
             {
                 Id = 1,
                 Name = "General",
@@ -1700,8 +1700,8 @@ public sealed class AddNewTransactionVMValidationTests
                 SpentAmount = 0m,
                 IsEnabled = true
             }));
-        appData.GetExpenseTagByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(callInfo => Task.FromResult<ExpenseTag?>(new ExpenseTag
+        appData.GetTagByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult<Tag?>(new Tag
             {
                 Id = callInfo.ArgAt<int>(0),
                 Name = "General",
@@ -1716,10 +1716,10 @@ public sealed class AddNewTransactionVMValidationTests
                 TargetAmount = 500m,
                 CurrentAmount = 100m
             }));
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseTag>>(
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Tag>>(
             [
-                new ExpenseTag
+                new Tag
                 {
                     Id = 99,
                     Name = GoalUpdateTransactionSupport.GoalUpdateTagName,
@@ -1750,7 +1750,7 @@ public sealed class AddNewTransactionVMValidationTests
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns([]);
-        mapper.Map<IReadOnlyList<ExpenseTagVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<TagVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<Fluxo.Core.DTO.RecurringTransactionDto>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<Fluxo.Core.DTO.SavingGoalDto>>(Arg.Any<object>()).Returns([]);
@@ -1764,7 +1764,7 @@ public sealed class AddNewTransactionVMValidationTests
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.AccountDto>>([]));
         var tagService = Substitute.For<ITagService>();
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseTagDto>>([]));
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.TagDto>>([]));
         var expenseService = Substitute.For<IExpenseService>();
         expenseService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseDto>>([]));
@@ -1802,9 +1802,9 @@ public sealed class AddNewTransactionVMValidationTests
         foreach (var source in accounts)
             main.BudgetPanel.Accounts.Add(source);
 
-        main.BudgetPanel.Tags = new ObservableCollection<ExpenseTagVM>(
+        main.BudgetPanel.Tags = new ObservableCollection<TagVM>(
         [
-            new ExpenseTagVM
+            new TagVM
             {
                 Id = 1,
                 Name = "General",
@@ -1812,7 +1812,7 @@ public sealed class AddNewTransactionVMValidationTests
                 IsSystemTag = false
             }
         ]);
-        main.BudgetPanel.OtherTags = new ObservableCollection<ExpenseTagVM>();
+        main.BudgetPanel.OtherTags = new ObservableCollection<TagVM>();
         main.SavingGoalsPanel.SavingGoals.Add(new SavingGoalVM
         {
             Id = 1,
@@ -1889,8 +1889,8 @@ public sealed class AddNewTransactionVMValidationTests
                 Name = name,
                 Amount = amount,
                 AccountId = sourceId,
-                ExpenseTagId = tagId,
-                ExpenseTag = new ExpenseTag
+                TagId = tagId,
+                Tag = new Tag
                 {
                     Id = tagId,
                     Name = tagName

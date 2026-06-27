@@ -88,10 +88,10 @@ public partial class NotificationChecklistActionVM : ObservableObject
         if (_appData is null)
             return;
 
-        var tags = (await _appData.GetExpenseTagsAsync(cancellationToken))
+        var tags = (await _appData.GetTagsAsync(cancellationToken))
             .Where(tag => !tag.IsSystemTag)
             .OrderBy(tag => tag.Name)
-            .Select(tag => new ExpenseTagVM
+            .Select(tag => new TagVM
             {
                 Id = tag.Id,
                 Name = tag.Name,
@@ -107,7 +107,7 @@ public partial class NotificationChecklistActionVM : ObservableObject
             item.AvailableTags.Clear();
             foreach (var tag in tags)
             {
-                item.AvailableTags.Add(new ExpenseTagVM
+                item.AvailableTags.Add(new TagVM
                 {
                     Id = tag.Id,
                     Name = tag.Name,

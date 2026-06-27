@@ -31,7 +31,7 @@ public partial class SettingsTagsTabVM : ObservableObject
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
-    public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
+    public ObservableCollection<TagVM> Tags { get; } = [];
 
     public async Task LoadAsync()
     {
@@ -53,11 +53,11 @@ public partial class SettingsTagsTabVM : ObservableObject
 
     public async Task<AddTagVM?> CreateEditTagViewModelAsync(int tagId)
     {
-        var expenseTag = await _appData.GetExpenseTagByIdAsync(tagId);
-        if (expenseTag is null || expenseTag.IsSystemTag)
+        var tag = await _appData.GetTagByIdAsync(tagId);
+        if (tag is null || tag.IsSystemTag)
             return null;
 
-        return new AddTagVM(expenseTag.Id, expenseTag.Name, expenseTag.HexCode, expenseTag.SpendingLimit);
+        return new AddTagVM(tag.Id, tag.Name, tag.HexCode, tag.SpendingLimit);
     }
 
     public async Task OpenEditTagAsync(int tagId)
@@ -76,9 +76,9 @@ public partial class SettingsTagsTabVM : ObservableObject
 
     public async Task RefreshTagsAsync()
     {
-        SettingsShared.ReplaceCollection(Tags, (await _appData.GetExpenseTagsByCountDescendingAsync())
+        SettingsShared.ReplaceCollection(Tags, (await _appData.GetTagsByCountDescendingAsync())
             .Where(item => !item.Tag.IsSystemTag)
-            .Select(item => new ExpenseTagVM
+            .Select(item => new TagVM
             {
                 Id = item.Tag.Id,
                 Name = item.Tag.Name,
@@ -104,11 +104,11 @@ public partial class SettingsTagsTabVM : ObservableObject
 
         try
         {
-            var existingTags = await _appData.GetExpenseTagsAsync();
+            var existingTags = await _appData.GetTagsAsync();
             if (existingTags.Any(tag => string.Equals(tag.Name, trimmedName, StringComparison.OrdinalIgnoreCase)))
                 return SettingsOperationResult.Failure($"A tag named \"{trimmedName}\" already exists.");
 
-            await _appData.AddExpenseTagAsync(new ExpenseTag
+            await _appData.AddTagAsync(new Tag
             {
                 Name = trimmedName,
                 HexCode = normalizedHexCode,
@@ -134,27 +134,27 @@ public partial class SettingsTagsTabVM : ObservableObject
     public Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode) =>
         CreateTagAsync(name, hexCode, string.Empty);
 
-    public async Task<SettingsOperationResult> DeleteTagAsync(ExpenseTagVM tag)
+    public async Task<SettingsOperationResult> DeleteTagAsync(TagVM tag)
     {
         ArgumentNullException.ThrowIfNull(tag);
 
         try
         {
-            var expenseTag = await _appData.GetExpenseTagByIdAsync(tag.Id);
-            if (expenseTag is null)
+            var persistedTag = await _appData.GetTagByIdAsync(tag.Id);
+            if (persistedTag is null)
                 return SettingsOperationResult.Failure("That tag could not be found anymore.");
 
             var allExpenses = await _appData.GetExpensesAsync();
-            var linkedExpenses = allExpenses.Where(e => e.ExpenseTagId == tag.Id).ToList();
+            var linkedExpenses = allExpenses.Where(e => e.TagId == persistedTag.Id).ToList();
             if (linkedExpenses.Count > 0)
                 return SettingsOperationResult.Failure(
-                    $"{tag.Name} is still assigned to one or more expenses, so it can't be deleted yet.");
+                    $"{persistedTag.Name} is still assigned to one or more expenses, so it can't be deleted yet.");
 
-            var snapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
-            _appData.RemoveExpenseTag(expenseTag);
+            var snapshot = TagMemorySnapshot.Create(persistedTag);
+            _appData.RemoveTag(persistedTag);
             await _appData.SaveChangesAsync();
 
-            SettingsShared.RecordActions([new DeleteExpenseTagMemoryAction(snapshot)], _messenger);
+            SettingsShared.RecordActions([new DeleteTagMemoryAction(snapshot)], _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Tags));
             _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();
@@ -186,34 +186,34 @@ public partial class SettingsTagsTabVM : ObservableObject
 
         try
         {
-            var expenseTag = await _appData.GetExpenseTagByIdAsync(tagId);
-            if (expenseTag is null)
+            var tag = await _appData.GetTagByIdAsync(tagId);
+            if (tag is null)
                 return SettingsOperationResult.Failure("That tag could not be found anymore.");
 
-            if (expenseTag.IsSystemTag)
+            if (tag.IsSystemTag)
                 return SettingsOperationResult.Failure("System tags can't be edited.");
 
-            var existingTags = await _appData.GetExpenseTagsAsync();
+            var existingTags = await _appData.GetTagsAsync();
             if (existingTags.Any(tag =>
-                    tag.Id != expenseTag.Id &&
+                    tag.Id != tag.Id &&
                     string.Equals(tag.Name, trimmedName, StringComparison.OrdinalIgnoreCase)))
                 return SettingsOperationResult.Failure($"A tag named \"{trimmedName}\" already exists.");
 
-            var beforeSnapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
-            var hasNameChanged = !string.Equals(expenseTag.Name, trimmedName, StringComparison.Ordinal);
-            var hasHexChanged = !string.Equals(expenseTag.HexCode, normalizedHexCode, StringComparison.OrdinalIgnoreCase);
-            var hasSpendingLimitChanged = expenseTag.SpendingLimit != spendingLimit;
+            var beforeSnapshot = TagMemorySnapshot.Create(tag);
+            var hasNameChanged = !string.Equals(tag.Name, trimmedName, StringComparison.Ordinal);
+            var hasHexChanged = !string.Equals(tag.HexCode, normalizedHexCode, StringComparison.OrdinalIgnoreCase);
+            var hasSpendingLimitChanged = tag.SpendingLimit != spendingLimit;
             if (!hasNameChanged && !hasHexChanged && !hasSpendingLimitChanged)
                 return SettingsOperationResult.Success();
 
-            expenseTag.Name = trimmedName;
-            expenseTag.HexCode = normalizedHexCode;
-            expenseTag.SpendingLimit = spendingLimit;
-            _appData.UpdateExpenseTag(expenseTag);
+            tag.Name = trimmedName;
+            tag.HexCode = normalizedHexCode;
+            tag.SpendingLimit = spendingLimit;
+            _appData.UpdateTag(tag);
             await _appData.SaveChangesAsync();
 
-            var afterSnapshot = ExpenseTagMemorySnapshot.Create(expenseTag);
-            SettingsShared.RecordActions([new EditExpenseTagMemoryAction(beforeSnapshot, afterSnapshot)], _messenger);
+            var afterSnapshot = TagMemorySnapshot.Create(tag);
+            SettingsShared.RecordActions([new EditTagMemoryAction(beforeSnapshot, afterSnapshot)], _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Tags));
             _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();

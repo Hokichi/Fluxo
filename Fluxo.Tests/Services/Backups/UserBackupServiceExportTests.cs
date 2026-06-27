@@ -23,10 +23,10 @@ public sealed class UserBackupServiceExportTests
         var appData = Substitute.For<IAppDataService>();
         appData.GetAccountsAsync(Arg.Any<CancellationToken>())
             .Returns([new Account { Id = 7, Name = "Wallet", AccountType = AccountType.Cash }]);
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns([new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff" }]);
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns([new Tag { Id = 3, Name = "Food", HexCode = "#ffffff" }]);
         appData.GetExpensesAsync(Arg.Any<CancellationToken>())
-            .Returns([new Expense { Id = 9, AccountId = 7, ExpenseTagId = 3, Name = "Lunch" }]);
+            .Returns([new Expense { Id = 9, AccountId = 7, TagId = 3, Name = "Lunch" }]);
         appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
@@ -49,7 +49,7 @@ public sealed class UserBackupServiceExportTests
             Assert.Equal("#e9c178", dataRestorationTag.HexCode);
 
             var expense = Assert.Single(document.Entities.Expenses);
-            Assert.Equal(dataRestorationTag.BackupId, expense.ExpenseTagBackupId);
+            Assert.Equal(dataRestorationTag.BackupId, expense.TagBackupId);
         }
         finally
         {
@@ -62,8 +62,8 @@ public sealed class UserBackupServiceExportTests
     public async Task BackupAsync_WhenTagsSelected_IncludesSpendingLimit()
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns([new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff", SpendingLimit = 250m }]);
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns([new Tag { Id = 3, Name = "Food", HexCode = "#ffffff", SpendingLimit = 250m }]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         var service = new UserBackupService(appData);
@@ -95,25 +95,25 @@ public sealed class UserBackupServiceExportTests
     {
         var appData = Substitute.For<IAppDataService>();
         var account = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking };
-        var tag = new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff" };
+        var tag = new Tag { Id = 3, Name = "Food", HexCode = "#ffffff" };
         var parentExpense = new Expense
         {
             Id = 20,
             AccountId = account.Id,
-            ExpenseTagId = tag.Id,
+            TagId = tag.Id,
             Name = "Dinner",
             Amount = 100m,
-            ExpenseTag = tag,
+            Tag = tag,
             Account = account
         };
         var childExpense = new Expense
         {
             Id = 21,
             AccountId = account.Id,
-            ExpenseTagId = tag.Id,
+            TagId = tag.Id,
             Name = "Tip",
             Amount = 20m,
-            ExpenseTag = tag,
+            Tag = tag,
             Account = account
         };
         var parentLog = new ExpenseLog
@@ -139,7 +139,7 @@ public sealed class UserBackupServiceExportTests
         };
 
         appData.GetAccountsAsync(Arg.Any<CancellationToken>()).Returns([account]);
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
+        appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
         appData.GetExpensesAsync(Arg.Any<CancellationToken>()).Returns([parentExpense, childExpense]);
         appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([parentLog, childLog]);
 
@@ -175,15 +175,15 @@ public sealed class UserBackupServiceExportTests
     {
         var appData = Substitute.For<IAppDataService>();
         var account = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking };
-        var tag = new ExpenseTag { Id = 3, Name = "Food", HexCode = "#ffffff" };
+        var tag = new Tag { Id = 3, Name = "Food", HexCode = "#ffffff" };
         var expense = new Expense
         {
             Id = 20,
             AccountId = account.Id,
-            ExpenseTagId = tag.Id,
+            TagId = tag.Id,
             Name = "Loan",
             Amount = 100m,
-            ExpenseTag = tag,
+            Tag = tag,
             Account = account,
             IsLend = true
         };
@@ -210,7 +210,7 @@ public sealed class UserBackupServiceExportTests
         };
 
         appData.GetAccountsAsync(Arg.Any<CancellationToken>()).Returns([account]);
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
+        appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
         appData.GetExpensesAsync(Arg.Any<CancellationToken>()).Returns([expense]);
         appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([expenseLog]);
         appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>()).Returns([incomeLog]);

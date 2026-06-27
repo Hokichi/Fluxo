@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Fluxo.ViewModels.Entities;
 
-public partial class ExpenseTagVM : ObservableObject
+public partial class TagVM : ObservableObject
 {
     [ObservableProperty] private string _hexCode = string.Empty;
     [ObservableProperty] private int _id;

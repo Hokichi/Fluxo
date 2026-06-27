@@ -112,7 +112,7 @@ public sealed class SettingsDebtIousTabVMTests
             Name = "Lunch lend",
             IsLend = true,
             ExpenseCategory = ExpenseCategory.Needs,
-            ExpenseTag = new ExpenseTag { Id = 20, Name = "Food", HexCode = "#22C55E" }
+            Tag = new Tag { Id = 20, Name = "Food", HexCode = "#22C55E" }
         };
         var log = new ExpenseLog
         {
@@ -166,7 +166,7 @@ public sealed class SettingsDebtIousTabVMTests
             AccountId = account.Id,
             Notes = string.Empty
         };
-        var tags = new List<ExpenseTag>();
+        var tags = new List<Tag>();
         var appData = CreateAppData([], [income], tags, [account]);
         var vm = CreateVm(appData);
         await vm.LoadAsync();
@@ -176,17 +176,17 @@ public sealed class SettingsDebtIousTabVMTests
         Assert.True(result.IsSuccess, result.ErrorMessage);
         Assert.False(income.IsDebt);
         Assert.Equal(60m, account.Balance);
-        _ = appData.Received(1).AddExpenseTagAsync(
-            Arg.Is<ExpenseTag>(tag =>
-                tag.Name == SystemExpenseTags.BudgetReconciliationName &&
-                tag.HexCode == SystemExpenseTags.BudgetReconciliationHexCode &&
+        _ = appData.Received(1).AddTagAsync(
+            Arg.Is<Tag>(tag =>
+                tag.Name == SystemTags.BudgetReconciliationName &&
+                tag.HexCode == SystemTags.BudgetReconciliationHexCode &&
                 tag.IsSystemTag),
             Arg.Any<CancellationToken>());
         _ = appData.Received(1).AddExpenseAsync(
             Arg.Is<Expense>(expense =>
                 expense.Amount == 40m &&
                 expense.ExpenseCategory == ExpenseCategory.Needs &&
-                expense.ExpenseTag.Name == SystemExpenseTags.BudgetReconciliationName),
+                expense.Tag.Name == SystemTags.BudgetReconciliationName),
             Arg.Any<CancellationToken>());
         _ = appData.Received(1).AddExpenseLogAsync(
             Arg.Is<ExpenseLog>(log => log.Amount == 40m && log.AccountId == 10),
@@ -209,7 +209,7 @@ public sealed class SettingsDebtIousTabVMTests
     private static IAppDataService CreateAppData(
         List<ExpenseLog> expenseLogs,
         List<IncomeLog> incomeLogs,
-        List<ExpenseTag> tags,
+        List<Tag> tags,
         List<Account> accounts)
     {
         var appData = Substitute.For<IAppDataService>();
@@ -219,8 +219,8 @@ public sealed class SettingsDebtIousTabVMTests
             .Returns(_ => Task.FromResult<IReadOnlyList<ExpenseLog>>(expenseLogs));
         appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>())
             .Returns(_ => Task.FromResult<IReadOnlyList<IncomeLog>>(incomeLogs));
-        appData.GetExpenseTagsAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<ExpenseTag>>(tags));
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IReadOnlyList<Tag>>(tags));
         appData.GetExpenseLogByLogIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(call => Task.FromResult<ExpenseLog?>(expenseLogs.SingleOrDefault(log => log.Id == call.ArgAt<int>(0))));
         appData.GetIncomeLogByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
@@ -237,10 +237,10 @@ public sealed class SettingsDebtIousTabVMTests
                 incomeLogs.Add(log);
                 return Task.CompletedTask;
             });
-        appData.AddExpenseTagAsync(Arg.Any<ExpenseTag>(), Arg.Any<CancellationToken>())
+        appData.AddTagAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                var tag = call.ArgAt<ExpenseTag>(0);
+                var tag = call.ArgAt<Tag>(0);
                 if (tag.Id <= 0)
                     tag.Id = nextId++;
                 tags.Add(tag);

@@ -76,12 +76,12 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
                 .ToArray();
 
             var tagTotals = expenseInPeriod
-                .Where(log => log.Expense?.ExpenseTag is not null)
+                .Where(log => log.Expense?.Tag is not null)
                 .GroupBy(log => new
                 {
-                    log.Expense.ExpenseTag.Id,
-                    log.Expense.ExpenseTag.Name,
-                    log.Expense.ExpenseTag.HexCode
+                    log.Expense.Tag.Id,
+                    log.Expense.Tag.Name,
+                    log.Expense.Tag.HexCode
                 })
                 .Select(group => new AnalyticsTagTotal(
                     group.Key.Name,

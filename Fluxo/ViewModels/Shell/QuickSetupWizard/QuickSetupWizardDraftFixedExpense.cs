@@ -10,6 +10,6 @@ public sealed record QuickSetupWizardDraftFixedExpense(
     int AccountId,
     RecurringPeriod RecurringPeriod,
     int RecurringTime,
-    int ExpenseTagId,
+    int TagId,
     string TagName,
     bool IsActive);

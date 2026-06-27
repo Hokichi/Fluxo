@@ -36,7 +36,7 @@ public sealed class ExpenseLogRepositoryAutoIncludeTests
                 PinnedOnUI = true
             };
 
-            var tag = new ExpenseTag
+            var tag = new Tag
             {
                 Name = "General",
                 HexCode = "#FFFFFF"
@@ -46,7 +46,7 @@ public sealed class ExpenseLogRepositoryAutoIncludeTests
             {
                 Name = "Groceries",
                 Amount = 30m,
-                ExpenseTag = tag,
+                Tag = tag,
                 Account = account
             };
 

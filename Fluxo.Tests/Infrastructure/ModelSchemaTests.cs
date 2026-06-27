@@ -29,9 +29,10 @@ public sealed class ModelSchemaTests
             index.GetFilter() == "IsDefault = 1" &&
             index.Properties.Single().Name == nameof(Account.IsDefault));
 
-        var expenseTag = model.FindEntityType(typeof(ExpenseTag))!;
-        Assert.Equal("NUMERIC", expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.GetColumnType());
-        Assert.True(expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.IsNullable);
+        var tag = model.FindEntityType(typeof(Tag))!;
+        Assert.Equal("Tags", tag.GetTableName());
+        Assert.Equal("NUMERIC", tag.FindProperty(nameof(Tag.SpendingLimit))!.GetColumnType());
+        Assert.True(tag.FindProperty(nameof(Tag.SpendingLimit))!.IsNullable);
 
         var expense = model.FindEntityType(typeof(Expense))!;
         Assert.False(expense.FindProperty(nameof(Expense.IsLend))!.IsNullable);
@@ -121,8 +122,8 @@ public sealed class ModelSchemaTests
         Assert.True(sourceVm.PinnedOnUI);
         Assert.True(sourceVm.IsDefault);
 
-        var tag = new ExpenseTag { SpendingLimit = 250m };
-        var tagVm = new ExpenseTagVM { SpendingLimit = tag.SpendingLimit };
+        var tag = new Tag { SpendingLimit = 250m };
+        var tagVm = new TagVM { SpendingLimit = tag.SpendingLimit };
         Assert.Equal(250m, tagVm.SpendingLimit);
 
         var expense = new Expense { IsLend = true };

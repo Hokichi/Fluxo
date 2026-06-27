@@ -205,7 +205,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
         if (selection.Includes(DataManagementEntityKind.Tags))
         {
-            var existing = (await appData.GetExpenseTagsAsync(cancellationToken))
+            var existing = (await appData.GetTagsAsync(cancellationToken))
                 .Select(tag => tag.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             conflicts.AddRange(document.Entities.Tags
@@ -347,7 +347,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             labels.Add("SavingGoals");
 
         if (selection.Includes(DataManagementEntityKind.Tags))
-            labels.Add("ExpenseTags");
+            labels.Add("Tags");
 
         if (selection.Includes(DataManagementEntityKind.UserSettings))
             labels.Add("UserSettings");
@@ -446,8 +446,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 case "SavingGoals":
                     await RemoveSavingGoalsAsync(cancellationToken);
                     break;
-                case "ExpenseTags":
-                    await RemoveExpenseTagsAsync(cancellationToken);
+                case "Tags":
+                    await RemoveTagsAsync(cancellationToken);
                     break;
                 case "UserSettings":
                     await RemoveUserSettingsAsync(cancellationToken);
@@ -498,11 +498,11 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             appData.RemoveSavingGoal(goal);
     }
 
-    private async Task RemoveExpenseTagsAsync(CancellationToken cancellationToken)
+    private async Task RemoveTagsAsync(CancellationToken cancellationToken)
     {
-        var tags = await appData.GetExpenseTagsAsync(cancellationToken);
+        var tags = await appData.GetTagsAsync(cancellationToken);
         foreach (var tag in tags)
-            appData.RemoveExpenseTag(tag);
+            appData.RemoveTag(tag);
     }
 
     private async Task RemoveUserSettingsAsync(CancellationToken cancellationToken)
@@ -545,7 +545,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         if (!selection.Includes(DataManagementEntityKind.Tags))
             return;
 
-        var existingTags = await appData.GetExpenseTagsAsync(cancellationToken);
+        var existingTags = await appData.GetTagsAsync(cancellationToken);
         var existingByName = existingTags.ToDictionary(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
 
         foreach (var backupTag in document.Entities.Tags)
@@ -559,7 +559,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
                 if (decision == DataManagementConflictDecision.Append)
                 {
-                    var newTag = new ExpenseTag
+                    var newTag = new Tag
                     {
                         Name = backupTag.Name,
                         HexCode = backupTag.HexCode,
@@ -567,7 +567,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                         SpendingLimit = backupTag.SpendingLimit
                     };
 
-                    await appData.AddExpenseTagAsync(newTag, cancellationToken);
+                    await appData.AddTagAsync(newTag, cancellationToken);
                     tagIdMap[backupTag.BackupId] = newTag.Id;
                     existingByName[newTag.Name] = newTag;
                     continue;
@@ -578,14 +578,14 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                     existingTag.HexCode = backupTag.HexCode;
                     existingTag.IsSystemTag = backupTag.IsSystemTag;
                     existingTag.SpendingLimit = backupTag.SpendingLimit;
-                    appData.UpdateExpenseTag(existingTag);
+                    appData.UpdateTag(existingTag);
                 }
 
                 tagIdMap[backupTag.BackupId] = existingTag.Id;
                 continue;
             }
 
-            var insertedTag = new ExpenseTag
+            var insertedTag = new Tag
             {
                 Name = backupTag.Name,
                 HexCode = backupTag.HexCode,
@@ -593,7 +593,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 SpendingLimit = backupTag.SpendingLimit
             };
 
-            await appData.AddExpenseTagAsync(insertedTag, cancellationToken);
+            await appData.AddTagAsync(insertedTag, cancellationToken);
             tagIdMap[backupTag.BackupId] = insertedTag.Id;
             existingByName[insertedTag.Name] = insertedTag;
         }
@@ -756,7 +756,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             return;
 
         var backupTagsById = document.Entities.Tags.ToDictionary(tag => tag.BackupId);
-        var existingTags = await appData.GetExpenseTagsAsync(cancellationToken);
+        var existingTags = await appData.GetTagsAsync(cancellationToken);
         var existingTagsByName = existingTags.ToDictionary(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
 
         foreach (var backupExpense in document.Entities.Expenses)
@@ -764,17 +764,17 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             if (!sourceIdMap.TryGetValue(backupExpense.AccountBackupId, out var sourceId))
                 continue;
 
-            if (!tagIdMap.TryGetValue(backupExpense.ExpenseTagBackupId, out var tagId) &&
-                !TryMapTagFromBackup(backupExpense.ExpenseTagBackupId, backupTagsById, existingTagsByName, tagIdMap, out tagId))
+            if (!tagIdMap.TryGetValue(backupExpense.TagBackupId, out var tagId) &&
+                !TryMapTagFromBackup(backupExpense.TagBackupId, backupTagsById, existingTagsByName, tagIdMap, out tagId))
             {
                 tagId = await EnsureDataRestorationTagIdAsync(existingTagsByName, cancellationToken);
-                tagIdMap[backupExpense.ExpenseTagBackupId] = tagId;
+                tagIdMap[backupExpense.TagBackupId] = tagId;
             }
 
             var expense = new Expense
             {
                 AccountId = sourceId,
-                ExpenseTagId = tagId,
+                TagId = tagId,
                 Name = backupExpense.Name,
                 Amount = backupExpense.Amount,
                 ExpenseCategory = ParseEnumValue<ExpenseCategory>(backupExpense.ExpenseCategory, "expenseCategory"),
@@ -864,7 +864,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             return;
 
         var backupTagsById = document.Entities.Tags.ToDictionary(tag => tag.BackupId);
-        var existingTags = await appData.GetExpenseTagsAsync(cancellationToken);
+        var existingTags = await appData.GetTagsAsync(cancellationToken);
         var existingTagsByName = existingTags.ToDictionary(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
 
         foreach (var backupRecurring in document.Entities.RecurringTransactions)
@@ -944,8 +944,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
     private static bool TryMapTagFromBackup(
         int backupTagId,
-        IReadOnlyDictionary<int, BackupExpenseTag> backupTagsById,
-        IReadOnlyDictionary<string, ExpenseTag> existingTagsByName,
+        IReadOnlyDictionary<int, BackupTag> backupTagsById,
+        IReadOnlyDictionary<string, Tag> existingTagsByName,
         IDictionary<int, int> tagIdMap,
         out int tagId)
     {
@@ -967,20 +967,20 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
     }
 
     private async Task<int> EnsureDataRestorationTagIdAsync(
-        IDictionary<string, ExpenseTag> existingTagsByName,
+        IDictionary<string, Tag> existingTagsByName,
         CancellationToken cancellationToken)
     {
         if (existingTagsByName.TryGetValue(DataRestorationTagName, out var existingTag))
             return existingTag.Id;
 
-        var dataRestorationTag = new ExpenseTag
+        var dataRestorationTag = new Tag
         {
             Name = DataRestorationTagName,
             HexCode = DataRestorationTagHex,
             IsSystemTag = true
         };
 
-        await appData.AddExpenseTagAsync(dataRestorationTag, cancellationToken);
+        await appData.AddTagAsync(dataRestorationTag, cancellationToken);
         existingTagsByName[dataRestorationTag.Name] = dataRestorationTag;
         return dataRestorationTag.Id;
     }
@@ -999,12 +999,12 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         Dictionary<int, int> tagBackupIds,
         CancellationToken cancellationToken)
     {
-        var tags = await appData.GetExpenseTagsAsync(cancellationToken);
+        var tags = await appData.GetTagsAsync(cancellationToken);
         foreach (var tag in tags)
         {
             var backupId = document.Entities.Tags.Count + 1;
             tagBackupIds[tag.Id] = backupId;
-            document.Entities.Tags.Add(new BackupExpenseTag(
+            document.Entities.Tags.Add(new BackupTag(
                 backupId,
                 tag.Name,
                 tag.HexCode,
@@ -1018,7 +1018,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         Dictionary<int, int> tagBackupIds)
     {
         var backupId = document.Entities.Tags.Count + 1;
-        document.Entities.Tags.Add(new BackupExpenseTag(
+        document.Entities.Tags.Add(new BackupTag(
             backupId,
             DataRestorationTagName,
             DataRestorationTagHex,
@@ -1061,7 +1061,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             if (!sourceBackupIds.TryGetValue(expense.AccountId, out var sourceBackupId))
                 continue;
 
-            var hasTag = tagBackupIds.TryGetValue(expense.ExpenseTagId, out var selectedTagBackupId);
+            var hasTag = tagBackupIds.TryGetValue(expense.TagId, out var selectedTagBackupId);
             var tagBackupId = hasTag ? selectedTagBackupId : dataRestorationBackupId;
 
             if (tagBackupId <= 0)

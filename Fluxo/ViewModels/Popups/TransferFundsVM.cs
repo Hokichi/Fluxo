@@ -78,8 +78,8 @@ public partial class TransferFundsVM : ObservableObject
             if (target is null)
                 return TransferFundsResult.Failure("Please choose a valid destination account.");
 
-            var expenseTag = await ResolveTransferTagAsync();
-            if (expenseTag is null)
+            var tag = await ResolveTransferTagAsync();
+            if (tag is null)
                 return TransferFundsResult.Failure("Add at least one expense tag before creating a transfer.");
 
             var expense = new Expense
@@ -88,7 +88,7 @@ public partial class TransferFundsVM : ObservableObject
                 Amount = input.Amount,
                 ExpenseCategory = ExpenseCategory.Savings,
                 AccountId = source.Id,
-                ExpenseTagId = expenseTag.Id
+                TagId = tag.Id
             };
 
             var expenseLog = new ExpenseLog
@@ -133,7 +133,7 @@ public partial class TransferFundsVM : ObservableObject
                             expenseLog.Amount,
                             expense.ExpenseCategory,
                             source.Id,
-                            expenseTag.Id,
+                            tag.Id,
                             expenseLog.DeductedOn,
                             expenseLog.Notes,
                             expenseLog.IsForDeletion,
@@ -169,10 +169,10 @@ public partial class TransferFundsVM : ObservableObject
         return TryBuildInput(out _, out _);
     }
 
-    private async Task<ExpenseTag?> ResolveTransferTagAsync()
+    private async Task<Tag?> ResolveTransferTagAsync()
     {
-        var expenseTags = await _appData.GetExpenseTagsAsync();
-        return expenseTags
+        var tags = await _appData.GetTagsAsync();
+        return tags
             .OrderByDescending(tag => string.Equals(tag.Name, "Transfer", StringComparison.OrdinalIgnoreCase))
             .ThenBy(tag => tag.Name)
             .FirstOrDefault();

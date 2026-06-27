@@ -122,7 +122,7 @@ public partial class LedgerVM : ObservableRecipient,
     public ObservableCollection<LedgerFilterOption<ExpenseCategory>> CategoryFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> TagFilters { get; } = [];
     public ObservableCollection<AccountVM> EditableAccounts { get; } = [];
-    public ObservableCollection<ExpenseTagVM> EditableTags { get; } = [];
+    public ObservableCollection<TagVM> EditableTags { get; } = [];
     public IReadOnlyList<LedgerFilterOption<int>> BatchAccountOptions =>
         AccountFilters.Where(option => !option.IsAll).ToList();
     public IReadOnlyList<LedgerFilterOption<int>> BatchTagOptions =>
@@ -388,7 +388,7 @@ public partial class LedgerVM : ObservableRecipient,
         var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
         var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
-        var tags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
+        var tags = _mapper.Map<IReadOnlyList<TagVM>>(
             await _tagService.GetAllAsync(cancellationToken));
 
         EditingTransaction = null;
@@ -502,7 +502,7 @@ public partial class LedgerVM : ObservableRecipient,
         }, cancellationToken);
     }
 
-    private void RebuildFilters(IReadOnlyList<AccountVM> accounts, IReadOnlyList<ExpenseTagVM> tags)
+    private void RebuildFilters(IReadOnlyList<AccountVM> accounts, IReadOnlyList<TagVM> tags)
     {
         ReplaceEditableAccounts(accounts);
         ReplaceEditableTags(tags);
@@ -551,7 +551,7 @@ public partial class LedgerVM : ObservableRecipient,
             EditableAccounts.Add(account);
     }
 
-    private void ReplaceEditableTags(IReadOnlyList<ExpenseTagVM> tags)
+    private void ReplaceEditableTags(IReadOnlyList<TagVM> tags)
     {
         EditableTags.Clear();
         foreach (var tag in tags
@@ -655,9 +655,9 @@ public partial class LedgerVM : ObservableRecipient,
             if (SelectedBatchAccountId is { } sourceId)
                 targetSource = await scope.UnitOfWork.Accounts.GetByIdAsync(sourceId, ct);
 
-            ExpenseTag? targetTag = null;
+            Tag? targetTag = null;
             if (SelectedBatchTagId is { } tagId)
-                targetTag = await scope.UnitOfWork.ExpenseTags.GetByIdAsync(tagId, ct);
+                targetTag = await scope.UnitOfWork.Tags.GetByIdAsync(tagId, ct);
 
             foreach (var transaction in selectedTransactions)
             {
@@ -677,8 +677,8 @@ public partial class LedgerVM : ObservableRecipient,
 
                     if (targetTag is not null && !transaction.IsGoal)
                     {
-                        expenseLog.Expense.ExpenseTag = targetTag;
-                        expenseLog.Expense.ExpenseTagId = targetTag.Id;
+                        expenseLog.Expense.Tag = targetTag;
+                        expenseLog.Expense.TagId = targetTag.Id;
                     }
 
                     scope.UnitOfWork.Expenses.Update(expenseLog.Expense);
@@ -778,7 +778,7 @@ public partial class LedgerVM : ObservableRecipient,
         ApplyFilters();
     }
 
-    public void ApplyTransactionTag(LedgerTransactionItemVM? transaction, ExpenseTagVM? tag)
+    public void ApplyTransactionTag(LedgerTransactionItemVM? transaction, TagVM? tag)
     {
         if (transaction is null ||
             tag is null ||
@@ -1039,7 +1039,7 @@ public partial class LedgerVM : ObservableRecipient,
 
     private static LedgerTransactionItemVM ProjectExpense(ExpenseLogVM log, bool isChildTransaction = false)
     {
-        var tagName = log.Expense?.ExpenseTag?.Name ?? string.Empty;
+        var tagName = log.Expense?.Tag?.Name ?? string.Empty;
         return new LedgerTransactionItemVM
         {
             Id = log.Id,
@@ -1052,9 +1052,9 @@ public partial class LedgerVM : ObservableRecipient,
             IsChildTransaction = isChildTransaction,
             AccountId = log.Account?.Id ?? 0,
             AccountName = log.Account?.Name ?? string.Empty,
-            TagId = log.Expense?.ExpenseTag?.Id ?? 0,
+            TagId = log.Expense?.Tag?.Id ?? 0,
             TagName = tagName,
-            TagHexCode = log.Expense?.ExpenseTag?.HexCode ?? string.Empty,
+            TagHexCode = log.Expense?.Tag?.HexCode ?? string.Empty,
             IsGoal = string.Equals(tagName, "Goal Update", StringComparison.OrdinalIgnoreCase),
             IsRecurring = log.Notes.Contains("recurring", StringComparison.OrdinalIgnoreCase)
         };
@@ -1201,15 +1201,15 @@ public partial class LedgerVM : ObservableRecipient,
                 await scope.UnitOfWork.Accounts.GetByIdAsync(transaction.AccountId, ct) ??
                 expenseLog.Account;
             var targetTag =
-                await scope.UnitOfWork.ExpenseTags.GetByIdAsync(transaction.TagId, ct) ??
-                expenseLog.Expense.ExpenseTag;
+                await scope.UnitOfWork.Tags.GetByIdAsync(transaction.TagId, ct) ??
+                expenseLog.Expense.Tag;
 
             expenseLog.Expense.Name = transaction.Name.Trim();
             expenseLog.Expense.Amount = transaction.Amount;
             expenseLog.Expense.Account = targetAccount;
             expenseLog.Expense.AccountId = targetAccount.Id;
-            expenseLog.Expense.ExpenseTag = targetTag;
-            expenseLog.Expense.ExpenseTagId = targetTag.Id;
+            expenseLog.Expense.Tag = targetTag;
+            expenseLog.Expense.TagId = targetTag.Id;
 
             expenseLog.Amount = transaction.Amount;
             expenseLog.Account = targetAccount;
@@ -1336,9 +1336,9 @@ public partial class LedgerVM : ObservableRecipient,
         transaction.Amount = log.Amount;
         transaction.AccountId = log.AccountId;
         transaction.AccountName = log.Account?.Name ?? log.Expense?.Account?.Name ?? transaction.AccountName;
-        transaction.TagId = log.Expense?.ExpenseTagId ?? 0;
-        transaction.TagName = log.Expense?.ExpenseTag?.Name ?? transaction.TagName;
-        transaction.TagHexCode = log.Expense?.ExpenseTag?.HexCode ?? transaction.TagHexCode;
+        transaction.TagId = log.Expense?.TagId ?? 0;
+        transaction.TagName = log.Expense?.Tag?.Name ?? transaction.TagName;
+        transaction.TagHexCode = log.Expense?.Tag?.HexCode ?? transaction.TagHexCode;
     }
 
     private static void ApplyIncomeSnapshotToTransaction(

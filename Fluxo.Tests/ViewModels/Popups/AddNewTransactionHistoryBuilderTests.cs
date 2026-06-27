@@ -116,8 +116,8 @@ public sealed class AddNewTransactionHistoryBuilderTests
                 Name = name,
                 Amount = amount,
                 ExpenseCategory = ExpenseCategory.Needs,
-                ExpenseTagId = 20,
-                ExpenseTag = new ExpenseTag
+                TagId = 20,
+                Tag = new Tag
                 {
                     Id = 20,
                     Name = "Food",
@@ -169,8 +169,8 @@ public sealed class AddNewTransactionHistoryBuilderTests
                 Name = $"{GoalUpdateTransactionSupport.GoalUpdateTagName}: {goalName}",
                 Amount = amount,
                 ExpenseCategory = ExpenseCategory.Savings,
-                ExpenseTagId = 20,
-                ExpenseTag = new ExpenseTag
+                TagId = 20,
+                Tag = new Tag
                 {
                     Id = 20,
                     Name = GoalUpdateTransactionSupport.GoalUpdateTagName,

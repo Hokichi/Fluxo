@@ -75,7 +75,7 @@ public sealed class BudgetAllocationPeriodSyncServiceTests
         public IExpenseRepository Expenses => throw new NotSupportedException();
         public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
         public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
-        public IExpenseTagRepository ExpenseTags => throw new NotSupportedException();
+        public ITagRepository Tags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts => throw new NotSupportedException();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();

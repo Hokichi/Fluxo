@@ -32,7 +32,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IExpenseLogService _expenseLogService;
     private readonly HashSet<ExpenseLogVM> _investVisibleWindow = [];
-    private readonly Dictionary<int, ExpenseTagVM> _knownTagsById = [];
+    private readonly Dictionary<int, TagVM> _knownTagsById = [];
     private readonly IMapper _mapper;
     private readonly ObservableCollection<ExpenseLogVM> _investSource = [];
     private readonly HashSet<ExpenseLogVM> _needsVisibleWindow = [];
@@ -48,7 +48,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private readonly IDialogService? _dialogService;
     private readonly IUiSettleAwaiter? _uiSettleAwaiter;
     private readonly SemaphoreSlim _filterFeedbackGate = new(1, 1);
-    private readonly List<ExpenseTagVM> _orderedTags = [];
+    private readonly List<TagVM> _orderedTags = [];
     private readonly AllocationDataVM? _allocationData;
 
     private List<ExpenseLogVM> _allExpenseLogs = [];
@@ -166,19 +166,19 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private bool _isTransactionsLoading;
 
     [ObservableProperty]
-    private ObservableCollection<ExpenseTagVM> _tags = [];
+    private ObservableCollection<TagVM> _tags = [];
 
     [ObservableProperty]
-    private ObservableCollection<ExpenseTagVM> _otherTags = [];
+    private ObservableCollection<TagVM> _otherTags = [];
 
     [ObservableProperty]
-    private ExpenseTagVM? _selectedTag;
+    private TagVM? _selectedTag;
 
     [ObservableProperty]
-    private ExpenseTagVM? _selectedVisibleTag;
+    private TagVM? _selectedVisibleTag;
 
     [ObservableProperty]
-    private ExpenseTagVM? _selectedOtherTag;
+    private TagVM? _selectedOtherTag;
 
     [ObservableProperty]
     private int? _selectedAccountId;
@@ -267,7 +267,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
         var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
-        var tags = _mapper.Map<IReadOnlyList<ExpenseTagVM>>(
+        var tags = _mapper.Map<IReadOnlyList<TagVM>>(
             await _tagService.GetAllAsync(cancellationToken));
 
         _allExpenseLogs = expenseLogs
@@ -296,7 +296,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         RefreshSourceDifferences();
     }
 
-    partial void OnSelectedTagChanged(ExpenseTagVM? value)
+    partial void OnSelectedTagChanged(TagVM? value)
     {
         if (!_isSynchronizingTagSelections &&
             value is not null &&
@@ -349,7 +349,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         OnPropertyChanged(nameof(InvestAllocationPercentage));
     }
 
-    partial void OnSelectedVisibleTagChanged(ExpenseTagVM? value)
+    partial void OnSelectedVisibleTagChanged(TagVM? value)
     {
         if (_isSynchronizingTagSelections)
             return;
@@ -357,7 +357,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         SelectedTag = value;
     }
 
-    partial void OnSelectedOtherTagChanged(ExpenseTagVM? value)
+    partial void OnSelectedOtherTagChanged(TagVM? value)
     {
         if (_isSynchronizingTagSelections)
             return;
@@ -570,7 +570,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }, cancellationToken);
     }
 
-    private void CacheKnownTags(IEnumerable<ExpenseTagVM> allTags)
+    private void CacheKnownTags(IEnumerable<TagVM> allTags)
     {
         _knownTagsById.Clear();
         foreach (var tag in allTags.Where(tag => tag.Id > 0))
@@ -676,7 +676,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private bool MatchesSelectedFilters(ExpenseLogVM expenseLog)
     {
         if (SelectedTag is not null &&
-            expenseLog.Expense?.ExpenseTag?.Id != SelectedTag.Id)
+            expenseLog.Expense?.Tag?.Id != SelectedTag.Id)
             return false;
 
         return SelectedAccountId is null ||
@@ -686,13 +686,13 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
     private bool MatchesSelectedFilters(BudgetTransactionLogVM transactionLog)
     {
         if (SelectedTag is not null)
-            return transactionLog.ExpenseLog?.Expense?.ExpenseTag?.Id == SelectedTag.Id;
+            return transactionLog.ExpenseLog?.Expense?.Tag?.Id == SelectedTag.Id;
 
         return SelectedAccountId is null ||
                transactionLog.Account.Id == SelectedAccountId;
     }
 
-    private void SynchronizeTagSelections(ExpenseTagVM? selectedTag)
+    private void SynchronizeTagSelections(TagVM? selectedTag)
     {
         _isSynchronizingTagSelections = true;
 
@@ -700,10 +700,10 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         {
             SelectedVisibleTag = selectedTag is null
                 ? null
-                : Enumerable.FirstOrDefault<ExpenseTagVM>(Tags, tag => tag.Id == selectedTag.Id);
+                : Enumerable.FirstOrDefault<TagVM>(Tags, tag => tag.Id == selectedTag.Id);
             SelectedOtherTag = selectedTag is null
                 ? null
-                : Enumerable.FirstOrDefault<ExpenseTagVM>(OtherTags, tag => tag.Id == selectedTag.Id);
+                : Enumerable.FirstOrDefault<TagVM>(OtherTags, tag => tag.Id == selectedTag.Id);
         }
         finally
         {
@@ -711,7 +711,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }
     }
 
-    private void PromoteTagToVisibleStart(ExpenseTagVM selectedTag)
+    private void PromoteTagToVisibleStart(TagVM selectedTag)
     {
         var promotedTag = _orderedTags.FirstOrDefault(tag => tag.Id == selectedTag.Id) ?? selectedTag;
         var reorderedTags = _orderedTags
@@ -1196,18 +1196,18 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private void RefreshTagCollections()
     {
-        Tags = new ObservableCollection<ExpenseTagVM>(_orderedTags.Take(VisibleTagSlots));
-        OtherTags = new ObservableCollection<ExpenseTagVM>(_orderedTags.Skip(VisibleTagSlots));
+        Tags = new ObservableCollection<TagVM>(_orderedTags.Take(VisibleTagSlots));
+        OtherTags = new ObservableCollection<TagVM>(_orderedTags.Skip(VisibleTagSlots));
 
         OnPropertyChanged(nameof(HasOtherTags));
         OnPropertyChanged(nameof(IsSelectedTagInOtherTags));
     }
 
-    private IEnumerable<ExpenseTagVM> BuildOrderedRangeTags(IEnumerable<ExpenseLogVM> visibleExpenseLogs)
+    private IEnumerable<TagVM> BuildOrderedRangeTags(IEnumerable<ExpenseLogVM> visibleExpenseLogs)
     {
         return visibleExpenseLogs
             .Where(log => !log.IsForDeletion)
-            .Select(log => log.Expense?.ExpenseTag)
+            .Select(log => log.Expense?.Tag)
             .Where(tag => tag is { Id: > 0 })
             .GroupBy(tag => tag!.Id)
             .Select(group =>
@@ -1225,7 +1225,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             .Select(item => item.Tag);
     }
 
-    private void SetSelectedTagInternal(ExpenseTagVM? selectedTag)
+    private void SetSelectedTagInternal(TagVM? selectedTag)
     {
         _suppressFilterFeedback = true;
         try
@@ -1238,9 +1238,9 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         }
     }
 
-    private static ExpenseTagVM CloneTag(ExpenseTagVM source)
+    private static TagVM CloneTag(TagVM source)
     {
-        return new ExpenseTagVM
+        return new TagVM
         {
             Id = source.Id,
             Name = source.Name,
@@ -1259,7 +1259,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
             expenseLog.Amount,
             expenseLog.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
             expenseLog.Account?.Id ?? 0,
-            expenseLog.Expense?.ExpenseTag?.Id ?? 0,
+            expenseLog.Expense?.Tag?.Id ?? 0,
             expenseLog.DeductedOn,
             expenseLog.Notes,
             expenseLog.IsForDeletion,
@@ -1275,7 +1275,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                                          AccountType.Checking;
 
         var knownTag = _knownTagsById.GetValueOrDefault(snapshot.TagId);
-        var existingTag = existing?.Expense?.ExpenseTag;
+        var existingTag = existing?.Expense?.Tag;
 
         return new ExpenseLogVM
         {
@@ -1297,7 +1297,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                 Name = snapshot.ExpenseName,
                 Amount = snapshot.Amount,
                 ExpenseCategory = snapshot.ExpenseCategory,
-                ExpenseTag = new ExpenseTagVM
+                Tag = new TagVM
                 {
                     Id = snapshot.TagId,
                     Name = knownTag?.Name ?? existingTag?.Name ?? string.Empty,
@@ -1349,7 +1349,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
                 AmountText = $"-{log.Amount:N0}",
                 OccurredOn = log.DeductedOn,
                 Account = log.Account,
-                TagHexCode = log.Expense?.ExpenseTag?.HexCode,
+                TagHexCode = log.Expense?.Tag?.HexCode,
                 ExpenseLog = log
             })
             .Concat(incomeLogs.Select(log => new BudgetTransactionLogVM

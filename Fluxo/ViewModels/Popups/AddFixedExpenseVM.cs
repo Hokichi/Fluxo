@@ -25,7 +25,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     private readonly MainVM _mainViewModel;
     private readonly IAppDataService _appData;
     private readonly Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? _saveDraftAsync;
-    private readonly Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? _loadDraftTagsAsync;
+    private readonly Func<CancellationToken, Task<IReadOnlyList<TagVM>>>? _loadDraftTagsAsync;
     private readonly Func<string, string, Task<SettingsOperationResult>>? _createDraftTagAsync;
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
@@ -38,7 +38,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     [ObservableProperty] private string _recurringTimeText = string.Empty;
     [ObservableProperty] private ExpenseCategory _selectedCategory = ExpenseCategory.Needs;
     [ObservableProperty] private AccountVM? _selectedAccount;
-    [ObservableProperty] private ExpenseTagVM? _selectedTag;
+    [ObservableProperty] private TagVM? _selectedTag;
     [ObservableProperty] private TagOption? _selectedTagOption;
     [ObservableProperty] private string _tagNameText = "General";
 
@@ -50,7 +50,7 @@ public partial class AddFixedExpenseVM : ObservableObject
         IReadOnlyList<AccountVM>? accountsOverride = null,
         int? forceIncludeAccountId = null,
         Func<AddFixedExpenseInput, Task<AddFixedExpenseResult>>? saveDraftAsync = null,
-        Func<CancellationToken, Task<IReadOnlyList<ExpenseTagVM>>>? loadDraftTagsAsync = null,
+        Func<CancellationToken, Task<IReadOnlyList<TagVM>>>? loadDraftTagsAsync = null,
         Func<string, string, Task<SettingsOperationResult>>? createDraftTagAsync = null)
     {
         _mainViewModel = mainViewModel;
@@ -86,7 +86,7 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     public ObservableCollection<AccountVM> Accounts { get; } = [];
     public ICollectionView AccountsView { get; }
-    public ObservableCollection<ExpenseTagVM> Tags { get; } = [];
+    public ObservableCollection<TagVM> Tags { get; } = [];
     public ObservableCollection<TagOption> TagOptions { get; } = [];
     public bool IsEditMode => EditingId.HasValue;
     public string PopupTitle => IsEditMode ? "Edit Recurring Transaction" : "Add Recurring Transaction";
@@ -131,7 +131,7 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     partial void OnSelectedAccountChanged(AccountVM? value) => NotifyFormStateChanged();
 
-    partial void OnSelectedTagChanged(ExpenseTagVM? value)
+    partial void OnSelectedTagChanged(TagVM? value)
     {
         if (!_isSyncingTagSelection)
         {
@@ -171,17 +171,17 @@ public partial class AddFixedExpenseVM : ObservableObject
 
     public async Task LoadTagsAsync(CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<ExpenseTagVM> availableTags;
+        IReadOnlyList<TagVM> availableTags;
         if (_loadDraftTagsAsync is not null)
         {
             availableTags = await _loadDraftTagsAsync(cancellationToken);
         }
         else
         {
-            availableTags = (await _appData.GetExpenseTagsAsync(cancellationToken))
+            availableTags = (await _appData.GetTagsAsync(cancellationToken))
                 .Where(tag => !tag.IsSystemTag)
                 .OrderBy(tag => tag.Name)
-                .Select(tag => new ExpenseTagVM
+                .Select(tag => new TagVM
                 {
                     Id = tag.Id,
                     Name = tag.Name,
@@ -258,18 +258,18 @@ public partial class AddFixedExpenseVM : ObservableObject
             if (account is null)
                 return AddFixedExpenseResult.Failure("Please choose a valid account.");
 
-            var existingTags = await _appData.GetExpenseTagsAsync();
+            var existingTags = await _appData.GetTagsAsync();
             var tag = existingTags.FirstOrDefault(existing => existing.Id == input.TagId && !existing.IsSystemTag);
 
             if (tag is null)
             {
-                tag = new ExpenseTag
+                tag = new Tag
                 {
                     Name = input.TagName,
                     HexCode = DefaultTagColor
                 };
 
-                await _appData.AddExpenseTagAsync(tag);
+                await _appData.AddTagAsync(tag);
                 await _appData.SaveChangesAsync();
             }
 
@@ -283,7 +283,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                 existing.Amount = input.Amount;
                 existing.ExpenseCategory = input.Category;
                 existing.AccountId = account.Id;
-                existing.ExpenseTagId = tag.Id;
+                existing.TagId = tag.Id;
                 _appData.UpdateExpense(existing);
             }
             else
@@ -294,7 +294,7 @@ public partial class AddFixedExpenseVM : ObservableObject
                     Amount = input.Amount,
                     ExpenseCategory = input.Category,
                     AccountId = account.Id,
-                    ExpenseTagId = tag.Id
+                    TagId = tag.Id
                 };
                 await _appData.AddExpenseAsync(expense);
             }
@@ -407,7 +407,7 @@ public partial class AddFixedExpenseVM : ObservableObject
     }
 
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
-    public sealed record TagOption(ExpenseTagVM? Tag, string Label, bool IsAddTagAction);
+    public sealed record TagOption(TagVM? Tag, string Label, bool IsAddTagAction);
 
     public readonly record struct AddFixedExpenseResult(bool IsSuccess, bool ShouldClose, string? ErrorMessage)
     {

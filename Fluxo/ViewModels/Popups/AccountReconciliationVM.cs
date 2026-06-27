@@ -86,17 +86,17 @@ public partial class AccountReconciliationVM : ObservableObject
                 return AccountReconciliationSaveResult.Failure("Please choose a valid account.");
 
             var reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
-            var expenseName = $"{account.Name} - {SystemExpenseTags.BudgetReconciliationName}";
+            var expenseName = $"{account.Name} - {SystemTags.BudgetReconciliationName}";
             var expense = new Expense
             {
                 Name = expenseName,
                 Amount = input.Amount,
                 ExpenseCategory = ExpenseCategory.Needs,
                 AccountId = account.Id,
-                ExpenseTagId = reconciliationTag.Id
+                TagId = reconciliationTag.Id
             };
             if (reconciliationTag.Id <= 0)
-                expense.ExpenseTag = reconciliationTag;
+                expense.Tag = reconciliationTag;
 
             var expenseLog = new ExpenseLog
             {
@@ -147,34 +147,34 @@ public partial class AccountReconciliationVM : ObservableObject
         }
     }
 
-    private async Task<ExpenseTag> EnsureBudgetReconciliationTagAsync(CancellationToken cancellationToken)
+    private async Task<Tag> EnsureBudgetReconciliationTagAsync(CancellationToken cancellationToken)
     {
-        var tags = await _appData.GetExpenseTagsAsync(cancellationToken);
+        var tags = await _appData.GetTagsAsync(cancellationToken);
         var existingSystemTag = tags.FirstOrDefault(tag =>
             tag.IsSystemTag &&
-            string.Equals(tag.Name, SystemExpenseTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(tag.Name, SystemTags.BudgetReconciliationName, StringComparison.OrdinalIgnoreCase));
 
         if (existingSystemTag is not null)
         {
-            if (!string.Equals(existingSystemTag.HexCode, SystemExpenseTags.BudgetReconciliationHexCode,
+            if (!string.Equals(existingSystemTag.HexCode, SystemTags.BudgetReconciliationHexCode,
                     StringComparison.Ordinal))
             {
-                existingSystemTag.Name = SystemExpenseTags.BudgetReconciliationName;
-                existingSystemTag.HexCode = SystemExpenseTags.BudgetReconciliationHexCode;
+                existingSystemTag.Name = SystemTags.BudgetReconciliationName;
+                existingSystemTag.HexCode = SystemTags.BudgetReconciliationHexCode;
                 existingSystemTag.IsSystemTag = true;
-                _appData.UpdateExpenseTag(existingSystemTag);
+                _appData.UpdateTag(existingSystemTag);
             }
 
             return existingSystemTag;
         }
 
-        var tag = new ExpenseTag
+        var tag = new Tag
         {
-            Name = SystemExpenseTags.BudgetReconciliationName,
-            HexCode = SystemExpenseTags.BudgetReconciliationHexCode,
+            Name = SystemTags.BudgetReconciliationName,
+            HexCode = SystemTags.BudgetReconciliationHexCode,
             IsSystemTag = true
         };
-        await _appData.AddExpenseTagAsync(tag, cancellationToken);
+        await _appData.AddTagAsync(tag, cancellationToken);
         return tag;
     }
 
@@ -203,7 +203,7 @@ public partial class AccountReconciliationVM : ObservableObject
         Expense expense,
         ExpenseLog expenseLog,
         Account account,
-        ExpenseTag reconciliationTag)
+        Tag reconciliationTag)
     {
         var sourceVm = new AccountVM
         {
@@ -214,7 +214,7 @@ public partial class AccountReconciliationVM : ObservableObject
             SpentAmount = account.SpentAmount,
             IsEnabled = account.IsEnabled
         };
-        var tagVm = new ExpenseTagVM
+        var tagVm = new TagVM
         {
             Id = reconciliationTag.Id,
             Name = reconciliationTag.Name,
@@ -238,7 +238,7 @@ public partial class AccountReconciliationVM : ObservableObject
                 Amount = expense.Amount,
                 ExpenseCategory = expense.ExpenseCategory,
                 Account = sourceVm,
-                ExpenseTag = tagVm
+                Tag = tagVm
             }
         };
     }

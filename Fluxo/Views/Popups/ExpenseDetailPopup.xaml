@@ -424,7 +424,7 @@
                 </Grid>
 
                 <StackPanel
-                    x:Name="NormalExpenseTagsPanel"
+                    x:Name="NormalTagsPanel"
                     Grid.Row="2"
                     Margin="0,16,0,0"
                     Visibility="{Binding ShowNormalExpenseFields, Converter={StaticResource BoolToVisibilityConverter}}">

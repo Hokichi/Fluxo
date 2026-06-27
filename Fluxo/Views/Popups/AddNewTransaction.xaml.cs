@@ -453,7 +453,7 @@ public partial class AddNewTransaction : BasePopup
         TryCloseMoreTagsPopup();
     }
 
-    private double MeasureTagWidth(ExpenseTagVM tag)
+    private double MeasureTagWidth(TagVM tag)
     {
         var tagChip = new RadioButton
         {

@@ -48,7 +48,7 @@ public sealed class NotificationActionServiceTests
             accounts: accounts,
             expenseLogs: expenseLogs,
             incomeLogs: incomeLogs,
-            expenseTags: [new ExpenseTag { Id = 1, Name = "Transfer", HexCode = "#000000" }]);
+            tags: [new Tag { Id = 1, Name = "Transfer", HexCode = "#000000" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
             card,
@@ -94,7 +94,7 @@ public sealed class NotificationActionServiceTests
             expenses: expenses,
             expenseLogs: expenseLogs,
             incomeLogs: incomeLogs,
-            expenseTags: [new ExpenseTag { Id = 9, Name = "Transfer", HexCode = "#000000" }]);
+            tags: [new Tag { Id = 9, Name = "Transfer", HexCode = "#000000" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
             card,
@@ -141,7 +141,7 @@ public sealed class NotificationActionServiceTests
             accounts: accounts,
             recurringTransactions: recurring,
             expenseLogs: expenseLogs,
-            expenseTags: [new ExpenseTag { Id = 5, Name = "Needs", HexCode = "#111111" }]);
+            tags: [new Tag { Id = 5, Name = "Needs", HexCode = "#111111" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
             card,
@@ -221,7 +221,7 @@ public sealed class NotificationActionServiceTests
             expenses: expenses,
             expenseLogs: expenseLogs,
             incomeLogs: incomeLogs,
-            expenseTags: [new ExpenseTag { Id = 11, Name = "Transfer", HexCode = "#555555" }]);
+            tags: [new Tag { Id = 11, Name = "Transfer", HexCode = "#555555" }]);
 
         var succeeded = await sut.ExecuteChecklistActionAsync(
             card,
@@ -322,7 +322,7 @@ public sealed class NotificationActionServiceTests
         List<RecurringTransaction>? recurringTransactions = null,
         List<ExpenseLog>? expenseLogs = null,
         List<IncomeLog>? incomeLogs = null,
-        List<ExpenseTag>? expenseTags = null)
+        List<Tag>? tags = null)
     {
         persistedGoals ??= [];
         accounts ??= [];
@@ -330,7 +330,7 @@ public sealed class NotificationActionServiceTests
         recurringTransactions ??= [];
         expenseLogs ??= [];
         incomeLogs ??= [];
-        expenseTags ??= [];
+        tags ??= [];
 
         var notificationRepository = Substitute.For<INotificationRepository>();
         notificationRepository.GetAllAsync(Arg.Any<CancellationToken>())
@@ -477,14 +477,14 @@ public sealed class NotificationActionServiceTests
                 return Task.CompletedTask;
             });
 
-        var expenseTagRepository = Substitute.For<IExpenseTagRepository>();
-        expenseTagRepository.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<ExpenseTag>>(expenseTags.ToList()));
-        expenseTagRepository.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+        var tagRepository = Substitute.For<ITagRepository>();
+        tagRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IReadOnlyList<Tag>>(tags.ToList()));
+        tagRepository.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
                 var id = call.Arg<int>();
-                return Task.FromResult<ExpenseTag?>(expenseTags.FirstOrDefault(tag => tag.Id == id));
+                return Task.FromResult<Tag?>(tags.FirstOrDefault(tag => tag.Id == id));
             });
 
         var recurringRepository = Substitute.For<IRecurringTransactionRepository>();
@@ -521,7 +521,7 @@ public sealed class NotificationActionServiceTests
         unitOfWork.Expenses.Returns(expenseRepository);
         unitOfWork.ExpenseLogs.Returns(expenseLogRepository);
         unitOfWork.IncomeLogs.Returns(incomeLogRepository);
-        unitOfWork.ExpenseTags.Returns(expenseTagRepository);
+        unitOfWork.Tags.Returns(tagRepository);
         unitOfWork.RecurringTransactions.Returns(recurringRepository);
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(1));

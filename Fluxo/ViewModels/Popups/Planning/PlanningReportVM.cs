@@ -168,7 +168,7 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
                 Name = recurring.Name,
                 Amount = recurring.Amount,
                 ExpenseCategory = recurring.Category ?? ExpenseCategory.Needs,
-                ExpenseTag = CopyExpenseTag(recurring.Tag, recurring.TagId),
+                Tag = CopyTag(recurring.Tag, recurring.TagId),
                 Account = CopyAccount(recurring.Source, recurring.SourceId)
             });
         }
@@ -379,14 +379,14 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
             Name = source.Name,
             Amount = source.Amount,
             ExpenseCategory = source.ExpenseCategory,
-            ExpenseTag = CopyExpenseTag(source.ExpenseTag),
+            Tag = CopyTag(source.Tag),
             Account = CopyAccount(source.Account)
         };
     }
 
-    private static ExpenseTagVM CopyExpenseTag(ExpenseTagVM source)
+    private static TagVM CopyTag(TagVM source)
     {
-        return new ExpenseTagVM
+        return new TagVM
         {
             Id = source.Id,
             Name = source.Name,
@@ -396,12 +396,12 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
         };
     }
 
-    private static ExpenseTagVM CopyExpenseTag(ExpenseTag? source, int? fallbackId)
+    private static TagVM CopyTag(Tag? source, int? fallbackId)
     {
         if (source is null)
-            return new ExpenseTagVM { Id = fallbackId ?? 0 };
+            return new TagVM { Id = fallbackId ?? 0 };
 
-        return new ExpenseTagVM
+        return new TagVM
         {
             Id = source.Id,
             Name = source.Name,
