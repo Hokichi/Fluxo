@@ -14,7 +14,7 @@ public sealed class BalloonButtonDependencyPropertyTests
         var source = File.ReadAllText(ResolveBalloonButtonPath());
 
         Assert.Contains("public static readonly DependencyProperty ButtonTextProperty =", source);
-        Assert.Contains("DependencyProperty.Register(nameof(ButtonText), typeof(string), typeof(BalloonButton),", source);
+        Assert.Contains("DependencyProperty.Register(nameof(ButtonText), typeof(string), typeof(BalloonControl),", source);
         Assert.Contains("public string? ButtonText", source);
         Assert.Contains("get => (string?)GetValue(ButtonTextProperty);", source);
         Assert.Contains("set => SetValue(ButtonTextProperty, value);", source);
@@ -26,7 +26,7 @@ public sealed class BalloonButtonDependencyPropertyTests
         var source = File.ReadAllText(ResolveBalloonButtonPath());
 
         Assert.Contains("public static readonly DependencyProperty ShouldExpandProperty =", source);
-        Assert.Contains("DependencyProperty.Register(nameof(ShouldExpand), typeof(bool), typeof(BalloonButton),", source);
+        Assert.Contains("DependencyProperty.Register(nameof(ShouldExpand), typeof(bool), typeof(BalloonControl),", source);
         Assert.Contains("new FrameworkPropertyMetadata(false", source);
         Assert.Contains("CoerceShouldExpand", source);
         Assert.Contains("public bool ShouldExpand", source);
@@ -40,7 +40,7 @@ public sealed class BalloonButtonDependencyPropertyTests
         var source = File.ReadAllText(ResolveBalloonButtonPath());
 
         Assert.Contains("public static readonly DependencyProperty ShouldShowTextProperty =", source);
-        Assert.Contains("DependencyProperty.Register(nameof(ShouldShowText), typeof(bool), typeof(BalloonButton),", source);
+        Assert.Contains("DependencyProperty.Register(nameof(ShouldShowText), typeof(bool), typeof(BalloonControl),", source);
         Assert.Contains("new PropertyMetadata(false, OnShouldShowTextChanged)", source);
         Assert.Contains("public bool ShouldShowText", source);
         Assert.Contains("get => (bool)GetValue(ShouldShowTextProperty);", source);
@@ -53,7 +53,7 @@ public sealed class BalloonButtonDependencyPropertyTests
         var source = File.ReadAllText(ResolveBalloonButtonPath());
 
         Assert.Contains("public static readonly DependencyProperty ButtonSizeProperty =", source);
-        Assert.Contains("DependencyProperty.Register(nameof(ButtonSize), typeof(double), typeof(BalloonButton),", source);
+        Assert.Contains("DependencyProperty.Register(nameof(ButtonSize), typeof(double), typeof(BalloonControl),", source);
         Assert.Contains("public double ButtonSize", source);
         Assert.Contains("get => (double)GetValue(ButtonSizeProperty);", source);
         Assert.Contains("set => SetValue(ButtonSizeProperty, value);", source);
@@ -62,16 +62,11 @@ public sealed class BalloonButtonDependencyPropertyTests
     }
 
     [Fact]
-    public void BalloonButton_TracksActiveBackgroundForForegroundConversion()
+    public void BalloonButton_DoesNotExposeActiveBackground()
     {
         var source = File.ReadAllText(ResolveBalloonButtonPath());
 
-        Assert.Contains("public static readonly DependencyProperty ActiveBackgroundProperty =", source);
-        Assert.Contains("DependencyProperty.Register(nameof(ActiveBackground), typeof(Brush), typeof(BalloonButton),", source);
-        Assert.Contains("public Brush ActiveBackground", source);
-        Assert.Contains("private set => SetValue(ActiveBackgroundProperty, value);", source);
-        Assert.Contains("ActiveBackground = HoveredBackground;", source);
-        Assert.Contains("ActiveBackground = DefaultBackground;", source);
+        Assert.DoesNotContain("ActiveBackground", source);
     }
 
     [Fact]
@@ -159,7 +154,7 @@ public sealed class BalloonButtonDependencyPropertyTests
     }
 
     private static string ResolveBalloonButtonPath() =>
-        RepositoryPaths.File("Fluxo.Resources", "CustomControls", "BalloonButton.cs");
+        RepositoryPaths.File("Fluxo.Resources", "CustomControls", "BalloonControl.cs");
 
     private static void RunOnStaThread(Action action)
     {
