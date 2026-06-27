@@ -62,33 +62,18 @@ public partial class SettingsIoUsTabVM : ObservableObject
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
-        var incomeLogs = await _appData.GetIncomeLogsAsync(cancellationToken);
-
-        var items = expenseLogs
-            .Where(log => !log.IsForDeletion)
-            .Where(log => log.IsIoU || log.Expense?.IsIoU == true)
-            .Select(log => new IoUItemVM
+        var transactions = await _appData.GetTransactionsAsync(cancellationToken);
+        var items = transactions
+            .Where(transaction => !transaction.IsForDeletion && transaction.IsIoU)
+            .Select(transaction => new IoUItemVM
             {
-                Kind = IoUKind.Lend,
-                TransactionId = log.Id,
-                Name = log.Expense?.Name ?? "Lend",
-                Amount = log.Amount,
-                Date = log.DeductedOn,
-                AccountName = log.Account?.Name ?? log.Expense?.Account?.Name ?? string.Empty
+                Kind = transaction.Type == TransactionType.Expense ? IoUKind.Lend : IoUKind.Debt,
+                TransactionId = transaction.Id,
+                Name = transaction.Name,
+                Amount = transaction.Amount,
+                Date = transaction.OccurredOn,
+                AccountName = transaction.Account?.Name ?? string.Empty
             })
-            .Concat(incomeLogs
-                .Where(log => !log.IsForDeletion)
-                .Where(log => log.IsIoU)
-                .Select(log => new IoUItemVM
-                {
-                    Kind = IoUKind.Debt,
-                    TransactionId = log.Id,
-                    Name = log.Name,
-                    Amount = log.Amount,
-                    Date = log.AddedOn,
-                    AccountName = log.Account?.Name ?? string.Empty
-                }))
             .OrderBy(item => item.Date)
             .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -135,11 +120,11 @@ public partial class SettingsIoUsTabVM : ObservableObject
     }
 
     private async Task<SettingsOperationResult> ResolveLendAsync(
-        int expenseLogId,
+        int transactionId,
         CancellationToken cancellationToken)
     {
-        var source = await _appData.GetExpenseLogByLogIdAsync(expenseLogId, cancellationToken);
-        if (source?.Expense is null || !(source.IsIoU || source.Expense.IsIoU))
+        var source = await _appData.GetTransactionByIdAsync(transactionId, cancellationToken);
+        if (source is null || source.Type != TransactionType.Expense || !source.IsIoU)
         {
             await LoadAsync(cancellationToken);
             return SettingsOperationResult.Success();
@@ -149,44 +134,42 @@ public partial class SettingsIoUsTabVM : ObservableObject
         if (account is null)
             return SettingsOperationResult.Failure("Unable to load the IOU account.");
 
-        var beforeSnapshot = ExpenseLogMemorySnapshot.Create(source);
-        var incomeLog = new IncomeLog
+        var beforeSnapshot = TransactionMemorySnapshot.Create(source);
+        var income = new Transaction
         {
-            Name = $"{source.Expense.Name} - IOU resolved",
+            Type = TransactionType.Income,
+            Name = $"{source.Name} - IOU resolved",
             Amount = source.Amount,
-            AddedOn = _todayProvider().Date,
+            OccurredOn = _todayProvider().Date,
             Notes = $"Resolved lend from expense #{source.Id}",
             AccountId = account.Id,
             Account = account,
             IsIoU = false
         };
 
-        await _appData.AddIncomeLogAsync(incomeLog, cancellationToken);
+        await _appData.AddTransactionAsync(income, cancellationToken);
         ApplyIncomeToAccount(account, source.Amount);
 
         source.IsIoU = false;
-        source.Expense.IsIoU = false;
-        _appData.UpdateIncomeLog(incomeLog);
-        _appData.UpdateExpense(source.Expense);
-        _appData.UpdateExpenseLog(source);
+        _appData.UpdateTransaction(source);
         _appData.UpdateAccount(account);
 
         await _appData.SaveChangesAsync(cancellationToken);
 
         RecordResolutionActions(
-            new AddIncomeLogMemoryAction(IncomeLogMemorySnapshot.Create(incomeLog)),
-            new EditExpenseLogMemoryAction(beforeSnapshot, ExpenseLogMemorySnapshot.Create(source)));
+            new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(income)),
+            new EditTransactionMemoryAction(beforeSnapshot, TransactionMemorySnapshot.Create(source)));
 
         await ReloadAfterResolveAsync(cancellationToken);
         return SettingsOperationResult.Success();
     }
 
     private async Task<SettingsOperationResult> ResolveDebtAsync(
-        int incomeLogId,
+        int transactionId,
         CancellationToken cancellationToken)
     {
-        var source = await _appData.GetIncomeLogByIdAsync(incomeLogId, cancellationToken);
-        if (source is null || !source.IsIoU)
+        var source = await _appData.GetTransactionByIdAsync(transactionId, cancellationToken);
+        if (source is null || source.Type != TransactionType.Income || !source.IsIoU)
         {
             await LoadAsync(cancellationToken);
             return SettingsOperationResult.Success();
@@ -196,42 +179,33 @@ public partial class SettingsIoUsTabVM : ObservableObject
         if (account is null)
             return SettingsOperationResult.Failure("Unable to load the debt account.");
 
-        var beforeSnapshot = IncomeLogMemorySnapshot.Create(source);
+        var beforeSnapshot = TransactionMemorySnapshot.Create(source);
         var reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
-        var expense = new Expense
+        var expense = new Transaction
         {
+            Type = TransactionType.Expense,
             Name = $"{source.Name} - Debt resolved",
             Amount = source.Amount,
+            OccurredOn = _todayProvider().Date,
+            Notes = $"Resolved debt from income #{source.Id}",
             ExpenseCategory = ExpenseCategory.Needs,
             AccountId = account.Id,
             Account = account,
             TagId = reconciliationTag.Id,
             Tag = reconciliationTag
         };
-        var expenseLog = new ExpenseLog
-        {
-            Expense = expense,
-            Account = account,
-            AccountId = account.Id,
-            Amount = source.Amount,
-            DeductedOn = _todayProvider().Date,
-            Notes = $"Resolved debt from income #{source.Id}",
-            IsForDeletion = false
-        };
-
-        await _appData.AddExpenseAsync(expense, cancellationToken);
-        await _appData.AddExpenseLogAsync(expenseLog, cancellationToken);
+        await _appData.AddTransactionAsync(expense, cancellationToken);
         ApplyExpenseToAccount(account, source.Amount);
 
         source.IsIoU = false;
-        _appData.UpdateIncomeLog(source);
+        _appData.UpdateTransaction(source);
         _appData.UpdateAccount(account);
 
         await _appData.SaveChangesAsync(cancellationToken);
 
         RecordResolutionActions(
-            new AddExpenseLogMemoryAction(ExpenseLogMemorySnapshot.Create(expenseLog)),
-            new EditIncomeLogMemoryAction(beforeSnapshot, IncomeLogMemorySnapshot.Create(source)));
+            new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(expense)),
+            new EditTransactionMemoryAction(beforeSnapshot, TransactionMemorySnapshot.Create(source)));
 
         await ReloadAfterResolveAsync(cancellationToken);
         return SettingsOperationResult.Success();

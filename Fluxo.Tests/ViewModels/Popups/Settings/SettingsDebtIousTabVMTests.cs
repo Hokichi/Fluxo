@@ -24,30 +24,29 @@ public sealed class SettingsIoUsTabVMTests
         var account = new Account { Id = 10, Name = "Checking", AccountType = AccountType.Checking };
         var appData = CreateAppData(
             [
-                new ExpenseLog
+                new Transaction
                 {
                     Id = 1,
+                    Type = TransactionType.Expense,
+                    Name = "Lunch lend",
                     Amount = 25m,
-                    DeductedOn = new DateTime(2026, 6, 20),
+                    OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
-                    AccountId = account.Id,
-                    Expense = new Expense { Id = 2, Name = "Lunch lend", IsIoU = true }
-                }
-            ],
-            [
-                new IncomeLog
+                    AccountId = account.Id
+                },
+                new Transaction
                 {
                     Id = 3,
+                    Type = TransactionType.Income,
                     Name = "Advance",
                     Amount = 40m,
-                    AddedOn = new DateTime(2026, 6, 20),
+                    OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
                     AccountId = account.Id
                 }
-            ],
-            [],
+            ], [],
             [account]);
         var vm = CreateVm(appData);
 
@@ -64,30 +63,29 @@ public sealed class SettingsIoUsTabVMTests
         var account = new Account { Id = 10, Name = "Checking", AccountType = AccountType.Checking };
         var appData = CreateAppData(
             [
-                new ExpenseLog
+                new Transaction
                 {
                     Id = 1,
+                    Type = TransactionType.Expense,
+                    Name = "Lunch lend",
                     Amount = 25m,
-                    DeductedOn = new DateTime(2026, 6, 20),
+                    OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
-                    AccountId = account.Id,
-                    Expense = new Expense { Id = 2, Name = "Lunch lend", IsIoU = true }
-                }
-            ],
-            [
-                new IncomeLog
+                    AccountId = account.Id
+                },
+                new Transaction
                 {
                     Id = 3,
+                    Type = TransactionType.Income,
                     Name = "Advance",
                     Amount = 40m,
-                    AddedOn = new DateTime(2026, 6, 20),
+                    OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
                     AccountId = account.Id
                 }
-            ],
-            [],
+            ], [],
             [account]);
         var vm = CreateVm(appData);
 
@@ -106,43 +104,37 @@ public sealed class SettingsIoUsTabVMTests
             AccountType = AccountType.Checking,
             Balance = 100m
         };
-        var expense = new Expense
-        {
-            Id = 2,
-            Name = "Lunch lend",
-            IsIoU = true,
-            ExpenseCategory = ExpenseCategory.Needs,
-            Tag = new Tag { Id = 20, Name = "Food", HexCode = "#22C55E" }
-        };
-        var log = new ExpenseLog
+        var transaction = new Transaction
         {
             Id = 1,
+            Type = TransactionType.Expense,
+            Name = "Lunch lend",
             Amount = 25m,
             IsIoU = true,
             Account = account,
             AccountId = account.Id,
-            Expense = expense,
+            ExpenseCategory = ExpenseCategory.Needs,
+            Tag = new Tag { Id = 20, Name = "Food", HexCode = "#22C55E" },
             Notes = string.Empty
         };
-        var appData = CreateAppData([log], [], [], [account]);
+        var appData = CreateAppData([transaction], [], [account]);
         var vm = CreateVm(appData);
         await vm.LoadAsync();
 
         var result = await vm.ResolveAsync(vm.Items.Single());
 
         Assert.True(result.IsSuccess, result.ErrorMessage);
-        Assert.False(log.IsIoU);
-        Assert.False(expense.IsIoU);
+        Assert.False(transaction.IsIoU);
         Assert.Equal(125m, account.Balance);
-        _ = appData.Received(1).AddIncomeLogAsync(
-            Arg.Is<IncomeLog>(income =>
+        _ = appData.Received(1).AddTransactionAsync(
+            Arg.Is<Transaction>(income =>
+                income.Type == TransactionType.Income &&
                 income.Amount == 25m &&
                 income.AccountId == 10 &&
                 !income.IsIoU &&
                 income.Name == "Lunch lend - IOU resolved"),
             Arg.Any<CancellationToken>());
-        appData.Received(1).UpdateExpense(expense);
-        appData.Received(1).UpdateExpenseLog(log);
+        appData.Received(1).UpdateTransaction(transaction);
         appData.Received(1).UpdateAccount(account);
     }
 
@@ -156,9 +148,10 @@ public sealed class SettingsIoUsTabVMTests
             AccountType = AccountType.Checking,
             Balance = 100m
         };
-        var income = new IncomeLog
+        var income = new Transaction
         {
             Id = 3,
+            Type = TransactionType.Income,
             Name = "Advance",
             Amount = 40m,
             IsIoU = true,
@@ -167,7 +160,7 @@ public sealed class SettingsIoUsTabVMTests
             Notes = string.Empty
         };
         var tags = new List<Tag>();
-        var appData = CreateAppData([], [income], tags, [account]);
+        var appData = CreateAppData([income], tags, [account]);
         var vm = CreateVm(appData);
         await vm.LoadAsync();
 
@@ -182,16 +175,15 @@ public sealed class SettingsIoUsTabVMTests
                 tag.HexCode == SystemTags.BudgetReconciliationHexCode &&
                 tag.IsSystemTag),
             Arg.Any<CancellationToken>());
-        _ = appData.Received(1).AddExpenseAsync(
-            Arg.Is<Expense>(expense =>
+        _ = appData.Received(1).AddTransactionAsync(
+            Arg.Is<Transaction>(expense =>
+                expense.Type == TransactionType.Expense &&
                 expense.Amount == 40m &&
                 expense.ExpenseCategory == ExpenseCategory.Needs &&
-                expense.Tag.Name == SystemTags.BudgetReconciliationName),
+                expense.Tag!.Name == SystemTags.BudgetReconciliationName &&
+                expense.AccountId == 10),
             Arg.Any<CancellationToken>());
-        _ = appData.Received(1).AddExpenseLogAsync(
-            Arg.Is<ExpenseLog>(log => log.Amount == 40m && log.AccountId == 10),
-            Arg.Any<CancellationToken>());
-        appData.Received(1).UpdateIncomeLog(income);
+        appData.Received(1).UpdateTransaction(income);
         appData.Received(1).UpdateAccount(account);
     }
 
@@ -207,34 +199,29 @@ public sealed class SettingsIoUsTabVMTests
     }
 
     private static IAppDataService CreateAppData(
-        List<ExpenseLog> expenseLogs,
-        List<IncomeLog> incomeLogs,
+        List<Transaction> transactions,
         List<Tag> tags,
         List<Account> accounts)
     {
         var appData = Substitute.For<IAppDataService>();
         var nextId = 1000;
 
-        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<ExpenseLog>>(expenseLogs));
-        appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult<IReadOnlyList<IncomeLog>>(incomeLogs));
+        appData.GetTransactionsAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IReadOnlyList<Transaction>>(transactions));
         appData.GetTagsAsync(Arg.Any<CancellationToken>())
             .Returns(_ => Task.FromResult<IReadOnlyList<Tag>>(tags));
-        appData.GetExpenseLogByLogIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(call => Task.FromResult<ExpenseLog?>(expenseLogs.SingleOrDefault(log => log.Id == call.ArgAt<int>(0))));
-        appData.GetIncomeLogByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(call => Task.FromResult<IncomeLog?>(incomeLogs.SingleOrDefault(log => log.Id == call.ArgAt<int>(0))));
+        appData.GetTransactionByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(call => Task.FromResult<Transaction?>(transactions.SingleOrDefault(transaction => transaction.Id == call.ArgAt<int>(0))));
         appData.GetAccountByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(call => Task.FromResult<Account?>(accounts.SingleOrDefault(account => account.Id == call.ArgAt<int>(0))));
 
-        appData.AddIncomeLogAsync(Arg.Any<IncomeLog>(), Arg.Any<CancellationToken>())
+        appData.AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                var log = call.ArgAt<IncomeLog>(0);
-                if (log.Id <= 0)
-                    log.Id = nextId++;
-                incomeLogs.Add(log);
+                var transaction = call.ArgAt<Transaction>(0);
+                if (transaction.Id <= 0)
+                    transaction.Id = nextId++;
+                transactions.Add(transaction);
                 return Task.CompletedTask;
             });
         appData.AddTagAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>())
@@ -244,23 +231,6 @@ public sealed class SettingsIoUsTabVMTests
                 if (tag.Id <= 0)
                     tag.Id = nextId++;
                 tags.Add(tag);
-                return Task.CompletedTask;
-            });
-        appData.AddExpenseAsync(Arg.Any<Expense>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                var expense = call.ArgAt<Expense>(0);
-                if (expense.Id <= 0)
-                    expense.Id = nextId++;
-                return Task.CompletedTask;
-            });
-        appData.AddExpenseLogAsync(Arg.Any<ExpenseLog>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                var log = call.ArgAt<ExpenseLog>(0);
-                if (log.Id <= 0)
-                    log.Id = nextId++;
-                expenseLogs.Add(log);
                 return Task.CompletedTask;
             });
         appData.SaveChangesAsync(Arg.Any<CancellationToken>())
