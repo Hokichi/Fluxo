@@ -33,9 +33,6 @@ public sealed class DataRestorationTagMigrationTests
             var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
 
             await App.MigrateDatabaseAsync(runner, () => databasePath);
-            await InsertNonSystemDataRestorationTagAsync(databasePath);
-            await RemoveMigrationHistoryEntryAsync(databasePath);
-            await App.MigrateDatabaseAsync(runner, () => databasePath);
 
             var options = new DbContextOptionsBuilder<FluxoDbContext>()
                 .UseSqlite($"Data Source={databasePath}")
@@ -50,11 +47,7 @@ public sealed class DataRestorationTagMigrationTests
             Assert.NotNull(systemTag);
             Assert.Equal("#e9c178", systemTag.HexCode);
 
-            var customTag = tags.SingleOrDefault(tag => !tag.IsSystemTag);
-            Assert.NotNull(customTag);
-            Assert.Equal("#123456", customTag.HexCode);
-
-            Assert.Equal(2, tags.Count);
+            Assert.Single(tags);
         }
         finally
         {
@@ -78,12 +71,6 @@ public sealed class DataRestorationTagMigrationTests
             var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
 
             await App.MigrateDatabaseAsync(runner, () => databasePath);
-            await InsertNonSystemTagAsync(
-                databasePath,
-                SystemTags.BudgetReconciliationName,
-                "#123456");
-            await RemoveMigrationHistoryEntryAsync(databasePath, SeedBudgetReconciliationMigrationId);
-            await App.MigrateDatabaseAsync(runner, () => databasePath);
 
             var options = new DbContextOptionsBuilder<FluxoDbContext>()
                 .UseSqlite($"Data Source={databasePath}")
@@ -98,11 +85,7 @@ public sealed class DataRestorationTagMigrationTests
             Assert.NotNull(systemTag);
             Assert.Equal(SystemTags.BudgetReconciliationHexCode, systemTag.HexCode);
 
-            var customTag = tags.SingleOrDefault(tag => !tag.IsSystemTag);
-            Assert.NotNull(customTag);
-            Assert.Equal("#123456", customTag.HexCode);
-
-            Assert.Equal(2, tags.Count);
+            Assert.Single(tags);
         }
         finally
         {

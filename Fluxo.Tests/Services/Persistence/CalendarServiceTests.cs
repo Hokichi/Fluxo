@@ -77,6 +77,26 @@ public sealed class CalendarServiceTests
                 Amount = 200m,
                 OccurredOn = new DateTime(2026, 6, 13, 1, 0, 0),
                 Account = new Account { Name = "Checking" }
+            },
+            new Transaction
+            {
+                Id = 11,
+                Type = TransactionType.Expense,
+                Name = "Excluded expense",
+                Amount = 30m,
+                OccurredOn = new DateTime(2026, 6, 12, 15, 0, 0),
+                IsExcludedFromBudget = true,
+                Account = new Account { Name = "Checking" }
+            },
+            new Transaction
+            {
+                Id = 12,
+                Type = TransactionType.Income,
+                Name = "Excluded income",
+                Amount = 100m,
+                OccurredOn = new DateTime(2026, 6, 12, 16, 0, 0),
+                IsExcludedFromBudget = true,
+                Account = new Account { Name = "Checking" }
             }
         ]);
 
@@ -115,10 +135,10 @@ public sealed class CalendarServiceTests
         Assert.Equal(selected, result.Date);
         Assert.Equal(74m, result.TotalSpent);
         Assert.Equal(450m, result.TotalEarned);
-        Assert.Single(result.Expenses);
-        Assert.Equal("Groceries", result.Expenses[0].Name);
-        Assert.Single(result.Incomes);
-        Assert.Equal("Freelance", result.Incomes[0].Name);
+        Assert.Equal(2, result.Expenses.Count);
+        Assert.Contains(result.Expenses, item => item.Name == "Groceries");
+        Assert.Equal(2, result.Incomes.Count);
+        Assert.Contains(result.Incomes, item => item.Name == "Freelance");
         Assert.Single(result.GoalDeadlines);
         Assert.Equal("Vacation", result.GoalDeadlines[0].Name);
         Assert.Single(result.RecurringTransactions);

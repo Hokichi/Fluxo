@@ -34,39 +34,18 @@ public sealed class ModelSchemaTests
         Assert.Equal("NUMERIC", tag.FindProperty(nameof(Tag.SpendingLimit))!.GetColumnType());
         Assert.True(tag.FindProperty(nameof(Tag.SpendingLimit))!.IsNullable);
 
-        var expense = model.FindEntityType(typeof(Expense))!;
-        Assert.False(expense.FindProperty(nameof(Expense.IsIoU))!.IsNullable);
-        Assert.Equal(false, expense.FindProperty(nameof(Expense.IsIoU))!.GetDefaultValue());
-
-        var expenseLog = model.FindEntityType(typeof(ExpenseLog))!;
-        Assert.False(expenseLog.FindProperty(nameof(ExpenseLog.IsIoU))!.IsNullable);
-        Assert.Equal(false, expenseLog.FindProperty(nameof(ExpenseLog.IsIoU))!.GetDefaultValue());
-        Assert.False(expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.IsNullable);
-        Assert.Equal(false, expenseLog.FindProperty(nameof(ExpenseLog.IsPinned))!.GetDefaultValue());
-        var parentLogId = expenseLog.FindProperty(nameof(ExpenseLog.ParentLogId));
-        Assert.NotNull(parentLogId);
-        Assert.True(parentLogId!.IsNullable);
-        Assert.Contains(expenseLog.GetForeignKeys(), foreignKey =>
-            foreignKey.Properties.Any(property => property.Name == nameof(ExpenseLog.ParentLogId)) &&
-            foreignKey.PrincipalEntityType.ClrType == typeof(ExpenseLog) &&
-            foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
-        var parentLogNavigation = expenseLog.FindNavigation(nameof(ExpenseLog.ParentLog));
-        Assert.NotNull(parentLogNavigation);
-        Assert.False(parentLogNavigation!.IsEagerLoaded);
-        Assert.True(expenseLog.FindNavigation(nameof(ExpenseLog.Expense))!.IsEagerLoaded);
-        Assert.True(expenseLog.FindNavigation(nameof(ExpenseLog.Account))!.IsEagerLoaded);
-
-        var incomeLog = model.FindEntityType(typeof(IncomeLog))!;
-        Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsIoU))!.IsNullable);
-        Assert.Equal(false, incomeLog.FindProperty(nameof(IncomeLog.IsIoU))!.GetDefaultValue());
-        Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsForDeletion))!.IsNullable);
-        Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.IsNullable);
-        Assert.Equal(false, incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.GetDefaultValue());
-
         var transaction = model.FindEntityType(typeof(Transaction))!;
         Assert.Equal("Transactions", transaction.GetTableName());
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsIoU))!.GetDefaultValue());
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsExcludedFromBudget))!.GetDefaultValue());
+        Assert.True(transaction.FindProperty(nameof(Transaction.ParentTransactionId))!.IsNullable);
+        Assert.Contains(transaction.GetForeignKeys(), foreignKey =>
+            foreignKey.Properties.Any(property => property.Name == nameof(Transaction.ParentTransactionId)) &&
+            foreignKey.PrincipalEntityType.ClrType == typeof(Transaction) &&
+            foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
+        Assert.Null(model.FindEntityType(typeof(Expense)));
+        Assert.Null(model.FindEntityType(typeof(ExpenseLog)));
+        Assert.Null(model.FindEntityType(typeof(IncomeLog)));
 
         var savingGoal = model.FindEntityType(typeof(SavingGoal))!;
         Assert.True(savingGoal.FindProperty(nameof(SavingGoal.SavingEndDate))!.IsNullable);

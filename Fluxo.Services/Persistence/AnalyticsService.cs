@@ -27,6 +27,7 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
             var expenseInPeriod = transactions
                 .Where(transaction => transaction.Type == TransactionType.Expense &&
                               !transaction.IsForDeletion &&
+                              !transaction.IsExcludedFromBudget &&
                               transaction.ParentTransactionId is null &&
                               transaction.OccurredOn >= fromDate &&
                               transaction.OccurredOn <= toDate)
@@ -34,6 +35,8 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
 
             var incomeInPeriod = transactions
                 .Where(transaction => transaction.Type == TransactionType.Income &&
+                                      !transaction.IsForDeletion &&
+                                      !transaction.IsExcludedFromBudget &&
                                       transaction.OccurredOn >= fromDate && transaction.OccurredOn <= toDate)
                 .ToList();
 

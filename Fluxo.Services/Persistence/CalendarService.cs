@@ -73,8 +73,19 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
 
             return new CalendarDto(
                 date,
-                expenses.Sum(item => item.Amount),
-                incomes.Sum(item => item.Amount),
+                transactions.Where(transaction =>
+                        transaction.Type == TransactionType.Expense &&
+                        !transaction.IsForDeletion &&
+                        !transaction.IsExcludedFromBudget &&
+                        transaction.ParentTransactionId is null &&
+                        transaction.OccurredOn.Date == selectedDate)
+                    .Sum(transaction => transaction.Amount),
+                transactions.Where(transaction =>
+                        transaction.Type == TransactionType.Income &&
+                        !transaction.IsForDeletion &&
+                        !transaction.IsExcludedFromBudget &&
+                        transaction.OccurredOn.Date == selectedDate)
+                    .Sum(transaction => transaction.Amount),
                 expenses,
                 incomes,
                 goalDeadlines,
