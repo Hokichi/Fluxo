@@ -25,9 +25,8 @@ public sealed class UserBackupServiceExportTests
             .Returns([new Account { Id = 7, Name = "Wallet", AccountType = AccountType.Cash }]);
         appData.GetTagsAsync(Arg.Any<CancellationToken>())
             .Returns([new Tag { Id = 3, Name = "Food", HexCode = "#ffffff" }]);
-        appData.GetExpensesAsync(Arg.Any<CancellationToken>())
-            .Returns([new Expense { Id = 9, AccountId = 7, TagId = 3, Name = "Lunch" }]);
-        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([]);
+        appData.GetTransactionsAsync(Arg.Any<CancellationToken>())
+            .Returns([new Transaction { Id = 9, Type = TransactionType.Expense, AccountId = 7, TagId = 3, Name = "Lunch" }]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         var service = new UserBackupService(appData);
@@ -48,7 +47,7 @@ public sealed class UserBackupServiceExportTests
             var dataRestorationTag = Assert.Single(document.Entities.Tags, tag => tag.Name == "Data Restoration");
             Assert.Equal("#e9c178", dataRestorationTag.HexCode);
 
-            var expense = Assert.Single(document.Entities.Expenses);
+            var expense = Assert.Single(document.Entities.Transactions);
             Assert.Equal(dataRestorationTag.BackupId, expense.TagBackupId);
         }
         finally
@@ -96,9 +95,10 @@ public sealed class UserBackupServiceExportTests
         var appData = Substitute.For<IAppDataService>();
         var account = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking };
         var tag = new Tag { Id = 3, Name = "Food", HexCode = "#ffffff" };
-        var parentExpense = new Expense
+        var parentExpense = new Transaction
         {
             Id = 20,
+            Type = TransactionType.Expense,
             AccountId = account.Id,
             TagId = tag.Id,
             Name = "Dinner",
@@ -106,9 +106,10 @@ public sealed class UserBackupServiceExportTests
             Tag = tag,
             Account = account
         };
-        var childExpense = new Expense
+        var childExpense = new Transaction
         {
             Id = 21,
+            Type = TransactionType.Expense,
             AccountId = account.Id,
             TagId = tag.Id,
             Name = "Tip",
@@ -116,32 +117,11 @@ public sealed class UserBackupServiceExportTests
             Tag = tag,
             Account = account
         };
-        var parentLog = new ExpenseLog
-        {
-            Id = 10,
-            ExpenseId = parentExpense.Id,
-            AccountId = account.Id,
-            Expense = parentExpense,
-            Account = account,
-            Amount = 100m,
-            Notes = string.Empty
-        };
-        var childLog = new ExpenseLog
-        {
-            Id = 11,
-            ParentLogId = parentLog.Id,
-            ExpenseId = childExpense.Id,
-            AccountId = account.Id,
-            Expense = childExpense,
-            Account = account,
-            Amount = 20m,
-            Notes = string.Empty
-        };
+        childExpense.ParentTransactionId = parentExpense.Id;
 
         appData.GetAccountsAsync(Arg.Any<CancellationToken>()).Returns([account]);
         appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
-        appData.GetExpensesAsync(Arg.Any<CancellationToken>()).Returns([parentExpense, childExpense]);
-        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([parentLog, childLog]);
+        appData.GetTransactionsAsync(Arg.Any<CancellationToken>()).Returns([parentExpense, childExpense]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         var service = new UserBackupService(appData);
@@ -160,8 +140,8 @@ public sealed class UserBackupServiceExportTests
             var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
             Assert.NotNull(document);
 
-            var exportedChild = Assert.Single(document.Entities.ExpenseLogs, log => log.BackupId == 2);
-            Assert.Equal(1, exportedChild.ParentLogBackupId);
+            var exportedChild = Assert.Single(document.Entities.Transactions, transaction => transaction.BackupId == 2);
+            Assert.Equal(1, exportedChild.ParentTransactionBackupId);
         }
         finally
         {
@@ -176,9 +156,10 @@ public sealed class UserBackupServiceExportTests
         var appData = Substitute.For<IAppDataService>();
         var account = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking };
         var tag = new Tag { Id = 3, Name = "Food", HexCode = "#ffffff" };
-        var expense = new Expense
+        var expense = new Transaction
         {
             Id = 20,
+            Type = TransactionType.Expense,
             AccountId = account.Id,
             TagId = tag.Id,
             Name = "Loan",
@@ -187,20 +168,10 @@ public sealed class UserBackupServiceExportTests
             Account = account,
             IsIoU = true
         };
-        var expenseLog = new ExpenseLog
-        {
-            Id = 10,
-            ExpenseId = expense.Id,
-            AccountId = account.Id,
-            Expense = expense,
-            Account = account,
-            Amount = 100m,
-            Notes = string.Empty,
-            IsIoU = true
-        };
-        var incomeLog = new IncomeLog
+        var incomeLog = new Transaction
         {
             Id = 11,
+            Type = TransactionType.Income,
             AccountId = account.Id,
             Account = account,
             Name = "Borrowed cash",
@@ -211,9 +182,7 @@ public sealed class UserBackupServiceExportTests
 
         appData.GetAccountsAsync(Arg.Any<CancellationToken>()).Returns([account]);
         appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns([tag]);
-        appData.GetExpensesAsync(Arg.Any<CancellationToken>()).Returns([expense]);
-        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>()).Returns([expenseLog]);
-        appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>()).Returns([incomeLog]);
+        appData.GetTransactionsAsync(Arg.Any<CancellationToken>()).Returns([expense, incomeLog]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         var service = new UserBackupService(appData);
@@ -233,9 +202,7 @@ public sealed class UserBackupServiceExportTests
             var document = JsonSerializer.Deserialize<FluxoUserBackupDocument>(json, BackupJsonOptions);
             Assert.NotNull(document);
 
-            Assert.True(Assert.Single(document.Entities.Expenses).IsIoU);
-            Assert.True(Assert.Single(document.Entities.ExpenseLogs).IsIoU);
-            Assert.True(Assert.Single(document.Entities.IncomeLogs).IsIoU);
+            Assert.All(document.Entities.Transactions, transaction => Assert.True(transaction.IsIoU));
         }
         finally
         {
@@ -343,7 +310,7 @@ public sealed class UserBackupServiceExportTests
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "createdAt": "2026-05-26T00:00:00Z",
           "includedEntities": [ "expenses", "accounts" ],
           "entities": {}

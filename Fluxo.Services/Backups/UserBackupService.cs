@@ -515,7 +515,19 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         CancellationToken cancellationToken)
     {
         if (!selection.Includes(DataManagementEntityKind.Tags))
+        {
+            if (selection.Includes(DataManagementEntityKind.Expenses) ||
+                selection.Includes(DataManagementEntityKind.RecurringTransactions))
+            {
+                var availableTags = await appData.GetTagsAsync(cancellationToken);
+                var availableTagsByName = availableTags.ToDictionary(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
+                var restorationTagId = await EnsureDataRestorationTagIdAsync(availableTagsByName, cancellationToken);
+                foreach (var backupTag in document.Entities.Tags)
+                    tagIdMap[backupTag.BackupId] = restorationTagId;
+            }
+
             return;
+        }
 
         var existingTags = await appData.GetTagsAsync(cancellationToken);
         var existingByName = existingTags.ToDictionary(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
@@ -1040,7 +1052,9 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
             int? tagBackupId = transaction.TagId is { } tagId && tagBackupIds.TryGetValue(tagId, out var mappedTagId)
                 ? mappedTagId
-                : null;
+                : transaction.Type == TransactionType.Expense && tagBackupIds.TryGetValue(-1, out var restorationTagId)
+                    ? restorationTagId
+                    : null;
             int? parentBackupId = transaction.ParentTransactionId is { } parentId && backupIds.TryGetValue(parentId, out var mappedParentId)
                 ? mappedParentId
                 : null;

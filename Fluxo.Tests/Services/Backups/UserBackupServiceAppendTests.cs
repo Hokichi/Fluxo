@@ -51,7 +51,7 @@ public sealed class UserBackupServiceAppendTests
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "createdAt": "2026-05-26T00:00:00Z",
           "includedEntities": [ "accounts", "goals", "tags" ],
           "entities": {
@@ -101,11 +101,11 @@ public sealed class UserBackupServiceAppendTests
                 return Task.CompletedTask;
             });
 
-        var appendedExpenses = new List<Expense>();
-        appData.AddExpenseAsync(Arg.Any<Expense>(), Arg.Any<CancellationToken>())
+        var appendedExpenses = new List<Transaction>();
+        appData.AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                var expense = call.Arg<Expense>();
+                var expense = call.Arg<Transaction>();
                 expense.Id = 100;
                 appendedExpenses.Add(expense);
                 return Task.CompletedTask;
@@ -129,7 +129,7 @@ public sealed class UserBackupServiceAppendTests
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "createdAt": "2026-05-26T00:00:00Z",
           "includedEntities": [ "accounts", "expenses", "recurringTransactions", "tags" ],
           "entities": {
@@ -139,10 +139,9 @@ public sealed class UserBackupServiceAppendTests
             "tags": [
               { "backupId": 2, "name": "Missing Tag", "hexCode": "#123456", "isSystemTag": false }
             ],
-            "expenses": [
-              { "backupId": 3, "accountBackupId": 1, "tagBackupId": 2, "name": "Lunch", "amount": 10, "expenseCategory": "Needs" }
+            "transactions": [
+              { "backupId": 3, "type": "Expense", "accountBackupId": 1, "tagBackupId": 2, "name": "Lunch", "amount": 10, "occurredOn": "2026-05-26T00:00:00Z", "notes": "", "expenseCategory": "Needs", "isPinned": false, "isForDeletion": false, "isIoU": false, "isExcludedFromBudget": false }
             ],
-            "expenseLogs": [],
             "recurringTransactions": [
               { "backupId": 4, "name": "Gym", "amount": 40, "recurringPeriod": "Monthly", "recurringTime": 1, "type": "Expense", "sourceBackupId": 1, "tagBackupId": 2, "goalBackupId": null, "isEnabled": true }
             ]
@@ -195,7 +194,7 @@ public sealed class UserBackupServiceAppendTests
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "createdAt": "2026-05-26T00:00:00Z",
           "includedEntities": [ "tags" ],
           "entities": {
@@ -228,7 +227,7 @@ public sealed class UserBackupServiceAppendTests
     }
 
     [Fact]
-    public async Task AppendAsync_WithLegacyShowOnUiBackup_RestoresPinnedOnUi()
+    public async Task AppendAsync_WithLegacySchema_ReturnsFailure()
     {
         var appData = Substitute.For<IAppDataService>();
         appData.GetAccountsAsync(Arg.Any<CancellationToken>())
@@ -282,8 +281,9 @@ public sealed class UserBackupServiceAppendTests
                 }),
                 new Dictionary<string, DataManagementConflictDecision>());
 
-            Assert.True(result.IsSuccess, result.ErrorMessage);
-            Assert.True(Assert.Single(appendedSources).PinnedOnUI);
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Unsupported backup schema version 1", result.ErrorMessage);
+            Assert.Empty(appendedSources);
         }
         finally
         {
@@ -301,7 +301,7 @@ public sealed class UserBackupServiceAppendTests
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "createdAt": "2026-05-26T00:00:00Z",
           "includedEntities": [ "userSettings" ],
           "entities": {
@@ -389,7 +389,7 @@ public sealed class UserBackupServiceAppendTests
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(tempFile, """
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "createdAt": "2026-05-26T00:00:00Z",
           "includedEntities": [ "accounts", "goals" ],
           "entities": {
