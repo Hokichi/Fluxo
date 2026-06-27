@@ -138,8 +138,8 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
             ? budgetEffectiveLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
             : budgetEffectiveLogs;
         var visibleIncomeLogs = _selectedRange is { } incomeRange
-            ? _allIncomeLogs.Where(log => log.AddedOn.Date >= incomeRange.From.Date && log.AddedOn.Date <= incomeRange.To.Date)
-            : _allIncomeLogs;
+            ? _allIncomeLogs.Where(log => !log.IsExcludedFromBudget && log.AddedOn.Date >= incomeRange.From.Date && log.AddedOn.Date <= incomeRange.To.Date)
+            : _allIncomeLogs.Where(log => !log.IsExcludedFromBudget);
 
         TotalSpent = visibleExpenseLogs.Sum(log => log.Amount);
         TotalEarned = visibleIncomeLogs.Sum(log => log.Amount);

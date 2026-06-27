@@ -11,6 +11,7 @@ public partial class ExpenseLogVM : ObservableObject
     [ObservableProperty] private bool _isForDeletion;
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _isIoU;
+    [ObservableProperty] private bool _isExcludedFromBudget;
     [ObservableProperty] private string _notes = string.Empty;
     [ObservableProperty] private int? _parentLogId;
     [ObservableProperty] private AccountVM _account = new();

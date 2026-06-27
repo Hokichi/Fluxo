@@ -15,4 +15,5 @@ public sealed class ExpenseLog
     public bool IsForDeletion { get; set; }
     public bool IsPinned { get; set; }
     public bool IsIoU { get; set; }
+    public bool IsExcludedFromBudget { get; set; }
 }

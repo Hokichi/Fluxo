@@ -7,7 +7,7 @@ internal static class BudgetEffectiveExpenseLogFilter
     public static List<ExpenseLogVM> SelectBudgetEffectiveLogs(IEnumerable<ExpenseLogVM> expenseLogs)
     {
         var activeLogs = expenseLogs
-            .Where(log => !log.IsForDeletion)
+            .Where(log => !log.IsForDeletion && !log.IsExcludedFromBudget)
             .ToList();
         var parentLogIds = BuildParentLogIds(activeLogs);
 
@@ -18,13 +18,15 @@ internal static class BudgetEffectiveExpenseLogFilter
 
     public static bool IsBudgetEffectiveLog(ExpenseLogVM expenseLog, IReadOnlySet<int> parentLogIds)
     {
-        return !expenseLog.IsForDeletion && !parentLogIds.Contains(expenseLog.Id);
+        return !expenseLog.IsForDeletion &&
+               !expenseLog.IsExcludedFromBudget &&
+               !parentLogIds.Contains(expenseLog.Id);
     }
 
     public static HashSet<int> BuildParentLogIds(IEnumerable<ExpenseLogVM> expenseLogs)
     {
         return expenseLogs
-            .Where(log => !log.IsForDeletion)
+            .Where(log => !log.IsForDeletion && !log.IsExcludedFromBudget)
             .Select(log => log.ParentLogId)
             .Where(parentLogId => parentLogId is > 0)
             .Select(parentLogId => parentLogId!.Value)

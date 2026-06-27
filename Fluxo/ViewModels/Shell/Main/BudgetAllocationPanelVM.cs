@@ -830,10 +830,11 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     private IEnumerable<IncomeLogVM> EnumerateVisibleIncomeLogs()
     {
+        var included = _allIncomeLogs.Where(log => !log.IsExcludedFromBudget);
         if (_selectedRange is not { } range)
-            return _allIncomeLogs;
+            return included;
 
-        return _allIncomeLogs.Where(log => log.AddedOn.Date >= range.From.Date && log.AddedOn.Date <= range.To.Date);
+        return included.Where(log => log.AddedOn.Date >= range.From.Date && log.AddedOn.Date <= range.To.Date);
     }
 
     private void ApplyBalanceImpactsFromAction(CoreILogMemoryAction action, LogMemoryApplyDirection direction)

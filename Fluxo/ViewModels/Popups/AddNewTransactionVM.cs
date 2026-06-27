@@ -495,6 +495,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         NameText = draft.Name;
         NoteText = draft.Note;
         IsIoU = draft.IsIoU;
+        IsExcludedFromBudget = draft.IsExcludedFromBudget;
         SelectedDate = draft.Date.Date;
         SelectedExpenseCategory = draft.Category ?? ExpenseCategory.Needs;
         SelectedAccount = draft.AccountId is null
@@ -777,7 +778,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Notes = $"Goal update for {goal.Name}",
                     IsForDeletion = false,
                     AccountId = account.Id,
-                    IsPinned = false
+                    IsPinned = false,
+                    IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
                 goal.CurrentAmount += input.Amount;
@@ -835,7 +837,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     IsForDeletion = false,
                     AccountId = account.Id,
                     IsPinned = input.IsPinned,
-                    IsIoU = input.IsIoU
+                    IsIoU = input.IsIoU,
+                    IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
                 await _appData.AddExpenseAsync(expense);
@@ -870,7 +873,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Notes = input.Note,
                     AccountId = account.Id,
                     IsPinned = input.IsPinned,
-                    IsIoU = input.IsIoU
+                    IsIoU = input.IsIoU,
+                    IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
                 await _appData.AddIncomeLogAsync(incomeLog);
@@ -968,6 +972,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         IsRecurring = false;
         IsPinned = false;
         IsIoU = false;
+        IsExcludedFromBudget = false;
         IsRecurringModeLocked = false;
         _isTransactionTypeLocked = false;
         SetPopupPurpose(TransactionPopupPurpose.AddNewTransaction);
@@ -1056,6 +1061,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsInstallments,
             IsPinned,
             IsIoU,
+            IsExcludedFromBudget,
             _editingRecurringTransactionId,
             SelectedRecurringPeriod,
             NameText.Trim(),
@@ -1695,6 +1701,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsInstallments,
             IsPinned,
             IsIoU,
+            IsExcludedFromBudget,
             SelectedRecurringPeriod,
             NameText ?? string.Empty,
             AmountText,
@@ -2153,7 +2160,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         int? TagId,
         bool IsGoal = false,
         int? GoalId = null,
-        bool IsIoU = false);
+        bool IsIoU = false,
+        bool IsExcludedFromBudget = false);
 
     public readonly record struct RecurringDraftSaveInput(
         int? EditingRecurringTransactionId,
@@ -2186,6 +2194,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsInstallments,
         bool IsPinned,
         bool IsIoU,
+        bool IsExcludedFromBudget,
         int? EditingRecurringTransactionId,
         RecurringPeriod RecurringPeriod,
         string Name,
@@ -2206,6 +2215,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsInstallments,
         bool IsPinned,
         bool IsIoU,
+        bool IsExcludedFromBudget,
         RecurringPeriod SelectedRecurringPeriod,
         string NameText,
         decimal AmountText,

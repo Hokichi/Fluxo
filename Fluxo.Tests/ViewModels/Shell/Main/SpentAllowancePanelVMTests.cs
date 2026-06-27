@@ -116,6 +116,24 @@ public sealed class SpentAllowancePanelVMTests
     }
 
     [Fact]
+    public async Task LoadAsync_BudgetTotalsExcludeFlaggedExpensesAndIncome()
+    {
+        var day = new DateTime(2026, 6, 12);
+        var vm = CreateVm(
+            new WeakReferenceMessenger(),
+            [CreateExpenseLog(1, 75m, day), CreateExpenseLog(2, 40m, day, isExcludedFromBudget: true)],
+            [CreateCheckingSource(balance: 1_000m)],
+            incomeLogs:
+            [CreateIncomeLog(1, 125m, day), CreateIncomeLog(2, 20m, day, isExcludedFromBudget: true)]);
+
+        await vm.LoadAsync();
+
+        Assert.Equal(75m, vm.TotalSpent);
+        Assert.Equal(125m, vm.TotalEarned);
+        Assert.Equal(50m, vm.Net);
+    }
+
+    [Fact]
     public async Task LoadAsync_TotalSpent_ExcludesSplitParentLogsAndIncludesChildExpenseLogs()
     {
         var messenger = new WeakReferenceMessenger();
@@ -193,12 +211,18 @@ public sealed class SpentAllowancePanelVMTests
         };
     }
 
-    private static ExpenseLogVM CreateExpenseLog(int id, decimal amount, DateTime deductedOn, int? parentLogId = null)
+    private static ExpenseLogVM CreateExpenseLog(
+        int id,
+        decimal amount,
+        DateTime deductedOn,
+        int? parentLogId = null,
+        bool isExcludedFromBudget = false)
     {
         return new ExpenseLogVM
         {
             Id = id,
             ParentLogId = parentLogId,
+            IsExcludedFromBudget = isExcludedFromBudget,
             Amount = amount,
             DeductedOn = deductedOn,
             Expense = new ExpenseVM
@@ -212,7 +236,7 @@ public sealed class SpentAllowancePanelVMTests
         };
     }
 
-    private static IncomeLog CreateIncomeLog(int id, decimal amount, DateTime addedOn)
+    private static IncomeLog CreateIncomeLog(int id, decimal amount, DateTime addedOn, bool isExcludedFromBudget = false)
     {
         return new IncomeLog
         {
@@ -222,6 +246,7 @@ public sealed class SpentAllowancePanelVMTests
             AddedOn = addedOn,
             Notes = string.Empty,
             AccountId = 1,
+            IsExcludedFromBudget = isExcludedFromBudget,
             Account = new Account()
         };
     }
