@@ -63,6 +63,11 @@ public sealed class ModelSchemaTests
         Assert.False(incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.IsNullable);
         Assert.Equal(false, incomeLog.FindProperty(nameof(IncomeLog.IsPinned))!.GetDefaultValue());
 
+        var transaction = model.FindEntityType(typeof(Transaction))!;
+        Assert.Equal("Transactions", transaction.GetTableName());
+        Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsIoU))!.GetDefaultValue());
+        Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsExcludedFromBudget))!.GetDefaultValue());
+
         var savingGoal = model.FindEntityType(typeof(SavingGoal))!;
         Assert.True(savingGoal.FindProperty(nameof(SavingGoal.SavingEndDate))!.IsNullable);
 

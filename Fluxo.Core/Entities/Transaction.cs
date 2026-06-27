@@ -1,0 +1,24 @@
+using Fluxo.Core.Enums;
+
+namespace Fluxo.Core.Entities;
+
+public sealed class Transaction
+{
+    public int Id { get; set; }
+    public TransactionType Type { get; set; }
+    public int AccountId { get; set; }
+    public Account Account { get; set; } = null!;
+    public string Name { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public DateTime OccurredOn { get; set; }
+    public string Notes { get; set; } = string.Empty;
+    public ExpenseCategory? ExpenseCategory { get; set; }
+    public int? TagId { get; set; }
+    public Tag? Tag { get; set; }
+    public int? ParentTransactionId { get; set; }
+    public Transaction? ParentTransaction { get; set; }
+    public bool IsPinned { get; set; }
+    public bool IsForDeletion { get; set; }
+    public bool IsIoU { get; set; }
+    public bool IsExcludedFromBudget { get; set; }
+}

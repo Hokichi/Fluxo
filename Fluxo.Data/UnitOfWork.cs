@@ -15,13 +15,15 @@ public sealed class UnitOfWork(
     IRecurringTransactionRepository recurringTransactions,
     INotificationRepository notifications,
     IUserSettingsRepository userSettings,
-    IBudgetAllocationRepository budgetAllocation) : IUnitOfWork
+    IBudgetAllocationRepository budgetAllocation,
+    ITransactionRepository? transactions = null) : IUnitOfWork
 {
     private readonly FluxoDbContext _dbContext = dbContext;
 
     public IExpenseRepository Expenses { get; } = expenses;
     public IExpenseLogRepository ExpenseLogs { get; } = expenseLogs;
     public IIncomeLogRepository IncomeLogs { get; } = incomeLogs;
+    public ITransactionRepository Transactions => transactions ?? throw new NotSupportedException();
     public ITagRepository Tags { get; } = tags;
     public ISavingGoalRepository SavingGoals { get; } = savingGoals;
     public IAccountRepository Accounts { get; } = accounts;

@@ -9,6 +9,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<ExpenseLog> ExpenseLogs => Set<ExpenseLog>();
     public DbSet<IncomeLog> IncomeLogs => Set<IncomeLog>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<Account> Accounts => Set<Account>();
@@ -22,6 +23,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureExpense(modelBuilder.Entity<Expense>());
         ConfigureExpenseLog(modelBuilder.Entity<ExpenseLog>());
         ConfigureIncomeLog(modelBuilder.Entity<IncomeLog>());
+        ConfigureTransaction(modelBuilder.Entity<Transaction>());
         ConfigureTag(modelBuilder.Entity<Tag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
         ConfigureAccount(modelBuilder.Entity<Account>());
@@ -200,6 +202,23 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
         entity.Property(settings => settings.Name).IsRequired();
         entity.Property(settings => settings.Value).IsRequired();
+    }
+
+    private static void ConfigureTransaction(EntityTypeBuilder<Transaction> entity)
+    {
+        entity.ToTable("Transactions", table => table.HasCheckConstraint("CK_Transactions_Amount", "Amount >= 0"));
+        entity.HasKey(transaction => transaction.Id);
+        entity.Property(transaction => transaction.Id).ValueGeneratedOnAdd();
+        entity.Property(transaction => transaction.Name).IsRequired();
+        entity.Property(transaction => transaction.Amount).HasColumnType("NUMERIC");
+        entity.Property(transaction => transaction.Notes).IsRequired();
+        entity.Property(transaction => transaction.IsPinned).HasDefaultValue(false);
+        entity.Property(transaction => transaction.IsForDeletion).HasDefaultValue(false);
+        entity.Property(transaction => transaction.IsIoU).HasDefaultValue(false);
+        entity.Property(transaction => transaction.IsExcludedFromBudget).HasDefaultValue(false);
+        entity.HasOne(transaction => transaction.Account).WithMany().HasForeignKey(transaction => transaction.AccountId).OnDelete(DeleteBehavior.Restrict);
+        entity.HasOne(transaction => transaction.Tag).WithMany().HasForeignKey(transaction => transaction.TagId).OnDelete(DeleteBehavior.Restrict);
+        entity.HasOne(transaction => transaction.ParentTransaction).WithMany().HasForeignKey(transaction => transaction.ParentTransactionId).OnDelete(DeleteBehavior.Restrict);
     }
 
     private static void ConfigureBudgetAllocation(EntityTypeBuilder<BudgetAllocation> entity)

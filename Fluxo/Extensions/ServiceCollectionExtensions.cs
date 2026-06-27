@@ -56,6 +56,7 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<IExpenseService, ExpenseService>();
         services.AddTransient<IExpenseLogService, ExpenseLogService>();
+        services.AddTransient<ITransactionService, TransactionService>();
         services.AddTransient<IAccountService, AccountService>();
         services.AddTransient<ITagService, TagService>();
         services.AddTransient<IAnalyticsService, AnalyticsService>();
@@ -95,6 +96,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ExpenseVM>();
         services.AddTransient<ExpenseLogVM>();
         services.AddTransient<IncomeLogVM>();
+        services.AddTransient<TransactionVM>();
         services.AddTransient<TagVM>();
         services.AddTransient<SavingGoalVM>();
         services.AddTransient<AccountVM>();

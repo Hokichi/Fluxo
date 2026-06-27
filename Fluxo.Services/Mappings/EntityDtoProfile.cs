@@ -15,6 +15,7 @@ public sealed class EntityDtoProfile : Profile
             .ForMember(dest => dest.ParentLogId, opt => opt.MapFrom(src => src.ParentLogId));
         CreateMap<Tag, TagDto>().ReverseMap();
         CreateMap<IncomeLog, IncomeLogDto>().ReverseMap();
+        CreateMap<Transaction, TransactionDto>().ReverseMap();
         CreateMap<SavingGoal, SavingGoalDto>().ReverseMap();
         CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap();
         CreateMap<UserSettings, UserSettingsDto>().ReverseMap();

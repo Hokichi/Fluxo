@@ -7,6 +7,7 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IExpenseRepository Expenses { get; }
     IExpenseLogRepository ExpenseLogs { get; }
     IIncomeLogRepository IncomeLogs { get; }
+    ITransactionRepository Transactions => throw new NotSupportedException();
     ITagRepository Tags { get; }
     ISavingGoalRepository SavingGoals { get; }
     IAccountRepository Accounts { get; }

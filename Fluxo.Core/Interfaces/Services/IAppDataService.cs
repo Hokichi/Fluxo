@@ -4,6 +4,12 @@ namespace Fluxo.Core.Interfaces.Services;
 
 public interface IAppDataService
 {
+    Task<IReadOnlyList<Transaction>> GetTransactionsAsync(CancellationToken cancellationToken = default);
+    Task<Transaction?> GetTransactionByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task AddTransactionAsync(Transaction entity, CancellationToken cancellationToken = default);
+    void UpdateTransaction(Transaction entity);
+    void RemoveTransaction(Transaction entity);
+
     Task<IReadOnlyList<Expense>> GetExpensesAsync(CancellationToken cancellationToken = default);
     Task<Expense?> GetExpenseByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Expense?> GetExpenseByExpenseIdAsync(int id, CancellationToken cancellationToken = default);

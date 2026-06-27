@@ -6,6 +6,18 @@ namespace Fluxo.Services.Persistence;
 
 public sealed class AppDataService(IUnitOfWork unitOfWork) : IAppDataService
 {
+    public Task<IReadOnlyList<Transaction>> GetTransactionsAsync(CancellationToken cancellationToken = default) =>
+        unitOfWork.Transactions.GetAllAsync(cancellationToken);
+
+    public Task<Transaction?> GetTransactionByIdAsync(int id, CancellationToken cancellationToken = default) =>
+        unitOfWork.Transactions.GetByIdAsync(id, cancellationToken);
+
+    public Task AddTransactionAsync(Transaction entity, CancellationToken cancellationToken = default) =>
+        unitOfWork.Transactions.AddAsync(entity, cancellationToken);
+
+    public void UpdateTransaction(Transaction entity) => unitOfWork.Transactions.Update(entity);
+    public void RemoveTransaction(Transaction entity) => unitOfWork.Transactions.Remove(entity);
+
     public Task<IReadOnlyList<Expense>> GetExpensesAsync(CancellationToken cancellationToken = default)
     {
         return unitOfWork.Expenses.GetAllAsync(cancellationToken);
