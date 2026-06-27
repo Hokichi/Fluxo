@@ -1110,8 +1110,7 @@ public sealed class ExpenseDetailVMSplitTests
 
         var dashboard = new DashboardVM(
             new NotificationPanelVM(
-                Substitute.For<IExpenseService>(),
-                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ITransactionService>(),
                 Substitute.For<IAccountService>(),
                 runner,
                 mapper,

@@ -1785,8 +1785,7 @@ public sealed class AddNewTransactionVMValidationTests
 
         var dashboard = new DashboardVM(
             new NotificationPanelVM(
-                expenseService,
-                expenseLogService,
+                transactionService,
                 accountService,
                 dataOperationRunner,
                 mapper,

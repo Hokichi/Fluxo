@@ -29,8 +29,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     IRecipient<AllTimeViewModeMessage>,
     IRecipient<DashboardDataInvalidatedMessage>
 {
-    private readonly IExpenseLogService _expenseLogService;
-    private readonly IExpenseService _expenseService;
+    private readonly ITransactionService _transactionService;
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly INotificationGroupingService _notificationGroupingService;
     private readonly INotificationActionService _notificationActionService;
@@ -63,8 +62,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private IReadOnlyList<SavingGoalVM> _savingGoals = [];
 
     public NotificationPanelVM(
-        IExpenseService expenseService,
-        IExpenseLogService expenseLogService,
+        ITransactionService transactionService,
         IAccountService accountService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
@@ -75,8 +73,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         IAppUpdateInteractionService? appUpdateInteractionService = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
-        _expenseService = expenseService;
-        _expenseLogService = expenseLogService;
+        _transactionService = transactionService;
         _accountService = accountService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
@@ -297,9 +294,28 @@ public partial class NotificationPanelVM : ObservableRecipient,
             _mapper.Map<IReadOnlyList<RecurringTransactionDto>>(
                 await _dataOperationRunner.RunAsync(async (scope, ct) =>
                     await scope.UnitOfWork.RecurringTransactions.GetAllAsync(ct), cancellationToken)));
-        _expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
-            await _expenseLogService.GetAllAsync(cancellationToken))
-            .Where(log => !log.IsForDeletion)
+        _expenseLogs = _mapper.Map<IReadOnlyList<TransactionVM>>(
+                await _transactionService.GetAllAsync(cancellationToken))
+            .Where(transaction => transaction.Type == TransactionType.Expense && !transaction.IsForDeletion)
+            .Select(transaction => new ExpenseLogVM
+            {
+                Id = transaction.Id,
+                Amount = transaction.Amount,
+                DeductedOn = transaction.OccurredOn,
+                Notes = transaction.Notes,
+                Account = transaction.Account,
+                ParentLogId = transaction.ParentTransactionId,
+                IsExcludedFromBudget = transaction.IsExcludedFromBudget,
+                Expense = new ExpenseVM
+                {
+                    Id = transaction.Id,
+                    Name = transaction.Name,
+                    Amount = transaction.Amount,
+                    ExpenseCategory = transaction.ExpenseCategory ?? ExpenseCategory.Needs,
+                    Account = transaction.Account,
+                    Tag = transaction.Tag ?? new TagVM()
+                }
+            })
             .ToList();
         _accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));

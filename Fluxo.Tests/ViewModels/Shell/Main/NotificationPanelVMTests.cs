@@ -1110,13 +1110,9 @@ public class NotificationPanelVMTests
         IReadOnlyList<UserSettings>? userSettings = null,
         BudgetAllocation? budgetAllocation = null)
     {
-        var expenseService = Substitute.For<IExpenseService>();
-        expenseService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseDto>>([]));
-
-        var expenseLogService = Substitute.For<IExpenseLogService>();
-        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseLogDto>>([]));
+        var transactionService = Substitute.For<ITransactionService>();
+        transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<TransactionDto>>([]));
 
         var accountService = Substitute.For<IAccountService>();
         accountService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -1217,6 +1213,21 @@ public class NotificationPanelVMTests
             .ToList();
         mapper.Map<IReadOnlyList<ExpenseVM>>(Arg.Any<object>()).Returns(expenses);
         mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
+        mapper.Map<IReadOnlyList<TransactionVM>>(Arg.Any<object>()).Returns(expenseLogs.Select(log => new TransactionVM
+        {
+            Id = log.Id,
+            Type = TransactionType.Expense,
+            Account = log.Account,
+            Name = log.Expense.Name,
+            Amount = log.Amount,
+            OccurredOn = log.DeductedOn,
+            Notes = log.Notes,
+            ExpenseCategory = log.Expense.ExpenseCategory,
+            Tag = log.Expense.Tag,
+            ParentTransactionId = log.ParentLogId,
+            IsForDeletion = log.IsForDeletion,
+            IsExcludedFromBudget = log.IsExcludedFromBudget
+        }).ToList());
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
         mapper.Map<IReadOnlyList<RecurringTransactionDto>>(Arg.Any<object>()).Returns(recurringDtos);
         mapper.Map<IReadOnlyList<RecurringTransactionVM>>(Arg.Any<object>()).Returns(recurringVms);
@@ -1226,8 +1237,7 @@ public class NotificationPanelVMTests
         mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns([]);
 
         return new NotificationPanelVM(
-            expenseService,
-            expenseLogService,
+            transactionService,
             accountService,
             dataOperationRunner,
             mapper,
