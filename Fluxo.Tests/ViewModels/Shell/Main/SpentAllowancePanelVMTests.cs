@@ -50,19 +50,22 @@ public sealed class SpentAllowancePanelVMTests
         Assert.Equal(100m, vm.TotalSpent);
         Assert.Equal(33.33m, vm.Allowance);
 
-        messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(
-            new ExpenseLogMemorySnapshot(
-                ExpenseId: 20,
-                ExpenseLogId: 10,
-                ExpenseName: "Groceries",
-                Amount: 100m,
-                ExpenseCategory: ExpenseCategory.Needs,
+        messenger.Send(new RecordLogMemoryMessage(new DeleteTransactionMemoryAction(
+            new TransactionMemorySnapshot(
+                TransactionId: 10,
+                Type: TransactionType.Expense,
                 AccountId: 1,
-                TagId: 0,
-                DeductedOn: expenseLog.DeductedOn,
+                Name: "Groceries",
+                Amount: 100m,
+                OccurredOn: expenseLog.DeductedOn,
                 Notes: "groceries",
+                ExpenseCategory: ExpenseCategory.Needs,
+                TagId: null,
+                ParentTransactionId: null,
+                IsPinned: false,
                 IsForDeletion: false,
-                ParentLogId: null))));
+                IsIoU: false,
+                IsExcludedFromBudget: false))));
 
         Assert.Equal(0m, vm.TotalSpent);
         Assert.Equal(36.67m, vm.Allowance);
@@ -159,9 +162,9 @@ public sealed class SpentAllowancePanelVMTests
         Func<DateTime>? todayProvider = null,
         IReadOnlyList<IncomeLog>? incomeLogs = null)
     {
-        var expenseLogService = Substitute.For<IExpenseLogService>();
-        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseLogDto>>([]));
+        var transactionService = Substitute.For<ITransactionService>();
+        transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<TransactionDto>>([]));
 
         var accountService = Substitute.For<IAccountService>();
         accountService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -187,11 +190,37 @@ public sealed class SpentAllowancePanelVMTests
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
 
         var mapper = Substitute.For<IMapper>();
-        mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
+        var transactions = expenseLogs.Select(log => new TransactionVM
+            {
+                Id = log.Id,
+                Type = TransactionType.Expense,
+                Account = log.Account,
+                Name = log.Expense.Name,
+                Amount = log.Amount,
+                OccurredOn = log.DeductedOn,
+                Notes = log.Notes,
+                ExpenseCategory = log.Expense.ExpenseCategory,
+                ParentTransactionId = log.ParentLogId,
+                IsForDeletion = log.IsForDeletion,
+                IsExcludedFromBudget = log.IsExcludedFromBudget
+            })
+            .Concat((incomeLogs ?? []).Select(log => new TransactionVM
+            {
+                Id = log.Id,
+                Type = TransactionType.Income,
+                Account = accounts.FirstOrDefault(account => account.Id == log.AccountId) ?? new AccountVM(),
+                Name = log.Name,
+                Amount = log.Amount,
+                OccurredOn = log.AddedOn,
+                Notes = log.Notes,
+                IsExcludedFromBudget = log.IsExcludedFromBudget
+            }))
+            .ToList();
+        mapper.Map<IReadOnlyList<TransactionVM>>(Arg.Any<object>()).Returns(transactions);
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns(accounts);
 
         return new SpentAllowancePanelVM(
-            expenseLogService,
+            transactionService,
             accountService,
             dataOperationRunner,
             mapper,

@@ -21,20 +21,19 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
     IRecipient<LogMemoryActionAppliedMessage>
 {
     private readonly IDataOperationRunner _dataOperationRunner;
-    private readonly IExpenseLogService _expenseLogService;
+    private readonly ITransactionService _transactionService;
     private readonly IMapper _mapper;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly IAccountService _accountService;
     private readonly Func<DateTime> _todayProvider;
 
-    private List<ExpenseLogVM> _allExpenseLogs = [];
-    private List<IncomeLog> _allIncomeLogs = [];
+    private List<TransactionVM> _allTransactions = [];
     private BudgetAllocation _budgetAllocation = new();
     private (DateTime From, DateTime To)? _selectedRange;
     private List<AccountVM> _accounts = [];
 
     public SpentAllowancePanelVM(
-        IExpenseLogService expenseLogService,
+        ITransactionService transactionService,
         IAccountService accountService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
@@ -42,7 +41,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         Func<DateTime>? todayProvider = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
-        _expenseLogService = expenseLogService;
+        _transactionService = transactionService;
         _accountService = accountService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
@@ -99,18 +98,13 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
     {
         _budgetAllocation = await LoadBudgetAllocationAsync(cancellationToken);
 
-        var expenseLogs = _mapper.Map<IReadOnlyList<ExpenseLogVM>>(
-            await _expenseLogService.GetAllAsync(cancellationToken));
+        var transactions = _mapper.Map<IReadOnlyList<TransactionVM>>(
+            await _transactionService.GetAllAsync(cancellationToken));
         var accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
-        var incomeLogs = await LoadIncomeLogsAsync(cancellationToken);
-
-        _allExpenseLogs = expenseLogs
-            .Where(log => !log.IsForDeletion)
-            .OrderByDescending(log => log.DeductedOn)
-            .ToList();
-        _allIncomeLogs = incomeLogs
-            .OrderByDescending(log => log.AddedOn)
+        _allTransactions = transactions
+            .Where(transaction => !transaction.IsForDeletion)
+            .OrderByDescending(transaction => transaction.OccurredOn)
             .ToList();
         _accounts = accounts.ToList();
 
@@ -133,16 +127,15 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private void RefreshMetrics()
     {
-        var budgetEffectiveLogs = BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs);
-        var visibleExpenseLogs = _selectedRange is { } range
-            ? budgetEffectiveLogs.Where(log => log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date)
-            : budgetEffectiveLogs;
-        var visibleIncomeLogs = _selectedRange is { } incomeRange
-            ? _allIncomeLogs.Where(log => !log.IsExcludedFromBudget && log.AddedOn.Date >= incomeRange.From.Date && log.AddedOn.Date <= incomeRange.To.Date)
-            : _allIncomeLogs.Where(log => !log.IsExcludedFromBudget);
+        var budgetTransactions = BudgetEffectiveTransactionFilter.Select(_allTransactions);
+        var visibleTransactions = _selectedRange is { } range
+            ? budgetTransactions.Where(transaction => transaction.OccurredOn.Date >= range.From.Date && transaction.OccurredOn.Date <= range.To.Date)
+            : budgetTransactions;
 
-        TotalSpent = visibleExpenseLogs.Sum(log => log.Amount);
-        TotalEarned = visibleIncomeLogs.Sum(log => log.Amount);
+        TotalSpent = visibleTransactions.Where(transaction => transaction.Type == TransactionType.Expense)
+            .Sum(transaction => transaction.Amount);
+        TotalEarned = visibleTransactions.Where(transaction => transaction.Type == TransactionType.Income)
+            .Sum(transaction => transaction.Amount);
 
         var totalIncomeAmount = _accounts.Where(source => source.IsEnabled).Sum(source => source.Balance);
         Allowance = BudgetAllocationCalculator.CalculateDailyAllowance(
@@ -160,102 +153,95 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
                     ApplyLogMemoryAction(childAction, direction);
                 return;
 
-            case DeleteExpenseLogMemoryAction deleteExpenseAction:
-                ApplyDeletedExpenseAction(deleteExpenseAction, direction);
+            case DeleteTransactionMemoryAction deleteTransactionAction:
+                ApplyDeletedTransactionAction(deleteTransactionAction, direction);
                 return;
         }
     }
 
-    private void ApplyDeletedExpenseAction(DeleteExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
+    private void ApplyDeletedTransactionAction(DeleteTransactionMemoryAction action, LogMemoryApplyDirection direction)
     {
         if (action.Snapshot is not { } snapshot)
             return;
 
         if (direction == LogMemoryApplyDirection.Redo)
         {
-            RemoveExpenseLog(snapshot.ExpenseLogId);
-            RestoreExpenseFromTrackedSource(snapshot);
+            RemoveTransaction(snapshot.TransactionId);
+            RestoreTransactionFromTrackedSource(snapshot);
             RefreshMetrics();
             return;
         }
 
-        UpsertExpenseLog(snapshot);
-        ApplyExpenseToTrackedSource(snapshot);
+        UpsertTransaction(snapshot);
+        ApplyTransactionToTrackedSource(snapshot);
         RefreshMetrics();
     }
 
-    private void RemoveExpenseLog(int expenseLogId)
+    private void RemoveTransaction(int transactionId)
     {
-        _allExpenseLogs = _allExpenseLogs
-            .Where(log => log.Id != expenseLogId)
+        _allTransactions = _allTransactions
+            .Where(transaction => transaction.Id != transactionId)
             .ToList();
     }
 
-    private void UpsertExpenseLog(ExpenseLogMemorySnapshot snapshot)
+    private void UpsertTransaction(TransactionMemorySnapshot snapshot)
     {
-        var existingIndex = _allExpenseLogs.FindIndex(log => log.Id == snapshot.ExpenseLogId);
-        var vm = ToExpenseLogVm(snapshot);
+        var existingIndex = _allTransactions.FindIndex(transaction => transaction.Id == snapshot.TransactionId);
+        var vm = ToTransactionVm(snapshot);
 
         if (existingIndex >= 0)
-            _allExpenseLogs[existingIndex] = vm;
+            _allTransactions[existingIndex] = vm;
         else
-            _allExpenseLogs.Add(vm);
+            _allTransactions.Add(vm);
     }
 
-    private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
+    private void ApplyTransactionToTrackedSource(TransactionMemorySnapshot snapshot)
     {
         var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.AccountType == AccountType.Credit)
-        {
-            source.SpentAmount += snapshot.Amount;
-            return;
-        }
-
-        source.Balance -= snapshot.Amount;
+        if (snapshot.Type == TransactionType.Expense)
+            ApplyExpense(source, snapshot.Amount);
+        else
+            ApplyIncome(source, snapshot.Amount);
     }
 
-    private void RestoreExpenseFromTrackedSource(ExpenseLogMemorySnapshot snapshot)
+    private void RestoreTransactionFromTrackedSource(TransactionMemorySnapshot snapshot)
     {
         var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
         if (source is null)
             return;
 
-        if (source.AccountType == AccountType.Credit)
-        {
-            source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
-            return;
-        }
-
-        source.Balance += snapshot.Amount;
+        if (snapshot.Type == TransactionType.Expense)
+            ApplyIncome(source, snapshot.Amount);
+        else
+            ApplyExpense(source, snapshot.Amount);
     }
 
-    private ExpenseLogVM ToExpenseLogVm(ExpenseLogMemorySnapshot snapshot)
+    private TransactionVM ToTransactionVm(TransactionMemorySnapshot snapshot)
     {
         var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
 
-        return new ExpenseLogVM
+        return new TransactionVM
         {
-            Id = snapshot.ExpenseLogId,
+            Id = snapshot.TransactionId,
+            Type = snapshot.Type,
             Amount = snapshot.Amount,
-            DeductedOn = snapshot.DeductedOn,
+            OccurredOn = snapshot.OccurredOn,
             Notes = snapshot.Notes,
             IsForDeletion = snapshot.IsForDeletion,
-            ParentLogId = snapshot.ParentLogId,
+            ParentTransactionId = snapshot.ParentTransactionId,
+            Name = snapshot.Name,
+            ExpenseCategory = snapshot.ExpenseCategory,
+            IsPinned = snapshot.IsPinned,
+            IsIoU = snapshot.IsIoU,
+            IsExcludedFromBudget = snapshot.IsExcludedFromBudget,
             Account = new AccountVM
             {
                 Id = snapshot.AccountId,
                 Name = source?.Name ?? string.Empty,
                 AccountType = source?.AccountType ?? AccountType.Checking
-            },
-            Expense = new ExpenseVM
-            {
-                Id = snapshot.ExpenseId,
-                Name = snapshot.ExpenseName,
-                Amount = snapshot.Amount,
-                ExpenseCategory = snapshot.ExpenseCategory
             }
         };
     }
@@ -266,10 +252,19 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
             await scope.UnitOfWork.BudgetAllocation.GetAsync(ct) ?? new BudgetAllocation(), cancellationToken);
     }
 
-    private async Task<IReadOnlyList<IncomeLog>> LoadIncomeLogsAsync(CancellationToken cancellationToken)
+    private static void ApplyExpense(AccountVM account, decimal amount)
     {
-        return await _dataOperationRunner.RunAsync(
-            async (scope, ct) => await scope.UnitOfWork.IncomeLogs.GetAllAsync(ct),
-            cancellationToken);
+        if (account.AccountType == AccountType.Credit)
+            account.SpentAmount += amount;
+        else
+            account.Balance -= amount;
+    }
+
+    private static void ApplyIncome(AccountVM account, decimal amount)
+    {
+        if (account.AccountType == AccountType.Credit)
+            account.SpentAmount = Math.Max(0m, account.SpentAmount - amount);
+        else
+            account.Balance += amount;
     }
 }

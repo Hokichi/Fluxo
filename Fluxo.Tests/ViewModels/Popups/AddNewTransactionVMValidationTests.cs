@@ -1770,6 +1770,9 @@ public sealed class AddNewTransactionVMValidationTests
         var expenseLogService = Substitute.For<IExpenseLogService>();
         expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseLogDto>>([]));
+        var transactionService = Substitute.For<ITransactionService>();
+        transactionService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.TransactionDto>>([]));
         var accountService = Substitute.For<IAccountService>();
         accountService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.AccountDto>>([]));
@@ -1796,7 +1799,7 @@ public sealed class AddNewTransactionVMValidationTests
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
-                expenseLogService,
+                transactionService,
                 accountService,
                 dataOperationRunner,
                 mapper,

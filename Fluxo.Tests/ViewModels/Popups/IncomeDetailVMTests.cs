@@ -159,7 +159,7 @@ public sealed class IncomeDetailVMTests
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
-                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ITransactionService>(),
                 Substitute.For<IAccountService>(),
                 dataOperationRunner,
                 mapper,

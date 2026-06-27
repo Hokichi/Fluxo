@@ -1142,7 +1142,7 @@ public sealed class ExpenseDetailVMSplitTests
                 mapper,
                 messenger),
             new SpentAllowancePanelVM(
-                Substitute.For<IExpenseLogService>(),
+                Substitute.For<ITransactionService>(),
                 Substitute.For<IAccountService>(),
                 runner,
                 mapper,
