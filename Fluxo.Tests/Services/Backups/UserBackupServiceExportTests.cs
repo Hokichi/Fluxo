@@ -171,7 +171,7 @@ public sealed class UserBackupServiceExportTests
     }
 
     [Fact]
-    public async Task BackupAsync_WhenDebtIouFlagsSet_ExportsFlags()
+    public async Task BackupAsync_WhenIoUFlagsSet_ExportsFlags()
     {
         var appData = Substitute.For<IAppDataService>();
         var account = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking };

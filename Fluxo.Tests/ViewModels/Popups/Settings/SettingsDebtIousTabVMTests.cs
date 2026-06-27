@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups.Settings;
 
-public sealed class SettingsDebtIousTabVMTests
+public sealed class SettingsIoUsTabVMTests
 {
     [Fact]
     public async Task LoadAsync_ListsUnresolvedLendsAndDebts()
@@ -54,8 +54,8 @@ public sealed class SettingsDebtIousTabVMTests
         await vm.LoadAsync();
 
         Assert.Equal(2, vm.Items.Count);
-        Assert.Contains(vm.Items, item => item.Kind == DebtIouKind.Lend && item.TransactionId == 1);
-        Assert.Contains(vm.Items, item => item.Kind == DebtIouKind.Debt && item.TransactionId == 3);
+        Assert.Contains(vm.Items, item => item.Kind == IoUKind.Lend && item.TransactionId == 1);
+        Assert.Contains(vm.Items, item => item.Kind == IoUKind.Debt && item.TransactionId == 3);
     }
 
     [Fact]
@@ -195,10 +195,10 @@ public sealed class SettingsDebtIousTabVMTests
         appData.Received(1).UpdateAccount(account);
     }
 
-    private static SettingsDebtIousTabVM CreateVm(IAppDataService appData)
+    private static SettingsIoUsTabVM CreateVm(IAppDataService appData)
     {
         var messenger = new WeakReferenceMessenger();
-        return new SettingsDebtIousTabVM(
+        return new SettingsIoUsTabVM(
             CreateMainViewModel(messenger),
             appData,
             messenger,

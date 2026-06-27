@@ -1122,7 +1122,7 @@ public sealed class AddNewTransactionVMValidationTests
                 isRecurring: false,
                 amount: 25m,
                 appData: appData);
-            vm.IsDebtIou = true;
+            vm.IsIoU = true;
 
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 
@@ -1187,13 +1187,13 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
-            vm.IsDebtIou = true;
+            vm.IsIoU = true;
 
             vm.HandleRecurringModeClick();
 
             Assert.True(vm.IsRecurring);
             Assert.False(vm.IsInstallments);
-            Assert.False(vm.IsDebtIou);
+            Assert.False(vm.IsIoU);
             Assert.False(vm.CanPinTransaction);
         });
     }
@@ -1209,45 +1209,57 @@ public sealed class AddNewTransactionVMValidationTests
 
             Assert.False(vm.IsRecurring);
             Assert.True(vm.IsInstallments);
-            Assert.False(vm.IsDebtIou);
+            Assert.False(vm.IsIoU);
             Assert.True(vm.ShowInstallmentEndDate);
         });
     }
 
     [Fact]
-    public void HandleDebtIouModeClick_SelectsDebtIou()
+    public void HandleIoUModeClick_SelectsIoU()
     {
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
             vm.IsInstallments = true;
 
-            vm.HandleDebtIouModeClick();
+            vm.HandleIoUModeClick();
 
             Assert.False(vm.IsRecurring);
             Assert.False(vm.IsInstallments);
-            Assert.True(vm.IsDebtIou);
+            Assert.True(vm.IsIoU);
         });
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ExclusionModeHandlers_ClearImplementedModesWithoutAddingBehavior(bool excludedDebt)
+    [Fact]
+    public void HandleExcludeModeClick_SelectsExclusionOnly()
     {
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
-            vm.IsDebtIou = true;
+            vm.IsIoU = true;
 
-            if (excludedDebt)
-                vm.HandleExcludedDebtModeClick();
-            else
-                vm.HandleExcludeModeClick();
+            vm.HandleExcludeModeClick();
 
             Assert.False(vm.IsRecurring);
             Assert.False(vm.IsInstallments);
-            Assert.False(vm.IsDebtIou);
+            Assert.False(vm.IsIoU);
+            Assert.True(vm.IsExcludedFromBudget);
+        });
+    }
+
+    [Fact]
+    public void HandleExcludedIoUModeClick_SelectsIoUAndExclusion()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
+
+            vm.HandleExcludedIoUModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.False(vm.IsInstallments);
+            Assert.True(vm.IsIoU);
+            Assert.True(vm.IsExcludedFromBudget);
         });
     }
 
@@ -1558,7 +1570,7 @@ public sealed class AddNewTransactionVMValidationTests
                 isRecurring: false,
                 amount: 25m,
                 appData: appData);
-            vm.IsDebtIou = true;
+            vm.IsIoU = true;
 
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 

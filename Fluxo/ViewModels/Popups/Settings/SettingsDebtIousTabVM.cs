@@ -13,24 +13,24 @@ using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups.Settings;
 
-public enum DebtIouKind
+public enum IoUKind
 {
     Lend,
     Debt
 }
 
-public sealed class DebtIouItemVM
+public sealed class IoUItemVM
 {
-    public DebtIouKind Kind { get; init; }
+    public IoUKind Kind { get; init; }
     public int TransactionId { get; init; }
     public string Name { get; init; } = string.Empty;
     public decimal Amount { get; init; }
     public DateTime Date { get; init; }
     public string AccountName { get; init; } = string.Empty;
-    public string TypeLabel => Kind == DebtIouKind.Lend ? "Lend" : "Debt";
+    public string TypeLabel => Kind == IoUKind.Lend ? "Lend" : "Debt";
 }
 
-public partial class SettingsDebtIousTabVM : ObservableObject
+public partial class SettingsIoUsTabVM : ObservableObject
 {
     private readonly MainVM _mainViewModel;
     private readonly IAppDataService _appData;
@@ -40,7 +40,7 @@ public partial class SettingsDebtIousTabVM : ObservableObject
 
     [ObservableProperty] private bool _isResolving;
 
-    public SettingsDebtIousTabVM(
+    public SettingsIoUsTabVM(
         MainVM mainViewModel,
         IAppDataService appData,
         IMessenger? messenger = null,
@@ -54,7 +54,7 @@ public partial class SettingsDebtIousTabVM : ObservableObject
         _reloadCurrentDataAsync = reloadCurrentDataAsync ?? mainViewModel.ReloadCurrentDataAsync;
     }
 
-    public ObservableCollection<DebtIouItemVM> Items { get; } = [];
+    public ObservableCollection<IoUItemVM> Items { get; } = [];
 
     public bool HasItems => Items.Count > 0;
 
@@ -68,9 +68,9 @@ public partial class SettingsDebtIousTabVM : ObservableObject
         var items = expenseLogs
             .Where(log => !log.IsForDeletion)
             .Where(log => log.IsLend || log.Expense?.IsLend == true)
-            .Select(log => new DebtIouItemVM
+            .Select(log => new IoUItemVM
             {
-                Kind = DebtIouKind.Lend,
+                Kind = IoUKind.Lend,
                 TransactionId = log.Id,
                 Name = log.Expense?.Name ?? "Lend",
                 Amount = log.Amount,
@@ -80,9 +80,9 @@ public partial class SettingsDebtIousTabVM : ObservableObject
             .Concat(incomeLogs
                 .Where(log => !log.IsForDeletion)
                 .Where(log => log.IsDebt)
-                .Select(log => new DebtIouItemVM
+                .Select(log => new IoUItemVM
                 {
-                    Kind = DebtIouKind.Debt,
+                    Kind = IoUKind.Debt,
                     TransactionId = log.Id,
                     Name = log.Name,
                     Amount = log.Amount,
@@ -102,7 +102,7 @@ public partial class SettingsDebtIousTabVM : ObservableObject
     }
 
     public async Task<SettingsOperationResult> ResolveAsync(
-        DebtIouItemVM item,
+        IoUItemVM item,
         CancellationToken cancellationToken = default)
     {
         if (IsResolving)
@@ -112,7 +112,7 @@ public partial class SettingsDebtIousTabVM : ObservableObject
 
         try
         {
-            var result = item.Kind == DebtIouKind.Lend
+            var result = item.Kind == IoUKind.Lend
                 ? await ResolveLendAsync(item.TransactionId, cancellationToken)
                 : await ResolveDebtAsync(item.TransactionId, cancellationToken);
 

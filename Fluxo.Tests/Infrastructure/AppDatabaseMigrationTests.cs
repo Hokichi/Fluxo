@@ -249,7 +249,7 @@ public sealed class AppDatabaseMigrationTests
     }
 
     [Fact]
-    public async Task MigrateDatabaseAsync_AddsDebtIouFlagColumns()
+    public async Task MigrateDatabaseAsync_AddsIoUFlagColumns()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
         var databasePath = Path.Combine(tempDirectory, "fluxo.db");

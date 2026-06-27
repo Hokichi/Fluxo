@@ -4,17 +4,17 @@ using Fluxo.ViewModels.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 
-public partial class SettingsDebtIousTab : UserControl
+public partial class SettingsIoUsTab : UserControl
 {
-    public SettingsDebtIousTab()
+    public SettingsIoUsTab()
     {
         InitializeComponent();
     }
 
     private async void OnResolveClick(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not SettingsDebtIousTabVM viewModel ||
-            sender is not FrameworkElement { DataContext: DebtIouItemVM item })
+        if (DataContext is not SettingsIoUsTabVM viewModel ||
+            sender is not FrameworkElement { DataContext: IoUItemVM item })
         {
             return;
         }

@@ -220,7 +220,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
             BudgetTabButton,
             FixedExpensesTabButton,
             GoalsTabButton,
-            DebtIousTabButton,
+            IoUsTabButton,
             TagsTabButton,
             PreferencesTabButton,
             AboutTabButton
@@ -280,8 +280,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         if (TagsTabButton.IsChecked.GetValueOrDefault())
             return TagsTabButton;
 
-        if (DebtIousTabButton.IsChecked.GetValueOrDefault())
-            return DebtIousTabButton;
+        if (IoUsTabButton.IsChecked.GetValueOrDefault())
+            return IoUsTabButton;
 
         if (PreferencesTabButton.IsChecked.GetValueOrDefault())
             return PreferencesTabButton;
@@ -306,8 +306,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         if (ReferenceEquals(tabButton, GoalsTabButton))
             return GoalsTabContent;
 
-        if (ReferenceEquals(tabButton, DebtIousTabButton))
-            return DebtIousTabContent;
+        if (ReferenceEquals(tabButton, IoUsTabButton))
+            return IoUsTabContent;
 
         if (ReferenceEquals(tabButton, TagsTabButton))
             return TagsTabContent;

@@ -15,13 +15,13 @@ public sealed class AddNewTransactionBalloonToggleTests
         Assert.Equal(2, xaml.Split("ButtonText=\"Recurring\"", StringSplitOptions.None).Length - 1);
         Assert.Equal(2, xaml.Split("ButtonText=\"Installments\"", StringSplitOptions.None).Length - 1);
         Assert.Equal(2, xaml.Split("ButtonText=\"Exclude\"", StringSplitOptions.None).Length - 1);
-        Assert.Equal(2, xaml.Split("ButtonText=\"ExcludedDebt\"", StringSplitOptions.None).Length - 1);
+        Assert.Equal(2, xaml.Split("ButtonText=\"ExcludedIoU\"", StringSplitOptions.None).Length - 1);
         Assert.Equal(2, xaml.Split("ButtonIcon=\"{StaticResource CreditCardOff}\"", StringSplitOptions.None).Length - 1);
         Assert.Equal(2, xaml.Split("ButtonIcon=\"{StaticResource CreditCardXRegular}\"", StringSplitOptions.None).Length - 1);
         Assert.Contains("OnChecked=\"{Binding HandleExcludeModeClickCommand}\"", xaml);
-        Assert.Contains("OnChecked=\"{Binding HandleExcludedDebtModeClickCommand}\"", xaml);
+        Assert.Contains("OnChecked=\"{Binding HandleExcludedIoUModeClickCommand}\"", xaml);
         Assert.DoesNotContain("OnRecurringModePreviewMouseLeftButtonDown", xaml + codeBehind);
         Assert.DoesNotContain("OnInstallmentsModePreviewMouseLeftButtonDown", xaml + codeBehind);
-        Assert.DoesNotContain("OnDebtIouModePreviewMouseLeftButtonDown", xaml + codeBehind);
+        Assert.DoesNotContain("OnIoUModePreviewMouseLeftButtonDown", xaml + codeBehind);
     }
 }

@@ -1,10 +1,10 @@
 <UserControl
-    x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsDebtIousTab"
+    x:Class="Fluxo.Views.Popups.Settings.Tabs.SettingsIoUsTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources">
     <UserControl.Resources>
-        <DataTemplate x:Key="DebtIouItemTemplate">
+        <DataTemplate x:Key="IoUItemTemplate">
             <StackPanel>
                 <Border
                     x:Name="ItemRoot"
@@ -125,7 +125,7 @@
                 Grid.Row="2"
                 Margin="0,8,0,0"
                 VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemTemplate="{StaticResource DebtIouItemTemplate}" ItemsSource="{Binding Items}" />
+                <ItemsControl ItemTemplate="{StaticResource IoUItemTemplate}" ItemsSource="{Binding Items}" />
             </customControls:FadingScrollViewer>
 
             <StackPanel

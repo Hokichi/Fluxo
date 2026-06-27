@@ -114,7 +114,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SettingsSourcesTabVM>();
         services.AddTransient<SettingsFixedExpensesTabVM>();
         services.AddTransient<SettingsGoalsTabVM>();
-        services.AddTransient<SettingsDebtIousTabVM>();
+        services.AddTransient<SettingsIoUsTabVM>();
         services.AddTransient<SettingsTagsTabVM>();
         services.AddTransient<SettingsPersonalizationTabVM>();
         services.AddTransient<DataManagementVM>();

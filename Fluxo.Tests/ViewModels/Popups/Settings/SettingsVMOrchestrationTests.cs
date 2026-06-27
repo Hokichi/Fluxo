@@ -108,7 +108,7 @@ public sealed class SettingsVMOrchestrationTests
             new SettingsSourcesTabVM(mainViewModel, appData, messenger),
             new SettingsFixedExpensesTabVM(mainViewModel, appData, messenger),
             new SettingsGoalsTabVM(mainViewModel, appData, messenger),
-            new SettingsDebtIousTabVM(mainViewModel, appData, messenger),
+            new SettingsIoUsTabVM(mainViewModel, appData, messenger),
             new SettingsTagsTabVM(mainViewModel, appData, messenger),
             new SettingsPersonalizationTabVM(appData, messenger),
             messenger);

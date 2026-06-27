@@ -372,10 +372,10 @@
                                         OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource CreditCardMinusSolid}"
-                                        ButtonText="{Binding DebtIouTooltip}"
+                                        ButtonText="{Binding IoUTooltip}"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                         HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                        OnChecked="{Binding HandleDebtIouModeClickCommand}" />
+                                        OnChecked="{Binding HandleIoUModeClickCommand}" />
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource CreditCardOff}"
                                         ButtonText="Exclude"
@@ -387,7 +387,7 @@
                                         ButtonText="Set as lend and Exclude"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                         HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                        OnChecked="{Binding HandleExcludedDebtModeClickCommand}" />
+                                        OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />
                                 </customControls:BalloonToggle.States>
                             </customControls:BalloonToggle>
                             <customControls:BalloonCheckBox
@@ -598,10 +598,10 @@
                                             OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
                                         <customControls:BalloonToggleState
                                             ButtonIcon="{StaticResource CreditCardMinusSolid}"
-                                            ButtonText="{Binding DebtIouTooltip}"
+                                            ButtonText="{Binding IoUTooltip}"
                                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                             HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                            OnChecked="{Binding HandleDebtIouModeClickCommand}" />
+                                            OnChecked="{Binding HandleIoUModeClickCommand}" />
                                         <customControls:BalloonToggleState
                                             ButtonIcon="{StaticResource CreditCardOff}"
                                             ButtonText="Exclude"
@@ -610,10 +610,10 @@
                                             OnChecked="{Binding HandleExcludeModeClickCommand}" />
                                         <customControls:BalloonToggleState
                                             ButtonIcon="{StaticResource CreditCardXRegular}"
-                                            ButtonText="ExcludedDebt"
+                                            ButtonText="ExcludedIoU"
                                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                             HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                            OnChecked="{Binding HandleExcludedDebtModeClickCommand}" />
+                                            OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />
                                     </customControls:BalloonToggle.States>
                                 </customControls:BalloonToggle>
                                 <customControls:BalloonCheckBox

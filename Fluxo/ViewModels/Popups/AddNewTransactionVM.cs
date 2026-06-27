@@ -65,7 +65,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     [ObservableProperty] private bool _isInstallments;
     [ObservableProperty] private DateTime _installmentEndDate = DateTime.Today;
     [ObservableProperty] private bool _isPinned;
-    [ObservableProperty] private bool _isDebtIou;
+    [ObservableProperty] private bool _isIoU;
+    [ObservableProperty] private bool _isExcludedFromBudget;
     [ObservableProperty] private bool _isHistoryOpen;
     [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedPinnedHistoryItem;
     [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedHistoryItem;
@@ -177,7 +178,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowDateSelector => !IsRecurringTransactionMode;
     public bool ShowInstallmentEndDate => IsInstallments;
     public bool CanUseInstallments => !IsGoal && CanToggleRecurring;
-    public bool CanUseDebtIou => !IsGoal && CanToggleRecurring;
+    public bool CanUseIoU => !IsGoal && CanToggleRecurring;
     public string DateOrRecurrenceLabel => IsRecurringTransactionMode ? "Recurrence" : "Date";
     public string InstallmentSummaryText => BuildInstallmentSummaryText();
     public bool CanToggleRecurring => !IsRecurringModeLocked;
@@ -187,7 +188,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool CanEditTags => IsExpense;
     public bool CanChangeTransactionType => !_isTransactionTypeLocked;
     public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && !IsRecurringTransactionMode;
-    public string DebtIouTooltip => IsExpense ? "Set as lend" : "Set as debt";
+    public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
 
     public string PopupTitle => _popupPurpose switch
     {
@@ -275,11 +276,11 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         if (!CanPinTransaction)
             IsPinned = false;
-        if (value && IsDebtIou)
-            IsDebtIou = false;
+        if (value && IsIoU)
+            IsIoU = false;
 
-        if (!CanUseDebtIou)
-            IsDebtIou = false;
+        if (!CanUseIoU)
+            IsIoU = false;
 
         OnPropertyChanged(nameof(ShowRecurringDayInput));
         OnPropertyChanged(nameof(ShowRecurringNoneInput));
@@ -291,7 +292,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(DateOrRecurrenceLabel));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
-        OnPropertyChanged(nameof(CanUseDebtIou));
+        OnPropertyChanged(nameof(CanUseIoU));
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
@@ -301,14 +302,14 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (value)
         {
             IsRecurring = false;
-            if (IsDebtIou)
-                IsDebtIou = false;
+            if (IsIoU)
+                IsIoU = false;
         }
 
         if (!CanPinTransaction)
             IsPinned = false;
-        if (!CanUseDebtIou)
-            IsDebtIou = false;
+        if (!CanUseIoU)
+            IsIoU = false;
 
         OnPropertyChanged(nameof(IsRecurringTransactionMode));
         OnPropertyChanged(nameof(ShowRecurringDayInput));
@@ -320,7 +321,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowInstallmentEndDate));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
-        OnPropertyChanged(nameof(CanUseDebtIou));
+        OnPropertyChanged(nameof(CanUseIoU));
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
@@ -354,10 +355,10 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         OnPropertyChanged(nameof(CanToggleRecurring));
         OnPropertyChanged(nameof(CanUseInstallments));
-        OnPropertyChanged(nameof(CanUseDebtIou));
+        OnPropertyChanged(nameof(CanUseIoU));
     }
 
-    partial void OnIsDebtIouChanged(bool value)
+    partial void OnIsIoUChanged(bool value)
     {
         if (value)
         {
@@ -451,27 +452,37 @@ public partial class AddNewTransactionVM : ObservableValidator
         IsInstallments = true;
     }
 
-    [RelayCommand(CanExecute = nameof(CanUseDebtIou))]
-    public void HandleDebtIouModeClick()
+    [RelayCommand(CanExecute = nameof(CanUseIoU))]
+    public void HandleIoUModeClick()
     {
-        if (!CanUseDebtIou)
+        if (!CanUseIoU)
             return;
 
         ClearTransactionModes();
-        IsDebtIou = true;
+        IsIoU = true;
     }
 
     [RelayCommand]
-    public void HandleExcludeModeClick() => ClearTransactionModes();
+    public void HandleExcludeModeClick()
+    {
+        ClearTransactionModes();
+        IsExcludedFromBudget = true;
+    }
 
     [RelayCommand]
-    public void HandleExcludedDebtModeClick() => ClearTransactionModes();
+    public void HandleExcludedIoUModeClick()
+    {
+        ClearTransactionModes();
+        IsIoU = true;
+        IsExcludedFromBudget = true;
+    }
 
     private void ClearTransactionModes()
     {
         IsRecurring = false;
         IsInstallments = false;
-        IsDebtIou = false;
+        IsIoU = false;
+        IsExcludedFromBudget = false;
     }
 
     public void InitializeFromDraft(AddNewTransactionDraft draft)
@@ -483,7 +494,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         AmountText = draft.AmountText;
         NameText = draft.Name;
         NoteText = draft.Note;
-        IsDebtIou = draft.IsDebtIou;
+        IsIoU = draft.IsIoU;
         SelectedDate = draft.Date.Date;
         SelectedExpenseCategory = draft.Category ?? ExpenseCategory.Needs;
         SelectedAccount = draft.AccountId is null
@@ -512,12 +523,12 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
         OnPropertyChanged(nameof(CanUseInstallments));
-        OnPropertyChanged(nameof(CanUseDebtIou));
+        OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(InstallmentSummaryText));
-        OnPropertyChanged(nameof(DebtIouTooltip));
+        OnPropertyChanged(nameof(IoUTooltip));
 
-        if (!CanUseDebtIou)
-            IsDebtIou = false;
+        if (!CanUseIoU)
+            IsIoU = false;
 
         if (!value || IsGoal)
             IsMoreTagsOpen = false;
@@ -545,14 +556,14 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
         OnPropertyChanged(nameof(CanUseInstallments));
-        OnPropertyChanged(nameof(CanUseDebtIou));
+        OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(InstallmentSummaryText));
-        OnPropertyChanged(nameof(DebtIouTooltip));
+        OnPropertyChanged(nameof(IoUTooltip));
 
         if (value)
         {
             IsInstallments = false;
-            IsDebtIou = false;
+            IsIoU = false;
             IsMoreTagsOpen = false;
             SyncGoalUpdateName();
         }
@@ -812,7 +823,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     ExpenseCategory = input.Category!.Value,
                     AccountId = account.Id,
                     TagId = tag.Id,
-                    IsLend = input.IsDebtIou
+                    IsLend = input.IsIoU
                 };
 
                 var expenseLog = new ExpenseLog
@@ -824,7 +835,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     IsForDeletion = false,
                     AccountId = account.Id,
                     IsPinned = input.IsPinned,
-                    IsLend = input.IsDebtIou
+                    IsLend = input.IsIoU
                 };
 
                 await _appData.AddExpenseAsync(expense);
@@ -859,7 +870,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Notes = input.Note,
                     AccountId = account.Id,
                     IsPinned = input.IsPinned,
-                    IsDebt = input.IsDebtIou
+                    IsDebt = input.IsIoU
                 };
 
                 await _appData.AddIncomeLogAsync(incomeLog);
@@ -956,7 +967,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         IsInstallments = false;
         IsRecurring = false;
         IsPinned = false;
-        IsDebtIou = false;
+        IsIoU = false;
         IsRecurringModeLocked = false;
         _isTransactionTypeLocked = false;
         SetPopupPurpose(TransactionPopupPurpose.AddNewTransaction);
@@ -1044,7 +1055,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsRecurringTransactionMode,
             IsInstallments,
             IsPinned,
-            IsDebtIou,
+            IsIoU,
             _editingRecurringTransactionId,
             SelectedRecurringPeriod,
             NameText.Trim(),
@@ -1683,7 +1694,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsRecurring,
             IsInstallments,
             IsPinned,
-            IsDebtIou,
+            IsIoU,
             SelectedRecurringPeriod,
             NameText ?? string.Empty,
             AmountText,
@@ -2142,7 +2153,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         int? TagId,
         bool IsGoal = false,
         int? GoalId = null,
-        bool IsDebtIou = false);
+        bool IsIoU = false);
 
     public readonly record struct RecurringDraftSaveInput(
         int? EditingRecurringTransactionId,
@@ -2174,7 +2185,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsRecurring,
         bool IsInstallments,
         bool IsPinned,
-        bool IsDebtIou,
+        bool IsIoU,
         int? EditingRecurringTransactionId,
         RecurringPeriod RecurringPeriod,
         string Name,
@@ -2194,7 +2205,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsRecurring,
         bool IsInstallments,
         bool IsPinned,
-        bool IsDebtIou,
+        bool IsIoU,
         RecurringPeriod SelectedRecurringPeriod,
         string NameText,
         decimal AmountText,

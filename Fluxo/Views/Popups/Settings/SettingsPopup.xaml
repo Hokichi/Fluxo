@@ -95,7 +95,7 @@
                 </RadioButton>
 
                 <RadioButton
-                    x:Name="DebtIousTabButton"
+                    x:Name="IoUsTabButton"
                     GroupName="SettingsTabs"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource LockedSettingsTabButtonStyle}"
@@ -169,9 +169,9 @@
                 Opacity="0"
                 Visibility="Collapsed" />
 
-            <tabs:SettingsDebtIousTab
-                x:Name="DebtIousTabContent"
-                DataContext="{Binding DebtIousTab}"
+            <tabs:SettingsIoUsTab
+                x:Name="IoUsTabContent"
+                DataContext="{Binding IoUsTab}"
                 Opacity="0"
                 Visibility="Collapsed" />
 

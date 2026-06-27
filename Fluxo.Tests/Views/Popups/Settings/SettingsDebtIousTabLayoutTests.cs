@@ -5,28 +5,28 @@ using Xunit;
 
 namespace Fluxo.Tests.Views.Popups.Settings;
 
-public sealed class SettingsDebtIousTabLayoutTests
+public sealed class SettingsIoUsTabLayoutTests
 {
     [Fact]
-    public void SettingsPopup_WiresDebtIousTab()
+    public void SettingsPopup_WiresIoUsTab()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "SettingsPopup.xaml"));
         var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "SettingsPopup.xaml.cs"));
 
         Assert.Contains("Debt/IoUs", xaml);
         Assert.Contains("CreditCardMinusSolid", xaml);
-        Assert.Contains("SettingsDebtIousTab", xaml);
-        Assert.Contains("x:Name=\"DebtIousTabButton\"", xaml);
+        Assert.Contains("SettingsIoUsTab", xaml);
+        Assert.Contains("x:Name=\"IoUsTabButton\"", xaml);
         Assert.Contains("Style=\"{StaticResource LockedSettingsTabButtonStyle}\"", xaml);
-        Assert.Contains("DebtIousTabButton", codeBehind);
-        Assert.Contains("DebtIousTabContent", codeBehind);
+        Assert.Contains("IoUsTabButton", codeBehind);
+        Assert.Contains("IoUsTabContent", codeBehind);
     }
 
     [Fact]
-    public void SettingsDebtIousTab_IncludesResolveButtonAndItems()
+    public void SettingsIoUsTab_IncludesResolveButtonAndItems()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml"));
-        var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml.cs"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsIoUsTab.xaml"));
+        var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsIoUsTab.xaml.cs"));
 
         Assert.Contains("ItemsSource=\"{Binding Items}\"", xaml);
         Assert.Contains("ButtonIcon=\"{StaticResource Check}\"", xaml);
@@ -37,9 +37,9 @@ public sealed class SettingsDebtIousTabLayoutTests
     }
 
     [Fact]
-    public void SettingsDebtIousTab_UsesSettingsListItemHoverTemplate()
+    public void SettingsIoUsTab_UsesSettingsListItemHoverTemplate()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsIoUsTab.xaml"));
 
         Assert.Contains("x:Name=\"ItemRoot\"", xaml);
         Assert.Contains("BorderBrush=\"Transparent\"", xaml);

@@ -76,7 +76,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         SettingsSourcesTabVM sourcesTab,
         SettingsFixedExpensesTabVM fixedExpensesTab,
         SettingsGoalsTabVM goalsTab,
-        SettingsDebtIousTabVM debtIousTab,
+        SettingsIoUsTabVM debtIousTab,
         SettingsTagsTabVM tagsTab,
         SettingsPersonalizationTabVM personalizationTab,
         IMessenger? messenger = null)
@@ -90,7 +90,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         SourcesTab = sourcesTab;
         FixedExpensesTab = fixedExpensesTab;
         GoalsTab = goalsTab;
-        DebtIousTab = debtIousTab;
+        IoUsTab = debtIousTab;
         TagsTab = tagsTab;
         PersonalizationTab = personalizationTab;
         IsActive = true;
@@ -100,7 +100,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     public SettingsSourcesTabVM SourcesTab { get; }
     public SettingsFixedExpensesTabVM FixedExpensesTab { get; }
     public SettingsGoalsTabVM GoalsTab { get; }
-    public SettingsDebtIousTabVM DebtIousTab { get; }
+    public SettingsIoUsTabVM IoUsTab { get; }
     public SettingsTagsTabVM TagsTab { get; }
     public SettingsPersonalizationTabVM PersonalizationTab { get; }
     public bool IsDashboardSpendingAmountGateLocked => _mainViewModel.IsDashboardSpendingAmountGateLocked;
@@ -167,7 +167,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         await SourcesTab.LoadAsync();
         await FixedExpensesTab.LoadAsync();
         await GoalsTab.LoadAsync();
-        await DebtIousTab.LoadAsync();
+        await IoUsTab.LoadAsync();
         await TagsTab.LoadAsync();
         await PersonalizationTab.LoadAsync();
         ApplyDashboardSpendingAmountGateState();
