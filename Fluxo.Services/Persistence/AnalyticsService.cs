@@ -18,22 +18,23 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
         return await dataOperationRunner.RunAsync("load analytics data", async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
-            var expenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync(ct);
-            var incomeLogs = await unitOfWork.IncomeLogs.GetAllAsync(ct);
+            var transactions = await unitOfWork.Transactions.GetAllAsync(ct);
             var goals = await unitOfWork.SavingGoals.GetAllAsync(ct);
 
             var fromDate = from.ToDateTime(TimeOnly.MinValue);
             var toDate = to.ToDateTime(TimeOnly.MaxValue);
 
-            var expenseInPeriod = expenseLogs
-                .Where(log => !log.IsForDeletion &&
-                              log.ParentLogId is null &&
-                              log.DeductedOn >= fromDate &&
-                              log.DeductedOn <= toDate)
+            var expenseInPeriod = transactions
+                .Where(transaction => transaction.Type == TransactionType.Expense &&
+                              !transaction.IsForDeletion &&
+                              transaction.ParentTransactionId is null &&
+                              transaction.OccurredOn >= fromDate &&
+                              transaction.OccurredOn <= toDate)
                 .ToList();
 
-            var incomeInPeriod = incomeLogs
-                .Where(log => log.AddedOn >= fromDate && log.AddedOn <= toDate)
+            var incomeInPeriod = transactions
+                .Where(transaction => transaction.Type == TransactionType.Income &&
+                                      transaction.OccurredOn >= fromDate && transaction.OccurredOn <= toDate)
                 .ToList();
 
             var totalIncome = incomeInPeriod.Sum(log => log.Amount);
@@ -44,11 +45,11 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
                 .ToArray();
 
             var incomeByDay = incomeInPeriod
-                .GroupBy(log => DateOnly.FromDateTime(log.AddedOn))
+                .GroupBy(transaction => DateOnly.FromDateTime(transaction.OccurredOn))
                 .ToDictionary(group => group.Key, group => group.Sum(item => item.Amount));
 
             var expenseByDay = expenseInPeriod
-                .GroupBy(log => DateOnly.FromDateTime(log.DeductedOn))
+                .GroupBy(transaction => DateOnly.FromDateTime(transaction.OccurredOn))
                 .ToDictionary(group => group.Key, group => group.Sum(item => item.Amount));
 
             var timeSeries = dateSequence
@@ -59,8 +60,8 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
                 .ToArray();
 
             var categoryTotals = expenseInPeriod
-                .Where(log => log.Expense is not null)
-                .GroupBy(log => log.Expense.ExpenseCategory)
+                .Where(transaction => transaction.ExpenseCategory.HasValue)
+                .GroupBy(transaction => transaction.ExpenseCategory!.Value)
                 .ToDictionary(group => group.Key, group => group.Sum(item => item.Amount));
 
             var categoryRatio =
@@ -76,12 +77,12 @@ public sealed class AnalyticsService(IDataOperationRunner dataOperationRunner) :
                 .ToArray();
 
             var tagTotals = expenseInPeriod
-                .Where(log => log.Expense?.Tag is not null)
-                .GroupBy(log => new
+                .Where(transaction => transaction.Tag is not null)
+                .GroupBy(transaction => new
                 {
-                    log.Expense.Tag.Id,
-                    log.Expense.Tag.Name,
-                    log.Expense.Tag.HexCode
+                    transaction.Tag!.Id,
+                    transaction.Tag.Name,
+                    transaction.Tag.HexCode
                 })
                 .Select(group => new AnalyticsTagTotal(
                     group.Key.Name,

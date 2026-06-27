@@ -17,32 +17,32 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
             var unitOfWork = scope.UnitOfWork;
             var selectedDate = date.ToDateTime(TimeOnly.MinValue).Date;
 
-            var expenseLogs = await unitOfWork.ExpenseLogs.GetAllAsync(ct);
-            var incomeLogs = await unitOfWork.IncomeLogs.GetAllAsync(ct);
+            var transactions = await unitOfWork.Transactions.GetAllAsync(ct);
             var goals = await unitOfWork.SavingGoals.GetAllAsync(ct);
             var recurringTransactions = await unitOfWork.RecurringTransactions.GetAllAsync(ct);
 
-            var expenses = expenseLogs
-                .Where(log => !log.IsForDeletion && log.ParentLogId is null && log.DeductedOn.Date == selectedDate)
-                .OrderByDescending(log => log.DeductedOn)
-                .ThenBy(log => log.Id)
-                .Select(log => new CalendarExpenseItem(
-                    log.Id,
-                    log.Expense?.Name ?? string.Empty,
-                    log.Amount,
-                    log.Account?.Name ?? string.Empty,
-                    log.Expense?.Tag?.Name))
+            var expenses = transactions
+                .Where(transaction => transaction.Type == TransactionType.Expense && !transaction.IsForDeletion &&
+                                      transaction.ParentTransactionId is null && transaction.OccurredOn.Date == selectedDate)
+                .OrderByDescending(transaction => transaction.OccurredOn)
+                .ThenBy(transaction => transaction.Id)
+                .Select(transaction => new CalendarExpenseItem(
+                    transaction.Id,
+                    transaction.Name,
+                    transaction.Amount,
+                    transaction.Account?.Name ?? string.Empty,
+                    transaction.Tag?.Name))
                 .ToArray();
 
-            var incomes = incomeLogs
-                .Where(log => log.AddedOn.Date == selectedDate)
-                .OrderByDescending(log => log.AddedOn)
-                .ThenBy(log => log.Id)
-                .Select(log => new CalendarIncomeItem(
-                    log.Id,
-                    log.Name,
-                    log.Amount,
-                    log.Account?.Name ?? string.Empty))
+            var incomes = transactions
+                .Where(transaction => transaction.Type == TransactionType.Income && transaction.OccurredOn.Date == selectedDate)
+                .OrderByDescending(transaction => transaction.OccurredOn)
+                .ThenBy(transaction => transaction.Id)
+                .Select(transaction => new CalendarIncomeItem(
+                    transaction.Id,
+                    transaction.Name,
+                    transaction.Amount,
+                    transaction.Account?.Name ?? string.Empty))
                 .ToArray();
 
             var goalDeadlines = goals

@@ -17,61 +17,65 @@ public sealed class CalendarServiceTests
         var (sut, unitOfWork) = CreateSut();
         var selected = new DateOnly(2026, 6, 12);
 
-        unitOfWork.ExpenseLogs.GetAllAsync(Arg.Any<CancellationToken>()).Returns([
-            new ExpenseLog
+        unitOfWork.Transactions.GetAllAsync(Arg.Any<CancellationToken>()).Returns([
+            new Transaction
             {
                 Id = 1,
+                Type = TransactionType.Expense,
                 Amount = 74m,
-                DeductedOn = new DateTime(2026, 6, 12, 9, 0, 0),
+                OccurredOn = new DateTime(2026, 6, 12, 9, 0, 0),
                 IsForDeletion = false,
-                Expense = new Expense { Name = "Groceries", Tag = new Tag { Name = "Food", HexCode = "#00FF00" } },
+                Name = "Groceries",
+                Tag = new Tag { Name = "Food", HexCode = "#00FF00" },
                 Account = new Account { Name = "Checking" }
             },
-            new ExpenseLog
+            new Transaction
             {
                 Id = 2,
+                Type = TransactionType.Expense,
                 Amount = 10m,
-                DeductedOn = new DateTime(2026, 6, 12, 10, 0, 0),
+                OccurredOn = new DateTime(2026, 6, 12, 10, 0, 0),
                 IsForDeletion = true,
-                Expense = new Expense { Name = "Deleted" },
+                Name = "Deleted",
                 Account = new Account { Name = "Checking" }
             },
-            new ExpenseLog
+            new Transaction
             {
                 Id = 3,
+                Type = TransactionType.Expense,
                 Amount = 99m,
-                DeductedOn = new DateTime(2026, 6, 11, 23, 59, 0),
+                OccurredOn = new DateTime(2026, 6, 11, 23, 59, 0),
                 IsForDeletion = false,
-                Expense = new Expense { Name = "Different day" },
+                Name = "Different day",
                 Account = new Account { Name = "Checking" }
             },
-            new ExpenseLog
+            new Transaction
             {
                 Id = 10,
-                ParentLogId = 1,
+                Type = TransactionType.Expense,
+                ParentTransactionId = 1,
                 Amount = 25m,
-                DeductedOn = new DateTime(2026, 6, 12, 11, 0, 0),
+                OccurredOn = new DateTime(2026, 6, 12, 11, 0, 0),
                 IsForDeletion = false,
-                Expense = new Expense { Name = "Child split" },
-                Account = new Account { Name = "Checking" }
-            }
-        ]);
-
-        unitOfWork.IncomeLogs.GetAllAsync(Arg.Any<CancellationToken>()).Returns([
-            new IncomeLog
-            {
-                Id = 4,
-                Name = "Freelance",
-                Amount = 450m,
-                AddedOn = new DateTime(2026, 6, 12, 14, 0, 0),
+                Name = "Child split",
                 Account = new Account { Name = "Checking" }
             },
-            new IncomeLog
+            new Transaction
+            {
+                Id = 4,
+                Type = TransactionType.Income,
+                Name = "Freelance",
+                Amount = 450m,
+                OccurredOn = new DateTime(2026, 6, 12, 14, 0, 0),
+                Account = new Account { Name = "Checking" }
+            },
+            new Transaction
             {
                 Id = 5,
+                Type = TransactionType.Income,
                 Name = "Other",
                 Amount = 200m,
-                AddedOn = new DateTime(2026, 6, 13, 1, 0, 0),
+                OccurredOn = new DateTime(2026, 6, 13, 1, 0, 0),
                 Account = new Account { Name = "Checking" }
             }
         ]);
@@ -139,8 +143,7 @@ public sealed class CalendarServiceTests
         bool expectedIncluded)
     {
         var (sut, unitOfWork) = CreateSut();
-        unitOfWork.ExpenseLogs.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
-        unitOfWork.IncomeLogs.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
+        unitOfWork.Transactions.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
         unitOfWork.SavingGoals.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
         unitOfWork.RecurringTransactions.GetAllAsync(Arg.Any<CancellationToken>()).Returns([
             new RecurringTransaction
@@ -164,8 +167,7 @@ public sealed class CalendarServiceTests
     private static (CalendarService Sut, IUnitOfWork UnitOfWork) CreateSut()
     {
         var unitOfWork = Substitute.For<IUnitOfWork>();
-        unitOfWork.ExpenseLogs.Returns(Substitute.For<IExpenseLogRepository>());
-        unitOfWork.IncomeLogs.Returns(Substitute.For<IIncomeLogRepository>());
+        unitOfWork.Transactions.Returns(Substitute.For<ITransactionRepository>());
         unitOfWork.SavingGoals.Returns(Substitute.For<ISavingGoalRepository>());
         unitOfWork.RecurringTransactions.Returns(Substitute.For<IRecurringTransactionRepository>());
 
