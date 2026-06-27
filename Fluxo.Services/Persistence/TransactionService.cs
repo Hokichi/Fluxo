@@ -29,4 +29,14 @@ public sealed class TransactionService(IDataOperationRunner runner, IMapper mapp
             scope.UnitOfWork.Transactions.Update(transaction);
             await scope.UnitOfWork.SaveChangesAsync(ct);
         }, cancellationToken);
+
+    public Task PostTerminationCleanupAsync(CancellationToken cancellationToken = default) =>
+        runner.RunAsync("cleanup terminated transactions", async (scope, ct) =>
+        {
+            var transactions = await scope.UnitOfWork.Transactions.GetMarkedForDeletionAsync(ct);
+            foreach (var transaction in transactions)
+                scope.UnitOfWork.Transactions.Remove(transaction);
+            if (transactions.Count > 0)
+                await scope.UnitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
 }

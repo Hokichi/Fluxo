@@ -48,7 +48,7 @@ public partial class App : Application
 
     private readonly IDataOperationRunner _dataOperationRunner;
     private readonly IBudgetAllocationPeriodSyncService _budgetAllocationPeriodSyncService;
-    private readonly IExpenseLogService _expenseLogService;
+    private readonly ITransactionService _transactionService;
     private readonly MainVM _mainVM;
     private readonly IStartupRegistrationService _startupRegistrationService;
     private readonly IStartupUpdateNotificationService _startupUpdateNotificationService;
@@ -83,7 +83,7 @@ public partial class App : Application
         _mainVM = _serviceProvider.GetRequiredService<MainVM>();
         _dataOperationRunner = _serviceProvider.GetRequiredService<IDataOperationRunner>();
         _budgetAllocationPeriodSyncService = _serviceProvider.GetRequiredService<IBudgetAllocationPeriodSyncService>();
-        _expenseLogService = _serviceProvider.GetRequiredService<IExpenseLogService>();
+        _transactionService = _serviceProvider.GetRequiredService<ITransactionService>();
         _startupRegistrationService = _serviceProvider.GetRequiredService<IStartupRegistrationService>();
         _startupUpdateNotificationService = _serviceProvider.GetRequiredService<IStartupUpdateNotificationService>();
         _startupNotificationSummaryService = _serviceProvider.GetRequiredService<IStartupNotificationSummaryService>();
@@ -143,7 +143,7 @@ public partial class App : Application
                 LogStartupStage("first-run setting", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 LogStartupStage("post-termination cleanup", StartupStageState.Started);
-                await _expenseLogService.PostTerminationCleanupAsync();
+                await _transactionService.PostTerminationCleanupAsync();
                 LogStartupStage("post-termination cleanup", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 LogStartupStage("startup registration sync", StartupStageState.Started);
