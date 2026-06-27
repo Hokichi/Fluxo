@@ -885,8 +885,6 @@ public sealed class ExpenseDetailVMSplitTests
                 new Tag { Id = 1, Name = "General", HexCode = "#22C55E", IsSystemTag = false },
                 new Tag { Id = 2, Name = "Travel", HexCode = "#3B82F6", IsSystemTag = false }
             ]));
-        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>([]));
 
         var persistedSource = new Account
         {
@@ -905,11 +903,14 @@ public sealed class ExpenseDetailVMSplitTests
             IsSystemTag = isBudgetReconciliation
         };
 
-        var persistedExpense = new Expense
+        var persistedTransaction = new Transaction
         {
-            Id = 20,
+            Id = 10,
+            Type = TransactionType.Expense,
             Name = "Parent expense",
             Amount = amount,
+            OccurredOn = new DateTime(2026, 5, 31),
+            Notes = "Original note",
             ExpenseCategory = ExpenseCategory.Needs,
             Account = persistedSource,
             AccountId = persistedSource.Id,
@@ -917,42 +918,23 @@ public sealed class ExpenseDetailVMSplitTests
             TagId = persistedTag.Id
         };
 
-        var persistedLog = new ExpenseLog
-        {
-            Id = 10,
-            ExpenseId = persistedExpense.Id,
-            AccountId = persistedSource.Id,
-            Expense = persistedExpense,
-            Account = persistedSource,
-            Amount = amount,
-            DeductedOn = new DateTime(2026, 5, 31),
-            Notes = "Original note"
-        };
-
-        appData.GetExpenseLogByLogIdAsync(10, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<ExpenseLog?>(persistedLog));
+        appData.GetTransactionsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Transaction>>([persistedTransaction]));
+        appData.GetTransactionByIdAsync(10, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Transaction?>(persistedTransaction));
         appData.GetAccountByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Account?>(persistedSource));
         appData.GetTagByIdAsync(1, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Tag?>(persistedTag));
         appData.SaveChangesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
-        var nextExpenseId = 100;
-        appData.When(service => service.AddExpenseAsync(Arg.Any<Expense>(), Arg.Any<CancellationToken>()))
+        var nextTransactionId = 100;
+        appData.When(service => service.AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>()))
             .Do(call =>
             {
-                var expense = call.Arg<Expense>();
-                if (expense.Id <= 0)
-                    expense.Id = nextExpenseId++;
-            });
-
-        var nextExpenseLogId = 200;
-        appData.When(service => service.AddExpenseLogAsync(Arg.Any<ExpenseLog>(), Arg.Any<CancellationToken>()))
-            .Do(call =>
-            {
-                var expenseLog = call.Arg<ExpenseLog>();
-                if (expenseLog.Id <= 0)
-                    expenseLog.Id = nextExpenseLogId++;
+                var transaction = call.Arg<Transaction>();
+                if (transaction.Id <= 0)
+                    transaction.Id = nextTransactionId++;
             });
 
         return (new ExpenseDetailVM(main, new ExpenseLogVM
