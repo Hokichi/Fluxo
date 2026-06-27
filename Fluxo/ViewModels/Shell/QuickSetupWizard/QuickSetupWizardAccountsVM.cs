@@ -259,22 +259,14 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
             appData.UpdateAccount(persisted);
         }
 
-        var allExpenseLogs = await appData.GetExpenseLogsAsync();
-        var allIncomeLogs = await appData.GetIncomeLogsAsync();
+        var allTransactions = await appData.GetTransactionsAsync();
 
         foreach (var removedId in _removedPersistedIds)
         {
             if (existingSources.TryGetValue(removedId, out var existing))
             {
-                var relatedExpenseLogs = allExpenseLogs
-                    .Where(log => log.AccountId == removedId);
-                foreach (var expenseLog in relatedExpenseLogs)
-                    appData.RemoveExpenseLog(expenseLog);
-
-                var relatedIncomeLogs = allIncomeLogs
-                    .Where(log => log.AccountId == removedId);
-                foreach (var incomeLog in relatedIncomeLogs)
-                    appData.RemoveIncomeLog(incomeLog);
+                foreach (var transaction in allTransactions.Where(item => item.AccountId == removedId))
+                    appData.RemoveTransaction(transaction);
 
                 appData.RemoveAccount(existing);
             }

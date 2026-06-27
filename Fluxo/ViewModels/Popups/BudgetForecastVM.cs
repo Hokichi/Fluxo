@@ -67,7 +67,9 @@ public sealed partial class BudgetForecastVM : ObservableObject
         _allocation = await _appData.GetBudgetAllocationAsync(cancellationToken);
         var accounts = await _appData.GetAccountsAsync(cancellationToken);
         var recurringTransactions = await _appData.GetRecurringTransactionsAsync(cancellationToken);
-        var expenseLogs = await _appData.GetExpenseLogsAsync(cancellationToken);
+        var expenseLogs = (await _appData.GetTransactionsAsync(cancellationToken))
+            .Where(transaction => transaction.Type == TransactionType.Expense)
+            .ToList();
 
         Accounts.Clear();
         foreach (var account in accounts.Where(account => account.IsEnabled && !account.IsForDeletion).OrderBy(account => account.Name))
@@ -329,7 +331,7 @@ public sealed partial class BudgetForecastVM : ObservableObject
         OnPropertyChanged(nameof(IsEventCategoryVisible));
     }
 
-    private void ApplyCurrentBudgetRemaining(IReadOnlyList<ExpenseLog> expenseLogs, IReadOnlyList<Account> accounts)
+    private void ApplyCurrentBudgetRemaining(IReadOnlyList<Transaction> expenseLogs, IReadOnlyList<Account> accounts)
     {
         var budgetEffectiveLogs = SelectBudgetEffectiveLogs(expenseLogs);
         var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(
@@ -468,22 +470,22 @@ public sealed partial class BudgetForecastVM : ObservableObject
     }
 
     private static IReadOnlyDictionary<ExpenseCategory, decimal> SumSpentByCategory(
-        IEnumerable<ExpenseLog> logs,
+        IEnumerable<Transaction> logs,
         DateTime start,
         DateTime end)
     {
         return logs
-            .Where(log => log.DeductedOn.Date >= start.Date && log.DeductedOn.Date <= end.Date)
-            .GroupBy(log => log.Expense?.ExpenseCategory ?? ExpenseCategory.Needs)
+            .Where(log => log.OccurredOn.Date >= start.Date && log.OccurredOn.Date <= end.Date)
+            .GroupBy(log => log.ExpenseCategory ?? ExpenseCategory.Needs)
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
     }
 
-    private static IReadOnlyList<ExpenseLog> SelectBudgetEffectiveLogs(IReadOnlyList<ExpenseLog> expenseLogs)
+    private static IReadOnlyList<Transaction> SelectBudgetEffectiveLogs(IReadOnlyList<Transaction> expenseLogs)
     {
-        var activeLogs = expenseLogs.Where(log => !log.IsForDeletion).ToList();
+        var activeLogs = expenseLogs.Where(log => !log.IsForDeletion && !log.IsExcludedFromBudget).ToList();
         var parentLogIds = activeLogs
-            .Where(log => log.ParentLogId is > 0)
-            .Select(log => log.ParentLogId!.Value)
+            .Where(log => log.ParentTransactionId is > 0)
+            .Select(log => log.ParentTransactionId!.Value)
             .ToHashSet();
 
         return activeLogs

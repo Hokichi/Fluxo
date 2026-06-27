@@ -275,28 +275,35 @@ public partial class AddFixedExpenseVM : ObservableObject
 
             if (EditingId.HasValue)
             {
-                var existing = await _appData.GetExpenseByIdAsync(EditingId.Value);
+                var existing = await _appData.GetRecurringTransactionByIdAsync(EditingId.Value);
                 if (existing is null)
                     return AddFixedExpenseResult.Failure("Recurring transaction not found.");
 
                 existing.Name = input.Name;
                 existing.Amount = input.Amount;
-                existing.ExpenseCategory = input.Category;
-                existing.AccountId = account.Id;
+                existing.Category = input.Category;
+                existing.SourceId = account.Id;
                 existing.TagId = tag.Id;
-                _appData.UpdateExpense(existing);
+                existing.RecurringPeriod = RecurringPeriod.Monthly;
+                existing.RecurringTime = input.RecurringTime;
+                existing.IsEnabled = input.IsActive;
+                _appData.UpdateRecurringTransaction(existing);
             }
             else
             {
-                var expense = new Expense
+                var expense = new RecurringTransaction
                 {
                     Name = input.Name,
                     Amount = input.Amount,
-                    ExpenseCategory = input.Category,
-                    AccountId = account.Id,
-                    TagId = tag.Id
+                    Type = RecurringTransactionType.Expense,
+                    Category = input.Category,
+                    SourceId = account.Id,
+                    TagId = tag.Id,
+                    RecurringPeriod = RecurringPeriod.Monthly,
+                    RecurringTime = input.RecurringTime,
+                    IsEnabled = input.IsActive
                 };
-                await _appData.AddExpenseAsync(expense);
+                await _appData.AddRecurringTransactionAsync(expense);
             }
 
             await _appData.SaveChangesAsync();

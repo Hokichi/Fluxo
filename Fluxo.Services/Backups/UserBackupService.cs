@@ -11,7 +11,7 @@ namespace Fluxo.Services.Backups;
 
 public sealed class UserBackupService(IAppDataService appData) : IUserBackupService
 {
-    internal const int CurrentSchemaVersion = 1;
+    internal const int CurrentSchemaVersion = 2;
     private const string DataRestorationTagName = "Data Restoration";
     private const string DataRestorationTagHex = "#e9c178";
     private static readonly HashSet<string> LegacyBudgetAllocationUserSettingNames = new(StringComparer.OrdinalIgnoreCase)
@@ -92,7 +92,6 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             var sourceBackupIds = new Dictionary<int, int>();
             var tagBackupIds = new Dictionary<int, int>();
             var goalBackupIds = new Dictionary<int, int>();
-            var expenseBackupIds = new Dictionary<int, int>();
 
             if (selection.Includes(DataManagementEntityKind.Accounts))
             {
@@ -140,16 +139,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             if (selection.Includes(DataManagementEntityKind.Goals))
                 await AddSelectedGoalsAsync(document, goalBackupIds, cancellationToken);
 
-            if (selection.Includes(DataManagementEntityKind.Expenses))
-                await AddSelectedExpensesAsync(
-                    document,
-                    sourceBackupIds,
-                    tagBackupIds,
-                    expenseBackupIds,
-                    cancellationToken);
-
-            if (selection.Includes(DataManagementEntityKind.Incomes))
-                await AddSelectedIncomeLogsAsync(document, sourceBackupIds, cancellationToken);
+            if (selection.Includes(DataManagementEntityKind.Expenses) || selection.Includes(DataManagementEntityKind.Incomes))
+                await AddSelectedTransactionsAsync(document, selection, sourceBackupIds, tagBackupIds, cancellationToken);
 
             if (selection.Includes(DataManagementEntityKind.RecurringTransactions))
             {
@@ -230,13 +221,11 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             var sourceIdMap = new Dictionary<int, int>();
             var tagIdMap = new Dictionary<int, int>();
             var goalIdMap = new Dictionary<int, int>();
-            var expenseIdMap = new Dictionary<int, int>();
 
             await AppendTagsAsync(document, selection, conflictDecisions, tagIdMap, cancellationToken);
             await AppendAccountsAsync(document, selection, conflictDecisions, sourceIdMap, cancellationToken);
             await AppendGoalsAsync(document, selection, conflictDecisions, goalIdMap, cancellationToken);
-            await AppendExpensesAndLogsAsync(document, selection, sourceIdMap, tagIdMap, expenseIdMap, cancellationToken);
-            await AppendIncomeLogsAsync(document, selection, sourceIdMap, cancellationToken);
+            await AppendTransactionsAsync(document, selection, sourceIdMap, tagIdMap, cancellationToken);
             await AppendRecurringTransactionsAsync(document, selection, sourceIdMap, tagIdMap, goalIdMap, cancellationToken);
             await AppendUserSettingsAsync(document, selection, cancellationToken);
 
@@ -277,14 +266,12 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             var sourceIdMap = new Dictionary<int, int>();
             var tagIdMap = new Dictionary<int, int>();
             var goalIdMap = new Dictionary<int, int>();
-            var expenseIdMap = new Dictionary<int, int>();
             var overwriteConflictDecisions = new Dictionary<string, DataManagementConflictDecision>();
 
             await AppendTagsAsync(document, selection, overwriteConflictDecisions, tagIdMap, cancellationToken);
             await AppendAccountsAsync(document, selection, overwriteConflictDecisions, sourceIdMap, cancellationToken);
             await AppendGoalsAsync(document, selection, overwriteConflictDecisions, goalIdMap, cancellationToken);
-            await AppendExpensesAndLogsAsync(document, selection, sourceIdMap, tagIdMap, expenseIdMap, cancellationToken);
-            await AppendIncomeLogsAsync(document, selection, sourceIdMap, cancellationToken);
+            await AppendTransactionsAsync(document, selection, sourceIdMap, tagIdMap, cancellationToken);
             await AppendRecurringTransactionsAsync(document, selection, sourceIdMap, tagIdMap, goalIdMap, cancellationToken);
             await AppendUserSettingsAsync(document, selection, cancellationToken);
 
@@ -432,13 +419,12 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                     await RemoveRecurringTransactionsAsync(cancellationToken);
                     break;
                 case "ExpenseLogs":
-                    await RemoveExpenseLogsAsync(cancellationToken);
+                    await RemoveTransactionsAsync(TransactionType.Expense, cancellationToken);
                     break;
                 case "Expenses":
-                    await RemoveExpensesAsync(cancellationToken);
                     break;
                 case "IncomeLogs":
-                    await RemoveIncomeLogsAsync(cancellationToken);
+                    await RemoveTransactionsAsync(TransactionType.Income, cancellationToken);
                     break;
                 case "Accounts":
                     await RemoveAccountsAsync(cancellationToken);
@@ -463,25 +449,11 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             appData.RemoveRecurringTransaction(recurringTransaction);
     }
 
-    private async Task RemoveExpenseLogsAsync(CancellationToken cancellationToken)
+    private async Task RemoveTransactionsAsync(TransactionType type, CancellationToken cancellationToken)
     {
-        var logs = await appData.GetExpenseLogsAsync(cancellationToken);
-        foreach (var log in logs)
-            appData.RemoveExpenseLog(log);
-    }
-
-    private async Task RemoveExpensesAsync(CancellationToken cancellationToken)
-    {
-        var expenses = await appData.GetExpensesAsync(cancellationToken);
-        foreach (var expense in expenses)
-            appData.RemoveExpense(expense);
-    }
-
-    private async Task RemoveIncomeLogsAsync(CancellationToken cancellationToken)
-    {
-        var logs = await appData.GetIncomeLogsAsync(cancellationToken);
-        foreach (var log in logs)
-            appData.RemoveIncomeLog(log);
+        var transactions = await appData.GetTransactionsAsync(cancellationToken);
+        foreach (var transaction in transactions.Where(item => item.Type == type))
+            appData.RemoveTransaction(transaction);
     }
 
     private async Task RemoveAccountsAsync(CancellationToken cancellationToken)
@@ -1043,6 +1015,99 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 goal.CurrentAmount,
                 goal.SavingEndDate,
                 goal.CreatedOn));
+        }
+    }
+
+    private async Task AddSelectedTransactionsAsync(
+        FluxoUserBackupDocument document,
+        UserBackupSelection selection,
+        Dictionary<int, int> sourceBackupIds,
+        Dictionary<int, int> tagBackupIds,
+        CancellationToken cancellationToken)
+    {
+        var transactions = (await appData.GetTransactionsAsync(cancellationToken))
+            .Where(transaction => transaction.Type == TransactionType.Expense
+                ? selection.Includes(DataManagementEntityKind.Expenses)
+                : selection.Includes(DataManagementEntityKind.Incomes))
+            .ToList();
+        var backupIds = transactions.Select((transaction, index) => (transaction.Id, BackupId: index + 1))
+            .ToDictionary(item => item.Id, item => item.BackupId);
+
+        foreach (var transaction in transactions)
+        {
+            if (!sourceBackupIds.TryGetValue(transaction.AccountId, out var accountBackupId))
+                continue;
+
+            int? tagBackupId = transaction.TagId is { } tagId && tagBackupIds.TryGetValue(tagId, out var mappedTagId)
+                ? mappedTagId
+                : null;
+            int? parentBackupId = transaction.ParentTransactionId is { } parentId && backupIds.TryGetValue(parentId, out var mappedParentId)
+                ? mappedParentId
+                : null;
+
+            document.Entities.Transactions.Add(new BackupTransaction(
+                backupIds[transaction.Id],
+                transaction.Type.ToString(),
+                accountBackupId,
+                transaction.Name,
+                transaction.Amount,
+                transaction.OccurredOn,
+                transaction.Notes,
+                transaction.ExpenseCategory?.ToString(),
+                tagBackupId,
+                parentBackupId,
+                transaction.IsPinned,
+                transaction.IsForDeletion,
+                transaction.IsIoU,
+                transaction.IsExcludedFromBudget));
+        }
+    }
+
+    private async Task AppendTransactionsAsync(
+        FluxoUserBackupDocument document,
+        UserBackupSelection selection,
+        Dictionary<int, int> sourceIdMap,
+        Dictionary<int, int> tagIdMap,
+        CancellationToken cancellationToken)
+    {
+        var restored = new Dictionary<int, Transaction>();
+        foreach (var backup in document.Entities.Transactions)
+        {
+            if (!Enum.TryParse<TransactionType>(backup.Type, out var type) ||
+                (type == TransactionType.Expense && !selection.Includes(DataManagementEntityKind.Expenses)) ||
+                (type == TransactionType.Income && !selection.Includes(DataManagementEntityKind.Incomes)) ||
+                !sourceIdMap.TryGetValue(backup.AccountBackupId, out var accountId))
+                continue;
+
+            var transaction = new Transaction
+            {
+                Type = type,
+                AccountId = accountId,
+                Name = backup.Name,
+                Amount = backup.Amount,
+                OccurredOn = backup.OccurredOn,
+                Notes = backup.Notes,
+                ExpenseCategory = Enum.TryParse<ExpenseCategory>(backup.ExpenseCategory, out var category) ? category : null,
+                TagId = backup.TagBackupId is { } tagBackupId && tagIdMap.TryGetValue(tagBackupId, out var tagId) ? tagId : null,
+                IsPinned = backup.IsPinned,
+                IsForDeletion = backup.IsForDeletion,
+                IsIoU = backup.IsIoU,
+                IsExcludedFromBudget = backup.IsExcludedFromBudget
+            };
+            await appData.AddTransactionAsync(transaction, cancellationToken);
+            restored[backup.BackupId] = transaction;
+        }
+
+        await appData.SaveChangesAsync(cancellationToken);
+        foreach (var backup in document.Entities.Transactions)
+        {
+            if (backup.ParentTransactionBackupId is not { } parentBackupId ||
+                !restored.TryGetValue(backup.BackupId, out var transaction) ||
+                !restored.TryGetValue(parentBackupId, out var parent))
+                continue;
+
+            transaction.ParentTransactionId = parent.Id;
+            appData.UpdateTransaction(transaction);
         }
     }
 

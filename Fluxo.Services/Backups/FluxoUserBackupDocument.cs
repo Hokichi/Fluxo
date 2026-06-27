@@ -5,7 +5,7 @@ namespace Fluxo.Services.Backups;
 
 public sealed class FluxoUserBackupDocument
 {
-    public int SchemaVersion { get; set; } = 1;
+    public int SchemaVersion { get; set; } = 2;
     public DateTime CreatedAt { get; set; }
     public List<DataManagementEntityKind> IncludedEntities { get; set; } = [];
     public FluxoUserBackupEntities Entities { get; set; } = new();
@@ -16,9 +16,10 @@ public sealed class FluxoUserBackupEntities
     public List<BackupAccount> Accounts { get; set; } = [];
     public List<BackupTag> Tags { get; set; } = [];
     public List<BackupSavingGoal> Goals { get; set; } = [];
-    public List<BackupExpense> Expenses { get; set; } = [];
-    public List<BackupExpenseLog> ExpenseLogs { get; set; } = [];
-    public List<BackupIncomeLog> IncomeLogs { get; set; } = [];
+    public List<BackupTransaction> Transactions { get; set; } = [];
+    [JsonIgnore] public List<BackupExpense> Expenses { get; set; } = [];
+    [JsonIgnore] public List<BackupExpenseLog> ExpenseLogs { get; set; } = [];
+    [JsonIgnore] public List<BackupIncomeLog> IncomeLogs { get; set; } = [];
     public List<BackupRecurringTransaction> RecurringTransactions { get; set; } = [];
     public List<BackupUserSetting> UserSettings { get; set; } = [];
 }
@@ -92,6 +93,22 @@ public sealed record BackupIncomeLog(
     string Notes,
     bool IsPinned = false,
     bool IsIoU = false);
+
+public sealed record BackupTransaction(
+    int BackupId,
+    string Type,
+    int AccountBackupId,
+    string Name,
+    decimal Amount,
+    DateTime OccurredOn,
+    string Notes,
+    string? ExpenseCategory,
+    int? TagBackupId,
+    int? ParentTransactionBackupId,
+    bool IsPinned,
+    bool IsForDeletion,
+    bool IsIoU,
+    bool IsExcludedFromBudget);
 
 public sealed record BackupRecurringTransaction(
     int BackupId,

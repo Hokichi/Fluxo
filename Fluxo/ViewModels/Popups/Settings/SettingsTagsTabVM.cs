@@ -144,8 +144,8 @@ public partial class SettingsTagsTabVM : ObservableObject
             if (persistedTag is null)
                 return SettingsOperationResult.Failure("That tag could not be found anymore.");
 
-            var allExpenses = await _appData.GetExpensesAsync();
-            var linkedExpenses = allExpenses.Where(e => e.TagId == persistedTag.Id).ToList();
+            var allTransactions = await _appData.GetTransactionsAsync();
+            var linkedExpenses = allTransactions.Where(transaction => transaction.TagId == persistedTag.Id).ToList();
             if (linkedExpenses.Count > 0)
                 return SettingsOperationResult.Failure(
                     $"{persistedTag.Name} is still assigned to one or more expenses, so it can't be deleted yet.");

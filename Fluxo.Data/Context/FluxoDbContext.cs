@@ -20,9 +20,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        ConfigureExpense(modelBuilder.Entity<Expense>());
-        ConfigureExpenseLog(modelBuilder.Entity<ExpenseLog>());
-        ConfigureIncomeLog(modelBuilder.Entity<IncomeLog>());
+        modelBuilder.Ignore<Expense>();
+        modelBuilder.Ignore<ExpenseLog>();
+        modelBuilder.Ignore<IncomeLog>();
         ConfigureTransaction(modelBuilder.Entity<Transaction>());
         ConfigureTag(modelBuilder.Entity<Tag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
