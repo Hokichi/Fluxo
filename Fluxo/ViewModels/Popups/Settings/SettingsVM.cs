@@ -394,9 +394,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         try
         {
-            var expenseLogs = await _appData.GetExpenseLogsAsync();
-            var incomeLogs = await _appData.GetIncomeLogsAsync();
-            var expenses = await _appData.GetExpensesAsync();
+            var transactions = await _appData.GetTransactionsAsync();
             var savingGoals = await _appData.GetSavingGoalsAsync();
             var accounts = await _appData.GetAccountsAsync();
             var tags = await _appData.GetTagsAsync();
@@ -408,9 +406,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 _appData,
                 tags,
                 accounts,
-                expenses,
-                expenseLogs,
-                incomeLogs,
+                transactions,
                 savingGoals,
                 recurringTransactions,
                 notifications);
@@ -614,9 +610,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         IAppDataService appData,
         IReadOnlyList<Tag> tags,
         IReadOnlyList<Account> accounts,
-        IReadOnlyList<Expense> expenses,
-        IReadOnlyList<ExpenseLog> expenseLogs,
-        IReadOnlyList<IncomeLog> incomeLogs,
+        IReadOnlyList<Transaction> transactions,
         IReadOnlyList<SavingGoal> savingGoals,
         IReadOnlyList<RecurringTransaction> recurringTransactions,
         IReadOnlyList<Notification> notifications)
@@ -624,9 +618,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         ArgumentNullException.ThrowIfNull(appData);
         ArgumentNullException.ThrowIfNull(tags);
         ArgumentNullException.ThrowIfNull(accounts);
-        ArgumentNullException.ThrowIfNull(expenses);
-        ArgumentNullException.ThrowIfNull(expenseLogs);
-        ArgumentNullException.ThrowIfNull(incomeLogs);
+        ArgumentNullException.ThrowIfNull(transactions);
         ArgumentNullException.ThrowIfNull(savingGoals);
         ArgumentNullException.ThrowIfNull(recurringTransactions);
         ArgumentNullException.ThrowIfNull(notifications);
@@ -634,14 +626,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         foreach (var recurringTransaction in recurringTransactions)
             appData.RemoveRecurringTransaction(recurringTransaction);
 
-        foreach (var expenseLog in expenseLogs)
-            appData.RemoveExpenseLog(expenseLog);
-
-        foreach (var expense in expenses)
-            appData.RemoveExpense(expense);
-
-        foreach (var incomeLog in incomeLogs)
-            appData.RemoveIncomeLog(incomeLog);
+        foreach (var transaction in transactions)
+            appData.RemoveTransaction(transaction);
 
         foreach (var source in accounts)
             appData.RemoveAccount(source);

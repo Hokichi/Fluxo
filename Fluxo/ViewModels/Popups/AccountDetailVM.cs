@@ -365,16 +365,12 @@ public partial class AccountDetailVM : ObservableObject
             if (account is null)
                 return AccountDetailResult.Failure("Unable to load this account.");
 
-            var allExpenseLogs = await _appData.GetExpenseLogsAsync();
-            var allIncomeLogs = await _appData.GetIncomeLogsAsync();
+            var transactions = await _appData.GetTransactionsAsync();
 
             var snapshot = AccountMemorySnapshot.Create(account);
 
-            foreach (var expenseLog in allExpenseLogs.Where(log => log.AccountId == AccountId))
-                _appData.RemoveExpenseLog(expenseLog);
-
-            foreach (var incomeLog in allIncomeLogs.Where(log => log.AccountId == AccountId))
-                _appData.RemoveIncomeLog(incomeLog);
+            foreach (var transaction in transactions.Where(item => item.AccountId == AccountId))
+                _appData.RemoveTransaction(transaction);
 
             _appData.RemoveAccount(account);
             await _appData.SaveChangesAsync();
@@ -413,12 +409,11 @@ public partial class AccountDetailVM : ObservableObject
 
         await LoadDeductSourcesAsync();
 
-        var allExpenseLogs = await _appData.GetExpenseLogsAsync();
-        var expenseLogs = allExpenseLogs
-            .Where(log => log.AccountId == AccountId && !log.IsForDeletion)
+        var transactions = (await _appData.GetTransactionsAsync())
+            .Where(transaction => transaction.AccountId == AccountId && !transaction.IsForDeletion)
             .ToList();
-        var allIncomeLogsRaw = await _appData.GetIncomeLogsAsync();
-        var incomeLogs = allIncomeLogsRaw.Where(log => log.AccountId == AccountId).ToList();
+        var expenseLogs = transactions.Where(transaction => transaction.Type == TransactionType.Expense).ToList();
+        var incomeLogs = transactions.Where(transaction => transaction.Type == TransactionType.Income).ToList();
 
         MoneyIn = incomeLogs.Sum(log => log.Amount);
         MoneyOut = expenseLogs.Sum(log => log.Amount);
@@ -600,18 +595,18 @@ public partial class AccountDetailVM : ObservableObject
     }
 
     private static IEnumerable<AccountActivityItemVM> BuildActivities(
-        IEnumerable<ExpenseLog> expenseLogs,
-        IEnumerable<IncomeLog> incomeLogs)
+        IEnumerable<Transaction> expenseLogs,
+        IEnumerable<Transaction> incomeLogs)
     {
-        var expenseActivities = expenseLogs.Where(c => c.ParentLogId == null).Select(log => new AccountActivityItemVM(
-            log.DeductedOn,
-            log.Expense?.Name?.Trim() is { Length: > 0 } expenseName ? expenseName : "Expense",
+        var expenseActivities = expenseLogs.Where(c => c.ParentTransactionId == null).Select(log => new AccountActivityItemVM(
+            log.OccurredOn,
+            log.Name.Trim() is { Length: > 0 } expenseName ? expenseName : "Expense",
             string.IsNullOrWhiteSpace(log.Notes) ? "Expense" : log.Notes.Trim(),
             log.Amount,
             true));
 
         var incomeActivities = incomeLogs.Select(log => new AccountActivityItemVM(
-            log.AddedOn,
+            log.OccurredOn,
             BuildIncomeTitle(log.Notes),
             string.IsNullOrWhiteSpace(log.Notes) ? "Income" : log.Notes.Trim(),
             log.Amount,
@@ -625,19 +620,19 @@ public partial class AccountDetailVM : ObservableObject
     }
 
     private static IEnumerable<AccountTrendItemVM> BuildTrends(
-        IEnumerable<ExpenseLog> expenseLogs,
-        IEnumerable<IncomeLog> incomeLogs)
+        IEnumerable<Transaction> expenseLogs,
+        IEnumerable<Transaction> incomeLogs)
     {
         var months = Enumerable.Range(0, 4)
             .Select(offset => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-3 + offset))
             .ToList();
 
         var incomeByMonth = incomeLogs
-            .GroupBy(log => new DateTime(log.AddedOn.Year, log.AddedOn.Month, 1))
+            .GroupBy(log => new DateTime(log.OccurredOn.Year, log.OccurredOn.Month, 1))
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
 
         var expenseByMonth = expenseLogs
-            .GroupBy(log => new DateTime(log.DeductedOn.Year, log.DeductedOn.Month, 1))
+            .GroupBy(log => new DateTime(log.OccurredOn.Year, log.OccurredOn.Month, 1))
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
 
         return months.Select(month => new AccountTrendItemVM(

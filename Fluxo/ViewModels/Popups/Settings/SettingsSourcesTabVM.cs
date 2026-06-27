@@ -146,14 +146,10 @@ public partial class SettingsSourcesTabVM : ObservableObject
             switch (action)
             {
                 case SettingsBatchAction.Delete:
-                    var allExpenseLogs = await _appData.GetExpenseLogsAsync();
-                    var expenseLogsBySourceId = allExpenseLogs
+                    var allTransactions = await _appData.GetTransactionsAsync();
+                    var transactionsBySourceId = allTransactions
                         .GroupBy(log => log.AccountId)
-                        .ToDictionary(group => group.Key, group => (IReadOnlyList<ExpenseLog>)group.ToList());
-                    var allIncomeLogs = await _appData.GetIncomeLogsAsync();
-                    var incomeLogsBySourceId = allIncomeLogs
-                        .GroupBy(log => log.AccountId)
-                        .ToDictionary(group => group.Key, group => (IReadOnlyList<IncomeLog>)group.ToList());
+                        .ToDictionary(group => group.Key, group => (IReadOnlyList<Transaction>)group.ToList());
 
                     foreach (var selectedId in selectedIds)
                     {
@@ -161,13 +157,9 @@ public partial class SettingsSourcesTabVM : ObservableObject
                         if (account is null)
                             continue;
 
-                        if (expenseLogsBySourceId.TryGetValue(selectedId, out var expenseLogs))
-                            foreach (var expenseLog in expenseLogs)
-                                _appData.RemoveExpenseLog(expenseLog);
-
-                        if (incomeLogsBySourceId.TryGetValue(selectedId, out var incomeLogs))
-                            foreach (var incomeLog in incomeLogs)
-                                _appData.RemoveIncomeLog(incomeLog);
+                        if (transactionsBySourceId.TryGetValue(selectedId, out var transactions))
+                            foreach (var transaction in transactions)
+                                _appData.RemoveTransaction(transaction);
 
                         var snapshot = AccountMemorySnapshot.Create(account);
                         _appData.RemoveAccount(account);

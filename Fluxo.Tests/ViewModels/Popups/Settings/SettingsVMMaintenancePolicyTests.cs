@@ -148,32 +148,15 @@ public sealed class SettingsVMMaintenancePolicyTests
         var customTag = new Tag { Id = 2, Name = "Custom", HexCode = "#000000", IsSystemTag = false };
 
         var source = new Account { Id = 1, Name = "Wallet" };
-        var expense = new Expense
+        var transaction = new Transaction
         {
             Id = 1,
+            Type = TransactionType.Expense,
             Name = "Coffee",
             AccountId = source.Id,
             Account = source,
             TagId = customTag.Id,
             Tag = customTag
-        };
-
-        var expenseLog = new ExpenseLog
-        {
-            Id = 1,
-            ExpenseId = expense.Id,
-            Expense = expense,
-            AccountId = source.Id,
-            Account = source,
-            Notes = string.Empty
-        };
-
-        var incomeLog = new IncomeLog
-        {
-            Id = 1,
-            AccountId = source.Id,
-            Account = source,
-            Notes = string.Empty
         };
 
         var savingGoal = new SavingGoal { Id = 1, Name = "Emergency" };
@@ -195,9 +178,7 @@ public sealed class SettingsVMMaintenancePolicyTests
             appData,
             [systemTag, customTag],
             [source],
-            [expense],
-            [expenseLog],
-            [incomeLog],
+            [transaction],
             [savingGoal],
             [recurringTransaction],
             [firstNotification, secondNotification]);
@@ -206,9 +187,7 @@ public sealed class SettingsVMMaintenancePolicyTests
         appData.Received(1).RemoveRecurringTransaction(recurringTransaction);
         appData.Received(1).RemoveTag(customTag);
         appData.Received(1).RemoveAccount(source);
-        appData.Received(1).RemoveExpense(expense);
-        appData.Received(1).RemoveExpenseLog(expenseLog);
-        appData.Received(1).RemoveIncomeLog(incomeLog);
+        appData.Received(1).RemoveTransaction(transaction);
         appData.Received(1).RemoveSavingGoal(savingGoal);
         appData.Received(1).RemoveNotification(firstNotification);
         appData.Received(1).RemoveNotification(secondNotification);
@@ -216,9 +195,7 @@ public sealed class SettingsVMMaintenancePolicyTests
         Received.InOrder(() =>
         {
             appData.RemoveRecurringTransaction(recurringTransaction);
-            appData.RemoveExpenseLog(expenseLog);
-            appData.RemoveExpense(expense);
-            appData.RemoveIncomeLog(incomeLog);
+            appData.RemoveTransaction(transaction);
             appData.RemoveAccount(source);
             appData.RemoveSavingGoal(savingGoal);
             appData.RemoveTag(customTag);
