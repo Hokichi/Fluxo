@@ -7,7 +7,7 @@ namespace Fluxo.Tests.Views.Styles;
 public sealed class DisabledOpacityStyleTests
 {
     [Theory]
-    [InlineData(@"Fluxo.Resources\Resources\Styles\ButtonStyles.xaml", "c:BalloonButton")]
+    [InlineData(@"Fluxo.Resources\Resources\Styles\ButtonStyles.xaml", "c:BalloonControl")]
     [InlineData(@"Fluxo.Resources\Resources\Styles\ButtonStyles.xaml", "SelectorButtonStyle")]
     [InlineData(@"Fluxo.Resources\Resources\Styles\ButtonStyles.xaml", "PopupTagToggleStyle")]
     [InlineData(@"Fluxo.Resources\Resources\Styles\GlobalStyles.xaml", "FluxoComboBoxStyle")]
