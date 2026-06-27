@@ -348,53 +348,48 @@
                                 LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                <customControls:BalloonCheckBox
-                                    ButtonSize="38"
-                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                    CornerRadius="12"
-                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                    IconSize="14"
-                                    IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                                    IsEnabled="{Binding CanToggleRecurring}"
-                                    PreviewMouseLeftButtonDown="OnRecurringModePreviewMouseLeftButtonDown"
-                                    ToolTip="Set as Recurring"
-                                    UncheckedIcon="{StaticResource RegularRepeat}"
-                                    UncheckedText="Recurring"
-                                    Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                <customControls:BalloonCheckBox
-                                    ButtonSize="38"
-                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                    CheckedIcon="{StaticResource CreditCardClockOutline}"
-                                    CheckedText="Installments"
-                                    CornerRadius="12"
-                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                    IconSize="14"
-                                    IsChecked="{Binding IsInstallments, Mode=TwoWay}"
-                                    IsEnabled="{Binding CanToggleRecurring}"
-                                    PreviewMouseLeftButtonDown="OnInstallmentsModePreviewMouseLeftButtonDown"
-                                    ToolTip="Set as installments"
-                                    UncheckedIcon="{StaticResource CreditCardClockOutline}"
-                                    UncheckedText="Installments"
-                                    Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                <customControls:BalloonCheckBox
-                                    ButtonSize="38"
-                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                    CheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                    CheckedText="{Binding DebtIouTooltip}"
-                                    CornerRadius="12"
-                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                    IconSize="14"
-                                    IsChecked="{Binding IsDebtIou, Mode=TwoWay}"
-                                    PreviewMouseLeftButtonDown="OnDebtIouModePreviewMouseLeftButtonDown"
-                                    ToolTip="{Binding DebtIouTooltip}"
-                                    UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                    UncheckedText="{Binding DebtIouTooltip}"
-                                    Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            </StackPanel>
+                            <customControls:BalloonToggle
+                                Grid.Column="2"
+                                ButtonSize="38"
+                                CornerRadius="12"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                IconSize="14"
+                                IsEnabled="{Binding CanToggleRecurring}"
+                                ToolTip="Transaction mode">
+                                <customControls:BalloonToggle.States>
+                                    <customControls:BalloonToggleState
+                                        ButtonIcon="{StaticResource RegularRepeat}"
+                                        ButtonText="Set as Recurring"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        OnChecked="{Binding HandleRecurringModeClickCommand}" />
+                                    <customControls:BalloonToggleState
+                                        ButtonIcon="{StaticResource CreditCardClockOutline}"
+                                        ButtonText="Set as Installments"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
+                                    <customControls:BalloonToggleState
+                                        ButtonIcon="{StaticResource CreditCardMinusSolid}"
+                                        ButtonText="{Binding DebtIouTooltip}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        OnChecked="{Binding HandleDebtIouModeClickCommand}" />
+                                    <customControls:BalloonToggleState
+                                        ButtonIcon="{StaticResource CreditCardOff}"
+                                        ButtonText="Exclude"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        OnChecked="{Binding HandleExcludeModeClickCommand}" />
+                                    <customControls:BalloonToggleState
+                                        ButtonIcon="{StaticResource CreditCardXRegular}"
+                                        ButtonText="Set as lend and Exclude"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        OnChecked="{Binding HandleExcludedDebtModeClickCommand}" />
+                                </customControls:BalloonToggle.States>
+                            </customControls:BalloonToggle>
                             <customControls:BalloonCheckBox
                                 Grid.Column="4"
                                 ButtonSize="38"
@@ -579,49 +574,48 @@
                                     LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                     Style="{StaticResource RoundedTextInputStyle}"
                                     Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                    <customControls:BalloonCheckBox
-                                        ButtonSize="38"
-                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                        IsChecked="{Binding IsRecurring, Mode=TwoWay}"
-                                        IsEnabled="{Binding CanToggleRecurring}"
-                                        PreviewMouseLeftButtonDown="OnRecurringModePreviewMouseLeftButtonDown"
-                                        ToolTip="Recurring"
-                                        UncheckedIcon="{StaticResource RegularRepeat}"
-                                        UncheckedText="Recurring"
-                                        Visibility="{Binding ShowRecurringToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                    <customControls:BalloonCheckBox
-                                        ButtonSize="38"
-                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        CheckedIcon="{StaticResource CreditCardClockOutline}"
-                                        CheckedText="Installments"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                        IsChecked="{Binding IsInstallments, Mode=TwoWay}"
-                                        IsEnabled="{Binding CanToggleRecurring}"
-                                        PreviewMouseLeftButtonDown="OnInstallmentsModePreviewMouseLeftButtonDown"
-                                        ToolTip="Set as installments"
-                                        UncheckedIcon="{StaticResource CreditCardClockOutline}"
-                                        UncheckedText="Installments"
-                                        Visibility="{Binding ShowInstallmentsToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                    <customControls:BalloonCheckBox
-                                        ButtonSize="38"
-                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                        CheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                        CheckedText="{Binding DebtIouTooltip}"
-                                        CornerRadius="12"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                        IconSize="14"
-                                        IsChecked="{Binding IsDebtIou, Mode=TwoWay}"
-                                        PreviewMouseLeftButtonDown="OnDebtIouModePreviewMouseLeftButtonDown"
-                                        ToolTip="{Binding DebtIouTooltip}"
-                                        UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                        UncheckedText="{Binding DebtIouTooltip}"
-                                        Visibility="{Binding ShowDebtIouToggle, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                </StackPanel>
+                                <customControls:BalloonToggle
+                                    Grid.Column="2"
+                                    ButtonSize="38"
+                                    CornerRadius="12"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                    IconSize="14"
+                                    IsEnabled="{Binding CanToggleRecurring}"
+                                    ToolTip="Transaction mode">
+                                    <customControls:BalloonToggle.States>
+                                        <customControls:BalloonToggleState
+                                            ButtonIcon="{StaticResource RegularRepeat}"
+                                            ButtonText="Recurring"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                            HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            OnChecked="{Binding HandleRecurringModeClickCommand}" />
+                                        <customControls:BalloonToggleState
+                                            ButtonIcon="{StaticResource CreditCardClockOutline}"
+                                            ButtonText="Installments"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                            HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
+                                        <customControls:BalloonToggleState
+                                            ButtonIcon="{StaticResource CreditCardMinusSolid}"
+                                            ButtonText="{Binding DebtIouTooltip}"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                            HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            OnChecked="{Binding HandleDebtIouModeClickCommand}" />
+                                        <customControls:BalloonToggleState
+                                            ButtonIcon="{StaticResource CreditCardOff}"
+                                            ButtonText="Exclude"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                            HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            OnChecked="{Binding HandleExcludeModeClickCommand}" />
+                                        <customControls:BalloonToggleState
+                                            ButtonIcon="{StaticResource CreditCardXRegular}"
+                                            ButtonText="ExcludedDebt"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                            HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            OnChecked="{Binding HandleExcludedDebtModeClickCommand}" />
+                                    </customControls:BalloonToggle.States>
+                                </customControls:BalloonToggle>
                                 <customControls:BalloonCheckBox
                                     Grid.Column="4"
                                     ButtonSize="38"

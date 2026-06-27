@@ -368,33 +368,6 @@ public partial class AddNewTransaction : BasePopup
         _viewModel.ActivateAmountValidation();
     }
 
-    private void OnRecurringModePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not CheckBox { IsChecked: true })
-            return;
-
-        e.Handled = true;
-        _viewModel.HandleRecurringModeClick();
-    }
-
-    private void OnInstallmentsModePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not CheckBox { IsChecked: true })
-            return;
-
-        e.Handled = true;
-        _viewModel.HandleInstallmentsModeClick();
-    }
-
-    private void OnDebtIouModePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not CheckBox { IsChecked: true })
-            return;
-
-        e.Handled = true;
-        _viewModel.HandleDebtIouModeClick();
-    }
-
     private void RecalculateTagLayout()
     {
         if (!IsLoaded || !_viewModel.IsExpense)

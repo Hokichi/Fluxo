@@ -123,7 +123,7 @@ public class BalloonToggle : BalloonControl
 
     internal void SelectState(BalloonToggleState state)
     {
-        if (!States.Contains(state))
+        if (!States.Contains(state) || !CanActivate(state))
             return;
 
         Activate(state);
@@ -138,21 +138,27 @@ public class BalloonToggle : BalloonControl
         if (States.Count == 0)
             return;
 
-        if (!IsCycling)
-        {
-            Activate(States[0]);
-            return;
-        }
-
         var index = _activeState is null ? -1 : States.IndexOf(_activeState);
-        if (index < 0 || index == States.Count - 1)
+        if (_activeState is not null && index < 0)
         {
             ResetCycle();
             return;
         }
 
-        Activate(States[index + 1]);
+        for (var nextIndex = index + 1; nextIndex < States.Count; nextIndex++)
+        {
+            if (!CanActivate(States[nextIndex]))
+                continue;
+
+            Activate(States[nextIndex]);
+            return;
+        }
+
+        ResetCycle();
     }
+
+    private static bool CanActivate(BalloonToggleState state) =>
+        state.OnChecked?.CanExecute(null) != false;
 
     private void Activate(BalloonToggleState state)
     {

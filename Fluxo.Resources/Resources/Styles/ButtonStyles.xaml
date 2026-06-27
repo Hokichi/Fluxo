@@ -84,21 +84,28 @@
                             Placement="Bottom"
                             PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                             StaysOpen="False">
-                            <Border
-                                Padding="4"
-                                Background="{StaticResource Brush.Background.Surface}"
-                                CornerRadius="8">
+                            <Border Padding="4" Background="Transparent">
                                 <ItemsControl ItemsSource="{Binding States, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <c:BalloonButton
-                                                Margin="2"
+                                                Margin="0,4,0,0"
+                                                HorizontalAlignment="Right"
                                                 ButtonIcon="{Binding ButtonIcon}"
+                                                ButtonSize="40"
                                                 ButtonText="{Binding ButtonText}"
                                                 CommandParameter="{Binding}"
+                                                CornerRadius="12"
                                                 DefaultBackground="{Binding DefaultBackground}"
                                                 HoveredBackground="{Binding HoverBackground}"
-                                                ShouldShowText="True" />
+                                                IconSize="12"
+                                                ShouldExpand="True"
+                                                ShouldShowText="False" />
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -124,11 +131,11 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="{x:Type c:BalloonButton}" BasedOn="{StaticResource {x:Type c:BalloonControl}}" />
+    <Style BasedOn="{StaticResource {x:Type c:BalloonControl}}" TargetType="{x:Type c:BalloonButton}" />
 
-    <Style TargetType="{x:Type c:BalloonToggle}" BasedOn="{StaticResource {x:Type c:BalloonControl}}" />
+    <Style BasedOn="{StaticResource {x:Type c:BalloonControl}}" TargetType="{x:Type c:BalloonToggle}" />
 
-    <Style TargetType="{x:Type c:BalloonCheckBox}" BasedOn="{StaticResource {x:Type c:BalloonControl}}">
+    <Style BasedOn="{StaticResource {x:Type c:BalloonControl}}" TargetType="{x:Type c:BalloonCheckBox}">
         <Setter Property="CheckedBackground" Value="{StaticResource Brush.Mint}" />
         <Style.Triggers>
             <Trigger Property="IsChecked" Value="True">

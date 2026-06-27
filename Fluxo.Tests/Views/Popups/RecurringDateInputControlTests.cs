@@ -23,18 +23,6 @@ public sealed class RecurringDateInputControlTests
     }
 
     [Fact]
-    public void AddNewTransaction_DebtIouAndRecurringTogglesAreHorizontal()
-    {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
-
-        Assert.Equal(2, CountOccurrences(xaml, "<StackPanel Grid.Column=\"2\" Orientation=\"Horizontal\">"));
-        Assert.Equal(2, CountOccurrences(xaml, "IsChecked=\"{Binding IsDebtIou, Mode=TwoWay}\""));
-        Assert.Equal(2, CountOccurrences(xaml, "ToolTip=\"{Binding DebtIouTooltip}\""));
-        Assert.Equal(2, CountOccurrences(xaml, "PreviewMouseLeftButtonDown=\"OnDebtIouModePreviewMouseLeftButtonDown\""));
-        Assert.DoesNotContain("Margin=\"0,0,0,8\"", xaml);
-    }
-
-    [Fact]
     public void AddAccountPopup_MonthlyDueDateInputUsesBoundedNumericUpDown()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddAccountPopup.xaml"));

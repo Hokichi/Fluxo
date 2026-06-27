@@ -49,16 +49,40 @@ public sealed class BalloonToggleTests
     }
 
     [Fact]
-    public void Activate_SkipsCommandWhenCanExecuteIsFalse()
+    public void Click_SkipsStateWhoseCommandCannotExecute()
     {
         RunOnStaThread(() =>
         {
-            var command = new CountingCommand(canExecute: false);
+            var skipped = new CountingCommand(canExecute: false);
+            var selected = new CountingCommand();
             var toggle = new TestBalloonToggle();
-            toggle.States.Add(new BalloonToggleState { OnChecked = command });
+            toggle.States.Add(new BalloonToggleState { ButtonText = "Skipped", OnChecked = skipped });
+            toggle.States.Add(new BalloonToggleState { ButtonText = "Selected", OnChecked = selected });
+
             toggle.InvokeClick();
-            Assert.True(toggle.IsCycling);
-            Assert.Equal(0, command.ExecuteCount);
+
+            Assert.Equal("Selected", toggle.ButtonText);
+            Assert.Equal(0, skipped.ExecuteCount);
+            Assert.Equal(1, selected.ExecuteCount);
+        });
+    }
+
+    [Fact]
+    public void SelectState_IgnoresStateWhoseCommandCannotExecute()
+    {
+        RunOnStaThread(() =>
+        {
+            var state = new BalloonToggleState
+            {
+                ButtonText = "Unavailable",
+                OnChecked = new CountingCommand(canExecute: false)
+            };
+            var toggle = new BalloonToggle();
+            toggle.States.Add(state);
+
+            toggle.SelectState(state);
+
+            Assert.False(toggle.IsCycling);
         });
     }
 

@@ -1182,88 +1182,86 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
-    public void HandleRecurringModeClick_WhenRecurringChecked_SwitchesToInstallments()
-    {
-        RunInSta(() =>
-        {
-            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
-
-            vm.HandleRecurringModeClick();
-
-            Assert.False(vm.IsRecurring);
-            Assert.True(vm.IsInstallments);
-            Assert.False(vm.ShowRecurringToggle);
-            Assert.True(vm.ShowInstallmentsToggle);
-            Assert.False(vm.ShowDebtIouToggle);
-            Assert.True(vm.ShowInstallmentEndDate);
-            Assert.False(vm.CanPinTransaction);
-        });
-    }
-
-    [Fact]
-    public void InstallmentsToggle_IsHidden_WhenRecurringIsCheckedWithoutInstallments()
-    {
-        RunInSta(() =>
-        {
-            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
-
-            Assert.True(vm.ShowRecurringToggle);
-            Assert.False(vm.ShowInstallmentsToggle);
-            Assert.False(vm.ShowDebtIouToggle);
-        });
-    }
-
-    [Fact]
-    public void HandleInstallmentsModeClick_WhenInstallmentsChecked_SwitchesToDebtIou()
-    {
-        RunInSta(() =>
-        {
-            var vm = CreateVm(TransactionKind.Income, CreateCheckingSource(balance: 0m), isRecurring: true);
-            vm.IsInstallments = true;
-
-            vm.HandleInstallmentsModeClick();
-
-            Assert.False(vm.IsRecurring);
-            Assert.False(vm.IsInstallments);
-            Assert.True(vm.IsDebtIou);
-            Assert.False(vm.ShowRecurringToggle);
-            Assert.False(vm.ShowInstallmentsToggle);
-            Assert.True(vm.ShowDebtIouToggle);
-            Assert.False(vm.ShowInstallmentEndDate);
-        });
-    }
-
-    [Fact]
-    public void HandleDebtIouModeClick_WhenDebtIouChecked_ClearsMode()
+    public void HandleRecurringModeClick_SelectsRecurring()
     {
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
             vm.IsDebtIou = true;
 
-            vm.HandleDebtIouModeClick();
+            vm.HandleRecurringModeClick();
 
-            Assert.False(vm.IsRecurring);
+            Assert.True(vm.IsRecurring);
             Assert.False(vm.IsInstallments);
             Assert.False(vm.IsDebtIou);
-            Assert.True(vm.ShowRecurringToggle);
-            Assert.False(vm.ShowInstallmentsToggle);
-            Assert.False(vm.ShowDebtIouToggle);
+            Assert.False(vm.CanPinTransaction);
         });
     }
 
     [Fact]
-    public void HandleRecurringModeClick_ForGoalUpdate_UnchecksRecurringWithoutInstallments()
+    public void HandleInstallmentsModeClick_SelectsInstallments()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Income, CreateCheckingSource(balance: 0m), isRecurring: true);
+
+            vm.HandleInstallmentsModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.True(vm.IsInstallments);
+            Assert.False(vm.IsDebtIou);
+            Assert.True(vm.ShowInstallmentEndDate);
+        });
+    }
+
+    [Fact]
+    public void HandleDebtIouModeClick_SelectsDebtIou()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
+            vm.IsInstallments = true;
+
+            vm.HandleDebtIouModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.False(vm.IsInstallments);
+            Assert.True(vm.IsDebtIou);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ExclusionModeHandlers_ClearImplementedModesWithoutAddingBehavior(bool excludedDebt)
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: true);
+            vm.IsDebtIou = true;
+
+            if (excludedDebt)
+                vm.HandleExcludedDebtModeClick();
+            else
+                vm.HandleExcludeModeClick();
+
+            Assert.False(vm.IsRecurring);
+            Assert.False(vm.IsInstallments);
+            Assert.False(vm.IsDebtIou);
+        });
+    }
+
+    [Fact]
+    public void HandleInstallmentsModeClick_ForGoalUpdate_KeepsRecurringSelected()
     {
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Goal, CreateCheckingSource(balance: 500m), isRecurring: true);
 
-            vm.HandleRecurringModeClick();
+            vm.HandleInstallmentsModeClick();
 
-            Assert.False(vm.IsRecurring);
+            Assert.True(vm.IsRecurring);
             Assert.False(vm.IsInstallments);
-            Assert.False(vm.ShowInstallmentsToggle);
         });
     }
 

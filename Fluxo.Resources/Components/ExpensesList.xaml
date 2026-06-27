@@ -46,21 +46,20 @@
                         Click="OnExpenseDetailButtonClick"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
-                        IconSize="14" />
+                        IconSize="12" />
                 </customControls:SwipeRevealContainer.LeftContent>
 
                 <customControls:SwipeRevealContainer.RightContent>
                     <customControls:BalloonButton
-                        Width="32"
-                        Height="32"
                         Margin="0,0,8,0"
                         VerticalAlignment="Center"
                         ButtonIcon="{StaticResource Delete}"
+                        ButtonSize="32"
                         Command="{Binding DeleteCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
                         CommandParameter="{Binding}"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
-                        IconSize="14" />
+                        IconSize="12" />
                 </customControls:SwipeRevealContainer.RightContent>
 
                 <Grid>

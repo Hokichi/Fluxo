@@ -175,10 +175,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowRecurringWeekdayInput => IsRecurringTransactionMode && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
     public bool ShowRecurringMonthlyInput => IsRecurringTransactionMode && SelectedRecurringPeriod == RecurringPeriod.Monthly;
     public bool ShowDateSelector => !IsRecurringTransactionMode;
-    public bool ShowRecurringToggle => !IsInstallments && !IsDebtIou;
-    public bool ShowInstallmentsToggle => CanUseInstallments && IsInstallments;
     public bool ShowInstallmentEndDate => IsInstallments;
-    public bool ShowDebtIouToggle => CanUseDebtIou && IsDebtIou;
     public bool CanUseInstallments => !IsGoal && CanToggleRecurring;
     public bool CanUseDebtIou => !IsGoal && CanToggleRecurring;
     public string DateOrRecurrenceLabel => IsRecurringTransactionMode ? "Recurrence" : "Date";
@@ -290,14 +287,11 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowRecurringMonthlyInput));
         OnPropertyChanged(nameof(ShowDateSelector));
         OnPropertyChanged(nameof(IsRecurringTransactionMode));
-        OnPropertyChanged(nameof(ShowRecurringToggle));
-        OnPropertyChanged(nameof(ShowInstallmentsToggle));
         OnPropertyChanged(nameof(ShowInstallmentEndDate));
         OnPropertyChanged(nameof(DateOrRecurrenceLabel));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
         OnPropertyChanged(nameof(CanUseDebtIou));
-        OnPropertyChanged(nameof(ShowDebtIouToggle));
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
@@ -316,8 +310,6 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (!CanUseDebtIou)
             IsDebtIou = false;
 
-        OnPropertyChanged(nameof(ShowRecurringToggle));
-        OnPropertyChanged(nameof(ShowInstallmentsToggle));
         OnPropertyChanged(nameof(IsRecurringTransactionMode));
         OnPropertyChanged(nameof(ShowRecurringDayInput));
         OnPropertyChanged(nameof(ShowRecurringNoneInput));
@@ -329,7 +321,6 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
         OnPropertyChanged(nameof(CanUseDebtIou));
-        OnPropertyChanged(nameof(ShowDebtIouToggle));
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
@@ -364,8 +355,6 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanToggleRecurring));
         OnPropertyChanged(nameof(CanUseInstallments));
         OnPropertyChanged(nameof(CanUseDebtIou));
-        OnPropertyChanged(nameof(ShowInstallmentsToggle));
-        OnPropertyChanged(nameof(ShowDebtIouToggle));
     }
 
     partial void OnIsDebtIouChanged(bool value)
@@ -378,8 +367,6 @@ public partial class AddNewTransactionVM : ObservableValidator
                 IsInstallments = false;
         }
 
-        OnPropertyChanged(nameof(ShowRecurringToggle));
-        OnPropertyChanged(nameof(ShowDebtIouToggle));
         NotifyFormStateChanged();
     }
 
@@ -444,47 +431,47 @@ public partial class AddNewTransactionVM : ObservableValidator
         ValidateAmountField();
     }
 
+    [RelayCommand(CanExecute = nameof(CanToggleRecurring))]
     public void HandleRecurringModeClick()
     {
         if (!CanToggleRecurring)
             return;
 
-        if (!IsRecurring)
-        {
-            IsRecurring = true;
-            return;
-        }
-
-        if (CanUseInstallments)
-            IsInstallments = true;
-        else
-            IsRecurring = false;
+        ClearTransactionModes();
+        IsRecurring = true;
     }
 
+    [RelayCommand(CanExecute = nameof(CanUseInstallments))]
     public void HandleInstallmentsModeClick()
     {
-        if (!CanToggleRecurring)
+        if (!CanUseInstallments)
             return;
 
-        if (IsInstallments)
-        {
-            if (CanUseDebtIou)
-                IsDebtIou = true;
-            else
-                IsInstallments = false;
-        }
-        else if (CanUseInstallments)
-        {
-            IsInstallments = true;
-        }
+        ClearTransactionModes();
+        IsInstallments = true;
     }
 
+    [RelayCommand(CanExecute = nameof(CanUseDebtIou))]
     public void HandleDebtIouModeClick()
     {
         if (!CanUseDebtIou)
             return;
 
-        IsDebtIou = !IsDebtIou;
+        ClearTransactionModes();
+        IsDebtIou = true;
+    }
+
+    [RelayCommand]
+    public void HandleExcludeModeClick() => ClearTransactionModes();
+
+    [RelayCommand]
+    public void HandleExcludedDebtModeClick() => ClearTransactionModes();
+
+    private void ClearTransactionModes()
+    {
+        IsRecurring = false;
+        IsInstallments = false;
+        IsDebtIou = false;
     }
 
     public void InitializeFromDraft(AddNewTransactionDraft draft)
@@ -526,10 +513,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowGoalField));
         OnPropertyChanged(nameof(CanUseInstallments));
         OnPropertyChanged(nameof(CanUseDebtIou));
-        OnPropertyChanged(nameof(ShowRecurringToggle));
-        OnPropertyChanged(nameof(ShowInstallmentsToggle));
         OnPropertyChanged(nameof(InstallmentSummaryText));
-        OnPropertyChanged(nameof(ShowDebtIouToggle));
         OnPropertyChanged(nameof(DebtIouTooltip));
 
         if (!CanUseDebtIou)
@@ -562,10 +546,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowGoalField));
         OnPropertyChanged(nameof(CanUseInstallments));
         OnPropertyChanged(nameof(CanUseDebtIou));
-        OnPropertyChanged(nameof(ShowRecurringToggle));
-        OnPropertyChanged(nameof(ShowInstallmentsToggle));
         OnPropertyChanged(nameof(InstallmentSummaryText));
-        OnPropertyChanged(nameof(ShowDebtIouToggle));
         OnPropertyChanged(nameof(DebtIouTooltip));
 
         if (value)

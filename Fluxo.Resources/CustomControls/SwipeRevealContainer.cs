@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -97,7 +98,7 @@ public class SwipeRevealContainer : ContentControl
         base.OnPreviewMouseLeftButtonDown(e);
 
         // Don't start swipe if the click is on a button
-        if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<Button>(source) is not null)
+        if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<ButtonBase>(source) is not null)
             return;
 
         _startPoint = e.GetPosition(this);
@@ -150,7 +151,7 @@ public class SwipeRevealContainer : ContentControl
         {
             // Click (no drag): toggle swipe state
             // If currently revealed → restore; otherwise → swipe right to reveal left panel
-            if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<Button>(source) is not null)
+            if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<ButtonBase>(source) is not null)
                 return;
 
             var targetOffset = _currentOffset != 0 ? 0 : RevealWidth;
@@ -179,7 +180,7 @@ public class SwipeRevealContainer : ContentControl
     {
         base.OnPreviewMouseRightButtonDown(e);
 
-        if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<Button>(source) is not null)
+        if (e.OriginalSource is DependencyObject source && DependencyObjectTree.FindAncestor<ButtonBase>(source) is not null)
             return;
 
         AnimateTo(-RevealWidth);
@@ -229,5 +230,4 @@ public class SwipeRevealContainer : ContentControl
 
         _currentlyRevealed = targetX != 0 ? this : null;
     }
-
 }
