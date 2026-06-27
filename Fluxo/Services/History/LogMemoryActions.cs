@@ -330,6 +330,174 @@ public sealed class AddIncomeLogMemoryAction(IncomeLogMemorySnapshot snapshot) :
     }
 }
 
+public sealed record TransactionMemorySnapshot(
+    int TransactionId,
+    TransactionType Type,
+    int AccountId,
+    string Name,
+    decimal Amount,
+    DateTime OccurredOn,
+    string Notes,
+    ExpenseCategory? ExpenseCategory,
+    int? TagId,
+    int? ParentTransactionId,
+    bool IsPinned,
+    bool IsForDeletion,
+    bool IsIoU,
+    bool IsExcludedFromBudget)
+{
+    public static TransactionMemorySnapshot Create(Transaction transaction)
+    {
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        return new TransactionMemorySnapshot(
+            transaction.Id,
+            transaction.Type,
+            transaction.AccountId,
+            transaction.Name,
+            transaction.Amount,
+            transaction.OccurredOn,
+            transaction.Notes,
+            transaction.ExpenseCategory,
+            transaction.TagId,
+            transaction.ParentTransactionId,
+            transaction.IsPinned,
+            transaction.IsForDeletion,
+            transaction.IsIoU,
+            transaction.IsExcludedFromBudget);
+    }
+}
+
+public sealed class AddTransactionMemoryAction(TransactionMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public TransactionMemorySnapshot Snapshot => snapshot;
+    public string Description => snapshot.Type == TransactionType.Expense ? "Add expense" : "Add income";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var transaction = await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken);
+        if (transaction is null)
+            return;
+
+        LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
+        unitOfWork.Accounts.Update(transaction.Account);
+        unitOfWork.Transactions.Remove(transaction);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken) is not null)
+            return;
+
+        var account = await LogMemoryPersistence.GetRequiredAccountAsync(
+            unitOfWork, snapshot.AccountId, cancellationToken);
+        var transaction = CreateTransaction(snapshot, account);
+        await unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
+        LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
+        unitOfWork.Accounts.Update(account);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    internal static Transaction CreateTransaction(TransactionMemorySnapshot value, Account account) => new()
+    {
+        Id = value.TransactionId,
+        Type = value.Type,
+        AccountId = value.AccountId,
+        Account = account,
+        Name = value.Name,
+        Amount = value.Amount,
+        OccurredOn = value.OccurredOn,
+        Notes = value.Notes,
+        ExpenseCategory = value.ExpenseCategory,
+        TagId = value.TagId,
+        ParentTransactionId = value.ParentTransactionId,
+        IsPinned = value.IsPinned,
+        IsForDeletion = value.IsForDeletion,
+        IsIoU = value.IsIoU,
+        IsExcludedFromBudget = value.IsExcludedFromBudget
+    };
+}
+
+public sealed class EditTransactionMemoryAction(
+    TransactionMemorySnapshot before,
+    TransactionMemorySnapshot after) : ILogMemoryAction
+{
+    public TransactionMemorySnapshot Before => before;
+    public TransactionMemorySnapshot After => after;
+    public string Description => "Edit transaction";
+    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
+        ApplyAsync(unitOfWork, before, cancellationToken);
+    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
+        ApplyAsync(unitOfWork, after, cancellationToken);
+
+    private static async Task ApplyAsync(IUnitOfWork unitOfWork, TransactionMemorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        var transaction = await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken);
+        if (transaction is null)
+            return;
+
+        var oldAccount = transaction.Account;
+        var newAccount = await LogMemoryPersistence.GetRequiredAccountAsync(
+            unitOfWork, snapshot.AccountId, cancellationToken);
+        LogMemoryPersistence.RevertTransactionFromAccount(oldAccount, transaction.Type, transaction.Amount);
+        LogMemoryPersistence.ApplyTransactionToAccount(newAccount, snapshot.Type, snapshot.Amount);
+
+        transaction.Type = snapshot.Type;
+        transaction.AccountId = snapshot.AccountId;
+        transaction.Account = newAccount;
+        transaction.Name = snapshot.Name;
+        transaction.Amount = snapshot.Amount;
+        transaction.OccurredOn = snapshot.OccurredOn;
+        transaction.Notes = snapshot.Notes;
+        transaction.ExpenseCategory = snapshot.ExpenseCategory;
+        transaction.TagId = snapshot.TagId;
+        transaction.ParentTransactionId = snapshot.ParentTransactionId;
+        transaction.IsPinned = snapshot.IsPinned;
+        transaction.IsForDeletion = snapshot.IsForDeletion;
+        transaction.IsIoU = snapshot.IsIoU;
+        transaction.IsExcludedFromBudget = snapshot.IsExcludedFromBudget;
+
+        unitOfWork.Transactions.Update(transaction);
+        unitOfWork.Accounts.Update(oldAccount);
+        if (!ReferenceEquals(oldAccount, newAccount))
+            unitOfWork.Accounts.Update(newAccount);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snapshot) : ILogMemoryAction
+{
+    public TransactionMemorySnapshot Snapshot => snapshot;
+    public string Description => "Delete transaction";
+
+    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        if (await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken) is not null)
+            return;
+
+        var account = await LogMemoryPersistence.GetRequiredAccountAsync(
+            unitOfWork, snapshot.AccountId, cancellationToken);
+        await unitOfWork.Transactions.AddAsync(AddTransactionMemoryAction.CreateTransaction(snapshot, account), cancellationToken);
+        LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
+        unitOfWork.Accounts.Update(account);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    {
+        var transaction = await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken);
+        if (transaction is null)
+            return;
+
+        LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
+        unitOfWork.Accounts.Update(transaction.Account);
+        unitOfWork.Transactions.Remove(transaction);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
 public sealed class EditIncomeLogMemoryAction(
     IncomeLogMemorySnapshot before,
     IncomeLogMemorySnapshot after) : ILogMemoryAction
@@ -908,6 +1076,22 @@ public sealed class SetUserSettingMemoryAction(
 
 internal static class LogMemoryPersistence
 {
+    internal static void ApplyTransactionToAccount(Account account, TransactionType type, decimal amount)
+    {
+        if (type == TransactionType.Expense)
+            ApplyExpenseToAccount(account, amount);
+        else
+            ApplyIncomeToAccount(account, amount);
+    }
+
+    internal static void RevertTransactionFromAccount(Account account, TransactionType type, decimal amount)
+    {
+        if (type == TransactionType.Expense)
+            RevertExpenseFromAccount(account, amount);
+        else
+            RevertIncomeFromAccount(account, amount);
+    }
+
     internal static void ApplyExpenseToAccount(Account account, decimal amount)
     {
         if (account.AccountType == AccountType.Credit)

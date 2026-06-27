@@ -8,13 +8,14 @@ namespace Fluxo.Tests.Services.History;
 public sealed class LogMemorySnapshotTests
 {
     [Fact]
-    public void Create_CapturesIoUFlags()
+    public void Create_CapturesUnifiedTransactionFlags()
     {
         var account = new Account { Id = 1, Name = "Checking" };
         var tag = new Tag { Id = 2, Name = "Budget Reconciliation", HexCode = "#9ca3af" };
-        var expense = new Expense
+        var transaction = new Transaction
         {
             Id = 3,
+            Type = TransactionType.Expense,
             AccountId = account.Id,
             Account = account,
             TagId = tag.Id,
@@ -22,29 +23,14 @@ public sealed class LogMemorySnapshotTests
             Name = "Lend",
             Amount = 10m,
             ExpenseCategory = ExpenseCategory.Needs,
-            IsIoU = true
-        };
-        var expenseLog = new ExpenseLog
-        {
-            Id = 4,
-            Expense = expense,
-            Account = account,
-            Amount = 10m,
-            Notes = string.Empty,
-            IsIoU = true
-        };
-        var incomeLog = new IncomeLog
-        {
-            Id = 5,
-            Account = account,
-            Name = "Debt",
-            Amount = 10m,
-            Notes = string.Empty,
-            IsIoU = true
+            IsIoU = true,
+            IsExcludedFromBudget = true
         };
 
-        Assert.True(ExpenseMemorySnapshot.Create(expense).IsIoU);
-        Assert.True(ExpenseLogMemorySnapshot.Create(expenseLog).IsIoU);
-        Assert.True(IncomeLogMemorySnapshot.Create(incomeLog).IsIoU);
+        var snapshot = TransactionMemorySnapshot.Create(transaction);
+
+        Assert.Equal(TransactionType.Expense, snapshot.Type);
+        Assert.True(snapshot.IsIoU);
+        Assert.True(snapshot.IsExcludedFromBudget);
     }
 }
