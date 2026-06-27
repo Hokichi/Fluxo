@@ -1078,8 +1078,8 @@ public sealed class AddNewTransactionVMValidationTests
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
-            appData.Received(1).AddExpenseLogAsync(
-                Arg.Is<ExpenseLog>(log => log.IsPinned),
+            appData.Received(1).AddTransactionAsync(
+                Arg.Is<Transaction>(transaction => transaction.Type == TransactionType.Expense && transaction.IsPinned),
                 Arg.Any<CancellationToken>());
         });
     }
@@ -1089,9 +1089,9 @@ public sealed class AddNewTransactionVMValidationTests
     {
         RunInSta(() =>
         {
-            ExpenseLog? savedLog = null;
+            Transaction? savedTransaction = null;
             var appData = CreateAppData();
-            appData.AddExpenseLogAsync(Arg.Do<ExpenseLog>(log => savedLog = log), Arg.Any<CancellationToken>())
+            appData.AddTransactionAsync(Arg.Do<Transaction>(transaction => savedTransaction = transaction), Arg.Any<CancellationToken>())
                 .Returns(Task.CompletedTask);
             var vm = CreateVm(
                 TransactionKind.Expense,
@@ -1104,9 +1104,9 @@ public sealed class AddNewTransactionVMValidationTests
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
-            Assert.NotNull(savedLog);
-            Assert.Equal(new DateTime(2026, 6, 20), savedLog!.DeductedOn.Date);
-            Assert.NotEqual(TimeSpan.Zero, savedLog.DeductedOn.TimeOfDay);
+            Assert.NotNull(savedTransaction);
+            Assert.Equal(new DateTime(2026, 6, 20), savedTransaction!.OccurredOn.Date);
+            Assert.NotEqual(TimeSpan.Zero, savedTransaction.OccurredOn.TimeOfDay);
         });
     }
 
@@ -1127,11 +1127,8 @@ public sealed class AddNewTransactionVMValidationTests
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
-            appData.Received(1).AddExpenseAsync(
-                Arg.Is<Expense>(expense => expense.IsIoU),
-                Arg.Any<CancellationToken>());
-            appData.Received(1).AddExpenseLogAsync(
-                Arg.Is<ExpenseLog>(log => log.IsIoU),
+            appData.Received(1).AddTransactionAsync(
+                Arg.Is<Transaction>(transaction => transaction.Type == TransactionType.Expense && transaction.IsIoU),
                 Arg.Any<CancellationToken>());
         });
     }
@@ -1526,8 +1523,8 @@ public sealed class AddNewTransactionVMValidationTests
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
-            appData.Received(1).AddIncomeLogAsync(
-                Arg.Is<IncomeLog>(log => log.IsPinned),
+            appData.Received(1).AddTransactionAsync(
+                Arg.Is<Transaction>(transaction => transaction.Type == TransactionType.Income && transaction.IsPinned),
                 Arg.Any<CancellationToken>());
         });
     }
@@ -1537,9 +1534,9 @@ public sealed class AddNewTransactionVMValidationTests
     {
         RunInSta(() =>
         {
-            IncomeLog? savedLog = null;
+            Transaction? savedTransaction = null;
             var appData = CreateAppData();
-            appData.AddIncomeLogAsync(Arg.Do<IncomeLog>(log => savedLog = log), Arg.Any<CancellationToken>())
+            appData.AddTransactionAsync(Arg.Do<Transaction>(transaction => savedTransaction = transaction), Arg.Any<CancellationToken>())
                 .Returns(Task.CompletedTask);
             var vm = CreateVm(
                 TransactionKind.Income,
@@ -1552,9 +1549,9 @@ public sealed class AddNewTransactionVMValidationTests
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
-            Assert.NotNull(savedLog);
-            Assert.Equal(new DateTime(2026, 6, 20), savedLog!.AddedOn.Date);
-            Assert.NotEqual(TimeSpan.Zero, savedLog.AddedOn.TimeOfDay);
+            Assert.NotNull(savedTransaction);
+            Assert.Equal(new DateTime(2026, 6, 20), savedTransaction!.OccurredOn.Date);
+            Assert.NotEqual(TimeSpan.Zero, savedTransaction.OccurredOn.TimeOfDay);
         });
     }
 
@@ -1575,8 +1572,8 @@ public sealed class AddNewTransactionVMValidationTests
             var result = vm.SaveAsync(false).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccess);
-            appData.Received(1).AddIncomeLogAsync(
-                Arg.Is<IncomeLog>(log => log.IsIoU),
+            appData.Received(1).AddTransactionAsync(
+                Arg.Is<Transaction>(transaction => transaction.Type == TransactionType.Income && transaction.IsIoU),
                 Arg.Any<CancellationToken>());
         });
     }
@@ -1744,6 +1741,8 @@ public sealed class AddNewTransactionVMValidationTests
         appData.AddExpenseLogAsync(Arg.Any<ExpenseLog>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         appData.AddIncomeLogAsync(Arg.Any<IncomeLog>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         appData.AddRecurringTransactionAsync(Arg.Any<RecurringTransaction>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);

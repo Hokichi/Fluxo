@@ -761,31 +761,23 @@ public partial class AddNewTransactionVM : ObservableValidator
                     return budgetPolicyResult;
 
                 var goalUpdateTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(_appData);
-                var expense = new Expense
+                var transaction = new Transaction
                 {
+                    Type = TransactionType.Expense,
                     Name = BuildGoalUpdateName(goal.Name),
                     Amount = input.Amount,
+                    OccurredOn = input.Date,
+                    Notes = $"Goal update for {goal.Name}",
                     ExpenseCategory = ExpenseCategory.Savings,
                     AccountId = account.Id,
-                    TagId = goalUpdateTag.Id
-                };
-
-                var expenseLog = new ExpenseLog
-                {
-                    Expense = expense,
-                    Amount = input.Amount,
-                    DeductedOn = input.Date,
-                    Notes = $"Goal update for {goal.Name}",
-                    IsForDeletion = false,
-                    AccountId = account.Id,
+                    TagId = goalUpdateTag.Id,
                     IsPinned = false,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
                 goal.CurrentAmount += input.Amount;
 
-                await _appData.AddExpenseAsync(expense);
-                await _appData.AddExpenseLogAsync(expenseLog);
+                await _appData.AddTransactionAsync(transaction);
                 _appData.UpdateSavingGoal(goal);
 
                 ApplyExpenseToAccount(account, input.Amount);
@@ -793,18 +785,8 @@ public partial class AddNewTransactionVM : ObservableValidator
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
-                    new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
-                        expense.Id,
-                        expenseLog.Id,
-                        expense.Name,
-                        expenseLog.Amount,
-                        expense.ExpenseCategory,
-                        account.Id,
-                        goalUpdateTag.Id,
-                        expenseLog.DeductedOn,
-                        expenseLog.Notes,
-                        expenseLog.IsForDeletion,
-                        expenseLog.ParentLogId))));
+                    new RecordLogMemoryMessage(new AddTransactionMemoryAction(
+                        TransactionMemorySnapshot.Create(transaction))));
 
                 invalidationScope |= DashboardDataInvalidationScope.SavingGoals;
             }
@@ -818,58 +800,39 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (!budgetPolicyResult.IsSuccess)
                     return budgetPolicyResult;
 
-                var expense = new Expense
+                var transaction = new Transaction
                 {
+                    Type = TransactionType.Expense,
                     Name = BuildExpenseName(input.Name, input.Note, tag.Name),
                     Amount = input.Amount,
+                    OccurredOn = input.Date,
+                    Notes = input.Note,
                     ExpenseCategory = input.Category!.Value,
                     AccountId = account.Id,
                     TagId = tag.Id,
-                    IsIoU = input.IsIoU
-                };
-
-                var expenseLog = new ExpenseLog
-                {
-                    Expense = expense,
-                    Amount = input.Amount,
-                    DeductedOn = input.Date,
-                    Notes = input.Note,
-                    IsForDeletion = false,
-                    AccountId = account.Id,
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
-                await _appData.AddExpenseAsync(expense);
-                await _appData.AddExpenseLogAsync(expenseLog);
+                await _appData.AddTransactionAsync(transaction);
 
                 ApplyExpenseToAccount(account, input.Amount);
                 _appData.UpdateAccount(account);
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
-                    new RecordLogMemoryMessage(new AddExpenseLogMemoryAction(new ExpenseLogMemorySnapshot(
-                        expense.Id,
-                        expenseLog.Id,
-                        expense.Name,
-                        expenseLog.Amount,
-                        expense.ExpenseCategory,
-                        account.Id,
-                        tag.Id,
-                        expenseLog.DeductedOn,
-                        expenseLog.Notes,
-                        expenseLog.IsForDeletion,
-                        expenseLog.ParentLogId,
-                        expenseLog.IsIoU))));
+                    new RecordLogMemoryMessage(new AddTransactionMemoryAction(
+                        TransactionMemorySnapshot.Create(transaction))));
             }
             else
             {
-                var incomeLog = new IncomeLog
+                var transaction = new Transaction
                 {
+                    Type = TransactionType.Income,
                     Name = input.Name,
                     Amount = input.Amount,
-                    AddedOn = input.Date,
+                    OccurredOn = input.Date,
                     Notes = input.Note,
                     AccountId = account.Id,
                     IsPinned = input.IsPinned,
@@ -877,21 +840,15 @@ public partial class AddNewTransactionVM : ObservableValidator
                     IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
-                await _appData.AddIncomeLogAsync(incomeLog);
+                await _appData.AddTransactionAsync(transaction);
 
                 ApplyIncomeToAccount(account, input.Amount);
                 _appData.UpdateAccount(account);
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
-                    new RecordLogMemoryMessage(new AddIncomeLogMemoryAction(new IncomeLogMemorySnapshot(
-                        incomeLog.Id,
-                        account.Id,
-                        incomeLog.Name,
-                        incomeLog.Amount,
-                        incomeLog.AddedOn,
-                        incomeLog.Notes,
-                        incomeLog.IsIoU))));
+                    new RecordLogMemoryMessage(new AddTransactionMemoryAction(
+                        TransactionMemorySnapshot.Create(transaction))));
             }
 
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(invalidationScope));
