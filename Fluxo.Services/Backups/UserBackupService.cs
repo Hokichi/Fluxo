@@ -126,7 +126,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                         source.InterestRate,
                         source.PinnedOnUI,
                         source.IsEnabled,
-                        source.IsForDeletion));
+                        source.IsForDeletion,
+                        source.IsDefault));
                 }
             }
 
@@ -597,6 +598,20 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
         var existingByName = existingSources.ToDictionary(source => source.Name, StringComparer.OrdinalIgnoreCase);
         var pendingDeductMappings = new List<(Account Source, int? DeductBackupId)>();
 
+        void SetDefault(Account target, bool isDefault)
+        {
+            if (isDefault)
+            {
+                foreach (var other in existingByName.Values.Where(source => source.IsDefault && !ReferenceEquals(source, target)))
+                {
+                    other.IsDefault = false;
+                    appData.UpdateAccount(other);
+                }
+            }
+
+            target.IsDefault = isDefault;
+        }
+
         foreach (var backupSource in document.Entities.Accounts)
         {
             if (existingByName.TryGetValue(backupSource.Name, out var existingSource))
@@ -629,6 +644,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                     existingSource.PinnedOnUI = backupSource.RestoredPinnedOnUI;
                     existingSource.IsEnabled = backupSource.IsEnabled;
                     existingSource.IsForDeletion = backupSource.IsForDeletion;
+                    SetDefault(existingSource, backupSource.IsDefault);
                     appData.UpdateAccount(existingSource);
                     pendingDeductMappings.Add((existingSource, backupSource.DeductSourceBackupId));
                 }
@@ -653,6 +669,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 IsEnabled = backupSource.IsEnabled,
                 IsForDeletion = backupSource.IsForDeletion
             };
+
+            SetDefault(insertedSource, backupSource.IsDefault);
 
             await appData.AddAccountAsync(insertedSource, cancellationToken);
             sourceIdMap[backupSource.BackupId] = insertedSource.Id;

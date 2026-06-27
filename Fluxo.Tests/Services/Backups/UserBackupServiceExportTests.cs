@@ -228,7 +228,8 @@ public sealed class UserBackupServiceExportTests
                 {
                     Id = 12,
                     Name = "Wallet",
-                    AccountType = AccountType.Cash
+                    AccountType = AccountType.Cash,
+                    IsDefault = true
                 }
             ]);
 
@@ -251,6 +252,7 @@ public sealed class UserBackupServiceExportTests
             var deductSource = Assert.Single(document.Entities.Accounts, source => source.Name == "Wallet");
 
             Assert.Equal(deductSource.BackupId, dependentSource.DeductSourceBackupId);
+            Assert.True(deductSource.IsDefault);
         }
         finally
         {

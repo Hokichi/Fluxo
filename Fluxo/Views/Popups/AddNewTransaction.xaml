@@ -384,7 +384,7 @@
                                         OnChecked="{Binding HandleExcludeModeClickCommand}" />
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource CreditCardXRegular}"
-                                        ButtonText="Set as lend and Exclude"
+                                        ButtonText="Set as Debt and Exclude"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                         HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />
@@ -610,7 +610,7 @@
                                             OnChecked="{Binding HandleExcludeModeClickCommand}" />
                                         <customControls:BalloonToggleState
                                             ButtonIcon="{StaticResource CreditCardXRegular}"
-                                            ButtonText="ExcludedIoU"
+                                            ButtonText="Set as Debt and Exclude"
                                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                                             HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                             OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />

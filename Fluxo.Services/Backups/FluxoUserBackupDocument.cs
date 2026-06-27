@@ -38,7 +38,8 @@ public sealed record BackupAccount(
     decimal? InterestRate,
     bool PinnedOnUI,
     bool IsEnabled,
-    bool IsForDeletion)
+    bool IsForDeletion,
+    bool IsDefault = false)
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("showOnUI")]
