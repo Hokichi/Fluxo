@@ -672,41 +672,23 @@ public partial class LedgerVM : ObservableRecipient,
 
             foreach (var transaction in selectedTransactions)
             {
-                if (transaction.Kind == LedgerTransactionKind.Expense)
-                {
-                    var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
-                    if (expenseLog?.Expense is null)
-                        continue;
-
-                    if (targetSource is not null)
-                    {
-                        expenseLog.Account = targetSource;
-                        expenseLog.AccountId = targetSource.Id;
-                        expenseLog.Expense.Account = targetSource;
-                        expenseLog.Expense.AccountId = targetSource.Id;
-                    }
-
-                    if (targetTag is not null && !transaction.IsGoal)
-                    {
-                        expenseLog.Expense.Tag = targetTag;
-                        expenseLog.Expense.TagId = targetTag.Id;
-                    }
-
-                    scope.UnitOfWork.Expenses.Update(expenseLog.Expense);
-                    scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
+                var persisted = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
+                if (persisted is null)
                     continue;
+
+                if (targetSource is not null)
+                {
+                    persisted.Account = targetSource;
+                    persisted.AccountId = targetSource.Id;
                 }
 
-                if (targetSource is null)
-                    continue;
+                if (persisted.Type == TransactionType.Expense && targetTag is not null && !transaction.IsGoal)
+                {
+                    persisted.Tag = targetTag;
+                    persisted.TagId = targetTag.Id;
+                }
 
-                var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
-                if (incomeLog is null)
-                    continue;
-
-                incomeLog.Account = targetSource;
-                incomeLog.AccountId = targetSource.Id;
-                scope.UnitOfWork.IncomeLogs.Update(incomeLog);
+                scope.UnitOfWork.Transactions.Update(persisted);
             }
 
             await scope.UnitOfWork.SaveChangesAsync(ct);
@@ -735,23 +717,12 @@ public partial class LedgerVM : ObservableRecipient,
         {
             foreach (var transaction in selectedTransactions)
             {
-                if (transaction.Kind == LedgerTransactionKind.Expense)
-                {
-                    var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
-                    if (expenseLog is null)
-                        continue;
-
-                    expenseLog.IsForDeletion = true;
-                    scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
-                    continue;
-                }
-
-                var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
-                if (incomeLog is null)
+                var persisted = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
+                if (persisted is null)
                     continue;
 
-                incomeLog.IsForDeletion = true;
-                scope.UnitOfWork.IncomeLogs.Update(incomeLog);
+                persisted.IsForDeletion = true;
+                scope.UnitOfWork.Transactions.Update(persisted);
             }
 
             await scope.UnitOfWork.SaveChangesAsync(ct);
@@ -1182,8 +1153,8 @@ public partial class LedgerVM : ObservableRecipient,
     private async Task ReloadExpenseTransactionFromStoreAsync(LedgerTransactionItemVM transaction)
     {
         var persisted = await _dataOperationRunner.RunAsync(async (scope, ct) =>
-            await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct));
-        if (persisted?.Expense is null)
+            await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct));
+        if (persisted is null)
             return;
 
         ApplyExpenseLogToTransaction(transaction, persisted);
@@ -1192,7 +1163,7 @@ public partial class LedgerVM : ObservableRecipient,
     private async Task ReloadIncomeTransactionFromStoreAsync(LedgerTransactionItemVM transaction)
     {
         var persisted = await _dataOperationRunner.RunAsync(async (scope, ct) =>
-            await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct));
+            await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct));
         if (persisted is null)
             return;
 
@@ -1203,42 +1174,37 @@ public partial class LedgerVM : ObservableRecipient,
     {
         var (before, after) = await _dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
-            if (expenseLog?.Expense is null)
-                return ((ExpenseLogMemorySnapshot?)null, (ExpenseLogMemorySnapshot?)null);
+            var expenseLog = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
+            if (expenseLog is null)
+                return ((TransactionMemorySnapshot?)null, (TransactionMemorySnapshot?)null);
 
-            var beforeSnapshot = ExpenseLogMemorySnapshot.Create(expenseLog);
+            var beforeSnapshot = TransactionMemorySnapshot.Create(expenseLog);
             var targetAccount =
                 await scope.UnitOfWork.Accounts.GetByIdAsync(transaction.AccountId, ct) ??
                 expenseLog.Account;
             var targetTag =
                 await scope.UnitOfWork.Tags.GetByIdAsync(transaction.TagId, ct) ??
-                expenseLog.Expense.Tag;
+                expenseLog.Tag;
 
-            expenseLog.Expense.Name = transaction.Name.Trim();
-            expenseLog.Expense.Amount = transaction.Amount;
-            expenseLog.Expense.Account = targetAccount;
-            expenseLog.Expense.AccountId = targetAccount.Id;
-            expenseLog.Expense.Tag = targetTag;
-            expenseLog.Expense.TagId = targetTag.Id;
-
+            expenseLog.Name = transaction.Name.Trim();
             expenseLog.Amount = transaction.Amount;
             expenseLog.Account = targetAccount;
             expenseLog.AccountId = targetAccount.Id;
 
-            scope.UnitOfWork.Expenses.Update(expenseLog.Expense);
-            scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
+            expenseLog.Tag = targetTag;
+            expenseLog.TagId = targetTag.Id;
+            scope.UnitOfWork.Transactions.Update(expenseLog);
             await scope.UnitOfWork.SaveChangesAsync(ct);
 
-            return (beforeSnapshot, ExpenseLogMemorySnapshot.Create(expenseLog));
+            return (beforeSnapshot, TransactionMemorySnapshot.Create(expenseLog));
         });
 
         if (before is null || after is null)
             return;
 
-        ApplyExpenseSnapshotToTransaction(transaction, after);
+        ApplyTransactionSnapshotToTransaction(transaction, after);
         RefreshTransactionLookups(transaction);
-        Messenger.Send(new RecordLogMemoryMessage(new EditExpenseLogMemoryAction(before, after)));
+        Messenger.Send(new RecordLogMemoryMessage(new EditTransactionMemoryAction(before, after)));
         RefreshSummaries();
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
@@ -1248,11 +1214,11 @@ public partial class LedgerVM : ObservableRecipient,
     {
         var (before, after) = await _dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
+            var incomeLog = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
             if (incomeLog is null)
-                return ((IncomeLogMemorySnapshot?)null, (IncomeLogMemorySnapshot?)null);
+                return ((TransactionMemorySnapshot?)null, (TransactionMemorySnapshot?)null);
 
-            var beforeSnapshot = IncomeLogMemorySnapshot.Create(incomeLog);
+            var beforeSnapshot = TransactionMemorySnapshot.Create(incomeLog);
             var targetAccount =
                 await scope.UnitOfWork.Accounts.GetByIdAsync(transaction.AccountId, ct) ??
                 incomeLog.Account;
@@ -1262,18 +1228,18 @@ public partial class LedgerVM : ObservableRecipient,
             incomeLog.Account = targetAccount;
             incomeLog.AccountId = targetAccount.Id;
 
-            scope.UnitOfWork.IncomeLogs.Update(incomeLog);
+            scope.UnitOfWork.Transactions.Update(incomeLog);
             await scope.UnitOfWork.SaveChangesAsync(ct);
 
-            return (beforeSnapshot, IncomeLogMemorySnapshot.Create(incomeLog));
+            return (beforeSnapshot, TransactionMemorySnapshot.Create(incomeLog));
         });
 
         if (before is null || after is null)
             return;
 
-        ApplyIncomeSnapshotToTransaction(transaction, after);
+        ApplyTransactionSnapshotToTransaction(transaction, after);
         RefreshTransactionLookups(transaction);
-        Messenger.Send(new RecordLogMemoryMessage(new EditIncomeLogMemoryAction(before, after)));
+        Messenger.Send(new RecordLogMemoryMessage(new EditTransactionMemoryAction(before, after)));
         RefreshSummaries();
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
@@ -1283,13 +1249,13 @@ public partial class LedgerVM : ObservableRecipient,
     {
         var snapshot = await _dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            var expenseLog = await scope.UnitOfWork.ExpenseLogs.GetByIdAsync(transaction.Id, ct);
+            var expenseLog = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
             if (expenseLog is null)
                 return null;
 
-            var result = ExpenseLogMemorySnapshot.Create(expenseLog);
+            var result = TransactionMemorySnapshot.Create(expenseLog);
             expenseLog.IsForDeletion = true;
-            scope.UnitOfWork.ExpenseLogs.Update(expenseLog);
+            scope.UnitOfWork.Transactions.Update(expenseLog);
             await scope.UnitOfWork.SaveChangesAsync(ct);
             return result;
         });
@@ -1299,7 +1265,7 @@ public partial class LedgerVM : ObservableRecipient,
 
         _transactions.Remove(transaction);
         HasTransactions = _transactions.Count > 0;
-        Messenger.Send(new RecordLogMemoryMessage(new DeleteExpenseLogMemoryAction(snapshot)));
+        Messenger.Send(new RecordLogMemoryMessage(new DeleteTransactionMemoryAction(snapshot)));
         RefreshSummaries();
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
@@ -1309,13 +1275,13 @@ public partial class LedgerVM : ObservableRecipient,
     {
         var snapshot = await _dataOperationRunner.RunAsync(async (scope, ct) =>
         {
-            var incomeLog = await scope.UnitOfWork.IncomeLogs.GetByIdAsync(transaction.Id, ct);
+            var incomeLog = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
             if (incomeLog is null)
                 return null;
 
-            var result = IncomeLogMemorySnapshot.Create(incomeLog);
+            var result = TransactionMemorySnapshot.Create(incomeLog);
             incomeLog.IsForDeletion = true;
-            scope.UnitOfWork.IncomeLogs.Update(incomeLog);
+            scope.UnitOfWork.Transactions.Update(incomeLog);
             await scope.UnitOfWork.SaveChangesAsync(ct);
             return result;
         });
@@ -1325,43 +1291,34 @@ public partial class LedgerVM : ObservableRecipient,
 
         _transactions.Remove(transaction);
         HasTransactions = _transactions.Count > 0;
-        Messenger.Send(new RecordLogMemoryMessage(new DeleteIncomeLogMemoryAction(snapshot)));
+        Messenger.Send(new RecordLogMemoryMessage(new DeleteTransactionMemoryAction(snapshot)));
         RefreshSummaries();
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
     }
 
-    private static void ApplyExpenseSnapshotToTransaction(
+    private static void ApplyTransactionSnapshotToTransaction(
         LedgerTransactionItemVM transaction,
-        ExpenseLogMemorySnapshot snapshot)
-    {
-        transaction.Name = snapshot.ExpenseName;
-        transaction.Amount = snapshot.Amount;
-        transaction.AccountId = snapshot.AccountId;
-        transaction.TagId = snapshot.TagId;
-    }
-
-    private static void ApplyExpenseLogToTransaction(LedgerTransactionItemVM transaction, ExpenseLog log)
-    {
-        transaction.Name = log.Expense?.Name ?? "Expense";
-        transaction.Amount = log.Amount;
-        transaction.AccountId = log.AccountId;
-        transaction.AccountName = log.Account?.Name ?? log.Expense?.Account?.Name ?? transaction.AccountName;
-        transaction.TagId = log.Expense?.TagId ?? 0;
-        transaction.TagName = log.Expense?.Tag?.Name ?? transaction.TagName;
-        transaction.TagHexCode = log.Expense?.Tag?.HexCode ?? transaction.TagHexCode;
-    }
-
-    private static void ApplyIncomeSnapshotToTransaction(
-        LedgerTransactionItemVM transaction,
-        IncomeLogMemorySnapshot snapshot)
+        TransactionMemorySnapshot snapshot)
     {
         transaction.Name = snapshot.Name;
         transaction.Amount = snapshot.Amount;
         transaction.AccountId = snapshot.AccountId;
+        transaction.TagId = snapshot.TagId ?? 0;
     }
 
-    private static void ApplyIncomeLogToTransaction(LedgerTransactionItemVM transaction, IncomeLog log)
+    private static void ApplyExpenseLogToTransaction(LedgerTransactionItemVM transaction, Transaction log)
+    {
+        transaction.Name = log.Name;
+        transaction.Amount = log.Amount;
+        transaction.AccountId = log.AccountId;
+        transaction.AccountName = log.Account?.Name ?? transaction.AccountName;
+        transaction.TagId = log.TagId ?? 0;
+        transaction.TagName = log.Tag?.Name ?? transaction.TagName;
+        transaction.TagHexCode = log.Tag?.HexCode ?? transaction.TagHexCode;
+    }
+
+    private static void ApplyIncomeLogToTransaction(LedgerTransactionItemVM transaction, Transaction log)
     {
         transaction.Name = log.Name;
         transaction.Amount = log.Amount;
