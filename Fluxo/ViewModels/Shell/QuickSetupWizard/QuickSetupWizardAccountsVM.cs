@@ -75,7 +75,8 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
                 DeductSource = source.DeductSource,
                 InterestRate = source.InterestRate,
                 PinnedOnUI = source.PinnedOnUi,
-                IsEnabled = source.IsEnabled
+                IsEnabled = source.IsEnabled,
+                IsDefault = source.IsDefault
             })
             .ToList();
     }
@@ -113,6 +114,7 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
         vm.SelectedAccountType = source.AccountType;
         vm.PinnedOnUI = source.PinnedOnUi;
         vm.IsEnabled = source.IsEnabled;
+        vm.IsDefault = source.IsDefault;
 
         if (source.AccountType == AccountType.Credit)
         {
@@ -185,6 +187,16 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
             .ToDictionary(source => source.Id);
         var idMap = new Dictionary<int, int>();
 
+        foreach (var existingDefault in existingSources.Values.Where(source =>
+                     source.IsDefault &&
+                     (!_draftSources.TryGetValue(source.Id, out var draft) || !draft.IsDefault)))
+        {
+            existingDefault.IsDefault = false;
+            appData.UpdateAccount(existingDefault);
+        }
+
+        await appData.SaveChangesAsync();
+
         foreach (var draft in _draftSources.Values.OrderBy(source => source.Id))
         {
             if (draft.Id > 0 && existingSources.TryGetValue(draft.Id, out var persisted))
@@ -201,6 +213,7 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
                 persisted.DeductSource = null;
                 persisted.InterestRate = draft.InterestRate;
                 persisted.IsEnabled = draft.IsEnabled;
+                persisted.IsDefault = draft.IsDefault;
                 persisted.PinnedOnUI = ResolvePinnedOnUiFromEnabledState(previousIsEnabled, draft.IsEnabled, draft.PinnedOnUi);
                 appData.UpdateAccount(persisted);
                 idMap[draft.Id] = persisted.Id;
@@ -220,7 +233,8 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
                     DeductSource = null,
                     InterestRate = draft.InterestRate,
                     PinnedOnUI = draft.PinnedOnUi,
-                    IsEnabled = draft.IsEnabled
+                    IsEnabled = draft.IsEnabled,
+                    IsDefault = draft.IsDefault
                 };
                 await appData.AddAccountAsync(created);
                 await appData.SaveChangesAsync();
@@ -298,7 +312,8 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
                 source.DeductSource,
                 source.InterestRate,
                 source.PinnedOnUI,
-                source.IsEnabled);
+                source.IsEnabled,
+                source.IsDefault);
         }
 
         _removedPersistedIds.Clear();
@@ -337,7 +352,14 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
             input.DeductSource,
             input.InterestRate,
             resolvedPinnedOnUi,
-            input.IsEnabled);
+            input.IsEnabled,
+            input.IsDefault);
+
+        if (input.IsDefault)
+        {
+            foreach (var key in _draftSources.Keys.Where(key => key != id).ToList())
+                _draftSources[key] = _draftSources[key] with { IsDefault = false };
+        }
 
         if (id > 0)
             _removedPersistedIds.Remove(id);

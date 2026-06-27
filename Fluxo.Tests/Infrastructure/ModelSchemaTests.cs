@@ -23,6 +23,11 @@ public sealed class ModelSchemaTests
         Assert.False(account.FindProperty(nameof(Account.MaximumSpending))!.IsNullable);
         Assert.Equal("NUMERIC", account.FindProperty(nameof(Account.MinimumPayment))!.GetColumnType());
         Assert.True(account.FindProperty(nameof(Account.MinimumPayment))!.IsNullable);
+        Assert.Equal(false, account.FindProperty(nameof(Account.IsDefault))!.GetDefaultValue());
+        Assert.Contains(account.GetIndexes(), index =>
+            index.IsUnique &&
+            index.GetFilter() == "IsDefault = 1" &&
+            index.Properties.Single().Name == nameof(Account.IsDefault));
 
         var expenseTag = model.FindEntityType(typeof(ExpenseTag))!;
         Assert.Equal("NUMERIC", expenseTag.FindProperty(nameof(ExpenseTag.SpendingLimit))!.GetColumnType());
@@ -100,18 +105,21 @@ public sealed class ModelSchemaTests
         {
             MaximumSpending = 500m,
             MinimumPayment = 25m,
-            PinnedOnUI = true
+            PinnedOnUI = true,
+            IsDefault = true
         };
         var sourceVm = new AccountVM
         {
             MaximumSpending = source.MaximumSpending,
             MinimumPayment = source.MinimumPayment,
-            PinnedOnUI = source.PinnedOnUI
+            PinnedOnUI = source.PinnedOnUI,
+            IsDefault = source.IsDefault
         };
 
         Assert.Equal(500m, sourceVm.MaximumSpending);
         Assert.Equal(25m, sourceVm.MinimumPayment);
         Assert.True(sourceVm.PinnedOnUI);
+        Assert.True(sourceVm.IsDefault);
 
         var tag = new ExpenseTag { SpendingLimit = 250m };
         var tagVm = new ExpenseTagVM { SpendingLimit = tag.SpendingLimit };

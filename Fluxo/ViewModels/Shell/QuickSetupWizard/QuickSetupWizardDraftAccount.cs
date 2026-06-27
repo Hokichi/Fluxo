@@ -15,4 +15,5 @@ public sealed record QuickSetupWizardDraftAccount(
     int? DeductSource,
     decimal? InterestRate,
     bool PinnedOnUi,
-    bool IsEnabled);
+    bool IsEnabled,
+    bool IsDefault);

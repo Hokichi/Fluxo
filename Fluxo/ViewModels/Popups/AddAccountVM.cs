@@ -43,6 +43,7 @@ public partial class AddAccountVM : ObservableValidator
     private decimal _apyText;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEnabled = true;
+    [ObservableProperty] private bool _isDefault;
     [ObservableProperty]
     [CustomValidation(typeof(AddAccountVM), nameof(ValidateMaximumSpendingText))]
     private decimal _maximumSpendingText;
@@ -146,6 +147,7 @@ public partial class AddAccountVM : ObservableValidator
         SelectedAccountType = source.AccountType;
         PinnedOnUI = source.PinnedOnUI;
         IsEnabled = source.IsEnabled;
+        IsDefault = source.IsDefault;
 
         if (source.AccountType == AccountType.Credit)
         {
@@ -176,6 +178,7 @@ public partial class AddAccountVM : ObservableValidator
         AccountLimitText = 0m;
         ApyText = 0m;
         IsEnabled = true;
+        IsDefault = false;
         MaximumSpendingText = 0m;
         MinimumPaymentText = 0m;
         MonthlyDueDateText = GetDefaultMonthlyDueDateText();
@@ -397,6 +400,18 @@ public partial class AddAccountVM : ObservableValidator
             AccountMemorySnapshot? beforeSnapshot = null;
             var previousSpentAmount = 0m;
 
+            if (input.IsDefault)
+            {
+                foreach (var other in existingSources.Where(source =>
+                             source.Id != EditingId && source.IsDefault))
+                {
+                    other.IsDefault = false;
+                    _appData.UpdateAccount(other);
+                }
+
+                await _appData.SaveChangesAsync();
+            }
+
             if (EditingId.HasValue)
             {
                 account = existingSources.FirstOrDefault(s => s.Id == EditingId.Value)
@@ -415,6 +430,7 @@ public partial class AddAccountVM : ObservableValidator
                 account.InterestRate = input.InterestRate;
                 account.PinnedOnUI = ResolvePinnedOnUiFromEnabledState(account.IsEnabled, input.IsEnabled, input.PinnedOnUI);
                 account.IsEnabled = input.IsEnabled;
+                account.IsDefault = input.IsDefault;
                 _appData.UpdateAccount(account);
             }
             else
@@ -432,7 +448,8 @@ public partial class AddAccountVM : ObservableValidator
                     DeductSource = input.DeductSource,
                     InterestRate = input.InterestRate,
                     PinnedOnUI = ResolvePinnedOnUiForCreation(input.IsEnabled, input.PinnedOnUI),
-                    IsEnabled = input.IsEnabled
+                    IsEnabled = input.IsEnabled,
+                    IsDefault = input.IsDefault
                 };
                 await _appData.AddAccountAsync(account);
             }
@@ -736,7 +753,8 @@ public partial class AddAccountVM : ObservableValidator
             IsCredit ? SelectedDeductSource : null,
             interestRate,
             PinnedOnUI,
-            IsEnabled);
+            IsEnabled,
+            IsDefault);
 
         return true;
     }
@@ -940,7 +958,8 @@ public partial class AddAccountVM : ObservableValidator
             MinimumPaymentText,
             ApyText,
             PinnedOnUI,
-            IsEnabled);
+            IsEnabled,
+            IsDefault);
     }
 
     private void NotifyFormStateChanged()
@@ -1069,7 +1088,8 @@ public partial class AddAccountVM : ObservableValidator
         int? DeductSource,
         decimal? InterestRate,
         bool PinnedOnUI,
-        bool IsEnabled);
+        bool IsEnabled,
+        bool IsDefault);
 
     private readonly record struct FormState(
         string NameText,
@@ -1079,7 +1099,8 @@ public partial class AddAccountVM : ObservableValidator
         decimal MinimumPaymentText,
         decimal ApyText,
         bool PinnedOnUI,
-        bool IsEnabled);
+        bool IsEnabled,
+        bool IsDefault);
 
     public readonly record struct DeductSourceOption(
         int Id,

@@ -141,6 +141,10 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(source => source.MonthlyDueDate);
         entity.Property(source => source.DeductSource);
         entity.Property(source => source.IsEnabled);
+        entity.Property(source => source.IsDefault).HasDefaultValue(false);
+        entity.HasIndex(source => source.IsDefault)
+            .IsUnique()
+            .HasFilter("IsDefault = 1");
         entity.Property(source => source.PinnedOnUI);
         entity.Property(source => source.InterestRate).HasColumnType("REAL");
     }

@@ -20,7 +20,8 @@ public sealed record AccountMemorySnapshot(
     int? DeductSource,
     decimal? InterestRate,
     bool PinnedOnUI,
-    bool IsEnabled)
+    bool IsEnabled,
+    bool IsDefault = false)
 {
     public static AccountMemorySnapshot Create(Account account)
     {
@@ -39,7 +40,8 @@ public sealed record AccountMemorySnapshot(
             account.DeductSource,
             account.InterestRate,
             account.PinnedOnUI,
-            account.IsEnabled);
+            account.IsEnabled,
+            account.IsDefault);
     }
 }
 
@@ -586,7 +588,8 @@ public sealed class AddAccountMemoryAction(AccountMemorySnapshot snapshot) : ILo
             DeductSource = snapshot.DeductSource,
             InterestRate = snapshot.InterestRate,
             PinnedOnUI = snapshot.PinnedOnUI,
-            IsEnabled = snapshot.IsEnabled
+            IsEnabled = snapshot.IsEnabled,
+            IsDefault = snapshot.IsDefault
         };
 
         await unitOfWork.Accounts.AddAsync(account, cancellationToken);
@@ -629,6 +632,7 @@ public sealed class EditAccountMemoryAction(
         account.InterestRate = snapshot.InterestRate;
         account.PinnedOnUI = snapshot.PinnedOnUI;
         account.IsEnabled = snapshot.IsEnabled;
+        account.IsDefault = snapshot.IsDefault;
 
         unitOfWork.Accounts.Update(account);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -658,7 +662,8 @@ public sealed class DeleteAccountMemoryAction(AccountMemorySnapshot snapshot) : 
             DeductSource = snapshot.DeductSource,
             InterestRate = snapshot.InterestRate,
             PinnedOnUI = snapshot.PinnedOnUI,
-            IsEnabled = snapshot.IsEnabled
+            IsEnabled = snapshot.IsEnabled,
+            IsDefault = snapshot.IsDefault
         };
 
         await unitOfWork.Accounts.AddAsync(account, cancellationToken);

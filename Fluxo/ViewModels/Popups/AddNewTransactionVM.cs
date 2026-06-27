@@ -964,7 +964,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         SelectedRecurringPeriod = RecurringPeriod.Monthly;
         RecurringTimeText = GetDefaultRecurringTimeText(SelectedRecurringPeriod);
         SelectedExpenseCategory = ExpenseCategory.Needs;
-        SelectedAccount = Accounts.FirstOrDefault();
+        SelectedAccount = Accounts.FirstOrDefault(account => account.IsDefault) ?? Accounts.FirstOrDefault();
         SelectedTag = _orderedTags.FirstOrDefault();
         SelectedGoal = Goals.FirstOrDefault();
         IsMoreTagsOpen = false;
@@ -1914,9 +1914,9 @@ public partial class AddNewTransactionVM : ObservableValidator
         ReplaceCollection(Accounts, filteredSources);
 
         SelectedAccount = selectedAccountId is null
-            ? Accounts.FirstOrDefault()
+            ? Accounts.FirstOrDefault(account => account.IsDefault) ?? Accounts.FirstOrDefault()
             : Accounts.FirstOrDefault(source => source.Id == selectedAccountId.Value) ??
-              Accounts.FirstOrDefault();
+              Accounts.FirstOrDefault(account => account.IsDefault) ?? Accounts.FirstOrDefault();
     }
 
     public static ValidationResult? ValidateNameText(string value, ValidationContext validationContext)

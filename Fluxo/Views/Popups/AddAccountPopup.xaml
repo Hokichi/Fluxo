@@ -186,6 +186,11 @@
                             IsChecked="{Binding PinnedOnUI, Mode=TwoWay}"
                             Style="{StaticResource ItemCheckBoxWithContentStyle}" />
                         <CheckBox
+                            Margin="0,0,16,0"
+                            Content="Default"
+                            IsChecked="{Binding IsDefault, Mode=TwoWay}"
+                            Style="{StaticResource ItemCheckBoxWithContentStyle}" />
+                        <CheckBox
                             Content="Enabled"
                             IsChecked="{Binding IsEnabled, Mode=TwoWay}"
                             Style="{StaticResource ItemCheckBoxWithContentStyle}" />

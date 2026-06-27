@@ -51,7 +51,8 @@ public sealed class AddAccountVMTests
             MonthlyDueDate = 15,
             DeductSource = 2,
             PinnedOnUI = false,
-            IsEnabled = false
+            IsEnabled = false,
+            IsDefault = true
         };
 
         sut.InitializeFromAccount(source);
@@ -67,6 +68,7 @@ public sealed class AddAccountVMTests
         Assert.Equal(2, sut.SelectedDeductSource);
         Assert.False(sut.PinnedOnUI);
         Assert.False(sut.IsEnabled);
+        Assert.True(sut.IsDefault);
     }
 
     [Theory]

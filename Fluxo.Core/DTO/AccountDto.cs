@@ -17,6 +17,7 @@ public class AccountDto
     public decimal? InterestRate { get; set; }
     public bool PinnedOnUI { get; set; }
     public bool IsEnabled { get; set; }
+    public bool IsDefault { get; set; }
     public bool IsForDeletion { get; set; }
 
     /// <summary>Not mapped from entity — populated by service from IncomeLog aggregates.</summary>

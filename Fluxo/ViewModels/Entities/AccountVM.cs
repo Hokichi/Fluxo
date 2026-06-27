@@ -11,6 +11,7 @@ public partial class AccountVM : ObservableObject
     [ObservableProperty] private int _id;
     [ObservableProperty] private decimal? _interestRate;
     [ObservableProperty] private bool _isEnabled;
+    [ObservableProperty] private bool _isDefault;
     [ObservableProperty] private decimal _maximumSpending;
     [ObservableProperty] private decimal? _minimumPayment;
     [ObservableProperty] private int? _monthlyDueDate;

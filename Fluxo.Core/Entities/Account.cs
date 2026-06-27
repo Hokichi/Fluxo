@@ -17,5 +17,6 @@ public sealed class Account
     public decimal? InterestRate { get; set; }
     public bool PinnedOnUI { get; set; }
     public bool IsEnabled { get; set; }
+    public bool IsDefault { get; set; }
     public bool IsForDeletion { get; set; }
 }
