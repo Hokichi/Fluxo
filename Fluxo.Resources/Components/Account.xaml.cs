@@ -69,6 +69,16 @@ public partial class Account : UserControl
         WindowMethodInvoker.TryInvoke(this, "OpenTransferFundsPopup", DataContext);
     }
 
+    private void OnRepaymentActionClick(object sender, RoutedEventArgs e)
+    {
+        CloseActionsPopup();
+
+        if (DataContext is null)
+            return;
+
+        WindowMethodInvoker.TryInvoke(this, "OpenRepaymentPopup", DataContext);
+    }
+
     private void OnReconciliationActionClick(object sender, RoutedEventArgs e)
     {
         CloseActionsPopup();

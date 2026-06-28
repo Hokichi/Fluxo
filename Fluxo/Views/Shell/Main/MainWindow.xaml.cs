@@ -1808,6 +1808,20 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowTransferFunds(transferVm, this);
     }
 
+    public void OpenRepaymentPopup(AccountVM account)
+    {
+        ArgumentNullException.ThrowIfNull(account);
+
+        if (!account.IsCredit)
+            return;
+
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popupViewModel = new AddNewTransactionVM(_mainVM, appData);
+        popupViewModel.InitializeRepayment(account);
+        _dialogService.ShowAddNewTransaction(popupViewModel, this);
+    }
+
     public void OpenAccountReconciliationPopup(AccountVM account)
     {
         ArgumentNullException.ThrowIfNull(account);

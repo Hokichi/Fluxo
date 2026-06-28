@@ -28,6 +28,7 @@ public partial class AccountVM : ObservableObject
         AccountType is AccountType.Cash or AccountType.Checking;
 
     public bool IsCredit => AccountType == AccountType.Credit;
+    public bool CanRepay => IsCredit;
 
     public bool IsSaving => AccountType == AccountType.Saving;
 
@@ -74,6 +75,7 @@ public partial class AccountVM : ObservableObject
     {
         OnPropertyChanged(nameof(IsCashOrChecking));
         OnPropertyChanged(nameof(IsCredit));
+        OnPropertyChanged(nameof(CanRepay));
         OnPropertyChanged(nameof(IsSaving));
         OnPropertyChanged(nameof(CanTransferOut));
         OnPropertyChanged(nameof(CanTransfer));

@@ -24,4 +24,20 @@ public sealed class AccountComponentLayoutTests
         Assert.Contains("Style=\"{StaticResource AccountAccentStyle}\"", xaml);
         Assert.DoesNotContain("Text=\"{Binding AccountType}\"", xaml);
     }
+
+    [Fact]
+    public void CreditAccountMenu_ProvidesRepaymentAction()
+    {
+        var xaml = File.ReadAllText(AccountXamlPath);
+        var codeBehind = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo.Resources",
+            "Components",
+            "Account.xaml.cs"));
+
+        Assert.Contains("Click=\"OnRepaymentActionClick\"", xaml);
+        Assert.Contains("Path=\"{StaticResource Bill}\"", xaml);
+        Assert.Contains("Text=\"Repayment\"", xaml);
+        Assert.Contains("Visibility=\"{Binding CanRepay, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.Contains("OpenRepaymentPopup", codeBehind);
+    }
 }
