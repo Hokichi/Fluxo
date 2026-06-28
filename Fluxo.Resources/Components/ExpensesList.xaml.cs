@@ -141,6 +141,18 @@ public partial class ExpensesList : UserControl
         EmptyActionClick?.Invoke(this, e);
     }
 
+    private void OnDeleteButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: { } row })
+            ExecuteDelete(DeleteCommand, row);
+    }
+
+    internal static void ExecuteDelete(ICommand? command, object row)
+    {
+        if (command?.CanExecute(row) == true)
+            command.Execute(row);
+    }
+
     private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (sender is not DependencyObject source)

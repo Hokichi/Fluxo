@@ -55,8 +55,7 @@
                         VerticalAlignment="Center"
                         ButtonIcon="{StaticResource Delete}"
                         ButtonSize="32"
-                        Command="{Binding DeleteCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                        CommandParameter="{Binding}"
+                        Click="OnDeleteButtonClick"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                         IconSize="12" />
